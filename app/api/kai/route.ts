@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       'anthropic-beta': 'messages-2023-12-15',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-3-5',
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages: messages.slice(-20),
