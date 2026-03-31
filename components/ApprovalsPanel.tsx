@@ -50,6 +50,8 @@ const MOCK_APPROVALS: ApprovalItem[] = [
   },
 ];
 
+type ApprovalItemWithComment = ApprovalItem & { comment?: string };
+
 const RISK_STYLE: Record<string, string> = {
   low: 'bg-teal-50 text-teal-700',
   medium: 'bg-amber-50 text-amber-600',
@@ -63,10 +65,12 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function ApprovalsPanel() {
-  const [items, setItems] = useState<ApprovalItem[]>(MOCK_APPROVALS);
+  const [items, setItems] = useState<ApprovalItemWithComment[]>(MOCK_APPROVALS);
+  const [comments, setComments] = useState<Record<string, string>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   function act(id: string, status: 'approved' | 'denied') {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, status } : i));
+    setItems(prev => prev.map(i => i.id === id ? { ...i, status, comment: comments[id] || undefined } : i));
   }
 
   const pending = items.filter(i => i.status === 'pending');
@@ -95,8 +99,29 @@ export default function ApprovalsPanel() {
                     <div className="text-sm font-extrabold text-ink-heading mb-1">{item.action}</div>
                     <p className="text-[13px] text-ink-body m-0 leading-snug">{item.detail}</p>
                     <div className="text-[11px] text-ink-meta mt-2">{item.ts} · {item.id}</div>
+
+                    {/* Comment toggle */}
+                    <button
+                      onClick={() => setExpanded(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      className="mt-3 text-[12px] font-bold text-ink-label hover:text-ink-secondary transition-colors"
+                    >
+                      {expanded[item.id] ? '↑ Hide comment' : '+ Add comment or instructions'}
+                    </button>
+
+                    {expanded[item.id] && (
+                      <div className="mt-2">
+                        <textarea
+                          value={comments[item.id] || ''}
+                          onChange={e => setComments(prev => ({ ...prev, [item.id]: e.target.value }))}
+                          placeholder="Add instructions, modifications, or notes for Kai..."
+                          rows={3}
+                          className="w-full rounded-xl border border-surface-border text-[13px] text-ink-primary px-3 py-2 outline-none resize-none focus:border-teal-500 transition-colors"
+                          style={{ background: '#f9fbfc' }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-col gap-2 shrink-0">
                     <button
                       onClick={() => act(item.id, 'approved')}
                       className="px-4 py-2 rounded-xl text-[12px] font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-100 transition-colors"
@@ -135,6 +160,9 @@ export default function ApprovalsPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-ink-heading truncate">{item.action}</div>
                   <div className="text-[11px] text-ink-meta">{item.ts} · {item.source}</div>
+                  {item.comment && (
+                    <div className="text-[12px] text-ink-body mt-0.5 italic">"{item.comment}"</div>
+                  )}
                 </div>
                 <span className={`pill shrink-0 ${RISK_STYLE[item.risk]}`}>{item.risk}</span>
               </div>
