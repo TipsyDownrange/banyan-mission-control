@@ -31,6 +31,12 @@ const NAV: { section: string; items: { label: AppView; icon: string }[] }[] = [
       { label: 'Bid Queue', icon: '📊' },
     ],
   },
+  {
+    section: 'AI Command',
+    items: [
+      { label: 'Kai', icon: '◎' },
+    ],
+  },
 ];
 
 type Props = { activeView: AppView; onSelect: (v: AppView) => void };
