@@ -18,7 +18,7 @@ export default function KaiPanel() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(true);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -32,6 +32,16 @@ export default function KaiPanel() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Speak greeting on first load
+  const greetedRef = useRef(false);
+  useEffect(() => {
+    if (!greetedRef.current && voiceMode) {
+      greetedRef.current = true;
+      setTimeout(() => speak('Kai online. Ready when you are.'), 800);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const speak = useCallback((text: string) => {
     if (!voiceMode || typeof window === 'undefined') return;
