@@ -21,6 +21,7 @@ export default function KaiPanel() {
   const [voiceMode, setVoiceMode] = useState(true);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [micError, setMicError] = useState<string>('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -99,27 +100,44 @@ export default function KaiPanel() {
     setLoading(false);
   }, [loading, messages, speak]);
 
-  const toggleListening = useCallback(() => {
+  const toggleListening = useCallback(async () => {
     if (listening) {
       recognitionRef.current?.stop();
       setListening(false);
       return;
     }
+    setMicError('');
+
+    // Request mic permission explicitly first
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      setMicError('Microphone access denied. Allow mic in browser settings and reload.');
+      return;
+    }
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert('Speech recognition not supported. Try Chrome or Safari.'); return; }
+    if (!SR) {
+      setMicError('Speech recognition not supported. Use Chrome or Safari.');
+      return;
+    }
 
     const rec = new SR();
     rec.lang = 'en-US';
     rec.continuous = false;
     rec.interimResults = false;
 
-    rec.onstart = () => setListening(true);
+    rec.onstart = () => { setListening(true); setMicError(''); };
     rec.onresult = (e: any) => {
       const transcript = e.results[0]?.[0]?.transcript || '';
       setListening(false);
       if (transcript) sendMessage(transcript);
+      else setMicError('No speech detected. Try again.');
     };
-    rec.onerror = () => setListening(false);
+    rec.onerror = (e: any) => {
+      setListening(false);
+      setMicError(`Mic error: ${e.error || 'unknown'}. Check browser permissions.`);
+    };
     rec.onend = () => setListening(false);
 
     recognitionRef.current = rec;
@@ -248,7 +266,12 @@ export default function KaiPanel() {
               </svg>
             </button>
           </div>
-          <p className="text-[11px] text-ink-meta mt-2 text-center">Click mic to speak · Click again to stop · Enter to send</p>
+          {micError && (
+            <p className="text-[12px] font-bold text-red-600 mt-2 text-center">{micError}</p>
+          )}
+          {!micError && (
+            <p className="text-[11px] text-ink-meta mt-2 text-center">Click mic to speak · Click again to stop · Enter to send</p>
+          )}
         </div>
       </div>
     </div>
