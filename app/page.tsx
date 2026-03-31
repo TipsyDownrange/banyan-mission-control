@@ -10,6 +10,8 @@ import SchedulesPanel from '@/components/SchedulesPanel';
 import SubmittalsPanel from '@/components/SubmittalsPanel';
 import BidQueuePanel from '@/components/BidQueuePanel';
 import KaiPanel from '@/components/KaiPanel';
+import ApprovalsPanel from '@/components/ApprovalsPanel';
+import CostPanel from '@/components/CostPanel';
 
 export type AppView =
   | 'Overview'
@@ -20,7 +22,9 @@ export type AppView =
   | 'Schedules'
   | 'Submittals'
   | 'Bid Queue'
-  | 'Kai';
+  | 'Kai'
+  | 'Approvals'
+  | 'Cost & Usage';
 
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Overview');
@@ -38,6 +42,8 @@ export default function Home() {
           {activeView === 'Schedules' && <SchedulesPanel />}
           {activeView === 'Submittals' && <SubmittalsPanel />}
           {activeView === 'Bid Queue' && <BidQueuePanel />}
+          {activeView === 'Approvals' && <ApprovalsPanel />}
+          {activeView === 'Cost & Usage' && <CostPanel />}
         </div>
         {activeView === 'Kai' && (
           <div className="absolute inset-0 left-[260px] flex flex-col">
