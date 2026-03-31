@@ -36,6 +36,7 @@ const NAV: { section: string; items: { label: AppView; icon: string }[] }[] = [
     items: [
       { label: 'Kai', icon: '◎' },
       { label: 'Approvals', icon: '✓' },
+      { label: 'Workflows', icon: '⏱' },
       { label: 'Cost & Usage', icon: '$' },
     ],
   },
