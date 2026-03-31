@@ -99,9 +99,14 @@ export default function KaiPanel() {
     setLoading(false);
   }, [loading, messages, speak]);
 
-  const startListening = useCallback(() => {
+  const toggleListening = useCallback(() => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert('Speech recognition not supported in this browser.'); return; }
+    if (!SR) { alert('Speech recognition not supported. Try Chrome or Safari.'); return; }
 
     const rec = new SR();
     rec.lang = 'en-US';
@@ -111,6 +116,7 @@ export default function KaiPanel() {
     rec.onstart = () => setListening(true);
     rec.onresult = (e: any) => {
       const transcript = e.results[0]?.[0]?.transcript || '';
+      setListening(false);
       if (transcript) sendMessage(transcript);
     };
     rec.onerror = () => setListening(false);
@@ -118,12 +124,7 @@ export default function KaiPanel() {
 
     recognitionRef.current = rec;
     rec.start();
-  }, [sendMessage]);
-
-  const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-    setListening(false);
-  }, []);
+  }, [listening, sendMessage]);
 
   return (
     <div className="flex flex-col h-full" style={{ background: '#f4f7f9' }}>
@@ -208,7 +209,7 @@ export default function KaiPanel() {
                   sendMessage(input);
                 }
               }}
-              placeholder="Ask Kai anything about your jobs, crew, or data..."
+              placeholder={listening ? 'Listening... speak now' : 'Ask Kai anything, or click the mic to speak...'}
               rows={1}
               className="flex-1 resize-none border-0 outline-none text-sm text-ink-primary bg-transparent placeholder-ink-meta"
               style={{ maxHeight: 120, lineHeight: '1.5' }}
@@ -216,16 +217,13 @@ export default function KaiPanel() {
 
             {/* Voice button */}
             <button
-              onMouseDown={startListening}
-              onMouseUp={stopListening}
-              onTouchStart={startListening}
-              onTouchEnd={stopListening}
+              onClick={toggleListening}
               className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all"
               style={{
                 background: listening ? '#ef4444' : 'rgba(15,118,110,0.1)',
                 color: listening ? 'white' : '#0f766e',
               }}
-              title="Hold to speak"
+              title={listening ? 'Click to stop' : 'Click to speak'}
             >
               {listening ? (
                 <span className="w-3 h-3 bg-white rounded-full animate-pulse" />
@@ -250,7 +248,7 @@ export default function KaiPanel() {
               </svg>
             </button>
           </div>
-          <p className="text-[11px] text-ink-meta mt-2 text-center">Hold mic to speak · Enter to send · Shift+Enter for new line</p>
+          <p className="text-[11px] text-ink-meta mt-2 text-center">Click mic to speak · Click again to stop · Enter to send</p>
         </div>
       </div>
     </div>
