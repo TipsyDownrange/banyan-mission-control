@@ -14,6 +14,7 @@ import ApprovalsPanel from '@/components/ApprovalsPanel';
 import CostPanel from '@/components/CostPanel';
 import CronPanel from '@/components/CronPanel';
 import TaskBoardPanel from '@/components/TaskBoardPanel';
+import InboxPanel from '@/components/InboxPanel';
 
 export type AppView =
   | 'Overview'
@@ -24,6 +25,7 @@ export type AppView =
   | 'Schedules'
   | 'Submittals'
   | 'Bid Queue'
+  | 'Bid Intake'
   | 'Kai'
   | 'Task Board'
   | 'Approvals'
@@ -50,6 +52,7 @@ export default function Home() {
           {activeView === 'Cost & Usage' && <CostPanel />}
           {activeView === 'Workflows' && <CronPanel />}
           {activeView === 'Task Board' && <TaskBoardPanel />}
+          {activeView === 'Bid Intake' && <InboxPanel />}
         </div>
         {activeView === 'Kai' && (
           <div className="absolute inset-0 left-[260px] flex flex-col">
