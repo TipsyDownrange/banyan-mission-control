@@ -15,11 +15,13 @@ import CronPanel from '@/components/CronPanel';
 import TaskBoardPanel from '@/components/TaskBoardPanel';
 import InboxPanel from '@/components/InboxPanel';
 import TodayPanel from '@/components/TodayPanel';
+import CalendarPanel from '@/components/CalendarPanel';
 import KaiFloat from '@/components/KaiFloat';
 
 export type AppView =
   | 'Today'
   | 'Inbox'
+  | 'Calendar'
   | 'Overview'
   | 'Event Feed'
   | 'Projects'
@@ -103,6 +105,7 @@ export default function Home() {
 
         {activeView === 'Today' && <TodayPanel />}
         {activeView === 'Inbox' && <InboxPanel />}
+        {activeView === 'Calendar' && <CalendarPanel />}
         {activeView === 'Overview' && <OverviewPanel />}
         {activeView === 'Event Feed' && <EventFeedPanel />}
         {activeView === 'Projects' && <ProjectsPanel />}

@@ -8,6 +8,7 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
     items: [
       { label: 'Today', dot: '#14b8a6' },
       { label: 'Inbox', dot: '#f59e0b' },
+      { label: 'Calendar' },
     ],
   },
   {
