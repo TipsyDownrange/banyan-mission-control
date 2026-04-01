@@ -1,66 +1,43 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 type Bid = Record<string, string>;
-
 type DecisionState = 'needs review' | 'assign' | 'waiting on docs' | 'in estimating' | 'submitted' | 'won' | 'lost' | 'no bid';
 
-const DECISION_STYLES: Record<DecisionState, { color: string; bg: string; border: string }> = {
-  'needs review':   { color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
-  'assign':         { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
-  'waiting on docs':{ color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
-  'in estimating':  { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
-  'submitted':      { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
-  'won':            { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
-  'lost':           { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
-  'no bid':         { color: '#64748b', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },
+const DECISION_STYLES: Record<string, { color: string; bg: string; border: string }> = {
+  'needs review':    { color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
+  'assign':          { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
+  'waiting on docs': { color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
+  'in estimating':   { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
+  'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
+  'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
+  'lost':            { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
+  'no bid':          { color: '#64748b', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },
 };
 
-const CARD_STYLES: Record<string, { background: string; border: string; accent: string; tone: string }> = {
-  urgent:   { background: 'rgba(255,247,237,0.98)', border: '1px solid rgba(249,115,22,0.22)', accent: '#f97316', tone: 'Due soon' },
-  match:    { background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.22)', accent: '#0d9488', tone: 'In bid log' },
-  nodocs:   { background: 'rgba(254,252,232,0.98)', border: '1px solid rgba(202,138,4,0.22)',  accent: '#d97706', tone: 'Missing docs' },
-  clean:    { background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(226,232,240,0.9)', accent: '#94a3b8', tone: 'New' },
-};
-
-const FIELD_LABEL = (text: string) => (
-  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#64748b', marginBottom: 4 }}>
-    {text}
-  </div>
+const PILL = (label: string, style: {color:string;bg:string;border:string}) => (
+  <span style={{ padding: '4px 9px', borderRadius: 999, fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: style.color, background: style.bg, border: style.border }}>{label}</span>
 );
 
-const PILL = (label: string, style: {color: string; bg: string; border: string}) => (
-  <span style={{ padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: style.color, background: style.bg, border: style.border }}>
-    {label}
-  </span>
-);
+const FL = (text: string) => <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#64748b', marginBottom: 4 }}>{text}</div>;
 
 const ESTIMATORS = ['Unassigned', 'Kyle', 'Jenny', 'Mark Olson', 'Sean'];
-const DECISION_STATES: DecisionState[] = ['needs review', 'assign', 'waiting on docs', 'in estimating', 'submitted', 'won', 'lost', 'no bid'];
+const ISLANDS = ['All Islands', 'Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai'];
 
-function daysUntil(dateStr: string) {
-  if (!dateStr) return null;
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
-}
-
-function getCardStyle(bid: Bid) {
-  const days = daysUntil(bid['Due Date']);
-  const hasMatch = bid['Win / Loss'] === 'Won';
-  const noDocs = false; // could be derived from a field
-  if (days !== null && days <= 3 && days >= 0) return CARD_STYLES.urgent;
-  if (hasMatch) return CARD_STYLES.match;
-  return CARD_STYLES.clean;
+function daysUntil(d: string) {
+  if (!d) return null;
+  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
 }
 
 function getDecisionState(bid: Bid): DecisionState {
-  const status = (bid['Status'] || '').toLowerCase();
-  const winLoss = (bid['Win / Loss'] || '').toLowerCase();
-  if (winLoss === 'won') return 'won';
-  if (winLoss === 'lost') return 'lost';
-  if (winLoss === 'no bid') return 'no bid';
-  if (status === 'submitted') return 'submitted';
-  if (status === 'assigned' && bid['Assigned To']) return 'in estimating';
-  if (status === 'assigned' && !bid['Assigned To']) return 'assign';
+  const wl = (bid['Win / Loss'] || '').toLowerCase();
+  const st = (bid['Status'] || '').toLowerCase();
+  if (wl === 'won') return 'won';
+  if (wl === 'lost') return 'lost';
+  if (wl === 'no bid') return 'no bid';
+  if (st === 'submitted') return 'submitted';
+  if (st === 'assigned' && bid['Assigned To']) return 'in estimating';
+  if (st === 'assigned' && !bid['Assigned To']) return 'assign';
   return 'needs review';
 }
 
@@ -68,269 +45,320 @@ export default function BidQueuePanel() {
   const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'active' | 'mine' | 'all'>('active');
-  const [overrides, setOverrides] = useState<Record<string, { assignedTo?: string; decisionState?: DecisionState; notes?: string }>>({});
-  const [expandedNotes, setExpandedNotes] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [search, setSearch] = useState('');
+  const [filterAssignee, setFilterAssignee] = useState('All');
+  const [filterIsland, setFilterIsland] = useState('All Islands');
+  const [filterStatus, setFilterStatus] = useState('active');
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>({});
 
   useEffect(() => {
-    fetch('/api/bids?limit=150')
+    fetch('/api/bids?limit=300')
       .then(r => r.json())
       .then(d => { if (d.error) setError(d.error); else setBids(d.bids || []); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, []);
 
-  function updateBid(kID: string, field: string, value: string) {
-    setOverrides(prev => ({ ...prev, [kID]: { ...prev[kID], [field]: value } }));
+  function getEff(bid: Bid, field: string) {
+    return overrides[bid['kID']]?.[field] ?? bid[field] ?? '';
+  }
+  function setEff(kID: string, field: string, val: string) {
+    setOverrides(p => ({ ...p, [kID]: { ...p[kID], [field]: val } }));
   }
 
-  function getEffective(bid: Bid, field: string) {
-    const kID = bid['kID'];
-    return (overrides[kID] as Record<string, string> | undefined)?.[field] ?? bid[field] ?? '';
-  }
+  const filtered = useMemo(() => {
+    return bids.filter(b => {
+      const wl = b['Win / Loss'] || '';
+      const st = b['Status'] || '';
+      const isActive = !['Won','Lost','No Bid'].includes(wl) && !['Won','Lost','No Bid'].includes(st);
+      if (filterStatus === 'active' && !isActive) return false;
+      if (filterStatus === 'won' && wl !== 'Won') return false;
+      if (filterStatus === 'lost' && wl !== 'Lost') return false;
+      if (filterStatus === 'submitted' && st !== 'Submitted') return false;
+      if (filterAssignee !== 'All' && (b['Assigned To'] || '') !== filterAssignee) return false;
+      if (filterIsland !== 'All Islands' && (b['Island'] || '') !== filterIsland) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (!(b['Job Name'] || '').toLowerCase().includes(s) &&
+            !(b['kID'] || '').toLowerCase().includes(s) &&
+            !(b['Assigned To'] || '').toLowerCase().includes(s)) return false;
+      }
+      return true;
+    });
+  }, [bids, filterStatus, filterAssignee, filterIsland, search]);
 
-  const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Status'] || '') && !['Won','Lost','No Bid'].includes(b['Win / Loss'] || ''));
-  const displayed = filter === 'active' ? active : filter === 'mine' ? bids.filter(b => (b['Assigned To'] || '').toLowerCase().includes('sean')) : bids.slice(0, 50);
-
-  const needsReview = active.filter(b => !b['Assigned To']).length;
-  const waitingDocs = active.filter(b => daysUntil(b['Due Date']) !== null && (daysUntil(b['Due Date']) || 99) <= 3).length;
-  const inEstimating = active.filter(b => b['Assigned To']).length;
+  const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Win / Loss'] || '') && !['Won','Lost','No Bid'].includes(b['Status'] || ''));
+  const urgent = active.filter(b => { const d = daysUntil(b['Due Date']); return d !== null && d <= 3 && d >= 0; });
+  const unassigned = active.filter(b => !b['Assigned To']);
 
   if (loading) return (
-    <div style={{ padding: 32, maxWidth: 960, margin: '0 auto' }}>
+    <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
       <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
         <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-        <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading bid log...</div>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading bid log...</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto', display: 'grid', gap: 18 }}>
+    <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'grid', gap: 16 }}>
 
       {/* Header */}
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Estimating</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Estimating</div>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Bid Queue</h1>
-          <div style={{ fontSize: 12, color: '#94a3b8', paddingBottom: 4 }}>Live · BanyanOS Bid Log</div>
+        </div>
+        <div style={{ display: 'flex', gap: 6, paddingBottom: 4 }}>
+          {(['table','cards'] as const).map(v => (
+            <button key={v} onClick={() => setViewMode(v)} style={{
+              padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+              border: viewMode === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
+              background: viewMode === v ? 'rgba(240,253,250,0.96)' : 'white',
+              color: viewMode === v ? '#0f766e' : '#64748b', cursor: 'pointer',
+            }}>{v === 'table' ? '≡ Table' : '⊞ Cards'}</button>
+          ))}
         </div>
       </div>
 
-      {/* Stats + posture */}
-      <section style={{ display: 'grid', gap: 16, padding: 18, borderRadius: 24,
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,249,255,0.92) 45%, rgba(248,250,252,0.96) 100%)',
+      {/* Stats */}
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, padding: 18, borderRadius: 24,
+        background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 45%,rgba(248,250,252,0.96) 100%)',
         border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 36px rgba(15,23,42,0.08)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: 12 }}>
-          {[
-            { label: 'Active bids', value: `${active.length}`, helper: 'In the pipeline right now' },
-            { label: 'Needs assignment', value: `${needsReview}`, helper: 'No estimator assigned yet' },
-            { label: 'Due within 3 days', value: `${waitingDocs}`, helper: 'Deadline pressure' },
-            { label: 'In estimating', value: `${inEstimating}`, helper: 'Assigned and in progress' },
-          ].map(s => (
-            <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
-              <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a' }}>{s.value}</div>
-              <div style={{ marginTop: 6, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{s.helper}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'grid', gap: 10, padding: '12px 14px', borderRadius: 18, background: 'rgba(15,23,42,0.04)', border: '1px dashed rgba(148,163,184,0.42)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>Bid desk posture:</div>
-            <div style={{ fontSize: 13, lineHeight: 1.6, color: '#475569' }}>
-              Assign unassigned bids first. Flag anything due within 3 days as urgent. Hold incomplete invites in daylight — don't log until docs are confirmed.
-            </div>
+        {[
+          { label: 'Total in log', value: bids.length, helper: 'All time' },
+          { label: 'Active pipeline', value: active.length, helper: 'In progress now' },
+          { label: 'Unassigned', value: unassigned.length, helper: 'Needs estimator' },
+          { label: 'Due ≤ 3 days', value: urgent.length, helper: 'Deadline pressure' },
+          { label: 'Showing', value: filtered.length, helper: 'Current filters' },
+        ].map(s => (
+          <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
+            <div style={{ marginTop: 6, fontSize: 26, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
+            <div style={{ marginTop: 4, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
           </div>
-        </div>
+        ))}
       </section>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {([['active','Active pipeline'],['mine','My bids'],['all','All bids']] as const).map(([k,l]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{
-            padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-            border: filter === k ? '1px solid rgba(15,118,110,0.3)' : '1px solid rgba(226,232,240,0.9)',
-            background: filter === k ? 'rgba(240,253,250,0.96)' : 'white',
-            color: filter === k ? '#0f766e' : '#64748b', cursor: 'pointer',
-          }}>{l} · {k === 'active' ? active.length : k === 'mine' ? bids.filter(b=>(b['Assigned To']||'').toLowerCase().includes('sean')).length : Math.min(bids.length,50)}</button>
-        ))}
+      {/* Search + Filters */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search job name, ID, or estimator..."
+          style={{ flex: '1 1 220px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#0f172a', outline: 'none' }}
+        />
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          <option value="active">Active pipeline</option>
+          <option value="submitted">Submitted</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost / No Bid</option>
+          <option value="all">All bids</option>
+        </select>
+        <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}
+          style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          <option value="All">All estimators</option>
+          {ESTIMATORS.filter(e => e !== 'Unassigned').map(e => <option key={e}>{e}</option>)}
+          <option value="">Unassigned</option>
+        </select>
+        <select value={filterIsland} onChange={e => setFilterIsland(e.target.value)}
+          style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          {ISLANDS.map(i => <option key={i}>{i}</option>)}
+        </select>
+        {(search || filterAssignee !== 'All' || filterIsland !== 'All Islands') && (
+          <button onClick={() => { setSearch(''); setFilterAssignee('All'); setFilterIsland('All Islands'); }}
+            style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 4px' }}>
+            Clear filters ×
+          </button>
+        )}
       </div>
 
       {error && (
-        <div style={{ background: 'rgba(254,242,242,0.98)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 18, padding: '16px 20px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c' }}>Error loading bids</div>
-          <div style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>{error}</div>
+        <div style={{ background: 'rgba(254,242,242,0.98)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '14px 18px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c' }}>Error: {error}</div>
         </div>
       )}
 
-      {/* Bid cards */}
-      <section style={{ display: 'grid', gap: 14 }}>
-        {displayed.map(bid => {
-          const kID = bid['kID'];
-          const cardStyle = getCardStyle(bid);
-          const decisionState = (overrides[kID]?.decisionState || getDecisionState(bid)) as DecisionState;
-          const decisionStyle = DECISION_STYLES[decisionState];
-          const assignedTo = getEffective(bid, 'Assigned To') || 'Unassigned';
-          const days = daysUntil(bid['Due Date']);
-          const urgent = days !== null && days <= 3 && days >= 0;
+      {/* TABLE VIEW */}
+      {viewMode === 'table' && (
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)', overflow: 'hidden' }}>
+          {/* Table header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 90px 110px 90px 100px 32px', gap: 0, padding: '10px 16px', background: 'rgba(248,250,252,0.8)', borderBottom: '1px solid #f1f5f9' }}>
+            {['kID','Job Name','Island','Assigned','Due','Status',''].map(h => (
+              <div key={h} style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>{h}</div>
+            ))}
+          </div>
 
-          return (
-            <article key={kID} style={{
-              display: 'grid', gap: 16, padding: 18, borderRadius: 24,
-              background: cardStyle.background, border: cardStyle.border,
-              boxShadow: '0 14px 30px rgba(15,23,42,0.06)',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              {/* Left accent bar */}
-              <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 6, background: cardStyle.accent }} />
+          {/* Rows */}
+          <div style={{ maxHeight: 600, overflowY: 'auto' }}>
+            {filtered.map(bid => {
+              const ds = getDecisionState(bid);
+              const dStyle = DECISION_STYLES[ds];
+              const days = daysUntil(bid['Due Date']);
+              const urgent = days !== null && days <= 3 && days >= 0;
+              const isExpanded = expandedRow === bid['kID'];
 
-              {/* Top row — pills + name + desk posture */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 12px', justifyContent: 'space-between', alignItems: 'flex-start', paddingLeft: 4 }}>
-                <div style={{ display: 'grid', gap: 8, minWidth: 0, flex: 1 }}>
-                  {/* Pill row */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>{kID}</span>
-                    {PILL(cardStyle.tone, { color: cardStyle.accent, bg: 'rgba(255,255,255,0.72)', border: `1px solid ${cardStyle.accent}33` })}
-                    {PILL(decisionState, decisionStyle)}
-                    {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
-                  </div>
-
-                  {/* Project name */}
-                  <h3 style={{ margin: 0, fontSize: 26, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a', lineHeight: 1.1 }}>
-                    {bid['Job Name']}
-                  </h3>
-                  <div style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
-                    {bid['Island'] && <span>{bid['Island']} · </span>}
-                    GC / source: {bid['General Contractor'] || bid['Bid Source'] || 'Not specified'}
-                  </div>
-                </div>
-
-                {/* Desk posture card */}
-                <div style={{ display: 'grid', gap: 8, minWidth: 200, padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.92)' }}>
-                  {FIELD_LABEL('Desk posture')}
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
-                    {urgent ? '⚡ Urgent' : days !== null && days <= 7 ? 'Due this week' : 'Normal pipeline'}
-                  </div>
-                  <div style={{ fontSize: 13, color: '#475569' }}>
-                    {bid['Due Date'] ? `Due ${bid['Due Date']}` : 'No due date'}
-                  </div>
-                  {/* Assign dropdown */}
-                  <select
-                    value={assignedTo}
-                    onChange={e => updateBid(kID, 'Assigned To', e.target.value)}
-                    style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#0f172a', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+              return (
+                <div key={bid['kID']}>
+                  <div
+                    onClick={() => setExpandedRow(isExpanded ? null : bid['kID'])}
+                    style={{
+                      display: 'grid', gridTemplateColumns: '120px 1fr 90px 110px 90px 100px 32px',
+                      gap: 0, padding: '10px 16px',
+                      borderBottom: '1px solid #f8fafc',
+                      background: isExpanded ? 'rgba(240,253,250,0.4)' : 'white',
+                      cursor: 'pointer',
+                      transition: 'background 0.1s',
+                    }}
                   >
-                    {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Detail fields row */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 14, paddingLeft: 4 }}>
-                <div>
-                  {FIELD_LABEL('Received')}
-                  <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>{bid['Received Date'] || '—'}</div>
-                </div>
-                <div>
-                  {FIELD_LABEL('Bid due')}
-                  <div style={{ fontSize: 14, color: urgent ? '#c2410c' : '#0f172a', fontWeight: 700 }}>{bid['Due Date'] || '—'}</div>
-                </div>
-                <div>
-                  {FIELD_LABEL('GC count')}
-                  <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>{bid['GC Count'] || '1'}</div>
-                </div>
-                <div>
-                  {FIELD_LABEL('Est. value')}
-                  <div style={{ fontSize: 14, color: '#0f766e', fontWeight: 700 }}>{bid['Est Value (High)'] || '—'}</div>
-                </div>
-                <div>
-                  {FIELD_LABEL('Docs available')}
-                  <div style={{ fontSize: 14, fontWeight: 800, color: bid['Site Visit Done'] === 'Yes' ? '#047857' : '#b45309' }}>
-                    {bid['Site Visit Done'] === 'Yes' ? 'Yes — package ready' : 'Pending confirmation'}
-                  </div>
-                </div>
-                <div>
-                  {FIELD_LABEL('Products / specs')}
-                  <div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>{bid['Products / Specs'] || '—'}</div>
-                </div>
-              </div>
-
-              {/* Scope summary + Notes */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(240px,0.8fr)', gap: 14, alignItems: 'start', paddingLeft: 4 }}>
-                <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)' }}>
-                  {FIELD_LABEL('Scope summary')}
-                  <div style={{ fontSize: 14, lineHeight: 1.7, color: '#334155' }}>
-                    {bid['Notes'] || 'No scope summary available.'}
-                  </div>
-                </div>
-                <div style={{ padding: 16, borderRadius: 18, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.16)' }}>
-                  {FIELD_LABEL('Notes')}
-                  <div style={{ fontSize: 14, lineHeight: 1.7, color: '#475569' }}>
-                    Bid log entry. {bid['Products / Specs'] ? `Products: ${bid['Products / Specs']}.` : ''} {bid['Assigned To'] ? `Assigned to ${bid['Assigned To']}.` : 'Unassigned.'}
-                  </div>
-                </div>
-
-                {/* Decision controls */}
-                <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)', display: 'grid', gap: 10 }}>
-                  {FIELD_LABEL('Decision state')}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {DECISION_STATES.map(ds => (
-                      <button key={ds} onClick={() => updateBid(kID, 'decisionState', ds)}
-                        style={{
-                          padding: '5px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
-                          letterSpacing: '0.06em', textTransform: 'uppercase',
-                          cursor: 'pointer',
-                          border: decisionState === ds ? `1px solid ${DECISION_STYLES[ds].color}44` : '1px solid rgba(226,232,240,0.8)',
-                          background: decisionState === ds ? DECISION_STYLES[ds].bg : 'white',
-                          color: decisionState === ds ? DECISION_STYLES[ds].color : '#94a3b8',
-                        }}>
+                    <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#94a3b8', display: 'flex', alignItems: 'center' }}>{bid['kID']}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{bid['Job Name']}</div>
+                    <div style={{ fontSize: 12, color: '#64748b', display: 'flex', alignItems: 'center' }}>{bid['Island'] || '—'}</div>
+                    <div style={{ fontSize: 12, color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{bid['Assigned To'] || <span style={{ color: '#f59e0b', fontWeight: 700 }}>Unassigned</span>}</div>
+                    <div style={{ fontSize: 12, color: urgent ? '#c2410c' : '#64748b', fontWeight: urgent ? 700 : 400, display: 'flex', alignItems: 'center' }}>
+                      {bid['Due Date'] ? (urgent ? `⚡ ${days}d` : bid['Due Date'].substring(5)) : '—'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: dStyle.color, background: dStyle.bg, border: dStyle.border, whiteSpace: 'nowrap' }}>
                         {ds}
-                      </button>
-                    ))}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#94a3b8' }}>
+                      {isExpanded ? '▲' : '▼'}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setExpandedNotes(expandedNotes === kID ? null : kID)}
-                    style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}>
-                    {expandedNotes === kID ? '↑ Hide note' : '+ Add note'}
-                  </button>
-                  {expandedNotes === kID && (
-                    <textarea
-                      placeholder="Add a note about this bid..."
-                      style={{ fontSize: 13, padding: '8px 12px', borderRadius: 12, border: '1px solid #e2e8f0', resize: 'none', outline: 'none', color: '#0f172a', lineHeight: 1.5 }}
-                      rows={3}
-                    />
+
+                  {/* Expanded row detail */}
+                  {isExpanded && (
+                    <div style={{ padding: '16px 20px', background: 'rgba(248,250,252,0.6)', borderBottom: '1px solid #f1f5f9', display: 'grid', gap: 14 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
+                        <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Assign to</div>
+                          <select value={getEff(bid,'Assigned To') || 'Unassigned'} onChange={e => setEff(bid['kID'],'Assigned To',e.target.value)}
+                            style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
+                            {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
+                          </select>
+                        </div>
+                        <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Decision state</div>
+                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            {(['needs review','in estimating','submitted','won','lost','no bid'] as DecisionState[]).map(s => (
+                              <button key={s} onClick={() => setEff(bid['kID'],'decisionState',s)}
+                                style={{ padding: '4px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                                  border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid #e2e8f0',
+                                  background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : '#94a3b8' }}>
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        {bid['Notes'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Notes</div>
+                          <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>{bid['Notes']}</div>
+                        </div>}
+                        {bid['Products / Specs'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Products</div>
+                          <div style={{ fontSize: 13, color: '#334155' }}>{bid['Products / Specs']}</div>
+                        </div>}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-              {/* Bid-Log lookup */}
-              <div style={{ paddingLeft: 4 }}>
-                <div style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(226,232,240,0.94)', display: 'grid', gap: 6 }}>
-                  {FIELD_LABEL('Bid-log lookup')}
-                  <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
-                    {bid['kID'] ? (
-                      <span>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{bid['kID']}</span>
-                        {' · '}{bid['Status'] || 'Unknown status'}
-                        {bid['Win / Loss'] ? ` · ${bid['Win / Loss']}` : ''}
-                        {' · '}{bid['Assigned To'] || 'Unassigned'}
-                      </span>
-                    ) : 'Not in BanyanOS bid log'}
+              );
+            })}
+            {filtered.length === 0 && (
+              <div style={{ padding: '32px', textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No bids match your filters</div>
+            )}
+          </div>
+
+          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', fontSize: 11, color: '#94a3b8', background: 'rgba(248,250,252,0.5)' }}>
+            Showing {filtered.length} of {bids.length} bids · Click any row to expand details
+          </div>
+        </div>
+      )}
+
+      {/* CARD VIEW — Hunter architecture, only active/filtered */}
+      {viewMode === 'cards' && (
+        <div style={{ display: 'grid', gap: 14 }}>
+          {filtered.slice(0, 20).map(bid => {
+            const ds = getDecisionState(bid);
+            const dStyle = DECISION_STYLES[ds];
+            const days = daysUntil(bid['Due Date']);
+            const urgent = days !== null && days <= 3 && days >= 0;
+            const accent = urgent ? '#f97316' : ds === 'won' ? '#22c55e' : ds === 'lost' ? '#ef4444' : '#94a3b8';
+            const isExpanded = expandedCard === bid['kID'];
+
+            return (
+              <article key={bid['kID']} style={{ display: 'grid', gap: 14, padding: 18, borderRadius: 24,
+                background: 'rgba(255,255,255,0.98)', border: urgent ? '1px solid rgba(249,115,22,0.22)' : '1px solid rgba(226,232,240,0.9)',
+                boxShadow: '0 14px 30px rgba(15,23,42,0.06)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 6, background: accent }} />
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 12px', justifyContent: 'space-between', paddingLeft: 4 }}>
+                  <div style={{ display: 'grid', gap: 8, flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>{bid['kID']}</span>
+                      {PILL(ds, dStyle)}
+                      {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a', lineHeight: 1.1 }}>{bid['Job Name']}</h3>
+                    <div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>
+                      {bid['Island'] && <span>{bid['Island']} · </span>}
+                      {bid['Assigned To'] || 'Unassigned'}
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 8, minWidth: 180, padding: '12px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.92)' }}>
+                    {FL('Assign')}
+                    <select value={getEff(bid,'Assigned To') || 'Unassigned'} onChange={e => setEff(bid['kID'],'Assigned To',e.target.value)}
+                      style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
+                      {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
+                    </select>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>{bid['Due Date'] ? `Due ${bid['Due Date']}` : 'No due date'}</div>
                   </div>
                 </div>
-              </div>
 
-            </article>
-          );
-        })}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, paddingLeft: 4 }}>
+                  {[['Received', bid['Received Date'] || '—'], ['Due', bid['Due Date'] || '—'], ['GCs', bid['GC Count'] || '1'], ['Est. Value', bid['Est Value (High)'] || '—'], ['Products', bid['Products / Specs'] || '—']].map(([l,v]) => (
+                    <div key={l}>{FL(l)}<div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{v}</div></div>
+                  ))}
+                </div>
 
-        {displayed.length === 0 && !loading && (
-          <div style={{ background: 'white', borderRadius: 24, border: '1px solid rgba(226,232,240,0.9)', padding: 48, textAlign: 'center', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
-            <div style={{ fontSize: 13, color: '#94a3b8' }}>No bids in this view</div>
-          </div>
-        )}
-      </section>
+                <button onClick={() => setExpandedCard(isExpanded ? null : bid['kID'])}
+                  style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', paddingLeft: 4 }}>
+                  {isExpanded ? '↑ Less detail' : '↓ More detail'}
+                </button>
+
+                {isExpanded && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(220px,0.8fr)', gap: 12, paddingLeft: 4 }}>
+                    <div style={{ padding: 14, borderRadius: 16, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)' }}>
+                      {FL('Notes / Scope')}
+                      <div style={{ fontSize: 13, lineHeight: 1.7, color: '#334155' }}>{bid['Notes'] || 'No notes.'}</div>
+                    </div>
+                    <div style={{ padding: 14, borderRadius: 16, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.16)', display: 'grid', gap: 8 }}>
+                      {FL('Decision state')}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        {(['needs review','in estimating','submitted','won','lost','no bid'] as DecisionState[]).map(s => (
+                          <button key={s} onClick={() => setEff(bid['kID'],'decisionState',s)}
+                            style={{ padding: '4px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                              border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid #e2e8f0',
+                              background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : '#94a3b8' }}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+          {filtered.length > 20 && (
+            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '14px 20px', textAlign: 'center', fontSize: 13, color: '#64748b' }}>
+              Showing 20 of {filtered.length} bids in card view. Use filters to narrow results or switch to Table view to see all.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
