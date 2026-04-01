@@ -5,6 +5,13 @@ import type { AppView } from '@/app/page';
 
 const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
   {
+    section: 'Assistant',
+    items: [
+      { label: 'Today', dot: '#14b8a6' },
+      { label: 'Inbox', dot: '#f59e0b' },
+    ],
+  },
+  {
     section: 'Operations',
     items: [
       { label: 'Overview' },
@@ -36,7 +43,6 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
   {
     section: 'AI Command',
     items: [
-      { label: 'Kai', dot: '#14b8a6' },
       { label: 'Task Board' },
       { label: 'Approvals', dot: '#f97316' },
       { label: 'Workflows' },
