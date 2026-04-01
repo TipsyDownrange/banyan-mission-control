@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { readFileSync } from 'fs';
+import { getGoogleAuth } from '@/lib/gauth';
 
-const KEY_FILE = '/Users/kulaglassopenclaw/glasscore/credentials/drive-service-account.json';
 const BID_LOG_ID = '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA';
 
 export async function GET(req: Request) {
@@ -10,14 +9,9 @@ export async function GET(req: Request) {
   const limit = parseInt(searchParams.get('limit') || '100');
 
   try {
-    const key = JSON.parse(readFileSync(KEY_FILE, 'utf8'));
-    const auth = new google.auth.JWT({
-      email: key.client_email,
-      key: key.private_key,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    });
-
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
+
     const result = await sheets.spreadsheets.values.get({
       spreadsheetId: BID_LOG_ID,
       range: `Bids!A1:Z${limit + 1}`,

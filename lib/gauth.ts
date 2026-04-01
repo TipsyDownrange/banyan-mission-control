@@ -1,21 +1,23 @@
-import { JWT } from 'google-auth-library';
-import { readFileSync } from 'fs';
+import { google } from 'googleapis';
 
-const KEY_FILE = '/Users/kulaglassopenclaw/glasscore/credentials/drive-service-account.json';
+export function getServiceAccountKey() {
+  const b64 = process.env.GOOGLE_SA_KEY_B64;
+  if (!b64) throw new Error('GOOGLE_SA_KEY_B64 env var not set');
+  return JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+}
 
-export function getJWT(scopes: string[], subject?: string) {
-  const key = JSON.parse(readFileSync(KEY_FILE, 'utf8'));
-  const jwt = new JWT({
+export function getGoogleAuth(scopes: string[], subject?: string) {
+  const key = getServiceAccountKey();
+  return new google.auth.JWT({
     email: key.client_email,
     key: key.private_key,
     scopes,
     subject,
   });
-  return jwt;
 }
 
-export async function getAccessToken(scopes: string[], subject?: string) {
-  const jwt = getJWT(scopes, subject);
-  const token = await jwt.getAccessToken();
-  return token.token;
+export function getSSToken() {
+  const token = process.env.SS_TOKEN;
+  if (!token) throw new Error('SS_TOKEN env var not set');
+  return token.trim();
 }
