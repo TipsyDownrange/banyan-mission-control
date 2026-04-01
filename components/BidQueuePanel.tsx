@@ -201,9 +201,10 @@ export default function BidQueuePanel() {
                   <h3 style={{ margin: 0, fontSize: 26, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a', lineHeight: 1.1 }}>
                     {bid['Job Name']}
                   </h3>
-                  {bid['Island'] && (
-                    <div style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>{bid['Island']}</div>
-                  )}
+                  <div style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
+                    {bid['Island'] && <span>{bid['Island']} · </span>}
+                    GC / source: {bid['General Contractor'] || bid['Bid Source'] || 'Not specified'}
+                  </div>
                 </div>
 
                 {/* Desk posture card */}
@@ -256,13 +257,18 @@ export default function BidQueuePanel() {
                 </div>
               </div>
 
-              {/* Notes + decision */}
+              {/* Scope summary + Notes */}
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(240px,0.8fr)', gap: 14, alignItems: 'start', paddingLeft: 4 }}>
-                {/* Notes */}
+                <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)' }}>
+                  {FIELD_LABEL('Scope summary')}
+                  <div style={{ fontSize: 14, lineHeight: 1.7, color: '#334155' }}>
+                    {bid['Notes'] || 'No scope summary available.'}
+                  </div>
+                </div>
                 <div style={{ padding: 16, borderRadius: 18, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.16)' }}>
                   {FIELD_LABEL('Notes')}
                   <div style={{ fontSize: 14, lineHeight: 1.7, color: '#475569' }}>
-                    {bid['Notes'] || 'No notes yet.'}
+                    Bid log entry. {bid['Products / Specs'] ? `Products: ${bid['Products / Specs']}.` : ''} {bid['Assigned To'] ? `Assigned to ${bid['Assigned To']}.` : 'Unassigned.'}
                   </div>
                 </div>
 
@@ -298,6 +304,23 @@ export default function BidQueuePanel() {
                   )}
                 </div>
               </div>
+              {/* Bid-Log lookup */}
+              <div style={{ paddingLeft: 4 }}>
+                <div style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(226,232,240,0.94)', display: 'grid', gap: 6 }}>
+                  {FIELD_LABEL('Bid-log lookup')}
+                  <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+                    {bid['kID'] ? (
+                      <span>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{bid['kID']}</span>
+                        {' · '}{bid['Status'] || 'Unknown status'}
+                        {bid['Win / Loss'] ? ` · ${bid['Win / Loss']}` : ''}
+                        {' · '}{bid['Assigned To'] || 'Unassigned'}
+                      </span>
+                    ) : 'Not in BanyanOS bid log'}
+                  </div>
+                </div>
+              </div>
+
             </article>
           );
         })}
