@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import OverviewPanel from '@/components/OverviewPanel';
 import EventFeedPanel from '@/components/EventFeedPanel';
@@ -36,11 +36,71 @@ export type AppView =
 
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  function handleSelect(view: AppView) {
+    setActiveView(view);
+    if (isMobile) setMobileOpen(false);
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
-      <Sidebar activeView={activeView} onSelect={setActiveView} />
-      <main className="flex-1 overflow-y-auto bg-[#f4f7f9]" style={{ position: 'relative' }}>
+    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', background: '#f4f7f9' }}>
+      {/* Mobile overlay */}
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }}
+        />
+      )}
+
+      {/* Sidebar — desktop always visible, mobile slide-over */}
+      <div style={{
+        position: isMobile ? 'fixed' : 'relative',
+        left: isMobile ? (mobileOpen ? 0 : -280) : 0,
+        top: 0,
+        bottom: 0,
+        zIndex: isMobile ? 50 : 'auto',
+        transition: isMobile ? 'left 0.2s ease' : undefined,
+        flexShrink: 0,
+      }}>
+        <Sidebar
+          activeView={activeView}
+          onSelect={handleSelect}
+          collapsed={isMobile ? false : collapsed}
+          onToggle={() => isMobile ? setMobileOpen(false) : setCollapsed(v => !v)}
+        />
+      </div>
+
+      {/* Main */}
+      <main style={{ flex: 1, overflowY: 'auto', position: 'relative', minWidth: 0 }}>
+        {/* Mobile header */}
+        {isMobile && (
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 30,
+            background: 'linear-gradient(180deg, #071722 0%, #0c2330 100%)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            padding: '12px 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <button onClick={() => setMobileOpen(true)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: 'rgba(148,163,184,0.7)', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>
+              ☰
+            </button>
+            <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc' }}>
+              Banyan<span style={{ color: '#14b8a6' }}>OS</span>
+            </div>
+            <div style={{ width: 36 }} />
+          </div>
+        )}
+
         {activeView === 'Today' && <TodayPanel />}
         {activeView === 'Inbox' && <InboxPanel />}
         {activeView === 'Overview' && <OverviewPanel />}
@@ -56,6 +116,7 @@ export default function Home() {
         {activeView === 'Cost & Usage' && <CostPanel />}
         {activeView === 'Workflows' && <CronPanel />}
         {activeView === 'Task Board' && <TaskBoardPanel />}
+
         <KaiFloat activeView={activeView} />
       </main>
     </div>

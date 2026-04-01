@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import Image from 'next/image';
 import type { AppView } from '@/app/page';
 
 const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
@@ -51,52 +50,83 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
   },
 ];
 
-type Props = { activeView: AppView; onSelect: (v: AppView) => void };
+type Props = { activeView: AppView; onSelect: (v: AppView) => void; collapsed: boolean; onToggle: () => void };
 
-export default function Sidebar({ activeView, onSelect }: Props) {
+export default function Sidebar({ activeView, onSelect, collapsed, onToggle }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
 
   return (
     <aside
-      className="flex flex-col shrink-0 h-screen overflow-y-auto scrollbar-hide"
       style={{
-        width: 248,
+        width: collapsed ? 56 : 240,
+        minWidth: collapsed ? 56 : 240,
+        flexShrink: 0,
+        height: '100vh',
+        overflowY: 'auto',
+        overflowX: 'hidden',
         background: 'linear-gradient(180deg, #071722 0%, #0c2330 54%, #102c39 100%)',
         borderRight: '1px solid rgba(255,255,255,0.05)',
-        padding: '0 0 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'width 0.2s ease, min-width 0.2s ease',
+        scrollbarWidth: 'none',
       }}
     >
-      {/* Brand header */}
-      <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ marginBottom: 4 }}>
-          <Image
-            src="/banyan-logo-white.png"
-            alt="BanyanOS"
-            width={110}
-            height={36}
-            style={{ objectFit: 'contain', objectPosition: 'left' }}
-          />
-        </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(148,163,184,0.45)', letterSpacing: '0.06em' }}>
-          Kula Glass Company
-        </div>
+      {/* Brand + collapse toggle */}
+      <div style={{
+        padding: collapsed ? '20px 0' : '20px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'space-between',
+        gap: 8,
+        flexShrink: 0,
+      }}>
+        {!collapsed && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: '#f8fafc', lineHeight: 1 }}>
+              Banyan<span style={{ color: '#14b8a6' }}>OS</span>
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(148,163,184,0.4)', letterSpacing: '0.06em', marginTop: 3 }}>
+              Kula Glass
+            </div>
+          </div>
+        )}
+        {collapsed && (
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#14b8a6', letterSpacing: '-0.02em' }}>B</div>
+        )}
+        <button
+          onClick={onToggle}
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 8,
+            padding: '5px 7px',
+            color: 'rgba(148,163,184,0.5)',
+            cursor: 'pointer',
+            fontSize: 11,
+            flexShrink: 0,
+            lineHeight: 1,
+          }}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? '→' : '←'}
+        </button>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '16px 12px 0' }}>
+      <nav style={{ flex: 1, padding: collapsed ? '12px 8px 0' : '12px 10px 0' }}>
         {NAV.map(({ section, items }) => (
-          <div key={section} style={{ marginBottom: 20 }}>
-            <div style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'rgba(148,163,184,0.4)',
-              padding: '0 8px',
-              marginBottom: 4,
-            }}>
-              {section}
-            </div>
+          <div key={section} style={{ marginBottom: 16 }}>
+            {!collapsed && (
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: 'rgba(148,163,184,0.35)', padding: '0 6px', marginBottom: 4,
+              }}>
+                {section}
+              </div>
+            )}
+            {collapsed && <div style={{ height: 8 }} />}
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
               {items.map(({ label, dot }) => {
                 const isActive = activeView === label;
@@ -107,34 +137,43 @@ export default function Sidebar({ activeView, onSelect }: Props) {
                       onClick={() => onSelect(label)}
                       onMouseEnter={() => setHovered(label)}
                       onMouseLeave={() => setHovered(null)}
+                      title={collapsed ? label : undefined}
                       style={{
                         width: '100%',
-                        textAlign: 'left',
+                        textAlign: collapsed ? 'center' : 'left',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: collapsed ? 'center' : 'flex-start',
                         gap: 8,
-                        padding: '9px 10px',
+                        padding: collapsed ? '9px 0' : '8px 10px',
                         borderRadius: 10,
-                        border: `1px solid ${isActive ? 'rgba(251,146,60,0.35)' : 'transparent'}`,
+                        border: `1px solid ${isActive ? 'rgba(251,146,60,0.3)' : 'transparent'}`,
                         background: isActive
-                          ? 'linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(234,88,12,0.08) 100%)'
+                          ? 'linear-gradient(135deg, rgba(249,115,22,0.16) 0%, rgba(234,88,12,0.07) 100%)'
                           : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
-                        color: isActive ? '#ffedd5' : isHov ? '#e8f4f8' : 'rgba(203,213,225,0.7)',
+                        color: isActive ? '#ffedd5' : isHov ? '#e8f4f8' : 'rgba(203,213,225,0.65)',
                         fontSize: 13,
                         fontWeight: isActive ? 700 : 500,
-                        letterSpacing: '0.01em',
                         cursor: 'pointer',
                         transition: 'all 0.12s ease',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
                       }}
                     >
                       {dot && (
                         <span style={{
-                          width: 6, height: 6, borderRadius: '50%',
-                          background: dot, flexShrink: 0,
-                          boxShadow: `0 0 6px ${dot}66`,
+                          width: collapsed ? 8 : 6,
+                          height: collapsed ? 8 : 6,
+                          borderRadius: '50%',
+                          background: dot,
+                          flexShrink: 0,
+                          boxShadow: `0 0 5px ${dot}55`,
                         }} />
                       )}
-                      {label}
+                      {!dot && collapsed && (
+                        <span style={{ fontSize: 13, opacity: 0.5 }}>{label.charAt(0)}</span>
+                      )}
+                      {!collapsed && label}
                     </button>
                   </li>
                 );
@@ -145,11 +184,13 @@ export default function Sidebar({ activeView, onSelect }: Props) {
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '16px 20px 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(94,234,212,0.3)' }}>
-          BanyanOS · Field Phase
+      {!collapsed && (
+        <div style={{ padding: '12px 16px 20px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(94,234,212,0.25)' }}>
+            BanyanOS · Field Phase
+          </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 }
