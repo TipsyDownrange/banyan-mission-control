@@ -17,6 +17,8 @@ type InboxItem = {
   kaiNote: string;
   dueDate: string | null;
   project: string;
+  bidStatus: string | null;
+  bidMatch: { name: string; assignedTo: string; status: string } | null;
 };
 
 const CAT_CONFIG: Record<EmailCategory, { label: string; color: string; bg: string; border: string }> = {

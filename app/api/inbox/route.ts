@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 const USER = 'sean@kulaglass.com';
 const KEY_FILE = '/Users/kulaglassopenclaw/glasscore/credentials/drive-service-account.json';
+const SS_TOKEN_FILE = '/Users/kulaglassopenclaw/glasscore/credentials/smartsheet-token.txt';
+const BID_LOG_SHEET = '6073963369156484';
 
 function classifyEmail(subject: string, sender: string, snippet: string) {
   const s = (subject + ' ' + snippet + ' ' + sender).toLowerCase();
@@ -49,9 +51,55 @@ function senderName(from: string): string {
   return m ? m[1].trim() : from.split('@')[0];
 }
 
+async function getBidLogEntries(): Promise<{ name: string; assignedTo: string; status: string; gc: string; due: string }[]> {
+  try {
+    const { readFileSync } = await import('fs');
+    const token = readFileSync(SS_TOKEN_FILE, 'utf8').trim();
+    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${BID_LOG_SHEET}?pageSize=500`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const cols: Record<number, string> = {};
+    for (const c of data.columns || []) cols[c.id] = c.title;
+    const entries = [];
+    for (const row of data.rows || []) {
+      const r: Record<string, string> = {};
+      for (const cell of row.cells || []) {
+        const k = cols[cell.columnId] || '';
+        if (k) r[k] = cell.displayValue || cell.value || '';
+      }
+      if (r['Job Name']) entries.push({
+        name: r['Job Name'] || '',
+        assignedTo: r['Assigned To'] || '',
+        status: r['Status'] || '',
+        gc: r['General Contractor'] || '',
+        due: r['Due Date'] ? r['Due Date'].substring(0, 10) : '',
+      });
+    }
+    return entries;
+  } catch { return []; }
+}
+
+function normalize(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function matchBidLog(project: string, entries: { name: string; assignedTo: string; status: string; gc: string; due: string }[]) {
+  const proj = normalize(project);
+  if (!proj || proj.length < 6) return null;
+  const words = proj.split(' ').filter(w => w.length > 3);
+  for (const e of entries) {
+    const entry = normalize(e.name);
+    const matchCount = words.filter(w => entry.includes(w)).length;
+    if (matchCount >= 2 || (words.length === 1 && entry.includes(words[0]))) {
+      return e;
+    }
+  }
+  return null;
+}
+
 export async function GET() {
   try {
-    // Use python subprocess to read Gmail since googleapis types are finicky
     const { execSync } = await import('child_process');
 
     const script = `
@@ -94,20 +142,31 @@ print(json.dumps({'items': items, 'total': list_result.get('resultSizeEstimate',
 
     const raw = JSON.parse(result.trim());
 
+    // Load bid log for cross-reference
+    const bidLog = await getBidLogEntries();
+
     const items = raw.items.map((item: {
       id: string; subject: string; from: string;
       date: string; snippet: string; unread: boolean;
     }) => {
       const { category, priority, kaiNote } = classifyEmail(item.subject, item.from, item.snippet);
+      const project = extractProject(item.subject);
+      const bidMatch = matchBidLog(project, bidLog);
+      const bidStatus = bidMatch
+        ? `In bid log — ${bidMatch.assignedTo}${bidMatch.status ? ' · ' + bidMatch.status : ''}${bidMatch.due ? ' · Due ' + bidMatch.due : ''}`
+        : category === 'bid_invite' ? 'Not in bid log — needs to be logged' : null;
+
       return {
         ...item,
         from: senderName(item.from),
         fromEmail: item.from,
         category,
         priority,
-        kaiNote,
+        kaiNote: bidMatch ? `Already tracked: ${bidMatch.name} assigned to ${bidMatch.assignedTo}. ${kaiNote}` : kaiNote,
         dueDate: extractDueDate(item.subject, item.snippet),
-        project: extractProject(item.subject),
+        project,
+        bidStatus,
+        bidMatch: bidMatch ? { name: bidMatch.name, assignedTo: bidMatch.assignedTo, status: bidMatch.status } : null,
       };
     });
 
