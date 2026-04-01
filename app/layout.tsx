@@ -4,6 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'BanyanOS — Mission Control',
   description: 'Kula Glass Company — Project Operations',
+  icons: { icon: '/banyan-icon.png', apple: '/banyan-icon.png' },
 };
 
 export const viewport: Viewport = {

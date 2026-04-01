@@ -13,6 +13,7 @@ import KaiPanel from '@/components/KaiPanel';
 import ApprovalsPanel from '@/components/ApprovalsPanel';
 import CostPanel from '@/components/CostPanel';
 import CronPanel from '@/components/CronPanel';
+import TaskBoardPanel from '@/components/TaskBoardPanel';
 
 export type AppView =
   | 'Overview'
@@ -24,6 +25,7 @@ export type AppView =
   | 'Submittals'
   | 'Bid Queue'
   | 'Kai'
+  | 'Task Board'
   | 'Approvals'
   | 'Cost & Usage'
   | 'Workflows';
@@ -47,6 +49,7 @@ export default function Home() {
           {activeView === 'Approvals' && <ApprovalsPanel />}
           {activeView === 'Cost & Usage' && <CostPanel />}
           {activeView === 'Workflows' && <CronPanel />}
+          {activeView === 'Task Board' && <TaskBoardPanel />}
         </div>
         {activeView === 'Kai' && (
           <div className="absolute inset-0 left-[260px] flex flex-col">
