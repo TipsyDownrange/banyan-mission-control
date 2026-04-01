@@ -36,7 +36,6 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
   {
     section: 'Estimating',
     items: [
-      { label: 'Bid Intake', dot: '#f59e0b' },
       { label: 'Bid Queue' },
     ],
   },
