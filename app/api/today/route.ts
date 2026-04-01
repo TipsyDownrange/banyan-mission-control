@@ -1,64 +1,62 @@
 import { NextResponse } from 'next/server';
-import { execSync } from 'child_process';
+import { google } from 'googleapis';
+import { readFileSync } from 'fs';
 
 const KEY_FILE = '/Users/kulaglassopenclaw/glasscore/credentials/drive-service-account.json';
 const BID_LOG_ID = '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA';
-const SS_TOKEN = '/Users/kulaglassopenclaw/glasscore/credentials/smartsheet-token.txt';
+const SS_TOKEN_FILE = '/Users/kulaglassopenclaw/glasscore/credentials/smartsheet-token.txt';
 
 export async function GET() {
   try {
-    const script = `
-import json, datetime, requests
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
-today = datetime.date.today().isoformat()
-in_3_days = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
-
-# Get bids due soon from BanyanOS Bid Log
-creds = service_account.Credentials.from_service_account_file(
-    '${KEY_FILE}',
-    scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
-)
-sheets = build('sheets', 'v4', credentials=creds)
-result = sheets.spreadsheets().values().get(
-    spreadsheetId='${BID_LOG_ID}',
-    range='Bids!A1:Z200'
-).execute()
-rows = result.get('values', [])
-headers = rows[0] if rows else []
-
-bids_due = []
-for row in rows[1:]:
-    while len(row) < len(headers):
-        row.append('')
-    b = dict(zip(headers, row))
-    due = b.get('Due Date','')
-    status = b.get('Status','')
-    if due and today <= due <= in_3_days and status not in ['Won','Lost','No Bid','Submitted']:
-        bids_due.append({'name': b.get('Job Name',''), 'due': due, 'assigned': b.get('Assigned To',''), 'kID': b.get('kID','')})
-
-# Get active projects from Field Events sheet
-token = open('${SS_TOKEN}').read().strip()
-r = requests.get('https://api.smartsheet.com/2.0/sheets/1291254537080708?pageSize=5',
-    headers={'Authorization': f'Bearer {token}'}, timeout=8)
-active_projects = []
-if r.ok:
-    data = r.json()
-    cols = {c['id']: c['title'] for c in data.get('columns',[])}
-    for row in data.get('rows',[])[:5]:
-        rd = {cols.get(c['columnId'],''): c.get('displayValue',c.get('value','')) for c in row.get('cells',[])}
-        if rd.get('Job Name'):
-            active_projects.append({'name': rd['Job Name'], 'pm': rd.get('Project Manager',''), 'status': 'Active'})
-
-print(json.dumps({'bids_due': bids_due, 'active_projects': active_projects, 'date': today}))
-`;
-
-    const result = execSync(`python3 -c "${script.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`, {
-      timeout: 20000, encoding: 'utf8'
+    const key = JSON.parse(readFileSync(KEY_FILE, 'utf8'));
+    const auth = new google.auth.JWT({
+      email: key.client_email,
+      key: key.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
     });
 
-    return NextResponse.json(JSON.parse(result.trim()));
+    const sheets = google.sheets({ version: 'v4', auth });
+    const today = new Date().toISOString().split('T')[0];
+    const in3Days = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
+
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId: BID_LOG_ID,
+      range: 'Bids!A1:Z200',
+    });
+
+    const rows = result.data.values || [];
+    const headers = rows[0] || [];
+
+    const bids_due = rows.slice(1).filter(row => {
+      const b: Record<string, string> = {};
+      headers.forEach((h, i) => { b[h as string] = row[i] || ''; });
+      const due = b['Due Date'] || '';
+      const status = b['Status'] || '';
+      return due && today <= due && due <= in3Days && !['Won', 'Lost', 'No Bid', 'Submitted'].includes(status);
+    }).map(row => {
+      const b: Record<string, string> = {};
+      headers.forEach((h, i) => { b[h as string] = row[i] || ''; });
+      return { name: b['Job Name'], due: b['Due Date'], assigned: b['Assigned To'], kID: b['kID'] };
+    });
+
+    // Get active projects from Smartsheet
+    let active_projects: {name: string; pm: string; status: string}[] = [];
+    try {
+      const token = readFileSync(SS_TOKEN_FILE, 'utf8').trim();
+      const r = await fetch('https://api.smartsheet.com/2.0/sheets/1291254537080708?pageSize=5', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await r.json() as {columns?: {id: number; title: string}[]; rows?: {cells: {columnId: number; displayValue?: string; value?: unknown}[]}[]};
+      const cols: Record<number, string> = {};
+      for (const c of data.columns || []) cols[c.id] = c.title;
+      for (const row of (data.rows || []).slice(0, 5)) {
+        const rd: Record<string, string> = {};
+        for (const cell of row.cells || []) { if (cols[cell.columnId]) rd[cols[cell.columnId]] = cell.displayValue || ''; }
+        if (rd['Job Name']) active_projects.push({ name: rd['Job Name'], pm: rd['Project Manager'] || '', status: 'Active' });
+      }
+    } catch { /* optional */ }
+
+    return NextResponse.json({ bids_due, active_projects, date: today });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg.slice(0, 300), bids_due: [], active_projects: [] });
