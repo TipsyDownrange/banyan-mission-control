@@ -23,8 +23,8 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
     section: 'Projects',
     items: [
       { label: 'Projects' },
-      { label: 'Schedules' },
-      { label: 'Submittals' },
+      { label: 'Schedules', dot: '#14b8a6' },
+      { label: 'Submittals', dot: '#14b8a6' },
     ],
   },
   {

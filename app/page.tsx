@@ -8,6 +8,7 @@ import IssuesPanel from '@/components/IssuesPanel';
 import CrewPanel from '@/components/CrewPanel';
 import SchedulesPanel from '@/components/SchedulesPanel';
 import SubmittalsPanel from '@/components/SubmittalsPanel';
+import PMPanel from '@/components/PMPanel';
 import BidQueuePanel from '@/components/BidQueuePanel';
 import ApprovalsPanel from '@/components/ApprovalsPanel';
 import CostPanel from '@/components/CostPanel';
@@ -124,8 +125,8 @@ export default function Home() {
         {activeView === 'Projects' && <ProjectsPanel />}
         {activeView === 'Issues' && <IssuesPanel />}
         {activeView === 'Crew' && <CrewPanel />}
-        {activeView === 'Schedules' && <SchedulesPanel />}
-        {activeView === 'Submittals' && <SubmittalsPanel />}
+        {activeView === 'Schedules' && <PMPanel />}
+        {activeView === 'Submittals' && <PMPanel />}
         {activeView === 'Bid Queue' && <BidQueuePanel />}
         {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Service' && <ServicePanel />}
