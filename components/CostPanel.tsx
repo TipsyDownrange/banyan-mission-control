@@ -77,7 +77,7 @@ export default function CostPanel() {
             <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 16, background: 'rgba(254,242,242,0.98)', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', gap: 10 }}>
               <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#b91c1c', flexShrink: 0, marginTop: 2 }}>ALERT</span>
               <div style={{ fontSize: 13, color: '#b91c1c', fontWeight: 600 }}>
-                Today&#39;s spend (${data.todayCost.toFixed(2)}) exceeds the daily budget of ${data.dailyBudget?.toFixed(0) || '50'}. Consider throttling build work.
+                Today&#39;s spend (${(data.todayCost||0).toFixed(2)}) exceeds the daily budget of ${(data.dailyBudget||50).toFixed(0)}. Consider throttling build work.
               </div>
             </div>
           )}
