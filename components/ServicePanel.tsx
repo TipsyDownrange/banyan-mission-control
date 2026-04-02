@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ServiceIntake from '@/components/ServiceIntake';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -104,6 +105,7 @@ export default function ServicePanel() {
   const [data, setData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
+  const [showIntake, setShowIntake] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
 
@@ -127,7 +129,10 @@ export default function ServicePanel() {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Service</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Work Orders</h1>
-          <div style={{ display: 'flex', gap: 6, paddingBottom: 4 }}>
+          <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
+            <button onClick={() => setShowIntake(true)} style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
+              + New Lead
+            </button>
             {(['kanban','list'] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -233,6 +238,16 @@ export default function ServicePanel() {
             {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No work orders in this view</div>}
           </div>
         </>
+      )}
+    </div>
+
+      {/* Lead Intake Modal */}
+      {showIntake && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 28, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
+            <ServiceIntake onClose={() => setShowIntake(false)} />
+          </div>
+        </div>
       )}
     </div>
   );
