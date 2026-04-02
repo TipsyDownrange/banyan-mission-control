@@ -107,6 +107,7 @@ export default function ServicePanel() {
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [showIntake, setShowIntake] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, Record<string,string>>>({});
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
