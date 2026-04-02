@@ -3,7 +3,7 @@ import { Document, Page, Text, View } from '@react-pdf/renderer';
 import {
   S, C, COMPANY,
   Letterhead, SectionHead, InfoGrid, TotalsCard,
-  ExclusionsList, TermsBox, DualSigBlock, DocFooter, TCPage,
+  ExclusionsList, TermsBox, DualSigBlock, DocFooter, ServiceTCPage,
   fmt, renderToPDF,
 } from './pdf-templates';
 
@@ -135,7 +135,7 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
         <DocFooter docNumber={`WO ${data.wo_number}`} />
       </Page>
 
-      <TCPage docNumber={`WO ${data.wo_number}`} />
+      <ServiceTCPage docNumber={`WO ${data.wo_number}`} />
     </Document>
   );
 }

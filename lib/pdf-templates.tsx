@@ -39,6 +39,19 @@ export const COMPANY = {
 };
 
 // ─── T&C (2025) ───────────────────────────────────────────────────────────────
+// ─── Service Work Order T&C (short — residential & light commercial) ─────────
+export const SERVICE_TERMS = [
+  { num: '1', title: 'Acceptance',         body: 'A signed proposal and 50% deposit are required before materials are ordered or work is scheduled. Remaining balance is due upon completion.' },
+  { num: '2', title: 'Pricing',            body: 'Price includes materials, labor, and Hawaii GET (4.5%) as stated. Any additional work discovered on site requires a written change order before proceeding.' },
+  { num: '3', title: 'Measurements',       body: 'Customer or their representative must confirm all field dimensions prior to fabrication. Kula Glass is not responsible for costs arising from incorrect dimensions provided by others.' },
+  { num: '4', title: 'Lead Times',         body: 'Material lead times are estimates only and subject to supplier availability. Kula Glass will notify customer of delays as soon as known. Lead time begins upon receipt of deposit and approved dimensions.' },
+  { num: '5', title: 'Warranty',           body: 'Kula Glass warrants its installation workmanship for one (1) year from completion. Glass and material warranties are per manufacturer. Warranty does not cover breakage, scratching, or damage caused by others after installation.' },
+  { num: '6', title: 'Site Access',        body: 'Customer shall provide safe, clear access to the work area. If access is not available at the scheduled time, a return trip charge may apply.' },
+  { num: '7', title: 'Liability',          body: 'Kula Glass is not liable for pre-existing conditions, damage caused by others, or consequential damages. Maximum liability is limited to the value of the work performed.' },
+  { num: '8', title: 'Validity',           body: 'This proposal is valid for 30 days from the date above. Pricing is subject to change after that date.' },
+];
+
+// ─── Contract Proposal T&C (full 17-clause version) ──────────────────────────
 export const TERMS = [
   { num: '1',  title: 'Commencement, Mutual Schedule & Scope Review',   body: 'This proposal shall not become a binding contract until: (a) a mutually agreed written project schedule is attached and signed by both parties, and (b) a scope-review meeting has been held between Kula Glass and General Contractor to review drawings, specifications, exclusions, schedule, sequence, and access. Work shall commence based on the mutually agreed-upon schedule. Subcontractor shall not be responsible for delays caused by any reason beyond its reasonable control.' },
   { num: '1A', title: 'Force Majeure',                                   body: 'Subcontractor shall not be liable for any delay or failure to perform caused by acts of God, war, terrorism, pandemic/epidemic, government orders, fire, flood, earthquake, embargo, riot, labor disputes, supply-chain disruption, or any other event beyond Subcontractor\'s reasonable control. Subcontractor shall receive an equitable time extension and compensation for increased costs.' },
@@ -500,6 +513,7 @@ export function DocFooter({ docNumber, kID }: { docNumber: string; kID?: string 
   );
 }
 
+// Full contract T&C page (contract proposals)
 export function TCPage({ docNumber }: { docNumber: string }) {
   return (
     <Page size="LETTER" style={S.page}>
@@ -512,6 +526,30 @@ export function TCPage({ docNumber }: { docNumber: string }) {
           <Text style={S.tcBody}>{clause.body}</Text>
         </View>
       ))}
+      <DocFooter docNumber={`${docNumber} — Terms & Conditions`} />
+    </Page>
+  );
+}
+
+// Service WO T&C — short, fits on the same page or as a compact second page
+export function ServiceTCPage({ docNumber }: { docNumber: string }) {
+  return (
+    <Page size="LETTER" style={S.page}>
+      <Letterhead />
+      <View style={S.docTitleRow}>
+        <Text style={{ ...S.docTitle, fontSize: 18 }}>Terms &amp; Conditions</Text>
+        <Text style={{ ...S.docMeta, alignSelf: 'flex-end' }}>Work Order / Service</Text>
+      </View>
+      <View style={{ backgroundColor: C.bg, borderRadius: 12, padding: '14 18', border: `1 solid ${C.border}` }}>
+        {SERVICE_TERMS.map((clause, i) => (
+          <View key={clause.num} style={{ marginBottom: i < SERVICE_TERMS.length - 1 ? 10 : 0 }}>
+            <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.teal, marginBottom: 2 }}>
+              {clause.num}.  {clause.title}
+            </Text>
+            <Text style={{ fontSize: 9, color: C.subtext, lineHeight: 1.45 }}>{clause.body}</Text>
+          </View>
+        ))}
+      </View>
       <DocFooter docNumber={`${docNumber} — Terms & Conditions`} />
     </Page>
   );
