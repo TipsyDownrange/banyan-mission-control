@@ -16,6 +16,7 @@ import TaskBoardPanel from '@/components/TaskBoardPanel';
 import InboxPanel from '@/components/InboxPanel';
 import TodayPanel from '@/components/TodayPanel';
 import CalendarPanel from '@/components/CalendarPanel';
+import EstimatorWorkspace from '@/components/EstimatorWorkspace';
 import KaiFloat from '@/components/KaiFloat';
 
 export type AppView =
@@ -31,16 +32,20 @@ export type AppView =
   | 'Submittals'
   | 'Bid Queue'
   | 'Bid Intake'
+  | 'My Bids'
   | 'Task Board'
   | 'Approvals'
   | 'Cost & Usage'
   | 'Workflows';
+
+const DEMO_USERS = ['Sean Daniels', 'Kyle Shimizu', 'Jenny Shimabukuro', 'Mark Olson'];
 
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [demoUser, setDemoUser] = useState('Sean Daniels');
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -79,6 +84,8 @@ export default function Home() {
           onSelect={handleSelect}
           collapsed={isMobile ? false : collapsed}
           onToggle={() => isMobile ? setMobileOpen(false) : setCollapsed(v => !v)}
+          demoUser={demoUser}
+          onUserChange={setDemoUser}
         />
       </div>
 
@@ -99,7 +106,9 @@ export default function Home() {
             <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc' }}>
               Banyan<span style={{ color: '#14b8a6' }}>OS</span>
             </div>
-            <div style={{ width: 36 }} />
+            <select value={demoUser} onChange={e => setDemoUser(e.target.value)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: 'rgba(148,163,184,0.8)', cursor: 'pointer', outline: 'none' }}>
+              {DEMO_USERS.map(u => <option key={u} style={{ background: '#0c2330' }}>{u}</option>)}
+            </select>
           </div>
         )}
 
@@ -114,6 +123,7 @@ export default function Home() {
         {activeView === 'Schedules' && <SchedulesPanel />}
         {activeView === 'Submittals' && <SubmittalsPanel />}
         {activeView === 'Bid Queue' && <BidQueuePanel />}
+        {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Bid Intake' && <InboxPanel />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
         {activeView === 'Cost & Usage' && <CostPanel />}

@@ -37,6 +37,7 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
     section: 'Estimating',
     items: [
       { label: 'Bid Queue' },
+      { label: 'My Bids', dot: '#14b8a6' },
     ],
   },
   {
@@ -50,9 +51,9 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
   },
 ];
 
-type Props = { activeView: AppView; onSelect: (v: AppView) => void; collapsed: boolean; onToggle: () => void };
+type Props = { activeView: AppView; onSelect: (v: AppView) => void; collapsed: boolean; onToggle: () => void; demoUser?: string; onUserChange?: (u: string) => void };
 
-export default function Sidebar({ activeView, onSelect, collapsed, onToggle }: Props) {
+export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
 
   return (
@@ -179,9 +180,20 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle }: P
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — role preview selector */}
       {!collapsed && (
-        <div style={{ padding: '12px 16px 20px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+        <div style={{ padding: '12px 16px 20px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0, display: 'grid', gap: 8 }}>
+          {onUserChange && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.35)', marginBottom: 4 }}>Preview as</div>
+              <select value={demoUser} onChange={e => onUserChange(e.target.value)}
+                style={{ width: '100%', fontSize: 11, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(203,213,225,0.7)', cursor: 'pointer', outline: 'none' }}>
+                {['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Mark Olson'].map(u => (
+                  <option key={u} style={{ background: '#0c2330' }}>{u}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(94,234,212,0.25)' }}>
             BanyanOS · Field Phase
           </div>
