@@ -21,7 +21,7 @@ const PILL = (label: string, style: {color:string;bg:string;border:string}) => (
 
 const FL = (text: string) => <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#64748b', marginBottom: 4 }}>{text}</div>;
 
-const ESTIMATORS = ['Unassigned', 'Kyle', 'Jenny', 'Mark Olson', 'Sean'];
+const ESTIMATORS = ['Unassigned', 'Kyle Shimizu', 'Jenny', 'Mark Olson', 'Sean Daniels'];
 const ISLANDS = ['All Islands', 'Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai'];
 
 function daysUntil(d: string) {
@@ -75,9 +75,9 @@ export default function BidQueuePanel() {
       const isActive = !['Won','Lost','No Bid'].includes(wl) && !['Won','Lost','No Bid'].includes(st);
       if (filterStatus === 'active' && !isActive) return false;
       if (filterStatus === 'won' && wl !== 'Won') return false;
-      if (filterStatus === 'lost' && wl !== 'Lost') return false;
+      if (filterStatus === 'lost' && wl !== 'Lost' && wl !== 'No Bid') return false;
       if (filterStatus === 'submitted' && st !== 'Submitted') return false;
-      if (filterAssignee !== 'All' && (b['Assigned To'] || '') !== filterAssignee) return false;
+      if (filterAssignee !== 'All') { const assigned = (b['Assigned To'] || '').toLowerCase(); const filter = filterAssignee.toLowerCase(); if (!assigned.includes(filter) && filter !== 'unassigned') return false; if (filter === 'unassigned' && assigned !== '') return false; }
       if (filterIsland !== 'All Islands' && (b['Island'] || '') !== filterIsland) return false;
       if (search) {
         const s = search.toLowerCase();
@@ -162,8 +162,11 @@ export default function BidQueuePanel() {
         <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}
           style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
           <option value="All">All estimators</option>
-          {ESTIMATORS.filter(e => e !== 'Unassigned').map(e => <option key={e}>{e}</option>)}
-          <option value="">Unassigned</option>
+          <option value="Kyle">Kyle Shimizu</option>
+          <option value="Jenny">Jenny</option>
+          <option value="Mark">Mark Olson</option>
+          <option value="Sean">Sean Daniels</option>
+          <option value="unassigned">Unassigned</option>
         </select>
         <select value={filterIsland} onChange={e => setFilterIsland(e.target.value)}
           style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
