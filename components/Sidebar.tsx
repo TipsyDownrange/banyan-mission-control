@@ -44,7 +44,7 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
   {
     section: 'Service',
     items: [
-      { label: 'Service', dot: '#f59e0b' },
+      { label: 'Work Orders', dot: '#f59e0b' },
     ],
   },
   {

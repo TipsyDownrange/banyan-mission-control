@@ -36,7 +36,7 @@ export type AppView =
   | 'Bid Queue'
   | 'Bid Intake'
   | 'My Bids'
-  | 'Service'
+  | 'Work Orders'
   | 'Customers'
   | 'Task Board'
   | 'Approvals'
@@ -129,7 +129,7 @@ export default function Home() {
         {activeView === 'Submittals' && <PMPanel />}
         {activeView === 'Bid Queue' && <BidQueuePanel />}
         {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
-        {activeView === 'Service' && <ServicePanel />}
+        {activeView === 'Work Orders' && <ServicePanel />}
         {activeView === 'Customers' && <CustomersPanel />}
         {activeView === 'Bid Intake' && <InboxPanel />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
