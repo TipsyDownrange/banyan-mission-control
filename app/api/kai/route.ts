@@ -27,6 +27,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: 'No API key configured. Set ANTHROPIC_API_KEY in Vercel environment variables.' });
   }
 
+  // Inject live bid log context
+  let bidContext = '';
+  try {
+    const { google } = await import('googleapis');
+    const { readFileSync } = await import('fs');
+    const key = JSON.parse(readFileSync('/Users/kulaglassopenclaw/glasscore/credentials/drive-service-account.json', 'utf8'));
+    const auth = new google.auth.JWT({ email: key.client_email, key: key.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+    const sheets = google.sheets({ version: 'v4', auth });
+    const result = await sheets.spreadsheets.values.get({ spreadsheetId: '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA', range: 'Bids!A1:J50' });
+    const rows = result.data.values || [];
+    if (rows.length > 1) {
+      const headers = rows[0];
+      const bids = rows.slice(1).map(r => { const b: Record<string,string> = {}; headers.forEach((h,i) => { b[h as string] = r[i] || ''; }); return b; });
+      const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Win / Loss'] || '') && !['Won','Lost','No Bid'].includes(b['Status'] || '')).slice(0, 30);
+      bidContext = `\n\nLIVE BID LOG (active bids, first 30):\n${active.map(b => `${b['kID']} | ${b['Job Name']} | ${b['Assigned To'] || 'Unassigned'} | ${b['Status']} | Due: ${b['Due Date'] || 'TBD'}`).join('\n')}`;
+    }
+  } catch { /* silent */ }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -38,7 +56,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
+        system: SYSTEM_PROMPT + bidContext,
         messages: messages.slice(-20),
       }),
     });
