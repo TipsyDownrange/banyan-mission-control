@@ -78,7 +78,7 @@ export default function ServiceIntake({ onClose }: { onClose: () => void }) {
           systemType: wo.systemType || prev.systemType,
           urgency: wo.urgency || prev.urgency,
         }));
-        setCustomerSearch(wo.customerName || prev.customerName);
+        setCustomerSearch(wo.customerName || draft.customerName);
       }
     } catch {}
     setLoading(false);
@@ -99,7 +99,7 @@ export default function ServiceIntake({ onClose }: { onClose: () => void }) {
       <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Work Order Created</div>
       <div style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>{draft.customerName} · {draft.island}</div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-        <button onClick={() => { setStep('form'); setDraft({ customerName:'',address:'',city:'',island:'',contactPerson:'',contactPhone:'',contactEmail:'',description:'',systemType:'',urgency:'normal',assignedTo:'Joey Ritthaler',notes:'' }); setCustomerSearch(''); }} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Another</button>
+        <button onClick={() => { setStep('form'); setDraft({ customerName:'',address:'',city:'',island:'',contactPerson:'',contactPhone:'',contactEmail:'',description:'',systemType:'',urgency:'normal',assignedTo:'Joey Ritthaler',notes:'' } as WODraft); setCustomerSearch(''); }} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Another</button>
         <button onClick={onClose} style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
       </div>
     </div>
