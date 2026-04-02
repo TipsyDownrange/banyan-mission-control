@@ -77,7 +77,11 @@ export default function BidQueuePanel() {
       if (filterStatus === 'won' && wl !== 'Won') return false;
       if (filterStatus === 'lost' && wl !== 'Lost' && wl !== 'No Bid') return false;
       if (filterStatus === 'submitted' && st !== 'Submitted') return false;
-      if (filterAssignee !== 'All') { const assigned = (b['Assigned To'] || '').toLowerCase(); const filter = filterAssignee.toLowerCase(); if (!assigned.includes(filter) && filter !== 'unassigned') return false; if (filter === 'unassigned' && assigned !== '') return false; }
+      if (filterAssignee !== 'All') {
+          const assigned = (b['Assigned To'] || '');
+          if (filterAssignee === 'unassigned') { if (assigned !== '') return false; }
+          else { if (!assigned.includes(filterAssignee)) return false; }
+        }
       if (filterIsland !== 'All Islands' && (b['Island'] || '') !== filterIsland) return false;
       if (search) {
         const s = search.toLowerCase();
@@ -162,10 +166,10 @@ export default function BidQueuePanel() {
         <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}
           style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
           <option value="All">All estimators</option>
-          <option value="Kyle">Kyle Shimizu</option>
-          <option value="Jenny">Jenny</option>
-          <option value="Mark">Mark Olson</option>
-          <option value="Sean">Sean Daniels</option>
+          <option value="Kyle Shimizu">Kyle Shimizu</option>
+          <option value="Jenny Shimabukuro">Jenny Shimabukuro</option>
+          <option value="Mark Olson">Mark Olson</option>
+          <option value="Sean Daniels">Sean Daniels</option>
           <option value="unassigned">Unassigned</option>
         </select>
         <select value={filterIsland} onChange={e => setFilterIsland(e.target.value)}
