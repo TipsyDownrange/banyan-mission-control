@@ -239,7 +239,6 @@ export default function ServicePanel() {
           </div>
         </>
       )}
-    </div>
 
       {/* Lead Intake Modal */}
       {showIntake && (
