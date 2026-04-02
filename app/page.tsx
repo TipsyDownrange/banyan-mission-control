@@ -17,6 +17,7 @@ import InboxPanel from '@/components/InboxPanel';
 import TodayPanel from '@/components/TodayPanel';
 import CalendarPanel from '@/components/CalendarPanel';
 import EstimatorWorkspace from '@/components/EstimatorWorkspace';
+import ServicePanel from '@/components/ServicePanel';
 import KaiFloat from '@/components/KaiFloat';
 
 export type AppView =
@@ -33,6 +34,7 @@ export type AppView =
   | 'Bid Queue'
   | 'Bid Intake'
   | 'My Bids'
+  | 'Service'
   | 'Task Board'
   | 'Approvals'
   | 'Cost & Usage'
@@ -124,6 +126,7 @@ export default function Home() {
         {activeView === 'Submittals' && <SubmittalsPanel />}
         {activeView === 'Bid Queue' && <BidQueuePanel />}
         {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
+        {activeView === 'Service' && <ServicePanel />}
         {activeView === 'Bid Intake' && <InboxPanel />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
         {activeView === 'Cost & Usage' && <CostPanel />}

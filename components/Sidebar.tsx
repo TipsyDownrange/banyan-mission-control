@@ -41,6 +41,12 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
     ],
   },
   {
+    section: 'Service',
+    items: [
+      { label: 'Service', dot: '#f59e0b' },
+    ],
+  },
+  {
     section: 'AI Command',
     items: [
       { label: 'Task Board' },
