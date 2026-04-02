@@ -31,12 +31,21 @@ export default function KaiFloat({ activeView }: { activeView: AppView }) {
 
   const context = CONTEXT_LABEL[activeView] || 'BanyanOS';
 
+  // Reset messages when context changes (user switches sections)
+  const prevContextRef = useRef(context);
+  useEffect(() => {
+    if (prevContextRef.current !== context) {
+      prevContextRef.current = context;
+      setMessages([{ role: 'kai', text: `Switched to ${context}. What do you need?` }]);
+    }
+  }, [context]);
+
   useEffect(() => {
     if (open && messages.length === 0) {
       setMessages([{ role: 'kai', text: `On ${context}. What do you need?` }]);
     }
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
-  }, [open]);
+  }, [open, context]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
