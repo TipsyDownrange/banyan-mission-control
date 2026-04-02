@@ -26,13 +26,13 @@ export const EVENTS = [
 
 export const CREW = [
   // Management
-  { id: 'USR-001', name: 'Jody', role: 'Owner / President', island: 'Oahu', type: 'management' },
+  { id: 'USR-001', name: 'Jody Boeringa', role: 'Owner / President', island: 'Oahu', type: 'management' },
   { id: 'USR-002', name: 'Sean Daniels', role: 'GM / PM', island: 'Oahu', type: 'management' },
-  { id: 'USR-003', name: 'Frank', role: 'Senior PM', island: 'Maui', type: 'management' },
+  { id: 'USR-003', name: 'Frank Redondo', role: 'Senior PM', island: 'Maui', type: 'management' },
   { id: 'USR-004', name: 'Kyle Shimizu', role: 'Estimator / PM', island: 'Oahu', type: 'management' },
   { id: 'USR-005', name: 'Jenny Shimabukuro', role: 'Estimator / PM', island: 'Oahu', type: 'management' },
   { id: 'USR-006', name: 'Joey Ritthaler', role: 'PM — Service Lane', island: 'Oahu', type: 'management' },
-  { id: 'USR-007', name: 'Nate', role: 'Superintendent', island: 'Oahu', type: 'management' },
+  { id: 'USR-007', name: 'Nate Nakamura', role: 'Superintendent', island: 'Oahu', type: 'management' },
   { id: 'USR-008', name: 'Mark Olson', role: 'Sales Engineer', island: 'Oahu', type: 'management' },
   // Field
   { id: 'USR-009', name: 'Thomas Begonia', role: 'Journeyman', island: 'Oahu', type: 'field' },
