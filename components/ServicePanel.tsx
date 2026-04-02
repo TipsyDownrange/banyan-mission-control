@@ -33,70 +33,77 @@ const ISLAND_COLOR: Record<string, string> = {
 
 function WOCard({ wo, expanded, onToggle, onStageChange }: { wo: WorkOrder; expanded: boolean; onToggle: () => void; onStageChange?: (status: string) => void }) {
   const [editing, setEditing] = useState(false);
-  const [editDraft, setEditDraft] = useState({ description: wo.description, assignedTo: wo.assignedTo, scheduledDate: wo.scheduledDate, notes: '' });
-  const INP: React.CSSProperties = { width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.3)', background: 'rgba(240,253,250,0.5)', fontSize: 12, color: '#0f172a', outline: 'none' };
+  const [draft, setDraft] = useState({ description: wo.description, assignedTo: wo.assignedTo, scheduledDate: wo.scheduledDate, notes: wo.comments || '' });
   const stage = STAGES.find(s => s.key === wo.status) || STAGES[0];
+  const INP: React.CSSProperties = { width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.3)', background: 'rgba(240,253,250,0.5)', fontSize: 12, color: '#0f172a', outline: 'none' };
+
   return (
-    <article onClick={onToggle} style={{
-      display: 'grid', gap: 12, padding: 16, borderRadius: 20,
-      background: stage.bg, border: stage.border,
-      boxShadow: '0 8px 24px rgba(15,23,42,0.05)',
-      position: 'relative', overflow: 'hidden', cursor: 'pointer',
-    }}>
+    <article style={{ display: 'grid', gap: 0, borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 5, background: stage.color, opacity: 0.8 }} />
-      <div style={{ paddingLeft: 4 }}>
-        {/* Pills */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-          {wo.id && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{wo.id}</span>}
-          {wo.island && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999, color: ISLAND_COLOR[wo.island] || '#64748b', background: 'rgba(255,255,255,0.7)', border: `1px solid currentColor`, opacity: 0.8 }}>{wo.island}</span>}
-        </div>
-        {/* Name */}
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 6, letterSpacing: '-0.01em' }}>
-          {wo.name}
-        </div>
-        {/* Description */}
-        <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4, marginBottom: 8 }}>
-          {wo.description}
-        </div>
-        {/* Meta row */}
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: '#94a3b8' }}>
-          {wo.assignedTo && <span>→ {wo.assignedTo.split(',')[0]}</span>}
-          {wo.scheduledDate && <span>📅 {wo.scheduledDate}</span>}
-          {wo.hoursEstimated && <span>⏱ {wo.hoursEstimated}h est</span>}
+
+      {/* Card header — always visible, click to expand */}
+      <div onClick={onToggle} style={{ padding: '14px 16px', cursor: 'pointer', paddingLeft: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+              {wo.id && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{wo.id}</span>}
+              {wo.island && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 999, color: ISLAND_COLOR[wo.island] || '#64748b', background: 'rgba(255,255,255,0.7)', border: '1px solid currentColor', opacity: 0.8 }}>{wo.island}</span>}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 4, letterSpacing: '-0.01em' }}>{wo.name}</div>
+            <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4, marginBottom: 6 }}>{wo.description}</div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: '#94a3b8' }}>
+              {wo.assignedTo && <span>→ {wo.assignedTo.split(',')[0]}</span>}
+              {wo.scheduledDate && <span>{wo.scheduledDate}</span>}
+            </div>
+          </div>
+          {/* Edit button — always visible */}
+          <button onClick={e => { e.stopPropagation(); setEditing(!editing); if (!expanded) onToggle(); }}
+            style={{ padding: '6px 14px', borderRadius: 10, border: `1px solid ${editing ? 'rgba(15,118,110,0.4)' : 'rgba(226,232,240,0.9)'}`, background: editing ? 'rgba(240,253,250,0.96)' : 'white', color: editing ? '#0f766e' : '#64748b', fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
+            {editing ? 'Cancel' : 'Edit'}
+          </button>
         </div>
       </div>
 
-      {/* Expanded detail */}
+      {/* Expanded section */}
       {expanded && (
-        <div style={{ paddingLeft: 4, borderTop: '1px solid rgba(226,232,240,0.7)', paddingTop: 12, display: 'grid', gap: 8 }}>
-          {wo.address && (
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 3 }}>Address</div>
-              <div style={{ fontSize: 12, color: '#334155' }}>{wo.address}</div>
+        <div style={{ paddingLeft: 20, paddingRight: 16, paddingBottom: 16, borderTop: '1px solid rgba(226,232,240,0.6)', paddingTop: 12, display: 'grid', gap: 10 }}>
+
+          {/* Edit form */}
+          {editing ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Description</div>
+                <textarea value={draft.description} onChange={e => setDraft(p=>({...p,description:e.target.value}))} rows={2} style={{ ...INP, resize: 'none' }} /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Assigned To</div>
+                  <input value={draft.assignedTo} onChange={e => setDraft(p=>({...p,assignedTo:e.target.value}))} style={INP} /></div>
+                <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Scheduled Date</div>
+                  <input value={draft.scheduledDate} onChange={e => setDraft(p=>({...p,scheduledDate:e.target.value}))} style={INP} placeholder="YYYY-MM-DD" /></div>
+              </div>
+              <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Note</div>
+                <textarea value={draft.notes} onChange={e => setDraft(p=>({...p,notes:e.target.value}))} rows={2} style={{ ...INP, resize: 'none' }} /></div>
+              <button onClick={() => setEditing(false)} style={{ padding: '8px 20px', borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', width: 'fit-content', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>Save Changes</button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {wo.address && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Address</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.address}</div></div>}
+              {wo.contact && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Contact</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.contact}</div></div>}
+              {wo.comments && <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.1)' }}><div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', marginBottom: 3 }}>Latest Note</div><div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>{wo.comments}</div></div>}
             </div>
           )}
-          {wo.contact && (
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 3 }}>Contact</div>
-              <div style={{ fontSize: 12, color: '#334155' }}>{wo.contact}</div>
+
+          {/* Stage move buttons */}
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Move to stage</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {STAGES.filter(s => s.key !== 'lost').map(s => (
+                <button key={s.key} onClick={e => { e.stopPropagation(); if (onStageChange) onStageChange(s.key); }}
+                  style={{ padding: '5px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer',
+                    border: wo.status === s.key ? `1px solid ${s.color}` : '1px solid #e2e8f0',
+                    background: wo.status === s.key ? s.bg : 'white', color: wo.status === s.key ? s.color : '#94a3b8' }}>
+                  {s.label}
+                </button>
+              ))}
             </div>
-          )}
-          {wo.comments && (
-            <div style={{ padding: '8px 12px', borderRadius: 12, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.12)' }}>
-              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', marginBottom: 4 }}>Latest Note</div>
-              <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>{wo.comments}</div>
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-            {STAGES.filter(s => s.key !== 'closed' && s.key !== 'lost').map(s => (
-              <button key={s.key} onClick={e => { e.stopPropagation(); alert(`Move to ${s.label} — write-back coming soon`); }}
-                style={{ padding: '4px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer',
-                  border: wo.status === s.key ? `1px solid ${s.color}` : '1px solid #e2e8f0',
-                  background: wo.status === s.key ? s.bg : 'white',
-                  color: wo.status === s.key ? s.color : '#94a3b8' }}>
-                {s.label}
-              </button>
-            ))}
           </div>
         </div>
       )}
