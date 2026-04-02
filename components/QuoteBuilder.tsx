@@ -49,6 +49,8 @@ const SEC = (color = '#0f766e') => ({
 export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [emailing, setEmailing] = useState(false);
   const [wo, setWo] = useState<WOData | null>(null);
   const [defaults, setDefaults] = useState<QuoteDefaults | null>(null);
   const [jobTypes, setJobTypes] = useState<string[]>([]);
@@ -180,8 +182,39 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setQuote(null)} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>← Edit</button>
-          <button style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>⬇ Download PDF</button>
-          <button style={{ padding: '8px 16px', borderRadius: 10, background: '#4338ca', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>✉ Email Customer</button>
+          <button
+              disabled={downloading}
+              onClick={async () => {
+                setDownloading(true);
+                try {
+                  const res = await fetch('/api/service/proposal', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ quote, sendEmail: false }) });
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url; a.download = `Proposal-WO-${woNumber}.pdf`; a.click();
+                  URL.revokeObjectURL(url);
+                } catch(e) { alert('PDF failed: ' + e); }
+                setDownloading(false);
+              }}
+              style={{ padding: '8px 16px', borderRadius: 10, background: downloading ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: downloading ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: downloading ? 'default' : 'pointer' }}>
+              {downloading ? 'Generating...' : '⬇ Download PDF'}
+            </button>
+          <button
+              disabled={emailing || !customerEmail}
+              onClick={async () => {
+                if (!customerEmail) { alert('No customer email'); return; }
+                setEmailing(true);
+                try {
+                  const res = await fetch('/api/service/proposal', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ quote, sendEmail: true }) });
+                  const data = await res.json();
+                  if (data.success) alert('Sent to ' + customerEmail);
+                  else alert('Failed: ' + data.error);
+                } catch(e) { alert('Email failed: ' + e); }
+                setEmailing(false);
+              }}
+              style={{ padding: '8px 16px', borderRadius: 10, background: emailing || !customerEmail ? '#e2e8f0' : '#4338ca', color: emailing || !customerEmail ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: emailing || !customerEmail ? 'default' : 'pointer' }}>
+              {emailing ? 'Sending...' : '✉ Email Customer'}
+            </button>
         </div>
       </div>
 
