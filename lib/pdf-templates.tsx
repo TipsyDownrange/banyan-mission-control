@@ -27,11 +27,16 @@ export const BRAND = {
 
 export const COMPANY = {
   name:    'KULA GLASS COMPANY, INC.',
-  address: '289 Pakana St., Wailuku HI 96793',
-  phone:   '808-242-8999',
+  address1: '289 Pakana Street  •  Wailuku, Hawaii 96793',
+  address2: 'P: (808) 242-8999  •  F: (808) 242-7822  •  Lic. C-20080',
   email:   'info@kulaglass.com',
-  website: 'kulaglass.com',
+  // Logo path — set once logo file is added to public folder
+  logoPath: process.env.KG_LOGO_PATH || null,
 };
+
+// Blue band color matching the letterhead
+export const LETTERHEAD_BLUE = '#8A9DC0';
+export const LETTERHEAD_RULE = '#C8C8C8';
 
 // ─── Shared Styles ────────────────────────────────────────────────────────────
 
@@ -323,28 +328,45 @@ export const BASE_STYLES = StyleSheet.create({
 
 // ─── Shared Header Component ──────────────────────────────────────────────────
 
-export function DocHeader({ docType, docNumber, date }: {
+export function DocHeader({ docType, docNumber, date, hideDate }: {
   docType: string;
   docNumber?: string;
   date: string;
+  hideDate?: boolean;
 }) {
   return (
     <View>
-      <View style={BASE_STYLES.headerRow}>
-        <View>
+      {/* ── Letterhead ── */}
+      <View style={[BASE_STYLES.headerRow, { marginBottom: 6 }]}>
+        {/* Left: Company name + address */}
+        <View style={{ flex: 1 }}>
           <Text style={BASE_STYLES.companyName}>{COMPANY.name}</Text>
-          <Text style={BASE_STYLES.companyInfo}>
-            {COMPANY.address}  ·  {COMPANY.phone}
-          </Text>
+          <Text style={{ ...BASE_STYLES.companyInfo, marginTop: 3 }}>{COMPANY.address1}</Text>
+          <Text style={BASE_STYLES.companyInfo}>{COMPANY.address2}</Text>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ fontSize: 8, color: BRAND.lightGray }}>quote date: {date}</Text>
-          {docNumber && (
-            <Text style={BASE_STYLES.woChip}>{docNumber}</Text>
-          )}
+        {/* Right: Logo placeholder (replace with Image when file available) */}
+        <View style={{ width: 90, alignItems: 'center', justifyContent: 'center' }}>
+          {/* Logo placeholder — blue bordered box until real logo provided */}
+          <View style={{ width: 72, height: 64, borderRadius: 3, border: `2 solid ${LETTERHEAD_BLUE}`, alignItems: 'center', justifyContent: 'center', backgroundColor: `${LETTERHEAD_BLUE}11` }}>
+            <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: LETTERHEAD_BLUE, textAlign: 'center', letterSpacing: 0.3 }}>KULA GLASS</Text>
+            <Text style={{ fontSize: 6, color: LETTERHEAD_BLUE, textAlign: 'center', marginTop: 2 }}>🏗</Text>
+          </View>
         </View>
       </View>
-      <Text style={BASE_STYLES.docTitle}>{docType}</Text>
+
+      {/* ── Blue band ── */}
+      <View style={{ height: 18, backgroundColor: LETTERHEAD_BLUE, marginBottom: 1 }} />
+      {/* ── Thin rule ── */}
+      <View style={{ height: 0.5, backgroundColor: LETTERHEAD_RULE, marginBottom: 10 }} />
+
+      {/* ── Document title row ── */}
+      <View style={[BASE_STYLES.headerRow, { marginBottom: 12 }]}>
+        <Text style={BASE_STYLES.docTitle}>{docType}</Text>
+        <View style={{ alignItems: 'flex-end', justifyContent: 'flex-end', paddingBottom: 4 }}>
+          {docNumber && <Text style={BASE_STYLES.woChip}>{docNumber}</Text>}
+          {!hideDate && <Text style={{ fontSize: 8, color: BRAND.lightGray, marginTop: 2 }}>Date: {date}</Text>}
+        </View>
+      </View>
     </View>
   );
 }
