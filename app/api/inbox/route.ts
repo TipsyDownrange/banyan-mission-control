@@ -49,6 +49,40 @@ function matchBidLog(project: string, entries: {name: string; assignedTo: string
   return null;
 }
 
+
+// Hawaii island detection from address, ZIP, or city name
+const ISLAND_ZIPS: Record<string, string> = {};
+// Maui ZIPs
+['96708','96713','96732','96733','96734','96753','96761','96763','96768','96779','96790','96793'].forEach(z => ISLAND_ZIPS[z]='Maui');
+// Kauai ZIPs
+['96703','96705','96714','96715','96716','96720','96722','96741','96746','96747','96751','96752','96754','96756','96765','96766','96769','96796'].forEach(z => ISLAND_ZIPS[z]='Kauai');
+// Big Island ZIPs
+['96704','96710','96719','96725','96726','96727','96728','96737','96738','96740','96743','96745','96748','96749','96750','96755','96760','96764','96771','96772','96773','96774','96776','96777','96778','96780','96781','96783','96785'].forEach(z => ISLAND_ZIPS[z]='Hawaii');
+const ISLAND_CITIES: Record<string, string> = {
+  lahaina:'Maui',kahului:'Maui',wailuku:'Maui',kihei:'Maui',wailea:'Maui',makena:'Maui',
+  haiku:'Maui',paia:'Maui',makawao:'Maui',pukalani:'Maui',kapalua:'Maui',napili:'Maui',
+  lihue:'Kauai',kapaa:'Kauai',waimea:'Kauai',hanapepe:'Kauai',koloa:'Kauai',poipu:'Kauai',
+  princeville:'Kauai',hanalei:'Kauai',kilauea:'Kauai',kekaha:'Kauai',hokuala:'Kauai',
+  hilo:'Hawaii',kona:'Hawaii',volcano:'Hawaii',pahoa:'Hawaii',keaau:'Hawaii',
+  'kailua-kona':'Hawaii',kohala:'Hawaii',kawaihae:'Hawaii',
+  kapolei:'Oahu',waipahu:'Oahu',mililani:'Oahu',kaneohe:'Oahu',kailua:'Oahu',
+  waimanalo:'Oahu',waikiki:'Oahu',honolulu:'Oahu',aiea:'Oahu','pearl city':'Oahu',
+  'ewa beach':'Oahu','hawaii kai':'Oahu',kahala:'Oahu',schofield:'Oahu',
+  kaunakakai:'Molokai','lanai city':'Lanai',
+};
+
+function detectIsland(text: string): string | null {
+  const t = text.toLowerCase();
+  // ZIP code first (most reliable)
+  const zips = t.match(/\b(96\d{3})\b/g) || [];
+  for (const z of zips) { if (ISLAND_ZIPS[z]) return ISLAND_ZIPS[z]; }
+  // City name
+  for (const [city, island] of Object.entries(ISLAND_CITIES)) {
+    if (t.includes(city)) return island;
+  }
+  return null;
+}
+
 export async function GET() {
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/gmail.readonly'], USER);
@@ -90,10 +124,12 @@ export async function GET() {
       const { category, priority, kaiNote } = classifyEmail(item.subject, item.from, item.snippet);
       const project = extractProject(item.subject);
       const bidMatch = matchBidLog(project, bidEntries);
+      const island = detectIsland(item.subject + ' ' + item.snippet);
       return {
         ...item, from: senderName(item.from), fromEmail: item.from, category, priority,
         kaiNote: bidMatch ? `Already tracked as "${bidMatch.name}" — ${bidMatch.assignedTo}. ${kaiNote}` : kaiNote,
         dueDate: extractDueDate(item.subject, item.snippet), project,
+        island,
         bidStatus: bidMatch ? `In bid log — ${bidMatch.assignedTo}` : category === 'bid_invite' ? 'Not in bid log' : null,
         bidMatch: bidMatch ? { name: bidMatch.name, assignedTo: bidMatch.assignedTo, status: bidMatch.status } : null,
       };

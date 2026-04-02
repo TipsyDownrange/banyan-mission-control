@@ -19,6 +19,7 @@ type InboxItem = {
   project: string;
   bidStatus: string | null;
   bidMatch: { name: string; assignedTo: string; status: string } | null;
+  island: string | null;
 };
 
 const CAT: Record<EmailCategory, { label: string; color: string; bg: string; border: string; accent: string }> = {
@@ -170,6 +171,11 @@ export default function InboxPanel() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
                       <span style={PILL(cfg.color, 'rgba(255,255,255,0.72)', `1px solid ${cfg.accent}33`)}>{cfg.label}</span>
                       {item.unread && <span style={PILL('#ef4444', 'rgba(254,242,242,0.9)', '1px solid rgba(239,68,68,0.2)')}>New</span>}
+                      {item.island && item.category === 'bid_invite' && (
+                        <span style={{ padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#0369a1', background: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                          {item.island}
+                        </span>
+                      )}
                       {item.dueDate && <span style={PILL('#92400e', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Due {item.dueDate}</span>}
                       {item.bidMatch && <span style={PILL('#0f766e', 'rgba(240,253,250,0.9)', '1px solid rgba(13,148,136,0.2)')}>✓ In bid log</span>}
                       {!item.bidMatch && item.category === 'bid_invite' && <span style={PILL('#92400e', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Not logged</span>}
