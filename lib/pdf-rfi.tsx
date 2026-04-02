@@ -1,13 +1,18 @@
 /**
  * RFI (Request for Information) PDF
+ * Matches Kula Glass proposal design language.
  */
 
 import React from 'react';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
-import { BASE_STYLES, BRAND, DocHeader, DocFooter, SignatureBlock, fmt, renderToPDF } from './pdf-templates';
+import {
+  S, BLUE, GRAY_BORDER, GRAY_TEXT,
+  CompanyHeader, SectionBar, DualSignatureBlock, DocFooter,
+  fmt, renderToPDF,
+} from './pdf-templates';
 
 export type RFIData = {
-  rfi_number: string;         // RFI-PRJ-26-0001-004
+  rfi_number: string;
   date: string;
   response_required_date: string;
   project_name: string;
@@ -22,7 +27,6 @@ export type RFIData = {
   schedule_impact?: string;
   cost_impact?: string;
   submitted_by: { name: string; email: string; phone: string };
-  // Response (blank on issue, filled when received)
   response_date?: string;
   responded_by?: string;
   response_text?: string;
@@ -30,100 +34,97 @@ export type RFIData = {
 };
 
 function RFIPDF({ data }: { data: RFIData }) {
-  const statusColor = data.status === 'OPEN' ? BRAND.amber : data.status === 'RESPONDED' ? BRAND.teal : BRAND.gray;
+  const statusColor = data.status === 'OPEN' ? '#e67e22' : data.status === 'RESPONDED' ? BLUE : GRAY_TEXT;
 
   return (
     <Document>
-      <Page size="LETTER" style={BASE_STYLES.page}>
-        <DocHeader docType="REQUEST FOR INFORMATION" docNumber={data.rfi_number} date={data.date} />
+      <Page size="LETTER" style={S.page}>
+        <CompanyHeader docNumber={data.rfi_number} date={data.date} />
 
-        {/* Info box */}
-        <View style={BASE_STYLES.infoBox}>
-          <View style={BASE_STYLES.infoCol}>
-            <Text style={BASE_STYLES.infoLabel}>Project</Text>
-            <Text style={BASE_STYLES.infoValueBold}>{data.project_name}</Text>
-            <Text style={{ ...BASE_STYLES.infoValue, color: BRAND.teal }}>{data.kID}</Text>
-            <View style={{ marginTop: 8 }}>
-              <Text style={BASE_STYLES.infoLabel}>To</Text>
-              <Text style={BASE_STYLES.infoValueBold}>{data.gc_name}</Text>
-              <Text style={BASE_STYLES.infoValue}>Attn: {data.gc_contact}</Text>
+        <Text style={S.docTitle}>REQUEST FOR INFORMATION</Text>
+
+        {/* Project info table */}
+        <View style={[S.infoTable, { marginBottom: 14 }]}>
+          {[
+            ['Project', data.project_name, 'kID', data.kID],
+            ['Contract #', data.contract_number, 'RFI #', data.rfi_number],
+            ['To (GC)', data.gc_name, 'Attn', data.gc_contact],
+            ['Date', data.date, 'Response Required', data.response_required_date],
+            ['Status', data.status, 'Submitted By', data.submitted_by.name],
+          ].map(([l1, v1, l2, v2], i, arr) => (
+            <View key={l1} style={i === arr.length - 1 ? S.infoRowLast : S.infoRow}>
+              <View style={S.infoCell}>
+                <Text style={S.infoLabel}>{l1}</Text>
+                <Text style={{ ...S.infoValue, color: l1 === 'Status' ? statusColor : undefined, fontFamily: l1 === 'Status' ? 'Helvetica-Bold' : 'Helvetica' }}>{v1}</Text>
+              </View>
+              <View style={S.infoCellLast}>
+                <Text style={S.infoLabel}>{l2}</Text>
+                <Text style={{ ...S.infoValue, color: l2 === 'Response Required' ? '#e67e22' : undefined, fontFamily: l2 === 'Response Required' ? 'Helvetica-Bold' : 'Helvetica' }}>{v2}</Text>
+              </View>
             </View>
-          </View>
-          <View style={BASE_STYLES.infoColRight}>
-            <Text style={BASE_STYLES.infoLabel}>Contract #</Text>
-            <Text style={BASE_STYLES.infoValue}>{data.contract_number}</Text>
-            <View style={{ marginTop: 8 }}>
-              <Text style={BASE_STYLES.infoLabel}>Response Required By</Text>
-              <Text style={{ ...BASE_STYLES.infoValueBold, color: BRAND.amber }}>{data.response_required_date}</Text>
-            </View>
-            <View style={{ marginTop: 8 }}>
-              <Text style={BASE_STYLES.infoLabel}>Status</Text>
-              <Text style={{ ...BASE_STYLES.infoValueBold, color: statusColor }}>{data.status}</Text>
-            </View>
-          </View>
+          ))}
         </View>
 
         {/* Subject */}
-        <View style={{ marginBottom: 12 }}>
-          <Text style={BASE_STYLES.sectionHeader}>Subject</Text>
-          <Text style={{ ...BASE_STYLES.bodyText, fontFamily: 'Helvetica-Bold' }}>{data.subject}</Text>
-        </View>
+        <SectionBar title="Subject" />
+        <Text style={{ ...S.bodyText, fontFamily: 'Helvetica-Bold', marginBottom: 12 }}>{data.subject}</Text>
 
         {/* Description */}
-        <View style={{ marginBottom: 12 }}>
-          <Text style={BASE_STYLES.sectionHeader}>Description of Request</Text>
-          <Text style={BASE_STYLES.bodyText}>{data.description}</Text>
-        </View>
+        <SectionBar title="Description of Request" />
+        <Text style={{ ...S.bodyText, marginBottom: 12 }}>{data.description}</Text>
 
         {/* Reference docs */}
         {data.reference_docs.length > 0 && (
-          <View style={{ marginBottom: 12 }}>
-            <Text style={BASE_STYLES.sectionHeader}>Reference Documents</Text>
+          <>
+            <SectionBar title="Reference Documents" />
             {data.reference_docs.map((ref, i) => (
-              <Text key={i} style={{ ...BASE_STYLES.bodyTextGray, marginBottom: 3 }}>
+              <Text key={i} style={{ ...S.bodyText, marginBottom: 3 }}>
                 {ref.doc_type} {ref.doc_number} — {ref.description}
               </Text>
             ))}
-          </View>
+          </>
         )}
 
         {/* Proposed solution */}
-        <View style={{ marginBottom: 12 }}>
-          <Text style={BASE_STYLES.sectionHeader}>Proposed Solution</Text>
-          <Text style={BASE_STYLES.bodyText}>{data.proposed_solution || 'None proposed'}</Text>
-        </View>
+        <SectionBar title="Proposed Solution" />
+        <Text style={{ ...S.bodyText, marginBottom: 12, minHeight: 28 }}>
+          {data.proposed_solution || 'None proposed'}
+        </Text>
 
         {/* Impact */}
-        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 12 }}>
           <View style={{ flex: 1 }}>
-            <Text style={BASE_STYLES.sectionHeader}>Schedule Impact</Text>
-            <Text style={BASE_STYLES.bodyText}>{data.schedule_impact || 'Unknown — pending response'}</Text>
+            <SectionBar title="Schedule Impact" />
+            <Text style={S.bodyText}>{data.schedule_impact || 'Unknown — pending response'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={BASE_STYLES.sectionHeader}>Cost Impact</Text>
-            <Text style={BASE_STYLES.bodyText}>{data.cost_impact || 'Unknown — pending response'}</Text>
+            <SectionBar title="Cost Impact" />
+            <Text style={S.bodyText}>{data.cost_impact || 'Unknown — pending response'}</Text>
           </View>
         </View>
 
-        {/* GC Response section */}
-        <View style={{ border: `1 solid ${BRAND.border}`, borderRadius: 4, padding: '10 12', marginBottom: 16 }}>
-          <Text style={{ ...BASE_STYLES.sectionHeader, marginTop: 0 }}>GC Response</Text>
+        {/* GC Response box */}
+        <SectionBar title="GC Response" />
+        <View style={{ border: `1 solid ${GRAY_BORDER}`, padding: '10 12', marginBottom: 16, minHeight: 60 }}>
           {data.response_text ? (
             <>
-              <View style={{ flexDirection: 'row', gap: 20, marginBottom: 8 }}>
-                <Text style={BASE_STYLES.bodyTextGray}>Date: {data.response_date}</Text>
-                <Text style={BASE_STYLES.bodyTextGray}>By: {data.responded_by}</Text>
-              </View>
-              <Text style={BASE_STYLES.bodyText}>{data.response_text}</Text>
+              <Text style={{ ...S.bodyText, color: GRAY_TEXT, marginBottom: 6 }}>
+                Date: {data.response_date}    Responded by: {data.responded_by}
+              </Text>
+              <Text style={S.bodyText}>{data.response_text}</Text>
             </>
           ) : (
-            <View style={{ height: 48 }}>
-              <Text style={BASE_STYLES.bodyTextGray}>Date: _______________    Responded by: _______________</Text>
-            </View>
+            <Text style={{ ...S.bodyText, color: '#ccc' }}>
+              Date: _______________    Responded by: _______________
+            </Text>
           )}
         </View>
 
-        <SignatureBlock preparedBy={data.submitted_by} date={data.date} />
+        <DualSignatureBlock
+          preparedBy={{ name: data.submitted_by.name, title: 'Project Manager' }}
+          date={data.date}
+        />
+
         <DocFooter docNumber={data.rfi_number} kID={data.kID} />
       </Page>
     </Document>
