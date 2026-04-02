@@ -31,6 +31,7 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
     section: 'People',
     items: [
       { label: 'Crew' },
+      { label: 'Customers' },
     ],
   },
   {
@@ -44,7 +45,6 @@ const NAV: { section: string; items: { label: AppView; dot?: string }[] }[] = [
     section: 'Service',
     items: [
       { label: 'Service', dot: '#f59e0b' },
-      { label: 'Customers' },
     ],
   },
   {

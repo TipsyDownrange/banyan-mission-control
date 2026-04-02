@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
 
 const COL = {
-  taskName:     5281432546895748,
-  woNumber:     4363127736821636,
-  status:       8866727364192132,
-  assignedTo:   1196534248826756,
-  description:  70634341984132,
-  scheduledDate:198316698324868,
-  comments:     7951933689882500,
+  taskName:       5281432546895748,
+  woNumber:       4363127736821636,
+  status:         8866727364192132,
+  assignedTo:     1196534248826756,
+  description:    70634341984132,
+  scheduledDate:  198316698324868,
+  comments:       7951933689882500,
+  hoursEstimated: 5700133876197252, // "Hours to measure" — closest fit for pre-dispatch estimate
 };
 
 // BanyanOS stage → Smartsheet status string
@@ -28,7 +29,7 @@ const SHEET_ID = '7905619916154756';
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { rowId, woNumber, stage, assignedTo, description, scheduledDate, notes } = body;
+    const { rowId, woNumber, stage, assignedTo, description, scheduledDate, notes, hoursEstimated } = body;
 
     if (!rowId && !woNumber) {
       return NextResponse.json({ error: 'rowId or woNumber required' }, { status: 400 });
@@ -60,7 +61,8 @@ export async function PATCH(req: Request) {
     if (assignedTo !== undefined)   cells.push({ columnId: COL.assignedTo,    value: assignedTo });
     if (description !== undefined)  cells.push({ columnId: COL.description,   value: description });
     if (scheduledDate !== undefined) cells.push({ columnId: COL.scheduledDate, value: scheduledDate });
-    if (notes !== undefined)         cells.push({ columnId: COL.comments,      value: notes });
+    if (notes !== undefined)            cells.push({ columnId: COL.comments,        value: notes });
+    if (hoursEstimated !== undefined)   cells.push({ columnId: COL.hoursEstimated, value: String(hoursEstimated) });
 
     if (cells.length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });

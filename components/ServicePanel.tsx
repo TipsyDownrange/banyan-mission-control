@@ -29,7 +29,7 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
 ];
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e', Kauai: '#6d28d9',
+  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
 };
 
 function WOCard({
@@ -39,36 +39,72 @@ function WOCard({
   expanded: boolean;
   onToggle: () => void;
   onStageChange: (woId: string, stage: string) => Promise<void>;
-  onSave: (woId: string, fields: Partial<WorkOrder>) => Promise<void>;
+  onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string }) => Promise<void>;
   allCrew: CrewMember[];
 }) {
-  const [editing, setEditing] = useState(false);
+  const [mode, setMode] = useState<'view' | 'dispatch' | 'edit'>('view');
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
-  const [draft, setDraft] = useState({
+
+  const [editDraft, setEditDraft] = useState({
     description: wo.description,
-    assignedTo: wo.assignedTo,
-    scheduledDate: wo.scheduledDate,
     notes: wo.comments || '',
   });
+
+  const [dispatchDraft, setDispatchDraft] = useState({
+    scheduledDate: wo.scheduledDate || '',
+    hoursEstimated: wo.hoursEstimated || '',
+    selectedCrew: wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : [] as string[],
+  });
+
   const stage = STAGES.find(s => s.key === wo.status) || STAGES[0];
 
   const INP: React.CSSProperties = {
-    width: '100%', padding: '7px 10px', borderRadius: 8,
-    border: '1px solid rgba(15,118,110,0.3)', background: 'rgba(240,253,250,0.5)',
+    width: '100%', padding: '8px 10px', borderRadius: 8,
+    border: '1px solid rgba(15,118,110,0.25)', background: 'rgba(240,253,250,0.5)',
     fontSize: 12, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
   };
 
-  async function handleSave() {
+  // Field crew for this WO's island — supers + journeymen + apprentices
+  const islandCrew = allCrew.filter(c => {
+    const isFieldRole = ['Superintendent','Journeyman','Apprentice'].some(r => c.role.includes(r));
+    const matchesIsland = !wo.island || c.island === wo.island;
+    return isFieldRole && matchesIsland;
+  });
+
+  function toggleCrewMember(name: string) {
+    setDispatchDraft(prev => ({
+      ...prev,
+      selectedCrew: prev.selectedCrew.includes(name)
+        ? prev.selectedCrew.filter(n => n !== name)
+        : [...prev.selectedCrew, name],
+    }));
+  }
+
+  async function handleDispatch() {
+    if (!dispatchDraft.scheduledDate || dispatchDraft.selectedCrew.length === 0) return;
     setSaving(true);
     await onSave(wo.id, {
-      description: draft.description,
-      assignedTo: draft.assignedTo,
-      scheduledDate: draft.scheduledDate,
-      comments: draft.notes,
+      assignedTo: dispatchDraft.selectedCrew.join(', '),
+      scheduledDate: dispatchDraft.scheduledDate,
+      hoursEstimated: dispatchDraft.hoursEstimated,
+    });
+    // Also move to scheduled stage if still in approved/quote/lead
+    if (['lead','quote','approved'].includes(wo.status)) {
+      await onStageChange(wo.id, 'scheduled');
+    }
+    setSaving(false);
+    setMode('view');
+  }
+
+  async function handleEditSave() {
+    setSaving(true);
+    await onSave(wo.id, {
+      description: editDraft.description,
+      comments: editDraft.notes,
     });
     setSaving(false);
-    setEditing(false);
+    setMode('view');
   }
 
   async function handleStageChange(stageKey: string) {
@@ -77,17 +113,14 @@ function WOCard({
     setStageSaving('');
   }
 
-  // Island-filtered crew for this WO
-  const islandCrew = wo.island
-    ? allCrew.filter(c => c.island === wo.island || c.role.toLowerCase().includes('pm') || c.role.toLowerCase().includes('service'))
-    : allCrew;
+  const canDispatch = dispatchDraft.scheduledDate && dispatchDraft.selectedCrew.length > 0;
 
   return (
-    <article style={{ display: 'grid', gap: 0, borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
+    <article style={{ borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 5, background: stage.color, opacity: 0.8 }} />
 
-      {/* Card header */}
-      <div onClick={onToggle} style={{ padding: '14px 16px', cursor: 'pointer', paddingLeft: 20 }}>
+      {/* Card header — always visible */}
+      <div onClick={onToggle} style={{ padding: '14px 16px 14px 20px', cursor: 'pointer' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
@@ -97,61 +130,133 @@ function WOCard({
                   {wo.island}
                 </span>
               )}
+              {wo.assignedTo && (
+                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 999, background: 'rgba(99,102,241,0.08)', color: '#4338ca', border: '1px solid rgba(99,102,241,0.15)' }}>
+                  → {wo.assignedTo.split(',')[0]}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 4, letterSpacing: '-0.01em' }}>{wo.name}</div>
-            <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4, marginBottom: 6 }}>{wo.description}</div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: '#94a3b8' }}>
-              {wo.assignedTo && <span>→ {wo.assignedTo.split(',')[0]}</span>}
-              {wo.scheduledDate && <span>{wo.scheduledDate}</span>}
-            </div>
+            <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4 }}>{wo.description}</div>
+            {wo.scheduledDate && (
+              <div style={{ marginTop: 6, fontSize: 11, color: '#6d28d9', fontWeight: 700 }}>📅 {wo.scheduledDate}</div>
+            )}
           </div>
-          <button
-            onClick={e => { e.stopPropagation(); setEditing(!editing); if (!expanded) onToggle(); }}
-            style={{ padding: '6px 14px', borderRadius: 10, border: `1px solid ${editing ? 'rgba(15,118,110,0.4)' : 'rgba(226,232,240,0.9)'}`, background: editing ? 'rgba(240,253,250,0.96)' : 'white', color: editing ? '#0f766e' : '#64748b', fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
-            {editing ? 'Cancel' : 'Edit'}
-          </button>
+          {/* Action buttons — always visible */}
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => { setMode(mode === 'dispatch' ? 'view' : 'dispatch'); if (!expanded) onToggle(); }}
+              style={{ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: mode === 'dispatch' ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(226,232,240,0.9)', background: mode === 'dispatch' ? 'rgba(238,242,255,0.96)' : 'white', color: mode === 'dispatch' ? '#4338ca' : '#64748b' }}>
+              Dispatch
+            </button>
+            <button
+              onClick={() => { setMode(mode === 'edit' ? 'view' : 'edit'); if (!expanded) onToggle(); }}
+              style={{ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(226,232,240,0.9)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'white', color: mode === 'edit' ? '#0f766e' : '#64748b' }}>
+              Edit
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Expanded section */}
+      {/* Expanded body */}
       {expanded && (
-        <div style={{ paddingLeft: 20, paddingRight: 16, paddingBottom: 16, borderTop: '1px solid rgba(226,232,240,0.6)', paddingTop: 12, display: 'grid', gap: 10 }}>
+        <div style={{ paddingLeft: 20, paddingRight: 16, paddingBottom: 16, borderTop: '1px solid rgba(226,232,240,0.6)', paddingTop: 14, display: 'grid', gap: 12 }}>
 
-          {editing ? (
+          {/* DISPATCH MODE */}
+          {mode === 'dispatch' && (
+            <div style={{ display: 'grid', gap: 12, padding: '12px 14px', borderRadius: 14, background: 'rgba(238,242,255,0.5)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#4338ca' }}>Schedule Dispatch</div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Date</div>
+                  <input type="date" value={dispatchDraft.scheduledDate}
+                    onChange={e => setDispatchDraft(p => ({ ...p, scheduledDate: e.target.value }))}
+                    style={{ ...INP, border: '1px solid rgba(99,102,241,0.25)', background: 'white' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Est. Hours</div>
+                  <input type="number" value={dispatchDraft.hoursEstimated} placeholder="e.g. 4"
+                    onChange={e => setDispatchDraft(p => ({ ...p, hoursEstimated: e.target.value }))}
+                    style={{ ...INP, border: '1px solid rgba(99,102,241,0.25)', background: 'white' }} />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 8 }}>
+                  Crew — {wo.island || 'All Islands'}
+                  {dispatchDraft.selectedCrew.length > 0 && (
+                    <span style={{ marginLeft: 8, color: '#4338ca' }}>{dispatchDraft.selectedCrew.length} selected</span>
+                  )}
+                </div>
+                {islandCrew.length === 0 ? (
+                  <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>No field crew found for {wo.island || 'this island'}</div>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {islandCrew.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i).map(c => {
+                      const selected = dispatchDraft.selectedCrew.includes(c.name);
+                      return (
+                        <button key={c.user_id} onClick={() => toggleCrewMember(c.name)}
+                          style={{ padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.1s', border: selected ? '1px solid rgba(99,102,241,0.5)' : '1px solid #e2e8f0', background: selected ? 'rgba(99,102,241,0.1)' : 'white', color: selected ? '#4338ca' : '#64748b' }}>
+                          {selected ? '✓ ' : ''}{c.name}
+                          <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 4 }}>{c.role.split('/')[0].trim()}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {dispatchDraft.selectedCrew.length > 0 && dispatchDraft.scheduledDate && (
+                <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 12, color: '#4338ca' }}>
+                  <strong>{dispatchDraft.selectedCrew.join(', ')}</strong> → {dispatchDraft.scheduledDate}
+                  {dispatchDraft.hoursEstimated && ` · ${dispatchDraft.hoursEstimated}h`}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setMode('view')}
+                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button onClick={handleDispatch} disabled={!canDispatch || saving}
+                  style={{ padding: '8px 20px', borderRadius: 10, background: canDispatch && !saving ? 'linear-gradient(135deg,#4338ca,#6366f1)' : '#e2e8f0', color: canDispatch && !saving ? 'white' : '#94a3b8', border: 'none', fontSize: 12, fontWeight: 800, cursor: canDispatch && !saving ? 'pointer' : 'default', boxShadow: canDispatch && !saving ? '0 2px 8px rgba(99,102,241,0.3)' : 'none' }}>
+                  {saving ? 'Dispatching...' : 'Confirm Dispatch'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* EDIT MODE */}
+          {mode === 'edit' && (
             <div style={{ display: 'grid', gap: 10 }}>
               <div>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Description</div>
-                <textarea value={draft.description} onChange={e => setDraft(p => ({ ...p, description: e.target.value }))} rows={2} style={{ ...INP, resize: 'none' }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Assigned To</div>
-                  <select value={draft.assignedTo} onChange={e => setDraft(p => ({ ...p, assignedTo: e.target.value }))}
-                    style={{ ...INP, cursor: 'pointer', WebkitAppearance: 'none' }}>
-                    <option value="">Unassigned</option>
-                    {islandCrew.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i).map(c => (
-                      <option key={c.user_id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Scheduled Date</div>
-                  <input value={draft.scheduledDate} onChange={e => setDraft(p => ({ ...p, scheduledDate: e.target.value }))} style={INP} placeholder="YYYY-MM-DD" type="date" />
-                </div>
+                <textarea value={editDraft.description} onChange={e => setEditDraft(p => ({ ...p, description: e.target.value }))} rows={2} style={{ ...INP, resize: 'none' }} />
               </div>
               <div>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Note</div>
-                <textarea value={draft.notes} onChange={e => setDraft(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...INP, resize: 'none' }} />
+                <textarea value={editDraft.notes} onChange={e => setEditDraft(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...INP, resize: 'none' }} />
               </div>
-              <button onClick={handleSave} disabled={saving}
-                style={{ padding: '8px 20px', borderRadius: 12, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: saving ? 'default' : 'pointer', width: 'fit-content', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setMode('view')}
+                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button onClick={handleEditSave} disabled={saving}
+                  style={{ padding: '8px 20px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
             </div>
-          ) : (
+          )}
+
+          {/* VIEW MODE */}
+          {mode === 'view' && (
             <div style={{ display: 'grid', gap: 8 }}>
               {wo.address && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Address</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.address}</div></div>}
               {wo.contact && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Contact</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.contact}</div></div>}
+              {wo.hoursEstimated && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Est. Hours</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.hoursEstimated}</div></div>}
               {wo.comments && (
                 <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.1)' }}>
                   <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', marginBottom: 3 }}>Latest Note</div>
@@ -161,22 +266,15 @@ function WOCard({
             </div>
           )}
 
-          {/* Stage move */}
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Move to stage</div>
+          {/* Stage pipeline — always visible at bottom */}
+          <div style={{ borderTop: '1px solid rgba(226,232,240,0.5)', paddingTop: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Pipeline stage</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {STAGES.filter(s => s.key !== 'lost').map(s => (
                 <button key={s.key}
                   onClick={e => { e.stopPropagation(); handleStageChange(s.key); }}
                   disabled={wo.status === s.key || !!stageSaving}
-                  style={{
-                    padding: '5px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
-                    textTransform: 'uppercase', letterSpacing: '0.06em', cursor: wo.status === s.key || stageSaving ? 'default' : 'pointer',
-                    border: wo.status === s.key ? `1px solid ${s.color}` : '1px solid #e2e8f0',
-                    background: stageSaving === s.key ? '#f1f5f9' : wo.status === s.key ? s.bg : 'white',
-                    color: wo.status === s.key ? s.color : '#94a3b8',
-                    opacity: stageSaving && stageSaving !== s.key ? 0.5 : 1,
-                  }}>
+                  style={{ padding: '5px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', cursor: wo.status === s.key || stageSaving ? 'default' : 'pointer', border: wo.status === s.key ? `1px solid ${s.color}` : '1px solid #e2e8f0', background: stageSaving === s.key ? '#f1f5f9' : wo.status === s.key ? s.bg : 'white', color: wo.status === s.key ? s.color : '#94a3b8', opacity: stageSaving && stageSaving !== s.key ? 0.5 : 1 }}>
                   {stageSaving === s.key ? '...' : s.label}
                 </button>
               ))}
@@ -249,7 +347,7 @@ export default function ServicePanel() {
     }
   }
 
-  async function handleSave(woId: string, fields: Partial<WorkOrder>) {
+  async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string }) {
     // Optimistic update
     setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], ...fields } }));
     try {
@@ -262,6 +360,7 @@ export default function ServicePanel() {
           assignedTo: fields.assignedTo,
           scheduledDate: fields.scheduledDate,
           notes: fields.comments,
+          hoursEstimated: fields.hoursEstimated,
         }),
       });
     } catch {
