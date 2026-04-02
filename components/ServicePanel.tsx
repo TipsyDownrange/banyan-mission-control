@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import ServiceIntake from '@/components/ServiceIntake';
+import QuoteBuilder from '@/components/QuoteBuilder';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -58,7 +59,7 @@ function toTitleCase(str: string): string {
 }
 
 function WOCard({
-  wo, expanded, onToggle, onStageChange, onSave, allCrew,
+  wo, expanded, onToggle, onStageChange, onSave, allCrew, onQuote,
 }: {
   wo: WorkOrder;
   expanded: boolean;
@@ -66,6 +67,7 @@ function WOCard({
   onStageChange: (woId: string, stage: string) => Promise<void>;
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string }) => Promise<void>;
   allCrew: CrewMember[];
+  onQuote: (woId: string) => void;
 }) {
   const [mode, setMode] = useState<'view' | 'dispatch' | 'edit'>('view');
   const [saving, setSaving] = useState(false);
@@ -160,6 +162,12 @@ function WOCard({
           <div style={{ flex: 1 }} />
           {/* Icon buttons — small, don't eat space */}
           <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+            <button
+              title="Build quote / proposal"
+              onClick={() => onQuote(wo.id)}
+              style={{ padding: '4px 8px', borderRadius: 8, fontSize: 10, fontWeight: 800, letterSpacing: '0.04em', cursor: 'pointer', border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1' }}>
+              $ Quote
+            </button>
             <button
               title="Schedule & dispatch crew"
               onClick={() => { setMode(mode === 'dispatch' ? 'view' : 'dispatch'); if (!expanded) onToggle(); }}
@@ -333,6 +341,7 @@ export default function ServicePanel() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [showIntake, setShowIntake] = useState(false);
+  const [quoteWO, setQuoteWO] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
@@ -502,6 +511,7 @@ export default function ServicePanel() {
                       onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
                       onStageChange={handleStageChange}
                       onSave={handleSave}
+                      onQuote={(id) => setQuoteWO(id)}
                       allCrew={allCrew}
                     />
                   ))}
@@ -536,12 +546,22 @@ export default function ServicePanel() {
                 onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
                 onStageChange={handleStageChange}
                 onSave={handleSave}
+                      onQuote={(id) => setQuoteWO(id)}
                 allCrew={allCrew}
               />
             ))}
             {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No work orders in this view</div>}
           </div>
         </>
+      )}
+
+      {/* Quote Builder modal */}
+      {quoteWO && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 28, width: '100%', maxWidth: 640, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
+            <QuoteBuilder woNumber={quoteWO} onClose={() => setQuoteWO(null)} />
+          </div>
+        </div>
       )}
 
       {/* Intake modal */}
