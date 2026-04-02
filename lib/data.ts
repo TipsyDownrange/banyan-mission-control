@@ -75,7 +75,7 @@ export const BIDS = [
 ];
 
 export const ISLAND_EMOJI: Record<string, string> = {
-  Oahu: '🌺', Maui: '🌊', Kauai: '🌿', Lanai: '🏝️', Hawaii: '🌋', Molokai: '🌴',
+  Oahu: 'OAH', Maui: 'MAU', Kauai: 'KAU', Lanai: 'LAN', Hawaii: 'BIG', Molokai: 'MOL',
 };
 
 export const STATUS_COLOR: Record<string, string> = {

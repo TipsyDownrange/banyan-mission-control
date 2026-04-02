@@ -83,7 +83,7 @@ export default function IssuesPanel() {
 
         {open.length === 0 && (
           <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: 40, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}></div>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>All clear</div>
             <div style={{ fontSize: 13, color: '#94a3b8' }}>No open issues</div>
           </div>

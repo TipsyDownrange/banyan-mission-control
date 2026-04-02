@@ -227,7 +227,7 @@ export default function BidQueuePanel() {
                     <div style={{ fontSize: 12, color: '#64748b', display: 'flex', alignItems: 'center' }}>{bid['Island'] || '—'}</div>
                     <div style={{ fontSize: 12, color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{bid['Assigned To'] || <span style={{ color: '#f59e0b', fontWeight: 700 }}>Unassigned</span>}</div>
                     <div style={{ fontSize: 12, color: urgent ? '#c2410c' : '#64748b', fontWeight: urgent ? 700 : 400, display: 'flex', alignItems: 'center' }}>
-                      {bid['Due Date'] ? (urgent ? `⚡ ${days}d` : bid['Due Date'].substring(5)) : '—'}
+                      {bid['Due Date'] ? (urgent ? ` ${days}d` : bid['Due Date'].substring(5)) : '—'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: dStyle.color, background: dStyle.bg, border: dStyle.border, whiteSpace: 'nowrap' }}>

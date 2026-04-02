@@ -90,7 +90,7 @@ export default function KaiFloat({ activeView }: { activeView: AppView }) {
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
         >
-          <span style={{ fontSize: 16 }}>◎</span>
+          
           Ask Kai
         </button>
       )}

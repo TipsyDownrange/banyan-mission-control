@@ -45,7 +45,7 @@ export default function OverviewPanel() {
               const pct = p.budget > 0 ? Math.round((p.spent / p.budget) * 100) : 0;
               return (
                 <div key={p.kID} style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>{ISLAND_EMOJI[p.island]}</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#94a3b8", flexShrink: 0, width: 32, textAlign: "center" as const }}>{p.island.slice(0,3).toUpperCase()}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{p.name}</span>

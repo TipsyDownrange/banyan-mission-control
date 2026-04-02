@@ -45,7 +45,7 @@ export default function ProjectsPanel() {
           return (
             <div key={p.kID} style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: 24, flexShrink: 0 }}>{ISLAND_EMOJI[p.island]}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#94a3b8", flexShrink: 0, minWidth: 36, textAlign: "center" as const }}>{p.island.slice(0,3).toUpperCase()}</span>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>

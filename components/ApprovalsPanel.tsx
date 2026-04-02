@@ -144,7 +144,7 @@ export default function ApprovalsPanel() {
 
       {pending.length === 0 && (
         <div className="card p-8 flex flex-col items-center text-center mb-8">
-          <div className="text-4xl mb-3">✓</div>
+          <div className="text-4xl mb-3"></div>
           <div className="font-extrabold text-ink-heading mb-1">All clear</div>
           <p className="text-ink-label text-sm">No pending actions. Kai will route sensitive operations here for your approval.</p>
         </div>

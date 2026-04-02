@@ -160,20 +160,16 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle }: P
                         overflow: 'hidden',
                       }}
                     >
-                      {dot && (
+                      {dot && !collapsed && (
                         <span style={{
-                          width: collapsed ? 8 : 6,
-                          height: collapsed ? 8 : 6,
-                          borderRadius: '50%',
-                          background: dot,
-                          flexShrink: 0,
-                          boxShadow: `0 0 5px ${dot}55`,
+                          width: 6, height: 6, borderRadius: '50%',
+                          background: dot, flexShrink: 0,
+                          boxShadow: `0 0 4px ${dot}66`,
                         }} />
                       )}
-                      {!dot && collapsed && (
-                        <span style={{ fontSize: 13, opacity: 0.5 }}>{label.charAt(0)}</span>
-                      )}
-                      {!collapsed && label}
+                      {collapsed ? (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: dot || 'rgba(203,213,225,0.5)', letterSpacing: '-0.01em' }}>{label.charAt(0)}</span>
+                      ) : label}
                     </button>
                   </li>
                 );

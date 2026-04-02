@@ -75,8 +75,7 @@ export default function CrewPanel() {
         return (
           <div key={island} style={{ marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 16 }}>{ISLAND_EMOJI[island]}</span>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>
+<div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>
                 Field Crew — {island} ({crew.length})
               </div>
             </div>
