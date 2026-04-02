@@ -7,7 +7,7 @@ const CUSTOMER_DB = '1ZJtlJPM0GBogzdIRlC50JpNpi96bSY7tS7xnIn08d6A';
 async function getSheetData(tab: string, search = '') {
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
   const sheets = google.sheets({ version: 'v4', auth });
-  const range = tab === 'gc' ? 'GC_Contacts!A1:J500' : 'Customers!A1:N500';
+  const range = tab === 'gc' ? 'GC_Contacts!A1:J500' : tab === 'gc_people' ? 'GC_People!A1:G500' : 'Customers!A1:N500';
   const result = await sheets.spreadsheets.values.get({ spreadsheetId: CUSTOMER_DB, range });
   const rows = result.data.values || [];
   if (rows.length < 2) return { headers: [], records: [] };
@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
     const idKey = tab === 'gc' ? 'GC ID' : 'Customer ID';
-    const range = tab === 'gc' ? 'GC_Contacts!A1:J500' : 'Customers!A1:N500';
+    const range = tab === 'gc' ? 'GC_Contacts!A1:J500' : tab === 'gc_people' ? 'GC_People!A1:G500' : 'Customers!A1:N500';
 
     const result = await sheets.spreadsheets.values.get({ spreadsheetId: CUSTOMER_DB, range });
     const rows = result.data.values || [];

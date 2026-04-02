@@ -12,7 +12,7 @@ const CUST_EDITABLE = ['Name','Primary Contact','Phone','Email','Address','City'
 export default function CustomersPanel() {
   const [records, setRecords] = useState<Rec[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'customers' | 'gc'>('gc');
+  const [tab, setTab] = useState<'customers' | 'gc' | 'gc_people'>('gc');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [total, setTotal] = useState(0);
@@ -23,13 +23,13 @@ export default function CustomersPanel() {
   const [showNew, setShowNew] = useState(false);
   const [newDraft, setNewDraft] = useState<Rec>({});
 
-  const nameKey = tab === 'gc' ? 'Company Name' : 'Name';
-  const contactKey = 'Primary Contact';
-  const emailKey = tab === 'gc' ? 'Contact Email' : 'Email';
+  const nameKey = tab === 'gc' ? 'Company Name' : tab === 'gc_people' ? 'Full Name' : 'Name';
+  const contactKey = tab === 'gc_people' ? 'Email' : 'Primary Contact';
+  const emailKey = tab === 'gc' ? 'Contact Email' : tab === 'gc_people' ? 'Company Domain' : 'Email';
   const phoneKey = tab === 'gc' ? 'Contact Phone' : 'Phone';
-  const countKey = tab === 'gc' ? 'Bid Count' : 'Job Count';
-  const idKey = tab === 'gc' ? 'GC ID' : 'Customer ID';
-  const editableFields = tab === 'gc' ? GC_EDITABLE : CUST_EDITABLE;
+  const countKey = tab === 'gc' ? 'Bid Count' : tab === 'gc_people' ? '' : 'Job Count';
+  const idKey = tab === 'gc' ? 'GC ID' : tab === 'gc_people' ? 'Contact ID' : 'Customer ID';
+  const editableFields = tab === 'gc' ? GC_EDITABLE : tab === 'gc_people' ? ['Full Name','Email','Company Domain','Company Name'] : CUST_EDITABLE;
 
   useEffect(() => {
     setLoading(true);
@@ -93,7 +93,8 @@ export default function CustomersPanel() {
         {[
           { label: 'Service customers', value: '275', helper: 'From work order history' },
           { label: 'GC contacts', value: '111', helper: 'From 11 years of bids' },
-          { label: 'Showing', value: loading ? '...' : String(total), helper: 'Current filter' },
+          { label: 'Email contacts', value: '61', helper: 'Extracted from Gmail' },
+
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
@@ -105,9 +106,9 @@ export default function CustomersPanel() {
 
       {/* Tabs + Search */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(['gc','customers'] as const).map(k => (
+        {(['gc','gc_people','customers'] as const).map(k => (
           <button key={k} onClick={() => { setTab(k); setSearch(''); setSearchInput(''); setEditing(null); setExpanded(null); }} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: tab === k ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: tab === k ? 'rgba(240,253,250,0.96)' : 'white', color: tab === k ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
-            {k === 'gc' ? 'GC Contacts' : 'Service Customers'}
+            {k === 'gc' ? 'GC Contacts' : k === 'gc_people' ? 'All Contacts' : 'Service Customers'}
           </button>
         ))}
         <div style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
