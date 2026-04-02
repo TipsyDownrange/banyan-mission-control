@@ -1,15 +1,10 @@
-/**
- * Service Work Order / Proposal PDF
- * Matches the actual Kula Glass proposal design.
- * Single lump sum pricing. T&C appended on page 2.
- */
-
 import React from 'react';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
 import {
-  S, BLUE, GRAY_BORDER, COMPANY, WHITE,
-  CompanyHeader, SectionBar, DualSignatureBlock, DocFooter,
-  STANDARD_EXCLUSIONS, TERMS_AND_CONDITIONS, fmt, renderToPDF,
+  S, C, COMPANY,
+  Letterhead, SectionHead, InfoGrid, TotalsCard,
+  ExclusionsList, TermsBox, DualSigBlock, DocFooter, TCPage,
+  fmt, renderToPDF,
 } from './pdf-templates';
 
 export type ServiceWOData = {
@@ -42,45 +37,43 @@ export type ServiceWOData = {
 };
 
 function ServiceWOPDF({ data }: { data: ServiceWOData }) {
-  const allExclusions = [
-    ...STANDARD_EXCLUSIONS,
-    ...(data.installation_included ? [] : ['Installation']),
-    ...(data.exclusions_extra || []),
+  const totalLines = [
+    ...(data.materials_total ? [{ label: 'Materials', value: data.materials_total }] : []),
+    ...(data.labor_subtotal ? [{ label: 'Labor', value: data.labor_subtotal }] : []),
+    ...(data.equipment_charges ? [{ label: 'Equipment', value: data.equipment_charges }] : []),
+    ...(data.site_visit_fee ? [{ label: 'Site Visit', value: data.site_visit_fee }] : []),
+    ...((data.site_visit_credit || 0) > 0 ? [{ label: 'Site Visit Credit', value: -(data.site_visit_credit!) }] : []),
+    ...(data.additional_charges || []).map(c => ({ label: c.label, value: c.amount })),
+    { label: 'Hawaii GET (4.5%)', value: data.get_amount },
   ];
 
   return (
     <Document>
-      {/* ── PAGE 1: PROPOSAL FACE SHEET ── */}
       <Page size="LETTER" style={S.page}>
-        <CompanyHeader docNumber={`WO ${data.wo_number}`} date={data.quote_date} />
+        <Letterhead docNumber={`WO ${data.wo_number}`} date={data.quote_date} />
 
-        {/* PROPOSAL title */}
-        <Text style={S.docTitle}>PROPOSAL</Text>
-
-        {/* Project info table */}
-        <View style={[S.infoTable, { marginBottom: 14 }]}>
-          {[
-            ['Date', data.quote_date, 'WO Number', `WO ${data.wo_number}`],
-            ['Customer', data.customer_name, 'Phone', data.customer_phone],
-            ['Address', data.customer_address, 'Email', data.customer_email],
-            ['Project', data.project_description, 'Island', data.island],
-            ['Site Address', data.site_address, 'Prepared By', data.prepared_by.name],
-          ].map(([l1, v1, l2, v2], i, arr) => (
-            <View key={l1} style={i === arr.length - 1 ? S.infoRowLast : S.infoRow}>
-              <View style={S.infoCell}>
-                <Text style={S.infoLabel}>{l1}</Text>
-                <Text style={S.infoValue}>{v1}</Text>
-              </View>
-              <View style={S.infoCellLast}>
-                <Text style={S.infoLabel}>{l2}</Text>
-                <Text style={S.infoValue}>{v2}</Text>
-              </View>
-            </View>
-          ))}
+        {/* Title */}
+        <View style={S.docTitleRow}>
+          <Text style={S.docTitle}>Proposal</Text>
+          <Text style={S.docMeta}>
+            {data.island && `${data.island}  ·  `}{data.quote_date}
+          </Text>
         </View>
 
-        {/* Intro sentence */}
-        <Text style={{ ...S.bodyText, marginBottom: 14 }}>
+        {/* Project info */}
+        <InfoGrid items={[
+          ['Customer',   data.customer_name],
+          ['Phone',      data.customer_phone],
+          ['Address',    data.customer_address],
+          ['Email',      data.customer_email],
+          ['Project',    data.project_description],
+          ['Island',     data.island, true],
+          ['Site',       data.site_address],
+          ['Prepared By',data.prepared_by.name],
+        ]} />
+
+        {/* Intro */}
+        <Text style={{ ...S.body, marginBottom: 14 }}>
           {COMPANY.name} hereby proposes to furnish and{' '}
           <Text style={S.bodyBold}>
             {data.installation_included ? 'install' : 'supply'}
@@ -88,126 +81,61 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
           {' '}the following for the above-referenced project.
         </Text>
 
-        {/* SCOPE & PRICING */}
-        <SectionBar title="Scope & Pricing Summary" />
+        {/* Scope */}
+        <SectionHead title="Scope of Work" />
+        {data.scope_narrative ? (
+          <Text style={{ ...S.body, marginBottom: 8 }}>{data.scope_narrative}</Text>
+        ) : null}
+        {data.line_items.filter(li => li.description).map((li, i) => (
+          <Text key={i} style={{ ...S.bodyMuted, marginBottom: 3, paddingLeft: 8 }}>
+            {li.qty}×  {li.description}
+          </Text>
+        ))}
 
-        {/* Job description table */}
-        <View style={[S.priceTable, { marginBottom: 12 }]}>
+        {/* Pricing */}
+        <SectionHead title="Pricing" />
+        <View style={S.priceTable}>
           <View style={S.priceHeaderRow}>
-            <View style={{ flex: 1, ...S.priceHeaderCell }}><Text>JOB DESCRIPTION</Text></View>
-            <View style={{ width: 90, ...S.priceHeaderCell, textAlign: 'right', borderRight: 0 }}><Text>AMOUNT</Text></View>
+            <Text style={{ ...S.priceHeaderCell, flex: 1 }}>Description</Text>
+            <Text style={{ ...S.priceHeaderCell, width: 100, textAlign: 'right' }}>Amount</Text>
           </View>
-          <View style={{ flexDirection: 'row', padding: '10 10 6 10' }}>
-            <View style={{ flex: 1 }}>
-              {/* Scope narrative */}
-              {data.scope_narrative ? (
-                <Text style={{ ...S.bodyText, marginBottom: 8 }}>
-                  <Text style={S.bodyBold}>Scope: </Text>{data.scope_narrative}
-                </Text>
-              ) : null}
-              {/* Line items */}
-              {data.line_items.filter(li => li.description).map((li, i) => (
-                <Text key={i} style={{ ...S.bodyText, marginBottom: 3 }}>
-                  {li.qty} each  {li.description}
-                </Text>
-              ))}
-              {/* Total cost label */}
-              <View style={{ marginTop: 12 }}>
-                <Text style={S.bodyBold}>
-                  Total cost: materials, crating, shipping, handling, delivery,
-                  {data.installation_included ? ' labor, installation,' : ''} & taxes  ....
-                </Text>
-              </View>
-            </View>
-            {/* Amount */}
-            <View style={{ width: 90, alignItems: 'flex-end', justifyContent: 'flex-end', paddingLeft: 10 }}>
-              <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', color: BLUE }}>{fmt(data.total)}</Text>
-            </View>
+          <View style={[S.priceDataRow, { backgroundColor: `${C.teal}08` }]}>
+            <Text style={{ flex: 1, fontSize: 9.5, color: C.text, lineHeight: 1.4 }}>
+              Total cost: materials, crating, shipping, handling, delivery,
+              {data.installation_included ? ' labor, installation,' : ''} & taxes
+            </Text>
+            <Text style={{ width: 100, fontSize: 13, fontFamily: 'Helvetica-Bold', color: C.navy, textAlign: 'right' }}>
+              {fmt(data.total)}
+            </Text>
           </View>
         </View>
 
-        {/* GET breakdown */}
-        <View style={S.totalsBlock}>
-          <View style={S.totalRow}>
-            <Text style={S.totalLabel}>Subtotal</Text>
-            <Text style={S.totalValue}>{fmt(data.subtotal)}</Text>
-          </View>
-          <View style={S.totalRow}>
-            <Text style={S.totalLabel}>Hawaii GET (4.5%)</Text>
-            <Text style={S.totalValue}>{fmt(data.get_amount)}</Text>
-          </View>
-          <View style={[S.totalRow, { marginTop: 4 }]}>
-            <Text style={S.grandTotalLabel}>TOTAL PROPOSAL AMOUNT</Text>
-            <Text style={S.grandTotalValue}>{fmt(data.total)}</Text>
-          </View>
-          <View style={[S.totalRow, { marginTop: 6 }]}>
-            <Text style={{ ...S.totalLabel, fontSize: 9 }}>50% Deposit Required to Commence</Text>
-            <Text style={{ ...S.totalValue, fontFamily: 'Helvetica-Bold', color: BLUE }}>{fmt(data.deposit)}</Text>
-          </View>
-        </View>
+        <TotalsCard lines={totalLines} total={data.total} deposit={data.deposit} />
 
-        {/* EXCLUSIONS */}
-        <SectionBar title="Exclusions" />
-        <View style={{ marginBottom: 12 }}>
-          {allExclusions.map((ex, i) => (
-            <Text key={i} style={{ ...S.bodyText, marginBottom: 2 }}>•  {ex}</Text>
-          ))}
-        </View>
+        {/* Exclusions */}
+        <SectionHead title="Exclusions" />
+        <ExclusionsList extras={data.exclusions_extra} installationIncluded={data.installation_included} />
 
-        {/* Validity + T&C note */}
-        <View style={{ marginBottom: 12 }}>
-          <Text style={S.bodyText}>
-            <Text style={S.bodyBold}>Proposal Validity: </Text>
-            This proposal is valid for {data.validity_days || 30} calendar days from the date above.
-          </Text>
-          <Text style={S.bodyText}>
-            <Text style={S.bodyBold}>Acceptance: </Text>
-            This proposal, together with the attached Terms and Conditions, shall govern upon acceptance. Customer signed proposal and 50% deposit ({fmt(data.deposit)}) are required prior to ordering material or commencing fabrication.
-          </Text>
-          <Text style={S.bodyText}>
-            <Text style={S.bodyBold}>Dimensions: </Text>
-            Confirmation of layout and field dimensions is required prior to ordering or fabricating any custom materials.
-          </Text>
-        </View>
+        {/* Terms */}
+        <SectionHead title="Terms" />
+        <TermsBox deposit={data.deposit} validityDays={data.validity_days} />
 
         {/* Labor tracking (internal) */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-          <Text style={{ fontSize: 8.5, color: '#999' }}>Manpower: _______________   Hours: _______________</Text>
-          <Text style={{ fontSize: 8.5, color: '#999' }}>Total Hours: _______________</Text>
+          <Text style={{ fontSize: 8, color: C.slateLight }}>Manpower: ___________   Hours: ___________</Text>
+          <Text style={{ fontSize: 8, color: C.slateLight }}>Balance Due: $ ___________</Text>
         </View>
 
-        {/* Balance due box */}
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16 }}>
-          <View style={{ border: `1 solid ${GRAY_BORDER}`, padding: '6 16', flexDirection: 'row', gap: 20 }}>
-            <Text style={{ fontSize: 9.5 }}>Please pay balance</Text>
-            <Text style={{ fontSize: 9.5, fontFamily: 'Helvetica-Bold' }}>$ _______________</Text>
-          </View>
-        </View>
-
-        {/* Signature block */}
-        <DualSignatureBlock
-          preparedBy={{ name: data.prepared_by.name, title: 'Estimator / Service PM' }}
+        {/* Signatures */}
+        <DualSigBlock
+          preparedBy={{ name: data.prepared_by.name, title: 'Service / Estimating' }}
           date={data.quote_date}
         />
 
         <DocFooter docNumber={`WO ${data.wo_number}`} />
       </Page>
 
-      {/* ── PAGE 2: TERMS & CONDITIONS ── */}
-      <Page size="LETTER" style={S.page}>
-        <CompanyHeader />
-        <SectionBar title="Terms and Conditions" />
-        <Text style={{ ...S.bodyText, marginBottom: 10, fontFamily: 'Helvetica-Bold' }}>
-          KULA GLASS COMPANY, INC. — Commercial Glass & Glazing Subcontract
-        </Text>
-        {TERMS_AND_CONDITIONS.map(clause => (
-          <View key={clause.num}>
-            <Text style={S.tcClauseTitle}>{clause.num}. {clause.title}</Text>
-            <Text style={S.tcBody}>{clause.body}</Text>
-          </View>
-        ))}
-        <DocFooter docNumber={`WO ${data.wo_number} — Terms & Conditions`} />
-      </Page>
+      <TCPage docNumber={`WO ${data.wo_number}`} />
     </Document>
   );
 }

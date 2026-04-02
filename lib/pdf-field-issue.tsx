@@ -1,45 +1,23 @@
-/**
- * Field Issue Report PDF — Legal Defense Document
- * NOTE: This generates a standalone exhibit for legal/claim purposes.
- * In day-to-day operations, issues are embedded in the Daily Field Report.
- * This standalone version is generated on-demand for claims, disputes, or backcharge documentation.
- */
-
 import React from 'react';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
-import {
-  S, BLUE, GRAY_BORDER, GRAY_TEXT, WHITE,
-  CompanyHeader, SectionBar, DocFooter, renderToPDF,
-} from './pdf-templates';
+import { S, C, Letterhead, SectionHead, InfoGrid, DocFooter, renderToPDF } from './pdf-templates';
 
 export type FieldIssueData = {
-  event_id: string;
-  report_id: string;
-  timestamp: string;
-  project_name: string;
-  kID: string;
-  location_group: string;
-  elevation?: string;
-  unit_reference?: string;
-  reported_by: string;
-  role: string;
-  issue_description: string;
-  issue_category: string;
-  caused_by: string;
-  affected_count: number;
-  hours_lost: number;
-  blocking: boolean;
+  event_id: string; report_id: string; timestamp: string;
+  project_name: string; kID: string; location_group: string;
+  elevation?: string; unit_reference?: string;
+  reported_by: string; role: string;
+  issue_description: string; issue_category: string; caused_by: string;
+  affected_count: number; hours_lost: number; blocking: boolean;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   photos: { file_name: string; drive_link: string; timestamp: string }[];
   gps?: { lat: number; lng: number };
-  device_id?: string;
-  recorded_at: string;
-  recorded_by: string;
-  source_system: string;
+  device_id?: string; recorded_at: string; recorded_by: string; source_system: string;
 };
 
 function FieldIssuePDF({ data }: { data: FieldIssueData }) {
-  const sevColor = { CRITICAL: '#7f1d1d', HIGH: '#c0392b', MEDIUM: '#e67e22', LOW: GRAY_TEXT }[data.severity] || GRAY_TEXT;
+  const sevColor = { CRITICAL: '#7f1d1d', HIGH: C.red, MEDIUM: C.amber, LOW: C.slate }[data.severity] || C.slate;
+  const sevBg    = { CRITICAL: '#fef2f2', HIGH: '#fef2f2', MEDIUM: '#fffbeb', LOW: C.bg }[data.severity] || C.bg;
   const laborCost = data.affected_count * data.hours_lost * 89.10;
 
   function fmtTime(iso: string) {
@@ -50,107 +28,82 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
   return (
     <Document>
       <Page size="LETTER" style={S.page}>
-        <CompanyHeader docNumber={data.report_id} date={fmtTime(data.timestamp).split(',')[0]} />
+        <Letterhead docNumber={data.report_id} date={fmtTime(data.timestamp).split(',')[0]} />
 
-        <Text style={S.docTitle}>FIELD ISSUE REPORT</Text>
-
-        {/* Severity banner */}
-        <View style={{ backgroundColor: sevColor, padding: '8 12', marginBottom: 14 }}>
-          <Text style={{ color: WHITE, fontFamily: 'Helvetica-Bold', fontSize: 11, letterSpacing: 0.5 }}>
-            {data.severity} SEVERITY{data.blocking ? '  —  BLOCKING WORK' : ''}
-          </Text>
-          <Text style={{ color: WHITE, fontSize: 9, marginTop: 2 }}>{fmtTime(data.timestamp)}</Text>
+        <View style={S.docTitleRow}>
+          <Text style={S.docTitle}>Field Issue Report</Text>
+          {/* Severity pill */}
+          <View style={{ backgroundColor: sevBg, border: `1.5 solid ${sevColor}`, borderRadius: 999, paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, alignSelf: 'flex-end' }}>
+            <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: sevColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {data.severity}{data.blocking ? '  ·  BLOCKING' : ''}
+            </Text>
+          </View>
         </View>
 
-        {/* Project + location info */}
-        <View style={[S.infoTable, { marginBottom: 14 }]}>
+        <Text style={{ ...S.bodyMuted, marginBottom: 16 }}>{fmtTime(data.timestamp)}</Text>
+
+        <InfoGrid items={[
+          ['Project',    data.project_name],
+          ['kID',        data.kID, true],
+          ['Reported By',data.reported_by],
+          ['Role',       data.role],
+          ['Location',   data.location_group],
+          ['Elevation',  data.elevation || '—'],
+          ['Unit Ref',   data.unit_reference || '—'],
+          ['GPS',        data.gps ? `${data.gps.lat.toFixed(5)}, ${data.gps.lng.toFixed(5)}` : '—'],
+        ]} />
+
+        <SectionHead title="Issue Description" />
+        <Text style={{ ...S.body, marginBottom: 12 }}>{data.issue_description}</Text>
+
+        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 12 }}>
+          <View style={{ flex: 1 }}>
+            <SectionHead title="Category" />
+            <Text style={S.body}>{data.issue_category}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <SectionHead title="Caused By" />
+            <Text style={{ ...S.body, fontFamily: 'Helvetica-Bold', color: sevColor }}>{data.caused_by}</Text>
+          </View>
+        </View>
+
+        {/* Impact card */}
+        <SectionHead title="Operational Impact" />
+        <View style={{ backgroundColor: sevBg, border: `1 solid ${sevColor}44`, borderRadius: 12, padding: '12 16', marginBottom: 14, flexDirection: 'row', gap: 16 }}>
           {[
-            ['Project', data.project_name, 'kID', data.kID],
-            ['Reported By', data.reported_by, 'Role', data.role],
-            ['Location', data.location_group, 'Elevation', data.elevation || '—'],
-            ['Unit Reference', data.unit_reference || '—', 'GPS', data.gps ? `${data.gps.lat.toFixed(5)}, ${data.gps.lng.toFixed(5)}` : '—'],
-          ].map(([l1, v1, l2, v2], i, arr) => (
-            <View key={l1} style={i === arr.length - 1 ? S.infoRowLast : S.infoRow}>
-              <View style={S.infoCell}>
-                <Text style={S.infoLabel}>{l1}</Text>
-                <Text style={S.infoValue}>{v1}</Text>
-              </View>
-              <View style={S.infoCellLast}>
-                <Text style={S.infoLabel}>{l2}</Text>
-                <Text style={S.infoValue}>{v2}</Text>
-              </View>
+            ['Crew Affected', String(data.affected_count), 'people'],
+            ['Hours Lost', String(data.hours_lost), 'hours'],
+            ['Blocking', data.blocking ? 'YES' : 'NO', ''],
+            ...(laborCost > 0 ? [['Est. Cost Impact', `~$${laborCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}`, '@$89.10/hr journeyman']] : []),
+          ].map(([label, value, sub]) => (
+            <View key={label} style={{ flex: 1 }}>
+              <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.slate, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>{label}</Text>
+              <Text style={{ fontSize: 16, fontFamily: 'Helvetica-Bold', color: sevColor, lineHeight: 1.1 }}>{value}</Text>
+              {sub ? <Text style={{ fontSize: 7.5, color: C.slateLight, marginTop: 2 }}>{sub}</Text> : null}
             </View>
           ))}
         </View>
 
-        {/* Issue description */}
-        <SectionBar title="Issue Description" />
-        <Text style={{ ...S.bodyText, marginBottom: 12 }}>{data.issue_description}</Text>
-
-        {/* Category + Cause */}
-        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 12 }}>
-          <View style={{ flex: 1 }}>
-            <SectionBar title="Category" />
-            <Text style={S.bodyText}>{data.issue_category}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <SectionBar title="Caused By" />
-            <Text style={{ ...S.bodyText, fontFamily: 'Helvetica-Bold', color: sevColor }}>{data.caused_by}</Text>
-          </View>
-        </View>
-
-        {/* Impact */}
-        <SectionBar title="Operational Impact" />
-        <View style={{ border: `1 solid ${sevColor}`, backgroundColor: `${sevColor}11`, padding: '10 12', marginBottom: 12, flexDirection: 'row', gap: 20 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_TEXT, textTransform: 'uppercase', letterSpacing: 0.5 }}>Crew Affected</Text>
-            <Text style={{ fontSize: 18, fontFamily: 'Helvetica-Bold', color: sevColor }}>{data.affected_count}</Text>
-            <Text style={{ fontSize: 8, color: GRAY_TEXT }}>people</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_TEXT, textTransform: 'uppercase', letterSpacing: 0.5 }}>Hours Lost</Text>
-            <Text style={{ fontSize: 18, fontFamily: 'Helvetica-Bold', color: sevColor }}>{data.hours_lost}</Text>
-            <Text style={{ fontSize: 8, color: GRAY_TEXT }}>hours</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_TEXT, textTransform: 'uppercase', letterSpacing: 0.5 }}>Blocking Work</Text>
-            <Text style={{ fontSize: 18, fontFamily: 'Helvetica-Bold', color: data.blocking ? '#c0392b' : BLUE }}>{data.blocking ? 'YES' : 'NO'}</Text>
-          </View>
-          {laborCost > 0 && (
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_TEXT, textTransform: 'uppercase', letterSpacing: 0.5 }}>Labor Cost Impact</Text>
-              <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', color: sevColor }}>
-                ~${laborCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-              </Text>
-              <Text style={{ fontSize: 7, color: GRAY_TEXT }}>@$89.10/hr journeyman</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Photo evidence */}
-        <SectionBar title={`Photo Evidence (${data.photos.length} photo${data.photos.length !== 1 ? 's' : ''})`} />
+        {/* Evidence */}
+        <SectionHead title={`Photo Evidence — ${data.photos.length} photo${data.photos.length !== 1 ? 's' : ''}`} />
         {data.photos.length === 0 ? (
-          <Text style={{ ...S.bodyText, color: '#c0392b', fontFamily: 'Helvetica-Bold' }}>
-            ⚠ No photos attached — documentation incomplete
-          </Text>
+          <Text style={{ ...S.body, color: C.red, fontFamily: 'Helvetica-Bold' }}>⚠ No photos attached — documentation incomplete</Text>
         ) : (
           data.photos.map((p, i) => (
-            <View key={i} style={{ flexDirection: 'row', gap: 10, marginBottom: 5 }}>
-              <Text style={{ ...S.bodyText, width: 18 }}>{i + 1}.</Text>
+            <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 5, paddingLeft: 8 }}>
+              <Text style={{ fontSize: 8.5, color: C.slateLight, width: 16 }}>{i + 1}.</Text>
               <View>
-                <Text style={S.bodyText}>{p.file_name}</Text>
-                <Text style={{ fontSize: 8, color: GRAY_TEXT }}>Captured: {p.timestamp}  •  Drive: {p.drive_link}</Text>
+                <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.text }}>{p.file_name}</Text>
+                <Text style={{ fontSize: 8, color: C.slateLight }}>Captured: {p.timestamp}  ·  {p.drive_link}</Text>
               </View>
             </View>
           ))
         )}
 
         {/* Immutability notice */}
-        <View style={{ marginTop: 14, padding: '8 10', border: `0.5 solid ${BLUE}33`, backgroundColor: '#EEF4FB' }}>
-          <Text style={{ fontSize: 7.5, color: BLUE, lineHeight: 1.5 }}>
-            This report is an immutable record generated by BanyanOS.  Event ID: {data.event_id}
-            {'  ·  '}Recorded: {fmtTime(data.recorded_at)}  {'  ·  '}Source: {data.source_system}
-            {data.device_id ? `  ·  Device: ${data.device_id}` : ''}
+        <View style={{ marginTop: 16, padding: '8 12', backgroundColor: C.tealBg, borderRadius: 8, border: `0.5 solid ${C.teal}44` }}>
+          <Text style={{ fontSize: 7.5, color: C.teal, lineHeight: 1.5 }}>
+            Immutable record — BanyanOS  ·  Event ID: {data.event_id}  ·  Recorded: {fmtTime(data.recorded_at)}  ·  Source: {data.source_system}
           </Text>
         </View>
 
