@@ -1,8 +1,17 @@
+'use client';
+import { useState } from 'react';
 import { CREW, ISLAND_EMOJI } from '@/lib/data';
 
+type CrewMember = typeof CREW[0];
+
 export default function CrewPanel() {
-  const management = CREW.filter(c => c.type === 'management');
-  const supers = CREW.filter(c => c.type === 'super');
+  const [crew, setCrew] = useState(CREW.map(c => ({...c})));
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<Partial<CrewMember>>({});
+  
+  const INP: React.CSSProperties = { width: '100%', padding: '5px 8px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.3)', background: 'rgba(240,253,250,0.6)', fontSize: 11, color: '#0f172a', outline: 'none' };
+  const management = crew.filter(c => c.type === 'management');
+  const supers = crew.filter(c => c.type === 'super');
   const islands = ['Oahu', 'Maui', 'Kauai'];
 
   const Avatar = ({ name, color }: { name: string; color: string }) => (
@@ -11,17 +20,34 @@ export default function CrewPanel() {
     </div>
   );
 
-  const Card = ({ c, color }: { c: typeof CREW[0]; color: string }) => (
-    <div style={{ background: 'white', borderRadius: 16, border: '1px solid rgba(226,232,240,0.9)', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
-      <Avatar name={c.name} color={color} />
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{c.role}</div>
+  const Card = ({ c, color }: { c: CrewMember; color: string }) => {
+    const isEditing = editing === c.id;
+    return (
+      <div style={{ background: 'white', borderRadius: 16, border: `1px solid ${isEditing ? 'rgba(15,118,110,0.2)' : 'rgba(226,232,240,0.9)'}`, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+        <Avatar name={c.name} color={color} />
+        {isEditing ? (
+          <div style={{ flex: 1, display: 'grid', gap: 4 }}>
+            <input value={editDraft.name||''} onChange={e => setEditDraft(p=>({...p,name:e.target.value}))} style={INP} placeholder="Name" />
+            <input value={editDraft.role||''} onChange={e => setEditDraft(p=>({...p,role:e.target.value}))} style={INP} placeholder="Role" />
+            <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+              <button onClick={() => { setCrew(prev => prev.map(m => m.id === c.id ? {...m,...editDraft} : m)); setEditing(null); }} style={{ padding: '3px 10px', borderRadius: 8, background: '#0f766e', color: 'white', border: 'none', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Save</button>
+              <button onClick={() => setEditing(null)} style={{ padding: '3px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>×</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{c.role}</div>
+            </div>
+            <button onClick={() => { setEditing(c.id); setEditDraft({name:c.name,role:c.role}); }} style={{ padding: '3px 8px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.2)', background: 'rgba(240,253,250,0.8)', color: '#0f766e', fontSize: 9, fontWeight: 800, cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>Edit</button>
+          </>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
-  const totalField = CREW.filter(c => c.type === 'field').length;
+
 
   return (
     <div style={{ padding: '32px', maxWidth: 1100, margin: '0 auto' }}>
@@ -37,10 +63,10 @@ export default function CrewPanel() {
         background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 50%,rgba(248,250,252,0.96) 100%)',
         border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}>
         {[
-          { label: 'Total crew', value: CREW.length, helper: 'All islands' },
+          { label: 'Total crew', value: crew.length, helper: 'All islands' },
           { label: 'Management', value: management.length, helper: 'Office & PM team' },
           { label: 'Superintendents', value: supers.length, helper: 'Oahu + Maui' },
-          { label: 'Field crew', value: totalField, helper: 'Journeymen + apprentices' },
+          { label: 'Field crew', value: crew.filter(c=>c.type==='field').length, helper: 'Journeymen + apprentices' },
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
@@ -68,10 +94,10 @@ export default function CrewPanel() {
 
       {/* Field crew by island */}
       {islands.map(island => {
-        const crew = CREW.filter(c => c.type === 'field' && c.island === island);
-        if (crew.length === 0) return null;
-        const journeymen = crew.filter(c => c.role === 'Journeyman');
-        const apprentices = crew.filter(c => c.role === 'Apprentice');
+        const islandCrew = crew.filter(c => c.type === 'field' && c.island === island);
+        if (islandCrew.length === 0) return null;
+        const journeymen = islandCrew.filter(c => c.role === 'Journeyman');
+        const apprentices = islandCrew.filter(c => c.role === 'Apprentice');
         return (
           <div key={island} style={{ marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
