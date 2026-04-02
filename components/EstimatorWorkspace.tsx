@@ -202,7 +202,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
 
                   {/* Desk posture */}
                   <div style={{ display: 'grid', gap: 8, minWidth: 200, padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.92)' }}>
-                    {FL('Status')}
+                    {FL('Update Status — click to change')}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {[
                         ['In Estimating', 'in estimating'],
