@@ -31,7 +31,10 @@ const ISLAND_COLOR: Record<string, string> = {
   Kihei: '#92400e', Wailea: '#15803d', Makawao: '#64748b',
 };
 
-function WOCard({ wo, expanded, onToggle }: { wo: WorkOrder; expanded: boolean; onToggle: () => void }) {
+function WOCard({ wo, expanded, onToggle, onStageChange }: { wo: WorkOrder; expanded: boolean; onToggle: () => void; onStageChange?: (status: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [editDraft, setEditDraft] = useState({ description: wo.description, assignedTo: wo.assignedTo, scheduledDate: wo.scheduledDate, notes: '' });
+  const INP: React.CSSProperties = { width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.3)', background: 'rgba(240,253,250,0.5)', fontSize: 12, color: '#0f172a', outline: 'none' };
   const stage = STAGES.find(s => s.key === wo.status) || STAGES[0];
   return (
     <article onClick={onToggle} style={{
@@ -140,7 +143,7 @@ export default function ServicePanel() {
                 border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
                 background: view === v ? 'rgba(240,253,250,0.96)' : 'white',
                 color: view === v ? '#0f766e' : '#64748b', cursor: 'pointer',
-              }}>{v === 'kanban' ? 'Kanban' : 'List'}</button>
+              }}>{v === 'kanban' ? 'Card View' : 'List'}</button>
             ))}
           </div>
         </div>
