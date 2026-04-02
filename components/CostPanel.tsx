@@ -1,130 +1,136 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-type CostEntry = {
-  date: string;
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  costUsd: number;
-  session: string;
+type CostData = {
+  entries: { date: string; inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number; costUsd: number; calls: number }[];
+  totalCost: number;
+  todayCost: number;
+  totalCalls: number;
+  totalInput: number;
+  totalOutput: number;
+  totalCacheRead: number;
+  totalCacheWrite: number;
+  byModel: Record<string, { input: number; output: number; cost: number; calls: number }>;
+  error?: string;
 };
 
-// Anthropic pricing (per 1M tokens)
-const PRICING: Record<string, { input: number; output: number }> = {
-  'claude-sonnet-4-6': { input: 3.0, output: 15.0 },
-  'claude-opus-4-6': { input: 15.0, output: 75.0 },
-  'claude-haiku-3-5': { input: 0.80, output: 4.0 },
-};
-
-function calcCost(model: string, inputTok: number, outputTok: number): number {
-  const key = Object.keys(PRICING).find(k => model.includes(k)) || 'claude-sonnet-4-6';
-  const p = PRICING[key];
-  return (inputTok / 1_000_000) * p.input + (outputTok / 1_000_000) * p.output;
+function fmt(n: number) {
+  if (n >= 1e9) return `${(n/1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n/1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n/1e3).toFixed(0)}K`;
+  return n.toString();
 }
 
 export default function CostPanel() {
-  const [entries, setEntries] = useState<CostEntry[]>([]);
+  const [data, setData] = useState<CostData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/cost')
       .then(r => r.json())
-      .then(d => { setEntries(d.entries || []); setLoading(false); })
+      .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
-  const totalToday = entries.reduce((s, e) => s + e.costUsd, 0);
-  const totalTokens = entries.reduce((s, e) => s + e.inputTokens + e.outputTokens, 0);
-  const byModel = entries.reduce((acc, e) => {
-    acc[e.model] = (acc[e.model] || 0) + e.costUsd;
-    return acc;
-  }, {} as Record<string, number>);
-
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <div className="label-upper text-ink-meta mb-1">AI Command</div>
-        <h1 className="text-[30px] font-extrabold text-ink-heading tracking-tight m-0">Cost &amp; Usage</h1>
-        <p className="text-ink-label text-sm mt-1">Token usage and API costs — today</p>
+    <div style={{ padding: '32px', maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>AI Command</div>
+        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Cost & Usage</h1>
+        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Live from OpenClaw session logs · Anthropic API</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="card p-5 bg-teal-50">
-          <div className="text-[34px] font-extrabold text-teal-700 leading-none mb-1">
-            ${totalToday.toFixed(4)}
-          </div>
-          <div className="label-upper text-ink-label">Cost Today</div>
-        </div>
-        <div className="card p-5">
-          <div className="text-[34px] font-extrabold text-ink-heading leading-none mb-1">
-            {(totalTokens / 1000).toFixed(1)}k
-          </div>
-          <div className="label-upper text-ink-label">Tokens Today</div>
-        </div>
-        <div className="card p-5">
-          <div className="text-[34px] font-extrabold text-ink-heading leading-none mb-1">
-            {entries.length}
-          </div>
-          <div className="label-upper text-ink-label">Sessions</div>
-        </div>
-      </div>
-
-      {/* By model */}
-      {Object.keys(byModel).length > 0 && (
-        <div className="card p-6 mb-6">
-          <div className="label-upper text-ink-meta mb-4">By Model</div>
-          <div className="flex flex-col gap-3">
-            {Object.entries(byModel).sort((a, b) => b[1] - a[1]).map(([model, cost]) => {
-              const pct = totalToday > 0 ? (cost / totalToday) * 100 : 0;
-              return (
-                <div key={model}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-bold text-ink-heading">{model}</span>
-                    <span className="text-sm text-ink-meta">${cost.toFixed(4)}</span>
-                  </div>
-                  <div className="h-2 bg-surface-border rounded-pill overflow-hidden">
-                    <div className="h-full bg-teal-500 rounded-pill" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {loading && (
+        <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       )}
 
-      {/* Session log */}
-      {loading ? (
-        <div className="card p-8 flex items-center justify-center">
-          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(91,158,191,0.2)', borderTopColor: '#14b8a6' }} />
-        </div>
-      ) : entries.length > 0 ? (
-        <div className="card divide-y divide-surface-border">
-          <div className="px-5 py-3 label-upper text-ink-meta">Session Log</div>
-          {entries.map((e, i) => (
-            <div key={i} className="flex items-center gap-4 px-5 py-3">
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-ink-heading truncate">{e.session}</div>
-                <div className="text-[11px] text-ink-meta">{e.date} · {e.model}</div>
+      {!loading && data && !data.error && (
+        <>
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 24,
+            padding: 18, borderRadius: 24,
+            background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 50%,rgba(248,250,252,0.96) 100%)',
+            border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}>
+            {[
+              { label: 'Total spend', value: `$${data.totalCost.toFixed(2)}`, helper: 'All sessions to date' },
+              { label: 'Today', value: `$${data.todayCost.toFixed(2)}`, helper: 'Current day' },
+              { label: 'API calls', value: data.totalCalls.toLocaleString(), helper: 'Total requests' },
+              { label: 'Output tokens', value: fmt(data.totalOutput), helper: 'Generated by Kai' },
+              { label: 'Cache read', value: fmt(data.totalCacheRead), helper: 'Saved 90% on these' },
+            ].map(s => (
+              <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
+                <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
+                <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
               </div>
-              <div className="text-right shrink-0">
-                <div className="text-sm font-bold text-ink-heading">${e.costUsd.toFixed(4)}</div>
-                <div className="text-[11px] text-ink-meta">{((e.inputTokens + e.outputTokens) / 1000).toFixed(1)}k tokens</div>
+            ))}
+          </div>
+
+          {/* Cache savings note */}
+          <div style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 16, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)', display: 'flex', gap: 10 }}>
+            <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(15,118,110,0.7)', flexShrink: 0, marginTop: 2 }}>KAI</span>
+            <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+              Cache is saving significant cost — {fmt(data.totalCacheRead)} cache read tokens at $0.30/M vs $3.00/M regular rate. Without caching this session would cost ~${((data.totalCacheRead / 1e6) * 2.70 + data.totalCost).toFixed(0)} more.
+            </div>
+          </div>
+
+          {/* By model */}
+          {Object.keys(data.byModel).length > 0 && (
+            <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(15,23,42,0.04)', padding: '20px 24px', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 16 }}>By Model</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {Object.entries(data.byModel).sort((a,b) => b[1].cost - a[1].cost).map(([model, d]) => {
+                  const pct = data.totalCost > 0 ? (d.cost / data.totalCost) * 100 : 0;
+                  return (
+                    <div key={model}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{model}</span>
+                          <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 10 }}>{d.calls.toLocaleString()} calls</span>
+                        </div>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>${d.cost.toFixed(4)}</span>
+                      </div>
+                      <div style={{ height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: '#14b8a6', borderRadius: 999 }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="card p-8 flex flex-col items-center text-center">
-          <div className="text-4xl mb-3">📊</div>
-          <div className="font-extrabold text-ink-heading mb-1">No data yet</div>
-          <p className="text-ink-label text-sm max-w-sm">
-            Cost tracking pulls from OpenClaw session data. Data will appear here as sessions accumulate.
-            <br /><br />
-            <span className="font-bold text-ink-secondary">Current model: claude-sonnet-4-6</span><br />
-            Input: $3.00 / 1M tokens · Output: $15.00 / 1M tokens
-          </p>
+          )}
+
+          {/* Daily breakdown */}
+          <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 24px 12px', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>Daily Breakdown</div>
+            </div>
+            {data.entries.map(e => (
+              <div key={e.date} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 24px', borderBottom: '1px solid #f8fafc' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{e.date}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                    {fmt(e.inputTokens)}in · {fmt(e.outputTokens)}out · {fmt(e.cacheReadTokens)}cr · {e.calls} calls
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: e.costUsd > 100 ? '#b91c1c' : e.costUsd > 50 ? '#92400e' : '#0f172a' }}>
+                    ${e.costUsd.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!loading && data?.error && (
+        <div style={{ background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '16px 20px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>Error reading session logs</div>
+          <div style={{ fontSize: 12, color: '#475569' }}>{data.error}</div>
         </div>
       )}
     </div>
