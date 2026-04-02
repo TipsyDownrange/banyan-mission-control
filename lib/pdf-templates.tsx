@@ -10,7 +10,11 @@
  */
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf, Image } from '@react-pdf/renderer';
+import path from 'path';
+
+// Logo path — resolved at runtime so it works in both local and Vercel
+const LOGO_PATH = path.join(process.cwd(), 'public', 'kg-logo.png');
 
 // ─── Brand ────────────────────────────────────────────────────────────────────
 
@@ -337,10 +341,8 @@ export function CompanyHeader({ docNumber, date }: { docNumber?: string; date?: 
       <View style={{ alignItems: 'flex-end', gap: 4 }}>
         {docNumber && <Text style={{ fontSize: 9, color: GRAY_TEXT }}>No. {docNumber}</Text>}
         {date && <Text style={{ fontSize: 9, color: GRAY_TEXT }}>Date: {date}</Text>}
-        {/* Logo placeholder — replace with Image once logo file provided */}
-        <View style={S.logoBox}>
-          <Text style={S.logoInner}>{'[KG\nLOGO]'}</Text>
-        </View>
+        {/* Kula Glass Logo */}
+        <Image src={LOGO_PATH} style={{ width: 72, height: 70 }} />
       </View>
     </View>
   );
