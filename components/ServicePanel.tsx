@@ -28,9 +28,34 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'closed',      label: 'Completed',        color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
 ];
 
-const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
+const AREA_COLOR: Record<string, string> = {
+  // Maui areas
+  lahaina: '#0f766e', kahului: '#0369a1', kihei: '#6d28d9',
+  wailea: '#15803d', wailuku: '#92400e', maalaea: '#0369a1',
+  makawao: '#64748b', paia: '#0f766e', kapalua: '#15803d',
+  // Oahu
+  honolulu: '#0369a1', kapolei: '#6d28d9', kailua: '#0f766e',
+  kaneohe: '#15803d', 'hawaii kai': '#92400e', aiea: '#64748b',
+  // Kauai
+  lihue: '#6d28d9', kapaa: '#0f766e', poipu: '#15803d',
+  // Big Island
+  hilo: '#92400e', kona: '#0369a1', waimea: '#6d28d9',
 };
+
+function areaColor(area: string): string {
+  return AREA_COLOR[area?.toLowerCase()] || '#64748b';
+}
+
+// Normalize ALL CAPS strings from Smartsheet to Title Case
+function toTitleCase(str: string): string {
+  if (!str) return str;
+  // If string is all uppercase (ignoring spaces/numbers/punctuation), convert it
+  const letters = str.replace(/[^a-zA-Z]/g, '');
+  if (letters.length > 2 && letters === letters.toUpperCase()) {
+    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  }
+  return str;
+}
 
 function WOCard({
   wo, expanded, onToggle, onStageChange, onSave, allCrew,
@@ -119,43 +144,60 @@ function WOCard({
     <article style={{ borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 5, background: stage.color, opacity: 0.8 }} />
 
-      {/* Card header — always visible */}
-      <div onClick={onToggle} style={{ padding: '14px 16px 14px 20px', cursor: 'pointer' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
-              {wo.id && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{wo.id}</span>}
-              {wo.island && (
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 999, color: ISLAND_COLOR[wo.island] || '#64748b', background: 'rgba(255,255,255,0.7)', border: '1px solid currentColor', opacity: 0.8 }}>
-                  {wo.island}
-                </span>
-              )}
-              {wo.assignedTo && (
-                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 999, background: 'rgba(99,102,241,0.08)', color: '#4338ca', border: '1px solid rgba(99,102,241,0.15)' }}>
-                  → {wo.assignedTo.split(',')[0]}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 4, letterSpacing: '-0.01em' }}>{wo.name}</div>
-            <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4 }}>{wo.description}</div>
-            {wo.scheduledDate && (
-              <div style={{ marginTop: 6, fontSize: 11, color: '#6d28d9', fontWeight: 700 }}>📅 {wo.scheduledDate}</div>
-            )}
-          </div>
-          {/* Action buttons — always visible */}
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+      {/* Card header — compact, single-row */}
+      <div onClick={onToggle} style={{ padding: '10px 10px 10px 16px', cursor: 'pointer' }}>
+        {/* Row 1: WO# + area tag + action buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+          {wo.id && (
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#94a3b8', flexShrink: 0 }}>{wo.id}</span>
+          )}
+          {wo.island && (
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '1px 6px', borderRadius: 999, color: areaColor(wo.island), background: 'rgba(255,255,255,0.8)', border: '1px solid currentColor', flexShrink: 0 }}>
+              {wo.island}
+            </span>
+          )}
+          {/* Spacer */}
+          <div style={{ flex: 1 }} />
+          {/* Icon buttons — small, don't eat space */}
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
             <button
+              title="Schedule & dispatch crew"
               onClick={() => { setMode(mode === 'dispatch' ? 'view' : 'dispatch'); if (!expanded) onToggle(); }}
-              style={{ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: mode === 'dispatch' ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(226,232,240,0.9)', background: mode === 'dispatch' ? 'rgba(238,242,255,0.96)' : 'white', color: mode === 'dispatch' ? '#4338ca' : '#64748b' }}>
-              Dispatch
+              style={{ padding: '4px 8px', borderRadius: 8, fontSize: 10, fontWeight: 800, letterSpacing: '0.04em', cursor: 'pointer', border: mode === 'dispatch' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'dispatch' ? 'rgba(238,242,255,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'dispatch' ? '#4338ca' : '#94a3b8' }}>
+              ⬡ Dispatch
             </button>
             <button
+              title="Edit details"
               onClick={() => { setMode(mode === 'edit' ? 'view' : 'edit'); if (!expanded) onToggle(); }}
-              style={{ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(226,232,240,0.9)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'white', color: mode === 'edit' ? '#0f766e' : '#64748b' }}>
-              Edit
+              style={{ padding: '4px 8px', borderRadius: 8, fontSize: 10, fontWeight: 800, letterSpacing: '0.04em', cursor: 'pointer', border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8' }}>
+              ✎ Edit
             </button>
           </div>
         </div>
+
+        {/* Row 2: Name — truncated to 1 line */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>
+          {toTitleCase(wo.name)}
+        </div>
+
+        {/* Row 3: Description — max 2 lines */}
+        <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {toTitleCase(wo.description)}
+        </div>
+
+        {/* Row 4: Meta — assignee + date, only if set */}
+        {(wo.assignedTo || wo.scheduledDate) && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+            {wo.assignedTo && (
+              <span style={{ fontSize: 10, fontWeight: 600, color: '#4338ca' }}>
+                → {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}
+              </span>
+            )}
+            {wo.scheduledDate && (
+              <span style={{ fontSize: 10, fontWeight: 600, color: '#6d28d9' }}>{wo.scheduledDate}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Expanded body */}
@@ -254,8 +296,8 @@ function WOCard({
           {/* VIEW MODE */}
           {mode === 'view' && (
             <div style={{ display: 'grid', gap: 8 }}>
-              {wo.address && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Address</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.address}</div></div>}
-              {wo.contact && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Contact</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.contact}</div></div>}
+              {wo.address && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Address</div><div style={{ fontSize: 12, color: '#334155' }}>{toTitleCase(wo.address)}</div></div>}
+              {wo.contact && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Contact</div><div style={{ fontSize: 12, color: '#334155' }}>{toTitleCase(wo.contact)}</div></div>}
               {wo.hoursEstimated && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Est. Hours</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.hoursEstimated}</div></div>}
               {wo.comments && (
                 <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.1)' }}>
@@ -439,7 +481,7 @@ export default function ServicePanel() {
 
       {/* KANBAN */}
       {!loading && data && view === 'kanban' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 12, alignItems: 'start' }}>
           {STAGES.slice(0, 5).map(stage => {
             const wos = mergedByStatus[stage.key] || [];
             return (
@@ -449,7 +491,7 @@ export default function ServicePanel() {
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{stage.label}</div>
                   <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{wos.length}</div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {wos.length === 0 ? (
                     <div style={{ padding: '20px 16px', borderRadius: 16, background: 'rgba(248,250,252,0.5)', border: '1px dashed rgba(226,232,240,0.8)', textAlign: 'center', fontSize: 12, color: '#cbd5e1' }}>
                       No work orders
