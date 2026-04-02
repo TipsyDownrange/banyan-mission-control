@@ -34,15 +34,15 @@ export default function ServiceIntake({ onClose }: { onClose: () => void }) {
   const [listening, setListening] = useState(false);
   const [loading, setLoading] = useState(false);
   const [draft, setDraft] = useState<WODraft | null>(null);
-  const recRef = useRef<SpeechRecognition | null>(null);
+  const recRef = useRef<any>(null);
 
   function toggleListen() {
     if (listening) { recRef.current?.stop(); setListening(false); return; }
-    const SR = (window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition
-      || (window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition;
+    const w = window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any };
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!SR) { alert('Voice not supported in this browser'); return; }
-    const rec = new SR(); rec.lang = 'en-US'; rec.continuous = false;
-    rec.onresult = (e: SpeechRecognitionEvent) => setRawInput(prev => prev + ' ' + e.results[0][0].transcript);
+    const rec: any = new SR(); rec.lang = 'en-US'; rec.continuous = false;
+    rec.onresult = (e: any) => setRawInput(prev => prev + ' ' + e.results[0][0].transcript);
     rec.onend = () => setListening(false);
     rec.onerror = () => setListening(false);
     recRef.current = rec; rec.start(); setListening(true);
