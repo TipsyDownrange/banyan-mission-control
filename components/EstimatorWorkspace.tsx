@@ -237,31 +237,44 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                 {/* Scope + Notes */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(220px,0.8fr)', gap: 14, paddingLeft: 4 }}>
                   <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)' }}>
-                    {FL('Scope summary')}
-                    <div style={{ fontSize: 14, lineHeight: 1.7, color: '#334155' }}>{bid['Notes'] || 'No scope notes yet. Add notes as you work through the takeoff.'}</div>
+                    {FL('Scope summary — click to edit')}
+                    <textarea defaultValue={bid['Notes'] || ''} placeholder="Add scope notes as you work through the takeoff..." onClick={e => e.stopPropagation()}
+                      style={{ width: '100%', fontSize: 13, lineHeight: 1.7, color: '#334155', background: 'transparent', border: 'none', outline: 'none', resize: 'none', fontFamily: 'inherit', cursor: 'text', padding: 0 }}
+                      rows={4} />
                   </div>
                   <div style={{ padding: 16, borderRadius: 18, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.16)', display: 'grid', gap: 10 }}>
-                    {FL('Documents')}
+                    {FL('Documents & Notes')}
                     {bid['Bid Platform URL'] ? (
-                      <a href={bid['Bid Platform URL']} target="_blank" rel="noopener"
+                      <a href={bid['Bid Platform URL']} target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
                         style={{ fontSize: 13, fontWeight: 700, color: '#0f766e', textDecoration: 'none', padding: '7px 12px', borderRadius: 10, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)', display: 'block' }}>
                         Open Bid Platform ↗
                       </a>
-                    ) : <div style={{ fontSize: 13, color: '#94a3b8' }}>No bid platform link</div>}
-                    {bid['Estimating Folder Path'] ? (
-                      <div style={{ fontSize: 12, color: '#64748b' }}>📁 {bid['Estimating Folder Path']}</div>
-                    ) : (
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>Estimating folder not linked yet</div>
-                    )}
-                    <button onClick={() => setExpanded(isExpanded ? null : kID)}
-                      style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}>
-                      {isExpanded ? '↑ Less' : '↓ Add note'}
-                    </button>
-                    {isExpanded && (
-                      <textarea placeholder="Add estimating notes, assumptions, risk items..."
-                        style={{ fontSize: 12, padding: '8px 10px', borderRadius: 10, border: '1px solid #e2e8f0', resize: 'none', outline: 'none', color: '#0f172a', lineHeight: 1.5 }}
-                        rows={3} />
-                    )}
+                    ) : <div style={{ fontSize: 12, color: '#94a3b8' }}>No bid platform link on file</div>}
+                    {/* Upload button */}
+                    <label onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>Upload document — Kai routes automatically</span>
+                      <span style={{ padding: '4px 12px', borderRadius: 8, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Upload</span>
+                      <input type="file" style={{ display: 'none' }} onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const form = new FormData();
+                        form.append('file', file);
+                        form.append('bidKID', kID);
+                        form.append('bidName', bid['Job Name'] || '');
+                        form.append('estimator', bid['Assigned To'] || currentUser);
+                        try {
+                          const res = await fetch('/api/upload', { method: 'POST', body: form });
+                          const d = await res.json();
+                          if (d.success) alert('Uploaded to: ' + d.path + '\n(' + d.routingReason + ')');
+                          else alert('Upload failed: ' + d.error);
+                        } catch { alert('Upload error'); }
+                        e.target.value = '';
+                      }} />
+                    </label>
+                    {/* Notes */}
+                    <textarea placeholder="Add estimating notes, assumptions, risk items..."
+                      style={{ fontSize: 12, padding: '8px 10px', borderRadius: 10, border: '1px solid #e2e8f0', resize: 'none', outline: 'none', color: '#0f172a', lineHeight: 1.5, background: 'white' }}
+                      rows={3} onClick={e => e.stopPropagation()} />
                   </div>
                 </div>
 
