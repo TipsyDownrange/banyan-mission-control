@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSSToken } from '@/lib/gauth';
+import { getSSToken, getGoogleAuth } from '@/lib/gauth';
+import { google } from 'googleapis';
 
 const COL = {
   woNumber:       4363127736821636,
@@ -33,7 +34,8 @@ type SheetData = {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { rowId, woNumber, stage, assignedTo, description, scheduledDate, notes, hoursEstimated, hoursActual } = body;
+    const { rowId, woNumber, woName, stage, assignedTo, description, scheduledDate, notes, hoursEstimated, hoursActual } = body;
+    let island: string = body.island || '';
 
     if (!rowId && !woNumber) {
       return NextResponse.json({ error: 'rowId or woNumber required' }, { status: 400 });
@@ -45,6 +47,7 @@ export async function PATCH(req: Request) {
     const needsSheetFetch = (!rowId && woNumber) || hoursActual !== undefined;
     let targetRowId: number = rowId;
     let hoursActualColId: number | null = null;
+    let sheetData: SheetData | null = null;
 
     if (needsSheetFetch) {
       const searchRes = await fetch(
@@ -52,6 +55,7 @@ export async function PATCH(req: Request) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const sheet = await searchRes.json() as SheetData;
+      sheetData = sheet;
 
       // Find row by WO number if no rowId
       if (!targetRowId && woNumber) {
@@ -99,6 +103,77 @@ export async function PATCH(req: Request) {
     const data = await res.json() as { message?: string };
     if (!res.ok) {
       return NextResponse.json({ error: data.message || 'Smartsheet update failed' }, { status: 500 });
+    }
+
+    // If this is a dispatch (scheduledDate + assignedTo both provided), also write to Dispatch_Schedule
+    if (scheduledDate && assignedTo) {
+      try {
+        const fieldSheetId = process.env.FIELD_BACKEND_SHEET_ID;
+        if (fieldSheetId) {
+          const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+          const sheets = google.sheets({ version: 'v4', auth });
+
+          const slotId = `SVC-${woNumber || rowId}-${scheduledDate}`;
+          const menRequired = body.men || '1';
+          const displayName = woName || (woNumber ? `Service WO ${woNumber}` : 'Service Work Order');
+
+          // Try to get island from sheet if not passed in body
+          if (!island && sheetData) {
+            const woRow = sheetData.rows?.find(r => r.id === targetRowId);
+            if (woRow) {
+              const islandColId = sheetData.columns?.find(c => c.title.toLowerCase() === 'island' || c.title.toLowerCase().includes('location'))?.id;
+              if (islandColId) {
+                const cell = woRow.cells.find(c => c.columnId === islandColId);
+                island = String(cell?.displayValue || cell?.value || '');
+              }
+            }
+          }
+
+          // Check if slot already exists for this WO + date (avoid duplicates)
+          const existing = await sheets.spreadsheets.values.get({
+            spreadsheetId: fieldSheetId,
+            range: 'Dispatch_Schedule!A2:J5000',
+          });
+          const existingRows = existing.data.values || [];
+          const alreadyExists = existingRows.some(r => r[0] === slotId);
+
+          if (!alreadyExists) {
+            await sheets.spreadsheets.values.append({
+              spreadsheetId: fieldSheetId,
+              range: 'Dispatch_Schedule!A:J',
+              valueInputOption: 'RAW',
+              requestBody: {
+                values: [[
+                  slotId,           // slot_id
+                  scheduledDate,    // date
+                  `SVC-${woNumber || rowId}`, // kID
+                  displayName,      // project_name
+                  island,           // island
+                  menRequired,      // men_required
+                  body.hoursEstimated || '', // hours_estimated
+                  assignedTo,       // assigned_crew
+                  'Joey Ritthaler', // created_by
+                  'filled',         // status
+                ]],
+              },
+            });
+          } else {
+            // Update existing slot's assigned_crew and status
+            const rowIndex = existingRows.findIndex(r => r[0] === slotId);
+            if (rowIndex >= 0) {
+              await sheets.spreadsheets.values.update({
+                spreadsheetId: fieldSheetId,
+                range: `Dispatch_Schedule!H${rowIndex + 2}:J${rowIndex + 2}`,
+                valueInputOption: 'RAW',
+                requestBody: { values: [[assignedTo, 'Joey Ritthaler', 'filled']] },
+              });
+            }
+          }
+        }
+      } catch {
+        // Non-fatal: log to console but don't block the WO update response
+        console.error('[schedule-sync] Failed to write to Dispatch_Schedule');
+      }
     }
 
     return NextResponse.json({ ok: true, rowId: targetRowId });

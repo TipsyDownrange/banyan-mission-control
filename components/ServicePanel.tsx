@@ -67,7 +67,7 @@ function WOCard({
   expanded: boolean;
   onToggle: () => void;
   onStageChange: (woId: string, stage: string) => Promise<void>;
-  onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }) => Promise<void>;
+  onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
   allCrew: CrewMember[];
   onQuote: (woId: string) => void;
 }) {
@@ -134,6 +134,8 @@ function WOCard({
       assignedTo: dispatchDraft.selectedCrew.join(', '),
       scheduledDate: dispatchDraft.scheduledDate,
       hoursEstimated: dispatchDraft.hoursEstimated,
+      _woName: wo.name,
+      _island: woIsland || wo.island,
     });
     // Also move to scheduled stage if still in approved/quote/lead
     if (['lead','quote','approved'].includes(wo.status)) {
@@ -493,7 +495,7 @@ export default function ServicePanel() {
     }
   }
 
-  async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }) {
+  async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string; }) {
     // Optimistic update
     setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], ...fields } }));
     try {
@@ -502,6 +504,8 @@ export default function ServicePanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           woNumber: woId,
+          woName: fields._woName,
+          island: fields._island,
           description: fields.description,
           assignedTo: fields.assignedTo,
           scheduledDate: fields.scheduledDate,
