@@ -118,9 +118,11 @@ type Props = {
   onToggle: () => void;
   demoUser?: string;
   onUserChange?: (u: string) => void;
+  visibleSections?: string[];
+  allUsers?: { name: string; role: string; group: string }[];
 };
 
-export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange }: Props) {
+export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, allUsers }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
 
@@ -178,7 +180,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: collapsed ? '8px 6px' : '8px 8px', overflowY: 'auto', scrollbarWidth: 'none' }}>
-        {NAV.map(({ section, sectionIcon, items }) => {
+        {NAV.filter(({ section }) => !visibleSections || visibleSections.includes(section)).map(({ section, sectionIcon, items }) => {
           const hasActive = items.some(i => i.label === activeView);
           const isSectionCollapsed = collapsedSections.has(section) && !hasActive;
 
@@ -266,12 +268,28 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
         <div style={{ padding: '10px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
           {onUserChange && (
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.4)', marginBottom: 4 }}>Preview as</div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.4)', marginBottom: 4 }}>🧪 Preview as</div>
               <select value={demoUser} onChange={e => onUserChange(e.target.value)}
                 style={{ width: '100%', fontSize: 11, padding: '5px 8px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(203,213,225,0.8)', cursor: 'pointer', outline: 'none' }}>
-                {['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Mark Olson','Joey Ritthaler','Frank Redondo','Nate Nakamura'].map(u => (
-                  <option key={u} style={{ background: '#0d1f2d' }}>{u}</option>
-                ))}
+                {allUsers ? (
+                  // Grouped by department
+                  Object.entries(
+                    allUsers.reduce((acc, u) => {
+                      (acc[u.group] = acc[u.group] || []).push(u);
+                      return acc;
+                    }, {} as Record<string, typeof allUsers>)
+                  ).map(([group, users]) => (
+                    <optgroup key={group} label={group} style={{ background: '#0d1f2d' }}>
+                      {users.map(u => (
+                        <option key={u.name} value={u.name} style={{ background: '#0d1f2d' }}>{u.name}</option>
+                      ))}
+                    </optgroup>
+                  ))
+                ) : (
+                  ['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Mark Olson','Joey Ritthaler','Frank Redondo','Nate Nakamura'].map(u => (
+                    <option key={u} style={{ background: '#0d1f2d' }}>{u}</option>
+                  ))
+                )}
               </select>
             </div>
           )}

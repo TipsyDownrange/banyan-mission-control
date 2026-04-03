@@ -54,7 +54,70 @@ export type AppView =
   | 'Cost & Usage'
   | 'Workflows';
 
-const DEMO_USERS = ['Sean Daniels', 'Kyle Shimizu', 'Jenny Shimabukuro', 'Mark Olson'];
+// Full org — grouped for the picker
+const ALL_USERS: { name: string; role: string; group: string }[] = [
+  // Leadership
+  { name: 'Jody Boeringa',   role: 'owner',       group: 'Leadership' },
+  { name: 'Sean Daniels',    role: 'gm',           group: 'Leadership' },
+  // PM / Estimating
+  { name: 'Frank Redondo',   role: 'pm',           group: 'PM / Estimating' },
+  { name: 'Kyle Shimizu',    role: 'estimator',    group: 'PM / Estimating' },
+  { name: 'Jenny Shimabukuro',role:'estimator',    group: 'PM / Estimating' },
+  { name: 'Joey Ritthaler',  role: 'service_pm',   group: 'PM / Estimating' },
+  // Sales / Admin
+  { name: 'Mark Olson',      role: 'sales',        group: 'Sales / Admin' },
+  { name: 'Tia Omura',       role: 'admin',        group: 'Sales / Admin' },
+  { name: 'Jenna Nakama',    role: 'admin',        group: 'Sales / Admin' },
+  { name: 'Sherilynn Takuchi',role:'admin',         group: 'Sales / Admin' },
+  // Field — Supers
+  { name: 'Karl Nakamura Sr.',role:'super',         group: 'Field — Oahu' },
+  { name: 'Nate Nakamura',   role: 'super',        group: 'Field — Maui' },
+  // Field — Oahu crew
+  { name: 'Karl Nakamura Jr.',role:'glazier',       group: 'Field — Oahu' },
+  { name: 'Thomas Begonia',  role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Jay Castillo',    role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Nolan Lagmay',    role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Francis Lynch',   role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'James Nakamura',  role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Timothy Stitt',   role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Wendall Tavares', role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Deric Valoroso',  role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Sonny Ah Kui',    role: 'glazier',      group: 'Field — Oahu' },
+  { name: 'Lewis Roman',     role: 'glazier',      group: 'Field — Oahu' },
+  // Field — Maui crew
+  { name: 'Nathan Nakamura', role: 'glazier',      group: 'Field — Maui' },
+  { name: 'Mark Villados',   role: 'glazier',      group: 'Field — Maui' },
+  { name: 'Tyler Niemeyer',  role: 'glazier',      group: 'Field — Maui' },
+  { name: 'Tyson Omura',     role: 'glazier',      group: 'Field — Maui' },
+  // Field — Kauai crew
+  { name: 'Silas Macon',     role: 'glazier',      group: 'Field — Kauai' },
+  { name: 'Mien-Quoc Ly',    role: 'glazier',      group: 'Field — Kauai' },
+  { name: 'Lonnie McKenzie', role: 'glazier',      group: 'Field — Kauai' },
+  { name: 'Joshua Moore',    role: 'glazier',      group: 'Field — Kauai' },
+  { name: 'Troy Sliter',     role: 'glazier',      group: 'Field — Kauai' },
+];
+
+// Role → which nav sections are visible
+export function navSectionsForRole(role: string): string[] {
+  if (role === 'owner') return ['Command', 'Operations', 'People & Assets', 'Estimating', 'Service', 'BanyanOS'];
+  if (role === 'gm')    return ['Command', 'Operations', 'People & Assets', 'Estimating', 'Service', 'BanyanOS'];
+  if (role === 'pm')    return ['Command', 'Operations', 'People & Assets', 'Service'];
+  if (role === 'estimator') return ['Command', 'Estimating', 'People & Assets'];
+  if (role === 'service_pm') return ['Command', 'Service', 'People & Assets'];
+  if (role === 'sales') return ['Command', 'Estimating', 'People & Assets'];
+  if (role === 'admin') return ['Command', 'People & Assets'];
+  if (role === 'super') return ['Command', 'Operations', 'People & Assets'];
+  if (role === 'glazier') return ['Command']; // schedule only — field app is their primary
+  return ['Command'];
+}
+
+// Role → default landing view
+function defaultViewForRole(role: string): AppView {
+  if (['glazier', 'super'].includes(role)) return 'Today';
+  if (role === 'estimator') return 'Bid Queue';
+  if (role === 'service_pm') return 'Work Orders';
+  return 'Today';
+}
 
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
@@ -62,6 +125,14 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [demoUser, setDemoUser] = useState('Sean Daniels');
+  const demoUserObj = ALL_USERS.find(u => u.name === demoUser) || ALL_USERS[0];
+  const visibleSections = navSectionsForRole(demoUserObj.role);
+
+  function handleUserChange(name: string) {
+    setDemoUser(name);
+    const u = ALL_USERS.find(x => x.name === name);
+    if (u) setActiveView(defaultViewForRole(u.role));
+  }
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -101,7 +172,9 @@ export default function Home() {
           collapsed={isMobile ? false : collapsed}
           onToggle={() => isMobile ? setMobileOpen(false) : setCollapsed(v => !v)}
           demoUser={demoUser}
-          onUserChange={setDemoUser}
+          onUserChange={handleUserChange}
+          visibleSections={visibleSections}
+          allUsers={ALL_USERS}
         />
       </div>
 
@@ -122,9 +195,9 @@ export default function Home() {
             <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc' }}>
               Banyan<span style={{ color: '#14b8a6' }}>OS</span>
             </div>
-            <select value={demoUser} onChange={e => setDemoUser(e.target.value)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: 'rgba(148,163,184,0.8)', cursor: 'pointer', outline: 'none' }}>
-              {DEMO_USERS.map(u => <option key={u} style={{ background: '#0c2330' }}>{u}</option>)}
-            </select>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(20,184,166,0.7)' }}>
+              {demoUser.split(' ')[0]}
+            </div>
           </div>
         )}
 
