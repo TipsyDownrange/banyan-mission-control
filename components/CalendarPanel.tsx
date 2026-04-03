@@ -8,9 +8,12 @@ type CalEvent = {
   end: string;
   location?: string;
   calendar: string;
+  calendarOwner?: string;
   color: string;
   allDay: boolean;
   description?: string;
+  googleEventId?: string;
+  calendarId?: string;
 };
 
 function fmt(iso: string) {
@@ -40,13 +43,21 @@ export default function CalendarPanel() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalEvent | null>(null);
+  const [calMode, setCalMode] = useState<'personal' | 'management'>('personal');
+  const [showNewEvent, setShowNewEvent] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newStartTime, setNewStartTime] = useState('');
+  const [newEndTime, setNewEndTime] = useState('');
+  const [savingEvent, setSavingEvent] = useState(false);
 
   useEffect(() => {
-    fetch('/api/calendar')
+    setLoading(true);
+    fetch(`/api/calendar?mode=${calMode}&days=30`)
       .then(r => r.json())
       .then(d => { setEvents(d.events || []); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
-  }, []);
+  }, [calMode]);
 
   // Build calendar grid
   const year = currentMonth.getFullYear();
@@ -81,6 +92,29 @@ export default function CalendarPanel() {
     if (dayEvents.length > 0 || i === 0) agendaDays.push({ date: d, events: dayEvents });
   }
 
+  async function createEvent() {
+    if (!newTitle || !newDate) return;
+    setSavingEvent(true);
+    try {
+      const start = newStartTime ? `${newDate}T${newStartTime}:00` : newDate;
+      const end = newEndTime ? `${newDate}T${newEndTime}:00` : newDate;
+      const res = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle, start, end, allDay: !newStartTime }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setShowNewEvent(false);
+        setNewTitle(''); setNewDate(''); setNewStartTime(''); setNewEndTime('');
+        // Refresh
+        setLoading(true);
+        fetch(`/api/calendar?mode=${calMode}&days=30`).then(r=>r.json()).then(d=>{setEvents(d.events||[]);setLoading(false);});
+      } else { alert('Failed: ' + (data.error || 'Unknown')); }
+    } catch(e) { alert('Error: ' + e); }
+    setSavingEvent(false);
+  }
+
   return (
     <div style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
       {/* Header */}
@@ -90,6 +124,15 @@ export default function CalendarPanel() {
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Calendar</h1>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Personal / Management toggle */}
+          <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 3 }}>
+            {(['personal', 'management'] as const).map(m => (
+              <button key={m} onClick={() => setCalMode(m)}
+                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === m ? 'white' : 'transparent', color: calMode === m ? '#0369a1' : '#94a3b8', cursor: 'pointer', boxShadow: calMode === m ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                {m === 'personal' ? 'My Calendar' : '🏢 All Staff'}
+              </button>
+            ))}
+          </div>
           {/* View toggle */}
           {(['month', 'agenda'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
@@ -107,6 +150,12 @@ export default function CalendarPanel() {
                 style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>›</button>
               <button onClick={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
                 style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}>Today</button>
+              {calMode === 'personal' && (
+                <button onClick={() => setShowNewEvent(true)}
+                  style={{ padding: '5px 14px', borderRadius: 8, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                  + New
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -232,6 +281,47 @@ export default function CalendarPanel() {
               No upcoming events in the next 30 days
             </div>
           )}
+        </div>
+      )}
+      {/* New Event Modal */}
+      {showNewEvent && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 420, padding: 28, boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>New Event</div>
+            <div style={{ display: 'grid', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>Title *</label>
+                <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Event title..." autoFocus
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>Date *</label>
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>Start Time</label>
+                  <input type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>End Time</label>
+                  <input type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>Leave time blank to create an all-day event</div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button onClick={() => { setShowNewEvent(false); setNewTitle(''); setNewDate(''); }}
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={createEvent} disabled={!newTitle || !newDate || savingEvent}
+                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: newTitle && newDate ? 'white' : '#94a3b8', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
+                {savingEvent ? 'Creating...' : 'Create Event'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
