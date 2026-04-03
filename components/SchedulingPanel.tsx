@@ -316,8 +316,15 @@ export default function SchedulingPanel() {
                     (islandFilter === 'Kauai' && island.island.includes('Outer'))
                   );
                   const total = visibleIslands.reduce((sum, island) => {
+                    // Use sheet TOTAL row if available, otherwise sum from job rows
                     const islandTotal = island.totals.find(t => t.date === w.date);
-                    return sum + (islandTotal?.men || 0);
+                    if (islandTotal && islandTotal.men > 0) return sum + islandTotal.men;
+                    // Fallback: sum individual job rows
+                    const jobSum = island.jobs.reduce((jsum, job) => {
+                      const jobWeek = job.weeks.find(wk => wk.date === w.date);
+                      return jsum + (jobWeek?.men || 0);
+                    }, 0);
+                    return sum + jobSum;
                   }, 0);
                   const current = isCurrentWeek(w.date);
                   return (
@@ -340,7 +347,11 @@ export default function SchedulingPanel() {
                 {data.islands.map(island => {
                   const color = ISLAND_COLOR[island.island] || '#64748b';
                   const thisWeek = displayWeeks.find(w => isCurrentWeek(w.date));
-                  const current = thisWeek ? island.totals.find(t => t.date === thisWeek.date)?.men || 0 : 0;
+                  const thisWeekTotal = thisWeek ? island.totals.find(t => t.date === thisWeek.date) : null;
+                  const current = thisWeekTotal?.men || (thisWeek ? island.jobs.reduce((s, j) => {
+                    const jw = j.weeks.find(w => w.date === thisWeek.date);
+                    return s + (jw?.men || 0);
+                  }, 0) : 0);
                   return (
                     <div key={island.island} style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
