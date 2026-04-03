@@ -236,7 +236,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.35)', marginBottom: 4 }}>Preview as</div>
               <select value={demoUser} onChange={e => onUserChange(e.target.value)}
                 style={{ width: '100%', fontSize: 11, padding: '5px 8px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(203,213,225,0.7)', cursor: 'pointer', outline: 'none' }}>
-                {['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Joey Ritthaler','Frank Redondo'].map(u => (
+                {['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Mark Olson','Joey Ritthaler','Frank Redondo'].map(u => (
                   <option key={u} style={{ background: '#0c2330' }}>{u}</option>
                 ))}
               </select>

@@ -56,6 +56,7 @@ export default function SchedulingPanel() {
   const [view, setView] = useState<'forecast' | 'lookahead'>('forecast');
   const [islandFilter, setIslandFilter] = useState('All');
   const [editingCell, setEditingCell] = useState<{jobNum: string; date: string} | null>(null);
+  const [draggingMen, setDraggingMen] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
   const [expandedIslands, setExpandedIslands] = useState<Set<string>>(new Set(['MAUI', 'OAHU']));
   const [weeksAhead, setWeeksAhead] = useState(12);
@@ -190,6 +191,23 @@ export default function SchedulingPanel() {
                 {isExpanded && (
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                      {/* Drag-to-set men chips */}
+                      <div style={{ display: 'flex', gap: 5, padding: '6px 12px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', alignSelf: 'center', whiteSpace: 'nowrap', marginRight: 4 }}>Drag to set:</span>
+                        {[1,2,3,4,5,6,8,10].map(n => (
+                          <div key={n} draggable
+                            onDragStart={() => setDraggingMen(n)}
+                            onDragEnd={() => setDraggingMen(null)}
+                            style={{ width: 32, height: 28, borderRadius: 8, background: menBg(n), border: `1.5px solid ${menColor(n)}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flexShrink: 0, userSelect: 'none' }}>
+                            <span style={{ fontSize: 13, fontWeight: 900, color: menColor(n) }}>{n}</span>
+                          </div>
+                        ))}
+                        <div key={0} draggable onDragStart={() => setDraggingMen(0)} onDragEnd={() => setDraggingMen(null)}
+                          style={{ width: 32, height: 28, borderRadius: 8, background: '#f8fafc', border: '1.5px dashed #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flexShrink: 0, userSelect: 'none' }}>
+                          <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>0</span>
+                        </div>
+                      </div>
+
                       <thead>
                         <tr style={{ background: '#f8fafc' }}>
                           <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: '#f8fafc', zIndex: 1, minWidth: 220 }}>Job</th>
@@ -226,8 +244,26 @@ export default function SchedulingPanel() {
                                       onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
                                       style={{ width: 36, height: 26, textAlign: 'center', borderRadius: 6, border: '2px solid #0369a1', fontSize: 13, fontWeight: 800, outline: 'none', padding: 0, margin: '0 auto', display: 'block' }} />
                                   ) : (
-                                    <div onClick={() => { setEditingCell({jobNum: job.job_number, date: w.date}); setEditValue(String(men||0)); }}
-                                      style={{ width: men ? 32 : 24, height: men ? 24 : 20, borderRadius: 6, background: men ? menBg(men) : 'transparent', border: `1px solid ${men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'text' }}>
+                                    <div
+                                      onClick={() => { setEditingCell({jobNum: job.job_number, date: w.date}); setEditValue(String(men||0)); }}
+                                      onDragOver={e => e.preventDefault()}
+                                      onDrop={() => {
+                                        if (draggingMen !== null) {
+                                          // Update local state optimistically
+                                          setData(prev => prev ? {
+                                            ...prev,
+                                            islands: prev.islands.map(isl => ({
+                                              ...isl,
+                                              jobs: isl.jobs.map(j => j.job_number === job.job_number ? {
+                                                ...j,
+                                                weeks: j.weeks.map(wk => wk.date === w.date ? { ...wk, men: draggingMen } : wk)
+                                              } : j)
+                                            }))
+                                          } : null);
+                                          setDraggingMen(null);
+                                        }
+                                      }}
+                                      style={{ width: men ? 32 : 28, height: men ? 24 : 24, borderRadius: 6, background: draggingMen !== null ? 'rgba(15,118,110,0.08)' : men ? menBg(men) : 'transparent', border: `1px solid ${draggingMen !== null ? '#14b8a6' : men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: draggingMen !== null ? 'copy' : 'text', transition: 'all 0.1s' }}>
                                       {men > 0 && <span style={{ fontSize: 12, fontWeight: 800, color: menColor(men) }}>{men}</span>}
                                     </div>
                                   )}
@@ -247,7 +283,9 @@ export default function SchedulingPanel() {
                               const men = total?.men || 0;
                               return (
                                 <td key={w.date} style={{ padding: '6px 4px', textAlign: 'center', borderLeft: isCurrentWeek(w.date) ? `2px solid ${color}55` : `1px solid ${color}22` }}>
-                                  <span style={{ fontSize: 13, fontWeight: 900, color: men ? color : '#cbd5e1' }}>{men || '—'}</span>
+                                  <div style={{ width: men ? 32 : 20, height: men ? 28 : 20, borderRadius: 6, background: men ? menBg(men) : 'transparent', border: `1px solid ${men ? menColor(men)+'44' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                                    <span style={{ fontSize: men >= 10 ? 11 : 14, fontWeight: 900, color: men ? color : '#cbd5e1', letterSpacing: '-0.04em' }}>{men || '—'}</span>
+                                  </div>
                                 </td>
                               );
                             })}
@@ -261,8 +299,63 @@ export default function SchedulingPanel() {
             );
           })}
 
+          {/* Company-wide totals summary — always shown at bottom */}
+          <div style={{ marginTop: 16, borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', background: 'white' }}>
+            <div style={{ padding: '10px 16px', background: '#0f172a', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>
+                {islandFilter === 'All' ? 'Company Total — All Islands' : `${islandFilter} Total`}
+              </span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>Men on site per week</span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <div style={{ display: 'flex', padding: '10px 16px', gap: 8, minWidth: 'fit-content' }}>
+                {displayWeeks.map(w => {
+                  // Sum totals for visible islands
+                  const visibleIslands = data.islands.filter(island =>
+                    islandFilter === 'All' || island.island.toUpperCase().includes(islandFilter.toUpperCase()) ||
+                    (islandFilter === 'Kauai' && island.island.includes('Outer'))
+                  );
+                  const total = visibleIslands.reduce((sum, island) => {
+                    const islandTotal = island.totals.find(t => t.date === w.date);
+                    return sum + (islandTotal?.men || 0);
+                  }, 0);
+                  const current = isCurrentWeek(w.date);
+                  return (
+                    <div key={w.date} style={{ flexShrink: 0, textAlign: 'center', minWidth: 52 }}>
+                      <div style={{ fontSize: 9, color: current ? '#0369a1' : '#94a3b8', fontWeight: current ? 800 : 600, marginBottom: 4 }}>
+                        {fmtDate(w.date)}
+                      </div>
+                      <div style={{ width: 48, height: 48, borderRadius: 10, background: total ? menBg(total) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (total ? menColor(total) + '44' : '#e2e8f0')}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                        <span style={{ fontSize: total >= 10 ? 14 : 18, fontWeight: 900, color: total ? menColor(total) : '#cbd5e1', letterSpacing: '-0.04em', lineHeight: 1 }}>{total || '—'}</span>
+                        {total > 0 && <span style={{ fontSize: 7.5, color: '#94a3b8', marginTop: 1 }}>men</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {/* Per-island breakdown row */}
+            {islandFilter === 'All' && (
+              <div style={{ borderTop: '1px solid #f1f5f9', padding: '8px 16px', display: 'flex', gap: 16, overflowX: 'auto' }}>
+                {data.islands.map(island => {
+                  const color = ISLAND_COLOR[island.island] || '#64748b';
+                  const thisWeek = displayWeeks.find(w => isCurrentWeek(w.date));
+                  const current = thisWeek ? island.totals.find(t => t.date === thisWeek.date)?.men || 0 : 0;
+                  return (
+                    <div key={island.island} style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, color }}>{island.island}</span>
+                      <span style={{ fontSize: 13, fontWeight: 900, color: current ? color : '#cbd5e1' }}>{current || 0}</span>
+                      <span style={{ fontSize: 10, color: '#94a3b8' }}>this week</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Legend */}
-          <div style={{ marginTop: 16, padding: '10px 16px', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>Men on site:</span>
             {[[1,'1-2','#0f766e'],[2,'3-4','#0f766e'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','#b91c1c']].map(([n,label,color]) => (
               <div key={String(n)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
