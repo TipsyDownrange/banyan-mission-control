@@ -45,7 +45,7 @@ export type AppView =
   | 'Work Orders'
   | 'Customers'
   | 'Assets'
-  | 'Scheduling'
+  | 'Forecasting'
   | 'Dispatch Board'
   | 'Task Board'
   | 'Approvals'
@@ -144,7 +144,7 @@ export default function Home() {
         {activeView === 'Work Orders' && <ServicePanel />}
         {activeView === 'Customers' && <CustomersPanel />}
         {activeView === 'Assets' && <AssetsPanel />}
-        {activeView === 'Scheduling' && <SchedulingPanel />}
+        {activeView === 'Forecasting' && <SchedulingPanel />}
         {activeView === 'Dispatch Board' && <DispatchBoard />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
         {activeView === 'Cost & Usage' && <CostPanel />}
