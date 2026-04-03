@@ -91,20 +91,16 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3, marginBottom: 6 }}>Work Order Dispatch</Text>
-            {/* Date/time on its own line, below the title with clear separation */}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 0 }}>
-              {data.scheduled_date ? (
-                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 999, backgroundColor: `${C.blue}18`, marginRight: 8 }}>
-                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.blue }}>📅 {data.scheduled_date}</Text>
-                </View>
-              ) : (
-                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 999, backgroundColor: C.bg, marginRight: 8 }}>
-                  <Text style={{ fontSize: 10, color: C.slateLight }}>Date TBD</Text>
-                </View>
-              )}
+            {/* Date/time row — plain text, no emoji */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 }}>
+              <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 8, backgroundColor: `${C.blue}18`, marginRight: 8 }}>
+                <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.blue }}>
+                  {data.scheduled_date ? `Date: ${data.scheduled_date}` : 'Date: TBD'}
+                </Text>
+              </View>
               {data.start_time && (
-                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 999, backgroundColor: `${C.navy}12` }}>
-                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.navy }}>🕐 Start: {data.start_time}</Text>
+                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 8, backgroundColor: `${C.navy}12` }}>
+                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.navy }}>Start: {data.start_time}</Text>
                 </View>
               )}
             </View>
@@ -247,7 +243,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
         {/* Special instructions */}
         {data.special_instructions && (
           <View style={{ marginTop: 8, padding: '8 12', backgroundColor: '#fffbeb', borderRadius: 8, border: `1 solid ${C.orangeBorder}` }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.orange, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>⚠ Special Instructions</Text>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.orange, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Special Instructions</Text>
             <Text style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>{data.special_instructions}</Text>
           </View>
         )}
