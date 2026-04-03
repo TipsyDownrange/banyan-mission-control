@@ -40,6 +40,7 @@ const NAV: { section: string; icon: string; items: { label: AppView; dot?: strin
       { label: 'Customers' },
       { label: 'Assets', dot: '#14b8a6' },
       { label: 'Scheduling', dot: '#14b8a6' },
+      { label: 'Dispatch Board', dot: '#f59e0b' },
     ],
   },
   {

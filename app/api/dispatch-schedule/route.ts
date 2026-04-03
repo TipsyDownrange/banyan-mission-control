@@ -1,0 +1,132 @@
+/**
+ * Dispatch Schedule API
+ * GET  - fetch all slots for a date range
+ * POST - create a new slot (PM creates the need)
+ * PATCH - assign crew to a slot / update status (superintendent fills it)
+ * DELETE - remove a slot
+ */
+
+import { NextResponse } from 'next/server';
+import { google } from 'googleapis';
+import { getGoogleAuth } from '@/lib/gauth';
+
+const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status'];
+
+function rowToSlot(row: string[]) {
+  const s: Record<string, string> = {};
+  COLS.forEach((c, i) => { s[c] = row[i] || ''; });
+  return s;
+}
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const from = searchParams.get('from') || new Date().toISOString().slice(0,10);
+    const days = parseInt(searchParams.get('days') || '28');
+    const island = searchParams.get('island') || '';
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:J5000',
+    });
+
+    const fromDate = new Date(from);
+    const toDate = new Date(fromDate.getTime() + days * 24 * 60 * 60 * 1000);
+
+    let slots = (res.data.values || [])
+      .filter(r => r[0])
+      .map(r => rowToSlot(r.map(String)))
+      .filter(s => {
+        const d = new Date(s.date);
+        return d >= fromDate && d <= toDate;
+      });
+
+    if (island) slots = slots.filter(s => s.island === island);
+
+    return NextResponse.json({ slots });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err), slots: [] }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { date, kID, project_name, island, men_required, hours_estimated, created_by } = body;
+    if (!date || !project_name) return NextResponse.json({ error: 'date and project_name required' }, { status: 400 });
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Generate slot_id
+    const existing = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:A5000' });
+    const count = (existing.data.values || []).filter(r => r[0]).length;
+    const slot_id = `SLOT-${date.replace(/-/g,'')}-${String(count + 1).padStart(3,'0')}`;
+
+    const row = [slot_id, date, kID||'', project_name, island||'', men_required||'1', hours_estimated||'', '', created_by||'', 'open'];
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A1',
+      valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: [row] },
+    });
+
+    return NextResponse.json({ ok: true, slot_id });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { slot_id, assigned_crew, status, ...updates } = body;
+    if (!slot_id) return NextResponse.json({ error: 'slot_id required' }, { status: 400 });
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:J5000' });
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex(r => r[0] === slot_id);
+    if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
+
+    const existing = rows[rowIdx].map(String);
+    const updated = [...existing];
+    if (assigned_crew !== undefined) updated[7] = Array.isArray(assigned_crew) ? assigned_crew.join(', ') : assigned_crew;
+    if (status !== undefined) updated[9] = status;
+    COLS.forEach((c, i) => { if (updates[c] !== undefined) updated[i] = updates[c]; });
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:J${rowIdx + 2}`,
+      valueInputOption: 'USER_ENTERED', requestBody: { values: [updated] },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const slot_id = searchParams.get('slot_id') || '';
+    if (!slot_id) return NextResponse.json({ error: 'slot_id required' }, { status: 400 });
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:A5000' });
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex(r => r[0] === slot_id);
+    if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
+
+    // Clear the row
+    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:J${rowIdx+2}` });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+}

@@ -22,6 +22,7 @@ import ServicePanel from '@/components/ServicePanel';
 import BidIntakePanel from '@/components/BidIntakePanel';
 import AssetsPanel from '@/components/AssetsPanel';
 import SchedulingPanel from '@/components/SchedulingPanel';
+import DispatchBoard from '@/components/DispatchBoard';
 import CustomersPanel from '@/components/CustomersPanel';
 import KaiFloat from '@/components/KaiFloat';
 
@@ -45,6 +46,7 @@ export type AppView =
   | 'Customers'
   | 'Assets'
   | 'Scheduling'
+  | 'Dispatch Board'
   | 'Task Board'
   | 'Approvals'
   | 'Cost & Usage'
@@ -143,6 +145,7 @@ export default function Home() {
         {activeView === 'Customers' && <CustomersPanel />}
         {activeView === 'Assets' && <AssetsPanel />}
         {activeView === 'Scheduling' && <SchedulingPanel />}
+        {activeView === 'Dispatch Board' && <DispatchBoard />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
         {activeView === 'Cost & Usage' && <CostPanel />}
         {activeView === 'Workflows' && <CronPanel />}
