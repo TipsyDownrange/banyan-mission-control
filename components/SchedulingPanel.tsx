@@ -238,29 +238,54 @@ export default function SchedulingPanel() {
                                     <input autoFocus type="number" value={editValue} min="0" max="20"
                                       onChange={e => setEditValue(e.target.value)}
                                       onBlur={async () => {
-                                        // Write back to sheet (future: update Google Sheet row)
+                                        const newMen = parseInt(editValue) || 0;
+                                        // Optimistic update already applied via drag/edit state
                                         setEditingCell(null);
+                                        try {
+                                          await fetch('/api/scheduling', {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              job_number: job.job_number,
+                                              date: w.date,
+                                              men: newMen,
+                                            }),
+                                          });
+                                        } catch { /* non-fatal */ }
                                       }}
-                                      onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
+                                      onKeyDown={async e => {
+                                        if (e.key === 'Enter') {
+                                          const input = e.currentTarget;
+                                          input.blur(); // triggers onBlur → save
+                                        }
+                                        if (e.key === 'Escape') setEditingCell(null);
+                                      }}
                                       style={{ width: 36, height: 26, textAlign: 'center', borderRadius: 6, border: '2px solid #0369a1', fontSize: 13, fontWeight: 800, outline: 'none', padding: 0, margin: '0 auto', display: 'block' }} />
                                   ) : (
                                     <div
                                       onClick={() => { setEditingCell({jobNum: job.job_number, date: w.date}); setEditValue(String(men||0)); }}
                                       onDragOver={e => e.preventDefault()}
-                                      onDrop={() => {
+                                      onDrop={async () => {
                                         if (draggingMen !== null) {
-                                          // Update local state optimistically
+                                          const newMen = draggingMen;
                                           setData(prev => prev ? {
                                             ...prev,
                                             islands: prev.islands.map(isl => ({
                                               ...isl,
                                               jobs: isl.jobs.map(j => j.job_number === job.job_number ? {
                                                 ...j,
-                                                weeks: j.weeks.map(wk => wk.date === w.date ? { ...wk, men: draggingMen } : wk)
+                                                weeks: j.weeks.map(wk => wk.date === w.date ? { ...wk, men: newMen } : wk)
                                               } : j)
                                             }))
                                           } : null);
                                           setDraggingMen(null);
+                                          try {
+                                            await fetch('/api/scheduling', {
+                                              method: 'PATCH',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ job_number: job.job_number, date: w.date, men: newMen }),
+                                            });
+                                          } catch { /* non-fatal */ }
                                         }
                                       }}
                                       style={{ width: men ? 32 : 28, height: men ? 24 : 24, borderRadius: 6, background: draggingMen !== null ? 'rgba(15,118,110,0.08)' : men ? menBg(men) : 'transparent', border: `1px solid ${draggingMen !== null ? '#14b8a6' : men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: draggingMen !== null ? 'copy' : 'text', transition: 'all 0.1s' }}>
