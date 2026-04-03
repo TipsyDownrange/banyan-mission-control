@@ -137,7 +137,6 @@ export default function Home() {
         {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Work Orders' && <ServicePanel />}
         {activeView === 'Customers' && <CustomersPanel />}
-        {activeView === 'Bid Intake' && <InboxPanel />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
         {activeView === 'Cost & Usage' && <CostPanel />}
         {activeView === 'Workflows' && <CronPanel />}
