@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:ZZ200',
+      range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:DD200',
     });
 
     const rows = res.data.values || [];
@@ -74,29 +74,37 @@ export async function GET(req: Request) {
     }).slice(0, weeksAhead + 4);
 
     // Parse rows into island sections
+    // Key structure: col0=JobNum, col1=JobName, col2=PM, col3=Notes (or TOTAL label)
     const islands: IslandForecast[] = [];
     let currentIsland = '';
     let currentJobs: ForecastJob[] = [];
+    const PM_NAMES = ['Frank','Sean','Kyle','Jenny','Joey','Tia','Mark','Jody','Maatta'];
 
     for (let rowIdx = 3; rowIdx < rows.length; rowIdx++) {
       const row = rows[rowIdx] || [];
       const col0 = String(row[0] || '').trim();
       const col1 = String(row[1] || '').trim();
+      const col2 = String(row[2] || '').trim();
+      const col3 = String(row[3] || '').trim();
 
-      if (!col0 && !col1) continue;
+      // Skip completely empty rows
+      if (!col0 && !col1 && !col2 && !col3) continue;
 
-      // Island header rows (e.g. "MAUI", "OUTER", "OAHU")
-      if (['MAUI', 'OUTER', 'OAHU', 'KAUAI', 'HAWAII'].some(isl => col0.toUpperCase().includes(isl)) && !col1) {
-        if (currentIsland && currentJobs.length > 0) {
-          // Save previous island
-        }
-        currentIsland = col0.includes('OUTER') ? 'Outer Islands' : col0;
+      // Skip PM workload summary rows (col2 = PM name, col3 = number)
+      if (!col0 && !col1 && PM_NAMES.includes(col2)) continue;
+
+      // Island header rows: col0 has island name, everything else empty
+      const islandKeywords = ['MAUI', 'OUTER', 'OAHU', 'KAUAI', 'HAWAII'];
+      if (islandKeywords.some(isl => col0.toUpperCase().includes(isl)) && !col1 && !col2) {
+        currentIsland = col0.includes('OUTER') ? 'Outer Islands' : col0.trim();
         currentJobs = [];
         continue;
       }
 
-      // Total rows — save as island totals
-      if (col0.toUpperCase().includes('TOTAL') || col1.toUpperCase().includes('TOTAL')) {
+      // Total rows: col3 contains "TOTAL" (MAUI TOTAL, OUTER ISLAND TOTAL, OAHU TOTAL)
+      // OR col0/col1 contains TOTAL
+      const allCols = [col0, col1, col2, col3].join(' ').toUpperCase();
+      if (allCols.includes('TOTAL') && !col0.match(/^\d{2}-\d{4}/)) {
         const totals = relevantWeeks.map(w => ({
           week_ending: w.label,
           date: w.date,
@@ -110,11 +118,12 @@ export async function GET(req: Request) {
         continue;
       }
 
-      // Skip PM workload summary rows at bottom
-      if (['Frank','Sean','Kyle','Jenny','Joey','Tia','Mark','Frank'].includes(col0)) continue;
+      // Job rows: either col0 has a job number OR col1 has WORK ORDERS (service)
+      // col0 can be empty for WORK ORDERS rows (Joey's service)
+      const hasJobNum = col0.match(/^\d{2}-\d{4}/);
+      const isWorkOrders = col1.toUpperCase().includes('WORK ORDER') || col0.toUpperCase().includes('WORK ORDER');
 
-      // Job rows — col0 = job number or job name (work orders), col1 = job name
-      if (col0 && currentIsland) {
+      if ((hasJobNum || isWorkOrders) && currentIsland) {
         const weeks = relevantWeeks.map(w => ({
           week_ending: w.label,
           date: w.date,
@@ -123,10 +132,10 @@ export async function GET(req: Request) {
         const totalMenWeeks = weeks.reduce((s, w) => s + w.men, 0);
 
         currentJobs.push({
-          job_number: col0,
+          job_number: col0 || 'WO',
           job_name: col1 || col0,
-          pm: String(row[2] || ''),
-          notes: String(row[3] || ''),
+          pm: col2 || '',
+          notes: col3 || '',
           island: currentIsland,
           weeks,
           total_men_weeks: totalMenWeeks,
