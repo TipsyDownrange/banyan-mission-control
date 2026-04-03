@@ -10,6 +10,27 @@ import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { S, C, Letterhead, DocFooter, renderToPDF } from './pdf-templates';
 import QRCode from 'qrcode';
 
+// Island bounding boxes for fallback map (office = Kula Glass, 289 Pakana St Wailuku)
+const ISLAND_MAP: Record<string, { lon: number; lat: number; span: number }> = {
+  Maui:   { lon: -156.52, lat: 20.80, span: 0.18 },
+  Oahu:   { lon: -157.97, lat: 21.47, span: 0.22 },
+  Kauai:  { lon: -159.53, lat: 22.06, span: 0.18 },
+  Hawaii: { lon: -155.45, lat: 19.59, span: 0.60 },
+};
+
+async function fetchMapImage(island: string): Promise<string | null> {
+  const cfg = ISLAND_MAP[island] || ISLAND_MAP.Maui;
+  const margin = cfg.span / 2;
+  const bbox = [cfg.lon - margin, cfg.lat - margin * 0.6, cfg.lon + margin, cfg.lat + margin * 0.6];
+  const url = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${bbox.join(',')}&bboxSR=4326&size=480,200&imageSR=4326&format=png&f=image`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    return `data:image/png;base64,${buf.toString('base64')}`;
+  } catch { return null; }
+}
+
 async function generateMapsQR(address: string): Promise<string | null> {
   if (!address) return null;
   try {
@@ -25,6 +46,7 @@ async function generateMapsQR(address: string): Promise<string | null> {
 
 export type DispatchWOData = {
   qr_data_url?: string; // pre-generated QR code data URL
+  map_image_url?: string; // pre-fetched static map
   wo_number: string;
   date: string;
   scheduled_date: string;
@@ -109,7 +131,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
         </View>
 
         {/* Job info — large, easy to read on site */}
-        <View style={{ border: `2 solid ${C.orange}`, borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+        <View style={{ border: `2 solid ${C.orange}`, borderRadius: 12, overflow: 'hidden', marginBottom: data.map_image_url ? 8 : 14 }}>
           <View style={{ padding: '10 14', backgroundColor: C.bg }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
               <View style={{ width: '100%', marginBottom: 6 }}>
@@ -147,6 +169,17 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
             )}
           </View>
         </View>
+
+        {/* Map — shows job location on island */}
+        {data.map_image_url && (
+          <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', border: `1 solid ${C.border}` }}>
+            <View style={{ backgroundColor: C.navy, padding: '5 10', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.white, textTransform: 'uppercase', letterSpacing: 0.5 }}>Job Location — {data.island}</Text>
+              <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)' }}>{data.address}</Text>
+            </View>
+            <Image src={data.map_image_url} style={{ width: '100%', height: 130 }} />
+          </View>
+        )}
 
         <View style={{ flexDirection: 'row', gap: 0, marginBottom: 0 }}>
           {/* Left column */}
@@ -196,7 +229,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
             <Section title="PPE Required">
               {ppe.map((item, i) => (
                 <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 2, border: `1 solid ${C.border}`, marginRight: 6 }} />
+                  <View style={{ width: 12, height: 12, borderRadius: 2, border: `1.5 solid ${C.orange}`, marginRight: 6 }} />
                   <Text style={{ fontSize: 10, color: C.text }}>{item}</Text>
                 </View>
               ))}
@@ -206,7 +239,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
             <Section title="Tools / Equipment">
               {tools.map((item, i) => (
                 <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 2, border: `1 solid ${C.border}`, marginRight: 6 }} />
+                  <View style={{ width: 12, height: 12, borderRadius: 2, border: `1.5 solid ${C.orange}`, marginRight: 6 }} />
                   <Text style={{ fontSize: 10, color: C.text }}>{item}</Text>
                 </View>
               ))}
@@ -242,28 +275,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
           </View>
         )}
 
-        {/* Location summary — uses the whitespace */}
-        {data.address && (
-          <View style={{ marginTop: 10, padding: '10 14', backgroundColor: `${C.blue}08`, borderRadius: 10, border: `1 solid ${C.blue}22` }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Job Location</Text>
-                <Text style={{ fontSize: 12, fontFamily: 'Helvetica-Bold', color: C.navy, lineHeight: 1.4 }}>{data.address}</Text>
-                {data.island && <Text style={{ fontSize: 10, color: C.blue, marginTop: 2 }}>{data.island}</Text>}
-                <Text style={{ fontSize: 9, color: C.slateLight, marginTop: 6 }}>
-                  Departing from: 289 Pakana St, Wailuku, HI 96793 (Kula Glass)
-                </Text>
-              </View>
-              {data.qr_data_url && (
-                <View style={{ alignItems: 'center', marginLeft: 16, flexShrink: 0 }}>
-                  <Image src={data.qr_data_url} style={{ width: 80, height: 80 }} />
-                  <Text style={{ fontSize: 7.5, color: C.blue, marginTop: 3, textAlign: 'center', fontFamily: 'Helvetica-Bold' }}>Scan for Directions</Text>
-                  <Text style={{ fontSize: 7, color: C.slateLight, textAlign: 'center' }}>Google Maps</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
+
 
         {/* Sign-off strip */}
         <View style={{ marginTop: 12, flexDirection: 'row', gap: 0 }}>
@@ -282,7 +294,9 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
 }
 
 export async function generateDispatchWOPDF(data: DispatchWOData): Promise<Buffer> {
-  // Pre-generate QR code for Google Maps
-  const qr_data_url = await generateMapsQR(data.address);
-  return renderToPDF(<DispatchPDF data={{ ...data, qr_data_url: qr_data_url || undefined }} />);
+  const [qr_data_url, map_image_url] = await Promise.all([
+    generateMapsQR(data.address),
+    fetchMapImage(data.island || 'Maui'),
+  ]);
+  return renderToPDF(<DispatchPDF data={{ ...data, qr_data_url: qr_data_url || undefined, map_image_url: map_image_url || undefined }} />);
 }

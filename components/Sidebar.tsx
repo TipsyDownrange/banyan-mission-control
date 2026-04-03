@@ -124,12 +124,12 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
       }}>
         {!collapsed && (
           <div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(148,163,184,0.6)', letterSpacing: '0.04em', marginBottom: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 900, color: '#2E6DA4', letterSpacing: '0.02em', marginBottom: 3 }}>
               Kula Glass Company
             </div>
-            <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc', lineHeight: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 14, height: 14, borderRadius: 3, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: 'white', letterSpacing: '-0.04em', flexShrink: 0 }}>B</span>
-              Banyan<span style={{ color: '#14b8a6' }}>OS</span>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '-0.01em', color: 'rgba(248,250,252,0.65)', lineHeight: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <img src="/banyan-icon.png" alt="B" style={{ width: 14, height: 14, borderRadius: 2, flexShrink: 0, opacity: 0.8 } as React.CSSProperties} onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+              Banyan<span style={{ color: 'rgba(20,184,166,0.7)' }}>OS</span>
             </div>
           </div>
         )}
