@@ -18,14 +18,13 @@ const ORG = {
       children: [
         // ── Sales ──────────────────────────────────────
         {
-          id: 'tia',
-          name: 'Tia Omura',
+          id: 'mark',
+          name: 'Mark Olson',
           title: 'Sales Engineer',
           island: 'Oahu',
           color: '#0369a1',
-          children: [
-            { id: 'mark', name: 'Mark Olson', title: 'Sales', island: 'Oahu', color: '#64748b', note: 'Retiring May 1', children: [] },
-          ],
+          note: 'Retiring May 1',
+          children: [],
         },
 
         // ── PM / Estimating / Oahu Field ───────────────
@@ -94,6 +93,15 @@ const ORG = {
           color: '#0f766e',
           note: 'Management Team',
           children: [
+            {
+              id: 'tia',
+              name: 'Tia Omura',
+              title: 'Admin Asst → PM Track',
+              island: 'Oahu',
+              color: '#0f766e',
+              note: 'Running 2 projects',
+              children: [],
+            },
             {
               id: 'jenna',
               name: 'Jenna Nakama',
