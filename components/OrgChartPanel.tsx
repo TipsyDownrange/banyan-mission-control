@@ -14,34 +14,28 @@ const ORG = {
       title: 'General Manager / PM',
       island: 'Oahu',
       color: '#0369a1',
+      note: 'Management Team',
       children: [
+        // ── Sales ──────────────────────────────────────
         {
-          id: 'mark',
-          name: 'Mark Olson',
-          title: 'Sales (retiring May 1)',
+          id: 'tia',
+          name: 'Tia Omura',
+          title: 'Sales Engineer',
           island: 'Oahu',
-          color: '#64748b',
-          note: 'Retiring May 1',
+          color: '#0369a1',
           children: [
-            { id: 'tia', name: 'Tia Omura', title: 'Sales Engineer', island: 'Oahu', color: '#64748b', children: [] },
+            { id: 'mark', name: 'Mark Olson', title: 'Sales', island: 'Oahu', color: '#64748b', note: 'Retiring May 1', children: [] },
           ],
         },
-        {
-          id: 'admin',
-          name: 'Jenna Nakama',
-          title: 'Admin / Asst PM',
-          island: 'Oahu',
-          color: '#64748b',
-          children: [
-            { id: 'sher', name: 'Sherilynn Takuchi', title: 'Admin Assistant', island: 'Oahu', color: '#64748b', children: [] },
-          ],
-        },
+
+        // ── PM / Estimating ────────────────────────────
         {
           id: 'frank',
           name: 'Frank Redondo',
           title: 'Senior Project Manager',
           island: 'Oahu',
           color: '#0f766e',
+          note: 'Management Team',
           children: [
             {
               id: 'kyle',
@@ -52,23 +46,39 @@ const ORG = {
               children: [],
             },
             {
-              id: 'jenny',
-              name: 'Jenny Shimabukuro',
-              title: 'Estimator / PM',
+              id: 'joey',
+              name: 'Joey Ritthaler',
+              title: 'PM / Service Lane',
               island: 'Oahu',
-              color: '#0f766e',
+              color: '#6d28d9',
               children: [],
             },
           ],
         },
+
+        // ── Jenny — Estimating + Admin Manager ─────────
         {
-          id: 'joey',
-          name: 'Joey Ritthaler',
-          title: 'PM / Service Lane',
+          id: 'jenny',
+          name: 'Jenny Shimabukuro',
+          title: 'Estimator / PM · Admin Manager',
           island: 'Oahu',
-          color: '#6d28d9',
-          children: [],
+          color: '#0f766e',
+          note: 'Management Team',
+          children: [
+            {
+              id: 'jenna',
+              name: 'Jenna Nakama',
+              title: 'Admin Assistant',
+              island: 'Oahu',
+              color: '#64748b',
+              children: [
+                { id: 'sher', name: 'Sherilynn Takuchi', title: 'Admin Assistant', island: 'Oahu', color: '#64748b', children: [] },
+              ],
+            },
+          ],
         },
+
+        // ── Field — Oahu ───────────────────────────────
         {
           id: 'karl_sr',
           name: 'Karl Nakamura Sr.',
@@ -76,55 +86,49 @@ const ORG = {
           island: 'Oahu',
           color: '#0369a1',
           children: [
-            { id: 'karl_jr',  name: 'Karl Nakamura Jr.',       title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'thomas',   name: 'Thomas Begonia',           title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'jay',      name: 'Jay Castillo',             title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'nolan',    name: 'Nolan Lagmay',             title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'francis',  name: 'Francis Lynch',            title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'james',    name: 'James Nakamura',           title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'tim',      name: 'Timothy Stitt',            title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'wendall',  name: 'Wendall Tavares',          title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'deric',    name: 'Deric Valoroso',           title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'sonny',    name: 'Sonny Ah Kui',             title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'lewis',    name: 'Lewis Roman',              title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-            { id: 'christian',name: 'Christian Altman',         title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'ninja',    name: 'Ninja Thang',              title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'malu',     name: 'Malu Cleveland',           title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'layton',   name: 'Layton Domingo',           title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'wena',     name: 'Wena Hun',                 title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'santia',   name: 'Santia-Jacob Pascual',     title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'chacha',   name: 'Chachleigh Clarabal',      title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
-            { id: 'elijah',   name: 'Elijah-David Meheula-Lando',title: 'Apprentice',island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'karl_jr',  name: 'Karl Nakamura Jr.',          title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'thomas',   name: 'Thomas Begonia',              title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'jay',      name: 'Jay Castillo',                title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'nolan',    name: 'Nolan Lagmay',                title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'francis',  name: 'Francis Lynch',               title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'james',    name: 'James Nakamura',              title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'tim',      name: 'Timothy Stitt',               title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'wendall',  name: 'Wendall Tavares',             title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'deric',    name: 'Deric Valoroso',              title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'sonny',    name: 'Sonny Ah Kui',                title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'lewis',    name: 'Lewis Roman',                 title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+            { id: 'christian',name: 'Christian Altman',            title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'ninja',    name: 'Ninja Thang',                 title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'malu',     name: 'Malu Cleveland',              title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'layton',   name: 'Layton Domingo',              title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'wena',     name: 'Wena Hun',                    title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'santia',   name: 'Santia-Jacob Pascual',        title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'chacha',   name: 'Chachleigh Clarabal',         title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
+            { id: 'elijah',   name: 'Elijah-David Meheula-Lando',  title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
           ],
         },
+
+        // ── Field — Maui & Outer Islands ───────────────
         {
           id: 'nate',
           name: 'Nate Nakamura',
-          title: 'Superintendent — Maui',
+          title: 'Superintendent — Maui & Outer Islands',
           island: 'Maui',
           color: '#0f766e',
+          note: 'Management Team',
           children: [
-            { id: 'nathan', name: 'Nathan Nakamura', title: 'Journeyman', island: 'Maui', color: '#334155', children: [] },
-            { id: 'mark_v', name: 'Mark Villados',   title: 'Journeyman', island: 'Maui', color: '#334155', children: [] },
-            { id: 'tyler',  name: 'Tyler Niemeyer',  title: 'Journeyman', island: 'Maui', color: '#334155', children: [] },
-            { id: 'tyson',  name: 'Tyson Omura',     title: 'Journeyman', island: 'Maui', color: '#334155', children: [] },
-            { id: 'owen',   name: 'Owen Nakamura',   title: 'Apprentice', island: 'Maui', color: '#94a3b8', children: [] },
-            { id: 'holden', name: 'Holden Ioanis',   title: 'Apprentice', island: 'Maui', color: '#94a3b8', children: [] },
-            { id: 'quintin',name: 'Quintin Castro-Perry', title: 'Apprentice', island: 'Maui', color: '#94a3b8', children: [] },
-          ],
-        },
-        {
-          id: 'kauai_crew',
-          name: 'Kauai Field Crew',
-          title: 'Superintendent — Kauai (TBD)',
-          island: 'Kauai',
-          color: '#6d28d9',
-          children: [
-            { id: 'silas',  name: 'Silas Macon',    title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
-            { id: 'mien',   name: 'Mien-Quoc Ly',   title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
-            { id: 'lonnie', name: 'Lonnie McKenzie', title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
-            { id: 'joshua', name: 'Joshua Moore',    title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
-            { id: 'troy',   name: 'Troy Sliter',     title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
+            { id: 'nathan', name: 'Nathan Nakamura',      title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
+            { id: 'mark_v', name: 'Mark Villados',        title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
+            { id: 'tyler',  name: 'Tyler Niemeyer',       title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
+            { id: 'tyson',  name: 'Tyson Omura',          title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
+            { id: 'silas',  name: 'Silas Macon',          title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
+            { id: 'mien',   name: 'Mien-Quoc Ly',         title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
+            { id: 'lonnie', name: 'Lonnie McKenzie',       title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
+            { id: 'joshua', name: 'Joshua Moore',          title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
+            { id: 'troy',   name: 'Troy Sliter',           title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
+            { id: 'owen',   name: 'Owen Nakamura',         title: 'Apprentice', island: 'Maui',  color: '#94a3b8', children: [] },
+            { id: 'holden', name: 'Holden Ioanis',         title: 'Apprentice', island: 'Maui',  color: '#94a3b8', children: [] },
+            { id: 'quintin',name: 'Quintin Castro-Perry',  title: 'Apprentice', island: 'Maui',  color: '#94a3b8', children: [] },
           ],
         },
       ],
@@ -234,8 +238,12 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
         {node.title}
       </div>
       {node.note && (
-        <div style={{ fontSize: 8, color: '#f59e0b', fontWeight: 700, background: '#fffbeb', borderRadius: 4, padding: '1px 6px', marginTop: 2 }}>
-          {node.note}
+        <div style={{
+          fontSize: 8, fontWeight: 700, borderRadius: 4, padding: '1px 6px', marginTop: 2,
+          color: node.note === 'Management Team' ? '#0f766e' : '#92400e',
+          background: node.note === 'Management Team' ? '#f0fdfa' : '#fffbeb',
+        }}>
+          {node.note === 'Management Team' ? '★ Management Team' : node.note}
         </div>
       )}
     </div>
@@ -391,14 +399,16 @@ export default function OrgChartPanel() {
       <div style={{ marginTop: 20, padding: '14px 20px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
         {[
           { label: 'Total Headcount', value: 42 },
-          { label: 'Office / PM', value: 9 },
-          { label: 'Superintendents', value: 3 },
+          { label: 'Management Team', value: 4, note: 'Sean · Frank · Jenny · Nate' },
+          { label: 'Office / PM / Sales', value: 8 },
+          { label: 'Superintendents', value: 2, note: 'Karl Sr. (Oahu) · Nate (Maui + Outer)' },
           { label: 'Journeymen', value: 20 },
           { label: 'Apprentices', value: 10 },
-        ].map(({ label, value }) => (
+        ].map(({ label, value, note }) => (
           <div key={label}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>{label}</div>
             <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a' }}>{value}</div>
+            {note && <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>{note}</div>}
           </div>
         ))}
       </div>
