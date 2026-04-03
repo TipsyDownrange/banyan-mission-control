@@ -20,12 +20,13 @@ export async function GET(req: Request) {
     let crew = rows
       .filter(r => r[0] && r[1] && r[2])
       .map(r => ({
-        user_id:  r[0],
-        name:     r[1],
-        role:     r[2],
-        email:    r[3] || '',
-        phone:    r[4] || '',
-        island:   r[5] || '',
+        user_id:        r[0],
+        name:           r[1],
+        role:           r[2],
+        email:          r[3] || '',
+        phone:          r[4] || '',
+        island:         r[5] || '',
+        personal_email: r[6] || '',
       }));
 
     // Filter to field-dispatchable roles: Superintendent, Journeyman, Apprentice

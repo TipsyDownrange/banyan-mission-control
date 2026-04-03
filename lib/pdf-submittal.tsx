@@ -113,29 +113,6 @@ function SubmittalPDF({ data }: { data: SubmittalData }) {
           </>
         )}
 
-        {/* GC Response block */}
-        <SectionHead title="Review Action" />
-        <View style={{ borderRadius: 10, border: `1 solid ${C.border}`, overflow: 'hidden', marginBottom: 16 }}>
-          <View style={{ flexDirection: 'row', backgroundColor: C.bg, borderBottom: `0.5 solid ${C.border}` }}>
-            {['Approved', 'Approved as Noted', 'Revise & Resubmit', 'Rejected', 'For Information Only'].map(action => (
-              <View key={action} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', padding: '6 8', borderRight: `0.5 solid ${C.border}` }}>
-                <View style={{ width: 10, height: 10, borderRadius: 2, border: `1 solid ${actionColor(action)}`, marginRight: 5, backgroundColor: data.response_action === action ? actionColor(action) : 'transparent' }} />
-                <Text style={{ fontSize: 7, color: actionColor(action), fontFamily: data.response_action === action ? 'Helvetica-Bold' : 'Helvetica', flex: 1 }}>{action}</Text>
-              </View>
-            ))}
-          </View>
-          <View style={{ padding: '8 12', minHeight: 48 }}>
-            {data.response_comments ? (
-              <Text style={S.body}>{data.response_comments}</Text>
-            ) : (
-              <Text style={{ fontSize: 8.5, color: C.border }}>Awaiting review...</Text>
-            )}
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: '5 12', backgroundColor: C.bg, borderTop: `0.5 solid ${C.border}` }}>
-            <Text style={{ fontSize: 8.5, color: C.subtext }}>Reviewed by: {data.responded_by || '___________________________'}</Text>
-            <Text style={{ fontSize: 8.5, color: C.subtext }}>Date: {data.response_date || '_______________'}</Text>
-          </View>
-        </View>
 
         <DualSigBlock
           preparedBy={{ name: data.submitted_by.name, title: data.submitted_by.title }}

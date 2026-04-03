@@ -51,10 +51,11 @@ function WarrantyPDF({ data }: { data: WarrantyData }) {
         <Letterhead docNumber={data.warranty_number} date={data.issue_date} />
 
         <View style={{ textAlign: 'center', marginBottom: 20, marginTop: 4 }}>
-          <Text style={{ fontSize: 22, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3, textAlign: 'center' }}>
+          <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3, textAlign: 'center', lineHeight: 1.2 }}>
             Installer Warranty Certificate
           </Text>
-          <Text style={{ fontSize: 11, color: C.blue, textAlign: 'center', marginTop: 4 }}>
+          <View style={{ height: 6 }} />
+          <Text style={{ fontSize: 11, color: C.blue, textAlign: 'center' }}>
             {data.workmanship_years}-Year Workmanship Warranty
           </Text>
         </View>

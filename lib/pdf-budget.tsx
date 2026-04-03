@@ -130,6 +130,72 @@ function BudgetPDF({ data }: { data: BudgetData }) {
           </View>
         </View>
 
+
+        {/* Summary charts */}
+        <SectionHead title="Visual Summary" />
+        <View style={{ flexDirection: 'row', gap: 0, marginBottom: 14 }}>
+          {/* Budget vs Actual bar chart */}
+          <View style={{ flex: 1, marginRight: 12, backgroundColor: C.bg, borderRadius: 10, padding: '10 12', border: `1 solid ${C.border}` }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.navy, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Budget vs Actual by Category</Text>
+            {data.lines.slice(0, 6).map((line, i) => {
+              const maxVal = Math.max(line.budget_amount, line.actual_amount);
+              const budgetW = maxVal > 0 ? Math.round((line.budget_amount / maxVal) * 100) : 0;
+              const actualW = maxVal > 0 ? Math.round((line.actual_amount / maxVal) * 100) : 0;
+              const over = line.actual_amount > line.budget_amount;
+              return (
+                <View key={i} style={{ marginBottom: 6 }}>
+                  <Text style={{ fontSize: 7.5, color: C.subtext, marginBottom: 2 }}>{line.category}</Text>
+                  <View style={{ marginBottom: 1 }}>
+                    <View style={{ height: 5, width: `${budgetW}%`, backgroundColor: `${C.blue}55`, borderRadius: 3 }} />
+                  </View>
+                  <View>
+                    <View style={{ height: 5, width: `${actualW}%`, backgroundColor: over ? `${C.red}88` : `${C.navy}88`, borderRadius: 3 }} />
+                  </View>
+                </View>
+              );
+            })}
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ width: 10, height: 5, backgroundColor: `${C.blue}55`, borderRadius: 2, marginRight: 4 }} />
+                <Text style={{ fontSize: 7, color: C.slateLight }}>Budget</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ width: 10, height: 5, backgroundColor: `${C.navy}88`, borderRadius: 2, marginRight: 4 }} />
+                <Text style={{ fontSize: 7, color: C.slateLight }}>Actual</Text>
+              </View>
+            </View>
+          </View>
+          {/* Cost to Complete */}
+          <View style={{ flex: 1, backgroundColor: C.bg, borderRadius: 10, padding: '10 12', border: `1 solid ${C.border}` }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.navy, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Overall Cost Position</Text>
+            {(() => {
+              const spentPct = totalBudget > 0 ? Math.round((totalActual / totalBudget) * 100) : 0;
+              const remainPct = 100 - Math.min(spentPct, 100);
+              const costToComplete = totalBudget - totalActual;
+              return (
+                <View>
+                  <View style={{ height: 16, backgroundColor: C.border, borderRadius: 8, overflow: 'hidden', marginBottom: 6 }}>
+                    <View style={{ height: 16, width: `${Math.min(spentPct, 100)}%`, backgroundColor: totalVariance >= 0 ? C.blue : C.red, borderRadius: 8 }} />
+                  </View>
+                  <Text style={{ fontSize: 8, color: C.subtext, marginBottom: 10 }}>{spentPct}% of budget spent</Text>
+                  {[
+                    ['Total Budget', fmtN(totalBudget)],
+                    ['Spent to Date', fmtN(totalActual)],
+                    ['Cost to Complete', fmtN(costToComplete > 0 ? costToComplete : 0)],
+                    ['Variance', fmtN(totalVariance)],
+                    ['Revised Contract', fmtN(revisedContract)],
+                  ].map(([label, value]) => (
+                    <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <Text style={{ fontSize: 8, color: C.subtext }}>{label}</Text>
+                      <Text style={{ fontSize: 8, fontFamily: label === 'Variance' ? 'Helvetica-Bold' : 'Helvetica', color: label === 'Variance' ? varColor(totalVariance) : C.text }}>{value}</Text>
+                    </View>
+                  ))}
+                </View>
+              );
+            })()}
+          </View>
+        </View>
+
         {data.notes && (
           <>
             <SectionHead title="Notes" />
