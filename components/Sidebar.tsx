@@ -158,15 +158,16 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '4px 6px',
-                    background: 'none',
+                    padding: '6px 6px 3px',
+                    background: hasActive ? 'rgba(255,255,255,0.04)' : 'none',
                     border: 'none',
                     cursor: 'pointer',
+                    borderRadius: 6,
                     marginBottom: isSectionCollapsed ? 4 : 2,
                   }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ fontSize: 9, color: hasActive ? '#14b8a6' : 'rgba(148,163,184,0.45)', lineHeight: 1 }}>{icon}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: hasActive ? 'rgba(203,213,225,0.85)' : 'rgba(148,163,184,0.55)' }}>{section}</span>
+                    <span style={{ fontSize: 11, color: hasActive ? '#14b8a6' : 'rgba(148,163,184,0.5)', lineHeight: 1 }}>{icon}</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: hasActive ? '#e2e8f0' : 'rgba(148,163,184,0.7)' }}>{section}</span>
                   </div>
                   <span style={{ fontSize: 9, color: 'rgba(148,163,184,0.25)', transition: 'transform 0.15s', display: 'inline-block', transform: isSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▾</span>
                 </button>

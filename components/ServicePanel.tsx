@@ -95,9 +95,21 @@ function WOCard({
   };
 
   // Field crew for this WO's island — supers + journeymen + apprentices
+  // Map city/area names from Smartsheet WO to island names in crew DB
+  function areaToIsland(area: string): string {
+    const a = (area || '').toLowerCase();
+    if (['oahu','honolulu','kapolei','kailua','kaneohe','pearl city','aiea','ewa','hawaii kai'].some(c => a.includes(c))) return 'Oahu';
+    if (['kauai','lihue','kapaa','poipu','princeville','koloa'].some(c => a.includes(c))) return 'Kauai';
+    if (['hilo','kona','waimea','kohala','puna'].some(c => a.includes(c))) return 'Hawaii';
+    // Everything else defaults to Maui (kahului, wailuku, lahaina, kihei, wailea, etc.)
+    if (a) return 'Maui';
+    return '';
+  }
+  const woIsland = ['Oahu','Maui','Kauai','Hawaii'].includes(wo.island) ? wo.island : areaToIsland(wo.island);
+
   const islandCrew = allCrew.filter(c => {
     const isFieldRole = ['Superintendent','Journeyman','Apprentice'].some(r => c.role.includes(r));
-    const matchesIsland = !wo.island || c.island === wo.island;
+    const matchesIsland = !woIsland || c.island === woIsland;
     return isFieldRole && matchesIsland;
   });
 
@@ -241,7 +253,7 @@ function WOCard({
 
               <div>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 8 }}>
-                  Crew — {wo.island || 'All Islands'}
+                  Crew — {woIsland || wo.island || 'All Islands'}
                   {dispatchDraft.selectedCrew.length > 0 && (
                     <span style={{ marginLeft: 8, color: '#4338ca' }}>{dispatchDraft.selectedCrew.length} selected</span>
                   )}
