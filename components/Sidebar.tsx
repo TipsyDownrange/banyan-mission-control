@@ -38,6 +38,7 @@ const NAV: { section: string; icon: string; items: { label: AppView; dot?: strin
     items: [
       { label: 'Crew' },
       { label: 'Customers' },
+      { label: 'Assets', dot: '#14b8a6' },
     ],
   },
   {
