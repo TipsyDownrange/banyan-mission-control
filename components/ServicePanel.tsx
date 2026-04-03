@@ -160,25 +160,24 @@ function WOCard({
           )}
           {/* Spacer */}
           <div style={{ flex: 1 }} />
-          {/* Icon buttons — small, don't eat space */}
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-            <button
-              title="Build quote / proposal"
-              onClick={() => onQuote(wo.id)}
-              style={{ padding: '4px 8px', borderRadius: 8, fontSize: 10, fontWeight: 800, letterSpacing: '0.04em', cursor: 'pointer', border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1' }}>
-              $ Quote
+          {/* Icon-only buttons — no text labels, no overflow */}
+          <div style={{ display: 'flex', gap: 3, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+            {/* Quote */}
+            <button title="Build quote / proposal" onClick={() => onQuote(wo.id)}
+              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              $
             </button>
-            <button
-              title="Schedule & dispatch crew"
+            {/* Dispatch */}
+            <button title="Schedule & dispatch crew"
               onClick={() => { setMode(mode === 'dispatch' ? 'view' : 'dispatch'); if (!expanded) onToggle(); }}
-              style={{ padding: '4px 8px', borderRadius: 8, fontSize: 10, fontWeight: 800, letterSpacing: '0.04em', cursor: 'pointer', border: mode === 'dispatch' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'dispatch' ? 'rgba(238,242,255,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'dispatch' ? '#4338ca' : '#94a3b8' }}>
-              ⬡ Dispatch
+              style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'dispatch' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'dispatch' ? 'rgba(238,242,255,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'dispatch' ? '#4338ca' : '#94a3b8', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              ⬡
             </button>
-            <button
-              title="Edit details"
+            {/* Edit */}
+            <button title="Edit details"
               onClick={() => { setMode(mode === 'edit' ? 'view' : 'edit'); if (!expanded) onToggle(); }}
-              style={{ padding: '4px 8px', borderRadius: 8, fontSize: 10, fontWeight: 800, letterSpacing: '0.04em', cursor: 'pointer', border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8' }}>
-              ✎ Edit
+              style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              ✎
             </button>
           </div>
         </div>

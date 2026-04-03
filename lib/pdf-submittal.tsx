@@ -16,6 +16,14 @@ export type SubmittalItem = {
   resubmission_number?: number;
 };
 
+export type SubmittalAttachment = {
+  type: 'photo' | 'shipping_receipt' | 'document';
+  filename: string;
+  drive_link?: string;
+  description?: string;
+  captured_at?: string;
+};
+
 export type SubmittalData = {
   transmittal_number: string;  // TRANS-PRJ-26-0001-012
   date: string;
@@ -31,11 +39,10 @@ export type SubmittalData = {
   items: SubmittalItem[];
   remarks?: string;
   submitted_by: { name: string; title: string; email: string; phone: string };
-  // Response fields (blank on submission)
-  response_date?: string;
-  response_action?: 'Approved' | 'Approved as Noted' | 'Revise & Resubmit' | 'Rejected' | 'For Information Only';
-  response_comments?: string;
-  responded_by?: string;
+  // Physical attachments (photos of samples, shipping receipts, tracking)
+  attachments?: SubmittalAttachment[];
+  shipping_carrier?: string;
+  tracking_number?: string;
 };
 
 const actionColor = (action?: string) => {
@@ -110,6 +117,42 @@ function SubmittalPDF({ data }: { data: SubmittalData }) {
           <>
             <SectionHead title="Remarks" />
             <Text style={{ ...S.body, marginBottom: 12 }}>{data.remarks}</Text>
+          </>
+        )}
+
+
+        {/* Physical Attachments — photos of items sent + shipping receipts */}
+        {((data.attachments && data.attachments.length > 0) || data.tracking_number) && (
+          <>
+            <SectionHead title="Attachments & Shipping" />
+            <View style={{ backgroundColor: C.bg, borderRadius: 10, padding: '10 12', border: `1 solid ${C.border}`, marginBottom: 14 }}>
+              {data.tracking_number && (
+                <View style={{ flexDirection: 'row', marginBottom: 8, paddingBottom: 8, borderBottom: `0.5 solid ${C.border}` }}>
+                  <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.slateLight, textTransform: 'uppercase', letterSpacing: 0.5, width: 90 }}>Carrier</Text>
+                  <Text style={{ fontSize: 9, color: C.text, marginRight: 20 }}>{data.shipping_carrier || '—'}</Text>
+                  <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.slateLight, textTransform: 'uppercase', letterSpacing: 0.5, width: 80 }}>Tracking #</Text>
+                  <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.navy }}>{data.tracking_number}</Text>
+                </View>
+              )}
+              {(data.attachments || []).map((att, i) => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 5 }}>
+                  <View style={{ width: 16, height: 16, borderRadius: 4, backgroundColor: att.type === 'photo' ? `${C.blue}22` : att.type === 'shipping_receipt' ? `${C.orange}22` : `${C.navy}22`, alignItems: 'center', justifyContent: 'center', marginRight: 8, flexShrink: 0 }}>
+                    <Text style={{ fontSize: 8, color: att.type === 'photo' ? C.blue : att.type === 'shipping_receipt' ? C.orange : C.navy }}>
+                      {att.type === 'photo' ? '📷' : att.type === 'shipping_receipt' ? '📦' : '📄'}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.text }}>{att.filename}</Text>
+                    {att.description && <Text style={{ fontSize: 8, color: C.subtext }}>{att.description}</Text>}
+                    {att.drive_link && <Text style={{ fontSize: 7.5, color: C.blue }}>Drive: {att.drive_link}</Text>}
+                  </View>
+                  {att.captured_at && <Text style={{ fontSize: 7.5, color: C.slateLight, flexShrink: 0 }}>{att.captured_at}</Text>}
+                </View>
+              ))}
+              {(!data.attachments || data.attachments.length === 0) && !data.tracking_number && (
+                <Text style={{ fontSize: 8.5, color: C.slateLight }}>No attachments</Text>
+              )}
+            </View>
           </>
         )}
 
