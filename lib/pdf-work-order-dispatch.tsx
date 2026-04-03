@@ -238,7 +238,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
 
         {/* Materials notes */}
         {data.materials_notes && (
-          <View style={{ marginTop: 10, padding: '8 12', backgroundColor: C.bg, borderRadius: 8, border: `1 solid ${C.border}` }}>
+          <View style={{ marginTop: 6, padding: '6 10', backgroundColor: C.bg, borderRadius: 8, border: `1 solid ${C.border}` }}>
             <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Materials / Parts</Text>
             <Text style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>{data.materials_notes}</Text>
           </View>
@@ -253,7 +253,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
         )}
 
         {/* Sign-off strip */}
-        <View style={{ marginTop: 16, flexDirection: 'row', gap: 0 }}>
+        <View style={{ marginTop: 8, flexDirection: 'row', gap: 0 }}>
           {['Crew Member', 'Foreman / Supervisor', 'Time In', 'Time Out'].map((label, i) => (
             <View key={i} style={{ flex: 1, marginRight: i < 3 ? 8 : 0 }}>
               <View style={{ borderBottom: `1 solid ${C.text}`, height: 28, marginBottom: 3 }} />
