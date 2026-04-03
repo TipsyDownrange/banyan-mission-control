@@ -104,7 +104,8 @@ export async function PATCH(req: Request) {
     });
 
     // Send email notifications to newly assigned crew (non-blocking)
-    if (assigned_crew && assigned_crew.length > 0) {
+    // Set DISABLE_DISPATCH_EMAILS=true in Vercel env to suppress during testing
+    if (process.env.DISABLE_DISPATCH_EMAILS !== 'true' && assigned_crew && assigned_crew.length > 0) {
       try {
         const slot = rowToSlot(updated);
         const crewNames: string[] = Array.isArray(assigned_crew) ? assigned_crew : assigned_crew.split(', ').filter(Boolean);
