@@ -19,6 +19,7 @@ import TodayPanel from '@/components/TodayPanel';
 import CalendarPanel from '@/components/CalendarPanel';
 import EstimatorWorkspace from '@/components/EstimatorWorkspace';
 import ServicePanel from '@/components/ServicePanel';
+import BidIntakePanel from '@/components/BidIntakePanel';
 import CustomersPanel from '@/components/CustomersPanel';
 import KaiFloat from '@/components/KaiFloat';
 
@@ -132,6 +133,7 @@ export default function Home() {
         {activeView === 'Change Orders' && <PMPanel defaultTab='co' />}
         {activeView === 'Submittals' && <PMPanel defaultTab='submittal' />}
         {activeView === 'Bid Queue' && <BidQueuePanel />}
+        {activeView === 'Bid Intake' && <BidIntakePanel />}
         {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Work Orders' && <ServicePanel />}
         {activeView === 'Customers' && <CustomersPanel />}
