@@ -49,6 +49,7 @@ export type DispatchWOData = {
   special_instructions?: string;
   // Tools required
   tools_required?: string[];
+  specialty_tools?: string[];
   // Safety
   ppe_required?: string[];
 };
@@ -87,18 +88,31 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
         <Letterhead docNumber={`WO ${data.wo_number}`} date={data.date} />
 
         {/* Big bold title + QR code */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <View>
-            <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3 }}>Work Order Dispatch</Text>
-            <Text style={{ fontSize: 12, color: C.blue, marginTop: 2 }}>
-              {data.scheduled_date ? `Scheduled: ${data.scheduled_date}` : 'Date TBD'}
-              {data.start_time ? `  ·  Start: ${data.start_time}` : ''}
-            </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3, marginBottom: 6 }}>Work Order Dispatch</Text>
+            {/* Date/time on its own line, below the title with clear separation */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 0 }}>
+              {data.scheduled_date ? (
+                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 999, backgroundColor: `${C.blue}18`, marginRight: 8 }}>
+                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.blue }}>📅 {data.scheduled_date}</Text>
+                </View>
+              ) : (
+                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 999, backgroundColor: C.bg, marginRight: 8 }}>
+                  <Text style={{ fontSize: 10, color: C.slateLight }}>Date TBD</Text>
+                </View>
+              )}
+              {data.start_time && (
+                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 999, backgroundColor: `${C.navy}12` }}>
+                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.navy }}>🕐 Start: {data.start_time}</Text>
+                </View>
+              )}
+            </View>
           </View>
           {/* QR code — scan to open Google Maps directions */}
           {data.qr_data_url && (
-            <View style={{ alignItems: 'center' }}>
-              <Image src={data.qr_data_url} style={{ width: 72, height: 72 }} />
+            <View style={{ alignItems: 'center', flexShrink: 0 }}>
+              <Image src={data.qr_data_url} style={{ width: 68, height: 68 }} />
               <Text style={{ fontSize: 7, color: C.slateLight, marginTop: 3, textAlign: 'center' }}>Scan → Maps</Text>
             </View>
           )}
@@ -144,9 +158,9 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', gap: 0, marginBottom: 0 }}>
+        <View style={{ flexDirection: 'row', gap: 0, marginBottom: 0 }} wrap={false}>
           {/* Left column */}
-          <View style={{ flex: 1, marginRight: 10 }}>
+          <View style={{ flex: 1, marginRight: 8 }}>
             {/* Crew */}
             <Section title="Crew Assignment">
               {data.foreman && (
@@ -207,6 +221,18 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
                 </View>
               ))}
             </Section>
+
+            {/* Specialty tools — orange border checkbox, bold text */}
+            {data.specialty_tools && data.specialty_tools.length > 0 && (
+              <Section title="Specialty Tools / Equipment">
+                {data.specialty_tools.map((item: string, i: number) => (
+                  <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                    <View style={{ width: 13, height: 13, borderRadius: 2, border: `1.5 solid ${C.orange}`, marginRight: 6, flexShrink: 0 }} />
+                    <Text style={{ fontSize: 10, color: C.text, fontFamily: 'Helvetica-Bold' }}>{item}</Text>
+                  </View>
+                ))}
+              </Section>
+            )}
           </View>
         </View>
 
