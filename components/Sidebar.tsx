@@ -124,11 +124,12 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
       }}>
         {!collapsed && (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.03em', color: '#f8fafc', lineHeight: 1 }}>
-              Banyan<span style={{ color: '#14b8a6' }}>OS</span>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(148,163,184,0.6)', letterSpacing: '0.04em', marginBottom: 2 }}>
+              Kula Glass Company
             </div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(148,163,184,0.4)', letterSpacing: '0.06em', marginTop: 3 }}>
-              Kula Glass
+            <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc', lineHeight: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 14, height: 14, borderRadius: 3, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: 'white', letterSpacing: '-0.04em', flexShrink: 0 }}>B</span>
+              Banyan<span style={{ color: '#14b8a6' }}>OS</span>
             </div>
           </div>
         )}
@@ -163,8 +164,8 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                     marginBottom: isSectionCollapsed ? 4 : 2,
                   }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ fontSize: 9, color: hasActive ? '#14b8a6' : 'rgba(148,163,184,0.3)', lineHeight: 1 }}>{icon}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: hasActive ? 'rgba(148,163,184,0.7)' : 'rgba(148,163,184,0.35)' }}>{section}</span>
+                    <span style={{ fontSize: 9, color: hasActive ? '#14b8a6' : 'rgba(148,163,184,0.45)', lineHeight: 1 }}>{icon}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: hasActive ? 'rgba(203,213,225,0.85)' : 'rgba(148,163,184,0.55)' }}>{section}</span>
                   </div>
                   <span style={{ fontSize: 9, color: 'rgba(148,163,184,0.25)', transition: 'transform 0.15s', display: 'inline-block', transform: isSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▾</span>
                 </button>
@@ -237,7 +238,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
               </select>
             </div>
           )}
-          <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(94,234,212,0.2)' }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(94,234,212,0.2)' }}>
             BanyanOS · Field Phase
           </div>
         </div>

@@ -105,13 +105,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
               )}
             </View>
           </View>
-          {/* QR code — scan to open Google Maps directions */}
-          {data.qr_data_url && (
-            <View style={{ alignItems: 'center', flexShrink: 0 }}>
-              <Image src={data.qr_data_url} style={{ width: 68, height: 68 }} />
-              <Text style={{ fontSize: 7, color: C.slateLight, marginTop: 3, textAlign: 'center' }}>Scan → Maps</Text>
-            </View>
-          )}
+
         </View>
 
         {/* Job info — large, easy to read on site */}
@@ -154,7 +148,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', gap: 0, marginBottom: 0 }} wrap={false}>
+        <View style={{ flexDirection: 'row', gap: 0, marginBottom: 0 }}>
           {/* Left column */}
           <View style={{ flex: 1, marginRight: 8 }}>
             {/* Crew */}
@@ -248,8 +242,31 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
           </View>
         )}
 
+        {/* Location summary — uses the whitespace */}
+        {data.address && (
+          <View style={{ marginTop: 10, padding: '10 14', backgroundColor: `${C.blue}08`, borderRadius: 10, border: `1 solid ${C.blue}22` }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Job Location</Text>
+                <Text style={{ fontSize: 12, fontFamily: 'Helvetica-Bold', color: C.navy, lineHeight: 1.4 }}>{data.address}</Text>
+                {data.island && <Text style={{ fontSize: 10, color: C.blue, marginTop: 2 }}>{data.island}</Text>}
+                <Text style={{ fontSize: 9, color: C.slateLight, marginTop: 6 }}>
+                  Departing from: 289 Pakana St, Wailuku, HI 96793 (Kula Glass)
+                </Text>
+              </View>
+              {data.qr_data_url && (
+                <View style={{ alignItems: 'center', marginLeft: 16, flexShrink: 0 }}>
+                  <Image src={data.qr_data_url} style={{ width: 80, height: 80 }} />
+                  <Text style={{ fontSize: 7.5, color: C.blue, marginTop: 3, textAlign: 'center', fontFamily: 'Helvetica-Bold' }}>Scan for Directions</Text>
+                  <Text style={{ fontSize: 7, color: C.slateLight, textAlign: 'center' }}>Google Maps</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* Sign-off strip */}
-        <View style={{ marginTop: 16, flexDirection: 'row', gap: 0 }}>
+        <View style={{ marginTop: 12, flexDirection: 'row', gap: 0 }}>
           {['Crew Member', 'Foreman / Supervisor', 'Time In', 'Time Out'].map((label, i) => (
             <View key={i} style={{ flex: 1, marginRight: i < 3 ? 8 : 0 }}>
               <View style={{ borderBottom: `1 solid ${C.text}`, height: 28, marginBottom: 3 }} />
