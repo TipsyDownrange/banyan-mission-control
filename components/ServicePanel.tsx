@@ -7,7 +7,9 @@ type WorkOrder = {
   id: string; name: string; description: string;
   status: string; rawStatus: string; island: string;
   assignedTo: string; dateReceived: string; dueDate: string;
-  scheduledDate: string; hoursEstimated: string; hoursActual: string;
+  scheduledDate: string; startDate: string;
+  hoursEstimated: string; hoursActual: string; hoursToMeasure: string;
+  men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
 };
 
@@ -305,7 +307,14 @@ function WOCard({
             <div style={{ display: 'grid', gap: 8 }}>
               {wo.address && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Address</div><div style={{ fontSize: 12, color: '#334155' }}>{toTitleCase(wo.address)}</div></div>}
               {wo.contact && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Contact</div><div style={{ fontSize: 12, color: '#334155' }}>{toTitleCase(wo.contact)}</div></div>}
-              {wo.hoursEstimated && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Est. Hours</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.hoursEstimated}</div></div>}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+                {wo.hoursEstimated && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Est. Hrs</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.hoursEstimated}</div></div>}
+                {wo.hoursToMeasure && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Measure Hrs</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.hoursToMeasure}</div></div>}
+                {wo.hoursActual && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Actual Hrs</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.hoursActual}</div></div>}
+                {wo.men && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Men</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.men}</div></div>}
+                {wo.startDate && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Start</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.startDate}</div></div>}
+                {wo.dateReceived && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Received</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.dateReceived}</div></div>}
+              </div>
               {wo.comments && (
                 <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.1)' }}>
                   <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', marginBottom: 3 }}>Latest Note</div>
