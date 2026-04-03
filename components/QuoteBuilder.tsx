@@ -238,7 +238,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
       </div>
 
       <div style={{ background: '#f0fdfa', borderRadius: 12, border: '1px solid rgba(15,118,110,0.15)', padding: '14px 18px', fontSize: 12, color: '#0f766e', fontWeight: 600 }}>
-        ✓ Quote data ready — PDF generation and email delivery coming in next build.
+        ✓ Quote ready — download PDF or email directly to customer using the buttons above.
       </div>
     </div>
   );

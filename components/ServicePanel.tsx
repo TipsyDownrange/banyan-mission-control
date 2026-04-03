@@ -67,11 +67,11 @@ function WOCard({
   expanded: boolean;
   onToggle: () => void;
   onStageChange: (woId: string, stage: string) => Promise<void>;
-  onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string }) => Promise<void>;
+  onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }) => Promise<void>;
   allCrew: CrewMember[];
   onQuote: (woId: string) => void;
 }) {
-  const [mode, setMode] = useState<'view' | 'dispatch' | 'edit'>('view');
+  const [mode, setMode] = useState<'view' | 'dispatch' | 'edit' | 'close'>('view');
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
 
@@ -84,6 +84,11 @@ function WOCard({
     scheduledDate: wo.scheduledDate || '',
     hoursEstimated: wo.hoursEstimated || '',
     selectedCrew: wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : [] as string[],
+  });
+
+  const [closeDraft, setCloseDraft] = useState({
+    hoursActual: wo.hoursActual || '',
+    closeNotes: '',
   });
 
   const stage = STAGES.find(s => s.key === wo.status) || STAGES[0];
@@ -148,6 +153,22 @@ function WOCard({
     setMode('view');
   }
 
+  async function handleClose() {
+    setSaving(true);
+    const notes = [
+      closeDraft.closeNotes ? `CLOSED: ${closeDraft.closeNotes}` : 'CLOSED',
+      closeDraft.hoursActual ? `Actual hours: ${closeDraft.hoursActual}` : '',
+      wo.comments || '',
+    ].filter(Boolean).join(' | ');
+    await onSave(wo.id, {
+      hoursActual: closeDraft.hoursActual,
+      comments: notes,
+    });
+    await onStageChange(wo.id, 'closed');
+    setSaving(false);
+    setMode('view');
+  }
+
   async function handleStageChange(stageKey: string) {
     setStageSaving(stageKey);
     await onStageChange(wo.id, stageKey);
@@ -199,6 +220,14 @@ function WOCard({
               style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#64748b', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               🖨
             </button>
+            {/* Close WO — only show if not already closed */}
+            {wo.status !== 'closed' && (
+              <button title="Close work order"
+                onClick={() => { setMode(mode === 'close' ? 'view' : 'close'); if (!expanded) onToggle(); }}
+                style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'close' ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'close' ? 'rgba(254,242,242,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'close' ? '#b91c1c' : '#94a3b8', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                ✓
+              </button>
+            )}
           </div>
         </div>
 
@@ -320,6 +349,46 @@ function WOCard({
             </div>
           )}
 
+          {/* CLOSE MODE */}
+          {mode === 'close' && (
+            <div style={{ display: 'grid', gap: 12, padding: '12px 14px', borderRadius: 14, background: 'rgba(254,242,242,0.5)', border: '1px solid rgba(239,68,68,0.15)' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#b91c1c' }}>Close Work Order</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Actual Hours</div>
+                  <input type="number" value={closeDraft.hoursActual} placeholder="e.g. 3.5"
+                    onChange={e => setCloseDraft(p => ({ ...p, hoursActual: e.target.value }))}
+                    style={{ ...INP, border: '1px solid rgba(239,68,68,0.2)', background: 'white' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Est. Hours</div>
+                  <input type="text" value={wo.hoursEstimated || '—'} disabled
+                    style={{ ...INP, background: '#f8fafc', color: '#94a3b8', cursor: 'not-allowed' }} />
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Closing Notes (optional)</div>
+                <textarea value={closeDraft.closeNotes} rows={2}
+                  onChange={e => setCloseDraft(p => ({ ...p, closeNotes: e.target.value }))}
+                  placeholder="What was done, any issues, materials used..."
+                  style={{ ...INP, resize: 'none', border: '1px solid rgba(239,68,68,0.2)', background: 'white' }} />
+              </div>
+              <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.1)', fontSize: 11, color: '#b91c1c' }}>
+                This will mark the WO as <strong>Completed</strong> in Smartsheet.
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setMode('view')}
+                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button onClick={handleClose} disabled={saving}
+                  style={{ padding: '8px 20px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#b91c1c,#ef4444)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(185,28,28,0.3)' }}>
+                  {saving ? 'Closing...' : 'Close WO'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* VIEW MODE */}
           {mode === 'view' && (
             <div style={{ display: 'grid', gap: 8 }}>
@@ -424,7 +493,7 @@ export default function ServicePanel() {
     }
   }
 
-  async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string }) {
+  async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }) {
     // Optimistic update
     setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], ...fields } }));
     try {
@@ -438,6 +507,7 @@ export default function ServicePanel() {
           scheduledDate: fields.scheduledDate,
           notes: fields.comments,
           hoursEstimated: fields.hoursEstimated,
+          hoursActual: fields.hoursActual,
         }),
       });
     } catch {
