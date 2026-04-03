@@ -6,10 +6,25 @@
  */
 
 import React from 'react';
-import { Document, Page, Text, View } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { S, C, Letterhead, DocFooter, renderToPDF } from './pdf-templates';
+import QRCode from 'qrcode';
+
+async function generateMapsQR(address: string): Promise<string | null> {
+  if (!address) return null;
+  try {
+    const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+    const dataUrl = await QRCode.toDataURL(mapsUrl, {
+      width: 120,
+      margin: 1,
+      color: { dark: '#0D0D80', light: '#ffffff' },
+    });
+    return dataUrl;
+  } catch { return null; }
+}
 
 export type DispatchWOData = {
+  qr_data_url?: string; // pre-generated QR code data URL
   wo_number: string;
   date: string;
   scheduled_date: string;
@@ -71,13 +86,22 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
       <Page size="LETTER" style={{ ...S.page, padding: '32 44 44 44' }}>
         <Letterhead docNumber={`WO ${data.wo_number}`} date={data.date} />
 
-        {/* Big bold title */}
-        <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3 }}>Work Order Dispatch</Text>
-          <Text style={{ fontSize: 12, color: C.blue, marginTop: 2 }}>
-            {data.scheduled_date ? `Scheduled: ${data.scheduled_date}` : 'Date TBD'}
-            {data.start_time ? `  ·  Start: ${data.start_time}` : ''}
-          </Text>
+        {/* Big bold title + QR code */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <View>
+            <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: C.navy, letterSpacing: -0.3 }}>Work Order Dispatch</Text>
+            <Text style={{ fontSize: 12, color: C.blue, marginTop: 2 }}>
+              {data.scheduled_date ? `Scheduled: ${data.scheduled_date}` : 'Date TBD'}
+              {data.start_time ? `  ·  Start: ${data.start_time}` : ''}
+            </Text>
+          </View>
+          {/* QR code — scan to open Google Maps directions */}
+          {data.qr_data_url && (
+            <View style={{ alignItems: 'center' }}>
+              <Image src={data.qr_data_url} style={{ width: 72, height: 72 }} />
+              <Text style={{ fontSize: 7, color: C.slateLight, marginTop: 3, textAlign: 'center' }}>Scan → Maps</Text>
+            </View>
+          )}
         </View>
 
         {/* Job info — large, easy to read on site */}
@@ -219,5 +243,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
 }
 
 export async function generateDispatchWOPDF(data: DispatchWOData): Promise<Buffer> {
-  return renderToPDF(<DispatchPDF data={data} />);
+  // Pre-generate QR code for Google Maps
+  const qr_data_url = await generateMapsQR(data.address);
+  return renderToPDF(<DispatchPDF data={{ ...data, qr_data_url: qr_data_url || undefined }} />);
 }
