@@ -34,6 +34,10 @@ export const C = {
   // Keep teal only for status indicators
   teal:       '#0f766e',
   tealBg:     '#f0fdfa',
+  // Orange accent — for highlighted info blocks
+  orange:     '#ea580c',
+  orangeBg:   '#fff7ed',
+  orangeBorder:'#fed7aa',
 };
 
 export const COMPANY = {

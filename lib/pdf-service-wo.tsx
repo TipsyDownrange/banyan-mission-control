@@ -61,28 +61,37 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
           </Text>
         </View>
 
-        {/* Material lead time — highlighted, always visible */}
-        <View style={{ backgroundColor: `${C.blue}14`, borderRadius: 8, padding: '7 12', marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, border: `1 solid ${C.blue}33` }}>
-          <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>Material Lead Time</Text>
-          <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.navy }}>
-            {data.material_lead_time || 'TBD — confirm with vendor at time of order'}
-          </Text>
-          <Text style={{ fontSize: 7.5, color: C.slate, flex: 1, textAlign: 'right' }}>
-            Fabrication begins upon receipt of signed proposal + deposit. Installation scheduling is separate.
-          </Text>
+        {/* Unified customer info block — orange accent border */}
+        <View style={{ border: `1.5 solid ${C.orange}`, borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+          {/* Customer + project info grid */}
+          <View style={{ padding: '8 12', backgroundColor: C.bg, flexDirection: 'row', flexWrap: 'wrap' }}>
+            {[
+              ['Customer',    data.customer_name],
+              ['Phone',       data.customer_phone],
+              ['Address',     data.customer_address],
+              ['Email',       data.customer_email],
+              ['Project',     data.project_description],
+              ['Island',      data.island],
+              ['Site',        data.site_address],
+              ['Prepared By', data.prepared_by.name],
+            ].map(([label, value]) => (
+              <View key={label} style={{ width: '50%', flexDirection: 'row', alignItems: 'flex-start', marginBottom: 5, paddingRight: 10 }}>
+                <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.slateLight, textTransform: 'uppercase', letterSpacing: 0.5, width: 70, paddingTop: 1 }}>{label}</Text>
+                <Text style={{ fontSize: 9, color: C.text, flex: 1, lineHeight: 1.4 }}>{value}</Text>
+              </View>
+            ))}
+          </View>
+          {/* Material lead time strip — bottom of block */}
+          <View style={{ backgroundColor: C.orangeBg, borderTop: `1 solid ${C.orangeBorder}`, padding: '6 12', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.orange, textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0 }}>Material Lead Time</Text>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.navy, flex: 1 }}>
+              {data.material_lead_time || 'TBD — confirm with vendor at order'}
+            </Text>
+            <Text style={{ fontSize: 7.5, color: C.slate, textAlign: 'right', flexShrink: 0 }}>
+              Fabrication starts on deposit receipt. Installation scheduled separately.
+            </Text>
+          </View>
         </View>
-
-        {/* Project info */}
-        <InfoGrid items={[
-          ['Customer',   data.customer_name],
-          ['Phone',      data.customer_phone],
-          ['Address',    data.customer_address],
-          ['Email',      data.customer_email],
-          ['Project',    data.project_description],
-          ['Island',     data.island, true],
-          ['Site',       data.site_address],
-          ['Prepared By',data.prepared_by.name],
-        ]} />
 
         {/* Intro */}
         <Text style={{ ...S.body, marginBottom: 14 }}>
