@@ -21,6 +21,7 @@ import EstimatorWorkspace from '@/components/EstimatorWorkspace';
 import ServicePanel from '@/components/ServicePanel';
 import BidIntakePanel from '@/components/BidIntakePanel';
 import AssetsPanel from '@/components/AssetsPanel';
+import OrgChartPanel from '@/components/OrgChartPanel';
 import SchedulingPanel from '@/components/SchedulingPanel';
 import DispatchBoard from '@/components/DispatchBoard';
 import CustomersPanel from '@/components/CustomersPanel';
@@ -45,6 +46,7 @@ export type AppView =
   | 'Work Orders'
   | 'Customers'
   | 'Assets'
+  | 'Org Chart'
   | 'Forecasting'
   | 'Dispatch Board'
   | 'Task Board'
@@ -144,6 +146,7 @@ export default function Home() {
         {activeView === 'Work Orders' && <ServicePanel />}
         {activeView === 'Customers' && <CustomersPanel />}
         {activeView === 'Assets' && <AssetsPanel />}
+        {activeView === 'Org Chart' && <OrgChartPanel />}
         {activeView === 'Forecasting' && <SchedulingPanel />}
         {activeView === 'Dispatch Board' && <DispatchBoard />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
