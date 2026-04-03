@@ -54,16 +54,19 @@ export default function SchedulingPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState<'forecast' | 'lookahead'>('forecast');
+  const [islandFilter, setIslandFilter] = useState('All');
+  const [editingCell, setEditingCell] = useState<{jobNum: string; date: string} | null>(null);
+  const [editValue, setEditValue] = useState('');
   const [expandedIslands, setExpandedIslands] = useState<Set<string>>(new Set(['MAUI', 'OAHU']));
   const [weeksAhead, setWeeksAhead] = useState(12);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/scheduling?weeks=${weeksAhead}`)
+    fetch(`/api/scheduling?weeks=${weeksAhead}${islandFilter !== 'All' ? '&island=' + islandFilter : ''}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
-  }, [weeksAhead]);
+  }, [weeksAhead, islandFilter]);
 
   function toggleIsland(island: string) {
     setExpandedIslands(prev => {
@@ -100,7 +103,16 @@ export default function SchedulingPanel() {
                 {v === 'forecast' ? 'Forecast' : '3-Week Lookahead'}
               </button>
             ))}
-            {view === 'forecast' && (
+            {/* Island filter */}
+          <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.04)', borderRadius: 10, padding: 3 }}>
+            {['All','Maui','Oahu','Kauai','Hawaii'].map(isl => (
+              <button key={isl} onClick={() => setIslandFilter(isl)}
+                style={{ padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 800, border: 'none', background: islandFilter === isl ? 'white' : 'transparent', color: islandFilter === isl ? (isl === 'All' ? '#0369a1' : ISLAND_COLOR[isl] || '#0369a1') : '#94a3b8', cursor: 'pointer', boxShadow: islandFilter === isl ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                {isl}
+              </button>
+            ))}
+          </div>
+          {view === 'forecast' && (
               <select value={weeksAhead} onChange={e => setWeeksAhead(parseInt(e.target.value))}
                 style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, color: '#334155', cursor: 'pointer', outline: 'none' }}>
                 <option value={8}>8 weeks</option>
@@ -147,7 +159,7 @@ export default function SchedulingPanel() {
           </div>
 
           {/* Per-island sections */}
-          {data.islands.map(island => {
+          {data.islands.filter(island => islandFilter === 'All' || island.island.toUpperCase().includes(islandFilter.toUpperCase()) || (islandFilter === 'Kauai' && island.island.includes('Outer'))).map(island => {
             const isExpanded = expandedIslands.has(island.island);
             const color = ISLAND_COLOR[island.island] || '#64748b';
             const activeJobs = island.jobs.filter(j => j.total_men_weeks > 0);
@@ -204,9 +216,19 @@ export default function SchedulingPanel() {
                               const men = week?.men || 0;
                               return (
                                 <td key={w.date} style={{ padding: '6px 4px', textAlign: 'center', borderLeft: isCurrentWeek(w.date) ? '2px solid rgba(3,105,161,0.2)' : '1px solid #f8fafc' }}>
-                                  {men > 0 && (
-                                    <div style={{ width: 32, height: 24, borderRadius: 6, background: menBg(men), border: `1px solid ${menColor(men)}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                                      <span style={{ fontSize: 12, fontWeight: 800, color: menColor(men) }}>{men}</span>
+                                  {editingCell?.jobNum === job.job_number && editingCell?.date === w.date ? (
+                                    <input autoFocus type="number" value={editValue} min="0" max="20"
+                                      onChange={e => setEditValue(e.target.value)}
+                                      onBlur={async () => {
+                                        // Write back to sheet (future: update Google Sheet row)
+                                        setEditingCell(null);
+                                      }}
+                                      onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
+                                      style={{ width: 36, height: 26, textAlign: 'center', borderRadius: 6, border: '2px solid #0369a1', fontSize: 13, fontWeight: 800, outline: 'none', padding: 0, margin: '0 auto', display: 'block' }} />
+                                  ) : (
+                                    <div onClick={() => { setEditingCell({jobNum: job.job_number, date: w.date}); setEditValue(String(men||0)); }}
+                                      style={{ width: men ? 32 : 24, height: men ? 24 : 20, borderRadius: 6, background: men ? menBg(men) : 'transparent', border: `1px solid ${men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'text' }}>
+                                      {men > 0 && <span style={{ fontSize: 12, fontWeight: 800, color: menColor(men) }}>{men}</span>}
                                     </div>
                                   )}
                                 </td>

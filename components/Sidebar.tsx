@@ -17,6 +17,8 @@ const NAV: { section: string; icon: string; items: { label: AppView; dot?: strin
     icon: '◈',
     items: [
       { label: 'Overview' },
+      { label: 'Scheduling', dot: '#14b8a6' },
+      { label: 'Dispatch Board', dot: '#f59e0b' },
       { label: 'Event Feed' },
       { label: 'Issues' },
     ],
@@ -39,8 +41,6 @@ const NAV: { section: string; icon: string; items: { label: AppView; dot?: strin
       { label: 'Crew' },
       { label: 'Customers' },
       { label: 'Assets', dot: '#14b8a6' },
-      { label: 'Scheduling', dot: '#14b8a6' },
-      { label: 'Dispatch Board', dot: '#f59e0b' },
     ],
   },
   {
