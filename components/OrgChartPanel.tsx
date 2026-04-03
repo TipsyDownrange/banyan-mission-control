@@ -389,14 +389,45 @@ export default function OrgChartPanel() {
             <div style={{ height: 2, background: '#e2e8f0', width: '85%', maxWidth: 1100 }} />
           </div>
 
-          {/* Tier 3+: Sean's reports — each in its own island card */}
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            {seanReports.map(report => (
-              <div key={report.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
-                <SeanReportSection node={report} />
+          {/* Two office columns */}
+          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+
+            {/* ── MAUI OFFICE (HQ) ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 340 }}>
+              <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
+              <div style={{ background: 'rgba(15,118,110,0.04)', border: '2px solid rgba(15,118,110,0.15)', borderRadius: 18, padding: '14px 16px 20px' }}>
+                <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#0f766e', textAlign: 'center', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#0f766e' }} />
+                  Maui Office — HQ
+                </div>
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+                  {seanReports.filter(r => ['mark','tia','jenny','nate'].includes(r.id)).map(report => (
+                    <div key={report.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <SeanReportSection node={report} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* ── OAHU OFFICE ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 240 }}>
+              <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
+              <div style={{ background: 'rgba(3,105,161,0.04)', border: '2px solid rgba(3,105,161,0.15)', borderRadius: 18, padding: '14px 16px 20px' }}>
+                <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#0369a1', textAlign: 'center', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#0369a1' }} />
+                  Oahu Office
+                </div>
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+                  {seanReports.filter(r => r.id === 'frank').map(report => (
+                    <div key={report.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <SeanReportSection node={report} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
