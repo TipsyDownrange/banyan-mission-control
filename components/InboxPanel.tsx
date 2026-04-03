@@ -47,6 +47,7 @@ export default function InboxPanel() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<EmailCategory | 'all' | 'unread'>('all');
   const [total, setTotal] = useState(0);
+  const [delegating, setDelegating] = useState<string | null>(null); // itemId being delegated
 
   useEffect(() => {
     fetch('/api/inbox')
@@ -221,9 +222,35 @@ export default function InboxPanel() {
                         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Delegate to</div>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {DELEGATES.map(d => (
-                            <button key={d} onClick={e => { e.stopPropagation(); alert(`Delegate to ${d} — routing coming soon`); }}
-                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: 'white', border: '1px solid rgba(226,232,240,0.9)', color: '#334155', cursor: 'pointer' }}>
-                              {d}
+                            <button key={d} disabled={delegating === item.id} onClick={async e => {
+                              e.stopPropagation();
+                              setDelegating(item.id);
+                              // Find email for delegate
+                              const EMAILS: Record<string,string> = {
+                                Kyle: 'kyle@kulaglass.com', Jenny: 'jenny@kulaglass.com',
+                                'Mark Olson': 'markolson@kulaglass.com', Frank: 'frank@kulaglass.com',
+                                Joey: 'joey@kulaglass.com', Tia: 'tia@kulaglass.com',
+                              };
+                              const toEmail = EMAILS[d] || '';
+                              try {
+                                const res = await fetch('/api/inbox/delegate', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ messageId: item.id, delegateTo: d, delegateEmail: toEmail, subject: item.subject, snippet: item.snippet }),
+                                });
+                                const data = await res.json();
+                                if (data.ok) {
+                                  // Mark as delegated in the list
+                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, delegatedTo: d } : i));
+                                  setExpanded(null);
+                                } else {
+                                  alert('Failed to delegate: ' + (data.error || 'Unknown error'));
+                                }
+                              } catch(err) { alert('Error: ' + err); }
+                              setDelegating(null);
+                            }}
+                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? '#e2e8f0' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? '#94a3b8' : '#334155', cursor: delegating === item.id ? 'default' : 'pointer' }}>
+                              {delegating === item.id ? '...' : d}
                             </button>
                           ))}
                         </div>
