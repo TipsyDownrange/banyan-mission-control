@@ -21,6 +21,7 @@ import EstimatorWorkspace from '@/components/EstimatorWorkspace';
 import ServicePanel from '@/components/ServicePanel';
 import BidIntakePanel from '@/components/BidIntakePanel';
 import AssetsPanel from '@/components/AssetsPanel';
+import SchedulingPanel from '@/components/SchedulingPanel';
 import CustomersPanel from '@/components/CustomersPanel';
 import KaiFloat from '@/components/KaiFloat';
 
@@ -43,6 +44,7 @@ export type AppView =
   | 'Work Orders'
   | 'Customers'
   | 'Assets'
+  | 'Scheduling'
   | 'Task Board'
   | 'Approvals'
   | 'Cost & Usage'
@@ -140,6 +142,7 @@ export default function Home() {
         {activeView === 'Work Orders' && <ServicePanel />}
         {activeView === 'Customers' && <CustomersPanel />}
         {activeView === 'Assets' && <AssetsPanel />}
+        {activeView === 'Scheduling' && <SchedulingPanel />}
         {activeView === 'Approvals' && <ApprovalsPanel />}
         {activeView === 'Cost & Usage' && <CostPanel />}
         {activeView === 'Workflows' && <CronPanel />}
