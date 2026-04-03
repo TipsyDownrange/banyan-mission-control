@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import ServiceIntake from '@/components/ServiceIntake';
 import QuoteBuilder from '@/components/QuoteBuilder';
+import WODetailPanel from '@/components/WODetailPanel';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -61,7 +62,7 @@ function toTitleCase(str: string): string {
 }
 
 function WOCard({
-  wo, expanded, onToggle, onStageChange, onSave, allCrew, onQuote,
+  wo, expanded, onToggle, onStageChange, onSave, allCrew, onQuote, onDetail,
 }: {
   wo: WorkOrder;
   expanded: boolean;
@@ -70,6 +71,7 @@ function WOCard({
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
   allCrew: CrewMember[];
   onQuote: (woId: string) => void;
+  onDetail: (wo: WorkOrder) => void;
 }) {
   const [mode, setMode] = useState<'view' | 'dispatch' | 'edit' | 'close'>('view');
   const [saving, setSaving] = useState(false);
@@ -233,8 +235,13 @@ function WOCard({
           </div>
         </div>
 
-        {/* Row 2: Name — truncated to 1 line */}
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>
+        {/* Row 2: Name — clickable to open full detail panel */}
+        <div
+          onClick={e => { e.stopPropagation(); onDetail(wo); }}
+          title="Open full detail"
+          style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3, cursor: 'pointer', textDecoration: 'none' }}
+          onMouseEnter={e => { (e.target as HTMLDivElement).style.color = '#0f766e'; (e.target as HTMLDivElement).style.textDecoration = 'underline'; }}
+          onMouseLeave={e => { (e.target as HTMLDivElement).style.color = '#0f172a'; (e.target as HTMLDivElement).style.textDecoration = 'none'; }}>
           {toTitleCase(wo.name)}
         </div>
 
@@ -440,6 +447,7 @@ export default function ServicePanel() {
   const [showIntake, setShowIntake] = useState(false);
   const [quoteWO, setQuoteWO] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
   const [filter, setFilter] = useState('all');
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
   // Local optimistic state overrides: woId → partial WO
@@ -612,6 +620,7 @@ export default function ServicePanel() {
                       onStageChange={handleStageChange}
                       onSave={handleSave}
                       onQuote={(id) => setQuoteWO(id)}
+                      onDetail={(w) => setDetailWO(w)}
                       allCrew={allCrew}
                     />
                   ))}
@@ -646,7 +655,8 @@ export default function ServicePanel() {
                 onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
                 onStageChange={handleStageChange}
                 onSave={handleSave}
-                      onQuote={(id) => setQuoteWO(id)}
+                onQuote={(id) => setQuoteWO(id)}
+                onDetail={(w) => setDetailWO(w)}
                 allCrew={allCrew}
               />
             ))}
@@ -662,6 +672,18 @@ export default function ServicePanel() {
             <QuoteBuilder woNumber={quoteWO} onClose={() => setQuoteWO(null)} />
           </div>
         </div>
+      )}
+
+      {/* Full detail panel */}
+      {detailWO && (
+        <WODetailPanel
+          wo={detailWO}
+          allCrew={allCrew}
+          onClose={() => setDetailWO(null)}
+          onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
+          onStageChange={async (id, stage) => { await handleStageChange(id, stage); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
+          onQuote={(id) => { setQuoteWO(id); setDetailWO(null); }}
+        />
       )}
 
       {/* Intake modal */}
