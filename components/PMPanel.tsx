@@ -16,10 +16,10 @@ const ISLAND_COLOR: Record<string, string> = {
 
 type Project = { kID: string; name: string; pm: string; island: string };
 
-export default function PMPanel() {
+export default function PMPanel({ defaultTab }: { defaultTab?: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
-  const [activeTab, setActiveTab] = useState<Tab>('budget');
+  const [activeTab, setActiveTab] = useState<Tab>((defaultTab as Tab) || 'budget');
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

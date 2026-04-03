@@ -33,6 +33,8 @@ export type AppView =
   | 'Crew'
   | 'Schedules'
   | 'Submittals'
+  | 'Budget'
+  | 'Change Orders'
   | 'Bid Queue'
   | 'Bid Intake'
   | 'My Bids'
@@ -125,8 +127,10 @@ export default function Home() {
         {activeView === 'Projects' && <ProjectsPanel />}
         {activeView === 'Issues' && <IssuesPanel />}
         {activeView === 'Crew' && <CrewPanel />}
-        {activeView === 'Schedules' && <PMPanel />}
-        {activeView === 'Submittals' && <PMPanel />}
+        {activeView === 'Schedules' && <PMPanel defaultTab='schedule' />}
+        {activeView === 'Budget' && <PMPanel defaultTab='budget' />}
+        {activeView === 'Change Orders' && <PMPanel defaultTab='co' />}
+        {activeView === 'Submittals' && <PMPanel defaultTab='submittal' />}
         {activeView === 'Bid Queue' && <BidQueuePanel />}
         {activeView === 'My Bids' && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Work Orders' && <ServicePanel />}
