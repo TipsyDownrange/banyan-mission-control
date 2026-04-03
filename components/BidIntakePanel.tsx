@@ -4,23 +4,37 @@ import { useState, useEffect } from 'react';
 type BidOpportunity = {
   email_id: string;
   inbox_owner: string;
+  lead_type: 'rfp' | 'wo_inquiry' | 'addendum' | 'vendor';
   project_name: string;
   gc_name: string;
+  owner_name: string;
+  contact_name: string;
+  contact_phone: string;
   location: string;
   island: string;
   bid_due_date: string;
   scope_summary: string;
+  system_types_identified: string[];
   bid_source: string;
   plan_room_link: string;
+  urgency: 'urgent' | 'normal' | 'low';
   confidence: 'high' | 'medium' | 'low';
   email_date: string;
   from_email: string;
   raw_subject: string;
   already_in_bid_log: boolean;
+  rebid_keywords: string[];
 };
 
 const ISLAND_COLOR: Record<string, string> = {
   Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
+};
+
+const LEAD_TYPE_STYLE: Record<string, { color: string; bg: string; label: string; route: string }> = {
+  rfp:        { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', label: 'RFP',        route: 'Assign to Estimator' },
+  wo_inquiry: { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', label: 'WO Inquiry', route: 'Send to Joey' },
+  addendum:   { color: '#92400e', bg: 'rgba(255,251,235,0.9)', label: 'Addendum',   route: 'Link to Bid' },
+  vendor:     { color: '#64748b', bg: 'rgba(248,250,252,0.9)', label: 'Vendor',     route: 'File' },
 };
 
 const CONF_STYLE: Record<string, { color: string; bg: string }> = {
@@ -51,6 +65,8 @@ export default function BidIntakePanel() {
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [assignedTo, setAssignedTo] = useState<Record<string, string>>({});
+  const ESTIMATORS = ['Kyle Shimizu', 'Jenny Shimabukuro', 'Mark Olson'];
   const [editDraft, setEditDraft] = useState<Partial<BidOpportunity>>({});
   const [lastScan, setLastScan] = useState<string | null>(null);
 
@@ -138,9 +154,9 @@ export default function BidIntakePanel() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 20, padding: 14, borderRadius: 16, background: 'linear-gradient(135deg,rgba(255,255,255,0.98),rgba(240,249,255,0.92))', border: '1px solid rgba(148,163,184,0.18)' }}>
           {[
             { label: 'Emails Scanned', value: totalEmails },
-            { label: 'Bids Found', value: opportunities.length },
-            { label: 'Urgent (≤7 days)', value: urgentCount },
-            { label: 'Added to Queue', value: added.size },
+            { label: 'RFPs Found', value: opportunities.filter(o=>o.lead_type==='rfp').length },
+            { label: 'WO Inquiries', value: opportunities.filter(o=>o.lead_type==='wo_inquiry').length },
+            { label: 'Urgent', value: urgentCount },
           ].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 24, fontWeight: 900, color: s.label === 'Urgent (≤7 days)' && s.value > 0 ? '#b91c1c' : '#0f172a', letterSpacing: '-0.04em' }}>{s.value}</div>
@@ -194,13 +210,19 @@ export default function BidIntakePanel() {
                       <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 2 }}>{opp.project_name}</div>
                     )}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
+                      {/* Lead type — most prominent */}
+                      {(() => { const lt = LEAD_TYPE_STYLE[opp.lead_type] || LEAD_TYPE_STYLE.rfp; return (
+                        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 10px', borderRadius: 999, color: lt.color, background: lt.bg, border: `1.5px solid ${lt.color}44` }}>
+                          {lt.label}
+                        </span>
+                      ); })()}
                       {opp.island && opp.island !== 'Unknown' && (
                         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 999, color: ISLAND_COLOR[opp.island] || '#64748b', background: 'rgba(255,255,255,0.9)', border: '1px solid currentColor' }}>
                           {opp.island}
                         </span>
                       )}
                       <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, color: conf.color, background: conf.bg }}>
-                        {opp.confidence.toUpperCase()} CONFIDENCE
+                        {opp.confidence.toUpperCase()}
                       </span>
                       {opp.bid_source !== 'email' && (
                         <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', background: 'rgba(239,246,255,0.9)', padding: '2px 8px', borderRadius: 999 }}>
@@ -218,23 +240,35 @@ export default function BidIntakePanel() {
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                     {!isAdded && (
                       <>
-                        <button onClick={() => {
-                          if (isEditing) { setEditingId(null); setEditDraft({}); }
-                          else { setEditingId(opp.email_id); setEditDraft({}); }
-                        }}
-                          style={{ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
-                          {isEditing ? '✓ Done' : '✎ Edit'}
+                        <button onClick={() => { if (isEditing) { setEditingId(null); setEditDraft({}); } else { setEditingId(opp.email_id); setEditDraft({}); } }}
+                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
+                          {isEditing ? '✓' : '✎'}
                         </button>
                         <button onClick={() => setDismissed(prev => new Set([...prev, opp.email_id]))}
                           style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', cursor: 'pointer' }}>
                           ✕
                         </button>
-                        <button
-                          onClick={() => addToBidQueue(opp)}
-                          disabled={adding === opp.email_id}
-                          style={{ padding: '6px 16px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: adding === opp.email_id ? '#94a3b8' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
-                          {adding === opp.email_id ? '...' : '+ Add to Queue'}
-                        </button>
+                        {/* Assignment — RFP gets estimator dropdown, WO goes to Joey */}
+                        {opp.lead_type === 'rfp' ? (
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <select value={assignedTo[opp.email_id] || ''}
+                              onChange={e => setAssignedTo(prev => ({ ...prev, [opp.email_id]: e.target.value }))}
+                              style={{ padding: '6px 8px', borderRadius: 10, fontSize: 11, border: '1px solid #e2e8f0', background: 'white', color: '#334155', cursor: 'pointer', outline: 'none' }}>
+                              <option value="">Assign to...</option>
+                              {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
+                            </select>
+                            <button onClick={() => { if (assignedTo[opp.email_id]) addToBidQueue({...opp, gc_name: opp.gc_name}); }}
+                              disabled={!assignedTo[opp.email_id] || adding === opp.email_id}
+                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : '#e2e8f0', color: assignedTo[opp.email_id] ? 'white' : '#94a3b8', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
+                              {adding === opp.email_id ? '...' : '→ Bid Queue'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => addToBidQueue(opp)} disabled={adding === opp.email_id}
+                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: adding === opp.email_id ? '#94a3b8' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
+                            {adding === opp.email_id ? '...' : '→ Joey Queue'}
+                          </button>
+                        )}
                       </>
                     )}
                     {isAdded && (

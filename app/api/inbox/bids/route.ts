@@ -10,11 +10,37 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 
-// Estimators whose inboxes to scan
+// ALL @kulaglass.com accounts — includes former employees whose email forwards to active accounts
+// Scanning all ensures no leads fall through the cracks
 const SCAN_USERS = [
+  // Current staff — primary lead recipients
   'sean@kulaglass.com',
+  'jody@kulaglass.com',
+  'frank@kulaglass.com',
   'kyle@kulaglass.com',
   'jenny@kulaglass.com',
+  'joey@kulaglass.com',
+  'tia@kulaglass.com',
+  'markolson@kulaglass.com',
+  // Field/admin — may receive leads from past relationships
+  'nate@kulaglass.com',
+  'karl@kulaglass.com',
+  'james@kulaglass.com',
+  'sonny@kulaglass.com',
+  'tyler@kulaglass.com',
+  'tyson@kulaglass.com',
+  'karljr@kulaglass.com',
+  // Former employees — likely forwarding to active accounts, but scan anyway
+  'abi@kulaglass.com',
+  'brooke@kulaglass.com',
+  'david@kulaglass.com',
+  'fran@kulaglass.com',
+  'grant@kulaglass.com',
+  'kama@kulaglass.com',
+  'keinannakamura@kulaglass.com',
+  'pono@kulaglass.com',
+  'shaun@kulaglass.com',
+  'sydney@kulaglass.com',
 ];
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY!;
@@ -127,41 +153,60 @@ async function fetchEmailsForUser(user: string, keyJson: object): Promise<RawEma
 async function extractBidData(emails: RawEmail[]): Promise<BidOpportunity[]> {
   if (!emails.length) return [];
 
-  const prompt = `You are analyzing emails from a Hawaii commercial glass and glazing subcontractor (Kula Glass Company) to identify bid opportunities.
+  const prompt = `You are analyzing emails from a Hawaii commercial glass and glazing subcontractor (Kula Glass Company) to identify ALL business leads — both commercial bid opportunities AND service/work order inquiries.
 
-For each email below, determine:
-1. Is this a bid invitation, RFP, plan room notification, addendum, or NOT a bid?
-2. If it IS a bid opportunity, extract the structured data.
+LEAD TYPES:
+- "rfp": Bid invitation, RFP, ITB, plan room notification, addendum — contract work, typically from a general contractor
+- "wo_inquiry": Service request, repair inquiry, residential/light commercial quote request — typically from a building owner, property manager, or homeowner
+- "addendum": An addendum to an active bid (related to an existing EST record)
+- "vendor": Quote or pricing from a vendor/supplier — NOT a lead, but flag it
+- "not_lead": Internal email, spam, newsletter, or clearly unrelated
+
+ROUTING LOGIC:
+- "rfp" → Sean reviews, delegates to estimator (Kyle/Jenny/Mark)
+- "wo_inquiry" → Sean reviews, delegates to Joey
+- Both go to SEAN FIRST — he is the clearinghouse for all assignments
 
 Hawaii islands: Oahu, Maui, Kauai, Hawaii (Big Island), Molokai, Lanai
-Common GCs in Hawaii: Nordic PCL, Hensel Phelps, Nan Inc, Swinerton, Gilbane, Albert C. Kobayashi (AKA), Royal Contracting, Goodfellow Bros, T. Iida Contracting, Grace Pacific, Hawaiian Dredging, WCIT Architecture, Ferraro Choi, AHL Architecture
-Plan room systems: Procore, Autodesk Construction Cloud, PlanHub, ConstructConnect, Bid Clerk, iSqFt, Kahua
+Common GCs: Nordic PCL, Hensel Phelps, Nan Inc, Swinerton, Gilbane, Albert C. Kobayashi (AKA), Royal Contracting, Grace Pacific, Hawaiian Dredging, T. Iida
+Plan room systems: Procore, Autodesk Construction Cloud, PlanHub, ConstructConnect, Bid Clerk, iSqFt, Kahua, SmartBidNet
 
-Return a JSON array. For each email include:
+For EACH email, return:
 {
   "email_id": "...",
-  "is_bid": true/false,
-  "project_name": "...", 
+  "is_lead": true/false,
+  "lead_type": "rfp|wo_inquiry|addendum|vendor|not_lead",
+  "project_name": "...",
   "gc_name": "...",
+  "owner_name": "...",
+  "contact_name": "...",
+  "contact_phone": "...",
   "location": "city/area",
   "island": "Oahu|Maui|Kauai|Hawaii|Molokai|Lanai|Unknown",
   "bid_due_date": "YYYY-MM-DD or blank",
-  "scope_summary": "1-2 sentence scope description",
+  "scope_summary": "1-2 sentence scope — be specific about system types if identifiable",
+  "system_types_identified": ["Storefront", "Curtain Wall", etc — only canonical KG types],
   "bid_source": "email|procore|autodesk|kahua|planhub|other",
-  "plan_room_link": "URL if found, else blank",
+  "plan_room_link": "URL if found",
+  "has_attachments": true/false,
   "confidence": "high|medium|low",
-  "reason_not_bid": "only if is_bid=false"
+  "urgency": "urgent|normal|low",
+  "reason_not_lead": "only if is_lead=false",
+  "rebid_keywords": ["any project name/address keywords that might match a prior bid"]
 }
+
+Canonical system types (ONLY use these): Curtainwall, Window Wall, Storefront, Interior Storefront, Interior Doors, Exterior Doors, Railing, Skylights, Trellis, Automatic Entrances, Metal Screen Walls, ACM Panels, Aluminum Panels, Door Openers, Louvers
 
 Emails to analyze:
 ${emails.map((e, i) => `
 --- EMAIL ${i + 1} ---
 ID: ${e.id}
+Inbox: ${e.inbox_owner}
 From: ${e.from}
 Subject: ${e.subject}
 Date: ${e.date}
 Snippet: ${e.snippet}
-Body (first 800 chars): ${e.body.substring(0, 800)}
+Body (first 1000 chars): ${e.body.substring(0, 1000)}
 `).join('\n')}
 
 Return ONLY the JSON array, no other text.`;
@@ -186,7 +231,7 @@ Return ONLY the JSON array, no other text.`;
   try {
     const extracted = JSON.parse(text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, ''));
     return extracted
-      .filter((e: { is_bid?: boolean }) => e.is_bid)
+      .filter((e: { is_lead?: boolean }) => e.is_lead)
       .map((e: {
         email_id: string; project_name: string; gc_name: string; location: string;
         island: string; bid_due_date: string; scope_summary: string; bid_source: string;
