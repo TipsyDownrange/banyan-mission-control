@@ -1,50 +1,83 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { getGoogleAuth } from '@/lib/gauth';
 
 export async function POST(req: Request) {
   try {
     const { messageId, delegateTo, delegateEmail, subject, snippet } = await req.json();
 
     if (!delegateEmail) return NextResponse.json({ error: 'No email for delegate' }, { status: 400 });
+    if (!messageId) return NextResponse.json({ error: 'No messageId' }, { status: 400 });
 
-    // Send a delegation email from sean@ to the delegate
+    const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_B64!, 'base64').toString());
     const auth = new google.auth.JWT({
-      email: (JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_B64!, 'base64').toString())).client_email,
-      key: (JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_B64!, 'base64').toString())).private_key,
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      email: keyJson.client_email,
+      key: keyJson.private_key,
+      scopes: ['https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/gmail.send'],
       subject: 'sean@kulaglass.com',
     });
     const gmail = google.gmail({ version: 'v1', auth });
 
-    const body = [
-      `Hi ${delegateTo},`,
-      ``,
-      `Delegating this bid invitation to you for review and action.`,
-      ``,
+    // Fetch the original message in RFC 2822 format
+    const original = await gmail.users.messages.get({
+      userId: 'me',
+      id: messageId,
+      format: 'raw',
+    });
+
+    const rawOriginal = original.data.raw;
+    if (!rawOriginal) throw new Error('Could not fetch original message');
+
+    // Decode the original email
+    const originalBytes = Buffer.from(rawOriginal, 'base64url');
+    const originalText = originalBytes.toString('utf8');
+
+    // Build a proper forward:
+    // New headers → blank line → "Fwd note" → blank line → original message
+    const fwdNote = [
+      `---------- Forwarded message ---------`,
+      `From: sean@kulaglass.com`,
       `Subject: ${subject}`,
-      `Summary: ${snippet}`,
       ``,
-      `Please review and add to the Bid Queue if we're bidding, or mark as No Bid.`,
+      `Delegating to you for review and action. Please add to Bid Queue or mark No Bid.`,
       ``,
       `— Sean (via BanyanOS)`,
+      ``,
     ].join('\n');
 
-    const boundary = 'boundary_delegate_' + Date.now();
-    const raw = Buffer.from([
+    // Strip the original headers and prepend our own
+    // Find the end of headers (first blank line)
+    const headerEnd = originalText.indexOf('\n\n');
+    const originalBody = headerEnd >= 0 ? originalText.slice(headerEnd + 2) : originalText;
+    const originalHeaders = headerEnd >= 0 ? originalText.slice(0, headerEnd) : '';
+
+    // Extract content-type from original to preserve it
+    const contentTypeMatch = originalHeaders.match(/Content-Type:[^\n]+(\n[ \t][^\n]+)*/i);
+    const contentType = contentTypeMatch ? contentTypeMatch[0] : 'Content-Type: text/plain; charset=utf-8';
+
+    // Build the forwarded message
+    const forwardedEmail = [
       `From: Sean Daniels <sean@kulaglass.com>`,
       `To: ${delegateTo} <${delegateEmail}>`,
-      `Subject: Delegated: ${subject}`,
+      `Subject: Fwd: ${subject}`,
       `MIME-Version: 1.0`,
-      `Content-Type: text/plain; charset=utf-8`,
+      contentType,
       ``,
-      body,
-    ].join('\r\n')).toString('base64url');
+      fwdNote,
+      `--- Original Message ---`,
+      originalBody,
+    ].join('\n');
 
-    await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+    const encodedForward = Buffer.from(forwardedEmail).toString('base64url');
+
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw: encodedForward },
+    });
 
     return NextResponse.json({ ok: true, to: delegateTo, email: delegateEmail });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Delegate error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
