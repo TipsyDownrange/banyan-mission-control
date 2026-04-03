@@ -11,6 +11,7 @@ export type ServiceWOData = {
   wo_number: string;
   quote_date: string;
   invoice_date?: string;
+  material_lead_time?: string;  // e.g. "4–6 weeks" — shown prominently in header
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -52,11 +53,22 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
       <Page size="LETTER" style={S.page}>
         <Letterhead docNumber={`WO ${data.wo_number}`} date={data.quote_date} />
 
-        {/* Title */}
+        {/* Title + lead time banner */}
         <View style={S.docTitleRow}>
           <Text style={S.docTitle}>Proposal</Text>
           <Text style={S.docMeta}>
             {data.island && `${data.island}  ·  `}{data.quote_date}
+          </Text>
+        </View>
+
+        {/* Material lead time — highlighted, always visible */}
+        <View style={{ backgroundColor: `${C.blue}14`, borderRadius: 8, padding: '7 12', marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, border: `1 solid ${C.blue}33` }}>
+          <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>Material Lead Time</Text>
+          <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.navy }}>
+            {data.material_lead_time || 'TBD — confirm with vendor at time of order'}
+          </Text>
+          <Text style={{ fontSize: 7.5, color: C.slate, flex: 1, textAlign: 'right' }}>
+            Fabrication begins upon receipt of signed proposal + deposit. Installation scheduling is separate.
           </Text>
         </View>
 
@@ -99,7 +111,7 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
             <Text style={{ ...S.priceHeaderCell, flex: 1 }}>Description</Text>
             <Text style={{ ...S.priceHeaderCell, width: 100, textAlign: 'right' }}>Amount</Text>
           </View>
-          <View style={[S.priceDataRow, { backgroundColor: `${C.teal}08` }]}>
+          <View style={[S.priceDataRow, { backgroundColor: `${C.blue}08` }]}>
             <Text style={{ flex: 1, fontSize: 9.5, color: C.text, lineHeight: 1.4 }}>
               Total cost: materials, crating, shipping, handling, delivery,
               {data.installation_included ? ' labor, installation,' : ''} & taxes

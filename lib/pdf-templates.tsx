@@ -13,23 +13,27 @@ const LOGO_PATH = path.join(process.cwd(), 'public', 'kg-logo.png');
 const LOGO_W = 52;
 const LOGO_H = Math.round(LOGO_W / 0.707); // ≈ 74
 
-// ─── Brand Tokens ─────────────────────────────────────────────────────────────
+// ─── Brand Tokens — Kula Glass palette ───────────────────────────────────────
+// Primary: KG dark navy (#0D0D80) + steel blue (#2E6DA4)
+// NOT BanyanOS teal — these are KG company colors
 export const C = {
-  navy:      '#071722',  // dark header text
-  teal:      '#0f766e',  // primary accent
-  tealLight: '#14b8a6',  // gradient end
-  tealBg:    '#f0fdfa',  // teal wash background
-  blue:      '#0369a1',  // secondary info
-  indigo:    '#4338ca',  // status / numbers
-  amber:     '#92400e',  // warnings
-  red:       '#b91c1c',  // critical issues
-  slate:     '#64748b',  // labels
-  slateLight:'#94a3b8',  // sub-labels
-  border:    '#e2e8f0',  // dividers
-  bg:        '#f8fafc',  // page tint
-  white:     '#ffffff',
-  text:      '#0f172a',
-  subtext:   '#475569',
+  navy:       '#0D0D80',  // KG primary — dark navy (logo color)
+  navyDark:   '#0a0a60',  // darker navy for hover/active
+  blue:       '#2E6DA4',  // KG steel blue (letterhead band, section accents)
+  blueBg:     '#EEF4FB',  // light blue wash
+  blueMid:    '#4A8BBF',  // mid blue for gradients
+  amber:      '#92400e',  // warnings
+  red:        '#b91c1c',  // critical issues
+  slate:      '#64748b',  // labels
+  slateLight: '#94a3b8',  // sub-labels
+  border:     '#e2e8f0',  // dividers
+  bg:         '#f8fafc',  // page tint
+  white:      '#ffffff',
+  text:       '#0f172a',
+  subtext:    '#475569',
+  // Keep teal only for status indicators
+  teal:       '#0f766e',
+  tealBg:     '#f0fdfa',
 };
 
 export const COMPANY = {
@@ -101,22 +105,22 @@ export const S = StyleSheet.create({
   letterhead: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-    paddingBottom: 14,
-    borderBottom: `2 solid ${C.teal}`,
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottom: `2 solid ${C.blue}`,
   },
   companyName: {
-    fontSize: 15,
+    fontSize: 12,
     fontFamily: 'Helvetica-Bold',
     color: C.navy,
     letterSpacing: 0.3,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   companyDetail: {
-    fontSize: 8.5,
+    fontSize: 8,
     color: C.slate,
-    lineHeight: 1.6,
+    lineHeight: 1.5,
   },
 
   // ── Document title ──
@@ -127,10 +131,10 @@ export const S = StyleSheet.create({
     marginBottom: 20,
   },
   docTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
     color: C.navy,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   docMeta: {
     fontSize: 8.5,
@@ -145,7 +149,7 @@ export const S = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 0,
     marginBottom: 18,
-    padding: '12 14',
+    padding: '8 12',
     backgroundColor: C.bg,
     borderRadius: 12,
     border: `1 solid ${C.border}`,
@@ -154,8 +158,8 @@ export const S = StyleSheet.create({
     width: '50%',
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 7,
-    paddingRight: 12,
+    marginBottom: 5,
+    paddingRight: 10,
   },
   infoLabel: {
     fontSize: 8,
@@ -174,7 +178,7 @@ export const S = StyleSheet.create({
   },
   infoValueAccent: {
     fontSize: 9,
-    color: C.teal,
+    color: C.navy,
     fontFamily: 'Helvetica-Bold',
     flex: 1,
   },
@@ -185,11 +189,11 @@ export const S = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    color: C.teal,
-    marginTop: 16,
-    marginBottom: 6,
+    color: C.blue,
+    marginTop: 10,
+    marginBottom: 4,
     paddingLeft: 8,
-    borderLeft: `3 solid ${C.teal}`,
+    borderLeft: `3 solid ${C.blue}`,
   },
 
   // ── Body ──
@@ -277,13 +281,13 @@ export const S = StyleSheet.create({
   depositLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: `${C.teal}15`,
+    backgroundColor: `${C.blue}18`,
     padding: '5 8',
     borderRadius: 6,
     marginTop: 6,
   },
-  depositLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.teal },
-  depositValue: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.teal, textAlign: 'right' },
+  depositLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.blue },
+  depositValue: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.blue, textAlign: 'right' },
 
   // ── Exclusions list ──
   exclusionItem: {
@@ -354,7 +358,7 @@ export const S = StyleSheet.create({
   tcTitle: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: C.teal,
+    color: C.blue,
     marginTop: 10,
     marginBottom: 2,
   },

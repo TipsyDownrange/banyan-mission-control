@@ -101,8 +101,8 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
         )}
 
         {/* Immutability notice */}
-        <View style={{ marginTop: 16, padding: '8 12', backgroundColor: C.tealBg, borderRadius: 8, border: `0.5 solid ${C.teal}44` }}>
-          <Text style={{ fontSize: 7.5, color: C.teal, lineHeight: 1.5 }}>
+        <View style={{ marginTop: 16, padding: '8 12', backgroundColor: C.blueBg, borderRadius: 8, border: `0.5 solid ${C.blue}44` }}>
+          <Text style={{ fontSize: 7.5, color: C.blue, lineHeight: 1.5 }}>
             Immutable record — BanyanOS  ·  Event ID: {data.event_id}  ·  Recorded: {fmtTime(data.recorded_at)}  ·  Source: {data.source_system}
           </Text>
         </View>
