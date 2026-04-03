@@ -13,245 +13,225 @@ type CalEvent = {
   description?: string;
 };
 
-type DayGroup = { date: string; label: string; isToday: boolean; events: CalEvent[] };
+function fmt(iso: string) {
+  try { return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }); }
+  catch { return ''; }
+}
 
-const HOUR_HEIGHT = 60; // px per hour in day view
+function fmtDate(iso: string) {
+  try { return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+  catch { return iso; }
+}
 
-function formatTime(iso: string) {
+function isToday(dateStr: string) {
+  return new Date().toDateString() === new Date(dateStr).toDateString();
+}
+
+function isSameDay(iso: string, date: Date) {
   const d = new Date(iso);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}
-
-function getDayLabel(dateStr: string) {
-  const d = new Date(dateStr + 'T12:00:00');
-  const today = new Date();
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-  if (d.toDateString() === today.toDateString()) return 'Today';
-  if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-}
-
-function getHour(iso: string) {
-  return new Date(iso).getHours() + new Date(iso).getMinutes() / 60;
-}
-
-function getDurationHours(start: string, end: string) {
-  return Math.max(0.5, (new Date(end).getTime() - new Date(start).getTime()) / 3600000);
+  return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate();
 }
 
 export default function CalendarPanel() {
   const [events, setEvents] = useState<CalEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [view, setView] = useState<'week' | 'agenda'>('agenda');
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [view, setView] = useState<'month' | 'agenda'>('month');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<CalEvent | null>(null);
 
   useEffect(() => {
     fetch('/api/calendar')
       .then(r => r.json())
-      .then(d => { if (d.error) setError(d.error); else setEvents(d.events || []); setLoading(false); })
+      .then(d => { setEvents(d.events || []); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, []);
 
-  // Group events by date
-  const groupedByDay: DayGroup[] = [];
-  const dayMap: Record<string, CalEvent[]> = {};
-  for (const e of events) {
-    const date = e.start.split('T')[0] || e.start.split(' ')[0];
-    if (!dayMap[date]) dayMap[date] = [];
-    dayMap[date].push(e);
-  }
-  const today = new Date().toISOString().split('T')[0];
-  // Show next 7 days
-  for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
-    groupedByDay.push({
-      date: dateStr,
-      label: getDayLabel(dateStr),
-      isToday: dateStr === today,
-      events: dayMap[dateStr] || [],
-    });
+  // Build calendar grid
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = firstDay.getDay(); // 0=Sun
+  const totalDays = lastDay.getDate();
+
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < startOffset; i++) cells.push(null);
+  for (let d = 1; d <= totalDays; d++) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  function eventsForDay(date: Date) {
+    return events.filter(e => isSameDay(e.start, date));
   }
 
-  const totalEvents = events.length;
-  const todayEvents = dayMap[today]?.length || 0;
-  const tomorrowDate = new Date(); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrowEvents = dayMap[tomorrowDate.toISOString().split('T')[0]]?.length || 0;
+  function selectedDayEvents() {
+    if (!selectedDate) return [];
+    return eventsForDay(selectedDate).sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  }
+
+  const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const today = new Date();
+
+  // Agenda: next 30 days
+  const agendaDays: { date: Date; events: CalEvent[] }[] = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(); d.setDate(today.getDate() + i);
+    const dayEvents = eventsForDay(d);
+    if (dayEvents.length > 0 || i === 0) agendaDays.push({ date: d, events: dayEvents });
+  }
 
   return (
-    <div style={{ padding: '32px', maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Assistant</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Calendar</h1>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {(['agenda','week'] as const).map(v => (
-              <button key={v} onClick={() => setView(v)} style={{
-                padding: '7px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700,
-                border: `1px solid ${view === v ? 'rgba(15,118,110,0.3)' : '#e2e8f0'}`,
-                background: view === v ? 'rgba(240,253,250,0.96)' : 'white',
-                color: view === v ? '#0f766e' : '#64748b', cursor: 'pointer', textTransform: 'capitalize',
-              }}>{v}</button>
-            ))}
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Assistant</div>
+          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Calendar</h1>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* View toggle */}
+          {(['month', 'agenda'] as const).map(v => (
+            <button key={v} onClick={() => setView(v)}
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid #e2e8f0', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? '#0369a1' : '#64748b', cursor: 'pointer' }}>
+              {v}
+            </button>
+          ))}
+          {/* Month nav (only in month view) */}
+          {view === 'month' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
+              <button onClick={() => setCurrentMonth(new Date(year, month - 1))}
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>‹</button>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', minWidth: 140, textAlign: 'center' }}>{monthName}</span>
+              <button onClick={() => setCurrentMonth(new Date(year, month + 1))}
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>›</button>
+              <button onClick={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
+                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}>Today</button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Stats */}
-      {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24,
-          padding: 18, borderRadius: 24,
-          background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 50%,rgba(248,250,252,0.96) 100%)',
-          border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 36px rgba(15,23,42,0.08)' }}>
-          {[
-            { label: 'Today', value: todayEvents, helper: todayEvents === 0 ? 'Clear day' : `${todayEvents} event${todayEvents > 1 ? 's' : ''}` },
-            { label: 'Tomorrow', value: tomorrowEvents, helper: tomorrowEvents === 0 ? 'Clear day' : `${tomorrowEvents} event${tomorrowEvents > 1 ? 's' : ''}` },
-            { label: 'This week', value: totalEvents, helper: 'Next 7 days' },
-          ].map(s => (
-            <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
-              <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a' }}>{s.value}</div>
-              <div style={{ marginTop: 6, fontSize: 12, color: '#94a3b8' }}>{s.helper}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>{error}</div>}
 
       {loading && (
-        <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
+        <div style={{ textAlign: 'center', padding: 48 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading calendar...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading calendar...</div>
         </div>
       )}
 
-      {error && (
-        <div style={{ background: 'rgba(255,251,235,0.98)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 18, padding: '16px 20px', marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Calendar not connected yet</div>
-          <div style={{ fontSize: 12, color: '#475569' }}>Add calendar.readonly scope in Google Admin → Domain-wide delegation to enable.</div>
+      {!loading && view === 'month' && (
+        <div style={{ display: 'grid', gridTemplateColumns: selectedDate ? '1fr 320px' : '1fr', gap: 16 }}>
+          {/* Month grid */}
+          <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            {/* Day headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: '1px solid #f1f5f9' }}>
+              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                <div key={d} style={{ padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{d}</div>
+              ))}
+            </div>
+            {/* Grid cells */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' }}>
+              {cells.map((date, i) => {
+                if (!date) return <div key={i} style={{ minHeight: 90, borderRight: i % 7 !== 6 ? '1px solid #f8fafc' : 'none', borderBottom: '1px solid #f8fafc', background: '#fafafa' }} />;
+                const dayEvents = eventsForDay(date);
+                const isTodayCell = isToday(date.toISOString());
+                const isSelected = selectedDate?.toDateString() === date.toDateString();
+                return (
+                  <div key={i} onClick={() => setSelectedDate(date)} style={{ minHeight: 90, padding: '6px 4px', borderRight: i % 7 !== 6 ? '1px solid #f8fafc' : 'none', borderBottom: '1px solid #f8fafc', cursor: 'pointer', background: isSelected ? 'rgba(239,246,255,0.6)' : 'white', transition: 'background 0.1s' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: isTodayCell ? '#0369a1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: 12, fontWeight: isTodayCell ? 900 : 500, color: isTodayCell ? 'white' : date.getMonth() !== month ? '#cbd5e1' : '#0f172a' }}>{date.getDate()}</span>
+                      </div>
+                    </div>
+                    {dayEvents.slice(0, 3).map(ev => (
+                      <div key={ev.id} onClick={(e) => { e.stopPropagation(); setSelectedEvent(ev); }}
+                        style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, marginBottom: 2, background: ev.color || '#0369a1', color: 'white', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>
+                        {!ev.allDay && <span style={{ opacity: 0.85 }}>{fmt(ev.start)} </span>}{ev.title}
+                      </div>
+                    ))}
+                    {dayEvents.length > 3 && (
+                      <div style={{ fontSize: 9, color: '#94a3b8', paddingLeft: 4 }}>+{dayEvents.length - 3} more</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Day detail panel */}
+          {selectedDate && (
+            <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: '16px', maxHeight: 600, overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</div>
+                </div>
+                <button onClick={() => setSelectedDate(null)} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: '#94a3b8', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+              </div>
+              {selectedDayEvents().length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#94a3b8', fontSize: 13 }}>No events</div>
+              ) : (
+                selectedDayEvents().map(ev => (
+                  <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: '#f8fafc', border: `1px solid #e2e8f0`, cursor: 'pointer' }}
+                    onClick={() => setSelectedEvent(ev === selectedEvent ? null : ev)}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                          {ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}
+                        </div>
+                        {ev.location && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>📍 {ev.location}</div>}
+                        {selectedEvent?.id === ev.id && ev.description && (
+                          <div style={{ marginTop: 6, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>{ev.description}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {/* Agenda view */}
       {!loading && view === 'agenda' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {groupedByDay.map(day => (
-            <div key={day.date}>
-              {/* Day header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: day.events.length > 0 ? 8 : 0 }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 16, flexShrink: 0,
-                  background: day.isToday ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : 'white',
-                  border: day.isToday ? 'none' : '1px solid #e2e8f0',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: day.isToday ? '0 4px 16px rgba(15,118,110,0.3)' : '0 1px 3px rgba(15,23,42,0.06)',
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: day.isToday ? 'rgba(255,255,255,0.7)' : '#94a3b8' }}>
-                    {new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', color: day.isToday ? 'white' : '#0f172a', lineHeight: 1 }}>
-                    {new Date(day.date + 'T12:00:00').getDate()}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: day.isToday ? 800 : 700, color: day.isToday ? '#0f766e' : '#0f172a' }}>{day.label}</div>
-                  {day.events.length === 0 && <div style={{ fontSize: 12, color: '#94a3b8' }}>No events</div>}
-                </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {agendaDays.map(({ date, events: dayEvts }) => (
+            <div key={date.toISOString()}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: isToday(date.toISOString()) ? '#0369a1' : '#94a3b8', marginTop: 12, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                {isToday(date.toISOString()) && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0369a1', flexShrink: 0 }} />}
+                {fmtDate(date.toISOString())}
+                {isToday(date.toISOString()) && <span style={{ padding: '1px 6px', borderRadius: 999, background: '#0369a1', color: 'white', fontSize: 9, fontWeight: 800 }}>TODAY</span>}
               </div>
-
-              {/* Events for this day */}
-              {day.events.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 60 }}>
-                  {day.events.map(event => (
-                    <div key={event.id}
-                      onClick={() => setSelectedDay(selectedDay === event.id ? null : event.id)}
-                      style={{
-                        display: 'grid', gap: 10, padding: '14px 18px', borderRadius: 20,
-                        background: 'rgba(255,255,255,0.98)',
-                        border: '1px solid rgba(226,232,240,0.9)',
-                        boxShadow: '0 14px 30px rgba(15,23,42,0.06)',
-                        position: 'relative', overflow: 'hidden', cursor: 'pointer',
-                      }}>
-                      <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 5, background: event.color || '#14b8a6', borderRadius: '4px 0 0 4px' }} />
-                      <div style={{ paddingLeft: 4 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 4 }}>{event.title}</div>
-                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                              {!event.allDay && (
-                                <span style={{ fontSize: 12, fontWeight: 700, color: '#64748b' }}>
-                                  {formatTime(event.start)} – {formatTime(event.end)}
-                                </span>
-                              )}
-                              {event.allDay && <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', background: '#f8fafc', padding: '2px 8px', borderRadius: 999 }}>All day</span>}
-                              {event.location && (
-                                <span style={{ fontSize: 12, color: '#94a3b8' }}>📍 {event.location}</span>
-                              )}
-                            </div>
-                          </div>
-                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', flexShrink: 0 }}>
-                            {event.calendar}
-                          </span>
-                        </div>
-                        {selectedDay === event.id && event.description && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(226,232,240,0.7)', fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
-                            {event.description}
-                          </div>
-                        )}
+              {dayEvts.length === 0 ? (
+                <div style={{ padding: '10px 16px', borderRadius: 12, background: '#fafafa', border: '1px dashed #e2e8f0', fontSize: 12, color: '#cbd5e1' }}>No events</div>
+              ) : (
+                dayEvts.map(ev => (
+                  <div key={ev.id} style={{ padding: '10px 16px', borderRadius: 12, background: 'white', border: '1px solid #e2e8f0', marginBottom: 6, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: '#94a3b8' }}>
+                        <span>{ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}</span>
+                        {ev.location && <span>📍 {ev.location}</span>}
+                        <span style={{ color: '#cbd5e1' }}>{ev.calendar}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))
               )}
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Week grid view */}
-      {!loading && view === 'week' && (
-        <div style={{ background: 'white', borderRadius: 24, border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)', overflow: 'hidden' }}>
-          {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '48px repeat(7, 1fr)', borderBottom: '1px solid #f1f5f9' }}>
-            <div />
-            {groupedByDay.map(day => (
-              <div key={day.date} style={{ padding: '12px 8px', textAlign: 'center', background: day.isToday ? 'rgba(240,253,250,0.6)' : 'transparent', borderLeft: '1px solid #f1f5f9' }}>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: day.isToday ? '#0f766e' : '#94a3b8' }}>
-                  {new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: day.isToday ? '#0f766e' : '#0f172a' }}>
-                  {new Date(day.date + 'T12:00:00').getDate()}
-                </div>
-                {day.events.length > 0 && (
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: day.isToday ? '#0f766e' : '#94a3b8', margin: '4px auto 0' }} />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Events in week view — simplified blocks */}
-          <div style={{ padding: '12px 0' }}>
-            {groupedByDay.every(d => d.events.length === 0) ? (
-              <div style={{ textAlign: 'center', padding: '32px', fontSize: 13, color: '#94a3b8' }}>No events this week</div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '48px repeat(7, 1fr)' }}>
-                <div />
-                {groupedByDay.map(day => (
-                  <div key={day.date} style={{ padding: '4px', borderLeft: '1px solid #f1f5f9', minHeight: 80 }}>
-                    {day.events.map(e => (
-                      <div key={e.id} style={{ marginBottom: 4, padding: '6px 8px', borderRadius: 10, background: `${e.color || '#14b8a6'}18`, borderLeft: `3px solid ${e.color || '#14b8a6'}` }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{e.title}</div>
-                        {!e.allDay && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{formatTime(e.start)}</div>}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {agendaDays.filter(d => d.events.length > 0).length === 0 && (
+            <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', fontSize: 13, color: '#94a3b8' }}>
+              No upcoming events in the next 30 days
+            </div>
+          )}
         </div>
       )}
     </div>

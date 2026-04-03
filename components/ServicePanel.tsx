@@ -181,6 +181,12 @@ function WOCard({
               style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               ✎
             </button>
+            {/* Print dispatch sheet */}
+            <button title="Print dispatch sheet for crew"
+              onClick={(e) => { e.stopPropagation(); window.open(`/api/service/dispatch-pdf?wo=${encodeURIComponent(wo.id)}`, '_blank'); }}
+              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#64748b', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              🖨
+            </button>
           </div>
         </div>
 
