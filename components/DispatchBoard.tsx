@@ -4,7 +4,22 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 type Slot = {
   slot_id: string; date: string; kID: string; project_name: string;
   island: string; men_required: string; hours_estimated: string;
-  assigned_crew: string; created_by: string; status: string;
+  assigned_crew: string; created_by: string; status: string; confirmations: string;
+};
+
+function parseConfirmations(raw: string): Record<string, string> {
+  const map: Record<string, string> = {};
+  (raw || '').split(',').forEach(entry => {
+    const [n, s] = entry.trim().split(':');
+    if (n?.trim()) map[n.trim()] = s?.trim() || 'pending';
+  });
+  return map;
+}
+
+const CONF_STYLE: Record<string, { icon: string; color: string }> = {
+  confirmed: { icon: '✓', color: '#0f766e' },
+  declined:  { icon: '✗', color: '#b91c1c' },
+  pending:   { icon: '?', color: '#94a3b8' },
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
@@ -240,6 +255,7 @@ export default function DispatchBoard() {
                     const assignedNames = slot.assigned_crew ? slot.assigned_crew.split(', ').filter(Boolean) : [];
                     const required = parseInt(slot.men_required) || 1;
                     const isExpanded = expandedSlot === slot.slot_id;
+                    const confMap = parseConfirmations(slot.confirmations);
 
                     return (
                       <div key={slot.slot_id}
@@ -260,30 +276,54 @@ export default function DispatchBoard() {
                         <div style={{ fontSize: 9, color: ss.color, fontWeight: 700, marginBottom: 3 }}>
                           {assignedNames.length}/{required} men
                         </div>
-                        {/* Assigned crew chips */}
+                        {/* Assigned crew chips with confirmation status */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                          {assignedNames.map(name => (
-                            <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8.5, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'white', border: '1px solid #e2e8f0', color: '#334155' }}>
-                              {name.split(' ').map(n => n[0]).join('').slice(0,2)}
-                              {isExpanded && (
-                                <button onClick={e => { e.stopPropagation(); removeCrewFromSlot(slot.slot_id, name); }}
-                                  style={{ width: 12, height: 12, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 8, color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
-                              )}
-                            </div>
-                          ))}
+                          {assignedNames.map(name => {
+                            // Match by first name (partial match)
+                            const firstName = name.split(' ')[0];
+                            const confKey = Object.keys(confMap).find(k => k.includes(firstName)) || '';
+                            const confStatus = confMap[confKey] || 'pending';
+                            const cs = CONF_STYLE[confStatus] || CONF_STYLE.pending;
+                            return (
+                              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8.5, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'white', border: `1px solid ${confStatus === 'confirmed' ? '#0f766e33' : confStatus === 'declined' ? '#b91c1c33' : '#e2e8f0'}`, color: '#334155' }}>
+                                <span style={{ fontSize: 7, fontWeight: 900, color: cs.color }}>{cs.icon}</span>
+                                {name.split(' ').map(n => n[0]).join('').slice(0,2)}
+                                {isExpanded && (
+                                  <button onClick={e => { e.stopPropagation(); removeCrewFromSlot(slot.slot_id, name); }}
+                                    style={{ width: 12, height: 12, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 8, color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+                                )}
+                              </div>
+                            );
+                          })}
                           {assignedNames.length < required && (
                             <div style={{ fontSize: 8, padding: '2px 5px', borderRadius: 6, background: 'rgba(15,23,42,0.04)', color: '#94a3b8', border: '1px dashed #e2e8f0' }}>
                               +{required - assignedNames.length}
                             </div>
                           )}
                         </div>
-                        {/* Expanded: show full name + delete */}
+                        {/* Expanded: full name, confirmations, delete */}
                         {isExpanded && (
                           <div style={{ marginTop: 6, paddingTop: 5, borderTop: '1px solid #f1f5f9' }}>
                             <div style={{ fontSize: 9, color: '#475569', marginBottom: 4 }}>{slot.project_name}</div>
-                            {slot.hours_estimated && <div style={{ fontSize: 9, color: '#94a3b8' }}>{slot.hours_estimated}h est.</div>}
+                            {slot.hours_estimated && <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
+                            {/* Confirmation breakdown */}
+                            {assignedNames.length > 0 && (
+                              <div style={{ marginBottom: 4 }}>
+                                {assignedNames.map(name => {
+                                  const firstName = name.split(' ')[0];
+                                  const confKey = Object.keys(confMap).find(k => k.includes(firstName)) || '';
+                                  const confStatus = confMap[confKey] || 'pending';
+                                  const cs = CONF_STYLE[confStatus] || CONF_STYLE.pending;
+                                  return (
+                                    <div key={name} style={{ fontSize: 8, color: cs.color, fontWeight: 700 }}>
+                                      {cs.icon} {name.split(' ')[0]} — {confStatus}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                             <button onClick={e => { e.stopPropagation(); deleteSlot(slot.slot_id); }}
-                              style={{ marginTop: 4, fontSize: 8, color: '#b91c1c', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}>
+                              style={{ marginTop: 2, fontSize: 8, color: '#b91c1c', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}>
                               Remove slot
                             </button>
                           </div>

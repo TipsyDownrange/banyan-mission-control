@@ -11,7 +11,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
-const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status'];
+const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations'];
 
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:J5000',
+      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:K5000',
     });
 
     const fromDate = new Date(from);
@@ -87,19 +87,33 @@ export async function PATCH(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:J5000' });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:K5000' });
     const rows = res.data.values || [];
     const rowIdx = rows.findIndex(r => r[0] === slot_id);
     if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
 
     const existing = rows[rowIdx].map(String);
+    // Ensure row is long enough for all 11 cols
+    while (existing.length < 11) existing.push('');
     const updated = [...existing];
     if (assigned_crew !== undefined) updated[7] = Array.isArray(assigned_crew) ? assigned_crew.join(', ') : assigned_crew;
     if (status !== undefined) updated[9] = status;
+
+    // Handle crew confirmation: {name, confirm_status: 'confirmed'|'declined'|'pending'}
+    if (body.crew_name && body.confirm_status) {
+      const confMap: Record<string, string> = {};
+      (existing[10] || '').split(',').forEach((entry: string) => {
+        const [n, s] = entry.trim().split(':');
+        if (n) confMap[n.trim()] = s?.trim() || 'pending';
+      });
+      confMap[body.crew_name] = body.confirm_status;
+      updated[10] = Object.entries(confMap).map(([n, s]) => `${n}:${s}`).join(', ');
+    }
+
     COLS.forEach((c, i) => { if (updates[c] !== undefined) updated[i] = updates[c]; });
 
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:J${rowIdx + 2}`,
+      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:K${rowIdx + 2}`,
       valueInputOption: 'USER_ENTERED', requestBody: { values: [updated] },
     });
 
@@ -124,7 +138,7 @@ export async function DELETE(req: Request) {
     if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
 
     // Clear the row
-    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:J${rowIdx+2}` });
+    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:K${rowIdx+2}` });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
