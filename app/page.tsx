@@ -65,7 +65,7 @@ const ALL_USERS: { name: string; role: string; group: string }[] = [
   { name: 'Jenny Shimabukuro',role:'estimator',    group: 'PM / Estimating' },
   { name: 'Joey Ritthaler',  role: 'service_pm',   group: 'PM / Estimating' },
   // Sales / Admin
-  { name: 'Mark Olson',      role: 'sales',        group: 'Sales / Admin' },
+  { name: 'Mark Olson',      role: 'sales',        group: 'Sales / Admin — Remote' },
   { name: 'Tia Omura',       role: 'admin',        group: 'Sales / Admin' },
   { name: 'Jenna Nakama',    role: 'admin',        group: 'Sales / Admin' },
   { name: 'Sherilynn Takuchi',role:'admin',         group: 'Sales / Admin' },

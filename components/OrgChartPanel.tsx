@@ -20,10 +20,10 @@ const ORG = {
         {
           id: 'mark',
           name: 'Mark Olson',
-          title: 'Sales Engineer',
-          island: 'Oahu',
-          color: '#0369a1',
-          note: 'Retiring May 1',
+          title: 'Sales Engineer — Remote',
+          island: 'Hawaii',
+          color: '#92400e',
+          note: 'Remote · Big Island · Retiring May 1',
           children: [],
         },
 
