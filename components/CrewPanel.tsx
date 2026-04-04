@@ -379,11 +379,27 @@ export default function CrewPanel() {
     return matchSearch && matchIsland && matchDept;
   });
 
-  // Group by department for display
+  // Group by ALL matching departments — people with multi-roles appear in each section
+  function getDeptTags(m: CrewMember): string[] {
+    const roleLower = (m.role || '').toLowerCase();
+    const tags = new Set<string>([m.department || 'Other']);
+    if (roleLower.includes('pm') || roleLower.includes('project manager')) tags.add('PM');
+    if (roleLower.includes('estimator') || roleLower.includes('estimating')) tags.add('Estimating');
+    if (roleLower.includes('service')) tags.add('Service');
+    if (roleLower.includes('admin') || roleLower.includes('assistant')) tags.add('Admin');
+    if (roleLower.includes('superintendent')) tags.add('Superintendent');
+    if (roleLower.includes('journeyman') || roleLower.includes('apprentice')) tags.add('Field');
+    // Remove 'Other' if there are more specific tags
+    if (tags.size > 1) tags.delete('Other');
+    return Array.from(tags);
+  }
+
   const groups: Record<string, CrewMember[]> = {};
   filtered.forEach(m => {
-    const dept = m.department || 'Other';
-    (groups[dept] = groups[dept] || []).push(m);
+    const tags = getDeptTags(m);
+    tags.forEach(tag => {
+      (groups[tag] = groups[tag] || []).push(m);
+    });
   });
   const DEPT_ORDER = ['Leadership', 'PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field', 'Other'];
 
