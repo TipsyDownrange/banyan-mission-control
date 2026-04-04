@@ -6,7 +6,7 @@ const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
 export async function POST(req: Request) {
   try {
-    const { user_id, name, role, email, phone, personal_email, title, department, office, home_address, emergency_contact, start_date, notes } = await req.json();
+    const { user_id, name, role, email, phone, personal_email, title, department, office, home_address, emergency_contact, start_date, notes, authority_level, career_track } = await req.json();
     if (!user_id) return NextResponse.json({ error: 'user_id required' }, { status: 400 });
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const r = rows[rowIndex];
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Users_Roles!B${sheetRow}:N${sheetRow}`,
+      range: `Users_Roles!B${sheetRow}:P${sheetRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[
@@ -42,6 +42,8 @@ export async function POST(req: Request) {
           emergency_contact ?? r[11] ?? '',
           start_date        ?? r[12] ?? '',
           notes             ?? r[13] ?? '',
+          authority_level   ?? r[14] ?? '',
+          career_track      ?? r[15] ?? '',
         ]],
       },
     });

@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Users_Roles!A2:N100',
+      range: 'Users_Roles!A2:P100',
     });
 
     const rows = res.data.values || [];
@@ -34,6 +34,8 @@ export async function GET(req: Request) {
         emergency_contact: r[11] || '',
         start_date:        r[12] || '',
         notes:             r[13] || '',
+        authority_level:   r[14] || '',
+        career_track:      r[15] || '',
       }));
 
     // Filter to field-dispatchable roles: Superintendent, Journeyman, Apprentice

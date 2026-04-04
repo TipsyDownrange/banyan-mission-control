@@ -1,19 +1,31 @@
 /**
- * Shared role definitions and nav access rules.
- * Imported by page.tsx, CalendarPanel, and any component that needs role-based visibility.
+ * BanyanOS Role & Permission System
+ *
+ * Authority levels (stored in Users_Roles sheet col O):
+ *   Executive     — Jody, Sean: full access including AI Command
+ *   Management    — Frank, Jenny, Kyle, Joey, Mark: all except AI Command
+ *   Superintendent — Karl Sr., Nate: Operations + Service (view) + People
+ *   Admin         — Tia, Jenna, Sherilynn: varies by career track
+ *   Field         — All glaziers: Today + Schedule + Org Chart only
+ *
+ * career_track (col P): PM | Estimating | Admin | Field | Field-to-Office
+ *
+ * The preview-as picker uses this to filter nav dynamically.
+ * When real Google Auth is active, replace 'demoUser' lookup with session email → sheet lookup.
  */
 
+// ── User roster (mirrors Users_Roles sheet — source of truth is the sheet) ──
 export const ALL_USERS: { name: string; role: string; group: string }[] = [
-  { name: 'Jody Boeringa',            role: 'owner',      group: 'Leadership' },
-  { name: 'Sean Daniels',             role: 'gm',         group: 'Leadership' },
-  { name: 'Frank Redondo',            role: 'pm',         group: 'Leadership' },
-  { name: 'Kyle Shimizu',             role: 'estimator',  group: 'PM / Estimating' },
-  { name: 'Jenny Shimabukuro',        role: 'estimator',  group: 'Leadership' },
-  { name: 'Joey Ritthaler',           role: 'service_pm', group: 'PM / Estimating' },
-  { name: 'Mark Olson',               role: 'sales',      group: 'Admin — Remote' },
-  { name: 'Tia Omura',                role: 'pm_track',   group: 'Sales / Admin' },
-  { name: 'Jenna Nakama',             role: 'admin',      group: 'Sales / Admin' },
-  { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Sales / Admin' },
+  { name: 'Jody Boeringa',            role: 'owner',      group: 'Executive' },
+  { name: 'Sean Daniels',             role: 'gm',         group: 'Executive' },
+  { name: 'Frank Redondo',            role: 'pm',         group: 'Management' },
+  { name: 'Kyle Shimizu',             role: 'estimator',  group: 'Management' },
+  { name: 'Jenny Shimabukuro',        role: 'estimator',  group: 'Management' },
+  { name: 'Joey Ritthaler',           role: 'service_pm', group: 'Management' },
+  { name: 'Mark Olson',               role: 'sales',      group: 'Management' },
+  { name: 'Tia Omura',                role: 'pm_track',   group: 'Admin' },
+  { name: 'Jenna Nakama',             role: 'admin',      group: 'Admin' },
+  { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Admin' },
   { name: 'Karl Nakamura Sr.',        role: 'super',      group: 'Superintendent' },
   { name: 'Nate Nakamura',            role: 'super',      group: 'Superintendent' },
   { name: 'Karl Nakamura Jr.',        role: 'glazier',    group: 'Field — Oahu' },
@@ -49,29 +61,50 @@ export const ALL_USERS: { name: string; role: string; group: string }[] = [
   { name: 'Troy Sliter',              role: 'glazier',    group: 'Field — Kauai' },
 ];
 
-export function navSectionsForRole(role: string): string[] {
-  switch (role) {
-    case 'owner': case 'gm':
+// ── Authority level → nav sections ──────────────────────────────────────────
+// This is the single source of truth for what each person can see.
+// When authority_level changes in the sheet, this is what drives it.
+//
+// Sections: Assistant | Operations | Projects | People & Assets |
+//           Estimating | Service | AI Command
+
+export function navSectionsForAuthorityLevel(authorityLevel: string, role?: string): string[] {
+  switch (authorityLevel) {
+    case 'Executive':
       return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'AI Command'];
-    case 'pm':
+
+    case 'Management':
+      // Sub-filter by role for Management level
+      if (role === 'estimator') return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating'];
+      if (role === 'service_pm') return ['Assistant', 'Operations', 'Service', 'People & Assets'];
+      if (role === 'sales') return ['Assistant', 'Estimating', 'People & Assets'];
+      // Default management (pm, etc.)
       return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Service'];
-    case 'estimator':
-      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating'];
-    case 'service_pm':
+
+    case 'Superintendent':
       return ['Assistant', 'Operations', 'Service', 'People & Assets'];
-    case 'sales':
-      return ['Assistant', 'Estimating', 'People & Assets'];
-    case 'pm_track':
-      return ['Assistant', 'Projects', 'People & Assets'];
-    case 'admin':
+
+    case 'Admin':
+      if (role === 'pm_track') return ['Assistant', 'Projects', 'People & Assets'];
       return ['Assistant', 'People & Assets'];
-    case 'super':
-      return ['Assistant', 'Operations', 'Service', 'People & Assets'];
-    case 'glazier':
-      return ['Assistant', 'People & Assets'];
+
+    case 'Field':
     default:
-      return ['Assistant'];
+      return ['Assistant', 'People & Assets'];
   }
+}
+
+// Backwards-compatible wrapper — maps old role strings to authority levels
+export function navSectionsForRole(role: string): string[] {
+  const authorityMap: Record<string, string> = {
+    owner: 'Executive', gm: 'Executive',
+    pm: 'Management', estimator: 'Management', service_pm: 'Management', sales: 'Management',
+    pm_track: 'Admin', admin: 'Admin',
+    super: 'Superintendent',
+    glazier: 'Field',
+  };
+  const authority = authorityMap[role] || 'Field';
+  return navSectionsForAuthorityLevel(authority, role);
 }
 
 export function hiddenItemsForRole(role: string): string[] {
@@ -98,7 +131,6 @@ export function defaultViewForRole(role: string): string {
   if (role === 'service_pm') return 'Work Orders';
   if (role === 'super')      return 'Today';
   if (role === 'sales')      return 'Bid Queue';
-  if (role === 'admin')      return 'Today';
-  if (role === 'pm_track')   return 'Today';
+  if (role === 'admin' || role === 'pm_track') return 'Today';
   return 'Today';
 }

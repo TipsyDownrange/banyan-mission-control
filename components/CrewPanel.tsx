@@ -7,6 +7,7 @@ type CrewMember = {
   personal_email: string; title: string; department: string;
   office: string; home_address: string; emergency_contact: string;
   start_date: string; notes: string;
+  authority_level: string; career_track: string;
 };
 
 type Draft = Partial<CrewMember>;
@@ -157,6 +158,26 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                   <div>
                     <label style={LBL}>Start Date</label>
                     <input type="date" style={INP} value={draft.start_date || ''} onChange={e => update('start_date', e.target.value)} />
+                  </div>
+                </div>
+                {/* Authority & Career Track — drives app permissions */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10, padding: '12px 14px', background: 'rgba(99,102,241,0.04)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.12)' }}>
+                  <div>
+                    <label style={{ ...LBL, color: '#4338ca' }}>Authority Level</label>
+                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.authority_level || ''} onChange={e => update('authority_level' as keyof CrewMember, e.target.value)}>
+                      <option value="">Select…</option>
+                      {['Executive','Management','Superintendent','Admin','Field'].map(a => <option key={a}>{a}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ ...LBL, color: '#4338ca' }}>Career Track</label>
+                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.career_track || ''} onChange={e => update('career_track' as keyof CrewMember, e.target.value)}>
+                      <option value="">Select…</option>
+                      {['PM','Estimating','Admin','Field','Field-to-Office'].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: '1/-1', fontSize: 10, color: '#6366f1', fontWeight: 600 }}>
+                    ↑ Controls which sections this person sees in Mission Control
                   </div>
                 </div>
               </div>
