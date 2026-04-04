@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type ApprovalItem = {
   id: string;
@@ -9,48 +9,8 @@ type ApprovalItem = {
   risk: 'low' | 'medium' | 'high';
   status: 'pending' | 'approved' | 'denied';
   source: string;
+  notes?: string;
 };
-
-const MOCK_APPROVALS: ApprovalItem[] = [
-  {
-    id: 'APR-001',
-    ts: '2026-03-31 11:42',
-    action: 'Send daily report email',
-    detail: 'Email daily report PDF to Frank (frank@kulaglass.com) for Hokuala Hotel — Thomas Begonia submitted.',
-    risk: 'low',
-    status: 'pending',
-    source: 'Daily Report Cron',
-  },
-  {
-    id: 'APR-002',
-    ts: '2026-03-31 10:15',
-    action: 'Write to Google Drive',
-    detail: 'Save 2026-03-31_Hokuala_DailyReport_ThomasBegonia.pdf to Active Projects / PRJ-26-0001 / Field Reports.',
-    risk: 'low',
-    status: 'pending',
-    source: 'Field Capture App',
-  },
-  {
-    id: 'APR-003',
-    ts: '2026-03-31 09:30',
-    action: 'Update Google Sheet row',
-    detail: 'Mark Field Issue ISS-002 as RESOLVED in Field_Events_V1. Triggered by Nate via field app.',
-    risk: 'medium',
-    status: 'pending',
-    source: 'Field App',
-  },
-  {
-    id: 'APR-004',
-    ts: '2026-03-30 16:55',
-    action: 'Send reminder email',
-    detail: 'Email Thomas Begonia (thomas@kulaglass.com): "Daily report not submitted for Hokuala Hotel. Please submit by 3:30 PM."',
-    risk: 'low',
-    status: 'approved',
-    source: 'Daily Report Cron',
-  },
-];
-
-type ApprovalItemWithComment = ApprovalItem & { comment?: string };
 
 const RISK_STYLE: Record<string, string> = {
   low: 'bg-teal-50 text-teal-700',
@@ -65,12 +25,40 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function ApprovalsPanel() {
-  const [items, setItems] = useState<ApprovalItemWithComment[]>(MOCK_APPROVALS);
+  const [items, setItems] = useState<ApprovalItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [comments, setComments] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  function act(id: string, status: 'approved' | 'denied') {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, status, comment: comments[id] || undefined } : i));
+  const fetchApprovals = useCallback(async () => {
+    try {
+      const res = await fetch('/api/approvals');
+      const data = await res.json();
+      if (data.error) setError(data.error);
+      else setItems(data.approvals || []);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchApprovals(); }, [fetchApprovals]);
+
+  async function act(id: string, status: 'approved' | 'denied') {
+    // Optimistic update
+    setItems(prev => prev.map(i => i.id === id ? { ...i, status, notes: comments[id] || i.notes } : i));
+    try {
+      await fetch('/api/approvals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approval_id: id, status, notes: comments[id] || undefined }),
+      });
+    } catch {
+      // Revert on failure
+      fetchApprovals();
+    }
   }
 
   const pending = items.filter(i => i.status === 'pending');
@@ -84,7 +72,18 @@ export default function ApprovalsPanel() {
         <p className="text-ink-label text-sm mt-1">Kai routes sensitive actions here before executing</p>
       </div>
 
-      {pending.length > 0 && (
+      {loading && (
+        <div className="card p-8 flex flex-col items-center text-center mb-8">
+          <div className="w-7 h-7 rounded-full border-2 border-teal-100 border-t-teal-500 animate-spin mb-3" />
+          <div className="text-ink-label text-sm">Loading approvals...</div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">{error}</div>
+      )}
+
+      {!loading && pending.length > 0 && (
         <div className="mb-8">
           <div className="label-upper text-orange-600 mb-3">{pending.length} Pending</div>
           <div className="flex flex-col gap-3">
@@ -100,7 +99,6 @@ export default function ApprovalsPanel() {
                     <p className="text-[13px] text-ink-body m-0 leading-snug">{item.detail}</p>
                     <div className="text-[11px] text-ink-meta mt-2">{item.ts} · {item.id}</div>
 
-                    {/* Comment toggle */}
                     <button
                       onClick={() => setExpanded(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
                       className="mt-3 text-[12px] font-bold text-ink-label hover:text-ink-secondary transition-colors"
@@ -142,15 +140,19 @@ export default function ApprovalsPanel() {
         </div>
       )}
 
-      {pending.length === 0 && (
+      {!loading && pending.length === 0 && (
         <div className="card p-8 flex flex-col items-center text-center mb-8">
-          <div className="text-4xl mb-3"></div>
-          <div className="font-extrabold text-ink-heading mb-1">All clear</div>
-          <p className="text-ink-label text-sm">No pending actions. Kai will route sensitive operations here for your approval.</p>
+          <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center mb-3">
+            <svg className="w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="font-extrabold text-ink-heading mb-1">No pending approvals</div>
+          <p className="text-ink-label text-sm">Kai will route sensitive operations here for your approval.</p>
         </div>
       )}
 
-      {resolved.length > 0 && (
+      {!loading && resolved.length > 0 && (
         <div>
           <div className="label-upper text-ink-meta mb-3">Recent</div>
           <div className="card divide-y divide-surface-border">
@@ -160,8 +162,8 @@ export default function ApprovalsPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-ink-heading truncate">{item.action}</div>
                   <div className="text-[11px] text-ink-meta">{item.ts} · {item.source}</div>
-                  {item.comment && (
-                    <div className="text-[12px] text-ink-body mt-0.5 italic">"{item.comment}"</div>
+                  {item.notes && (
+                    <div className="text-[12px] text-ink-body mt-0.5 italic">&quot;{item.notes}&quot;</div>
                   )}
                 </div>
                 <span className={`pill shrink-0 ${RISK_STYLE[item.risk]}`}>{item.risk}</span>
