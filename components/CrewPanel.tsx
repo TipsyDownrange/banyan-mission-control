@@ -16,7 +16,7 @@ const ISLAND_COLORS: Record<string, string> = {
 };
 const DEPT_COLORS: Record<string, string> = {
   Leadership: '#0f172a', PM: '#0f766e', Estimating: '#0f766e',
-  Service: '#6d28d9', Sales: '#0369a1', Admin: '#64748b', Field: '#334155',
+  Service: '#6d28d9', Admin: '#64748b', Superintendent: '#4338ca', Field: '#334155',
 };
 
 function initials(name: string): string {
@@ -134,7 +134,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                       <label style={LBL}>Department</label>
                       <select style={INP} value={draft.department || ''} onChange={e => update('department', e.target.value)}>
                         <option value="">Select…</option>
-                        {['Leadership','PM','Estimating','Service','Sales','Admin','Field'].map(d => <option key={d}>{d}</option>)}
+                        {['Leadership','PM','Estimating','Service','Admin','Superintendent','Field'].map(d => <option key={d}>{d}</option>)}
                       </select>
                     </div>
                   </div>
@@ -360,7 +360,7 @@ export default function CrewPanel() {
   }, []);
 
   const islands = ['All', 'Oahu', 'Maui', 'Kauai', 'Hawaii'];
-  const depts = ['All', 'Leadership', 'PM', 'Estimating', 'Service', 'Sales', 'Admin', 'Field'];
+  const depts = ['All', 'Leadership', 'PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field'];
 
   const filtered = crew.filter(m => {
     const q = search.toLowerCase();
@@ -376,7 +376,7 @@ export default function CrewPanel() {
     const dept = m.department || 'Other';
     (groups[dept] = groups[dept] || []).push(m);
   });
-  const DEPT_ORDER = ['Leadership', 'PM', 'Estimating', 'Service', 'Sales', 'Admin', 'Field', 'Other'];
+  const DEPT_ORDER = ['Leadership', 'PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field', 'Other'];
 
   if (loading) return (
     <div style={{ padding: 32, textAlign: 'center' }}>

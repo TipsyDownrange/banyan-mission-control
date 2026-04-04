@@ -16,7 +16,7 @@ const ORG = {
       color: '#0369a1',
       note: 'Management Team',
       children: [
-        // ── Sales ──────────────────────────────────────
+        // ── Sales / Business Development ──────────────────────────
         {
           id: 'mark',
           name: 'Mark Olson',
@@ -69,7 +69,7 @@ const ORG = {
                 { id: 'tim',      name: 'Timothy Stitt',               title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
                 { id: 'wendall',  name: 'Wendall Tavares',             title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
                 { id: 'deric',    name: 'Deric Valoroso',              title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-                { id: 'sonny',    name: 'Sonny Ah Kui',                title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
+                
                 { id: 'lewis',    name: 'Lewis Roman',                 title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
                 { id: 'christian',name: 'Christian Altman',            title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
                 { id: 'ninja',    name: 'Ninja Thang',                 title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
@@ -119,7 +119,7 @@ const ORG = {
         {
           id: 'nate',
           name: 'Nate Nakamura',
-          title: 'Superintendent — Maui & Outer Islands',
+          title: 'Superintendent · Journeyman',
           island: 'Maui',
           color: '#0f766e',
           note: 'Management Team',
@@ -128,6 +128,7 @@ const ORG = {
             { id: 'mark_v', name: 'Mark Villados',        title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
             { id: 'tyler',  name: 'Tyler Niemeyer',       title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
             { id: 'tyson',  name: 'Tyson Omura',          title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
+            { id: 'sonny',  name: 'Sonny Ah Kui',          title: 'Journeyman', island: 'Maui',  color: '#334155', children: [] },
             { id: 'silas',  name: 'Silas Macon',          title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
             { id: 'mien',   name: 'Mien-Quoc Ly',         title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
             { id: 'lonnie', name: 'Lonnie McKenzie',       title: 'Journeyman', island: 'Kauai', color: '#334155', children: [] },
@@ -438,7 +439,7 @@ export default function OrgChartPanel() {
         {[
           { label: 'Total Headcount', value: 42 },
           { label: 'Management Team', value: 4, note: 'Sean · Frank · Jenny · Nate' },
-          { label: 'Office / PM / Sales', value: 8 },
+          { label: 'Office / PM', value: 8 },
           { label: 'Superintendents', value: 2, note: 'Karl Sr. (Oahu) · Nate (Maui + Outer)' },
           { label: 'Journeymen', value: 20 },
           { label: 'Apprentices', value: 10 },
