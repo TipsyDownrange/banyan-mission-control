@@ -366,7 +366,16 @@ export default function CrewPanel() {
     const q = search.toLowerCase();
     const matchSearch = !q || m.name.toLowerCase().includes(q) || m.role.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
     const matchIsland = filterIsland === 'All' || m.island === filterIsland;
-    const matchDept = filterDept === 'All' || m.department === filterDept;
+    // Multi-department matching: check primary department AND infer from role text
+    const roleLower = (m.role || '').toLowerCase();
+    const deptTags: string[] = [m.department];
+    if (roleLower.includes('pm') || roleLower.includes('project manager')) deptTags.push('PM');
+    if (roleLower.includes('estimator') || roleLower.includes('estimating')) deptTags.push('Estimating');
+    if (roleLower.includes('service')) deptTags.push('Service');
+    if (roleLower.includes('admin') || roleLower.includes('assistant')) deptTags.push('Admin');
+    if (roleLower.includes('superintendent')) deptTags.push('Superintendent');
+    if (roleLower.includes('journeyman') || roleLower.includes('apprentice')) deptTags.push('Field');
+    const matchDept = filterDept === 'All' || deptTags.includes(filterDept);
     return matchSearch && matchIsland && matchDept;
   });
 
