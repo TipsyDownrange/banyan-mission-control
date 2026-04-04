@@ -440,7 +440,13 @@ function WOCard({
   );
 }
 
-export default function ServicePanel() {
+const READ_ONLY_BANNER = (
+  <div style={{ margin: '0 32px 16px', padding: '10px 16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, fontSize: 12, color: '#92400e', fontWeight: 600 }}>
+    👁 View only — contact Joey or Sean to make changes
+  </div>
+);
+
+export default function ServicePanel({ readOnly = false }: { readOnly?: boolean }) {
   const [data, setData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
@@ -539,16 +545,17 @@ export default function ServicePanel() {
 
   return (
     <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto' }}>
+      {readOnly && READ_ONLY_BANNER}
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Service</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Work Orders</h1>
           <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
-            <button onClick={() => setShowIntake(true)}
+            {!readOnly && <button onClick={() => setShowIntake(true)}
               style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
               + New Lead
-            </button>
+            </button>}
             <button onClick={loadData}
               style={{ padding: '7px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }}>
               Refresh
@@ -679,6 +686,7 @@ export default function ServicePanel() {
         <WODetailPanel
           wo={detailWO}
           allCrew={allCrew}
+          readOnly={readOnly}
           onClose={() => setDetailWO(null)}
           onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
           onStageChange={async (id, stage) => { await handleStageChange(id, stage); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}

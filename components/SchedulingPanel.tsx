@@ -49,7 +49,7 @@ function isCurrentWeek(date: string): boolean {
   return d >= weekStart && d <= weekEnd;
 }
 
-export default function SchedulingPanel() {
+export default function SchedulingPanel({ readOnly = false }: { readOnly?: boolean }) {
   const [data, setData] = useState<{ weeks: WeekData[]; islands: IslandForecast[]; master_totals: WeekData[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

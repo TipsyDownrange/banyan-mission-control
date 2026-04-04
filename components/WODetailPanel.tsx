@@ -59,13 +59,14 @@ const SECTION_TITLE: React.CSSProperties = {
 interface WODetailPanelProps {
   wo: WorkOrder | null;
   allCrew: CrewMember[];
+  readOnly?: boolean;
   onClose: () => void;
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
   onStageChange: (woId: string, stage: string) => Promise<void>;
   onQuote: (woId: string) => void;
 }
 
-export default function WODetailPanel({ wo, allCrew, onClose, onSave, onStageChange, onQuote }: WODetailPanelProps) {
+export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
@@ -93,7 +94,6 @@ export default function WODetailPanel({ wo, allCrew, onClose, onSave, onStageCha
   }, [wo]);
 
   if (!wo) return null;
-  // wo is guaranteed non-null from here
   const safeWo = wo!;
 
   const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
@@ -194,7 +194,7 @@ export default function WODetailPanel({ wo, allCrew, onClose, onSave, onStageCha
               style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               $ Quote
             </button>
-            {dirty && (
+            {dirty && !readOnly && (
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -202,6 +202,7 @@ export default function WODetailPanel({ wo, allCrew, onClose, onSave, onStageCha
                 {saving ? 'Saving…' : 'Save Changes'}
               </button>
             )}
+            {readOnly && <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, padding: '4px 10px', background: 'rgba(245,158,11,0.08)', borderRadius: 8 }}>👁 View only</div>}
             <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
           </div>
         </div>
@@ -389,7 +390,7 @@ export default function WODetailPanel({ wo, allCrew, onClose, onSave, onStageCha
         </div>
 
         {/* Bottom save bar — always visible */}
-        {dirty && (
+        {dirty && !readOnly && (
           <div style={{
             flexShrink: 0, padding: '12px 20px',
             background: 'white', borderTop: '1px solid #e2e8f0',

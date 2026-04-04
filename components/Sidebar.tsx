@@ -119,10 +119,11 @@ type Props = {
   demoUser?: string;
   onUserChange?: (u: string) => void;
   visibleSections?: string[];
+  hiddenItems?: string[];
   allUsers?: { name: string; role: string; group: string }[];
 };
 
-export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, allUsers }: Props) {
+export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, hiddenItems, allUsers }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
 
@@ -180,7 +181,9 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: collapsed ? '8px 6px' : '8px 8px', overflowY: 'auto', scrollbarWidth: 'none' }}>
-        {NAV.filter(({ section }) => !visibleSections || visibleSections.includes(section)).map(({ section, sectionIcon, items }) => {
+        {NAV.filter(({ section }) => !visibleSections || visibleSections.includes(section)).map(({ section, sectionIcon, items: allItems }) => {
+          const items = hiddenItems ? allItems.filter(i => !hiddenItems.includes(i.label)) : allItems;
+          if (items.length === 0) return null;
           const hasActive = items.some(i => i.label === activeView);
           const isSectionCollapsed = collapsedSections.has(section) && !hasActive;
 
