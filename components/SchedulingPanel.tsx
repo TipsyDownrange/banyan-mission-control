@@ -53,6 +53,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
   const [data, setData] = useState<{ weeks: WeekData[]; islands: IslandForecast[]; master_totals: WeekData[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [view, setView] = useState<'forecast' | 'lookahead'>('forecast');
   const [islandFilter, setIslandFilter] = useState('All');
   const [editingCell, setEditingCell] = useState<{jobNum: string; date: string} | null>(null);
@@ -65,7 +66,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
     setLoading(true);
     fetch(`/api/scheduling?weeks=${weeksAhead}${islandFilter !== 'All' ? '&island=' + islandFilter : ''}`)
       .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
+      .then(d => { setData(d); if (d.last_updated) setLastSynced(d.last_updated); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [weeksAhead, islandFilter]);
 
@@ -95,7 +96,14 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Manpower Forecasting</h1>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Live from Manpower Schedule sheet · Men per week by job and island</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Live from Manpower Schedule sheet · Men per week by job and island</p>
+              {lastSynced && (
+                <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                  Last synced: {new Date(lastSynced).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </span>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {(['forecast', 'lookahead'] as const).map(v => (
