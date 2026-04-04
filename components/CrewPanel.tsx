@@ -287,7 +287,9 @@ function CrewCard({ member, onClick, travel }: {
               ? <FerryIcon size={11} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />
               : <PlaneIcon size={11} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />}
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '-0.01em', color: isTodayTravel ? '#0369a1' : '#94a3b8' }}>
-              {isTodayTravel ? 'In transit today' : 'Departing tomorrow'} · {activeTravel.from_code} → {activeTravel.to_code}
+              {isTodayTravel ? 'In transit today' : 'Departing tomorrow'} · {activeTravel.from_code}
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{display:'inline',verticalAlign:'middle',margin:'0 2px'}}><path d="M5 12h14M14 6l6 6-6 6"/></svg>
+              {activeTravel.to_code}
             </span>
           </div>
         )}
@@ -412,7 +414,7 @@ export default function CrewPanel() {
   );
 
   return (
-    <div style={{ padding: '32px', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: '32px', paddingBottom: '120px', maxWidth: 1100, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>People & Assets</div>
