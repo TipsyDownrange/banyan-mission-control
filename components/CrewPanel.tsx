@@ -230,19 +230,32 @@ function CrewDetailPanel({ member, onClose, onSave }: {
 }
 
 // ── Crew Card ────────────────────────────────────────────────────────────────
-function CrewCard({ member, onClick }: { member: CrewMember; onClick: () => void }) {
+function CrewCard({ member, onClick, travel }: {
+  member: CrewMember;
+  onClick: () => void;
+  travel?: { type: string; from_code: string; to_code: string; travel_date: string; depart_time: string }[];
+}) {
   const color = avatarColor(member.department, member.island);
   const islandColor = ISLAND_COLORS[member.island] || '#64748b';
+  const today = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const todayTravel = travel?.find(t => t.travel_date === today);
+  const tomorrowTravel = travel?.find(t => t.travel_date === tomorrow);
+  const activeTravel = todayTravel || tomorrowTravel;
+  const travelIcon = activeTravel?.type === 'ferry' ? '⛴' : '✈';
+  const isTodayTravel = !!todayTravel;
 
   return (
     <div onClick={onClick} style={{
-      background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+      background: 'white', borderRadius: 14,
+      border: isTodayTravel ? '1.5px solid rgba(3,105,161,0.3)' : '1px solid #e2e8f0',
       padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
       cursor: 'pointer', transition: 'box-shadow 0.1s',
-      boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+      boxShadow: isTodayTravel ? '0 4px 16px rgba(3,105,161,0.1)' : '0 1px 4px rgba(15,23,42,0.04)',
+      position: 'relative',
     }}
       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(15,23,42,0.08)')}
-      onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,0.04)')}>
+      onMouseLeave={e => (e.currentTarget.style.boxShadow = isTodayTravel ? '0 4px 16px rgba(3,105,161,0.1)' : '0 1px 4px rgba(15,23,42,0.04)')}>
       {/* Avatar */}
       <div style={{ width: 40, height: 40, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'white', flexShrink: 0, position: 'relative' }}>
         {initials(member.name)}
@@ -254,13 +267,35 @@ function CrewCard({ member, onClick }: { member: CrewMember; onClick: () => void
         <div style={{ fontSize: 11, color: '#64748b', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {member.title || member.role}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-          {member.email && <span style={{ fontSize: 9, color: '#0369a1' }}>{member.email}</span>}
-          {member.phone && <span style={{ fontSize: 9, color: '#0f766e' }}>{member.phone}</span>}
-        </div>
+        {/* Travel indicator */}
+        {activeTravel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <span style={{ fontSize: 11 }}>{travelIcon}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: isTodayTravel ? '#0369a1' : '#94a3b8' }}>
+              {isTodayTravel ? 'Traveling today' : 'Traveling tomorrow'} — {activeTravel.from_code}→{activeTravel.to_code}
+            </span>
+          </div>
+        )}
+        {!activeTravel && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+            {member.email && <span style={{ fontSize: 9, color: '#0369a1' }}>{member.email}</span>}
+            {member.phone && <span style={{ fontSize: 9, color: '#0f766e' }}>{member.phone}</span>}
+          </div>
+        )}
       </div>
+      {/* Travel icon badge — pulsing if today */}
+      {activeTravel && (
+        <div style={{
+          width: 28, height: 28, borderRadius: '50%',
+          background: isTodayTravel ? 'rgba(3,105,161,0.12)' : 'rgba(148,163,184,0.1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 14, flexShrink: 0,
+        }}>
+          {travelIcon}
+        </div>
+      )}
       {/* Office badge */}
-      {member.office && (
+      {!activeTravel && member.office && (
         <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textAlign: 'right', flexShrink: 0, whiteSpace: 'nowrap' }}>
           {member.office}
         </div>
@@ -276,6 +311,7 @@ export default function CrewPanel() {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<CrewMember | null>(null);
+  const [travelByName, setTravelByName] = useState<Record<string, { type: string; from_code: string; to_code: string; travel_date: string; depart_time: string }[]>>({});
   const [search, setSearch] = useState('');
   const [filterIsland, setFilterIsland] = useState('All');
   const [filterDept, setFilterDept] = useState('All');
@@ -285,6 +321,11 @@ export default function CrewPanel() {
       .then(r => r.json())
       .then(d => { setCrew(d.all || []); setLoading(false); })
       .catch(() => setLoading(false));
+    // Load travel status
+    fetch('/api/travel')
+      .then(r => r.json())
+      .then(d => setTravelByName(d.byCrewName || {}))
+      .catch(() => {});
   }, []);
 
   const handleSave = useCallback(async (userId: string, draft: Draft) => {
@@ -373,7 +414,7 @@ export default function CrewPanel() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 8 }}>
             {groups[dept].map(m => (
-              <CrewCard key={m.user_id} member={m} onClick={() => setSelected(m)} />
+              <CrewCard key={m.user_id} member={m} onClick={() => setSelected(m)} travel={travelByName[m.name.toLowerCase()]} />
             ))}
           </div>
         </div>

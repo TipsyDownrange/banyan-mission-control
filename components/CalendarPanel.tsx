@@ -82,13 +82,29 @@ export default function CalendarPanel() {
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [calMode]);
 
-  // Load flight data (management only)
+  // Load travel data from Travel_Status sheet (populated every 5min by scan-admin.py)
   useEffect(() => {
     if (calMode !== 'management' || !canSeeAllStaff) return;
     setFlightsLoading(true);
-    fetch('/api/inbox/flights')
+    fetch('/api/travel')
       .then(r => r.json())
-      .then(d => { setFlights(d.upcoming || []); setFlightsLoading(false); })
+      .then(d => {
+        // Adapt Travel_Status records to FlightData shape for the ticker
+        const records = (d.records || []).map((r: { crew_name: string; travel_date: string; type: string; from_code: string; from_name: string; to_code: string; to_name: string; flight_number: string; depart_time: string }) => ({
+          id: `${r.crew_name}-${r.travel_date}`,
+          subject: `${r.type === 'ferry' ? '⛴' : '✈'} ${r.crew_name} — ${r.from_code}→${r.to_code}`,
+          date: r.travel_date,
+          flightDate: r.travel_date,
+          flightNumber: r.flight_number || null,
+          passengers: r.crew_name !== 'Unknown' ? [r.crew_name] : [],
+          route: r.from_code ? { from: r.from_name, to: r.to_name, fromCode: r.from_code, toCode: r.to_code } : null,
+          snippet: `${r.depart_time || ''} ${r.from_name}→${r.to_name}`.trim(),
+          isForwardFromTia: true,
+          type: r.type,
+        }));
+        setFlights(records);
+        setFlightsLoading(false);
+      })
       .catch(() => setFlightsLoading(false));
   }, [calMode, canSeeAllStaff]);
 
@@ -258,9 +274,9 @@ export default function CalendarPanel() {
                     {f.flightNumber && (
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.5)', flexShrink: 0 }}>{f.flightNumber}</div>
                     )}
-                    {f.isForwardFromTia && (
-                      <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(20,184,166,0.5)', flexShrink: 0 }}>via Tia</div>
-                    )}
+                    <div style={{ fontSize: 12, flexShrink: 0 }}>
+                      {(f as { type?: string }).type === 'ferry' ? '⛴' : '✈'}
+                    </div>
                   </div>
                 ))}
               </div>
