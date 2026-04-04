@@ -450,20 +450,28 @@ export default function CrewPanel() {
         </div>
       </div>
 
-      {/* Grouped list */}
-      {DEPT_ORDER.filter(d => groups[d]?.length > 0).map(dept => (
-        <div key={dept} style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: DEPT_COLORS[dept] || '#64748b', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: DEPT_COLORS[dept] || '#64748b' }} />
-            {dept} <span style={{ fontWeight: 600, color: '#94a3b8' }}>({groups[dept].length})</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 8 }}>
-            {groups[dept].map(m => (
-              <CrewCard key={m.user_id} member={m} onClick={() => setSelected(m)} travel={travelByName[m.name.toLowerCase()]} />
-            ))}
-          </div>
+      {/* Filter active → flat list, no sections. All → grouped by dept */}
+      {filterDept !== 'All' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 8 }}>
+          {filtered.map(m => (
+            <CrewCard key={m.user_id} member={m} onClick={() => setSelected(m)} travel={travelByName[m.name.toLowerCase()]} />
+          ))}
         </div>
-      ))}
+      ) : (
+        DEPT_ORDER.filter(d => groups[d]?.length > 0).map(dept => (
+          <div key={dept} style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: DEPT_COLORS[dept] || '#64748b', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: DEPT_COLORS[dept] || '#64748b' }} />
+              {dept} <span style={{ fontWeight: 600, color: '#94a3b8' }}>({groups[dept].length})</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 8 }}>
+              {groups[dept].map(m => (
+                <CrewCard key={`${dept}-${m.user_id}`} member={m} onClick={() => setSelected(m)} travel={travelByName[m.name.toLowerCase()]} />
+              ))}
+            </div>
+          </div>
+        ))
+      )}
 
       {filtered.length === 0 && (
         <div style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8', fontSize: 13 }}>No crew members match your filters.</div>
