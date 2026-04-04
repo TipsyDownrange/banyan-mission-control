@@ -13,20 +13,29 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Users_Roles!A2:F100',
+      range: 'Users_Roles!A2:P100',
     });
 
     const rows = res.data.values || [];
     let crew = rows
       .filter(r => r[0] && r[1] && r[2])
       .map(r => ({
-        user_id:        r[0],
-        name:           r[1],
-        role:           r[2],
-        email:          r[3] || '',
-        phone:          r[4] || '',
-        island:         r[5] || '',
-        personal_email: r[6] || '',
+        user_id:           r[0]  || '',
+        name:              r[1]  || '',
+        role:              r[2]  || '',
+        email:             r[3]  || '',
+        phone:             r[4]  || '',
+        island:            r[5]  || '',
+        personal_email:    r[6]  || '',
+        title:             r[7]  || '',
+        department:        r[8]  || '',
+        office:            r[9]  || '',
+        home_address:      r[10] || '',
+        emergency_contact: r[11] || '',
+        start_date:        r[12] || '',
+        notes:             r[13] || '',
+        authority_level:   r[14] || '',
+        career_track:      r[15] || '',
       }));
 
     // Filter to field-dispatchable roles: Superintendent, Journeyman, Apprentice

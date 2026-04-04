@@ -49,10 +49,11 @@ function isCurrentWeek(date: string): boolean {
   return d >= weekStart && d <= weekEnd;
 }
 
-export default function SchedulingPanel() {
+export default function SchedulingPanel({ readOnly = false }: { readOnly?: boolean }) {
   const [data, setData] = useState<{ weeks: WeekData[]; islands: IslandForecast[]; master_totals: WeekData[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [view, setView] = useState<'forecast' | 'lookahead'>('forecast');
   const [islandFilter, setIslandFilter] = useState('All');
   const [editingCell, setEditingCell] = useState<{jobNum: string; date: string} | null>(null);
@@ -65,7 +66,7 @@ export default function SchedulingPanel() {
     setLoading(true);
     fetch(`/api/scheduling?weeks=${weeksAhead}${islandFilter !== 'All' ? '&island=' + islandFilter : ''}`)
       .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
+      .then(d => { setData(d); if (d.last_updated) setLastSynced(d.last_updated); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [weeksAhead, islandFilter]);
 
@@ -95,7 +96,14 @@ export default function SchedulingPanel() {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Manpower Forecasting</h1>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Live from Manpower Schedule sheet · Men per week by job and island</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Live from Manpower Schedule sheet · Men per week by job and island</p>
+              {lastSynced && (
+                <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                  Last synced: {new Date(lastSynced).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </span>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {(['forecast', 'lookahead'] as const).map(v => (
@@ -238,29 +246,54 @@ export default function SchedulingPanel() {
                                     <input autoFocus type="number" value={editValue} min="0" max="20"
                                       onChange={e => setEditValue(e.target.value)}
                                       onBlur={async () => {
-                                        // Write back to sheet (future: update Google Sheet row)
+                                        const newMen = parseInt(editValue) || 0;
+                                        // Optimistic update already applied via drag/edit state
                                         setEditingCell(null);
+                                        try {
+                                          await fetch('/api/scheduling', {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              job_number: job.job_number,
+                                              date: w.date,
+                                              men: newMen,
+                                            }),
+                                          });
+                                        } catch { /* non-fatal */ }
                                       }}
-                                      onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingCell(null); }}
+                                      onKeyDown={async e => {
+                                        if (e.key === 'Enter') {
+                                          const input = e.currentTarget;
+                                          input.blur(); // triggers onBlur → save
+                                        }
+                                        if (e.key === 'Escape') setEditingCell(null);
+                                      }}
                                       style={{ width: 36, height: 26, textAlign: 'center', borderRadius: 6, border: '2px solid #0369a1', fontSize: 13, fontWeight: 800, outline: 'none', padding: 0, margin: '0 auto', display: 'block' }} />
                                   ) : (
                                     <div
                                       onClick={() => { setEditingCell({jobNum: job.job_number, date: w.date}); setEditValue(String(men||0)); }}
                                       onDragOver={e => e.preventDefault()}
-                                      onDrop={() => {
+                                      onDrop={async () => {
                                         if (draggingMen !== null) {
-                                          // Update local state optimistically
+                                          const newMen = draggingMen;
                                           setData(prev => prev ? {
                                             ...prev,
                                             islands: prev.islands.map(isl => ({
                                               ...isl,
                                               jobs: isl.jobs.map(j => j.job_number === job.job_number ? {
                                                 ...j,
-                                                weeks: j.weeks.map(wk => wk.date === w.date ? { ...wk, men: draggingMen } : wk)
+                                                weeks: j.weeks.map(wk => wk.date === w.date ? { ...wk, men: newMen } : wk)
                                               } : j)
                                             }))
                                           } : null);
                                           setDraggingMen(null);
+                                          try {
+                                            await fetch('/api/scheduling', {
+                                              method: 'PATCH',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ job_number: job.job_number, date: w.date, men: newMen }),
+                                            });
+                                          } catch { /* non-fatal */ }
                                         }
                                       }}
                                       style={{ width: men ? 32 : 28, height: men ? 24 : 24, borderRadius: 6, background: draggingMen !== null ? 'rgba(15,118,110,0.08)' : men ? menBg(men) : 'transparent', border: `1px solid ${draggingMen !== null ? '#14b8a6' : men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: draggingMen !== null ? 'copy' : 'text', transition: 'all 0.1s' }}>

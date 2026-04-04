@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type TaskStatus = 'queued' | 'in_progress' | 'waiting' | 'done';
 type TaskPriority = 'high' | 'medium' | 'low';
@@ -66,10 +66,46 @@ const PRIORITY_TEXT: Record<TaskPriority, string> = {
 };
 
 export default function TaskBoardPanel() {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState<TaskStatus | 'all'>('all');
   const [showNew, setShowNew] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', detail: '', priority: 'medium' as TaskPriority, category: '', assignedTo: 'Kai' });
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      const res = await fetch('/api/tasks');
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+        setTasks(INITIAL_TASKS);
+        return;
+      }
+      if (data.empty) {
+        // Seed the sheet with INITIAL_TASKS
+        setTasks(INITIAL_TASKS);
+        try {
+          await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tasks: INITIAL_TASKS }),
+          });
+        } catch {
+          // Non-fatal: tasks still shown locally
+        }
+      } else {
+        setTasks(data.tasks as Task[]);
+      }
+    } catch (e) {
+      setError(String(e));
+      setTasks(INITIAL_TASKS);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
   const filtered = filter === 'all' ? tasks : tasks.filter(t => t.status === filter);
 
@@ -81,23 +117,42 @@ export default function TaskBoardPanel() {
     done: tasks.filter(t => t.status === 'done').length,
   };
 
-  function updateStatus(id: string, status: TaskStatus) {
+  async function updateStatus(id: string, status: TaskStatus) {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status, updatedAt: new Date().toISOString().split('T')[0] } : t));
+    try {
+      await fetch('/api/tasks', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_id: id, status }),
+      });
+    } catch {
+      // Non-fatal — optimistic update stays
+    }
   }
 
-  function addTask() {
+  async function addTask() {
     if (!newTask.title) return;
     const id = `TSK-${String(tasks.length + 1).padStart(3, '0')}`;
-    setTasks(prev => [{
+    const task: Task = {
       id, title: newTask.title, detail: newTask.detail,
       status: 'queued', priority: newTask.priority,
       category: newTask.category || 'General',
       assignedTo: newTask.assignedTo,
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
-    }, ...prev]);
+    };
+    setTasks(prev => [task, ...prev]);
     setNewTask({ title: '', detail: '', priority: 'medium', category: '', assignedTo: 'Kai' });
     setShowNew(false);
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks: [task] }),
+      });
+    } catch {
+      // Non-fatal
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -122,6 +177,10 @@ export default function TaskBoardPanel() {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">{error}</div>
+      )}
+
       {/* Status filter pills */}
       <div className="flex gap-2 flex-wrap mb-6">
         {(['all', 'in_progress', 'queued', 'waiting', 'done'] as const).map(s => {
@@ -142,6 +201,14 @@ export default function TaskBoardPanel() {
           );
         })}
       </div>
+
+      {/* Loading state */}
+      {loading && (
+        <div className="card p-8 flex flex-col items-center text-center">
+          <div className="w-7 h-7 rounded-full border-2 border-teal-100 border-t-teal-500 animate-spin mb-3" />
+          <div className="text-ink-label text-sm">Loading tasks...</div>
+        </div>
+      )}
 
       {/* New task form */}
       {showNew && (
@@ -168,64 +235,66 @@ export default function TaskBoardPanel() {
       )}
 
       {/* Task list */}
-      <div className="flex flex-col gap-3">
-        {filtered.map(task => {
-          const cfg = STATUS_CONFIG[task.status];
-          return (
-            <div key={task.id} className="card p-5">
-              <div className="flex items-start gap-4">
-                <div className="flex flex-col gap-1.5 shrink-0 pt-0.5 w-28">
-                  <span className="pill" style={{ background: cfg.bg, color: cfg.color, fontSize: 10 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.dot, marginRight: 4, display: 'inline-block', flexShrink: 0 }} />
-                    {cfg.label}
-                  </span>
-                  <span className="pill" style={{ background: PRIORITY_COLOR[task.priority], color: PRIORITY_TEXT[task.priority], fontSize: 10 }}>
-                    {task.priority}
-                  </span>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[11px] font-mono text-ink-meta">{task.id}</span>
-                    <span className="pill" style={{ background: 'rgba(100,116,139,0.08)', color: '#64748b', fontSize: 9, padding: '1px 7px' }}>{task.category}</span>
+      {!loading && (
+        <div className="flex flex-col gap-3">
+          {filtered.map(task => {
+            const cfg = STATUS_CONFIG[task.status];
+            return (
+              <div key={task.id} className="card p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex flex-col gap-1.5 shrink-0 pt-0.5 w-28">
+                    <span className="pill" style={{ background: cfg.bg, color: cfg.color, fontSize: 10 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.dot, marginRight: 4, display: 'inline-block', flexShrink: 0 }} />
+                      {cfg.label}
+                    </span>
+                    <span className="pill" style={{ background: PRIORITY_COLOR[task.priority], color: PRIORITY_TEXT[task.priority], fontSize: 10 }}>
+                      {task.priority}
+                    </span>
                   </div>
-                  <div className="text-[15px] font-bold text-ink-heading mb-1">{task.title}</div>
-                  <p className="text-[13px] text-ink-body leading-snug m-0">{task.detail}</p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="text-[11px] text-ink-meta">→ <strong className="text-ink-secondary">{task.assignedTo}</strong></span>
-                    <span className="text-[11px] text-ink-meta">Updated {task.updatedAt}</span>
-                  </div>
-                </div>
 
-                {/* Status controls */}
-                <div className="shrink-0 flex flex-col gap-1.5">
-                  {task.status !== 'in_progress' && (
-                    <button onClick={() => updateStatus(task.id, 'in_progress')}
-                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
-                      style={{ background: 'rgba(15,118,110,0.08)', color: '#0f766e', border: '1px solid rgba(15,118,110,0.15)' }}>
-                      Start
-                    </button>
-                  )}
-                  {task.status !== 'done' && (
-                    <button onClick={() => updateStatus(task.id, 'done')}
-                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
-                      style={{ background: 'rgba(29,78,216,0.08)', color: '#1d4ed8', border: '1px solid rgba(29,78,216,0.15)' }}>
-                      Done
-                    </button>
-                  )}
-                  {task.status === 'done' && (
-                    <button onClick={() => updateStatus(task.id, 'queued')}
-                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
-                      style={{ background: 'rgba(100,116,139,0.08)', color: '#64748b', border: '1px solid rgba(100,116,139,0.15)' }}>
-                      Reopen
-                    </button>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[11px] font-mono text-ink-meta">{task.id}</span>
+                      <span className="pill" style={{ background: 'rgba(100,116,139,0.08)', color: '#64748b', fontSize: 9, padding: '1px 7px' }}>{task.category}</span>
+                    </div>
+                    <div className="text-[15px] font-bold text-ink-heading mb-1">{task.title}</div>
+                    <p className="text-[13px] text-ink-body leading-snug m-0">{task.detail}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-[11px] text-ink-meta">→ <strong className="text-ink-secondary">{task.assignedTo}</strong></span>
+                      <span className="text-[11px] text-ink-meta">Updated {task.updatedAt}</span>
+                    </div>
+                  </div>
+
+                  {/* Status controls */}
+                  <div className="shrink-0 flex flex-col gap-1.5">
+                    {task.status !== 'in_progress' && (
+                      <button onClick={() => updateStatus(task.id, 'in_progress')}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+                        style={{ background: 'rgba(15,118,110,0.08)', color: '#0f766e', border: '1px solid rgba(15,118,110,0.15)' }}>
+                        Start
+                      </button>
+                    )}
+                    {task.status !== 'done' && (
+                      <button onClick={() => updateStatus(task.id, 'done')}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+                        style={{ background: 'rgba(29,78,216,0.08)', color: '#1d4ed8', border: '1px solid rgba(29,78,216,0.15)' }}>
+                        Done
+                      </button>
+                    )}
+                    {task.status === 'done' && (
+                      <button onClick={() => updateStatus(task.id, 'queued')}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+                        style={{ background: 'rgba(100,116,139,0.08)', color: '#64748b', border: '1px solid rgba(100,116,139,0.15)' }}>
+                        Reopen
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

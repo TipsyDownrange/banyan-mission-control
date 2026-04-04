@@ -111,35 +111,48 @@ export default function DispatchBoard() {
     return crew.filter(c => fieldRoles.some(r => c.role.includes(r)) && (island === 'All' || c.island === island));
   }
 
+  // Touch / tap-to-assign: tap a crew member to select, tap a slot to assign
+  // Works alongside drag-and-drop for desktop
+  const [tapped, setTapped] = useState<{ crewId: string; crewName: string } | null>(null);
+
+  async function onTapCrew(member: CrewMember) {
+    if (tapped?.crewId === member.user_id) {
+      setTapped(null); // deselect
+    } else {
+      setTapped({ crewId: member.user_id, crewName: member.name });
+    }
+  }
+
+  async function onTapSlot(slotId: string) {
+    if (!tapped) return;
+    await onAssignCrewToSlot(slotId, tapped.crewName);
+    setTapped(null);
+  }
+
   // Drag and drop handlers
   function onDragStartCrew(crewMember: CrewMember) {
     setDragging({ crewId: crewMember.user_id, crewName: crewMember.name });
   }
 
-  async function onDropToSlot(slotId: string) {
-    if (!dragging) return;
+  async function onAssignCrewToSlot(slotId: string, crewName: string) {
     const slot = slots.find(s => s.slot_id === slotId);
     if (!slot) return;
-
     const current = slot.assigned_crew ? slot.assigned_crew.split(', ').filter(Boolean) : [];
-    if (current.includes(dragging.crewName)) return; // already assigned
-
-    const newCrew = [...current, dragging.crewName];
+    if (current.includes(crewName)) return;
+    const newCrew = [...current, crewName];
     const required = parseInt(slot.men_required) || 1;
     const newStatus = newCrew.length >= required ? 'filled' : 'partial';
-
-    // Optimistic update
-    setSlots(prev => prev.map(s => s.slot_id === slotId
-      ? { ...s, assigned_crew: newCrew.join(', '), status: newStatus }
-      : s
-    ));
-
+    setSlots(prev => prev.map(s => s.slot_id === slotId ? { ...s, assigned_crew: newCrew.join(', '), status: newStatus } : s));
     await fetch('/api/dispatch-schedule', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slot_id: slotId, assigned_crew: newCrew, status: newStatus }),
     });
+  }
 
+  async function onDropToSlot(slotId: string) {
+    if (!dragging) return;
+    await onAssignCrewToSlot(slotId, dragging.crewName);
     setDragging(null);
     setDropTarget(null);
   }
@@ -179,7 +192,7 @@ export default function DispatchBoard() {
     setSaving(false);
   }
 
-  const availableCrew = crewForIsland(islandFilter === 'All' ? 'Maui' : islandFilter);
+  const availableCrew = crewForIsland(islandFilter);
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
@@ -262,8 +275,8 @@ export default function DispatchBoard() {
                         onDragOver={e => { e.preventDefault(); setDropTarget(slot.slot_id); }}
                         onDragLeave={() => setDropTarget(null)}
                         onDrop={e => { e.stopPropagation(); onDropToSlot(slot.slot_id); }}
-                        onClick={() => setExpandedSlot(isExpanded ? null : slot.slot_id)}
-                        style={{ borderRadius: 8, border: `1px solid ${ss.color}33`, background: ss.bg, padding: '6px 8px', cursor: 'pointer', boxShadow: dropTarget === slot.slot_id ? `0 0 0 2px ${ISLAND_COLOR[slot.island] || '#0f766e'}` : 'none' }}>
+                        onClick={() => tapped ? onTapSlot(slot.slot_id) : setExpandedSlot(isExpanded ? null : slot.slot_id)}
+                        style={{ borderRadius: 8, border: `1px solid ${ss.color}33`, background: tapped ? 'rgba(99,102,241,0.08)' : ss.bg, padding: '6px 8px', cursor: tapped ? 'copy' : 'pointer', boxShadow: dropTarget === slot.slot_id || tapped ? `0 0 0 2px ${tapped ? '#6366f1' : (ISLAND_COLOR[slot.island] || '#0f766e')}` : 'none' }}>
                         {/* Slot header */}
                         <div style={{ fontSize: 10, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {slot.project_name.length > 20 ? slot.project_name.substring(0,20)+'...' : slot.project_name}
@@ -346,26 +359,32 @@ export default function DispatchBoard() {
         {/* Crew panel — drag from here */}
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
-            {islandFilter === 'All' ? 'Maui' : islandFilter} Crew
+            {islandFilter === 'All' ? 'All Islands' : islandFilter} Crew
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 10 }}>Drag onto a job slot</div>
+          <div style={{ fontSize: 10, color: tapped ? '#6366f1' : '#94a3b8', marginBottom: 10, fontWeight: tapped ? 700 : 400 }}>
+            {tapped ? `${tapped.crewName.split(' ')[0]} selected — tap a slot to assign` : 'Drag onto a slot, or tap to select then tap a slot'}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {availableCrew.map(member => (
-              <div key={member.user_id}
-                draggable
-                onDragStart={() => onDragStartCrew(member)}
-                onDragEnd={() => { setDragging(null); setDropTarget(null); }}
-                style={{ padding: '8px 10px', borderRadius: 10, background: 'white', border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}33`, cursor: 'grab', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 3px rgba(15,23,42,0.06)', userSelect: 'none' }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${ISLAND_COLOR[member.island] || '#64748b'}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: ISLAND_COLOR[member.island] || '#64748b', flexShrink: 0 }}>
-                  {member.name.split(' ').map(n => n[0]).join('').slice(0,2)}
+            {availableCrew.map(member => {
+              const isTapped = tapped?.crewId === member.user_id;
+              return (
+                <div key={member.user_id}
+                  draggable
+                  onDragStart={() => { onDragStartCrew(member); setTapped(null); }}
+                  onDragEnd={() => { setDragging(null); setDropTarget(null); }}
+                  onClick={() => onTapCrew(member)}
+                  style={{ padding: '8px 10px', borderRadius: 10, background: isTapped ? 'rgba(99,102,241,0.08)' : 'white', border: isTapped ? '1px solid #6366f1' : `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}33`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: isTapped ? '0 0 0 2px #6366f1' : '0 1px 3px rgba(15,23,42,0.06)', userSelect: 'none' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isTapped ? 'rgba(99,102,241,0.2)' : `${ISLAND_COLOR[member.island] || '#64748b'}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: isTapped ? '#6366f1' : (ISLAND_COLOR[member.island] || '#64748b'), flexShrink: 0 }}>
+                    {member.name.split(' ').map(n => n[0]).join('').slice(0,2)}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: isTapped ? '#4338ca' : '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name.split(' ')[0]}</div>
+                    <div style={{ fontSize: 9, color: '#94a3b8' }}>{member.role.replace('Journeyman','J-man').replace('Apprentice','Appr.')}</div>
+                  </div>
+                  <div style={{ fontSize: 10, color: isTapped ? '#6366f1' : '#cbd5e1', marginLeft: 'auto', flexShrink: 0 }}>{isTapped ? '✓' : '⋮⋮'}</div>
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name.split(' ')[0]}</div>
-                  <div style={{ fontSize: 9, color: '#94a3b8' }}>{member.role.replace('Journeyman','J-man').replace('Apprentice','Appr.')}</div>
-                </div>
-                <div style={{ fontSize: 10, color: '#cbd5e1', marginLeft: 'auto', flexShrink: 0 }}>⋮⋮</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

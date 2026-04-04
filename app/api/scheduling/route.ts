@@ -169,3 +169,85 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
+
+/**
+ * PATCH /api/scheduling
+ * Update the men count for a specific job + week-ending date.
+ * Body: { job_number: string, date: string (ISO week-ending), men: number }
+ */
+export async function PATCH(req: Request) {
+  try {
+    const { job_number, date, men } = await req.json();
+    if (!job_number || !date || men === undefined) {
+      return NextResponse.json({ error: 'job_number, date, and men required' }, { status: 400 });
+    }
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Read the full sheet to find the right row and column
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:DD200',
+    });
+    const rows = res.data.values || [];
+    if (rows.length < 3) return NextResponse.json({ error: 'Sheet unavailable' }, { status: 500 });
+
+    // Find column index for this date
+    const headerRow = rows[2] || [];
+    let colIndex = -1;
+    for (let i = 4; i < headerRow.length; i++) {
+      const h = String(headerRow[i] || '');
+      if (h.startsWith('WE ')) {
+        const parts = h.replace('WE ', '').split('/');
+        if (parts.length === 3) {
+          const [m, d, y] = parts;
+          const iso = `20${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+          if (iso === date) { colIndex = i; break; }
+        }
+      }
+    }
+    if (colIndex === -1) return NextResponse.json({ error: `Week column not found for date ${date}` }, { status: 404 });
+
+    // Find row index for this job number
+    let rowIndex = -1;
+    for (let r = 3; r < rows.length; r++) {
+      const col0 = String(rows[r]?.[0] || '').trim();
+      const col1 = String(rows[r]?.[1] || '').trim();
+      // Match by job number or "WORK ORDERS" label
+      if (col0 === job_number || col0.replace(/\s/g,'') === job_number.replace(/\s/g,'')) {
+        rowIndex = r; break;
+      }
+      if (job_number === 'WO' && (col1.toUpperCase().includes('WORK ORDER') || col0.toUpperCase().includes('WORK ORDER'))) {
+        rowIndex = r; break;
+      }
+    }
+    if (rowIndex === -1) return NextResponse.json({ error: `Job ${job_number} not found in sheet` }, { status: 404 });
+
+    // Convert 0-based indices to A1 notation
+    // Row: 1-based (rowIndex + 1)
+    // Col: 0-based colIndex → letter(s)
+    function colToLetter(n: number): string {
+      let s = '';
+      n += 1; // 1-based
+      while (n > 0) {
+        const rem = (n - 1) % 26;
+        s = String.fromCharCode(65 + rem) + s;
+        n = Math.floor((n - 1) / 26);
+      }
+      return s;
+    }
+    const cellRef = `${colToLetter(colIndex)}${rowIndex + 1}`;
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `Manpower Schedule - MAUI/OUTER ISLAND!${cellRef}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[men === 0 ? '' : String(men)]] },
+    });
+
+    return NextResponse.json({ ok: true, cell: cellRef, job_number, date, men });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+}

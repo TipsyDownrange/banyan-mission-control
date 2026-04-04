@@ -24,6 +24,7 @@ const ICONS: Record<string, string> = {
   Crew:        'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
   Customers:   'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
   Assets:      'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+  'Org Chart': 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
   // Estimating
   'Bid Intake': 'M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76',
   'Bid Queue':  'M4 6h16M4 10h16M4 14h16M4 18h16',
@@ -72,6 +73,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
       { label: 'Crew' },
       { label: 'Customers' },
       { label: 'Assets', dot: '#14b8a6' },
+      { label: 'Org Chart' },
     ],
   },
   {
@@ -116,9 +118,12 @@ type Props = {
   onToggle: () => void;
   demoUser?: string;
   onUserChange?: (u: string) => void;
+  visibleSections?: string[];
+  hiddenItems?: string[];
+  allUsers?: { name: string; role: string; group: string }[];
 };
 
-export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange }: Props) {
+export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, hiddenItems, allUsers }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
 
@@ -176,7 +181,9 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: collapsed ? '8px 6px' : '8px 8px', overflowY: 'auto', scrollbarWidth: 'none' }}>
-        {NAV.map(({ section, sectionIcon, items }) => {
+        {NAV.filter(({ section }) => !visibleSections || visibleSections.includes(section)).map(({ section, sectionIcon, items: allItems }) => {
+          const items = hiddenItems ? allItems.filter(i => !hiddenItems.includes(i.label)) : allItems;
+          if (items.length === 0) return null;
           const hasActive = items.some(i => i.label === activeView);
           const isSectionCollapsed = collapsedSections.has(section) && !hasActive;
 
@@ -264,12 +271,28 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
         <div style={{ padding: '10px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
           {onUserChange && (
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.4)', marginBottom: 4 }}>Preview as</div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.4)', marginBottom: 4 }}>🧪 Preview as</div>
               <select value={demoUser} onChange={e => onUserChange(e.target.value)}
                 style={{ width: '100%', fontSize: 11, padding: '5px 8px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(203,213,225,0.8)', cursor: 'pointer', outline: 'none' }}>
-                {['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Mark Olson','Joey Ritthaler','Frank Redondo','Nate Nakamura'].map(u => (
-                  <option key={u} style={{ background: '#0d1f2d' }}>{u}</option>
-                ))}
+                {allUsers ? (
+                  // Grouped by department
+                  Object.entries(
+                    allUsers.reduce((acc, u) => {
+                      (acc[u.group] = acc[u.group] || []).push(u);
+                      return acc;
+                    }, {} as Record<string, typeof allUsers>)
+                  ).map(([group, users]) => (
+                    <optgroup key={group} label={group} style={{ background: '#0d1f2d' }}>
+                      {users.map(u => (
+                        <option key={u.name} value={u.name} style={{ background: '#0d1f2d' }}>{u.name}</option>
+                      ))}
+                    </optgroup>
+                  ))
+                ) : (
+                  ['Sean Daniels','Kyle Shimizu','Jenny Shimabukuro','Mark Olson','Joey Ritthaler','Frank Redondo','Nate Nakamura'].map(u => (
+                    <option key={u} style={{ background: '#0d1f2d' }}>{u}</option>
+                  ))
+                )}
               </select>
             </div>
           )}

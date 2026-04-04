@@ -1,263 +1,511 @@
 'use client';
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type CrewMember = {
-  user_id: string;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  personal_email?: string;
-  island: string;
-  type: 'management' | 'super' | 'field';
+  user_id: string; name: string; role: string;
+  email: string; phone: string; island: string;
+  personal_email: string; title: string; department: string;
+  office: string; home_address: string; emergency_contact: string;
+  start_date: string; notes: string;
+  authority_level: string; career_track: string;
 };
 
-type EditDraft = { name: string; role: string; email: string; phone: string; personal_email: string };
-
-const MGMT_ROLES = ['owner', 'gm', 'pm', 'estimator', 'sales', 'admin', 'assistant'];
-const SUPER_ROLES = ['superintendent'];
-
-function classifyType(role: string): CrewMember['type'] {
-  const r = role.toLowerCase();
-  if (SUPER_ROLES.some(s => r.includes(s))) return 'super';
-  if (MGMT_ROLES.some(s => r.includes(s))) return 'management';
-  return 'field';
-}
+type Draft = Partial<CrewMember>;
 
 const ISLAND_COLORS: Record<string, string> = {
   Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
 };
-const TYPE_COLORS = {
-  management: '#1d4ed8', super: '#4338ca',
-  field_journeyman: '#0f766e', field_apprentice: '#0891b2',
+const DEPT_COLORS: Record<string, string> = {
+  PM: '#0f766e', Estimating: '#0f766e',
+  Service: '#6d28d9', Admin: '#64748b', Superintendent: '#4338ca', Field: '#334155',
 };
+
+function initials(name: string): string {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+}
+function avatarColor(dept: string, island: string): string {
+  return DEPT_COLORS[dept] || ISLAND_COLORS[island] || '#64748b';
+}
 
 const INP: React.CSSProperties = {
-  width: '100%', padding: '6px 8px', borderRadius: 8,
-  border: '1px solid rgba(15,118,110,0.3)', background: 'rgba(240,253,250,0.6)',
-  fontSize: 11, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+  width: '100%', padding: '9px 12px', borderRadius: 10,
+  border: '1px solid #e2e8f0', background: 'white',
+  fontSize: 13, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+};
+const LBL: React.CSSProperties = {
+  fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+  textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4, display: 'block',
+};
+const SEC: React.CSSProperties = {
+  fontSize: 10, fontWeight: 800, letterSpacing: '0.12em',
+  textTransform: 'uppercase', color: '#64748b',
+  borderBottom: '1px solid #f1f5f9', paddingBottom: 8, marginBottom: 12, marginTop: 2,
 };
 
-// ── Card is a TOP-LEVEL component — not defined inside CrewPanel ──────────────
-// This prevents React from remounting it on parent re-renders, which was
-// causing the "one keystroke then lose focus" bug.
+// ── Crew Detail Panel ────────────────────────────────────────────────────────
+function CrewDetailPanel({ member, onClose, onSave }: {
+  member: CrewMember; onClose: () => void;
+  onSave: (id: string, draft: Draft) => Promise<void>;
+}) {
+  const [draft, setDraft] = useState<Draft>({});
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
-type CardProps = {
-  c: CrewMember;
-  color: string;
-  isEditing: boolean;
-  draft: EditDraft;
-  onEditStart: (id: string, draft: EditDraft) => void;
-  onDraftChange: (field: keyof EditDraft, value: string) => void;
-  onSave: (id: string) => void;
-  onCancel: () => void;
-  saving: boolean;
-};
+  useEffect(() => {
+    setDraft({ ...member });
+    setDirty(false);
+  }, [member]);
 
-const Card = memo(function Card({ c, color, isEditing, draft, onEditStart, onDraftChange, onSave, onCancel, saving }: CardProps) {
-  const initials = c.name.split(' ').map(n => n[0]).join('').slice(0, 2);
+  function update(field: keyof CrewMember, value: string) {
+    setDraft(prev => ({ ...prev, [field]: value }));
+    setDirty(true);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    await onSave(member.user_id, draft);
+    setSaving(false);
+    setDirty(false);
+  }
+
+  const color = avatarColor(draft.department || member.department, draft.island || member.island);
+  const islandColor = ISLAND_COLORS[draft.island || member.island] || '#64748b';
+
   return (
-    <div style={{ background: 'white', borderRadius: 16, border: `1px solid ${isEditing ? 'rgba(15,118,110,0.2)' : 'rgba(226,232,240,0.9)'}`, padding: '11px 14px', display: 'flex', alignItems: 'flex-start', gap: 10, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
-      <div style={{ width: 36, height: 36, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-        {initials}
-      </div>
-      {isEditing ? (
-        <div style={{ flex: 1, display: 'grid', gap: 5 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-            <input value={draft.name} onChange={e => onDraftChange('name', e.target.value)} style={INP} placeholder="Name" autoFocus />
-            <input value={draft.role} onChange={e => onDraftChange('role', e.target.value)} style={INP} placeholder="Role" />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-            <input value={draft.email} onChange={e => onDraftChange('email', e.target.value)} style={INP} placeholder="Work email (@kulaglass.com)" />
-            <input value={draft.phone} onChange={e => onDraftChange('phone', e.target.value)} style={INP} placeholder="Phone (808-XXX-XXXX)" />
-          </div>
-          <input value={draft.personal_email} onChange={e => onDraftChange('personal_email', e.target.value)} style={INP} placeholder="Personal email (for account recovery)" />
-          <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-            <button onClick={() => onSave(c.user_id)} disabled={saving}
-              style={{ padding: '4px 12px', borderRadius: 8, background: saving ? '#e2e8f0' : '#0f766e', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 10, fontWeight: 800, cursor: saving ? 'default' : 'pointer' }}>
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-            <button onClick={onCancel}
-              style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{c.role}</div>
-            <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {c.email && <a href={`mailto:${c.email}`} style={{ fontSize: 10, color: '#0369a1', textDecoration: 'none' }}>{c.email}</a>}
-              {c.personal_email && <span style={{ fontSize: 9, color: '#94a3b8' }}>↳ {c.personal_email}</span>}
-              {c.phone && <a href={`tel:${c.phone}`} style={{ fontSize: 10, color: '#0f766e', textDecoration: 'none' }}>{c.phone}</a>}
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 400, backdropFilter: 'blur(2px)' }} />
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 401,
+        height: '90vh', background: '#f8fafc',
+        borderRadius: '20px 20px 0 0',
+        boxShadow: '0 -24px 80px rgba(15,23,42,0.18)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '14px 20px 12px', background: 'white', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 36, height: 4, borderRadius: 2, background: '#e2e8f0' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: 'white', flexShrink: 0 }}>
+              {initials(draft.name || member.name)}
+            </div>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>{draft.name || member.name}</div>
+              <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: islandColor, background: `${islandColor}18`, padding: '1px 7px', borderRadius: 999 }}>{draft.island || member.island}</span>
+                {(draft.department || member.department) && <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>{draft.department || member.department}</span>}
+                {(draft.office || member.office) && <span style={{ fontSize: 10, color: '#94a3b8' }}>· {draft.office || member.office}</span>}
+              </div>
             </div>
           </div>
-          <button onClick={() => onEditStart(c.user_id, { name: c.name, role: c.role, email: c.email || '', phone: c.phone || '', personal_email: c.personal_email || '' })}
-            style={{ padding: '3px 8px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.2)', background: 'rgba(240,253,250,0.8)', color: '#0f766e', fontSize: 9, fontWeight: 800, cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
-            Edit
-          </button>
-        </>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {dirty && (
+              <button onClick={handleSave} disabled={saving}
+                style={{ padding: '7px 16px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            )}
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 900, margin: '0 auto' }}>
+
+            {/* LEFT */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SEC}>Position</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div>
+                    <label style={LBL}>Full Name</label>
+                    <input style={INP} value={draft.name || ''} onChange={e => update('name', e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={LBL}>Job Title</label>
+                    <input style={INP} value={draft.title || ''} onChange={e => update('title', e.target.value)} placeholder="e.g. Journeyman Glazier" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={LBL}>Role / Level</label>
+                      <input style={INP} value={draft.role || ''} onChange={e => update('role', e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={LBL}>Department</label>
+                      <select style={INP} value={draft.department || ''} onChange={e => update('department', e.target.value)}>
+                        <option value="">Select…</option>
+                        {['PM','Estimating','Service','Admin','Superintendent','Field'].map(d => <option key={d}>{d}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={LBL}>Island</label>
+                      <select style={INP} value={draft.island || ''} onChange={e => update('island', e.target.value)}>
+                        <option value="">Select…</option>
+                        {['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'].map(i => <option key={i}>{i}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={LBL}>Office / Location</label>
+                      <select style={INP} value={draft.office || ''} onChange={e => update('office', e.target.value)}>
+                        <option value="">Select…</option>
+                        {['Maui HQ','Oahu','Kauai','Remote — Big Island','Remote','Field'].map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={LBL}>Start Date</label>
+                    <input type="date" style={INP} value={draft.start_date || ''} onChange={e => update('start_date', e.target.value)} />
+                  </div>
+                </div>
+                {/* Authority & Career Track — drives app permissions */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10, padding: '12px 14px', background: 'rgba(99,102,241,0.04)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.12)' }}>
+                  <div>
+                    <label style={{ ...LBL, color: '#4338ca' }}>Authority Level</label>
+                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.authority_level || ''} onChange={e => update('authority_level' as keyof CrewMember, e.target.value)}>
+                      <option value="">Select…</option>
+                      {['Executive','Management','Superintendent','Admin','Field'].map(a => <option key={a}>{a}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ ...LBL, color: '#4338ca' }}>Career Track</label>
+                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.career_track || ''} onChange={e => update('career_track' as keyof CrewMember, e.target.value)}>
+                      <option value="">Select…</option>
+                      {['PM','Estimating','Admin','Field','Field-to-Office'].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: '1/-1', fontSize: 10, color: '#6366f1', fontWeight: 600 }}>
+                    ↑ Controls which sections this person sees in Mission Control
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SEC}>Notes (Union, Certs, etc.)</div>
+                <textarea rows={4} style={{ ...INP, resize: 'none' }} value={draft.notes || ''} onChange={e => update('notes', e.target.value)} placeholder="Union status, certifications, anything else…" />
+              </div>
+            </div>
+
+            {/* RIGHT */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SEC}>Contact</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div>
+                    <label style={LBL}>Work Email</label>
+                    <input style={INP} value={draft.email || ''} onChange={e => update('email', e.target.value)} placeholder="name@kulaglass.com" />
+                  </div>
+                  <div>
+                    <label style={LBL}>Personal Email</label>
+                    <input style={INP} value={draft.personal_email || ''} onChange={e => update('personal_email', e.target.value)} placeholder="For account recovery / notifications" />
+                  </div>
+                  <div>
+                    <label style={LBL}>Mobile Phone</label>
+                    <input style={INP} value={draft.phone || ''} onChange={e => update('phone', e.target.value)} placeholder="808-XXX-XXXX" />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SEC}>Address & Emergency</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div>
+                    <label style={LBL}>Home Address</label>
+                    <textarea rows={2} style={{ ...INP, resize: 'none' }} value={draft.home_address || ''} onChange={e => update('home_address', e.target.value)} placeholder="Street, City, HI ZIP" />
+                  </div>
+                  <div>
+                    <label style={LBL}>Emergency Contact</label>
+                    <input style={INP} value={draft.emergency_contact || ''} onChange={e => update('emergency_contact', e.target.value)} placeholder="Name · Relationship · 808-XXX-XXXX" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Read-only ID */}
+              <div style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #f1f5f9', padding: '10px 14px' }}>
+                <div style={{ ...LBL, marginBottom: 2 }}>Employee ID</div>
+                <div style={{ fontSize: 12, color: '#64748b', fontFamily: 'monospace' }}>{member.user_id}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom save bar */}
+        {dirty && (
+          <div style={{ flexShrink: 0, padding: '12px 20px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button onClick={() => { setDraft({ ...member }); setDirty(false); }}
+              style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              Discard
+            </button>
+            <button onClick={handleSave} disabled={saving}
+              style={{ padding: '10px 24px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
+              {saving ? 'Saving…' : '✓ Save All Changes'}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ── Crew Card ────────────────────────────────────────────────────────────────
+function CrewCard({ member, onClick, travel }: {
+  member: CrewMember;
+  onClick: () => void;
+  travel?: { type: string; from_code: string; to_code: string; travel_date: string; depart_time: string }[];
+}) {
+  const color = avatarColor(member.department, member.island);
+  const islandColor = ISLAND_COLORS[member.island] || '#64748b';
+  const today = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const todayTravel = travel?.find(t => t.travel_date === today);
+  const tomorrowTravel = travel?.find(t => t.travel_date === tomorrow);
+  const activeTravel = todayTravel || tomorrowTravel;
+  const isTodayTravel = !!todayTravel;
+  const isFerry = activeTravel?.type === 'ferry';
+
+  // Premium SVG icons — no emoji
+  const PlaneIcon = ({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+      <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill={color} />
+    </svg>
+  );
+
+  const FerryIcon = ({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+      <path d="M20 21c-1.6 0-3.2-.6-4.4-1.6-1.2 1-2.8 1.6-4.4 1.6S8 20.4 6.8 19.4C5.6 20.4 4 21 2.4 21H2v-2h.4c1 0 2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1s2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1h.4v2H20zM19 7H5l-1 4 8 2 8-2-1-4zM13 3H11v2H7v2h10V5h-4V3z" fill={color} />
+    </svg>
+  );
+
+  return (
+    <div onClick={onClick} style={{
+      background: 'white', borderRadius: 14,
+      border: isTodayTravel ? '1.5px solid rgba(3,105,161,0.3)' : '1px solid #e2e8f0',
+      padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
+      cursor: 'pointer', transition: 'box-shadow 0.1s',
+      boxShadow: isTodayTravel ? '0 4px 16px rgba(3,105,161,0.1)' : '0 1px 4px rgba(15,23,42,0.04)',
+      position: 'relative',
+    }}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(15,23,42,0.08)')}
+      onMouseLeave={e => (e.currentTarget.style.boxShadow = isTodayTravel ? '0 4px 16px rgba(3,105,161,0.1)' : '0 1px 4px rgba(15,23,42,0.04)')}>
+      {/* Avatar */}
+      <div style={{ width: 40, height: 40, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'white', flexShrink: 0, position: 'relative' }}>
+        {initials(member.name)}
+        <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: islandColor, border: '1.5px solid white' }} />
+      </div>
+      {/* Info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</div>
+        <div style={{ fontSize: 11, color: '#64748b', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {member.title || member.role}
+        </div>
+        {/* Travel indicator */}
+        {activeTravel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+            {isFerry
+              ? <FerryIcon size={11} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />
+              : <PlaneIcon size={11} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />}
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '-0.01em', color: isTodayTravel ? '#0369a1' : '#94a3b8' }}>
+              {isTodayTravel ? 'In transit today' : 'Departing tomorrow'} · {activeTravel.from_code}
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{display:'inline',verticalAlign:'middle',margin:'0 2px'}}><path d="M5 12h14M14 6l6 6-6 6"/></svg>
+              {activeTravel.to_code}
+            </span>
+          </div>
+        )}
+        {!activeTravel && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+            {member.email && <span style={{ fontSize: 9, color: '#0369a1' }}>{member.email}</span>}
+            {member.phone && <span style={{ fontSize: 9, color: '#0f766e' }}>{member.phone}</span>}
+          </div>
+        )}
+      </div>
+      {/* Travel icon badge */}
+      {activeTravel && (
+        <div style={{
+          width: 32, height: 32, borderRadius: 10,
+          background: isTodayTravel ? 'rgba(3,105,161,0.10)' : 'rgba(148,163,184,0.08)',
+          border: isTodayTravel ? '1px solid rgba(3,105,161,0.18)' : '1px solid rgba(148,163,184,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          {isFerry
+            ? <FerryIcon size={15} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />
+            : <PlaneIcon size={15} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />}
+        </div>
       )}
+      {/* Office badge */}
+      {!activeTravel && member.office && (
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textAlign: 'right', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          {member.office}
+        </div>
+      )}
+      {/* Arrow */}
+      <div style={{ fontSize: 14, color: '#cbd5e1', flexShrink: 0 }}>›</div>
     </div>
   );
-});
+}
 
-// ── Main panel ────────────────────────────────────────────────────────────────
-
+// ── Main Panel ───────────────────────────────────────────────────────────────
 export default function CrewPanel() {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState<EditDraft>({ name: '', role: '', email: '', phone: '', personal_email: '' });
-  const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<CrewMember | null>(null);
+  const [travelByName, setTravelByName] = useState<Record<string, { type: string; from_code: string; to_code: string; travel_date: string; depart_time: string }[]>>({});
+  const [search, setSearch] = useState('');
+  const [filterIsland, setFilterIsland] = useState('All');
+  const [filterDept, setFilterDept] = useState('All');
 
   useEffect(() => {
-    fetch('/api/crew')
+    fetch('/api/crew?all=true')
       .then(r => r.json())
-      .then(d => {
-        const all: CrewMember[] = (d.all || []).map((c: Omit<CrewMember, 'type'>) => ({
-          ...c, type: classifyType(c.role),
-        }));
-        setCrew(all);
-        setLoading(false);
-      })
-      .catch(e => { setError(String(e)); setLoading(false); });
+      .then(d => { setCrew(d.all || []); setLoading(false); })
+      .catch(() => setLoading(false));
+    // Load travel status
+    fetch('/api/travel')
+      .then(r => r.json())
+      .then(d => setTravelByName(d.byCrewName || {}))
+      .catch(() => {});
   }, []);
 
-  const handleEditStart = useCallback((id: string, d: EditDraft) => {
-    setEditing(id);
-    setDraft(d);
-  }, []);
-
-  const handleDraftChange = useCallback((field: keyof EditDraft, value: string) => {
-    setDraft(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handleSave = useCallback(async (userId: string) => {
-    setSaving(true);
-    // Optimistic update
-    setCrew(prev => prev.map(m => m.user_id === userId
-      ? { ...m, ...draft, type: classifyType(draft.role) }
-      : m
-    ));
-    // Write to sheet
+  const handleSave = useCallback(async (userId: string, draft: Draft) => {
+    setCrew(prev => prev.map(m => m.user_id === userId ? { ...m, ...draft } as CrewMember : m));
     try {
       await fetch('/api/crew/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId, ...draft }),
       });
-    } catch { /* optimistic update stays */ }
-    setSaving(false);
-    setEditing(null);
-  }, [draft]);
+      // Refresh selected
+      setSelected(prev => prev?.user_id === userId ? { ...prev, ...draft } as CrewMember : prev);
+    } catch { /* optimistic stays */ }
+  }, []);
 
-  const handleCancel = useCallback(() => setEditing(null), []);
+  const islands = ['All', 'Oahu', 'Maui', 'Kauai', 'Hawaii'];
+  const depts = ['All', 'PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field'];
 
-  const management = crew.filter(c => c.type === 'management');
-  const supers     = crew.filter(c => c.type === 'super');
-  const field      = crew.filter(c => c.type === 'field');
-  const islands    = ['Oahu', 'Maui', 'Kauai'];
+  const filtered = crew.filter(m => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || m.name.toLowerCase().includes(q) || m.role.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+    const matchIsland = filterIsland === 'All' || m.island === filterIsland;
+    // Multi-department matching: check primary department AND infer from role text
+    const roleLower = (m.role || '').toLowerCase();
+    const deptTags: string[] = [m.department];
+    if (roleLower.includes('pm') || roleLower.includes('project manager')) deptTags.push('PM');
+    if (roleLower.includes('estimator') || roleLower.includes('estimating')) deptTags.push('Estimating');
+    if (roleLower.includes('service')) deptTags.push('Service');
+    if (roleLower.includes('admin') || roleLower.includes('assistant')) deptTags.push('Admin');
+    if (roleLower.includes('superintendent')) deptTags.push('Superintendent');
+    if (roleLower.includes('journeyman') || roleLower.includes('apprentice')) deptTags.push('Field');
+    const matchDept = filterDept === 'All' || deptTags.includes(filterDept);
+    return matchSearch && matchIsland && matchDept;
+  });
+
+  // Group by ALL matching departments — people with multi-roles appear in each section
+  function getDeptTags(m: CrewMember): string[] {
+    const roleLower = (m.role || '').toLowerCase();
+    const tags = new Set<string>([m.department || 'Other']);
+    if (roleLower.includes('pm') || roleLower.includes('project manager')) tags.add('PM');
+    if (roleLower.includes('estimator') || roleLower.includes('estimating')) tags.add('Estimating');
+    if (roleLower.includes('service')) tags.add('Service');
+    if (roleLower.includes('admin') || roleLower.includes('assistant')) tags.add('Admin');
+    if (roleLower.includes('superintendent')) tags.add('Superintendent');
+    if (roleLower.includes('journeyman') || roleLower.includes('apprentice')) tags.add('Field');
+    // Remove 'Other' if there are more specific tags
+    if (tags.size > 1) tags.delete('Other');
+    return Array.from(tags);
+  }
+
+  const groups: Record<string, CrewMember[]> = {};
+  filtered.forEach(m => {
+    const tags = getDeptTags(m);
+    tags.forEach(tag => {
+      (groups[tag] = groups[tag] || []).push(m);
+    });
+  });
+  const DEPT_ORDER = ['PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field', 'Other'];
 
   if (loading) return (
     <div style={{ padding: 32, textAlign: 'center' }}>
       <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading crew...</div>
+      <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading crew…</div>
     </div>
   );
 
-  const renderCard = (c: CrewMember, color: string) => (
-    <Card key={c.user_id} c={c} color={color}
-      isEditing={editing === c.user_id}
-      draft={draft}
-      onEditStart={handleEditStart}
-      onDraftChange={handleDraftChange}
-      onSave={handleSave}
-      onCancel={handleCancel}
-      saving={saving}
-    />
-  );
-
   return (
-    <div style={{ padding: '32px', maxWidth: 1100, margin: '0 auto' }}>
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>People</div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Crew</h1>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{crew.length} people · All islands · Kula Glass Company</p>
-      </div>
-
-      {error && <div style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c' }}>Failed to load crew: {error}</div>}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28, padding: 18, borderRadius: 24, background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 50%,rgba(248,250,252,0.96) 100%)', border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}>
-        {[
-          { label: 'Total crew', value: crew.length, helper: 'All islands' },
-          { label: 'Management', value: management.length, helper: 'Office & PM team' },
-          { label: 'Superintendents', value: supers.length, helper: islands.join(', ') },
-          { label: 'Field crew', value: field.length, helper: 'Journeymen + apprentices' },
-        ].map(s => (
-          <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
-            <div style={{ marginTop: 6, fontSize: 34, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
-            <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Management */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Office & Management</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
-          {management.map(c => renderCard(c, TYPE_COLORS.management))}
+    <div style={{ padding: '32px', paddingBottom: '120px', maxWidth: 1100, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>People & Assets</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
+            Crew <span style={{ fontSize: 16, fontWeight: 600, color: '#94a3b8', letterSpacing: 0 }}>{crew.length} people</span>
+          </h1>
         </div>
       </div>
 
-      {/* Superintendents */}
-      {supers.length > 0 && (
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Superintendents</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
-            {supers.map(c => (
-              <div key={c.user_id} style={{ position: 'relative' }}>
-                {c.island && <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 800, textTransform: 'uppercase', padding: '1px 6px', borderRadius: 999, color: ISLAND_COLORS[c.island] || '#64748b', background: 'rgba(255,255,255,0.9)', border: '1px solid currentColor', zIndex: 1 }}>{c.island}</div>}
-                {renderCard(c, TYPE_COLORS.super)}
-              </div>
-            ))}
-          </div>
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search name, role, email…"
+          style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, outline: 'none', minWidth: 220 }}
+        />
+        <div style={{ display: 'flex', gap: 4 }}>
+          {islands.map(isl => (
+            <button key={isl} onClick={() => setFilterIsland(isl)}
+              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterIsland === isl ? `1px solid ${ISLAND_COLORS[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: filterIsland === isl ? `${ISLAND_COLORS[isl] || '#0f766e'}12` : 'white', color: filterIsland === isl ? (ISLAND_COLORS[isl] || '#0f766e') : '#64748b' }}>
+              {isl}
+            </button>
+          ))}
         </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {depts.map(d => (
+            <button key={d} onClick={() => setFilterDept(d)}
+              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterDept === d ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: filterDept === d ? 'rgba(15,118,110,0.08)' : 'white', color: filterDept === d ? '#0f766e' : '#64748b' }}>
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter active → flat list, no sections. All → grouped by dept */}
+      {filterDept !== 'All' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 8 }}>
+          {filtered.map(m => (
+            <CrewCard key={m.user_id} member={m} onClick={() => setSelected(m)} travel={travelByName[m.name.toLowerCase()]} />
+          ))}
+        </div>
+      ) : (
+        DEPT_ORDER.filter(d => groups[d]?.length > 0).map(dept => (
+          <div key={dept} style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: DEPT_COLORS[dept] || '#64748b', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: DEPT_COLORS[dept] || '#64748b' }} />
+              {dept} <span style={{ fontWeight: 600, color: '#94a3b8' }}>({groups[dept].length})</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 8 }}>
+              {groups[dept].map(m => (
+                <CrewCard key={`${dept}-${m.user_id}`} member={m} onClick={() => setSelected(m)} travel={travelByName[m.name.toLowerCase()]} />
+              ))}
+            </div>
+          </div>
+        ))
       )}
 
-      {/* Field crew by island */}
-      {islands.map(island => {
-        const islandCrew = field.filter(c => c.island === island);
-        if (!islandCrew.length) return null;
-        const journeymen  = islandCrew.filter(c => c.role.toLowerCase().includes('journeyman'));
-        const apprentices = islandCrew.filter(c => c.role.toLowerCase().includes('apprentice'));
-        return (
-          <div key={island} style={{ marginBottom: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: ISLAND_COLORS[island] || '#64748b' }} />
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>Field Crew — {island} · {islandCrew.length}</div>
-            </div>
-            {journeymen.length > 0 && (
-              <><div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#cbd5e1', marginBottom: 6, marginLeft: 2 }}>Journeymen · {journeymen.length}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8, marginBottom: 12 }}>
-                {journeymen.map(c => renderCard(c, TYPE_COLORS.field_journeyman))}
-              </div></>
-            )}
-            {apprentices.length > 0 && (
-              <><div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#cbd5e1', marginBottom: 6, marginLeft: 2 }}>Apprentices · {apprentices.length}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
-                {apprentices.map(c => renderCard(c, TYPE_COLORS.field_apprentice))}
-              </div></>
-            )}
-          </div>
-        );
-      })}
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8', fontSize: 13 }}>No crew members match your filters.</div>
+      )}
+
+      {/* Detail panel */}
+      {selected && (
+        <CrewDetailPanel
+          member={selected}
+          onClose={() => setSelected(null)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }

@@ -117,6 +117,74 @@ export async function PATCH(req: Request) {
       valueInputOption: 'USER_ENTERED', requestBody: { values: [updated] },
     });
 
+    // Send email notifications to newly assigned crew (non-blocking)
+    // Set DISABLE_DISPATCH_EMAILS=true in Vercel env to suppress during testing
+    if (process.env.DISABLE_DISPATCH_EMAILS !== 'true' && assigned_crew && assigned_crew.length > 0) {
+      try {
+        const slot = rowToSlot(updated);
+        const crewNames: string[] = Array.isArray(assigned_crew) ? assigned_crew : assigned_crew.split(', ').filter(Boolean);
+        const prevCrew = existing[7] ? existing[7].split(', ').filter(Boolean) : [];
+        const newlyAdded = crewNames.filter(n => !prevCrew.includes(n));
+
+        if (newlyAdded.length > 0) {
+          // Fetch users to get emails
+          const usersSheet = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:G100',
+          });
+          const userRows = usersSheet.data.values || [];
+          const userMap: Record<string, string> = {};
+          userRows.forEach(r => {
+            const name = r[1] || '';
+            const email = r[3] || '';
+            if (name && email) userMap[name.toLowerCase()] = email;
+          });
+
+          const dateFormatted = new Date(slot.date + 'T12:00:00').toLocaleDateString('en-US', {
+            weekday: 'long', month: 'long', day: 'numeric',
+          });
+
+          const gmailAuth = getGoogleAuth(
+            ['https://www.googleapis.com/auth/gmail.send'],
+            'kai@kulaglass.com'
+          );
+          const gmail = google.gmail({ version: 'v1', auth: gmailAuth });
+
+          for (const name of newlyAdded) {
+            const email = userMap[name.toLowerCase()];
+            if (!email) continue;
+
+            const subject = `You're scheduled: ${slot.project_name} — ${dateFormatted}`;
+            const body = [
+              `Hi ${name.split(' ')[0]},`,
+              '',
+              `You've been scheduled for the following job:`,
+              '',
+              `  Job: ${slot.project_name}`,
+              `  Date: ${dateFormatted}`,
+              `  Island: ${slot.island || 'TBD'}`,
+              slot.hours_estimated ? `  Estimated hours: ${slot.hours_estimated}h` : '',
+              slot.men_required ? `  Crew size: ${slot.men_required} men` : '',
+              '',
+              `Full crew assigned: ${crewNames.join(', ')}`,
+              '',
+              `View your schedule in the BanyanOS Field App:`,
+              `https://banyan-field-app-525p.vercel.app/schedule`,
+              '',
+              `— Kula Glass Company`,
+            ].filter(l => l !== null).join('\n');
+
+            const raw = Buffer.from(
+              `To: ${email}\r\nFrom: kai@kulaglass.com\r\nSubject: ${subject}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${body}`
+            ).toString('base64url');
+
+            await gmail.users.messages.send({ userId: 'me', requestBody: { raw } }).catch(() => {});
+          }
+        }
+      } catch {
+        // Non-fatal — don't block the response
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
