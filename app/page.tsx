@@ -1,4 +1,5 @@
 'use client';
+import { ALL_USERS, navSectionsForRole, hiddenItemsForRole, readOnlyViewsForRole, defaultViewForRole } from '@/lib/roles';
 import Sidebar from '@/components/Sidebar';
 import TodayPanel from '@/components/TodayPanel';
 import InboxPanel from '@/components/InboxPanel';
@@ -34,149 +35,6 @@ export type AppView =
   | 'Bid Intake' | 'Bid Queue' | 'My Bids'
   | 'Work Orders'
   | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage';
-
-// ── Full org user list ────────────────────────────────────────────────────────
-export const ALL_USERS: { name: string; role: string; group: string }[] = [
-  { name: 'Jody Boeringa',            role: 'owner',      group: 'Leadership' },
-  { name: 'Sean Daniels',             role: 'gm',         group: 'Leadership' },
-  { name: 'Frank Redondo',            role: 'pm',         group: 'PM / Estimating' },
-  { name: 'Kyle Shimizu',             role: 'estimator',  group: 'PM / Estimating' },
-  { name: 'Jenny Shimabukuro',        role: 'estimator',  group: 'PM / Estimating' },
-  { name: 'Joey Ritthaler',           role: 'service_pm', group: 'PM / Estimating' },
-  { name: 'Mark Olson',               role: 'sales',      group: 'Sales / Admin — Remote' },
-  { name: 'Tia Omura',                role: 'pm_track',   group: 'Sales / Admin' },
-  { name: 'Jenna Nakama',             role: 'admin',      group: 'Sales / Admin' },
-  { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Sales / Admin' },
-  { name: 'Karl Nakamura Sr.',        role: 'super',      group: 'Field — Oahu' },
-  { name: 'Nate Nakamura',            role: 'super',      group: 'Field — Maui' },
-  { name: 'Karl Nakamura Jr.',        role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Thomas Begonia',           role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Jay Castillo',             role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Nolan Lagmay',             role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Francis Lynch',            role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'James Nakamura',           role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Timothy Stitt',            role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Wendall Tavares',          role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Deric Valoroso',           role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Sonny Ah Kui',             role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Lewis Roman',              role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Christian Altman',         role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Ninja Thang',              role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Malu Cleveland',           role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Layton Domingo',           role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Wena Hun',                 role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Santia-Jacob Pascual',     role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Chachleigh Clarabal',      role: 'glazier',    group: 'Field — Oahu' },
-  { name: 'Elijah-David Meheula-Lando', role: 'glazier', group: 'Field — Oahu' },
-  { name: 'Nathan Nakamura',          role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Mark Villados',            role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Tyler Niemeyer',           role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Tyson Omura',              role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Owen Nakamura',            role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Holden Ioanis',            role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Quintin Castro-Perry',     role: 'glazier',    group: 'Field — Maui' },
-  { name: 'Silas Macon',              role: 'glazier',    group: 'Field — Kauai' },
-  { name: 'Mien-Quoc Ly',             role: 'glazier',    group: 'Field — Kauai' },
-  { name: 'Lonnie McKenzie',          role: 'glazier',    group: 'Field — Kauai' },
-  { name: 'Joshua Moore',             role: 'glazier',    group: 'Field — Kauai' },
-  { name: 'Troy Sliter',              role: 'glazier',    group: 'Field — Kauai' },
-];
-
-// ── Nav visibility per role ──────────────────────────────────────────────────
-//
-// Sections: Assistant | Operations | Projects | People & Assets |
-//           Estimating | Service | AI Command
-//
-// Items that are view-only for certain roles are controlled in the panel itself
-// (we pass a readOnly prop). The section visibility here controls whether the
-// nav item appears at all.
-
-export function navSectionsForRole(role: string): string[] {
-  switch (role) {
-    case 'owner':
-    case 'gm':
-      // Sean + Jody: everything
-      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'AI Command'];
-
-    case 'pm':
-      // Frank: no Estimating, no AI Command; WOs are view-only (controlled in panel)
-      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Service'];
-
-    case 'estimator':
-      // Kyle + Jenny: no Operations (except Overview — handled below), Projects view-only
-      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating'];
-
-    case 'service_pm':
-      // Joey: Dispatch Board + Forecasting in Operations, full WO control
-      return ['Assistant', 'Operations', 'Service', 'People & Assets'];
-
-    case 'sales':
-      // Mark: Estimating to see bid queue, People & Assets
-      return ['Assistant', 'Estimating', 'People & Assets'];
-
-    case 'pm_track':
-      // Tia: Admin → PM track, running 2 projects — gets Projects + People
-      return ['Assistant', 'Projects', 'People & Assets'];
-
-    case 'admin':
-      // Jenna, Sherilynn: Assistant + People only
-      return ['Assistant', 'People & Assets'];
-
-    case 'super':
-      // Karl Sr. + Nate: Overview (view), Dispatch Board (control), Forecasting (view)
-      // Service WOs view-only
-      return ['Assistant', 'Operations', 'Service', 'People & Assets'];
-
-    case 'glazier':
-      // Field crew: Today + Org Chart only
-      return ['Assistant', 'People & Assets'];
-
-    default:
-      return ['Assistant'];
-  }
-}
-
-// Items hidden per role within a visible section
-export function hiddenItemsForRole(role: string): AppView[] {
-  switch (role) {
-    case 'estimator':
-      // Can see Overview but not Forecasting, Dispatch, Event Feed, Issues
-      // Can't see Dispatch or scheduling tools
-      return ['Forecasting', 'Dispatch Board', 'Event Feed', 'Issues'];
-    case 'super':
-      // Supers: no Event Feed, Issues, or Forecasting write (still visible — control in panel)
-      return ['Event Feed', 'Issues'];
-    case 'glazier':
-      // Only Today/Calendar from Assistant; only Org Chart from People & Assets
-      return ['Inbox', 'Crew', 'Customers', 'Assets'];
-    case 'admin':
-      // Admin sees People & Assets but not Org Chart... actually they should see it
-      return [];
-    default:
-      return [];
-  }
-}
-
-// Read-only views per role (panel renders view-only mode)
-export function readOnlyViewsForRole(role: string): AppView[] {
-  switch (role) {
-    case 'pm':        return ['Work Orders', 'Schedules', 'Submittals', 'Budget', 'Change Orders'];
-    case 'estimator': return ['Projects', 'Schedules', 'Submittals', 'Budget', 'Change Orders', 'Overview'];
-    case 'super':     return ['Work Orders', 'Overview', 'Forecasting'];
-    default:          return [];
-  }
-}
-
-function defaultViewForRole(role: string): AppView {
-  if (role === 'glazier')    return 'Today';
-  if (role === 'estimator')  return 'Bid Queue';
-  if (role === 'service_pm') return 'Work Orders';
-  if (role === 'super')      return 'Today';
-  if (role === 'sales')      return 'Bid Queue';
-  if (role === 'admin')      return 'Today';
-  return 'Today';
-}
-
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
@@ -193,8 +51,9 @@ export default function Home() {
 
   function handleUserChange(name: string) {
     setDemoUser(name);
+    if (typeof window !== 'undefined') window.localStorage.setItem('banyan_demo_user', name);
     const u = ALL_USERS.find(x => x.name === name);
-    if (u) setActiveView(defaultViewForRole(u.role));
+    if (u) setActiveView(defaultViewForRole(u.role) as AppView);
   }
 
   useEffect(() => {

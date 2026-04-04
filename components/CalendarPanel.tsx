@@ -1,5 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { ALL_USERS } from '@/lib/roles';
+
+type FlightData = {
+  id: string; subject: string; date: string; flightDate: string | null;
+  flightNumber: string | null; passengers: string[];
+  route: { from: string; to: string; fromCode: string; toCode: string } | null;
+  snippet: string; isForwardFromTia: boolean;
+};
+
+// Roles that can see All Staff calendar
+const ALL_STAFF_ROLES = ['owner', 'gm', 'pm', 'estimator', 'service_pm', 'sales', 'admin', 'pm_track', 'super'];
 
 type CalEvent = {
   id: string;
@@ -50,6 +61,18 @@ export default function CalendarPanel() {
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
   const [savingEvent, setSavingEvent] = useState(false);
+  const [flights, setFlights] = useState<FlightData[]>([]);
+  const [flightsLoading, setFlightsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState('Sean Daniels');
+
+  // Read current demo user from the page (stored in localStorage for panel-level access)
+  useEffect(() => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('banyan_demo_user') : null;
+    if (stored) setCurrentUser(stored);
+  }, []);
+
+  const userObj = ALL_USERS.find(u => u.name === currentUser) || ALL_USERS[0];
+  const canSeeAllStaff = ALL_STAFF_ROLES.includes(userObj.role);
 
   useEffect(() => {
     setLoading(true);
@@ -58,6 +81,16 @@ export default function CalendarPanel() {
       .then(d => { setEvents(d.events || []); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [calMode]);
+
+  // Load flight data (management only)
+  useEffect(() => {
+    if (calMode !== 'management' || !canSeeAllStaff) return;
+    setFlightsLoading(true);
+    fetch('/api/inbox/flights')
+      .then(r => r.json())
+      .then(d => { setFlights(d.upcoming || []); setFlightsLoading(false); })
+      .catch(() => setFlightsLoading(false));
+  }, [calMode, canSeeAllStaff]);
 
   // Build calendar grid
   const year = currentMonth.getFullYear();
@@ -124,14 +157,18 @@ export default function CalendarPanel() {
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Calendar</h1>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {/* Personal / Management toggle */}
+          {/* Personal / All Staff toggle — All Staff only for non-glazier roles */}
           <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 3 }}>
-            {(['personal', 'management'] as const).map(m => (
-              <button key={m} onClick={() => setCalMode(m)}
-                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === m ? 'white' : 'transparent', color: calMode === m ? '#0369a1' : '#94a3b8', cursor: 'pointer', boxShadow: calMode === m ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
-                {m === 'personal' ? 'My Calendar' : '🏢 All Staff'}
+            <button onClick={() => setCalMode('personal')}
+              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'personal' ? 'white' : 'transparent', color: calMode === 'personal' ? '#0369a1' : '#94a3b8', cursor: 'pointer', boxShadow: calMode === 'personal' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+              My Calendar
+            </button>
+            {canSeeAllStaff && (
+              <button onClick={() => setCalMode('management')}
+                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'management' ? 'white' : 'transparent', color: calMode === 'management' ? '#0369a1' : '#94a3b8', cursor: 'pointer', boxShadow: calMode === 'management' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                🏢 All Staff
               </button>
-            ))}
+            )}
           </div>
           {/* View toggle */}
           {(['month', 'agenda'] as const).map(v => (
@@ -162,6 +199,75 @@ export default function CalendarPanel() {
       </div>
 
       {error && <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>{error}</div>}
+
+      {/* ── Personnel Travel Ticker ── */}
+      {calMode === 'management' && canSeeAllStaff && (
+        <div style={{ marginBottom: 16 }}>
+          {flightsLoading && (
+            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, color: '#94a3b8' }}>
+              Scanning emails for travel…
+            </div>
+          )}
+          {!flightsLoading && flights.length === 0 && (
+            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0', fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>✈</span> No upcoming flights found in inbox. Tia can forward travel confirmations to Sean and they'll appear here.
+            </div>
+          )}
+          {!flightsLoading && flights.length > 0 && (
+            <div style={{ background: 'linear-gradient(135deg,#071722,#0c2330)', borderRadius: 14, padding: '14px 18px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.6)', marginBottom: 10 }}>
+                ✈ Personnel Travel — Next 7 Days
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {flights.map(f => (
+                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    {/* Date */}
+                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 48 }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                        {f.flightDate ? new Date(f.flightDate + 'T12:00:00').getDate() : '?'}
+                      </div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase' }}>
+                        {f.flightDate ? new Date(f.flightDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' }) : ''}
+                      </div>
+                    </div>
+                    {/* Route */}
+                    {f.route && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#14b8a6' }}>{f.route.fromCode}</span>
+                        <span style={{ fontSize: 12, color: 'rgba(148,163,184,0.4)' }}>→</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#14b8a6' }}>{f.route.toCode}</span>
+                      </div>
+                    )}
+                    {/* Passengers */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {f.passengers.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {f.passengers.map(p => (
+                            <span key={p} style={{ fontSize: 11, fontWeight: 700, color: '#f8fafc', background: 'rgba(20,184,166,0.15)', border: '1px solid rgba(20,184,166,0.2)', borderRadius: 6, padding: '2px 8px' }}>
+                              {p.split(' ')[0]} {p.split(' ').slice(-1)[0]}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>
+                          {f.subject.substring(0, 50)}
+                        </div>
+                      )}
+                    </div>
+                    {/* Flight number */}
+                    {f.flightNumber && (
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.5)', flexShrink: 0 }}>{f.flightNumber}</div>
+                    )}
+                    {f.isForwardFromTia && (
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(20,184,166,0.5)', flexShrink: 0 }}>via Tia</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
@@ -198,6 +304,9 @@ export default function CalendarPanel() {
                     {dayEvents.slice(0, 3).map(ev => (
                       <div key={ev.id} onClick={(e) => { e.stopPropagation(); setSelectedEvent(ev); }}
                         style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, marginBottom: 2, background: ev.color || '#0369a1', color: 'white', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>
+                        {calMode === 'management' && ev.calendar && (
+                          <span style={{ opacity: 0.7 }}>{ev.calendar.split('@')[0].charAt(0).toUpperCase()} · </span>
+                        )}
                         {!ev.allDay && <span style={{ opacity: 0.85 }}>{fmt(ev.start)} </span>}{ev.title}
                       </div>
                     ))}
@@ -232,6 +341,11 @@ export default function CalendarPanel() {
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
                         <div style={{ fontSize: 11, color: '#94a3b8' }}>
                           {ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}
+                          {calMode === 'management' && ev.calendarOwner && (
+                            <span style={{ marginLeft: 8, fontWeight: 700, color: ev.color || '#64748b' }}>
+                              {ev.calendarOwner.split('@')[0]}
+                            </span>
+                          )}
                         </div>
                         {ev.location && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>📍 {ev.location}</div>}
                         {selectedEvent?.id === ev.id && ev.description && (
