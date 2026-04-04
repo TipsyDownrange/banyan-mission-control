@@ -44,7 +44,7 @@ export const ALL_USERS: { name: string; role: string; group: string }[] = [
   { name: 'Jenny Shimabukuro',        role: 'estimator',  group: 'PM / Estimating' },
   { name: 'Joey Ritthaler',           role: 'service_pm', group: 'PM / Estimating' },
   { name: 'Mark Olson',               role: 'sales',      group: 'Sales / Admin — Remote' },
-  { name: 'Tia Omura',                role: 'admin',      group: 'Sales / Admin' },
+  { name: 'Tia Omura',                role: 'pm_track',   group: 'Sales / Admin' },
   { name: 'Jenna Nakama',             role: 'admin',      group: 'Sales / Admin' },
   { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Sales / Admin' },
   { name: 'Karl Nakamura Sr.',        role: 'super',      group: 'Field — Oahu' },
@@ -114,8 +114,12 @@ export function navSectionsForRole(role: string): string[] {
       // Mark: Estimating to see bid queue, People & Assets
       return ['Assistant', 'Estimating', 'People & Assets'];
 
+    case 'pm_track':
+      // Tia: Admin → PM track, running 2 projects — gets Projects + People
+      return ['Assistant', 'Projects', 'People & Assets'];
+
     case 'admin':
-      // Tia, Jenna, Sherilynn: Assistant + People
+      // Jenna, Sherilynn: Assistant + People only
       return ['Assistant', 'People & Assets'];
 
     case 'super':
