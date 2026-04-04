@@ -242,8 +242,21 @@ function CrewCard({ member, onClick, travel }: {
   const todayTravel = travel?.find(t => t.travel_date === today);
   const tomorrowTravel = travel?.find(t => t.travel_date === tomorrow);
   const activeTravel = todayTravel || tomorrowTravel;
-  const travelIcon = activeTravel?.type === 'ferry' ? '⛴' : '✈';
   const isTodayTravel = !!todayTravel;
+  const isFerry = activeTravel?.type === 'ferry';
+
+  // Premium SVG icons — no emoji
+  const PlaneIcon = ({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+      <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill={color} />
+    </svg>
+  );
+
+  const FerryIcon = ({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+      <path d="M20 21c-1.6 0-3.2-.6-4.4-1.6-1.2 1-2.8 1.6-4.4 1.6S8 20.4 6.8 19.4C5.6 20.4 4 21 2.4 21H2v-2h.4c1 0 2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1s2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1h.4v2H20zM19 7H5l-1 4 8 2 8-2-1-4zM13 3H11v2H7v2h10V5h-4V3z" fill={color} />
+    </svg>
+  );
 
   return (
     <div onClick={onClick} style={{
@@ -269,10 +282,12 @@ function CrewCard({ member, onClick, travel }: {
         </div>
         {/* Travel indicator */}
         {activeTravel && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-            <span style={{ fontSize: 11 }}>{travelIcon}</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: isTodayTravel ? '#0369a1' : '#94a3b8' }}>
-              {isTodayTravel ? 'Traveling today' : 'Traveling tomorrow'} — {activeTravel.from_code}→{activeTravel.to_code}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+            {isFerry
+              ? <FerryIcon size={11} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />
+              : <PlaneIcon size={11} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />}
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '-0.01em', color: isTodayTravel ? '#0369a1' : '#94a3b8' }}>
+              {isTodayTravel ? 'In transit today' : 'Departing tomorrow'} · {activeTravel.from_code} → {activeTravel.to_code}
             </span>
           </div>
         )}
@@ -283,15 +298,18 @@ function CrewCard({ member, onClick, travel }: {
           </div>
         )}
       </div>
-      {/* Travel icon badge — pulsing if today */}
+      {/* Travel icon badge */}
       {activeTravel && (
         <div style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: isTodayTravel ? 'rgba(3,105,161,0.12)' : 'rgba(148,163,184,0.1)',
+          width: 32, height: 32, borderRadius: 10,
+          background: isTodayTravel ? 'rgba(3,105,161,0.10)' : 'rgba(148,163,184,0.08)',
+          border: isTodayTravel ? '1px solid rgba(3,105,161,0.18)' : '1px solid rgba(148,163,184,0.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14, flexShrink: 0,
+          flexShrink: 0,
         }}>
-          {travelIcon}
+          {isFerry
+            ? <FerryIcon size={15} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />
+            : <PlaneIcon size={15} color={isTodayTravel ? '#0369a1' : '#94a3b8'} />}
         </div>
       )}
       {/* Office badge */}

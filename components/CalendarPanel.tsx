@@ -92,7 +92,7 @@ export default function CalendarPanel() {
         // Adapt Travel_Status records to FlightData shape for the ticker
         const records = (d.records || []).map((r: { crew_name: string; travel_date: string; type: string; from_code: string; from_name: string; to_code: string; to_name: string; flight_number: string; depart_time: string }) => ({
           id: `${r.crew_name}-${r.travel_date}`,
-          subject: `${r.type === 'ferry' ? '⛴' : '✈'} ${r.crew_name} — ${r.from_code}→${r.to_code}`,
+          subject: `${r.crew_name} — ${r.from_code}→${r.to_code}`,
           date: r.travel_date,
           flightDate: r.travel_date,
           flightNumber: r.flight_number || null,
@@ -226,32 +226,44 @@ export default function CalendarPanel() {
           )}
           {!flightsLoading && flights.length === 0 && (
             <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0', fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>✈</span> No upcoming flights found in inbox. Tia can forward travel confirmations to Sean and they'll appear here.
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#94a3b8"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+              No upcoming travel found. Booking confirmations sent to Tia or Jenna appear here automatically.
             </div>
           )}
           {!flightsLoading && flights.length > 0 && (
             <div style={{ background: 'linear-gradient(135deg,#071722,#0c2330)', borderRadius: 14, padding: '14px 18px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.6)', marginBottom: 10 }}>
-                ✈ Personnel Travel — Next 7 Days
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(148,163,184,0.5)"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.6)' }}>Personnel Travel — Next 7 Days</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {flights.map(f => (
-                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                {flights.map(f => {
+                  const isFerry = (f as { type?: string }).type === 'ferry';
+                  return (
+                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    {/* Mode icon */}
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {isFerry ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#14b8a6"><path d="M20 21c-1.6 0-3.2-.6-4.4-1.6-1.2 1-2.8 1.6-4.4 1.6S8 20.4 6.8 19.4C5.6 20.4 4 21 2.4 21H2v-2h.4c1 0 2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1s2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1h.4v2H20zM19 7H5l-1 4 8 2 8-2-1-4zM13 3H11v2H7v2h10V5h-4V3z"/></svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#14b8a6"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                      )}
+                    </div>
                     {/* Date */}
-                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 48 }}>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                        {f.flightDate ? new Date(f.flightDate + 'T12:00:00').getDate() : '?'}
+                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 36 }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                        {f.flightDate ? new Date(f.flightDate + 'T12:00:00').getDate() : '—'}
                       </div>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {f.flightDate ? new Date(f.flightDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' }) : ''}
                       </div>
                     </div>
                     {/* Route */}
                     {f.route && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#14b8a6' }}>{f.route.fromCode}</span>
-                        <span style={{ fontSize: 12, color: 'rgba(148,163,184,0.4)' }}>→</span>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#14b8a6' }}>{f.route.toCode}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>{f.route.fromCode}</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.35)" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M14 6l6 6-6 6"/></svg>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>{f.route.toCode}</span>
                       </div>
                     )}
                     {/* Passengers */}
@@ -259,26 +271,22 @@ export default function CalendarPanel() {
                       {f.passengers.length > 0 ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                           {f.passengers.map(p => (
-                            <span key={p} style={{ fontSize: 11, fontWeight: 700, color: '#f8fafc', background: 'rgba(20,184,166,0.15)', border: '1px solid rgba(20,184,166,0.2)', borderRadius: 6, padding: '2px 8px' }}>
+                            <span key={p} style={{ fontSize: 11, fontWeight: 700, color: 'rgba(248,250,252,0.9)', background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.18)', borderRadius: 6, padding: '2px 8px', letterSpacing: '-0.01em' }}>
                               {p.split(' ')[0]} {p.split(' ').slice(-1)[0]}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>
-                          {f.subject.substring(0, 50)}
-                        </div>
+                        <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.4)', fontStyle: 'italic' }}>Crew TBD</div>
                       )}
                     </div>
                     {/* Flight number */}
                     {f.flightNumber && (
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.5)', flexShrink: 0 }}>{f.flightNumber}</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.35)', flexShrink: 0, letterSpacing: '0.04em' }}>{f.flightNumber}</div>
                     )}
-                    <div style={{ fontSize: 12, flexShrink: 0 }}>
-                      {(f as { type?: string }).type === 'ferry' ? '⛴' : '✈'}
-                    </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
