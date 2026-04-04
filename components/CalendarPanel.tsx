@@ -329,7 +329,9 @@ export default function CalendarPanel() {
                       <div key={ev.id} onClick={(e) => { e.stopPropagation(); setSelectedEvent(ev); }}
                         style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, marginBottom: 2, background: ev.color || '#0369a1', color: 'white', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>
                         {calMode === 'management' && ev.calendar && (
-                          <span style={{ opacity: 0.7 }}>{ev.calendar.split('@')[0].charAt(0).toUpperCase()} · </span>
+                          <span style={{ opacity: 0.7 }}>
+                            {ev.calendar.split(',').map((n: string) => n.trim().charAt(0).toUpperCase()).slice(0, 3).join('')} ·{' '}
+                          </span>
                         )}
                         {!ev.allDay && <span style={{ opacity: 0.85 }}>{fmt(ev.start)} </span>}{ev.title}
                       </div>
@@ -365,13 +367,13 @@ export default function CalendarPanel() {
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
                         <div style={{ fontSize: 11, color: '#94a3b8' }}>
                           {ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}
-                          {calMode === 'management' && ev.calendarOwner && (
+                          {calMode === 'management' && ev.calendar && (
                             <span style={{ marginLeft: 8, fontWeight: 700, color: ev.color || '#64748b' }}>
-                              {ev.calendarOwner.split('@')[0]}
+                              {ev.calendar.split(',').map((n: string) => n.trim()).join(' · ')}
                             </span>
                           )}
                         </div>
-                        {ev.location && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>📍 {ev.location}</div>}
+                        {ev.location && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>​{ev.location}</div>}
                         {selectedEvent?.id === ev.id && ev.description && (
                           <div style={{ marginTop: 6, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>{ev.description}</div>
                         )}
@@ -405,8 +407,12 @@ export default function CalendarPanel() {
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
                       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: '#94a3b8' }}>
                         <span>{ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}</span>
-                        {ev.location && <span>📍 {ev.location}</span>}
-                        <span style={{ color: '#cbd5e1' }}>{ev.calendar}</span>
+                        {ev.location && <span>​{ev.location}</span>}
+                        {ev.calendar && (
+                          <span style={{ color: '#cbd5e1' }}>
+                            {ev.calendar.split(',').map((n: string) => n.trim()).join(' · ')}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

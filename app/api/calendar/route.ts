@@ -68,8 +68,41 @@ export async function GET(req: Request) {
         } catch { /* user calendar not accessible */ }
       }));
 
-      allEvents.sort((a, b) => ((a as {start:string}).start < (b as {start:string}).start ? -1 : 1));
-      return NextResponse.json({ events: allEvents, mode: 'management', users: MANAGEMENT_USERS });
+      // Deduplicate: same title + same start time = same meeting
+      // Merge attendee names into one card, pick one color
+      type RawEvent = {
+        id: string; title: string; start: string; end: string;
+        location: string; description: string; calendar: string;
+        calendarOwner: string; color: string; allDay: boolean; googleEventId: string;
+      };
+
+      const deduped = new Map<string, RawEvent & { attendees: string[] }>();
+      for (const ev of allEvents as RawEvent[]) {
+        // Key: normalize title (lowercase, trimmed) + rounded start time (minute precision)
+        const startKey = ev.start.substring(0, 16); // "2026-04-06T09:00"
+        const titleKey = ev.title.toLowerCase().trim().replace(/\s+/g, ' ');
+        const key = `${titleKey}::${startKey}`;
+
+        if (deduped.has(key)) {
+          const existing = deduped.get(key)!;
+          const owner = ev.calendar;
+          if (!existing.attendees.includes(owner)) {
+            existing.attendees.push(owner);
+          }
+        } else {
+          deduped.set(key, { ...ev, attendees: [ev.calendar] });
+        }
+      }
+
+      const dedupedEvents = Array.from(deduped.values()).map(ev => ({
+        ...ev,
+        // Show attendee names in the calendar label, keep first owner's color
+        calendar: ev.attendees.join(', '),
+        calendarOwner: ev.attendees[0] + '@kulaglass.com',
+      }));
+
+      dedupedEvents.sort((a, b) => (a.start < b.start ? -1 : 1));
+      return NextResponse.json({ events: dedupedEvents, mode: 'management', users: MANAGEMENT_USERS });
     }
 
     // Personal view
