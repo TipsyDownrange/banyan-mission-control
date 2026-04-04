@@ -6,7 +6,7 @@ const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
 export async function POST(req: Request) {
   try {
-    const { user_id, name, role, email, phone, personal_email } = await req.json();
+    const { user_id, name, role, email, phone, personal_email, title, department, office, home_address, emergency_contact, start_date, notes } = await req.json();
     if (!user_id) return NextResponse.json({ error: 'user_id required' }, { status: 400 });
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
@@ -21,19 +21,27 @@ export async function POST(req: Request) {
     const rowIndex = rows.findIndex(r => r[0] === user_id);
     if (rowIndex === -1) return NextResponse.json({ error: `User ${user_id} not found` }, { status: 404 });
 
-    const sheetRow = rowIndex + 2; // 1-indexed, +1 for header
+    const sheetRow = rowIndex + 2;
+    const r = rows[rowIndex];
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Users_Roles!B${sheetRow}:G${sheetRow}`,
+      range: `Users_Roles!B${sheetRow}:N${sheetRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[
-          name   ?? rows[rowIndex][1] ?? '',
-          role   ?? rows[rowIndex][2] ?? '',
-          email  ?? rows[rowIndex][3] ?? '',
-          phone  ?? rows[rowIndex][4] ?? '',
-          rows[rowIndex][5] ?? '', // island — don't change from UI
-          personal_email ?? rows[rowIndex][6] ?? '',
+          name              ?? r[1]  ?? '',
+          role              ?? r[2]  ?? '',
+          email             ?? r[3]  ?? '',
+          phone             ?? r[4]  ?? '',
+          r[5]              ?? '',       // island — read-only
+          personal_email    ?? r[6]  ?? '',
+          title             ?? r[7]  ?? '',
+          department        ?? r[8]  ?? '',
+          office            ?? r[9]  ?? '',
+          home_address      ?? r[10] ?? '',
+          emergency_contact ?? r[11] ?? '',
+          start_date        ?? r[12] ?? '',
+          notes             ?? r[13] ?? '',
         ]],
       },
     });
