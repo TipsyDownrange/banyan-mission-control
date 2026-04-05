@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
+import { getGoogleAuth } from '@/lib/gauth';
 
-function getAuth() {
-  if (process.env.GOOGLE_SA_KEY_BASE64) {
-    const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString('utf-8'));
-    return new google.auth.JWT({ email: keyJson.client_email, key: keyJson.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
-  }
-  return new google.auth.JWT({
-    keyFile: process.env.GOOGLE_SA_KEY_PATH!,
-    key: undefined,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-  });
-}
+const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
 export async function GET(req: Request) {
   const session = await getServerSession();
@@ -24,12 +15,11 @@ export async function GET(req: Request) {
   const kID = searchParams.get('kID') || '';
   
   try {
-    const auth = getAuth();
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
-    const sheetId = process.env.GOOGLE_SHEET_ID || process.env.BACKEND_SHEET_ID!;
     
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       range: 'Install_Tracking!A2:S5000',
     });
     
@@ -88,6 +78,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ items: filtered, summary, total: filtered.length });
   } catch (err) {
     console.error('Install tracking error:', err);
-    return NextResponse.json({ error: 'Failed to load install data' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load install data', detail: String(err) }, { status: 500 });
   }
 }
