@@ -26,6 +26,7 @@ import KaiPanel from '@/components/KaiPanel';
 import KaiFloat from '@/components/KaiFloat';
 import OrgChartPanel from '@/components/OrgChartPanel';
 import AdminPanel from '@/components/AdminPanel';
+import InstallTrackingPanel from '@/components/InstallTrackingPanel';
 import { useState, useEffect } from 'react';
 
 export type AppView =
@@ -36,6 +37,7 @@ export type AppView =
   | 'Bid Intake' | 'Bid Queue' | 'My Bids'
   | 'Work Orders'
   | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage'
+  | 'QA / Install'
   | 'WIP Report' | 'Financials' | 'Vendors' | 'Compliance' | 'HR' | 'Safety' | 'Fleet';
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function Home() {
@@ -44,6 +46,13 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [demoUser, setDemoUser] = useState('Sean Daniels');
+  const [projectsList, setProjectsList] = useState<{kID:string;name:string}[]>([]);
+
+  useEffect(() => {
+    fetch('/api/projects').then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setProjectsList(d.map((p: Record<string,string>) => ({ kID: p.kID, name: p.name || p.project_name || '' })));
+    }).catch(() => {});
+  }, []);
 
   const demoUserObj = ALL_USERS.find(u => u.name === demoUser) || ALL_USERS[0];
   const visibleSections  = navSectionsForRole(demoUserObj.role);
@@ -133,6 +142,7 @@ export default function Home() {
         {activeView === 'Budget'        && <PMPanel />}
         {activeView === 'Change Orders' && <PMPanel />}
         {activeView === 'Submittals'    && <PMPanel />}
+        {activeView === 'QA / Install'  && <div style={{ padding: '24px 32px' }}><InstallTrackingPanel projects={projectsList} /></div>}
         {activeView === 'Bid Queue'     && <BidQueuePanel />}
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}

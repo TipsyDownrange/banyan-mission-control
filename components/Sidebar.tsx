@@ -65,6 +65,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
       { label: 'Submittals', dot: '#14b8a6' },
       { label: 'Budget', dot: '#14b8a6' },
       { label: 'Change Orders', dot: '#14b8a6' },
+      { label: 'QA / Install', dot: '#059669' },
     ],
   },
   {
