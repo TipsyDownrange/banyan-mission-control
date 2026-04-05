@@ -121,12 +121,12 @@ export default function Home() {
           </div>
         )}
 
-        {activeView === 'Today'         && <TodayPanel />}
+        {activeView === 'Today'         && <TodayPanel onNavigate={(view) => setActiveView(view as AppView)} />}
         {activeView === 'Inbox'         && <InboxPanel />}
         {activeView === 'Calendar'      && <CalendarPanel />}
         {activeView === 'Overview'      && <OverviewPanel />}
         {activeView === 'Event Feed'    && <EventFeedPanel />}
-        {activeView === 'Projects'      && <ProjectsPanel />}
+        {activeView === 'Projects'      && <ProjectsPanel onNavigate={(view) => setActiveView(view as AppView)} />}
         {activeView === 'Issues'        && <IssuesPanel />}
         {activeView === 'Crew'          && <CrewPanel />}
         {activeView === 'Schedules'     && <PMPanel />}

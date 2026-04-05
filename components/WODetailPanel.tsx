@@ -72,6 +72,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [stageSaving, setStageSaving] = useState('');
   const [dirty, setDirty] = useState(false);
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
+  const [saveError, setSaveError] = useState('');
+  const [stageError, setStageError] = useState('');
 
   useEffect(() => {
     if (!wo) return;
@@ -93,8 +95,26 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     setDirty(false);
   }, [wo]);
 
-  if (!wo) return null;
-  const safeWo = wo!;
+  if (!wo) {
+    return (
+      <>
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 400, backdropFilter: 'blur(2px)' }} />
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 401,
+          height: '40vh', background: '#f8fafc', borderRadius: '20px 20px 0 0',
+          boxShadow: '0 -24px 80px rgba(15,23,42,0.18)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: 32,
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Work order not found</div>
+          <div style={{ fontSize: 13, color: '#64748b', marginBottom: 20, textAlign: 'center' }}>The work order you selected could not be loaded. It may have been removed or the data is unavailable.</div>
+          <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Close</button>
+        </div>
+      </>
+    );
+  }
+  const safeWo = wo;
 
   const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
 
@@ -112,20 +132,32 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
   async function handleSave() {
     setSaving(true);
-    await onSave(safeWo.id, {
-      ...draft,
-      assignedTo: selectedCrew.join(', '),
-      _woName: draft.name || safeWo.name,
-      _island: draft.island || safeWo.island,
-    });
-    setSaving(false);
-    setDirty(false);
+    setSaveError('');
+    try {
+      await onSave(safeWo.id, {
+        ...draft,
+        assignedTo: selectedCrew.join(', '),
+        _woName: draft.name || safeWo.name,
+        _island: draft.island || safeWo.island,
+      });
+      setDirty(false);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleStageChange(stageKey: string) {
     setStageSaving(stageKey);
-    await onStageChange(safeWo.id, stageKey);
-    setStageSaving('');
+    setStageError('');
+    try {
+      await onStageChange(safeWo.id, stageKey);
+    } catch (err) {
+      setStageError(err instanceof Error ? err.message : 'Failed to update stage.');
+    } finally {
+      setStageSaving('');
+    }
   }
 
   // Island-filtered field crew
@@ -206,6 +238,20 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
           </div>
         </div>
+
+        {/* Error banners */}
+        {saveError && (
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>⚠️ {saveError}</span>
+            <button onClick={() => setSaveError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 16 }}>×</button>
+          </div>
+        )}
+        {stageError && (
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>⚠️ {stageError}</span>
+            <button onClick={() => setStageError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 16 }}>×</button>
+          </div>
+        )}
 
         {/* Scrollable body — two-column layout */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>

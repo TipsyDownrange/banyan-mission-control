@@ -71,3 +71,97 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: msg, events: [], issues: [] }, { status: 500 });
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { event_id, status, assigned_to } = body;
+    if (!event_id) return NextResponse.json({ error: 'event_id required' }, { status: 400 });
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Read all events to find the row
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'Field_Events_V1!A2:L500',
+    });
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex(r => r[0] === event_id);
+    if (rowIndex === -1) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+
+    // Update columns as needed — we use the note/source columns for status and assigned_to
+    // Column H (index 7) = source — we'll repurpose trailing text for status
+    // For now, update in-memory and write back the row
+    const row = [...rows[rowIndex]];
+    // Extend row to 12 columns if needed
+    while (row.length < 12) row.push('');
+
+    // We'll append status/assigned info to the source field (col H, index 7)
+    const updates: string[] = [];
+    if (status) updates.push(`status:${status}`);
+    if (assigned_to) updates.push(`assigned:${assigned_to}`);
+
+    if (updates.length > 0) {
+      // Store metadata in a structured way in the source column
+      const existing = row[7] || '';
+      const cleaned = existing.replace(/\[MC:.*?\]/g, '').trim();
+      row[7] = `${cleaned} [MC:${updates.join(',')}]`.trim();
+
+      const sheetRow = rowIndex + 2; // +2 because A2 is the start
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `Field_Events_V1!A${sheetRow}:L${sheetRow}`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [row] },
+      });
+    }
+
+    return NextResponse.json({ ok: true, event_id });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { kID, description, severity, type } = body;
+    if (!kID || !description) return NextResponse.json({ error: 'kID and description required' }, { status: 400 });
+
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const now = new Date().toISOString();
+    const eventId = `EVT-${Date.now()}`;
+    const eventType = type || 'FIELD_ISSUE';
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: 'Field_Events_V1!A:L',
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[
+          eventId,    // A: event_id
+          kID,        // B: kID
+          eventType,  // C: event_type
+          now,        // D: occurred_at
+          now,        // E: recorded_at
+          '',         // F: performed_by
+          '',         // G: recorded_by
+          `[MC:severity:${severity || 'MEDIUM'}]`, // H: source
+          '',         // I
+          description,// J: note
+          '',         // K: location
+          '',         // L: unit
+        ]],
+      },
+    });
+
+    return NextResponse.json({ ok: true, event_id: eventId });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}

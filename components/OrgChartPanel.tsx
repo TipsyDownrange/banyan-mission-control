@@ -1,4 +1,14 @@
 'use client';
+import { useEffect, useState } from 'react';
+
+// ── Live crew data type ──────────────────────────────────────────────────
+type LiveCrewMember = {
+  user_id: string; name: string; role: string; email: string;
+  phone: string; island: string; personal_email: string; title: string;
+  department: string; office: string; home_address: string;
+  emergency_contact: string; start_date: string; notes: string;
+  authority_level: string; career_track: string;
+};
 
 // ── Org data ──────────────────────────────────────────────────────────────
 const ORG = {
@@ -16,7 +26,6 @@ const ORG = {
       color: '#0369a1',
       note: 'Management Team',
       children: [
-        // ── Sales / Business Development ──────────────────────────
         {
           id: 'mark',
           name: 'Mark Olson',
@@ -26,8 +35,6 @@ const ORG = {
           note: 'Remote · Big Island · Retiring May 1',
           children: [],
         },
-
-        // ── PM / Estimating / Oahu Field ───────────────
         {
           id: 'frank',
           name: 'Frank Redondo',
@@ -36,23 +43,8 @@ const ORG = {
           color: '#0f766e',
           note: 'Management Team',
           children: [
-            {
-              id: 'kyle',
-              name: 'Kyle Shimizu',
-              title: 'Estimator / PM',
-              island: 'Oahu',
-              color: '#0f766e',
-              children: [],
-            },
-            {
-              id: 'joey',
-              name: 'Joey Ritthaler',
-              title: 'PM / Service Lane',
-              island: 'Oahu',
-              color: '#6d28d9',
-              children: [],
-            },
-            // ── Oahu Field (under Frank) ──
+            { id: 'kyle', name: 'Kyle Shimizu', title: 'Estimator / PM', island: 'Oahu', color: '#0f766e', children: [] },
+            { id: 'joey', name: 'Joey Ritthaler', title: 'PM / Service Lane', island: 'Oahu', color: '#6d28d9', children: [] },
             {
               id: 'karl_sr',
               name: 'Karl Nakamura Sr.',
@@ -69,7 +61,6 @@ const ORG = {
                 { id: 'tim',      name: 'Timothy Stitt',               title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
                 { id: 'wendall',  name: 'Wendall Tavares',             title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
                 { id: 'deric',    name: 'Deric Valoroso',              title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
-                
                 { id: 'lewis',    name: 'Lewis Roman',                 title: 'Journeyman', island: 'Oahu', color: '#334155', children: [] },
                 { id: 'christian',name: 'Christian Altman',            title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
                 { id: 'ninja',    name: 'Ninja Thang',                 title: 'Apprentice', island: 'Oahu', color: '#94a3b8', children: [] },
@@ -83,8 +74,6 @@ const ORG = {
             },
           ],
         },
-
-        // ── Jenny — Estimating + Admin Manager ─────────
         {
           id: 'jenny',
           name: 'Jenny Shimabukuro',
@@ -93,29 +82,15 @@ const ORG = {
           color: '#0f766e',
           note: 'Management Team',
           children: [
+            { id: 'tia', name: 'Tia Omura', title: 'Admin Asst → PM Track', island: 'Oahu', color: '#0f766e', note: 'Running 2 projects', children: [] },
             {
-              id: 'tia',
-              name: 'Tia Omura',
-              title: 'Admin Asst → PM Track',
-              island: 'Oahu',
-              color: '#0f766e',
-              note: 'Running 2 projects',
-              children: [],
-            },
-            {
-              id: 'jenna',
-              name: 'Jenna Nakama',
-              title: 'Admin Assistant',
-              island: 'Oahu',
-              color: '#64748b',
+              id: 'jenna', name: 'Jenna Nakama', title: 'Admin Assistant', island: 'Oahu', color: '#64748b',
               children: [
                 { id: 'sher', name: 'Sherilynn Takuchi', title: 'Admin Assistant', island: 'Oahu', color: '#64748b', children: [] },
               ],
             },
           ],
         },
-
-        // ── Field — Maui & Outer Islands ───────────────
         {
           id: 'nate',
           name: 'Nate Nakamura',
@@ -183,17 +158,28 @@ type OrgNode = {
   color: string; note?: string; children: OrgNode[];
 };
 
-function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean }) {
+type LiveOverlay = {
+  apprenticePct?: string;
+  tempAssignment?: string;
+  notes?: string;
+};
+
+function NodeCard({ node, compact = false, overlay }: { node: OrgNode; compact?: boolean; overlay?: LiveOverlay }) {
   const tier = roleTier(node.title);
-  const isLeaf = node.children.length === 0;
   const islandColor = ISLAND_COLOR[node.island] || '#64748b';
+  const isApprentice = node.title.toLowerCase().includes('apprentice');
+
+  // Build display name with overlays
+  let displaySuffix = '';
+  if (overlay?.tempAssignment) displaySuffix = ` (${overlay.tempAssignment})`;
+  const pctLabel = isApprentice && overlay?.apprenticePct ? ` · ${overlay.apprenticePct}` : '';
 
   if (compact) {
     return (
       <div style={{
         background: 'white', borderRadius: 10, border: `1px solid ${node.color}22`,
         padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 8,
-        boxShadow: '0 1px 4px rgba(15,23,42,0.06)', minWidth: 150, maxWidth: 200,
+        boxShadow: '0 1px 4px rgba(15,23,42,0.06)', minWidth: 150, maxWidth: 220,
       }}>
         <div style={{
           width: 28, height: 28, borderRadius: '50%', background: avatarBg(node.color),
@@ -203,8 +189,13 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
           {getInitials(node.name)}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{node.name.split(' ')[0]} {node.name.split(' ').slice(-1)[0]}</div>
-          <div style={{ fontSize: 9, color: node.color, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{node.title.split(' ')[0]}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {node.name.split(' ')[0]} {node.name.split(' ').slice(-1)[0]}
+            {displaySuffix && <span style={{ color: '#f59e0b', fontWeight: 600 }}>{displaySuffix}</span>}
+          </div>
+          <div style={{ fontSize: 9, color: node.color, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {node.title.split(' ')[0]}{pctLabel}
+          </div>
         </div>
         <div style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: islandColor, flexShrink: 0 }} />
       </div>
@@ -222,10 +213,7 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
       maxWidth: tier <= 1 ? 220 : 180,
       position: 'relative',
     }}>
-      {/* Island dot */}
       <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: islandColor }} title={node.island} />
-
-      {/* Avatar */}
       <div style={{
         width: tier <= 1 ? 48 : tier <= 3 ? 40 : 34,
         height: tier <= 1 ? 48 : tier <= 3 ? 40 : 34,
@@ -238,12 +226,12 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
       }}>
         {getInitials(node.name)}
       </div>
-
       <div style={{ fontSize: tier <= 1 ? 14 : tier <= 3 ? 12 : 11, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3 }}>
         {node.name}
+        {displaySuffix && <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: 9 }}>{displaySuffix}</span>}
       </div>
-      <div style={{ fontSize: tier <= 1 ? 10 : 9, fontWeight: 700, color: node.color, lineHeight: 1.3, marginBottom: node.note ? 4 : 0 }}>
-        {node.title}
+      <div style={{ fontSize: tier <= 1 ? 10 : 9, fontWeight: 700, color: node.color, lineHeight: 1.3, marginBottom: node.note || pctLabel ? 4 : 0 }}>
+        {node.title}{pctLabel}
       </div>
       {node.note && (
         <div style={{
@@ -259,40 +247,33 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
 }
 
 // ── Tree section ──────────────────────────────────────────────────────────
-function TreeSection({ node }: { node: OrgNode }) {
+function TreeSection({ node, overlays }: { node: OrgNode; overlays: Record<string, LiveOverlay> }) {
   const leafChildren = node.children.filter(c => c.children.length === 0);
   const branchChildren = node.children.filter(c => c.children.length > 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <NodeCard node={node} />
-
+      <NodeCard node={node} overlay={overlays[node.name]} />
       {node.children.length > 0 && (
         <>
-          {/* Vertical line down from parent */}
           <div style={{ width: 2, height: 20, background: '#e2e8f0' }} />
-
-          {/* Horizontal bar spanning children */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             {branchChildren.length > 0 && (
               <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', justifyContent: 'center', marginBottom: branchChildren.length > 0 && leafChildren.length > 0 ? 20 : 0 }}>
-                {branchChildren.map((child, i) => (
+                {branchChildren.map(child => (
                   <div key={child.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {/* Vertical drop line */}
                     <div style={{ width: 2, height: 8, background: '#e2e8f0' }} />
-                    <TreeSection node={child} />
+                    <TreeSection node={child} overlays={overlays} />
                   </div>
                 ))}
               </div>
             )}
-
-            {/* Leaf children in a wrapped grid */}
             {leafChildren.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {branchChildren.length > 0 && <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: leafChildren.length > 6 ? 700 : 500 }}>
                   {leafChildren.map(child => (
-                    <NodeCard key={child.id} node={child} compact={leafChildren.length > 4} />
+                    <NodeCard key={child.id} node={child} compact={leafChildren.length > 4} overlay={overlays[child.name]} />
                   ))}
                 </div>
               </div>
@@ -304,13 +285,11 @@ function TreeSection({ node }: { node: OrgNode }) {
   );
 }
 
-// ── Top-level section for Sean's direct reports ──────────────────────────
-function SeanReportSection({ node }: { node: OrgNode }) {
+function SeanReportSection({ node, overlays }: { node: OrgNode; overlays: Record<string, LiveOverlay> }) {
   const ISLAND_BG: Record<string, string> = {
     Oahu: 'rgba(3,105,161,0.04)', Maui: 'rgba(15,118,110,0.04)',
     Kauai: 'rgba(109,40,217,0.04)', Hawaii: 'rgba(146,64,14,0.04)',
   };
-
   return (
     <div style={{
       background: ISLAND_BG[node.island] || '#f8fafc',
@@ -318,12 +297,11 @@ function SeanReportSection({ node }: { node: OrgNode }) {
       padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
       minWidth: 160,
     }}>
-      <TreeSection node={node} />
+      <TreeSection node={node} overlays={overlays} />
     </div>
   );
 }
 
-// ── Legend ────────────────────────────────────────────────────────────────
 function Legend() {
   return (
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', padding: '10px 0', marginBottom: 8 }}>
@@ -343,57 +321,106 @@ function Legend() {
   );
 }
 
+// ── Build overlays from live data ─────────────────────────────────────────
+function buildOverlays(liveCrew: LiveCrewMember[]): Record<string, LiveOverlay> {
+  const overlays: Record<string, LiveOverlay> = {};
+  for (const c of liveCrew) {
+    const overlay: LiveOverlay = {};
+    // Column G (personal_email at index 6) is used for apprentice % in the spec
+    // But based on the API mapping, personal_email is column G
+    // The spec says "apprentice % next to each apprentice's name (read from column G of Users_Roles)"
+    // Column G in the sheet = index 6 = personal_email field in the API
+    // This might actually be a progress/completion percentage stored there
+    if (c.role.includes('Apprentice') && c.personal_email) {
+      // If it looks like a percentage or number, show it
+      const val = c.personal_email.trim();
+      if (/^\d+%?$/.test(val)) {
+        overlay.apprenticePct = val.includes('%') ? val : `${val}%`;
+      }
+    }
+
+    // Detect temp assignments from notes
+    if (c.notes) {
+      const tempMatch = c.notes.match(/\b(Maui|Oahu|Kauai|Hawaii|Big Island)\b/i);
+      if (tempMatch && tempMatch[1].toLowerCase() !== c.island.toLowerCase()) {
+        overlay.tempAssignment = tempMatch[1];
+      }
+      overlay.notes = c.notes;
+    }
+
+    overlays[c.name] = overlay;
+  }
+  return overlays;
+}
+
 // ── Main panel ────────────────────────────────────────────────────────────
 export default function OrgChartPanel() {
+  const [liveCrew, setLiveCrew] = useState<LiveCrewMember[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [liveCount, setLiveCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/crew')
+      .then(r => r.json())
+      .then(d => {
+        const all = d.all || [];
+        setLiveCrew(all);
+        setLiveCount(all.length);
+        setLastUpdated(new Date().toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: 'numeric', minute: '2-digit',
+        }));
+      })
+      .catch(() => {});
+  }, []);
+
+  const overlays = buildOverlays(liveCrew);
+  const headcount = liveCount || 42;
+
   const jody = ORG;
   const sean = ORG.children[0];
   const seanReports = sean.children;
 
   return (
     <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
-      {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Org Chart</h1>
             <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
-              {42} people · Oahu · Maui · Kauai
+              {headcount} people · Oahu · Maui · Kauai
+              {lastUpdated && (
+                <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 12 }}>
+                  Last updated: {lastUpdated}
+                </span>
+              )}
             </p>
           </div>
           <Legend />
         </div>
       </div>
 
-      {/* Chart — scrollable */}
       <div style={{ overflowX: 'auto', overflowY: 'auto', paddingBottom: 24 }}>
         <div style={{ minWidth: 900 }}>
-
-          {/* Tier 1: Jody */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
-            <NodeCard node={jody} />
+            <NodeCard node={jody} overlay={overlays[jody.name]} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: 2, height: 20, background: '#e2e8f0' }} />
           </div>
-
-          {/* Tier 2: Sean */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
-            <NodeCard node={sean} />
+            <NodeCard node={sean} overlay={overlays[sean.name]} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: 2, height: 20, background: '#e2e8f0' }} />
           </div>
-
-          {/* Horizontal connector */}
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
             <div style={{ height: 2, background: '#e2e8f0', width: '85%', maxWidth: 1100 }} />
           </div>
 
-          {/* Two office columns */}
           <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-            {/* ── MAUI OFFICE (HQ) ── */}
+            {/* MAUI OFFICE */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 340 }}>
               <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
               <div style={{ background: 'rgba(15,118,110,0.04)', border: '2px solid rgba(15,118,110,0.15)', borderRadius: 18, padding: '14px 16px 20px' }}>
@@ -404,14 +431,14 @@ export default function OrgChartPanel() {
                 <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
                   {seanReports.filter(r => ['mark','tia','jenny','nate'].includes(r.id)).map(report => (
                     <div key={report.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <SeanReportSection node={report} />
+                      <SeanReportSection node={report} overlays={overlays} />
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* ── OAHU OFFICE ── */}
+            {/* OAHU OFFICE */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 240 }}>
               <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
               <div style={{ background: 'rgba(3,105,161,0.04)', border: '2px solid rgba(3,105,161,0.15)', borderRadius: 18, padding: '14px 16px 20px' }}>
@@ -422,27 +449,25 @@ export default function OrgChartPanel() {
                 <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
                   {seanReports.filter(r => r.id === 'frank').map(report => (
                     <div key={report.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <SeanReportSection node={report} />
+                      <SeanReportSection node={report} overlays={overlays} />
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
 
-      {/* Total count footer */}
+      {/* Footer with live data */}
       <div style={{ marginTop: 20, padding: '14px 20px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
         {[
-          { label: 'Total Headcount', value: 42 },
+          { label: 'Total Headcount', value: headcount },
           { label: 'Management Team', value: 4, note: 'Sean · Frank · Jenny · Nate' },
           { label: 'Office / PM', value: 8 },
           { label: 'Superintendents', value: 2, note: 'Karl Sr. (Oahu) · Nate (Maui + Outer)' },
-          { label: 'Journeymen', value: 20 },
-          { label: 'Apprentices', value: 10 },
+          { label: 'Journeymen', value: liveCrew.filter(c => c.role.includes('Journeyman')).length || 20 },
+          { label: 'Apprentices', value: liveCrew.filter(c => c.role.includes('Apprentice')).length || 10 },
         ].map(({ label, value, note }) => (
           <div key={label}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>{label}</div>

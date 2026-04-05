@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 type Tab = 'overview' | 'rfi' | 'submittals' | 'co' | 'sov';
 
@@ -81,6 +81,8 @@ export default function PMPanel() {
   const [showNewCO, setShowNewCO] = useState(false);
   const [showNewSub, setShowNewSub] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [toast, setToast] = useState('');
   // New RFI form
   const [newRFISubject, setNewRFISubject] = useState('');
   const [newRFISpec, setNewRFISpec] = useState('');
@@ -96,7 +98,12 @@ export default function PMPanel() {
   const [newSubDesc, setNewSubDesc] = useState('');
 
   useEffect(() => {
-    fetch('/api/projects').then(r => r.json()).then(d => setProjects(d.projects || [])).catch(() => {});
+    fetch('/api/projects').then(r => r.json()).then(d => { setProjects(d.projects || []); setProjectsLoading(false); }).catch(() => setProjectsLoading(false));
+  }, []);
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2000);
   }, []);
 
   useEffect(() => {
@@ -121,6 +128,7 @@ export default function PMPanel() {
     const d = await fetch(`/api/pm/rfi?kID=${selectedKID}`).then(r => r.json());
     setRfis(d.rfis || []); setRfiSummary(d.summary || {});
     setSaving(false);
+    showToast('RFI created successfully');
   }
 
   async function submitCO() {
@@ -131,6 +139,7 @@ export default function PMPanel() {
     const d = await fetch(`/api/pm/change-orders?kID=${selectedKID}`).then(r => r.json());
     setCos(d.cos || []); setCoExposure(d.exposure || {});
     setSaving(false);
+    showToast('Change order created successfully');
   }
 
   async function submitSub() {
@@ -141,6 +150,7 @@ export default function PMPanel() {
     const d = await fetch(`/api/pm/submittals?kID=${selectedKID}`).then(r => r.json());
     setSubmittals(d.submittals || []); setSubSummary(d.summary || {});
     setSaving(false);
+    showToast('Submittal added successfully');
   }
 
   async function updateRFIStatus(rfi_id: string, status: string) {
@@ -175,11 +185,16 @@ export default function PMPanel() {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Project Management</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>PM Command</h1>
-          <select value={selectedKID} onChange={e => setSelectedKID(e.target.value)}
-            style={{ padding: '8px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: 'white', minWidth: 260, outline: 'none' }}>
-            <option value="">Select a project...</option>
-            {projects.map(p => <option key={p.kID} value={p.kID}>{p.name} ({p.island})</option>)}
-          </select>
+          {projectsLoading ? (
+            <div style={{ padding: '8px 14px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite', minWidth: 260, height: 38 }} />
+          ) : (
+            <select value={selectedKID} onChange={e => setSelectedKID(e.target.value)}
+              style={{ padding: '8px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: 'white', minWidth: 260, outline: 'none' }}>
+              <option value="">Select a project...</option>
+              {projects.map(p => <option key={p.kID} value={p.kID}>{p.name} ({p.island})</option>)}
+            </select>
+          )}
+          <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
           {proj && <span style={{ padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, background: `${ISLAND_COLOR[proj.island] || '#64748b'}18`, color: ISLAND_COLOR[proj.island] || '#64748b', border: `1px solid ${ISLAND_COLOR[proj.island] || '#64748b'}33` }}>{proj.island}</span>}
         </div>
       </div>
@@ -187,8 +202,10 @@ export default function PMPanel() {
       {!selectedKID && (
         <div style={{ padding: '60px 24px', textAlign: 'center', background: 'white', borderRadius: 20, border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>Select a project to begin</div>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>RFIs, Submittals, Change Orders, and SOV all in one place</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>Select a project above to get started</div>
+          <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, maxWidth: 400, margin: '0 auto' }}>
+            View and manage <strong>RFIs</strong>, <strong>Submittals</strong>, <strong>Change Orders</strong>, and <strong>Schedule of Values</strong> — all in one place.
+          </div>
         </div>
       )}
 
@@ -269,7 +286,11 @@ export default function PMPanel() {
                         <TAG status={rfi.status} />
                         {rfi.ball_in_court && <BALL court={rfi.ball_in_court} />}
                         {rfi.spec_section && <span style={{ fontSize: 10, color: '#64748b' }}>{rfi.spec_section}</span>}
-                        {rfi.days_open && rfi.status !== 'CLOSED' && parseInt(rfi.days_open) > 0 && <span style={{ fontSize: 10, color: parseInt(rfi.days_open) > 10 ? '#b91c1c' : '#64748b' }}>{rfi.days_open}d open</span>}
+                        {rfi.days_open && rfi.status !== 'CLOSED' && parseInt(rfi.days_open) > 0 && (
+                          parseInt(rfi.days_open) > 10
+                            ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}>⚠️ {rfi.days_open}d open</span>
+                            : <span style={{ fontSize: 10, color: '#64748b' }}>{rfi.days_open}d open</span>
+                        )}
                       </div>
                     </div>
                     <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'right' }}>
@@ -332,7 +353,23 @@ export default function PMPanel() {
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Change Orders</div>
                 <button onClick={() => setShowNewCO(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#92400e,#d97706)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New CO</button>
               </div>
-              {/* Exposure summary */}
+              {/* Total exposure banner */}
+              {((coExposure.approved || 0) > 0 || (coExposure.pending || 0) > 0) && (
+                <div style={{
+                  display: 'flex', gap: 16, alignItems: 'center', padding: '14px 20px', borderRadius: 14,
+                  background: 'linear-gradient(135deg, rgba(15,118,110,0.06), rgba(3,105,161,0.06))',
+                  border: '1px solid rgba(15,118,110,0.15)', marginBottom: 12,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b' }}>Total Exposure</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#0f766e' }}>{fmtMoney(String((coExposure.approved || 0) + (coExposure.pending || 0) + (coExposure.identified || 0)))}</div>
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
+                    <span style={{ fontSize: 12, color: '#0f766e', fontWeight: 700 }}>✓ {fmtMoney(String(coExposure.approved || 0))} approved</span>
+                    <span style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 700 }}>⏳ {fmtMoney(String(coExposure.pending || 0))} pending</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Exposure breakdown */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
                 {[['Approved', coExposure.approved||0, '#0f766e'],['Pending', coExposure.pending||0,'#1d4ed8'],['Drafted', coExposure.drafted||0,'#64748b'],['Identified', coExposure.identified||0,'#92400e'],['Rejected (reserve)', coExposure.rejected||0,'#94a3b8']].map(([label, val, color]) => (
                   <div key={String(label)} style={{ background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:'12px 14px' }}>
@@ -487,6 +524,20 @@ export default function PMPanel() {
               <button onClick={submitSub} disabled={!newSubSpec||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,#0369a1,#0ea5e9)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Add Submittal'}</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Success toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+          padding: '10px 20px', borderRadius: 12,
+          background: '#f0fdf4', border: '1px solid rgba(34,197,94,0.3)',
+          color: '#15803d', fontSize: 13, fontWeight: 700, zIndex: 500,
+          boxShadow: '0 4px 16px rgba(15,23,42,0.1)',
+          transition: 'opacity 0.3s',
+        }}>
+          ✓ {toast}
         </div>
       )}
     </div>
