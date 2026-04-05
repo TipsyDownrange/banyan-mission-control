@@ -65,15 +65,15 @@ export default function OverviewPanel() {
       setLoading(false);
     }).catch(() => setLoading(false));
 
-    // Fetch submittal and CO summaries
-    fetch('/api/pm/submittals?kID=ALL').then(r => r.json()).then(d => {
+    // Fetch submittal and CO summaries (catch errors silently — these are supplementary)
+    fetch('/api/pm/submittals').then(r => r.json()).then(d => {
       const subs = d.submittals || [];
       const pending = subs.filter((s: Record<string, string>) => !s.status || s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW' || s.status === 'PENDING');
       const approved = subs.filter((s: Record<string, string>) => s.status === 'APPROVED');
       setSubmittals({ total: subs.length, pending: pending.length, approved: approved.length, overdue: 0 });
     }).catch(() => {});
 
-    fetch('/api/pm/change-orders?kID=ALL').then(r => r.json()).then(d => {
+    fetch('/api/pm/change-orders').then(r => r.json()).then(d => {
       const items = d.cos || [];
       const pending = items.filter((c: Record<string, string>) => c.status === 'PENDING' || c.status === 'IDENTIFIED' || c.status === 'SUBMITTED' || c.status === 'IN_NEGOTIATION');
       const approved = items.filter((c: Record<string, string>) => c.status === 'APPROVED');

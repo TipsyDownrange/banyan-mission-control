@@ -28,18 +28,24 @@ export async function GET() {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const [entitiesRes, eventsRes, usersRes] = await Promise.all([
+    const [entitiesRes, eventsRes] = await Promise.all([
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Core_Entities!A2:H200' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Field_Events_V1!A2:L500' }),
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:B100' }),
     ]);
+
+    // Fetch users separately so it doesn't break projects if it fails
+    let usersRows: string[][] = [];
+    try {
+      const usersRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:B100' });
+      usersRows = usersRes.data.values || [];
+    } catch { /* fallback to static map */ }
 
     const rows = entitiesRes.data.values || [];
     const eventRows = eventsRes.data.values || [];
     
     // Build dynamic user name map
     const USER_NAMES: Record<string, string> = { ...USER_NAMES_FALLBACK };
-    for (const u of (usersRes.data.values || [])) {
+    for (const u of usersRows) {
       if (u[0] && u[1]) USER_NAMES[u[0]] = u[1];
     }
 
