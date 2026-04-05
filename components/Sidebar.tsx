@@ -91,6 +91,18 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
     ],
   },
   {
+    section: 'Admin & Finance', sectionIcon: '◐',
+    items: [
+      { label: 'WIP Report', dot: '#14b8a6' },
+      { label: 'Financials' },
+      { label: 'Vendors' },
+      { label: 'Compliance', dot: '#f59e0b' },
+      { label: 'HR' },
+      { label: 'Safety' },
+      { label: 'Fleet' },
+    ],
+  },
+  {
     section: 'AI Command', sectionIcon: '⬥',
     items: [
       { label: 'Task Board' },

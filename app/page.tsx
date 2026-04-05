@@ -25,6 +25,7 @@ import CustomersPanel from '@/components/CustomersPanel';
 import KaiPanel from '@/components/KaiPanel';
 import KaiFloat from '@/components/KaiFloat';
 import OrgChartPanel from '@/components/OrgChartPanel';
+import AdminPanel from '@/components/AdminPanel';
 import { useState, useEffect } from 'react';
 
 export type AppView =
@@ -34,7 +35,8 @@ export type AppView =
   | 'Crew' | 'Customers' | 'Assets' | 'Org Chart'
   | 'Bid Intake' | 'Bid Queue' | 'My Bids'
   | 'Work Orders'
-  | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage';
+  | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage'
+  | 'WIP Report' | 'Financials' | 'Vendors' | 'Compliance' | 'HR' | 'Safety' | 'Fleet';
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
@@ -144,6 +146,13 @@ export default function Home() {
         {activeView === 'Cost & Usage'  && <CostPanel />}
         {activeView === 'Workflows'     && <CronPanel />}
         {activeView === 'Task Board'    && <TaskBoardPanel />}
+        {activeView === 'WIP Report'    && <AdminPanel section="wip" />}
+        {activeView === 'Financials'    && <AdminPanel section="financials" />}
+        {activeView === 'Vendors'       && <AdminPanel section="vendors" />}
+        {activeView === 'Compliance'    && <AdminPanel section="compliance" />}
+        {activeView === 'HR'            && <AdminPanel section="hr" />}
+        {activeView === 'Safety'        && <AdminPanel section="safety" />}
+        {activeView === 'Fleet'         && <AdminPanel section="fleet" />}
 
         <KaiFloat activeView={activeView} />
       </main>
