@@ -1,63 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 
-const SYSTEM_PROMPT = `You are Kai, the AI intelligence layer for BanyanOS — the operating system for Kula Glass Company, a commercial glass and glazing subcontractor in Hawaii.
+const SYSTEM_PROMPT = `You are Kai, the AI assistant for BanyanOS — the operating system for Kula Glass Company, a commercial glass and glazing subcontractor in Hawaii.
 
 You have deep knowledge of:
-- Kula Glass operations: 8 active projects across Oahu, Maui, and Kauai
-- Active projects: PRJ-26-0001 Hokuala Hotel (Kauai), PRJ-26-0002 War Memorial Gym (Maui), PRJ-26-0003 Makena Beach Club (Maui), PRJ-26-0004 KCC Culinary (Oahu), PRJ-26-0005 War Memorial Football Stadium (Maui), PRJ-26-0006 KS-Olanui/Fuller Glass (Oahu), PRJ-26-0007 Straub Parking Building (Oahu)
-- Key people: Sean Daniels (GM/PM), Jody (Owner), Frank (Senior PM - Maui), Kyle & Jenny (Estimators), Joey (Service Lane PM), Nate (Superintendent)
-- Field crew: Thomas Begonia, Jay Castillo, Nolan Lagmay, Francis Lynch, James Nakamura, Karl Nakamura Jr., Timothy Stitt, Wendall Tavares
-- BanyanOS architecture: Google Sheets backend, Next.js apps, activity spine event model
+- Kula Glass operations across Oahu, Maui, Kauai, and Hawaii Island
+- Key people: Sean Daniels (GM/PM), Jody Boeringa (Owner), Frank Redondo (Senior PM), Kyle Shimizu (Estimator/PM), Jenny Shimabukuro (Admin Manager/PM), Joey Ritthaler (Service PM), Tia Omura (Admin/Asst PM), Jenna Nakama (Admin/Asst PM), Nate Nakamura (Superintendent - Maui), Karl Nakamura Sr. (Superintendent - Oahu)
+- BanyanOS architecture: Google Sheets backend, Smartsheet project data, Next.js apps
 - Glazing industry: storefront, curtainwall, shower enclosures, sliders, QA processes, Hawaii GET tax
 
-You are accessed through Mission Control — a management-only dashboard built by Kai and deployed at banyan-mission-control.vercel.app.
-
-THIS INTERFACE has voice built in right now:
-- There is a microphone button in the chat input — hold it to speak, release to send
-- There is a "Voice Off/On" toggle in the top right — when on, Kai's responses are read aloud using the browser's speech synthesis
-- Voice works on Chrome desktop and Safari on iPad/iPhone
-
-Be direct, concise, and technically accurate. When you don't have live data, say so clearly. Keep responses under 3 paragraphs unless asked for detail. Never tell the user voice isn't available — it is.`;
+Be direct, concise, and technically accurate. When you don't have live data, say so clearly. Keep responses under 3 paragraphs unless asked for detail.`;
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
+    return NextResponse.json({ reply: 'Please sign in with your Kula Glass account.' }, { status: 401 });
+  }
+
   const { messages } = await req.json();
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ reply: 'No API key configured. Set ANTHROPIC_API_KEY in Vercel environment variables.' });
+    return NextResponse.json({ reply: 'No API key configured. Set OPENAI_API_KEY in Vercel environment variables.' });
   }
 
   // Inject live bid log context
   let bidContext = '';
   try {
-    const { google } = await import('googleapis');
-    const { readFileSync } = await import('fs');
-    const key = JSON.parse(readFileSync('/Users/kulaglassopenclaw/glasscore/credentials/drive-service-account.json', 'utf8'));
-    const auth = new google.auth.JWT({ email: key.client_email, key: key.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
-    const sheets = google.sheets({ version: 'v4', auth });
-    const result = await sheets.spreadsheets.values.get({ spreadsheetId: '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA', range: 'Bids!A1:J50' });
-    const rows = result.data.values || [];
-    if (rows.length > 1) {
-      const headers = rows[0];
-      const bids = rows.slice(1).map(r => { const b: Record<string,string> = {}; headers.forEach((h,i) => { b[h as string] = r[i] || ''; }); return b; });
-      const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Win / Loss'] || '') && !['Won','Lost','No Bid'].includes(b['Status'] || '')).slice(0, 30);
-      bidContext = `\n\nLIVE BID LOG (active bids, first 30):\n${active.map(b => `${b['kID']} | ${b['Job Name']} | ${b['Assigned To'] || 'Unassigned'} | ${b['Status']} | Due: ${b['Due Date'] || 'TBD'}`).join('\n')}`;
+    const saKeyBase64 = process.env.GOOGLE_SA_KEY_BASE64;
+    if (saKeyBase64) {
+      const { google } = await import('googleapis');
+      const keyJson = JSON.parse(Buffer.from(saKeyBase64, 'base64').toString('utf-8'));
+      const auth = new google.auth.JWT({ email: keyJson.client_email, key: keyJson.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+      const sheets = google.sheets({ version: 'v4', auth });
+      const result = await sheets.spreadsheets.values.get({ spreadsheetId: '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA', range: 'Bids!A1:J50' });
+      const rows = result.data.values || [];
+      if (rows.length > 1) {
+        const headers = rows[0];
+        const bids = rows.slice(1).map(r => { const b: Record<string,string> = {}; headers.forEach((h,i) => { b[h as string] = r[i] || ''; }); return b; });
+        const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Win / Loss'] || '') && !['Won','Lost','No Bid'].includes(b['Status'] || '')).slice(0, 30);
+        bidContext = `\n\nLIVE BID LOG (active bids, first 30):\n${active.map(b => `${b['kID']} | ${b['Job Name']} | ${b['Assigned To'] || 'Unassigned'} | ${b['Status']} | Due: ${b['Due Date'] || 'TBD'}`).join('\n')}`;
+      }
+    }
+  } catch { /* silent */ }
+
+  // Inject live project list
+  let projectContext = '';
+  try {
+    const saKeyBase64 = process.env.GOOGLE_SA_KEY_BASE64;
+    const backendSheetId = process.env.GOOGLE_SHEET_ID || process.env.BACKEND_SHEET_ID;
+    if (saKeyBase64 && backendSheetId) {
+      const { google } = await import('googleapis');
+      const keyJson = JSON.parse(Buffer.from(saKeyBase64, 'base64').toString('utf-8'));
+      const auth = new google.auth.JWT({ email: keyJson.client_email, key: keyJson.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+      const sheets = google.sheets({ version: 'v4', auth });
+      const result = await sheets.spreadsheets.values.get({ spreadsheetId: backendSheetId, range: 'Core_Entities!A2:H200' });
+      const rows = result.data.values || [];
+      const active = rows.filter(r => r[3] === 'Active');
+      if (active.length > 0) {
+        projectContext = `\n\nACTIVE PROJECTS (${active.length} total):\n${active.map(r => `${r[0]} | ${r[2]} | PM: ${r[4] || 'TBD'} | ${r[6] || ''}`).join('\n')}`;
+      }
     }
   } catch { /* silent */ }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'gpt-5.4',
         max_tokens: 1024,
-        system: SYSTEM_PROMPT + bidContext,
-        messages: messages.slice(-20),
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT + bidContext + projectContext },
+          ...messages.slice(-20),
+        ],
       }),
     });
 
@@ -67,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text || 'No response.';
+    const reply = data.choices?.[0]?.message?.content || 'No response.';
     return NextResponse.json({ reply });
 
   } catch (err) {
