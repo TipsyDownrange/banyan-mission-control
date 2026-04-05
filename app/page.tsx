@@ -127,10 +127,10 @@ export default function Home() {
         {activeView === 'Projects'      && <ProjectsPanel />}
         {activeView === 'Issues'        && <IssuesPanel />}
         {activeView === 'Crew'          && <CrewPanel />}
-        {activeView === 'Schedules'     && <PMPanel defaultTab='schedule' />}
-        {activeView === 'Budget'        && <PMPanel defaultTab='budget' />}
-        {activeView === 'Change Orders' && <PMPanel defaultTab='co' />}
-        {activeView === 'Submittals'    && <PMPanel defaultTab='submittal' />}
+        {activeView === 'Schedules'     && <PMPanel />}
+        {activeView === 'Budget'        && <PMPanel />}
+        {activeView === 'Change Orders' && <PMPanel />}
+        {activeView === 'Submittals'    && <PMPanel />}
         {activeView === 'Bid Queue'     && <BidQueuePanel />}
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}
