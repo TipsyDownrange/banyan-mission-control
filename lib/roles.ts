@@ -75,7 +75,7 @@ export function navSectionsForAuthorityLevel(authorityLevel: string, role?: stri
 
     case 'Management':
       // Sub-filter by role for Management level
-      if (role === 'admin_mgr') return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Service', 'Admin & Finance'];
+      if (role === 'admin_mgr') return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'Admin & Finance'];
       if (role === 'estimator') return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating'];
       if (role === 'service_pm') return ['Assistant', 'Operations', 'Service', 'People & Assets'];
       if (role === 'sales') return ['Assistant', 'Estimating', 'People & Assets'];
