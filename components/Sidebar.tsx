@@ -208,10 +208,10 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                   borderRadius: 6, marginBottom: 1,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 9, color: hasActive ? '#14b8a6' : 'rgba(20,184,166,0.32)' }}>{sectionIcon}</span>
-                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: hasActive ? '#14b8a6' : 'rgba(20,184,166,0.38)' }}>{section}</span>
+                    <span style={{ fontSize: 11, color: hasActive ? '#14b8a6' : 'rgba(20,184,166,0.32)' }}>{sectionIcon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: hasActive ? '#14b8a6' : 'rgba(20,184,166,0.38)' }}>{section}</span>
                   </div>
-                  <span style={{ fontSize: 9, color: 'rgba(148,163,184,0.25)', transform: isSectionCollapsed ? 'rotate(-90deg)' : 'none', display: 'inline-block', transition: 'transform 0.15s' }}>▾</span>
+                  <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.25)', transform: isSectionCollapsed ? 'rotate(-90deg)' : 'none', display: 'inline-block', transition: 'transform 0.15s' }}>▾</span>
                 </button>
               )}
 

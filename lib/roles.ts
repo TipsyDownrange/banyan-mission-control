@@ -20,7 +20,7 @@ export const ALL_USERS: { name: string; role: string; group: string }[] = [
   { name: 'Sean Daniels',             role: 'gm',         group: 'Executive' },
   { name: 'Frank Redondo',            role: 'pm',         group: 'Management' },
   { name: 'Kyle Shimizu',             role: 'estimator',  group: 'Management' },
-  { name: 'Jenny Shimabukuro',        role: 'estimator',  group: 'Management' },
+  { name: 'Jenny Shimabukuro',        role: 'admin_mgr',  group: 'Management' },
   { name: 'Joey Ritthaler',           role: 'service_pm', group: 'Management' },
   { name: 'Mark Olson',               role: 'sales',      group: 'Management' },
   { name: 'Tia Omura',                role: 'pm_track',   group: 'Admin' },
@@ -71,10 +71,11 @@ export const ALL_USERS: { name: string; role: string; group: string }[] = [
 export function navSectionsForAuthorityLevel(authorityLevel: string, role?: string): string[] {
   switch (authorityLevel) {
     case 'Executive':
-      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'AI Command'];
+      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'Admin & Finance', 'AI Command'];
 
     case 'Management':
       // Sub-filter by role for Management level
+      if (role === 'admin_mgr') return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Service', 'Admin & Finance'];
       if (role === 'estimator') return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating'];
       if (role === 'service_pm') return ['Assistant', 'Operations', 'Service', 'People & Assets'];
       if (role === 'sales') return ['Assistant', 'Estimating', 'People & Assets'];
@@ -85,8 +86,8 @@ export function navSectionsForAuthorityLevel(authorityLevel: string, role?: stri
       return ['Assistant', 'Operations', 'Service', 'People & Assets'];
 
     case 'Admin':
-      if (role === 'pm_track') return ['Assistant', 'Projects', 'People & Assets'];
-      return ['Assistant', 'People & Assets'];
+      if (role === 'pm_track') return ['Assistant', 'Projects', 'People & Assets', 'Admin & Finance'];
+      return ['Assistant', 'People & Assets', 'Admin & Finance'];
 
     case 'Field':
     default:
@@ -98,7 +99,7 @@ export function navSectionsForAuthorityLevel(authorityLevel: string, role?: stri
 export function navSectionsForRole(role: string): string[] {
   const authorityMap: Record<string, string> = {
     owner: 'Executive', gm: 'Executive',
-    pm: 'Management', estimator: 'Management', service_pm: 'Management', sales: 'Management',
+    pm: 'Management', estimator: 'Management', service_pm: 'Management', sales: 'Management', admin_mgr: 'Management',
     pm_track: 'Admin', admin: 'Admin',
     super: 'Superintendent',
     glazier: 'Field',
