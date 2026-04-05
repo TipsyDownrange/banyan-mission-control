@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -78,22 +79,22 @@ export default function ProjectsPanel({ onNavigate }: ProjectsPanelProps) {
 
       {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 20 }}>{error}</div>}
 
-      {/* Stats */}
-      {!loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 28, padding: 18, borderRadius: 24, background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 50%,rgba(248,250,252,0.96) 100%)', border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}>
-          {[
-            { label: 'Active', value: projects.length, helper: 'All islands' },
-            { label: 'Open Issues', value: projects.reduce((s, p) => s + p.issues, 0), helper: 'Field issues' },
-            ...['Oahu','Maui','Kauai'].map(i => ({ label: i, value: byIsland[i]?.length || 0, helper: 'Active jobs' })),
-          ].map(s => (
-            <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
-              <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Dashboard Header */}
+      {!loading && (() => {
+        const totalIssues = projects.reduce((s, p) => s + p.issues, 0);
+        const kpis: KPI[] = [
+          { label: 'Active Projects', value: projects.length, subtitle: Object.entries(byIsland).map(([k,v]) => `${k}: ${v.length}`).join(' \u00b7 ') },
+          { label: 'Open Issues', value: totalIssues, color: totalIssues > 10 ? '#dc2626' : totalIssues > 3 ? '#d97706' : '#059669', subtitle: 'Across all projects' },
+          ...['Oahu','Maui','Kauai','Hawaii'].filter(i => (byIsland[i]?.length || 0) > 0).map(i => ({
+            label: i, value: byIsland[i]?.length || 0, subtitle: `${(byIsland[i] || []).filter((p: Project) => p.issues > 0).length} with issues`,
+          })),
+        ];
+        const actionItems: ActionItem[] = [];
+        if (totalIssues > 0) actionItems.push({ text: 'Open field issues need attention', severity: totalIssues > 5 ? 'high' : 'medium', count: totalIssues });
+        const projectsNoEvents = projects.filter(p => p.eventCount === 0);
+        if (projectsNoEvents.length > 5) actionItems.push({ text: 'Projects with no activity', severity: 'low', count: projectsNoEvents.length });
+        return <DashboardHeader title="Projects" subtitle={`${projects.length} active projects across ${Object.keys(byIsland).length} islands`} kpis={kpis} actionItems={actionItems} />;
+      })()}
 
       {/* Projects by island */}
       {!loading && ['Oahu','Maui','Kauai','Hawaii'].map(island => {

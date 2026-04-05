@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
+import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 
 type Bid = Record<string, string>;
 type DecisionState = 'needs review' | 'assign' | 'waiting on docs' | 'in estimating' | 'submitted' | 'won' | 'lost' | 'no bid';
@@ -110,11 +111,41 @@ export default function BidQueuePanel() {
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'grid', gap: 16 }}>
 
-      {/* Header */}
+      {/* Dashboard Header */}
+      {(() => {
+        const activeBids = bids.filter(b => !['won','lost','no bid'].includes(getDecisionState(b)));
+        const submittedBids = bids.filter(b => getDecisionState(b) === 'submitted');
+        const wonBids = bids.filter(b => getDecisionState(b) === 'won');
+        const lostBids = bids.filter(b => getDecisionState(b) === 'lost');
+        const noBids = bids.filter(b => getDecisionState(b) === 'no bid');
+        const totalDecided = wonBids.length + lostBids.length;
+        const hitRate = totalDecided > 0 ? Math.round((wonBids.length / totalDecided) * 100) : 0;
+        const dueSoon = activeBids.filter(b => { const d = daysUntil(b['Due Date']); return d !== null && d >= 0 && d <= 7; });
+        const overdue = activeBids.filter(b => { const d = daysUntil(b['Due Date']); return d !== null && d < 0; });
+        
+        // Workload by estimator
+        const byEstimator: Record<string, number> = {};
+        activeBids.forEach(b => { const a = b['Assigned To'] || 'Unassigned'; byEstimator[a] = (byEstimator[a] || 0) + 1; });
+        const workloadStr = Object.entries(byEstimator).sort((a,b) => b[1]-a[1]).map(([k,v]) => `${k.split(' ')[0]}: ${v}`).join(' · ');
+        
+        const kpis: KPI[] = [
+          { label: 'Active Bids', value: activeBids.length, subtitle: workloadStr || 'None assigned' },
+          { label: 'Submitted', value: submittedBids.length, subtitle: 'Awaiting decision', color: '#1d4ed8' },
+          { label: 'Hit Rate', value: `${hitRate}%`, subtitle: `${wonBids.length} won / ${totalDecided} decided`, color: hitRate >= 30 ? '#059669' : '#d97706', progress: hitRate },
+          { label: 'Due This Week', value: dueSoon.length, subtitle: overdue.length > 0 ? `${overdue.length} overdue` : 'On track', color: overdue.length > 0 ? '#dc2626' : dueSoon.length > 3 ? '#d97706' : '#059669' },
+        ];
+        const actionItems: ActionItem[] = [];
+        if (overdue.length > 0) actionItems.push({ text: 'Overdue bids', severity: 'critical', count: overdue.length });
+        if (dueSoon.length > 3) actionItems.push({ text: 'Due within 7 days', severity: 'high', count: dueSoon.length });
+        const unassigned = activeBids.filter(b => !b['Assigned To']);
+        if (unassigned.length > 0) actionItems.push({ text: 'Unassigned bids', severity: 'medium', count: unassigned.length });
+        
+        return <DashboardHeader title="Estimating" subtitle={`${bids.length} total bids tracked`} kpis={kpis} actionItems={actionItems} />;
+      })()}
+
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Estimating</div>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Bid Queue</h1>
+          <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>Bid Queue</h2>
         </div>
         <div style={{ display: 'flex', gap: 6, paddingBottom: 4 }}>
           {(['table','cards'] as const).map(v => (

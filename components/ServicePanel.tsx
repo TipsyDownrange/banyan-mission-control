@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import ServiceIntake from '@/components/ServiceIntake';
 import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
@@ -546,9 +547,25 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   return (
     <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto' }}>
       {readOnly && READ_ONLY_BANNER}
-      {/* Header */}
+      {/* Dashboard */}
+      {(() => {
+        const needsAction = mergedWorkOrders.filter(w => w.status === 'lead' || w.status === 'quote');
+        const scheduled = mergedWorkOrders.filter(w => w.status === 'scheduled' || w.status === 'in_progress');
+        const completed = mergedWorkOrders.filter(w => w.status === 'closed' || w.status === 'completed');
+        const kpis: KPI[] = [
+          { label: 'Open Work Orders', value: mergedWorkOrders.length - completed.length, subtitle: `${completed.length} completed` },
+          { label: 'Needs Action', value: needsAction.length, subtitle: 'Leads + quotes pending', color: needsAction.length > 5 ? '#d97706' : '#059669' },
+          { label: 'Scheduled', value: scheduled.length, subtitle: 'In the pipeline', color: '#0369a1' },
+          { label: 'Completed', value: completed.length, color: '#059669' },
+        ];
+        const ai: ActionItem[] = [];
+        const leads = mergedWorkOrders.filter(w => w.status === 'lead');
+        if (leads.length > 0) ai.push({ text: 'New leads', severity: 'high', count: leads.length });
+        const quotes = mergedWorkOrders.filter(w => w.status === 'quote');
+        if (quotes.length > 0) ai.push({ text: 'Quotes pending', severity: 'medium', count: quotes.length });
+        return <DashboardHeader title="Service" subtitle={`${mergedWorkOrders.length} work orders`} kpis={kpis} actionItems={ai} />;
+      })()}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Service</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Work Orders</h1>
           <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
@@ -613,10 +630,10 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color }} />
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{stage.label}</div>
-                  <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{wos.length}</div>
+                  <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{mergedWorkOrders.length}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {wos.length === 0 ? (
+                  {mergedWorkOrders.length === 0 ? (
                     <div style={{ padding: '20px 16px', borderRadius: 16, background: 'rgba(248,250,252,0.5)', border: '1px dashed rgba(226,232,240,0.8)', textAlign: 'center', fontSize: 12, color: '#cbd5e1' }}>
                       No work orders
                     </div>
