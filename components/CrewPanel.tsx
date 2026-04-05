@@ -5,6 +5,8 @@ type CrewMember = {
   user_id: string; name: string; role: string;
   email: string; phone: string; island: string;
   personal_email: string; title: string; department: string;
+  departments_multi?: string; roles_multi?: string;
+  departments?: string[]; roles?: string[];
   office: string; home_address: string; emergency_contact: string;
   start_date: string; notes: string;
   authority_level: string; career_track: string;
@@ -383,40 +385,52 @@ export default function CrewPanel() {
   }, []);
 
   const islands = ['All', 'Oahu', 'Maui', 'Kauai', 'Hawaii'];
-  const depts = ['All', 'PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field'];
+
+  // Department mapping uses departments_multi from sheet (comma-separated, authoritative)
+  // Falls back to single department field, then role inference as last resort
+  function getDeptTags(m: CrewMember): string[] {
+    // Primary: use departments array from API (parsed from departments_multi column)
+    if (m.departments && m.departments.length > 0) {
+      // Map sheet department names to display names
+      const MAP: Record<string, string> = {
+        'Executive': 'Executive',
+        'Project Management': 'Project Management',
+        'Estimating': 'Estimating',
+        'Service': 'Service',
+        'Admin': 'Admin',
+        'Field': 'Field',
+      };
+      return m.departments.map(d => MAP[d] || d);
+    }
+    // Fallback: single department column
+    if (m.department && m.department !== 'Other') return [m.department];
+    // Last resort: infer from role text (legacy)
+    const roleLower = (m.role || '').toLowerCase();
+    const tags = new Set<string>();
+    if (roleLower.includes('owner') || roleLower.includes('gm')) tags.add('Executive');
+    if (roleLower.includes('pm') || roleLower.includes('project manager')) tags.add('Project Management');
+    if (roleLower.includes('estimator')) tags.add('Estimating');
+    if (roleLower.includes('service')) tags.add('Service');
+    if (roleLower.includes('admin')) tags.add('Admin');
+    if (roleLower.includes('superintendent')) tags.add('Field');
+    if (roleLower.includes('journeyman') || roleLower.includes('apprentice') || roleLower.includes('leadman')) tags.add('Field');
+    if (tags.size === 0) tags.add('Other');
+    return Array.from(tags);
+  }
+
+  const DEPT_ORDER = ['Executive', 'Project Management', 'Estimating', 'Service', 'Admin', 'Field', 'Other'];
+  const depts = ['All', ...DEPT_ORDER.filter(d => d !== 'Other')];
 
   const filtered = crew.filter(m => {
     const q = search.toLowerCase();
     const matchSearch = !q || m.name.toLowerCase().includes(q) || m.role.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
     const matchIsland = filterIsland === 'All' || m.island === filterIsland;
-    // Multi-department matching: check primary department AND infer from role text
-    const roleLower = (m.role || '').toLowerCase();
-    const deptTags: string[] = [m.department];
-    if (roleLower.includes('pm') || roleLower.includes('project manager')) deptTags.push('PM');
-    if (roleLower.includes('estimator') || roleLower.includes('estimating')) deptTags.push('Estimating');
-    if (roleLower.includes('service')) deptTags.push('Service');
-    if (roleLower.includes('admin') || roleLower.includes('assistant')) deptTags.push('Admin');
-    if (roleLower.includes('superintendent')) deptTags.push('Superintendent');
-    if (roleLower.includes('journeyman') || roleLower.includes('apprentice')) deptTags.push('Field');
-    const matchDept = filterDept === 'All' || deptTags.includes(filterDept);
+    const memberDepts = getDeptTags(m);
+    const matchDept = filterDept === 'All' || memberDepts.includes(filterDept);
     return matchSearch && matchIsland && matchDept;
   });
 
   // Group by ALL matching departments — people with multi-roles appear in each section
-  function getDeptTags(m: CrewMember): string[] {
-    const roleLower = (m.role || '').toLowerCase();
-    const tags = new Set<string>([m.department || 'Other']);
-    if (roleLower.includes('pm') || roleLower.includes('project manager')) tags.add('PM');
-    if (roleLower.includes('estimator') || roleLower.includes('estimating')) tags.add('Estimating');
-    if (roleLower.includes('service')) tags.add('Service');
-    if (roleLower.includes('admin') || roleLower.includes('assistant')) tags.add('Admin');
-    if (roleLower.includes('superintendent')) tags.add('Superintendent');
-    if (roleLower.includes('journeyman') || roleLower.includes('apprentice')) tags.add('Field');
-    // Remove 'Other' if there are more specific tags
-    if (tags.size > 1) tags.delete('Other');
-    return Array.from(tags);
-  }
-
   const groups: Record<string, CrewMember[]> = {};
   filtered.forEach(m => {
     const tags = getDeptTags(m);
@@ -424,7 +438,6 @@ export default function CrewPanel() {
       (groups[tag] = groups[tag] || []).push(m);
     });
   });
-  const DEPT_ORDER = ['PM', 'Estimating', 'Service', 'Admin', 'Superintendent', 'Field', 'Other'];
 
   if (loading) return (
     <div style={{ padding: 32, textAlign: 'center' }}>

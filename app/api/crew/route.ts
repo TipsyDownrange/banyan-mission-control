@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Users_Roles!A2:P100',
+      range: 'Users_Roles!A2:R100',
     });
 
     const rows = res.data.values || [];
@@ -36,6 +36,11 @@ export async function GET(req: Request) {
         notes:             r[13] || '',
         authority_level:   r[14] || '',
         career_track:      r[15] || '',
+        departments_multi: r[16] || '',
+        roles_multi:       r[17] || '',
+        // Computed: array of departments this person belongs to
+        departments: (r[16] || r[8] || '').split(',').map((d: string) => d.trim()).filter(Boolean),
+        roles: (r[17] || r[2] || '').split(',').map((d: string) => d.trim()).filter(Boolean),
       }));
 
     // Filter to field-dispatchable roles: Superintendent, Journeyman, Apprentice
@@ -49,9 +54,7 @@ export async function GET(req: Request) {
 
     // Also return PM/Service for assignment (Joey etc)
     const pms = crew.filter(c =>
-      c.role.toLowerCase().includes('service') ||
-      c.role.toLowerCase().includes('pm') ||
-      c.role.toLowerCase().includes('superintendent')
+      c.roles.some((r: string) => r.toLowerCase().includes('pm') || r.toLowerCase().includes('service') || r.toLowerCase().includes('superintendent'))
     );
 
     return NextResponse.json({ crew: filtered, pms, all: crew });

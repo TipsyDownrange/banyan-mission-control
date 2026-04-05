@@ -5,15 +5,22 @@ import { getGoogleAuth } from '@/lib/gauth';
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
 // Map USR IDs to names — mirrors Users_Roles sheet
-const USER_NAMES: Record<string, string> = {
+// Dynamically loaded below from Users_Roles sheet, but keep static fallback
+const USER_NAMES_FALLBACK: Record<string, string> = {
   'USR-001': 'Jody Boeringa',
   'USR-002': 'Sean Daniels',
   'USR-003': 'Frank Redondo',
   'USR-004': 'Kyle Shimizu',
   'USR-005': 'Jenny Shimabukuro',
   'USR-006': 'Joey Ritthaler',
+  'USR-007': 'Tia Omura',
+  'USR-008': 'Jenna Nakama',
+  'USR-009': 'Sherilynn Takuchi',
   'USR-010': 'Karl Nakamura Sr.',
+  'USR-011': 'Karl Nakamura Jr.',
   'USR-028': 'Nate Nakamura',
+  'USR-EXT-001': 'Fuller Glass',
+  'USR-EXT-002': 'Matta',
 };
 
 export async function GET() {
@@ -21,13 +28,20 @@ export async function GET() {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const [entitiesRes, eventsRes] = await Promise.all([
+    const [entitiesRes, eventsRes, usersRes] = await Promise.all([
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Core_Entities!A2:H200' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Field_Events_V1!A2:L500' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:B100' }),
     ]);
 
     const rows = entitiesRes.data.values || [];
     const eventRows = eventsRes.data.values || [];
+    
+    // Build dynamic user name map
+    const USER_NAMES: Record<string, string> = { ...USER_NAMES_FALLBACK };
+    for (const u of (usersRes.data.values || [])) {
+      if (u[0] && u[1]) USER_NAMES[u[0]] = u[1];
+    }
 
     // Count events per project kID
     const eventCounts: Record<string, number> = {};
