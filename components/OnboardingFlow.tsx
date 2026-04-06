@@ -59,7 +59,12 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
   voiceRef.current = voiceEnabled;
   const speakRef = useRef(speak);
   speakRef.current = speak;
-  const userName = typeof window !== 'undefined' ? (localStorage.getItem('banyan_demo_user') || 'there').split(' ')[0] : 'there';
+  const [userName, setUserName] = useState('there');
+
+  useEffect(() => {
+    const stored = localStorage.getItem('banyan_demo_user');
+    if (stored) setUserName(stored.split(' ')[0]);
+  }, []);
   const roleConfig = ROLE_QUESTIONS[userRole] || ROLE_QUESTIONS['field'];
 
   useEffect(() => {
@@ -139,7 +144,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
   function finishOnboarding() {
     // Save onboarding data
     const data = {
-      user: typeof window !== 'undefined' ? localStorage.getItem('banyan_demo_user') : '',
+      user: userName,
       role: userRole,
       painPoint,
       updatePref,
