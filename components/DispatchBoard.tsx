@@ -456,6 +456,12 @@ export default function DispatchBoard() {
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Project *</label>
+                {addProject.startsWith('[WO]') ? (
+                  <div style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #0f766e44', background: '#f0fdfa', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#0f766e', fontWeight: 700 }}>{addProject}</span>
+                    <button type="button" onClick={() => { setAddProject(''); setAddKID(''); }} style={{ fontSize: 10, color: '#64748b', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
+                  </div>
+                ) : (
                 <select value={addKID} onChange={e => {
                   const val = e.target.value;
                   setAddKID(val);
@@ -489,6 +495,7 @@ export default function DispatchBoard() {
                   </optgroup>
                   <option value="__WO_PICKER__">Service — Work Orders →</option>
                 </select>
+                )}
               </div>
               {/* Secondary WO Picker */}
               {showWOPicker && (
