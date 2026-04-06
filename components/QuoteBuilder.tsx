@@ -18,6 +18,10 @@ type MaterialLine = {
   unit: string;
   unitCost: string;
   totalOverride: string;
+  unitType?: 'SF' | 'LF' | 'EA' | 'Tube';
+  width: string;
+  height: string;
+  length: string;
 };
 
 type AdditionalCost = {
@@ -85,6 +89,17 @@ function driveAreaLabel(address: string): string {
   if (a.includes('wailuku')) return 'Wailuku';
   if (a.includes('kahului')) return 'Kahului';
   return 'Maui';
+}
+
+// ─── Unit type auto-detection ────────────────────────────────────────────────
+
+function detectUnitType(desc: string): 'SF' | 'LF' | 'EA' | 'Tube' {
+  const d = desc.toLowerCase();
+  if (['glass', 'mirror', 'igu', 'laminated', 'tempered', 'panel'].some(k => d.includes(k))) return 'SF';
+  if (['caulking', 'sealant', 'backer rod', 'tape', 'weatherseal'].some(k => d.includes(k))) return 'LF';
+  if (['closer', 'handle', 'hardware', 'lock', 'hinge'].some(k => d.includes(k))) return 'EA';
+  if (['tube', 'cartridge'].some(k => d.includes(k))) return 'Tube';
+  return 'EA';
 }
 
 // ─── ID factory ───────────────────────────────────────────────────────────────
@@ -295,7 +310,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
   // Materials
   const [mainMaterials, setMainMaterials] = useState<MaterialLine[]>([
-    { id: uid(), description: '', qty: '1', unit: 'ea', unitCost: '', totalOverride: '' },
+    { id: uid(), description: '', qty: '1', unit: 'ea', unitCost: '', totalOverride: '', width: '', height: '', length: '' },
   ]);
   const [consumables, setConsumables] = useState<MaterialLine[]>([]);
   const [freight, setFreight] = useState<MaterialLine[]>([]);
@@ -308,6 +323,11 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
   // Markup
   const [markup, setMarkup] = useState<Markup>(defaultMarkup);
+
+  // File attachments
+  const quoteFileInputRef = useRef<HTMLInputElement>(null);
+  const [quoteFiles, setQuoteFiles] = useState<File[]>([]);
+  const [quoteFileDragging, setQuoteFileDragging] = useState(false);
 
   // Auto-save
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -352,6 +372,15 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
   function materialLineTotal(m: MaterialLine): number {
     if (m.totalOverride) return parseNum(m.totalOverride);
+    const ut = m.unitType || detectUnitType(m.description);
+    if (ut === 'SF') {
+      const sf = (parseNum(m.width) * parseNum(m.height) / 144) * parseNum(m.qty);
+      return sf * parseNum(m.unitCost);
+    }
+    if (ut === 'LF') {
+      const lf = parseNum(m.length || '0') * parseNum(m.qty);
+      return lf * parseNum(m.unitCost);
+    }
     return parseNum(m.qty) * parseNum(m.unitCost);
   }
 
@@ -419,7 +448,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   // ─── Material helpers ──────────────────────────────────────────────────────
 
   function newMaterialLine(): MaterialLine {
-    return { id: uid(), description: '', qty: '1', unit: 'ea', unitCost: '', totalOverride: '' };
+    return { id: uid(), description: '', qty: '1', unit: 'ea', unitCost: '', totalOverride: '', width: '', height: '', length: '' };
   }
 
   function updateMaterial(setter: React.Dispatch<React.SetStateAction<MaterialLine[]>>, id: string, patch: Partial<MaterialLine>) {
@@ -631,6 +660,79 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           )}
         </div>
 
+        {/* ── JOB FILES ─────────────────────────────────────────────── */}
+        <div>
+          <input
+            ref={quoteFileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const files = Array.from(e.target.files || []);
+              setQuoteFiles(prev => [...prev, ...files]);
+              e.target.value = '';
+            }}
+          />
+          <div
+            onDragOver={e => { e.preventDefault(); setQuoteFileDragging(true); }}
+            onDragLeave={() => setQuoteFileDragging(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setQuoteFileDragging(false);
+              const files = Array.from(e.dataTransfer.files);
+              setQuoteFiles(prev => [...prev, ...files]);
+            }}
+            onClick={() => quoteFileInputRef.current?.click()}
+            style={{
+              border: `2px dashed ${quoteFileDragging ? '#14b8a6' : '#cbd5e1'}`,
+              borderRadius: 10,
+              padding: '12px 16px',
+              cursor: 'pointer',
+              background: quoteFileDragging ? 'rgba(240,253,250,0.8)' : '#f8fafc',
+              transition: 'border-color 0.15s, background 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>📎</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: quoteFileDragging ? '#0f766e' : '#64748b', fontFamily: FONT }}>
+                Attach job files — photos, vendor quotes, plans
+              </div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 1, fontFamily: FONT }}>Drop files here or click to browse</div>
+            </div>
+            {quoteFiles.length > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)', flexShrink: 0 }}>
+                {quoteFiles.length} file{quoteFiles.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          {quoteFiles.length > 0 && (
+            <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {quoteFiles.map((file, i) => {
+                const isPDF = file.type === 'application/pdf';
+                const isImage = file.type.startsWith('image/');
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: 'white', border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: 13 }}>{isPDF ? '📄' : isImage ? '🖼' : '📎'}</span>
+                    <span style={{ flex: 1, fontSize: 12, color: '#0f172a', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: FONT }}>{file.name}</span>
+                    <span style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}>{(file.size / 1024).toFixed(0)} KB</span>
+                    {isPDF && (
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#0369a1', background: '#eff6ff', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(3,105,161,0.2)', flexShrink: 0 }}>Analyze Quote</span>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); setQuoteFiles(prev => prev.filter((_, j) => j !== i)); }}
+                      style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 16, padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
+                    >×</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* ── LABOR ────────────────────────────────────────────────────── */}
         <div>
           <SectionToggle label="Labor Steps" color="#4338ca" open={openSections.labor} onToggle={() => toggleSection('labor')} />
@@ -791,28 +893,76 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
                   {/* Column headers */}
                   {items.length > 0 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 55px 50px 80px 90px 28px', gap: 5, marginBottom: 3, padding: '0 2px' }}>
-                      {['Description', 'Qty', 'Unit', 'Unit $', 'Total', ''].map(h => (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 55px 60px 80px 90px 28px', gap: 5, marginBottom: 3, padding: '0 2px' }}>
+                      {['Description', 'Qty', 'Type', 'Unit $', 'Total', ''].map(h => (
                         <div key={h} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{h}</div>
                       ))}
                     </div>
                   )}
 
                   {items.map(m => {
-                    const autoTotal = parseNum(m.qty) * parseNum(m.unitCost);
+                    const effectiveUnitType = m.unitType || detectUnitType(m.description);
+                    const autoTotal = materialLineTotal(m);
                     return (
-                      <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '1fr 55px 50px 80px 90px 28px', gap: 5, marginBottom: 5, alignItems: 'center' }}>
-                        <GreenInput value={m.description} onChange={v => updateMaterial(setter, m.id, { description: v })} placeholder="Description" />
-                        <GreenInput value={m.qty} onChange={v => updateMaterial(setter, m.id, { qty: v, totalOverride: '' })} type="number" min="0" step="1" style={{ textAlign: 'right' }} />
-                        <GreenInput value={m.unit} onChange={v => updateMaterial(setter, m.id, { unit: v })} placeholder="ea" style={{ textAlign: 'center' }} />
-                        <GreenInput value={m.unitCost} onChange={v => updateMaterial(setter, m.id, { unitCost: v, totalOverride: '' })} placeholder="0.00" type="number" step="0.01" min="0" style={{ textAlign: 'right' }} />
-                        <input
-                          type="number" step="0.01" min="0"
-                          value={m.totalOverride || fmtNum(autoTotal)}
-                          onChange={e => updateMaterial(setter, m.id, { totalOverride: e.target.value })}
-                          style={{ ...ORANGE_DISPLAY, border: m.totalOverride ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(245,158,11,0.3)', cursor: 'text' }}
-                        />
-                        <button onClick={() => removeMaterial(setter, m.id)} style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                      <div key={m.id} style={{ marginBottom: 6 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 55px 60px 80px 90px 28px', gap: 5, alignItems: 'center' }}>
+                          <GreenInput value={m.description} onChange={v => updateMaterial(setter, m.id, { description: v })} placeholder="Description" />
+                          <GreenInput value={m.qty} onChange={v => updateMaterial(setter, m.id, { qty: v, totalOverride: '' })} type="number" min="0" step="1" style={{ textAlign: 'right' }} />
+                          <select
+                            value={effectiveUnitType}
+                            onChange={e => updateMaterial(setter, m.id, { unitType: e.target.value as MaterialLine['unitType'], totalOverride: '' })}
+                            style={{ ...GREEN_INPUT, cursor: 'pointer', textAlign: 'center', fontSize: 11, padding: '6px 4px' }}
+                          >
+                            {(['SF', 'LF', 'EA', 'Tube'] as const).map(ut => <option key={ut} value={ut}>{ut}</option>)}
+                          </select>
+                          <GreenInput value={m.unitCost} onChange={v => updateMaterial(setter, m.id, { unitCost: v, totalOverride: '' })} placeholder="0.00" type="number" step="0.01" min="0" style={{ textAlign: 'right' }} />
+                          <input
+                            type="number" step="0.01" min="0"
+                            value={m.totalOverride || fmtNum(autoTotal)}
+                            onChange={e => updateMaterial(setter, m.id, { totalOverride: e.target.value })}
+                            style={{ ...ORANGE_DISPLAY, border: m.totalOverride ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(245,158,11,0.3)', cursor: 'text' }}
+                          />
+                          <button onClick={() => removeMaterial(setter, m.id)} style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        </div>
+                        {effectiveUnitType === 'SF' && (
+                          <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center', paddingLeft: 2 }}>
+                            <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>W×H (in):</span>
+                            <GreenInput
+                              value={m.width || ''}
+                              onChange={v => updateMaterial(setter, m.id, { width: v, totalOverride: '' })}
+                              placeholder="W" type="number" step="0.125" min="0"
+                              style={{ width: 64, textAlign: 'right' }}
+                            />
+                            <span style={{ fontSize: 12, color: '#94a3b8' }}>×</span>
+                            <GreenInput
+                              value={m.height || ''}
+                              onChange={v => updateMaterial(setter, m.id, { height: v, totalOverride: '' })}
+                              placeholder="H" type="number" step="0.125" min="0"
+                              style={{ width: 64, textAlign: 'right' }}
+                            />
+                            {(m.width && m.height) && (
+                              <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>
+                                = {((parseNum(m.width) * parseNum(m.height) / 144) * parseNum(m.qty || '1')).toFixed(2)} SF
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {effectiveUnitType === 'LF' && (
+                          <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center', paddingLeft: 2 }}>
+                            <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>Length (ft):</span>
+                            <GreenInput
+                              value={m.length || ''}
+                              onChange={v => updateMaterial(setter, m.id, { length: v, totalOverride: '' })}
+                              placeholder="ft" type="number" step="0.5" min="0"
+                              style={{ width: 80, textAlign: 'right' }}
+                            />
+                            {m.length && (
+                              <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>
+                                × {m.qty || '1'} = {(parseNum(m.length) * parseNum(m.qty || '1')).toFixed(1)} LF
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -80,6 +80,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [linkFolderInput, setLinkFolderInput] = useState('');
   const [linkFolderSaving, setLinkFolderSaving] = useState(false);
   const [linkedFolderUrl, setLinkedFolderUrl] = useState<string | undefined>(undefined);
+  const [jobFiles, setJobFiles] = useState<File[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync linkedFolderUrl from wo prop
   useEffect(() => { setLinkedFolderUrl(wo?.folderUrl); }, [wo?.folderUrl]);
@@ -393,6 +396,75 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   onChange={e => update('comments', e.target.value)}
                   placeholder="Internal notes, follow-ups, customer requests…"
                 />
+              </div>
+
+              {/* Job Files */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    const files = Array.from(e.target.files || []);
+                    setJobFiles(prev => [...prev, ...files]);
+                    e.target.value = '';
+                  }}
+                />
+                <div style={{ ...SECTION_TITLE, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span>Job Files</span>
+                  {jobFiles.length > 0 && (
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)' }}>
+                      {jobFiles.length}
+                    </span>
+                  )}
+                </div>
+                <div
+                  onDragOver={e => { e.preventDefault(); setIsDraggingOver(true); }}
+                  onDragLeave={() => setIsDraggingOver(false)}
+                  onDrop={e => {
+                    e.preventDefault();
+                    setIsDraggingOver(false);
+                    const files = Array.from(e.dataTransfer.files);
+                    setJobFiles(prev => [...prev, ...files]);
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    border: `2px dashed ${isDraggingOver ? '#14b8a6' : '#e2e8f0'}`,
+                    borderRadius: 10,
+                    padding: '14px 16px',
+                    textAlign: 'center' as const,
+                    cursor: 'pointer',
+                    background: isDraggingOver ? 'rgba(240,253,250,0.8)' : '#f8fafc',
+                    transition: 'border-color 0.15s, background 0.15s',
+                  }}
+                >
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>📎</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: isDraggingOver ? '#0f766e' : '#64748b' }}>
+                    Drop files here or click to browse
+                  </div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>Images, PDFs, documents</div>
+                </div>
+                {jobFiles.length > 0 && (
+                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {jobFiles.map((file, i) => {
+                      const isPDF = file.type === 'application/pdf';
+                      const isImage = file.type.startsWith('image/');
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                          <span style={{ fontSize: 14 }}>{isPDF ? '📄' : isImage ? '🖼' : '📎'}</span>
+                          <span style={{ flex: 1, fontSize: 12, color: '#0f172a', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+                          <span style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}>{(file.size / 1024).toFixed(0)} KB</span>
+                          <button
+                            onClick={e => { e.stopPropagation(); setJobFiles(prev => prev.filter((_, j) => j !== i)); }}
+                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 16, padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
+                          >×</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
