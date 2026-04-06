@@ -28,6 +28,7 @@ export function useVoice() {
     setSpeaking(true);
 
     try {
+      console.log('[Kai TTS] Requesting speech for:', text.substring(0, 50) + '...');
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,9 +36,12 @@ export function useVoice() {
       });
 
       if (!res.ok) {
+        const err = await res.text();
+        console.error('[Kai TTS] API error:', res.status, err);
         setSpeaking(false);
         return;
       }
+      console.log('[Kai TTS] Got audio response, playing...');
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

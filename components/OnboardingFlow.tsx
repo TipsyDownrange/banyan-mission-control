@@ -81,13 +81,13 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
     {
       title: 'Welcome to BanyanOS',
       subtitle: 'The operating system for Kula Glass',
-      icon: '🌳',
+      icon: '△',
       desc: 'Everything you need — projects, scheduling, field reports, estimating — all in one place.',
     },
     {
       title: 'Your AI-Powered Workspace',
       subtitle: 'Built for glazing professionals',
-      icon: '⚡',
+      icon: '◈',
       desc: 'Every section is designed for how you actually work. No spreadsheet hunting. No email digging.',
     },
     {
@@ -164,7 +164,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
     return (
       <div style={PAGE}>
         <div style={{ textAlign: 'center', maxWidth: 440, padding: '0 24px' }}>
-          <div style={{ fontSize: 64, marginBottom: 24 }}>{slide.icon}</div>
+          <div style={{ fontSize: 48, marginBottom: 24, color: '#14b8a6', fontWeight: 200 }}>{slide.icon}</div>
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 8px' }}>
             {slide.title.includes('Banyan') ? <>Banyan<span style={{ color: '#14b8a6' }}>OS</span></> : slide.title}
           </h1>
@@ -213,7 +213,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
             </div>
             <button onClick={() => { setVoiceEnabled(!voiceEnabled); if (speaking) stopSpeaking(); }}
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 12px', cursor: 'pointer', color: voiceEnabled ? '#5eead4' : '#64748b', fontSize: 12, fontWeight: 700 }}>
-              {voiceEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
+              {voiceEnabled ? 'Voice' : 'Muted'}
             </button>
           </div>
 
@@ -270,12 +270,12 @@ How do you prefer to get updates — in the app when you open it, push notificat
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   animation: listening ? 'pulse-mic 1s ease-in-out infinite' : 'none',
                 }}>
-                🎤
+                
               </button>
               <style>{`@keyframes pulse-mic { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
               <input value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
-                placeholder={listening ? 'Listening...' : 'Type or hold 🎤 to speak...'}
+                placeholder={listening ? 'Listening...' : 'Type or hold  to speak...'}
                 style={{ flex: 1, padding: '14px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', fontSize: 14, outline: 'none' }}
               />
               <button onClick={() => { if (input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
@@ -284,7 +284,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
               </button>
             </div>
             <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'rgba(148,163,184,0.4)' }}>
-              {speaking ? '🔊 Kai is speaking...' : listening ? '🎤 Listening...' : 'Hold mic to speak · Type to text'}
+              {speaking ? 'Kai is speaking...' : listening ? 'Listening...' : 'Hold mic to speak · Type to text'}
             </div>
           </div>
         </div>
@@ -355,7 +355,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
     return (
       <div style={PAGE}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 20 }}>🌳</div>
+          <div style={{ fontSize: 48, marginBottom: 20, color: '#14b8a6' }}>✦</div>
           <h2 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>You're all set!</h2>
           <p style={{ fontSize: 14, color: 'rgba(148,163,184,0.6)' }}>
             Welcome to BanyanOS. Kai is always here if you need help.
