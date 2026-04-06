@@ -20,6 +20,33 @@ const COL = {
 
 const SHEET_ID = '7905619916154756';
 
+// Smartsheet picklist values (must match exactly)
+const AREA_MAP: Record<string, string> = {
+  'maui': 'Kahului',
+  'kahului': 'Kahului',
+  'kihei': 'Kihei',
+  'wailea': 'Kihei',
+  'lahaina': 'Lahaina',
+  'kapalua': 'Lahaina',
+  'kaanapali': 'Lahaina',
+  'wailuku': 'Wailuku',
+  'haiku': 'Haiku /Hana/Paia',
+  'hana': 'Haiku /Hana/Paia',
+  'paia': 'Haiku /Hana/Paia',
+  'kula': 'Kula/Makawao',
+  'makawao': 'Kula/Makawao',
+  'lanai': 'Lanai / Molokai',
+  'molokai': 'Lanai / Molokai',
+  'oahu': 'Kahului',  // default fallback
+  'kauai': 'Kahului', // default fallback
+  'hawaii': 'Kahului', // default fallback
+};
+
+function mapAreaOfIsland(island: string): string {
+  const lower = (island || '').toLowerCase().trim();
+  return AREA_MAP[lower] || 'Kahului';
+}
+
 // POST — create new work order row
 export async function POST(req: Request) {
   try {
@@ -31,8 +58,8 @@ export async function POST(req: Request) {
       assignedTo, notes, woNumber, dateReceived,
     } = body;
 
-    if (!customerName || !description || !island) {
-      return NextResponse.json({ error: 'customerName, description, and island are required' }, { status: 400 });
+    if (!customerName || !description) {
+      return NextResponse.json({ error: 'customerName and description are required' }, { status: 400 });
     }
 
     const token = getSSToken();
@@ -42,14 +69,14 @@ export async function POST(req: Request) {
     const addressStr = [address, city].filter(Boolean).join(', ');
     const today = dateReceived || new Date().toISOString().slice(0, 10);
     const wo = woNumber || `${new Date().getFullYear().toString().slice(-2)}-${Math.floor(Math.random() * 9000) + 1000}`;
-    const statusStr = urgency === 'urgent' ? 'REQUESTING A PROPOSAL' : 'REQUESTING A PROPOSAL';
+    const statusStr = 'NEED TO SCHEDULE';
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
     const cells = [
       { columnId: COL.taskName,     value: taskName },
       { columnId: COL.woNumber,     value: wo },
       { columnId: COL.description,  value: description },
-      { columnId: COL.island,       value: island },
+      { columnId: COL.island,       value: mapAreaOfIsland(island || city || '') },
       { columnId: COL.address,      value: addressStr },
       { columnId: COL.contact,      value: contactStr },
       { columnId: COL.status,       value: statusStr },
