@@ -293,12 +293,16 @@ How do you prefer to get updates — in the app when you open it, push notificat
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   animation: listening ? 'pulse-mic 1s ease-in-out infinite' : 'none',
                 }}>
-                
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                </svg>
               </button>
               <style>{`@keyframes pulse-mic { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
               <input value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
-                placeholder={listening ? 'Listening...' : 'Type or hold  to speak...'}
+                placeholder={listening ? 'Listening...' : 'Type or hold 🎙 to speak...'}
                 style={{ flex: 1, padding: '14px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', fontSize: 14, outline: 'none' }}
               />
               <button onClick={() => { if (input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
