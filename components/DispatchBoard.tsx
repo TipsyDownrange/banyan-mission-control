@@ -23,6 +23,7 @@ const CONF_STYLE: Record<string, { icon: string; color: string }> = {
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
+type WorkOrder = { id: string; name: string; island: string; status: string; contact: string };
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
   open:      { color: '#b91c1c', bg: '#fef2f2', label: 'Open' },
@@ -81,6 +82,7 @@ export default function DispatchBoard() {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
   const [projects, setProjects] = useState<{ kID: string; name: string; island: string }[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
 
   const weekDates = getWeekDates(weekStart);
   const fromDate = dateStr(weekDates[0]);
@@ -91,10 +93,15 @@ export default function DispatchBoard() {
       fetch(`/api/dispatch-schedule?from=${fromDate}&days=28`).then(r => r.json()),
       fetch('/api/crew').then(r => r.json()),
       fetch('/api/projects').then(r => r.json()),
-    ]).then(([sd, cd, pd]) => {
+      fetch('/api/service').then(r => r.json()),
+    ]).then(([sd, cd, pd, wd]) => {
       setSlots(sd.slots || []);
       setCrew(cd.all || []);
       setProjects(pd.projects || []);
+      const activeWOs = (wd.workOrders || []).filter(
+        (w: WorkOrder) => w.status !== 'closed' && w.status !== 'lost' && w.name
+      );
+      setWorkOrders(activeWOs);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [fromDate]);
@@ -281,7 +288,10 @@ export default function DispatchBoard() {
                         <div style={{ fontSize: 10, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {slot.project_name.length > 20 ? slot.project_name.substring(0,20)+'...' : slot.project_name}
                         </div>
-                        <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                        <div style={{ display: 'flex', gap: 4, marginBottom: 4, flexWrap: 'wrap' }}>
+                          {slot.project_name.startsWith('[WO]') && (
+                            <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: '#0d9488', background: '#ccfbf1', border: '1px solid #5eead4' }}>WO</span>
+                          )}
                           {slot.island && <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ISLAND_COLOR[slot.island] || '#64748b', background: `${ISLAND_COLOR[slot.island] || '#64748b'}18`, border: `1px solid currentColor` }}>{slot.island}</span>}
                           <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ss.color, background: 'white' }}>{ss.label}</span>
                         </div>
@@ -397,11 +407,28 @@ export default function DispatchBoard() {
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Project *</label>
-                <select value={addKID} onChange={e => { setAddKID(e.target.value); const p = projects.find(p => p.kID === e.target.value); if (p) { setAddProject(p.name); setAddIsland(p.island); } }}
+                <select value={addKID} onChange={e => {
+                  const val = e.target.value;
+                  setAddKID(val);
+                  const proj = projects.find(p => p.kID === val);
+                  if (proj) { setAddProject(proj.name); setAddIsland(proj.island); return; }
+                  const wo = workOrders.find(w => w.id === val);
+                  if (wo) { setAddProject('[WO] ' + wo.name); if (wo.island) setAddIsland(wo.island); }
+                }}
                   style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, cursor: 'pointer' }}>
                   <option value="">Select project or type below...</option>
-                  {projects.map(p => <option key={p.kID} value={p.kID}>{p.name} ({p.island})</option>)}
-                  <option value="SRV-26-0001">Work Orders — Service</option>
+                  <optgroup label="── PROJECTS ──">
+                    {projects.map(p => <option key={p.kID} value={p.kID}>{p.name} ({p.island})</option>)}
+                  </optgroup>
+                  {workOrders.length > 0 && (
+                    <optgroup label="── WORK ORDERS ──">
+                      {workOrders.map(wo => (
+                        <option key={wo.id} value={wo.id}>
+                          [WO] {wo.name}{wo.island ? ` (${wo.island})` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
               {!addKID && (
