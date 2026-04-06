@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       { columnId: COL.taskName,     value: taskName },
       { columnId: COL.woNumber,     value: wo },
       { columnId: COL.description,  value: description },
-      { columnId: COL.island,       value: island },
+      { columnId: COL.island,       value: island, strict: false },
       { columnId: COL.address,      value: addressStr },
       { columnId: COL.contact,      value: contactStr },
       { columnId: COL.status,       value: statusStr },
