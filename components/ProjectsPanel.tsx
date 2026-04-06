@@ -1,215 +1,440 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
-  island: string; eventCount: number; issues: number; lastEventDate?: string;
+  island: string; eventCount: number; issues: number;
 };
+type Submittal = Record<string, string>;
+type CO = Record<string, string>;
+type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
 
-const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
-};
+const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e' };
 
-interface ProjectsPanelProps {
-  onNavigate?: (view: string, params?: Record<string, string>) => void;
-}
+interface Props { onNavigate?: (view: string, params?: Record<string, string>) => void; }
 
-export default function ProjectsPanel({ onNavigate }: ProjectsPanelProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showNewEvent, setShowNewEvent] = useState<string | null>(null);
-  const [eventDesc, setEventDesc] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState('');
-
-  useEffect(() => {
-    fetch('/api/projects')
-      .then(r => r.json())
-      .then(d => { setProjects(d.projects || []); setLoading(false); })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, []);
-
-  async function handleNewEvent(kID: string) {
-    if (!eventDesc.trim()) return;
-    setSubmitting(true);
-    try {
-      await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kID, description: eventDesc, type: 'NOTE' }),
-      });
-      setShowNewEvent(null);
-      setEventDesc('');
-      setToast('Event logged');
-      setTimeout(() => setToast(''), 2000);
-    } catch {
-      setToast('Failed to log event');
-      setTimeout(() => setToast(''), 2000);
-    }
-    setSubmitting(false);
-  }
-
-  function handleProjectClick(kID: string) {
-    if (onNavigate) {
-      onNavigate('Schedules', { kID });
-    }
-  }
-
-  const byIsland = ['Oahu', 'Maui', 'Kauai', 'Hawaii'].reduce((acc, isl) => {
-    acc[isl] = projects.filter(p => p.island === isl);
-    return acc;
-  }, {} as Record<string, Project[]>);
+// ─── Project Card ────────────────────────────────────────────
+function ProjectCard({ project, submittals, cos, install, onClick }: {
+  project: Project;
+  submittals: Submittal[];
+  cos: CO[];
+  install?: InstallSummary;
+  onClick: () => void;
+}) {
+  const openSubs = submittals.filter(s => !s.status || ['SUBMITTED','UNDER_REVIEW','PENDING','REVISE_RESUBMIT'].includes(s.status)).length;
+  const pendingCOs = cos.filter(c => ['PENDING','IDENTIFIED','SUBMITTED','IN_NEGOTIATION','DRAFT'].includes(c.status || '')).length;
+  const coExposure = cos.filter(c => ['PENDING','IDENTIFIED','SUBMITTED','IN_NEGOTIATION'].includes(c.status || '')).reduce((s, c) => s + (parseFloat(c.amount_requested) || 0), 0);
+  const installPct = install?.pctComplete ?? null;
 
   return (
-    <div style={{ padding: '32px', maxWidth: 1100, margin: '0 auto' }}>
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Projects</div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Active Projects</h1>
-      </div>
-
-      {loading && (
-        <div style={{ textAlign: 'center', padding: 48 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading projects...</div>
-        </div>
-      )}
-
-      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 20 }}>{error}</div>}
-
-      {/* Dashboard Header */}
-      {!loading && (() => {
-        const totalIssues = projects.reduce((s, p) => s + p.issues, 0);
-        const kpis: KPI[] = [
-          { label: 'Active Projects', value: projects.length, subtitle: Object.entries(byIsland).map(([k,v]) => `${k}: ${v.length}`).join(' \u00b7 ') },
-          { label: 'Open Issues', value: totalIssues, color: totalIssues > 10 ? '#dc2626' : totalIssues > 3 ? '#d97706' : '#059669', subtitle: 'Across all projects' },
-          ...['Oahu','Maui','Kauai','Hawaii'].filter(i => (byIsland[i]?.length || 0) > 0).map(i => ({
-            label: i, value: byIsland[i]?.length || 0, subtitle: `${(byIsland[i] || []).filter((p: Project) => p.issues > 0).length} with issues`,
-          })),
-        ];
-        const actionItems: ActionItem[] = [];
-        if (totalIssues > 0) actionItems.push({ text: 'Open field issues need attention', severity: totalIssues > 5 ? 'high' : 'medium', count: totalIssues });
-        const projectsNoEvents = projects.filter(p => p.eventCount === 0);
-        if (projectsNoEvents.length > 5) actionItems.push({ text: 'Projects with no activity', severity: 'low', count: projectsNoEvents.length });
-        return <DashboardHeader title="Projects" subtitle={`${projects.length} active projects across ${Object.keys(byIsland).length} islands`} kpis={kpis} actionItems={actionItems} />;
-      })()}
-
-      {/* Projects by island */}
-      {!loading && ['Oahu','Maui','Kauai','Hawaii'].map(island => {
-        const iProjects = byIsland[island] || [];
-        if (!iProjects.length) return null;
-        return (
-          <div key={island} style={{ marginBottom: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: ISLAND_COLOR[island] || '#64748b' }} />
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>{island} · {iProjects.length}</div>
+    <button onClick={onClick} style={{
+      background: 'white', borderRadius: 18, border: '1.5px solid #e2e8f0',
+      boxShadow: '0 2px 8px rgba(15,23,42,0.04)', padding: 0, cursor: 'pointer',
+      textAlign: 'left', width: '100%', overflow: 'hidden', transition: 'box-shadow 0.15s',
+    }}>
+      {/* Color bar */}
+      <div style={{ height: 4, background: ISLAND_COLOR[project.island] || '#64748b' }} />
+      
+      <div style={{ padding: '16px 20px' }}>
+        {/* Header: name + island badge */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {project.name}
             </div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {iProjects.map(p => (
-                <div key={p.kID}
-                  onClick={() => handleProjectClick(p.kID)}
-                  style={{
-                    background: 'white', borderRadius: 18, border: '1px solid rgba(226,232,240,0.9)',
-                    padding: '16px 20px', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
-                    display: 'flex', alignItems: 'center', gap: 16,
-                    cursor: onNavigate ? 'pointer' : 'default',
-                    transition: 'box-shadow 0.15s, border-color 0.15s',
-                  }}
-                  onMouseEnter={e => { if (onNavigate) { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(15,23,42,0.1)'; (e.currentTarget as HTMLElement).style.borderColor = (ISLAND_COLOR[island] || '#64748b') + '44'; } }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(15,23,42,0.04)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(226,232,240,0.9)'; }}
-                >
-                  <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ISLAND_COLOR[island] || '#64748b', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em' }}>{p.kID}</span>
-                      {p.issues > 0 && (
-                        <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: '#fef2f2', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}>
-                          {p.issues} issue{p.issues > 1 ? 's' : ''}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 6 }}>{p.name}</div>
-                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12, color: '#64748b' }}>
-                      {p.pm && <span>PM: <strong style={{ color: '#334155' }}>{p.pm}</strong></span>}
-                      {p.super && <span>Super: <strong style={{ color: '#334155' }}>{p.super}</strong></span>}
-                      {p.eventCount > 0 && <span style={{ color: '#94a3b8' }}>{p.eventCount} event{p.eventCount !== 1 ? 's' : ''}</span>}
-                      {p.lastEventDate && <span style={{ color: '#94a3b8' }}>Last: {p.lastEventDate}</span>}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowNewEvent(p.kID); }}
-                      style={{
-                        padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                        background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e',
-                        cursor: 'pointer', whiteSpace: 'nowrap',
-                      }}>
-                      + Event
-                    </button>
-                    {onNavigate && (
-                      <span style={{ fontSize: 14, color: '#94a3b8' }}>→</span>
-                    )}
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+              {project.kID} · PM: {project.pm?.split(' ')[0] || '—'}
+            </div>
+          </div>
+          <span style={{
+            fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 999, flexShrink: 0,
+            color: ISLAND_COLOR[project.island] || '#64748b',
+            background: `${ISLAND_COLOR[project.island] || '#64748b'}12`,
+            border: `1px solid ${ISLAND_COLOR[project.island] || '#64748b'}33`,
+          }}>
+            {project.island}
+          </span>
+        </div>
+
+        {/* KPI grid on the card */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: openSubs > 0 ? '#d97706' : '#059669' }}>{openSubs}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Submittals</div>
+          </div>
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: pendingCOs > 0 ? '#d97706' : '#059669' }}>{pendingCOs}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Chg Orders</div>
+          </div>
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: project.issues > 0 ? '#dc2626' : '#059669' }}>{project.issues}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Issues</div>
+          </div>
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: installPct !== null ? (installPct >= 75 ? '#059669' : '#d97706') : '#94a3b8' }}>
+              {installPct !== null ? `${installPct}%` : '—'}
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Install</div>
+          </div>
+        </div>
+
+        {/* CO exposure if any */}
+        {coExposure > 0 && (
+          <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', padding: '4px 10px', borderRadius: 8, display: 'inline-block' }}>
+            ${(coExposure / 1000).toFixed(0)}K CO exposure
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ─── Project Workspace (full detail) ─────────────────────────
+function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'qa'>('overview');
+  const [submittals, setSubmittals] = useState<Submittal[]>([]);
+  const [rfis, setRfis] = useState<Record<string, string>[]>([]);
+  const [cos, setCos] = useState<CO[]>([]);
+  const [install, setInstall] = useState<{ items: Record<string, string>[]; summary: InstallSummary[] }>({ items: [], summary: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetch(`/api/pm/submittals?kID=${project.kID}`).then(r => r.json()).catch(() => ({ submittals: [] })),
+      fetch(`/api/pm/rfi?kID=${project.kID}`).then(r => r.json()).catch(() => ({ rfis: [] })),
+      fetch(`/api/pm/change-orders?kID=${project.kID}`).then(r => r.json()).catch(() => ({ cos: [] })),
+      fetch(`/api/install?kID=${project.kID}`).then(r => r.json()).catch(() => ({ items: [], summary: [] })),
+    ]).then(([sData, rData, cData, iData]) => {
+      setSubmittals(sData.submittals || []);
+      setRfis(rData.rfis || []);
+      setCos(cData.cos || []);
+      setInstall(iData);
+      setLoading(false);
+    });
+  }, [project.kID]);
+
+  const TABS = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'submittals', label: `Submittals (${submittals.length})` },
+    { key: 'rfis', label: `RFIs (${rfis.length})` },
+    { key: 'cos', label: `Change Orders (${cos.length})` },
+    { key: 'budget', label: 'Budget' },
+    { key: 'qa', label: `QA/Install (${install.items?.length || 0})` },
+  ] as const;
+
+  const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
+    APPROVED: { bg: '#f0fdfa', color: '#0f766e' },
+    SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
+    PENDING: { bg: '#f8fafc', color: '#64748b' },
+    REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
+    REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
+    UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
+    IDENTIFIED: { bg: '#fffbeb', color: '#92400e' },
+    IN_NEGOTIATION: { bg: '#fffbeb', color: '#92400e' },
+  };
+
+  const statusTag = (status: string) => {
+    const s = STATUS_COLOR[status] || { bg: '#f8fafc', color: '#64748b' };
+    return <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}22` }}>{(status || 'PENDING').replace(/_/g, ' ')}</span>;
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(15,23,42,0.5)', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 1100, height: '100dvh', background: '#f8fafc', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, #071722, #0c2330)', padding: '20px 28px', position: 'sticky', top: 0, zIndex: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(20,184,166,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{project.kID}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.03em', marginTop: 4 }}>{project.name}</div>
+              <div style={{ fontSize: 13, color: 'rgba(148,163,184,0.7)', marginTop: 4 }}>
+                PM: {project.pm || '—'} · {project.island} · {project.eventCount} events
+              </div>
+            </div>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 16px', color: '#94a3b8', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              ← Back
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 4, marginTop: 16, overflowX: 'auto' }}>
+            {TABS.map(t => (
+              <button key={t.key} onClick={() => setActiveTab(t.key as typeof activeTab)}
+                style={{
+                  padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+                  background: activeTab === t.key ? 'rgba(20,184,166,0.15)' : 'transparent',
+                  color: activeTab === t.key ? '#5eead4' : 'rgba(148,163,184,0.6)',
+                }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: '24px 28px' }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+          ) : (
+            <>
+              {activeTab === 'overview' && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+                    {[
+                      { label: 'Submittals', value: submittals.length, sub: `${submittals.filter(s => ['APPROVED'].includes(s.status)).length} approved` },
+                      { label: 'RFIs', value: rfis.length, sub: `${rfis.filter(r => r.status === 'OPEN' || !r.response_received_at).length} open` },
+                      { label: 'Change Orders', value: cos.length, sub: `${cos.filter(c => c.status === 'APPROVED').length} approved` },
+                      { label: 'QA Steps', value: install.items?.length || 0, sub: install.summary?.[0] ? `${install.summary[0].pctComplete}% complete` : 'No data yet' },
+                      { label: 'Field Events', value: project.eventCount, sub: `${project.issues} issues` },
+                    ].map((k, i) => (
+                      <div key={i} style={{ background: 'white', borderRadius: 14, padding: '14px 18px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</div>
+                        <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{k.value}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{k.sub}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+              )}
 
-      {!loading && projects.length === 0 && !error && (
-        <div style={{ padding: 48, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No active projects found in Core_Entities sheet.</div>
-      )}
+              {activeTab === 'submittals' && (
+                <div>
+                  {submittals.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No submittals for this project yet</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {submittals.map((s, i) => (
+                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {s.description || s.spec_section || `Submittal #${s.sub_number}`}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                              #{s.sub_number} · {s.spec_section || ''} {s.ball_in_court ? `· Ball: ${s.ball_in_court}` : ''}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                            {s.submitted_to_gc_date && <span style={{ fontSize: 11, color: '#94a3b8' }}>{s.submitted_to_gc_date}</span>}
+                            {statusTag(s.status)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-      {/* New Event Modal */}
-      {showNewEvent && (
-        <>
-          <div onClick={() => { setShowNewEvent(null); setEventDesc(''); }} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 300 }} />
-          <div style={{
-            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            background: 'white', borderRadius: 24, padding: 28, zIndex: 301,
-            width: '100%', maxWidth: 420, boxShadow: '0 24px 64px rgba(15,23,42,0.15)',
-          }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>New Event</div>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
-              {projects.find(p => p.kID === showNewEvent)?.name || showNewEvent}
-            </div>
-            <textarea value={eventDesc} onChange={e => setEventDesc(e.target.value)}
-              rows={3} placeholder="What happened?"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box', resize: 'none', marginBottom: 16 }} />
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setShowNewEvent(null); setEventDesc(''); }}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                Cancel
-              </button>
-              <button onClick={() => handleNewEvent(showNewEvent)} disabled={!eventDesc.trim() || submitting}
-                style={{
-                  flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  background: eventDesc.trim() ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-                  color: eventDesc.trim() ? 'white' : '#94a3b8',
-                }}>
-                {submitting ? 'Logging...' : 'Log Event'}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+              {activeTab === 'rfis' && (
+                <div>
+                  {rfis.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No RFIs for this project yet</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {rfis.map((r, i) => (
+                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{r.subject || `RFI #${r.rfi_number}`}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>#{r.rfi_number} · {r.created_at || ''}</div>
+                          </div>
+                          {statusTag(r.status)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
-          padding: '10px 20px', borderRadius: 12,
-          background: toast.includes('Failed') ? '#fef2f2' : '#f0fdf4',
-          border: `1px solid ${toast.includes('Failed') ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.3)'}`,
-          color: toast.includes('Failed') ? '#b91c1c' : '#15803d',
-          fontSize: 13, fontWeight: 700, zIndex: 500,
-          boxShadow: '0 4px 16px rgba(15,23,42,0.1)',
-        }}>
-          {toast.includes('Failed') ? '⚠️' : '✓'} {toast}
+              {activeTab === 'cos' && (
+                <div>
+                  {cos.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No change orders for this project yet</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {cos.map((c, i) => (
+                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{c.title || `CO #${c.co_number}`}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                              #{c.co_number} {c.amount_requested ? `· $${parseFloat(c.amount_requested).toLocaleString()}` : ''}
+                            </div>
+                          </div>
+                          {statusTag(c.status)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'budget' && (
+                <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+                  Budget data will be available once Schedule of Values is populated for this project.
+                </div>
+              )}
+
+              {activeTab === 'qa' && (
+                <div>
+                  {!install.items || install.items.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No QA/Install data for this project yet</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {install.items.map((item, i) => (
+                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{item.step_name}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{item.location_ref} · {item.system_type}</div>
+                          </div>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                            background: item.status === 'Complete' ? '#f0fdfa' : '#f8fafc',
+                            color: item.status === 'Complete' ? '#059669' : '#94a3b8',
+                          }}>{item.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Panel ──────────────────────────────────────────────
+export default function ProjectsPanel({ onNavigate }: Props) {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [submittals, setSubmittals] = useState<Submittal[]>([]);
+  const [cos, setCos] = useState<CO[]>([]);
+  const [installSummary, setInstallSummary] = useState<InstallSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [filterIsland, setFilterIsland] = useState('All');
+  const [filterPM, setFilterPM] = useState('All');
+  const [showHistorical, setShowHistorical] = useState(false);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/projects').then(r => r.json()),
+      fetch('/api/pm/submittals').then(r => r.json()).catch(() => ({ submittals: [] })),
+      fetch('/api/pm/change-orders').then(r => r.json()).catch(() => ({ cos: [] })),
+      fetch('/api/install').then(r => r.json()).catch(() => ({ summary: [] })),
+    ]).then(([pData, sData, cData, iData]) => {
+      setProjects(pData.projects || []);
+      setSubmittals(sData.submittals || []);
+      setCos(cData.cos || []);
+      setInstallSummary(iData.summary || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  // Filters
+  const filtered = projects.filter(p => {
+    if (filterIsland !== 'All' && p.island !== filterIsland) return false;
+    if (filterPM !== 'All' && !p.pm?.includes(filterPM)) return false;
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.kID.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const islands = ['All', ...new Set(projects.map(p => p.island).filter(Boolean))];
+  const pms = ['All', ...new Set(projects.map(p => p.pm?.split(' ')[0]).filter(Boolean))];
+
+  // KPIs
+  const totalIssues = projects.reduce((s, p) => s + p.issues, 0);
+  const byIsland = projects.reduce((acc, p) => { acc[p.island] = (acc[p.island] || 0) + 1; return acc; }, {} as Record<string, number>);
+
+  if (loading) return (
+    <div style={{ padding: 40, textAlign: 'center' }}>
+      <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+  return (
+    <div style={{ padding: '24px 32px', maxWidth: 1200, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Projects</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
+            {showHistorical ? 'All Projects' : 'Active Projects'}
+          </h1>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setShowHistorical(false)}
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: !showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: !showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: !showHistorical ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
+              Active
+            </button>
+            <button onClick={() => setShowHistorical(true)}
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: showHistorical ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
+              Historical
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive KPI bar */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        {islands.map(isl => (
+          <button key={isl} onClick={() => setFilterIsland(isl)}
+            style={{
+              padding: '8px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              border: filterIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1.5px solid #e2e8f0',
+              background: filterIsland === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}10` : 'white',
+              color: filterIsland === isl ? (ISLAND_COLOR[isl] || '#0f766e') : '#64748b',
+            }}>
+            {isl} {isl !== 'All' && <span style={{ fontWeight: 800 }}>({byIsland[isl] || 0})</span>}
+          </button>
+        ))}
+        <div style={{ width: 1, background: '#e2e8f0', margin: '0 4px' }} />
+        {pms.filter(p => p !== 'All' || filterPM !== 'All').map(pm => (
+          <button key={pm} onClick={() => setFilterPM(pm)}
+            style={{
+              padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              border: filterPM === pm ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
+              background: filterPM === pm ? 'rgba(15,118,110,0.08)' : 'white',
+              color: filterPM === pm ? '#0f766e' : '#64748b',
+            }}>
+            {pm}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <input
+        type="text" placeholder="Search projects..." value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{ width: '100%', padding: '12px 18px', borderRadius: 14, border: '1.5px solid #e2e8f0', fontSize: 14, marginBottom: 16, outline: 'none', background: 'white', boxSizing: 'border-box' }}
+      />
+
+      {/* Project Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
+        {filtered.map(p => (
+          <ProjectCard
+            key={p.kID}
+            project={p}
+            submittals={submittals.filter(s => s.kID === p.kID)}
+            cos={cos.filter(c => c.kID === p.kID)}
+            install={installSummary.find(i => i.kID === p.kID)}
+            onClick={() => setSelectedProject(p)}
+          />
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No projects match your filters</div>
+      )}
+
+      {/* Project Workspace Overlay */}
+      {selectedProject && (
+        <ProjectWorkspace project={selectedProject} onClose={() => setSelectedProject(null)} />
       )}
     </div>
   );

@@ -138,11 +138,7 @@ export default function Home() {
         {activeView === 'Projects'      && <ProjectsPanel onNavigate={(view) => setActiveView(view as AppView)} />}
         {activeView === 'Issues'        && <IssuesPanel />}
         {activeView === 'Crew'          && <CrewPanel />}
-        {activeView === 'Schedules'     && <PMPanel />}
-        {activeView === 'Budget'        && <PMPanel />}
-        {activeView === 'Change Orders' && <PMPanel />}
-        {activeView === 'Submittals'    && <PMPanel />}
-        {activeView === 'QA / Install'  && <div style={{ padding: '24px 32px' }}><InstallTrackingPanel projects={projectsList} /></div>}
+
         {activeView === 'Bid Queue'     && <BidQueuePanel />}
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}
