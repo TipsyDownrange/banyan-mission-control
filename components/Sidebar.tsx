@@ -29,6 +29,8 @@ const ICONS: Record<string, string> = {
   'Bid Intake': 'M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76',
   'Bid Queue':  'M4 6h16M4 10h16M4 14h16M4 18h16',
   'My Bids':    'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+  'Estimating Workspace': 'M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18',
+
   // Service
   'Work Orders': 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
   // AI Command
@@ -79,6 +81,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
       { label: 'Bid Intake', dot: '#f59e0b' },
       { label: 'Bid Queue' },
       { label: 'My Bids', dot: '#14b8a6' },
+      { label: 'Estimating Workspace' },
     ],
   },
   {

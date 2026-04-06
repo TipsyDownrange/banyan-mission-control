@@ -37,7 +37,7 @@ export type AppView =
   | 'Overview' | 'Forecasting' | 'Dispatch Board' | 'Event Feed' | 'Issues'
   | 'Projects' | 'Schedules' | 'Submittals' | 'Budget' | 'Change Orders'
   | 'Crew' | 'Customers' | 'Assets' | 'Org Chart'
-  | 'Bid Intake' | 'Bid Queue' | 'My Bids'
+  | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
   | 'Work Orders'
   | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage'
   | 'QA / Install'
@@ -171,7 +171,8 @@ export default function Home() {
         {activeView === 'Issues'        && <IssuesPanel />}
         {activeView === 'Crew'          && <CrewPanel />}
 
-        {activeView === 'Bid Queue'     && <BidQueuePanel />}
+        {activeView === 'Bid Queue'           && <BidQueuePanel />}
+        {activeView === 'Estimating Workspace' && <BidQueuePanel />}
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Work Orders'   && <ServicePanel readOnly={isReadOnly('Work Orders')} />}
