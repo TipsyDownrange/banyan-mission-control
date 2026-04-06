@@ -116,6 +116,7 @@ export async function GET() {
         profitPct: bv.profit_pct,
         version: bv.version_number,
         notes: bv.notes,
+        bidFolderUrl: job?.project_folder_url || '',
       };
     });
 

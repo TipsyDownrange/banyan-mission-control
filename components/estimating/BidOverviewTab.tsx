@@ -91,6 +91,9 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: BidOverviewTabProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [folderUrl, setFolderUrl] = useState(bid.bidFolderUrl ?? '');
+  const [folderSaving, setFolderSaving] = useState(false);
   const [draft, setDraft] = useState({
     projectName: bid.projectName ?? '',
     clientGC: bid.clientGC ?? '',
@@ -99,6 +102,24 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: Bi
     estimator: bid.estimator ?? '',
     notes: bid.notes ?? '',
   });
+
+  async function handleLinkFolder() {
+    if (!folderUrl.trim()) return;
+    setFolderSaving(true);
+    try {
+      await fetch(`/api/estimating/bids/${bid.bidVersionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_folder_url: folderUrl.trim() }),
+      });
+      onBidUpdate({ bidFolderUrl: folderUrl.trim() });
+      setShowFolderModal(false);
+    } catch (err) {
+      console.error('Folder link failed', err);
+    } finally {
+      setFolderSaving(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -421,6 +442,134 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: Bi
           </div>
         </div>
       </div>
+
+      {/* Bid Folder Card */}
+      <div style={{
+        background: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: 16,
+        overflow: 'hidden',
+        boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+        marginTop: 20,
+      }}>
+        <div style={{
+          background: '#0f172a',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 14 }}>📁</span>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.8)' }}>
+              Bid Folder
+            </span>
+            {(bid.bidFolderUrl || folderUrl) && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
+                background: 'rgba(21,128,61,0.2)', color: '#16a34a',
+                border: '1px solid rgba(21,128,61,0.3)',
+              }}>✓ Linked</span>
+            )}
+          </div>
+          <button
+            onClick={() => setShowFolderModal(true)}
+            style={{
+              padding: '5px 14px', borderRadius: 8, border: 'none',
+              background: 'rgba(255,255,255,0.08)', color: 'rgba(148,163,184,0.8)',
+              fontSize: 11, fontWeight: 700, cursor: 'pointer',
+            }}
+          >
+            {(bid.bidFolderUrl || folderUrl) ? '✎ Change' : '+ Link Folder'}
+          </button>
+        </div>
+        <div style={{ padding: '16px 20px' }}>
+          {(bid.bidFolderUrl || folderUrl) ? (
+            <a
+              href={bid.bidFolderUrl || folderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                fontSize: 12, color: '#2563eb', fontWeight: 600,
+                textDecoration: 'none', wordBreak: 'break-all',
+              }}
+            >
+              <span style={{ fontSize: 14 }}>🔗</span>
+              {bid.bidFolderUrl || folderUrl}
+            </a>
+          ) : (
+            <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>
+              Link a Google Drive folder to keep plans, specs, and quotes organized.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Link Folder Modal */}
+      {showFolderModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(15,23,42,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} onClick={() => setShowFolderModal(false)}>
+          <div
+            style={{
+              background: 'white', borderRadius: 20, padding: 32,
+              width: '90%', maxWidth: 480, boxShadow: '0 24px 64px rgba(15,23,42,0.3)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+              📁 Link Bid Folder
+            </h3>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
+              Paste the Google Drive folder URL for this bid. Plans, specs, quotes, and submittals should live here.
+            </p>
+            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 6 }}>
+              Google Drive Folder URL
+            </label>
+            <input
+              type="url"
+              placeholder="https://drive.google.com/drive/folders/..."
+              value={folderUrl}
+              onChange={e => setFolderUrl(e.target.value)}
+              style={{
+                width: '100%', padding: '10px 12px', borderRadius: 10,
+                border: '1.5px solid rgba(20,184,166,0.4)',
+                fontSize: 12, color: '#0f172a',
+                background: 'rgba(240,253,250,0.4)',
+                outline: 'none', boxSizing: 'border-box',
+                marginBottom: 20,
+              }}
+              autoFocus
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowFolderModal(false)}
+                style={{
+                  padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
+                  background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLinkFolder}
+                disabled={folderSaving || !folderUrl.trim()}
+                style={{
+                  padding: '9px 20px', borderRadius: 10, border: 'none',
+                  background: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+                  color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                  opacity: (!folderUrl.trim()) ? 0.5 : 1,
+                }}
+              >
+                {folderSaving ? 'Saving...' : '✓ Link Folder'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

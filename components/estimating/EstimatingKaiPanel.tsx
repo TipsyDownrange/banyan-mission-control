@@ -153,21 +153,40 @@ export default function EstimatingKaiPanel({ bid, activeTab }: EstimatingKaiPane
         <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
           Linked Documents
         </div>
-        <div style={{
-          padding: '12px',
-          borderRadius: 10,
-          background: '#f8fafc',
-          border: '1px dashed #e2e8f0',
-          textAlign: 'center',
-        }}>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>No documents linked</div>
-          <button style={{
-            fontSize: 11, fontWeight: 700, color: '#0f766e',
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        {bid.bidFolderUrl ? (
+          <div style={{
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: 'rgba(240,253,250,0.6)',
+            border: '1px solid rgba(20,184,166,0.25)',
           }}>
-            + Link Bid Folder
-          </button>
-        </div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#0f766e', marginBottom: 4 }}>✓ BID FOLDER</div>
+            <a
+              href={bid.bidFolderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 10, color: '#2563eb', fontWeight: 600,
+                textDecoration: 'none', wordBreak: 'break-all',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              <span>🔗</span>
+              Open Folder ↗
+            </a>
+          </div>
+        ) : (
+          <div style={{
+            padding: '12px',
+            borderRadius: 10,
+            background: '#f8fafc',
+            border: '1px dashed #e2e8f0',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>No folder linked</div>
+            <div style={{ fontSize: 10, color: '#cbd5e1' }}>Use Overview tab to link</div>
+          </div>
+        )}
       </div>
 
       {/* Bid Summary */}

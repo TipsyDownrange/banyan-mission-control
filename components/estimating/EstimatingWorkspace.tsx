@@ -6,6 +6,7 @@ import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar
 import StatusPipeline, { PipelineStage } from '@/components/shared/StatusPipeline';
 import EstimatingKaiPanel from '@/components/estimating/EstimatingKaiPanel';
 import BidOverviewTab from '@/components/estimating/BidOverviewTab';
+import CarlsMethodTab from '@/components/estimating/CarlsMethodTab';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,9 @@ export interface BidSummary {
   priority?: string;
   version?: string;
   notes?: string;
+  bidFolderUrl?: string;
+  getRate?: string;
+  profitPct?: string;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -41,14 +45,14 @@ function getStatusStyle(status: string) {
 }
 
 const WORKSPACE_TABS: WorkspaceTab[] = [
-  { id: 'overview',   label: 'Overview',      icon: '📊' },
-  { id: 'carls',      label: "Carl's Method",  icon: '📋' },
-  { id: 'takeoff',    label: 'Takeoff',        icon: '📐' },
-  { id: 'estimate',   label: 'Estimate',       icon: '💰' },
-  { id: 'quotes',     label: 'Quotes',         icon: '📩' },
-  { id: 'gaps',       label: 'Bid Gaps',       icon: '⚠️' },
-  { id: 'proposal',   label: 'Proposal',       icon: '📄' },
-  { id: 'gold',       label: 'Gold Data',      icon: '⭐' },
+  { id: 'overview',   label: 'Overview' },
+  { id: 'carls',      label: "Carl's Method" },
+  { id: 'takeoff',    label: 'Takeoff' },
+  { id: 'estimate',   label: 'Estimate' },
+  { id: 'quotes',     label: 'Quotes' },
+  { id: 'gaps',       label: 'Bid Gaps' },
+  { id: 'proposal',   label: 'Proposal' },
+  { id: 'gold',       label: 'Gold Data' },
 ];
 
 const PIPELINE_STAGES: PipelineStage[] = [
@@ -309,7 +313,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
               color: overdue ? '#dc2626' : dueSoon ? '#ea580c' : '#94a3b8',
               fontWeight: (overdue || dueSoon) ? 700 : 400,
             }}>
-              {overdue ? '⚠️ Overdue' : dueSoon ? `🔴 ${daysUntil}d left` : bidDate}
+              {overdue ? 'OVERDUE' : dueSoon ? `${daysUntil}d left` : bidDate}
             </span>
           )}
         </div>
@@ -425,7 +429,10 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
                 onStatusAdvance={handleStatusAdvance}
               />
             )}
-            {activeTab !== 'overview' && (
+            {activeTab === 'carls' && (
+              <CarlsMethodTab bid={selectedBid} />
+            )}
+            {activeTab !== 'overview' && activeTab !== 'carls' && (
               <PlaceholderTab tabId={activeTab} />
             )}
           </WorkspaceShell>
