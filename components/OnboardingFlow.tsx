@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useVoice } from './useVoice';
 
 
 type OnboardingStep = 'welcome' | 'meet-kai' | 'workspace' | 'chat' | 'routines' | 'done';
@@ -53,6 +54,7 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
   const [painPoint, setPainPoint] = useState('');
   const [updatePref, setUpdatePref] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { speaking, listening, voiceEnabled, setVoiceEnabled, speak, stopSpeaking, startListening, stopListening } = useVoice();
   const userName = typeof window !== 'undefined' ? (localStorage.getItem('banyan_demo_user') || 'there').split(' ')[0] : 'there';
   const roleConfig = ROLE_QUESTIONS[userRole] || ROLE_QUESTIONS['field'];
 
@@ -65,6 +67,8 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
     setTimeout(() => {
       setMessages(prev => [...prev, { role: 'kai', text, options }]);
       setTyping(false);
+      // Kai speaks the message
+      if (voiceEnabled) speak(text.replace(/\*\*/g, ''));
     }, 600);
   }
 
@@ -201,9 +205,16 @@ How do you prefer to get updates — in the app when you open it, push notificat
       <div style={{ ...PAGE, justifyContent: 'flex-end' }}>
         <div style={{ width: '100%', maxWidth: 600, height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <div style={{ padding: '20px 24px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#5eead4', letterSpacing: '0.1em' }}>✦ KAI</div>
-            <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.5)', marginTop: 4 }}>Getting to know you</div>
+          <div style={{ padding: '20px 24px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#5eead4', letterSpacing: '0.1em' }}>✦ KAI</div>
+              <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.5)', marginTop: 4 }}>Getting to know you</div>
+            </div>
+            <button onClick={() => { setVoiceEnabled(!voiceEnabled); if (speaking) stopSpeaking(); }}
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 12px', cursor: 'pointer', color: voiceEnabled ? '#5eead4' : '#64748b', fontSize: 12, fontWeight: 700 }}>
+              {voiceEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
+            </button>
           </div>
 
           {/* Messages */}
@@ -245,15 +256,35 @@ How do you prefer to get updates — in the app when you open it, push notificat
           {/* Input */}
           <div style={{ padding: '12px 24px 24px' }}>
             <div style={{ display: 'flex', gap: 8 }}>
+              {/* Mic button */}
+              <button
+                onMouseDown={() => startListening((text) => { handleChatResponse(text); })}
+                onMouseUp={() => stopListening()}
+                onTouchStart={() => startListening((text) => { handleChatResponse(text); })}
+                onTouchEnd={() => stopListening()}
+                style={{
+                  width: 48, height: 48, borderRadius: 14, flexShrink: 0, cursor: 'pointer',
+                  background: listening ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)',
+                  border: listening ? '1.5px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                  color: listening ? '#f87171' : '#94a3b8', fontSize: 20,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  animation: listening ? 'pulse-mic 1s ease-in-out infinite' : 'none',
+                }}>
+                🎤
+              </button>
+              <style>{`@keyframes pulse-mic { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
               <input value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
-                placeholder="Type your answer..."
+                placeholder={listening ? 'Listening...' : 'Type or hold 🎤 to speak...'}
                 style={{ flex: 1, padding: '14px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', fontSize: 14, outline: 'none' }}
               />
               <button onClick={() => { if (input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
                 style={{ padding: '14px 20px', borderRadius: 14, background: 'rgba(20,184,166,0.2)', border: '1px solid rgba(20,184,166,0.3)', color: '#5eead4', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 Send
               </button>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'rgba(148,163,184,0.4)' }}>
+              {speaking ? '🔊 Kai is speaking...' : listening ? '🎤 Listening...' : 'Hold mic to speak · Type to text'}
             </div>
           </div>
         </div>
