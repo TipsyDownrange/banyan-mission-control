@@ -85,6 +85,7 @@ export default function DispatchBoard() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [showWOPicker, setShowWOPicker] = useState(false);
   const [woSearchQuery, setWoSearchQuery] = useState('');
+  const [woIslandFilter, setWoIslandFilter] = useState('All');
   const [woPickerList, setWoPickerList] = useState<WorkOrder[]>([]);
   const [woPickerLoading, setWoPickerLoading] = useState(false);
 
@@ -198,7 +199,7 @@ export default function DispatchBoard() {
     if (data.ok) {
       setShowAddSlot(false);
       setAddProject(''); setAddDate(''); setAddKID(''); setAddHours('');
-      setShowWOPicker(false); setWoSearchQuery('');
+      setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All');
       load();
     }
     setSaving(false);
@@ -407,7 +408,7 @@ export default function DispatchBoard() {
       {/* Add Slot modal */}
       {showAddSlot && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 460, padding: 28, boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
+          <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 500, padding: 28, boxShadow: '0 24px 64px rgba(15,23,42,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>Add Job Slot</div>
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
@@ -415,9 +416,10 @@ export default function DispatchBoard() {
                 <select value={addKID} onChange={e => {
                   const val = e.target.value;
                   setAddKID(val);
-                  if (val === 'SRV-26-0001') {
+                  if (val === '__WO_PICKER__') {
                     setShowWOPicker(true);
                     setWoSearchQuery('');
+                    setWoIslandFilter('All');
                     setAddProject('');
                     if (workOrders.length > 0) {
                       setWoPickerList(workOrders);
@@ -442,15 +444,7 @@ export default function DispatchBoard() {
                   <optgroup label="── PROJECTS ──">
                     {projects.map(p => <option key={p.kID} value={p.kID}>{p.name} ({p.island})</option>)}
                   </optgroup>
-                  {workOrders.length > 0 && (
-                    <optgroup label="── WORK ORDERS ──">
-                      {workOrders.map(wo => (
-                        <option key={wo.id} value={wo.id}>
-                          [WO] {wo.name}{wo.island ? ` (${wo.island})` : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
+                  <option value="__WO_PICKER__">Service — Work Orders →</option>
                 </select>
               </div>
               {/* Secondary WO Picker */}
@@ -459,11 +453,24 @@ export default function DispatchBoard() {
                   <div style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
                     Select Work Order
                   </div>
+                  {/* Island filter pills */}
+                  <div style={{ display: 'flex', gap: 5, marginBottom: 8, flexWrap: 'wrap' }}>
+                    {['All', 'Maui', 'Oahu', 'Kauai', 'Hawaii'].map(isl => (
+                      <button
+                        key={isl}
+                        type="button"
+                        onClick={() => setWoIslandFilter(isl)}
+                        style={{ padding: '5px 11px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: woIslandFilter === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: woIslandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: woIslandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : '#94a3b8', cursor: 'pointer', minHeight: 30, touchAction: 'manipulation' }}
+                      >
+                        {isl}
+                      </button>
+                    ))}
+                  </div>
                   <input
                     type="text"
                     value={woSearchQuery}
                     onChange={e => setWoSearchQuery(e.target.value)}
-                    placeholder="Search work orders..."
+                    placeholder="Search by name, customer..."
                     autoFocus
                     style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, marginBottom: 8 }}
                   />
@@ -474,8 +481,13 @@ export default function DispatchBoard() {
                   {!woPickerLoading && woPickerList.length > 0 && (
                     <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {woPickerList
-                        .filter(wo => !woSearchQuery || wo.name.toLowerCase().includes(woSearchQuery.toLowerCase()))
-                        .slice(0, 40)
+                        .filter(wo => {
+                          const matchIsland = woIslandFilter === 'All' || wo.island === woIslandFilter;
+                          const q = woSearchQuery.toLowerCase();
+                          const matchSearch = !q || wo.name.toLowerCase().includes(q) || (wo.contact || '').toLowerCase().includes(q);
+                          return matchIsland && matchSearch;
+                        })
+                        .slice(0, 50)
                         .map(wo => (
                           <button
                             key={wo.id}
@@ -483,8 +495,10 @@ export default function DispatchBoard() {
                             onClick={() => {
                               setAddProject('[WO] ' + wo.name);
                               if (wo.island) setAddIsland(wo.island);
+                              setAddKID(wo.id);
                               setShowWOPicker(false);
                               setWoSearchQuery('');
+                              setWoIslandFilter('All');
                             }}
                             style={{ textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 12, color: '#0f172a', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
                           >
@@ -499,7 +513,10 @@ export default function DispatchBoard() {
                     </div>
                   )}
                   {addProject.startsWith('[WO]') && (
-                    <div style={{ marginTop: 8, fontSize: 11, color: '#0f766e', fontWeight: 700 }}>✓ {addProject}</div>
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#0f766e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>✓ {addProject}</span>
+                      <button type="button" onClick={() => { setAddProject(''); setAddKID(''); setShowWOPicker(true); }} style={{ fontSize: 9, color: '#0f766e', background: 'none', border: '1px solid #0f766e44', borderRadius: 6, padding: '1px 6px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
+                    </div>
                   )}
                 </div>
               )}
@@ -531,7 +548,7 @@ export default function DispatchBoard() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || saving}
                 style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : 'Add Slot'}
