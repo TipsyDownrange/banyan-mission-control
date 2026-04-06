@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 type Slot = {
   slot_id: string; date: string; kID: string; project_name: string;
@@ -84,10 +84,6 @@ function dateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function dayLabel(d: Date): string {
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
 function isToday(d: Date): boolean {
   return new Date().toDateString() === d.toDateString();
 }
@@ -112,8 +108,6 @@ export default function DispatchBoard() {
   const [addWorkType, setAddWorkType] = useState('');
   const [addNotes, setAddNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [dragging, setDragging] = useState<{ crewId: string; crewName: string } | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
   const [projects, setProjects] = useState<{ kID: string; name: string; island: string }[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
@@ -122,6 +116,11 @@ export default function DispatchBoard() {
   const [woIslandFilter, setWoIslandFilter] = useState('All');
   const [woPickerList, setWoPickerList] = useState<WorkOrder[]>([]);
   const [woPickerLoading, setWoPickerLoading] = useState(false);
+
+  // Crew picker per slot
+  const [crewPickerSlotId, setCrewPickerSlotId] = useState<string | null>(null);
+  const [crewPickerSearch, setCrewPickerSearch] = useState('');
+  const [crewPickerIsland, setCrewPickerIsland] = useState('All');
 
   const weekDates = getWeekDates(weekStart);
   const fromDate = dateStr(weekDates[0]);
@@ -152,32 +151,29 @@ export default function DispatchBoard() {
     return slots.filter(s => s.date === d && (islandFilter === 'All' || s.island === islandFilter));
   }
 
+  const fieldRoles = ['Superintendent', 'Journeyman', 'Apprentice'];
+
+  function fieldCrew(): CrewMember[] {
+    return crew.filter(c => fieldRoles.some(r => c.role.includes(r)));
+  }
+
   function crewForIsland(island: string): CrewMember[] {
-    const fieldRoles = ['Superintendent','Journeyman','Apprentice'];
-    return crew.filter(c => fieldRoles.some(r => c.role.includes(r)) && (island === 'All' || c.island === island));
+    return fieldCrew().filter(c => island === 'All' || c.island === island);
   }
 
-  // Touch / tap-to-assign: tap a crew member to select, tap a slot to assign
-  // Works alongside drag-and-drop for desktop
-  const [tapped, setTapped] = useState<{ crewId: string; crewName: string } | null>(null);
-
-  async function onTapCrew(member: CrewMember) {
-    if (tapped?.crewId === member.user_id) {
-      setTapped(null); // deselect
-    } else {
-      setTapped({ crewId: member.user_id, crewName: member.name });
-    }
+  /** Count how many slots this week a crew member appears in */
+  function crewAssignmentCount(crewName: string): number {
+    const weekDateStrs = weekDates.map(d => dateStr(d));
+    return slots.filter(s => {
+      const names = s.assigned_crew ? s.assigned_crew.split(', ').filter(Boolean) : [];
+      return names.includes(crewName) && weekDateStrs.includes(s.date);
+    }).length;
   }
 
-  async function onTapSlot(slotId: string) {
-    if (!tapped) return;
-    await onAssignCrewToSlot(slotId, tapped.crewName);
-    setTapped(null);
-  }
-
-  // Drag and drop handlers
-  function onDragStartCrew(crewMember: CrewMember) {
-    setDragging({ crewId: crewMember.user_id, crewName: crewMember.name });
+  function openCrewPicker(slotId: string) {
+    setCrewPickerSlotId(slotId);
+    setCrewPickerSearch('');
+    setCrewPickerIsland('All');
   }
 
   async function onAssignCrewToSlot(slotId: string, crewName: string) {
@@ -194,13 +190,6 @@ export default function DispatchBoard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slot_id: slotId, assigned_crew: newCrew, status: newStatus }),
     });
-  }
-
-  async function onDropToSlot(slotId: string) {
-    if (!dragging) return;
-    await onAssignCrewToSlot(slotId, dragging.crewName);
-    setDragging(null);
-    setDropTarget(null);
   }
 
   async function removeCrewFromSlot(slotId: string, crewName: string) {
@@ -242,15 +231,37 @@ export default function DispatchBoard() {
 
   const availableCrew = crewForIsland(islandFilter);
 
+  // Crew picker filtered list
+  const crewPickerSlot = crewPickerSlotId ? slots.find(s => s.slot_id === crewPickerSlotId) : null;
+  const crewPickerAssigned = crewPickerSlot?.assigned_crew
+    ? crewPickerSlot.assigned_crew.split(', ').filter(Boolean)
+    : [];
+  const crewPickerFiltered = fieldCrew().filter(c => {
+    if (crewPickerIsland !== 'All' && c.island !== crewPickerIsland) return false;
+    if (crewPickerSearch) {
+      const q = crewPickerSearch.toLowerCase();
+      if (!c.name.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
+      {/* Responsive: hide crew sidebar on mobile */}
+      <style>{`
+        @media (max-width: 640px) {
+          .dispatch-board-grid { grid-template-columns: 1fr !important; }
+          .dispatch-crew-sidebar { display: none !important; }
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 3 }}>Dispatch Board</h1>
-            <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Drag crew members onto job slots · Tap to expand</p>
+            <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Tap a slot to expand · Use Assign Crew to add glaziers</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Island filter */}
@@ -277,7 +288,7 @@ export default function DispatchBoard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
+      <div className="dispatch-board-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
         {/* Week grid */}
         <div>
           {/* Day headers */}
@@ -299,13 +310,9 @@ export default function DispatchBoard() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, minHeight: 400 }}>
             {weekDates.map(date => {
               const daySlots = slotsForDay(date);
-              const isTarget = dropTarget === dateStr(date);
               return (
                 <div key={dateStr(date)}
-                  onDragOver={e => { e.preventDefault(); setDropTarget(dateStr(date)); }}
-                  onDragLeave={() => setDropTarget(null)}
-                  onDrop={() => setDropTarget(null)}
-                  style={{ minHeight: 120, background: isTarget ? 'rgba(15,118,110,0.04)' : isToday(date) ? 'rgba(3,105,161,0.02)' : '#fafafa', borderRadius: 10, border: isTarget ? '2px dashed #14b8a6' : isToday(date) ? '1px solid rgba(3,105,161,0.15)' : '1px solid #f0f0f0', padding: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  style={{ minHeight: 120, background: isToday(date) ? 'rgba(3,105,161,0.02)' : '#fafafa', borderRadius: 10, border: isToday(date) ? '1px solid rgba(3,105,161,0.15)' : '1px solid #f0f0f0', padding: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {daySlots.length === 0 && (
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{ fontSize: 10, color: '#e2e8f0' }}>—</span>
@@ -320,14 +327,11 @@ export default function DispatchBoard() {
 
                     return (
                       <div key={slot.slot_id}
-                        onDragOver={e => { e.preventDefault(); setDropTarget(slot.slot_id); }}
-                        onDragLeave={() => setDropTarget(null)}
-                        onDrop={e => { e.stopPropagation(); onDropToSlot(slot.slot_id); }}
-                        onClick={() => tapped ? onTapSlot(slot.slot_id) : setExpandedSlot(isExpanded ? null : slot.slot_id)}
-                        style={{ borderRadius: 8, border: `1px solid ${ss.color}33`, background: tapped ? 'rgba(99,102,241,0.08)' : ss.bg, padding: '6px 8px', cursor: tapped ? 'copy' : 'pointer', boxShadow: dropTarget === slot.slot_id || tapped ? `0 0 0 2px ${tapped ? '#6366f1' : (ISLAND_COLOR[slot.island] || '#0f766e')}` : 'none' }}>
+                        onClick={() => setExpandedSlot(isExpanded ? null : slot.slot_id)}
+                        style={{ borderRadius: 8, border: `1px solid ${ss.color}33`, background: ss.bg, padding: '6px 8px', cursor: 'pointer', boxShadow: 'none' }}>
                         {/* Slot header */}
                         <div style={{ fontSize: 10, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {slot.project_name.length > 20 ? slot.project_name.substring(0,20)+'...' : slot.project_name}
+                          {slot.project_name.length > 20 ? slot.project_name.substring(0, 20) + '...' : slot.project_name}
                         </div>
                         {/* Work type badge — compact */}
                         {slot.work_type && (
@@ -346,10 +350,9 @@ export default function DispatchBoard() {
                         <div style={{ fontSize: 9, color: ss.color, fontWeight: 700, marginBottom: 3 }}>
                           {assignedNames.length}/{required} men
                         </div>
-                        {/* Assigned crew chips with confirmation status */}
+                        {/* Assigned crew badges with confirmation status */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                           {assignedNames.map(name => {
-                            // Match by first name (partial match)
                             const firstName = name.split(' ')[0];
                             const confKey = Object.keys(confMap).find(k => k.includes(firstName)) || '';
                             const confStatus = confMap[confKey] || 'pending';
@@ -357,10 +360,10 @@ export default function DispatchBoard() {
                             return (
                               <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8.5, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'white', border: `1px solid ${confStatus === 'confirmed' ? '#0f766e33' : confStatus === 'declined' ? '#b91c1c33' : '#e2e8f0'}`, color: '#334155' }}>
                                 <span style={{ fontSize: 7, fontWeight: 900, color: cs.color }}>{cs.icon}</span>
-                                {name.split(' ').map(n => n[0]).join('').slice(0,2)}
+                                {name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 {isExpanded && (
                                   <button onClick={e => { e.stopPropagation(); removeCrewFromSlot(slot.slot_id, name); }}
-                                    style={{ width: 12, height: 12, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 8, color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+                                    style={{ width: 14, height: 14, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 9, color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minWidth: 14 }}>×</button>
                                 )}
                               </div>
                             );
@@ -371,6 +374,12 @@ export default function DispatchBoard() {
                             </div>
                           )}
                         </div>
+                        {/* Assign Crew button — always visible */}
+                        <button
+                          onClick={e => { e.stopPropagation(); openCrewPicker(slot.slot_id); }}
+                          style={{ marginTop: 5, width: '100%', padding: '5px 6px', borderRadius: 6, background: 'rgba(15,118,110,0.06)', border: '1px dashed #14b8a6', color: '#0f766e', fontSize: 8, fontWeight: 800, cursor: 'pointer', minHeight: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                          <span style={{ fontSize: 10 }}>+</span> Assign Crew
+                        </button>
                         {/* Expanded: full name, confirmations, delete */}
                         {isExpanded && (
                           <div style={{ marginTop: 6, paddingTop: 5, borderTop: '1px solid #f1f5f9' }}>
@@ -403,50 +412,120 @@ export default function DispatchBoard() {
                       </div>
                     );
                   })}
-                  {/* Drop hint */}
-                  {dragging && (
-                    <div style={{ border: '1px dashed #14b8a6', borderRadius: 8, padding: '8px 4px', textAlign: 'center', fontSize: 9, color: '#14b8a6', fontWeight: 700 }}>
-                      Drop here
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Crew panel — drag from here */}
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+        {/* Crew panel — read-only reference, hidden on mobile */}
+        <div className="dispatch-crew-sidebar">
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 }}>
             {islandFilter === 'All' ? 'All Islands' : islandFilter} Crew
           </div>
-          <div style={{ fontSize: 10, color: tapped ? '#6366f1' : '#94a3b8', marginBottom: 10, fontWeight: tapped ? 700 : 400 }}>
-            {tapped ? `${tapped.crewName.split(' ')[0]} selected — tap a slot to assign` : 'Drag onto a slot, or tap to select then tap a slot'}
+          <div style={{ fontSize: 9, color: '#cbd5e1', marginBottom: 10, fontWeight: 500 }}>
+            Reference — use slot button to assign
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {availableCrew.map(member => {
-              const isTapped = tapped?.crewId === member.user_id;
+              const count = crewAssignmentCount(member.name);
               return (
                 <div key={member.user_id}
-                  draggable
-                  onDragStart={() => { onDragStartCrew(member); setTapped(null); }}
-                  onDragEnd={() => { setDragging(null); setDropTarget(null); }}
-                  onClick={() => onTapCrew(member)}
-                  style={{ padding: '8px 10px', borderRadius: 10, background: isTapped ? 'rgba(99,102,241,0.08)' : 'white', border: isTapped ? '1px solid #6366f1' : `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}33`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: isTapped ? '0 0 0 2px #6366f1' : '0 1px 3px rgba(15,23,42,0.06)', userSelect: 'none' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isTapped ? 'rgba(99,102,241,0.2)' : `${ISLAND_COLOR[member.island] || '#64748b'}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: isTapped ? '#6366f1' : (ISLAND_COLOR[member.island] || '#64748b'), flexShrink: 0 }}>
-                    {member.name.split(' ').map(n => n[0]).join('').slice(0,2)}
+                  style={{ padding: '8px 10px', borderRadius: 10, background: 'white', border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}33`, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${ISLAND_COLOR[member.island] || '#64748b'}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: ISLAND_COLOR[member.island] || '#64748b', flexShrink: 0 }}>
+                    {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: isTapped ? '#4338ca' : '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name.split(' ')[0]}</div>
-                    <div style={{ fontSize: 9, color: '#94a3b8' }}>{member.role.replace('Journeyman','J-man').replace('Apprentice','Appr.')}</div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name.split(' ')[0]}</div>
+                    <div style={{ fontSize: 9, color: count > 0 ? '#92400e' : '#94a3b8', fontWeight: count > 0 ? 700 : 400 }}>
+                      {count > 0 ? `${count} job${count > 1 ? 's' : ''}` : 'Available'}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 10, color: isTapped ? '#6366f1' : '#cbd5e1', marginLeft: 'auto', flexShrink: 0 }}>{isTapped ? '✓' : '⋮⋮'}</div>
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* ─── Crew Picker Modal ─── */}
+      {crewPickerSlotId && crewPickerSlot && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 0 0' }}
+          onClick={() => setCrewPickerSlotId(null)}>
+          <div
+            style={{ background: 'white', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, boxShadow: '0 -8px 40px rgba(15,23,42,0.18)', maxHeight: '82vh', display: 'flex', flexDirection: 'column' }}
+            onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Assign Crew</div>
+                <div style={{ fontSize: 10, color: '#64748b', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {crewPickerSlot.project_name.length > 36 ? crewPickerSlot.project_name.substring(0, 36) + '…' : crewPickerSlot.project_name}
+                  {crewPickerSlot.island && <span style={{ marginLeft: 6, fontWeight: 700, color: ISLAND_COLOR[crewPickerSlot.island] || '#64748b' }}>· {crewPickerSlot.island}</span>}
+                </div>
+              </div>
+              <button onClick={() => setCrewPickerSlotId(null)}
+                style={{ width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 16, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, minWidth: 32 }}>×</button>
+            </div>
+            {/* Island filter pills */}
+            <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
+              {['All', 'Maui', 'Oahu', 'Kauai', 'Hawaii'].map(isl => (
+                <button key={isl} onClick={() => setCrewPickerIsland(isl)}
+                  style={{ padding: '7px 13px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: crewPickerIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: crewPickerIsland === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: crewPickerIsland === isl ? (ISLAND_COLOR[isl] || '#0f766e') : '#94a3b8', cursor: 'pointer', minHeight: 36, touchAction: 'manipulation' }}>
+                  {isl}
+                </button>
+              ))}
+            </div>
+            {/* Search */}
+            <input
+              type="text"
+              value={crewPickerSearch}
+              onChange={e => setCrewPickerSearch(e.target.value)}
+              placeholder="Search crew..."
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 10 }}
+            />
+            {/* Crew list — scrollable */}
+            <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 5, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+              {crewPickerFiltered.length === 0 && (
+                <div style={{ textAlign: 'center', padding: 24, fontSize: 12, color: '#94a3b8' }}>No crew found</div>
+              )}
+              {crewPickerFiltered.map(member => {
+                const isAssigned = crewPickerAssigned.includes(member.name);
+                const count = crewAssignmentCount(member.name);
+                return (
+                  <button key={member.user_id}
+                    onClick={() => isAssigned
+                      ? removeCrewFromSlot(crewPickerSlotId, member.name)
+                      : onAssignCrewToSlot(crewPickerSlotId, member.name)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: isAssigned ? 'rgba(15,118,110,0.07)' : 'white', border: isAssigned ? '1.5px solid #0f766e' : '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', minHeight: 56, width: '100%', touchAction: 'manipulation' }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: isAssigned ? '#0f766e22' : `${ISLAND_COLOR[member.island] || '#64748b'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: isAssigned ? '#0f766e' : (ISLAND_COLOR[member.island] || '#64748b'), flexShrink: 0 }}>
+                      {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
+                      <div style={{ display: 'flex', gap: 5, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, color: ISLAND_COLOR[member.island] || '#64748b', background: `${ISLAND_COLOR[member.island] || '#64748b'}18`, border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}` }}>{member.island}</span>
+                        <span style={{ fontSize: 10, color: count > 0 ? '#92400e' : '#94a3b8', fontWeight: count > 0 ? 700 : 400 }}>
+                          {count > 0 ? `${count} job${count > 1 ? 's' : ''} this week` : 'Available'}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: isAssigned ? '#0f766e' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: isAssigned ? 'white' : '#cbd5e1', fontWeight: 800 }}>
+                      {isAssigned ? '✓' : '+'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Done button */}
+            <button onClick={() => setCrewPickerSlotId(null)}
+              style={{ marginTop: 12, width: '100%', padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add Slot modal */}
       {showAddSlot && (
