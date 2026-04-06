@@ -10,13 +10,26 @@ const SHEETS = {
 
 const STATUS_MAP: Record<string, string> = {
   'REQUESTING A PROPOSAL': 'quote',
+  'AWAITING RESPONSE FROM THE PROPOSAL': 'quote',
+  'PROPOSAL REQUIRED': 'quote',
   'NEED TO SCHEDULE': 'approved',
+  'NEED TO SCHEDULE INSTALL': 'approved',
+  'NEED TO MEASURE': 'approved',
+  'QUOTED AND ACCEPTED FOR FIELD': 'approved',
+  'QUOTED AND ACCEPTED FOR FIELD  FABRICATION': 'approved',
   'MEASURED': 'scheduled',
+  'MEASURE': 'scheduled',
+  'ORDERED': 'in_progress',
   'FABRICATING': 'in_progress',
+  'FABRICATING   ALUMINUM & LAMI REQUIRED': 'in_progress',
+  'WAITING ON PARTS': 'in_progress',
+  'WAITING FOR AVAILABILITY': 'in_progress',
+  'TO BE DELIVERED': 'in_progress',
   'SCHEDULED': 'dispatched',
   'COMPLETED': 'closed',
   'LOST': 'lost',
   'REJECTED': 'lost',
+  'RE-WORK / WARRANTY': 'in_progress',
 };
 
 async function fetchSheet(token: string, sheetId: string, lane: string) {
@@ -37,7 +50,7 @@ async function fetchSheet(token: string, sheetId: string, lane: string) {
       if (cols[cell.columnId]) rd[cols[cell.columnId]] = cell.displayValue || String(cell.value || '');
     }
     const rawStatus = rd['Status'] || '';
-    const status = STATUS_MAP[rawStatus.toUpperCase()] || STATUS_MAP[rawStatus] || 'lead';
+    const status = STATUS_MAP[rawStatus.toUpperCase()] || STATUS_MAP[rawStatus] || (lane === 'completed' ? 'closed' : 'lead');
     return {
       id: rd['WORK ORDER #'] || rd['Job Name/WO Number'] || '',
       name: (rd['Task Name / Job Name'] || rd['Job Name/WO Number'] || '').split('\n')[0].substring(0, 80),
@@ -148,12 +161,17 @@ export async function GET() {
       getFolderLinks(),
     ]);
 
-    // Deduplicate WOs — active > quoted > completed (first occurrence wins)
+    // Deduplicate WOs — prefer the version with a real status over blank/lead
     // Key: WO# if present, otherwise WO name (trimmed)
     const seen = new Map<string, typeof active[0]>();
     for (const wo of [...active, ...quoted, ...completed]) {
       const key = (wo.id || wo.name).trim();
-      if (key && !seen.has(key)) {
+      if (!key) continue;
+      const existing = seen.get(key);
+      if (!existing) {
+        seen.set(key, wo);
+      } else if (existing.status === 'lead' && wo.status !== 'lead') {
+        // Replace blank/lead with a real status
         seen.set(key, wo);
       }
     }
