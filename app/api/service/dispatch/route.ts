@@ -46,16 +46,16 @@ export async function POST(req: Request) {
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
     const cells = [
-      { columnId: COL.taskName,     value: taskName },
-      { columnId: COL.woNumber,     value: wo },
-      { columnId: COL.description,  value: description },
+      { columnId: COL.taskName,     value: taskName, strict: false },
+      { columnId: COL.woNumber,     value: wo, strict: false },
+      { columnId: COL.description,  value: description, strict: false },
       { columnId: COL.island,       value: island, strict: false },
-      { columnId: COL.address,      value: addressStr },
-      { columnId: COL.contact,      value: contactStr },
-      { columnId: COL.status,       value: statusStr },
-      { columnId: COL.assignedTo,   value: assignedTo || '' },
-      { columnId: COL.dateReceived, value: today },
-      { columnId: COL.comments,     value: notesStr },
+      { columnId: COL.address,      value: addressStr, strict: false },
+      { columnId: COL.contact,      value: contactStr, strict: false },
+      { columnId: COL.status,       value: statusStr, strict: false },
+      { columnId: COL.assignedTo,   value: assignedTo || '', strict: false },
+      { columnId: COL.dateReceived, value: today, strict: false },
+      { columnId: COL.comments,     value: notesStr, strict: false },
     ];
 
     const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${SHEET_ID}/rows`, {
