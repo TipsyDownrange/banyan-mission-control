@@ -1,4 +1,5 @@
 'use client';
+import { useSession } from 'next-auth/react';
 import { ALL_USERS, navSectionsForRole, hiddenItemsForRole, readOnlyViewsForRole, defaultViewForRole } from '@/lib/roles';
 import Sidebar from '@/components/Sidebar';
 import TodayPanel from '@/components/TodayPanel';
@@ -47,8 +48,21 @@ export default function Home() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { data: authSession } = useSession();
   const [demoUser, setDemoUser] = useState('Sean Daniels');
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Auto-detect logged-in user from Google auth session
+  useEffect(() => {
+    if (authSession?.user?.email) {
+      const email = authSession.user.email.toLowerCase();
+      const match = ALL_USERS.find(u => u.email === email);
+      if (match) {
+        setDemoUser(match.name);
+        window.localStorage.setItem('banyan_demo_user', match.name);
+      }
+    }
+  }, [authSession]);
 
   useEffect(() => {
     // Check if user has completed onboarding

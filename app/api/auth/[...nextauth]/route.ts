@@ -1,16 +1,20 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
+// Roles must match lib/roles.ts ALL_USERS exactly
 const ROLE_MAP: Record<string, string> = {
-  'sean@kulaglass.com': 'admin',
-  'jody@kulaglass.com': 'admin',
-  'frank@kulaglass.com': 'management',
+  'sean@kulaglass.com': 'gm',
+  'jody@kulaglass.com': 'owner',
+  'frank@kulaglass.com': 'pm',
   'kyle@kulaglass.com': 'estimator',
-  'jenny@kulaglass.com': 'estimator',
-  'joey@kulaglass.com': 'service',
-  'markolson@kulaglass.com': 'estimator',
-  'nate@kulaglass.com': 'superintendent',
-  'tia@kulaglass.com': 'admin',
+  'jenny@kulaglass.com': 'admin_mgr',
+  'joey@kulaglass.com': 'service_pm',
+  'markolson@kulaglass.com': 'sales',
+  'nate@kulaglass.com': 'super',
+  'tia@kulaglass.com': 'pm_track',
+  'jenna@kulaglass.com': 'admin',
+  'sherilynn@kulaglass.com': 'admin',
+  'karl@kulaglass.com': 'super',
 };
 
 function getRole(email: string): string {

@@ -15,19 +15,19 @@
  */
 
 // ── User roster (mirrors Users_Roles sheet — source of truth is the sheet) ──
-export const ALL_USERS: { name: string; role: string; group: string }[] = [
-  { name: 'Jody Boeringa',            role: 'owner',      group: 'Executive' },
-  { name: 'Sean Daniels',             role: 'gm',         group: 'Executive' },
-  { name: 'Frank Redondo',            role: 'pm',         group: 'Management' },
-  { name: 'Kyle Shimizu',             role: 'estimator',  group: 'Management' },
-  { name: 'Jenny Shimabukuro',        role: 'admin_mgr',  group: 'Management' },
-  { name: 'Joey Ritthaler',           role: 'service_pm', group: 'Management' },
-  { name: 'Mark Olson',               role: 'sales',      group: 'Management' },
-  { name: 'Tia Omura',                role: 'pm_track',   group: 'Admin' },
-  { name: 'Jenna Nakama',             role: 'admin',      group: 'Admin' },
-  { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Admin' },
-  { name: 'Karl Nakamura Sr.',        role: 'super',      group: 'Superintendent' },
-  { name: 'Nate Nakamura',            role: 'super',      group: 'Superintendent' },
+export const ALL_USERS: { name: string; role: string; group: string; email?: string }[] = [
+  { name: 'Jody Boeringa',            role: 'owner',      group: 'Executive',       email: 'jody@kulaglass.com' },
+  { name: 'Sean Daniels',             role: 'gm',         group: 'Executive',       email: 'sean@kulaglass.com' },
+  { name: 'Frank Redondo',            role: 'pm',         group: 'Management',      email: 'frank@kulaglass.com' },
+  { name: 'Kyle Shimizu',             role: 'estimator',  group: 'Management',      email: 'kyle@kulaglass.com' },
+  { name: 'Jenny Shimabukuro',        role: 'admin_mgr',  group: 'Management',      email: 'jenny@kulaglass.com' },
+  { name: 'Joey Ritthaler',           role: 'service_pm', group: 'Management',      email: 'joey@kulaglass.com' },
+  { name: 'Mark Olson',               role: 'sales',      group: 'Management',      email: 'markolson@kulaglass.com' },
+  { name: 'Tia Omura',                role: 'pm_track',   group: 'Admin',           email: 'tia@kulaglass.com' },
+  { name: 'Jenna Nakama',             role: 'admin',      group: 'Admin',           email: 'jenna@kulaglass.com' },
+  { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Admin',           email: 'sherilynn@kulaglass.com' },
+  { name: 'Karl Nakamura Sr.',        role: 'super',      group: 'Superintendent',  email: 'karl@kulaglass.com' },
+  { name: 'Nate Nakamura',            role: 'super',      group: 'Superintendent',  email: 'nate@kulaglass.com' },
   { name: 'Karl Nakamura Jr.',        role: 'glazier',    group: 'Field — Oahu' },
   { name: 'Thomas Begonia',           role: 'glazier',    group: 'Field — Oahu' },
   { name: 'Jay Castillo',             role: 'glazier',    group: 'Field — Oahu' },
