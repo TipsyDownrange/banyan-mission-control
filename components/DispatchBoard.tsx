@@ -83,6 +83,10 @@ export default function DispatchBoard() {
   const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
   const [projects, setProjects] = useState<{ kID: string; name: string; island: string }[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [showWOPicker, setShowWOPicker] = useState(false);
+  const [woSearchQuery, setWoSearchQuery] = useState('');
+  const [woPickerList, setWoPickerList] = useState<WorkOrder[]>([]);
+  const [woPickerLoading, setWoPickerLoading] = useState(false);
 
   const weekDates = getWeekDates(weekStart);
   const fromDate = dateStr(weekDates[0]);
@@ -194,6 +198,7 @@ export default function DispatchBoard() {
     if (data.ok) {
       setShowAddSlot(false);
       setAddProject(''); setAddDate(''); setAddKID(''); setAddHours('');
+      setShowWOPicker(false); setWoSearchQuery('');
       load();
     }
     setSaving(false);
@@ -410,6 +415,23 @@ export default function DispatchBoard() {
                 <select value={addKID} onChange={e => {
                   const val = e.target.value;
                   setAddKID(val);
+                  if (val === 'SRV-26-0001') {
+                    setShowWOPicker(true);
+                    setWoSearchQuery('');
+                    setAddProject('');
+                    if (workOrders.length > 0) {
+                      setWoPickerList(workOrders);
+                    } else {
+                      setWoPickerLoading(true);
+                      fetch('/api/service/wo-list').then(r => r.json()).then(d => {
+                        setWoPickerList(d.workOrders || []);
+                        setWoPickerLoading(false);
+                      }).catch(() => setWoPickerLoading(false));
+                    }
+                    return;
+                  }
+                  setShowWOPicker(false);
+                  setWoSearchQuery('');
                   const proj = projects.find(p => p.kID === val);
                   if (proj) { setAddProject(proj.name); setAddIsland(proj.island); return; }
                   const wo = workOrders.find(w => w.id === val);
@@ -431,6 +453,56 @@ export default function DispatchBoard() {
                   )}
                 </select>
               </div>
+              {/* Secondary WO Picker */}
+              {showWOPicker && (
+                <div style={{ border: '1px solid #ccfbf1', borderRadius: 12, padding: 12, background: '#f0fdfa' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                    Select Work Order
+                  </div>
+                  <input
+                    type="text"
+                    value={woSearchQuery}
+                    onChange={e => setWoSearchQuery(e.target.value)}
+                    placeholder="Search work orders..."
+                    autoFocus
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, marginBottom: 8 }}
+                  />
+                  {woPickerLoading && <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>Loading work orders…</div>}
+                  {!woPickerLoading && woPickerList.length === 0 && (
+                    <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>No work orders found</div>
+                  )}
+                  {!woPickerLoading && woPickerList.length > 0 && (
+                    <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {woPickerList
+                        .filter(wo => !woSearchQuery || wo.name.toLowerCase().includes(woSearchQuery.toLowerCase()))
+                        .slice(0, 40)
+                        .map(wo => (
+                          <button
+                            key={wo.id}
+                            type="button"
+                            onClick={() => {
+                              setAddProject('[WO] ' + wo.name);
+                              if (wo.island) setAddIsland(wo.island);
+                              setShowWOPicker(false);
+                              setWoSearchQuery('');
+                            }}
+                            style={{ textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 12, color: '#0f172a', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
+                          >
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wo.name}</span>
+                            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                              {wo.island && (
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ISLAND_COLOR[wo.island] || '#64748b', background: `${ISLAND_COLOR[wo.island] || '#64748b'}18` }}>{wo.island}</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                  {addProject.startsWith('[WO]') && (
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#0f766e', fontWeight: 700 }}>✓ {addProject}</div>
+                  )}
+                </div>
+              )}
               {!addKID && (
                 <div>
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Or type job name</label>
@@ -459,8 +531,8 @@ export default function DispatchBoard() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={() => setShowAddSlot(false)} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || saving}
+              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || saving}
                 style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : 'Add Slot'}
               </button>
