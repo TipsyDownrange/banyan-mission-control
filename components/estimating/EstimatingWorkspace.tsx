@@ -7,6 +7,7 @@ import StatusPipeline, { PipelineStage } from '@/components/shared/StatusPipelin
 import EstimatingKaiPanel from '@/components/estimating/EstimatingKaiPanel';
 import BidOverviewTab from '@/components/estimating/BidOverviewTab';
 import CarlsMethodTab from '@/components/estimating/CarlsMethodTab';
+import TakeoffTab from '@/components/estimating/TakeoffTab';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -438,7 +439,10 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
             {activeTab === 'carls' && (
               <CarlsMethodTab bid={selectedBid} />
             )}
-            {activeTab !== 'overview' && activeTab !== 'carls' && (
+            {activeTab === 'takeoff' && (
+              <TakeoffTab bid={selectedBid} />
+            )}
+            {activeTab !== 'overview' && activeTab !== 'carls' && activeTab !== 'takeoff' && (
               <PlaceholderTab tabId={activeTab} />
             )}
           </WorkspaceShell>
