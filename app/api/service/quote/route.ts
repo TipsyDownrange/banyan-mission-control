@@ -165,7 +165,9 @@ export async function POST(req: Request) {
     }
     onSiteHours = onSiteHours ?? 2; // absolute fallback
 
-    const laborSubtotal = crew * rate * onSiteHours;
+    // Use v2 labor subtotal if provided, otherwise calculate from crew/rate/hours
+    const v2LaborSubtotal = body.laborSubtotal;
+    const laborSubtotal = (typeof v2LaborSubtotal === 'number' && v2LaborSubtotal > 0) ? v2LaborSubtotal : crew * rate * onSiteHours;
 
     // ─── Site visit fee ───────────────────────────────────────────────────────
     let siteVisitFee = 0;
@@ -188,9 +190,21 @@ export async function POST(req: Request) {
     const extras     = (additionalCharges ?? []).reduce((s: number, c: { amount: number }) => s + c.amount, 0);
     const creditAmt  = siteVisitCredit ? siteVisitFee : 0;
 
-    const subtotal   = materials + laborSubtotal + equipment + extras + siteVisitFee - creditAmt;
-    const getAmount  = Math.round(subtotal * GET_RATE * 100) / 100;
-    const total      = Math.round((subtotal + getAmount) * 100) / 100;
+    // Use v2 totals if provided (QuoteBuilder v2 calculates everything client-side including overhead+profit)
+    const v2Subtotal = body.subtotal;
+    const v2GrandTotal = body.grandTotal;
+    const v2GetAmt = body.getAmt;
+    const v2OverheadAmt = body.overheadAmt;
+    const v2ProfitAmt = body.profitAmt;
+    const v2DriveTimeCost = body.driveTimeCost;
+
+    const rawSubtotal = materials + laborSubtotal + equipment + extras + (v2DriveTimeCost || 0) + siteVisitFee - creditAmt;
+    const subtotal   = (typeof v2Subtotal === 'number' && v2Subtotal > 0) ? v2Subtotal : rawSubtotal;
+    const overheadAmt = (typeof v2OverheadAmt === 'number') ? v2OverheadAmt : 0;
+    const profitAmt   = (typeof v2ProfitAmt === 'number') ? v2ProfitAmt : 0;
+    const totalBeforeTax = subtotal + overheadAmt + profitAmt;
+    const getAmount  = (typeof v2GetAmt === 'number' && v2GetAmt > 0) ? v2GetAmt : Math.round(totalBeforeTax * GET_RATE * 100) / 100;
+    const total      = (typeof v2GrandTotal === 'number' && v2GrandTotal > 0) ? v2GrandTotal : Math.round((totalBeforeTax + getAmount) * 100) / 100;
     const deposit    = Math.round(total * 0.5 * 100) / 100;
 
     // ─── Standard exclusions ─────────────────────────────────────────────────
