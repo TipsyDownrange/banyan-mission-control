@@ -26,7 +26,7 @@ export default function WorkspaceShell({
   children,
   hideRightPanelToggle = false,
 }: WorkspaceShellProps) {
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true); // default open on desktop
   const [isMobile, setIsMobile] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -37,8 +37,8 @@ export default function WorkspaceShell({
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // On desktop, right panel is always visible if provided
-  const showRightPanel = rightPanel && (!isMobile || rightPanelOpen);
+  // Desktop: controlled by rightPanelOpen toggle. Mobile: drawer controlled by rightPanelOpen.
+  const showRightPanel = !!rightPanel && rightPanelOpen;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: '#f8fafc' }}>
@@ -126,7 +126,7 @@ export default function WorkspaceShell({
       </div>
 
       {/* Content Area */}
-      <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
 
         {/* Tab Content */}
         <div style={{
@@ -189,17 +189,17 @@ export default function WorkspaceShell({
           </>
         )}
 
-        {/* Desktop Kai toggle when panel provided but collapsed */}
+        {/* Desktop Kai toggle */}
         {rightPanel && !isMobile && !hideRightPanelToggle && (
           <button
             onClick={() => setRightPanelOpen(o => !o)}
-            title={rightPanelOpen ? 'Hide Kai panel' : 'Show Kai panel'}
+            title={showRightPanel ? 'Hide Kai panel' : 'Show Kai panel'}
             style={{
               position: 'absolute',
-              right: showRightPanel && !isMobile ? 288 : 0,
+              right: showRightPanel ? 280 : 0,
               top: '50%',
               transform: 'translateY(-50%)',
-              display: isMobile ? 'none' : 'flex',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               width: 20,
@@ -212,7 +212,7 @@ export default function WorkspaceShell({
               fontSize: 10,
               cursor: 'pointer',
               zIndex: 10,
-              transition: 'right 0.2s',
+              transition: 'right 0.25s ease',
             }}
           >
             {showRightPanel ? '›' : '‹'}

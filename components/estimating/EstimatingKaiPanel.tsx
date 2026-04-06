@@ -1,10 +1,11 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import type { BidSummary } from '@/components/estimating/EstimatingWorkspace';
 
 interface EstimatingKaiPanelProps {
   bid: BidSummary;
   activeTab: string;
+  onBidUpdate?: (updates: Partial<BidSummary>) => void;
 }
 
 const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?: string[] }> = {
@@ -49,8 +50,29 @@ const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?:
   },
 };
 
-export default function EstimatingKaiPanel({ bid, activeTab }: EstimatingKaiPanelProps) {
+export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: EstimatingKaiPanelProps) {
   const ctx = TAB_CONTEXT[activeTab] ?? TAB_CONTEXT.overview;
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [folderUrl, setFolderUrl] = useState(bid.bidFolderUrl ?? '');
+  const [folderSaving, setFolderSaving] = useState(false);
+
+  async function handleLinkFolder() {
+    if (!folderUrl.trim()) return;
+    setFolderSaving(true);
+    try {
+      await fetch(`/api/estimating/bids/${bid.bidVersionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_folder_url: folderUrl.trim() }),
+      });
+      onBidUpdate?.({ bidFolderUrl: folderUrl.trim() });
+      setShowLinkModal(false);
+    } catch (err) {
+      console.error('Folder link failed', err);
+    } finally {
+      setFolderSaving(false);
+    }
+  }
 
   const totalEstimate = bid.totalEstimate
     ? (bid.totalEstimate.startsWith('$') ? bid.totalEstimate : `$${bid.totalEstimate}`)
@@ -160,7 +182,13 @@ export default function EstimatingKaiPanel({ bid, activeTab }: EstimatingKaiPane
             background: 'rgba(240,253,250,0.6)',
             border: '1px solid rgba(20,184,166,0.25)',
           }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#0f766e', marginBottom: 4 }}>✓ BID FOLDER</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#0f766e' }}>✓ BID FOLDER</div>
+              <button
+                onClick={() => { setFolderUrl(bid.bidFolderUrl ?? ''); setShowLinkModal(true); }}
+                style={{ background: 'none', border: 'none', fontSize: 10, color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+              >change</button>
+            </div>
             <a
               href={bid.bidFolderUrl}
               target="_blank"
@@ -183,8 +211,65 @@ export default function EstimatingKaiPanel({ bid, activeTab }: EstimatingKaiPane
             border: '1px dashed #e2e8f0',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>No folder linked</div>
-            <div style={{ fontSize: 10, color: '#cbd5e1' }}>Use Overview tab to link</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>No folder linked</div>
+            <button
+              onClick={() => { setFolderUrl(''); setShowLinkModal(true); }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: '1px solid rgba(20,184,166,0.3)',
+                background: 'rgba(240,253,250,0.8)',
+                color: '#0f766e',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >🔗 Link Folder</button>
+          </div>
+        )}
+
+        {/* Link Folder Modal */}
+        {showLinkModal && (
+          <div style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(15,23,42,0.5)',
+            zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+          }} onClick={() => setShowLinkModal(false)}>
+            <div style={{
+              background: 'white',
+              borderRadius: 16,
+              padding: 24,
+              width: '100%',
+              maxWidth: 420,
+              boxShadow: '0 20px 60px rgba(15,23,42,0.2)',
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Link Bid Folder</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>Paste a Google Drive, Dropbox, or any folder URL.</div>
+              <input
+                type="url"
+                value={folderUrl}
+                onChange={e => setFolderUrl(e.target.value)}
+                placeholder="https://drive.google.com/..."
+                autoFocus
+                style={{
+                  width: '100%', padding: '9px 12px',
+                  border: '1px solid rgba(20,184,166,0.4)',
+                  borderRadius: 9, fontSize: 12, color: '#0f172a',
+                  background: 'rgba(240,253,250,0.5)', outline: 'none',
+                  boxSizing: 'border-box', marginBottom: 14,
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button onClick={() => setShowLinkModal(false)} style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button
+                  onClick={handleLinkFolder}
+                  disabled={folderSaving || !folderUrl.trim()}
+                  style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: folderUrl.trim() ? '#0f766e' : '#e2e8f0', color: 'white', fontSize: 12, fontWeight: 700, cursor: folderUrl.trim() ? 'pointer' : 'default' }}
+                >{folderSaving ? 'Saving…' : 'Link Folder'}</button>
+              </div>
+            </div>
           </div>
         )}
       </div>

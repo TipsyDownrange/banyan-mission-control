@@ -414,6 +414,12 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
               <EstimatingKaiPanel
                 bid={selectedBid}
                 activeTab={activeTab}
+                onBidUpdate={(updates) => {
+                  setSelectedBid(prev => prev ? { ...prev, ...updates } : null);
+                  setBids(prev => prev.map(b =>
+                    b.bidVersionId === selectedBid.bidVersionId ? { ...b, ...updates } : b
+                  ));
+                }}
               />
             }
           >

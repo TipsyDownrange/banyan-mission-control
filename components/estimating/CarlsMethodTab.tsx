@@ -10,7 +10,7 @@ interface LineItem {
 }
 
 interface LaborLine {
-  byWhom: string;
+  description: string;
   hours: string;
   rate: string;
   amount: string;
@@ -29,12 +29,14 @@ interface CarlsData {
     travel: string;
     totalFreight: string;
   };
+  miscExtra: LineItem[];
   other: {
     equipmentRental: string;
     misc: string;
     travel: string;
     freight: string;
   };
+  otherExtra: LineItem[];
   labor: LaborLine[];
   markup: {
     overheadOverride: string;
@@ -78,16 +80,18 @@ function defaultData(bid: BidSummary): CarlsData {
       travel: '',
       totalFreight: '',
     },
+    miscExtra: [],
     other: {
       equipmentRental: '',
       misc: '',
       travel: '',
       freight: '',
     },
+    otherExtra: [],
     labor: [
-      { byWhom: '___', hours: '', rate: '117', amount: '' },
-      { byWhom: 'Kula', hours: '', rate: '117', amount: '' },
-      { byWhom: 'Field', hours: '', rate: '117', amount: '' },
+      { description: 'Fab by ___', hours: '', rate: '117', amount: '' },
+      { description: 'Fab by Kula', hours: '', rate: '117', amount: '' },
+      { description: 'Field Labor', hours: '', rate: '117', amount: '' },
     ],
     markup: {
       overheadOverride: '',
@@ -471,6 +475,7 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [xAmount, setXAmount] = useState('');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Load ───────────────────────────────────────────────────────────────────
@@ -481,7 +486,17 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
         const res = await fetch(`/api/estimating/carls-method?bidVersionId=${bid.bidVersionId}`);
         const json = await res.json();
         if (json.data) {
-          setData({ ...defaultData(bid), ...json.data });
+          const loaded = { ...defaultData(bid), ...json.data };
+          // Migrate old byWhom field to description
+          if (loaded.labor) {
+            loaded.labor = loaded.labor.map((l: LaborLine & { byWhom?: string }) => ({
+              ...l,
+              description: l.description || (l.byWhom ? `Fab by ${l.byWhom}` : ''),
+            }));
+          }
+          if (!loaded.miscExtra) loaded.miscExtra = [];
+          if (!loaded.otherExtra) loaded.otherExtra = [];
+          setData(loaded);
           if (json.updatedAt) setLastSaved(json.updatedAt);
         }
       } catch {
@@ -534,8 +549,10 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
 
   const metalSubtotal = sumItems(data.aluminum);
   const glassSubtotal = sumItems(data.glass);
-  const miscSubtotal = Object.values(data.misc).reduce((a, v) => a + parseDollar(v), 0);
-  const otherSubtotal = Object.values(data.other).reduce((a, v) => a + parseDollar(v), 0);
+  const miscSubtotal = Object.values(data.misc).reduce((a, v) => a + parseDollar(v), 0)
+    + sumItems(data.miscExtra ?? []);
+  const otherSubtotal = Object.values(data.other).reduce((a, v) => a + parseDollar(v), 0)
+    + sumItems(data.otherExtra ?? []);
   const grandTotalMaterials = metalSubtotal + glassSubtotal + miscSubtotal + otherSubtotal;
 
   const laborSubtotal = data.labor.reduce((a, l) => a + laborAmount(l), 0);
@@ -543,6 +560,8 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
   const overhead = data.markup.overheadOverride
     ? parseDollar(data.markup.overheadOverride)
     : laborSubtotal;
+
+
 
   const profitPct = parseFloat(data.markup.profitPct) / 100 || 0;
   const totalCostsBeforeProfit = grandTotalMaterials + laborSubtotal + overhead;
@@ -552,6 +571,17 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
   const taxRate = parseFloat(data.taxRate) / 100 || 0;
   const taxAmt = totalCosts * taxRate;
   const grandTotal = totalCosts + taxAmt;
+
+  // X Modifier (what-if negotiation tool)
+  const xVal = parseDollar(xAmount);
+  const grossCost = grandTotalMaterials + laborSubtotal;
+  const currentMarkupPct = grossCost > 0 ? ((overhead + profit) / grossCost) * 100 : 0;
+  const newProfit = profit + xVal;
+  const newTotalCostsBeforeProfit2 = grandTotalMaterials + laborSubtotal + overhead;
+  const newTotalCosts2 = newTotalCostsBeforeProfit2 + newProfit;
+  const newTaxAmt2 = newTotalCosts2 * taxRate;
+  const newGrandTotal2 = newTotalCosts2 + newTaxAmt2;
+  const newMarkupPct = grossCost > 0 ? ((overhead + newProfit) / grossCost) * 100 : 0;
 
   // ─── PDF Export ──────────────────────────────────────────────────────────────
 
@@ -909,6 +939,47 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
                   </td>
                 </tr>
               ))}
+              {/* Misc Extra Lines */}
+              {(data.miscExtra ?? []).map((item, i) => (
+                <tr key={`miscExtra-${i}`} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={bodyCell}>
+                    <DescriptionInput
+                      value={item.description}
+                      onChange={v => update(d => ({
+                        ...d,
+                        miscExtra: (d.miscExtra ?? []).map((x, j) => j === i ? { ...x, description: v } : x),
+                      }))}
+                    />
+                  </td>
+                  <td style={bodyCell} />
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                      <DollarInput
+                        value={item.amount}
+                        onChange={v => update(d => ({
+                          ...d,
+                          miscExtra: (d.miscExtra ?? []).map((x, j) => j === i ? { ...x, amount: v } : x),
+                        }))}
+                      />
+                      <button
+                        onClick={() => update(d => ({ ...d, miscExtra: (d.miscExtra ?? []).filter((_, j) => j !== i) }))}
+                        className="no-print"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 14, padding: '0 2px', lineHeight: 1 }}
+                        title="Remove"
+                      >×</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              <tr className="no-print">
+                <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
+                  <button
+                    onClick={() => update(d => ({ ...d, miscExtra: [...(d.miscExtra ?? []), { description: '', amount: '' }] }))}
+                    style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
+                  >+ add misc item</button>
+                </td>
+              </tr>
               <SubtotalRow label="Misc Subtotal" value={miscSubtotal} />
 
               {/* ── OTHER COST ITEMS ── */}
@@ -931,6 +1002,47 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
                   </td>
                 </tr>
               ))}
+              {/* Other Extra Lines */}
+              {(data.otherExtra ?? []).map((item, i) => (
+                <tr key={`otherExtra-${i}`} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={bodyCell}>
+                    <DescriptionInput
+                      value={item.description}
+                      onChange={v => update(d => ({
+                        ...d,
+                        otherExtra: (d.otherExtra ?? []).map((x, j) => j === i ? { ...x, description: v } : x),
+                      }))}
+                    />
+                  </td>
+                  <td style={bodyCell} />
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                      <DollarInput
+                        value={item.amount}
+                        onChange={v => update(d => ({
+                          ...d,
+                          otherExtra: (d.otherExtra ?? []).map((x, j) => j === i ? { ...x, amount: v } : x),
+                        }))}
+                      />
+                      <button
+                        onClick={() => update(d => ({ ...d, otherExtra: (d.otherExtra ?? []).filter((_, j) => j !== i) }))}
+                        className="no-print"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 14, padding: '0 2px', lineHeight: 1 }}
+                        title="Remove"
+                      >×</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              <tr className="no-print">
+                <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
+                  <button
+                    onClick={() => update(d => ({ ...d, otherExtra: [...(d.otherExtra ?? []), { description: '', amount: '' }] }))}
+                    style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
+                  >+ add cost item</button>
+                </td>
+              </tr>
 
               {/* Grand Total Materials — mid-tier dark */}
               <tr><td colSpan={4} style={{ paddingTop: 6 }} /></tr>
@@ -941,18 +1053,13 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
               {data.labor.map((line, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={bodyCell}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: '#64748b', fontSize: 12 }}>Fab by</span>
-                      <SmallInput
-                        value={line.byWhom}
-                        onChange={v => update(d => ({
-                          ...d,
-                          labor: d.labor.map((l, j) => j === i ? { ...l, byWhom: v } : l),
-                        }))}
-                        align="center"
-                        width={64}
-                      />
-                    </div>
+                    <DescriptionInput
+                      value={line.description}
+                      onChange={v => update(d => ({
+                        ...d,
+                        labor: d.labor.map((l, j) => j === i ? { ...l, description: v } : l),
+                      }))}
+                    />
                   </td>
                   <td style={bodyCell}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
@@ -980,33 +1087,75 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
                   </td>
                   <MarketCell />
                   <td style={{ ...bodyCell, textAlign: 'right' }}>
-                    <DollarInput
-                      value={line.amount || (line.hours && line.rate ? fmt(laborAmount(line)) : '')}
-                      onChange={v => update(d => ({
-                        ...d,
-                        labor: d.labor.map((l, j) => j === i ? { ...l, amount: v } : l),
-                      }))}
-                      placeholder={line.hours && line.rate ? fmt(laborAmount(line)) : '0.00'}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                      <DollarInput
+                        value={line.amount || (line.hours && line.rate ? fmt(laborAmount(line)) : '')}
+                        onChange={v => update(d => ({
+                          ...d,
+                          labor: d.labor.map((l, j) => j === i ? { ...l, amount: v } : l),
+                        }))}
+                        placeholder={line.hours && line.rate ? fmt(laborAmount(line)) : '0.00'}
+                      />
+                      {data.labor.length > 1 && (
+                        <button
+                          onClick={() => update(d => ({ ...d, labor: d.labor.filter((_, j) => j !== i) }))}
+                          className="no-print"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 14, padding: '0 2px', lineHeight: 1 }}
+                          title="Remove"
+                        >×</button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
+              <tr className="no-print">
+                <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
+                  <button
+                    onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: '117', amount: '' }] }))}
+                    style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
+                  >+ add labor line</button>
+                </td>
+              </tr>
               <SubtotalRow label="Subtotal Labor" value={laborSubtotal} />
 
               {/* ── MARKUP ── */}
               <SectionHeader>Markup</SectionHeader>
               <tr style={{ borderBottom: '1px solid #f8fafc' }}>
-                <td style={bodyCell}>Overhead</td>
-                <td style={{ ...bodyCell, fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
-                  (= labor cost)
+                <td style={bodyCell}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>Overhead</span>
+                    {data.markup.overheadOverride && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, padding: '1px 6px',
+                        borderRadius: 999, background: 'rgba(245,158,11,0.1)',
+                        color: '#d97706', border: '1px solid rgba(245,158,11,0.25)',
+                      }}>MANUAL</span>
+                    )}
+                  </div>
+                </td>
+                <td style={{ ...bodyCell, fontSize: 11, color: data.markup.overheadOverride ? '#d97706' : '#94a3b8', fontStyle: 'italic' }}>
+                  {data.markup.overheadOverride
+                    ? `overrides $${fmt(laborSubtotal)}`
+                    : `= Labor Subtotal ($${fmt(laborSubtotal)})`
+                  }
                 </td>
                 <MarketCell />
                 <td style={{ ...bodyCell, textAlign: 'right' }}>
-                  <DollarInput
-                    value={data.markup.overheadOverride}
-                    onChange={v => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: v } }))}
-                    placeholder={fmt(laborSubtotal)}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                    <DollarInput
+                      value={data.markup.overheadOverride}
+                      onChange={v => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: v } }))}
+                      placeholder={fmt(laborSubtotal)}
+                    />
+                    {data.markup.overheadOverride && (
+                      <button
+                        onClick={() => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: '' } }))}
+                        className="no-print"
+                        title="Reset to auto (= labor)"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d97706', fontSize: 11, padding: '0 2px', fontWeight: 700 }}
+                      >↺</button>
+                    )}
+                  </div>
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f8fafc' }}>
@@ -1056,6 +1205,95 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
               {/* ── GRAND TOTAL ── */}
               <tr><td colSpan={4} style={{ paddingTop: 10 }} /></tr>
               <GrandTotalRow label="Grand Total" value={grandTotal} prominent />
+
+              {/* ── X MODIFIER ── */}
+              <tr><td colSpan={4} style={{ paddingTop: 20 }} /></tr>
+              <tr>
+                <td colSpan={4}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(15,118,110,0.05), rgba(20,184,166,0.03))',
+                    border: '1px solid rgba(20,184,166,0.25)',
+                    borderRadius: 12,
+                    padding: '14px 18px',
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 10 }}>
+                      🧠 What-If / Negotiation Tool
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {/* Current markup */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, color: '#475569', fontFamily: FONT }}>
+                          Mark-Up = (Overhead + Profit) / Gross Cost
+                        </span>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>
+                          {currentMarkupPct.toFixed(2)}%
+                        </span>
+                      </div>
+                      {/* X field */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                        <label style={{ fontSize: 12, color: '#475569', fontFamily: FONT, flexShrink: 0 }}>
+                          If Profit is adjusted by X =
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <DollarInput
+                            value={xAmount}
+                            onChange={setXAmount}
+                            placeholder="-2,000"
+                            width={120}
+                          />
+                          {xAmount && (
+                            <button
+                              onClick={() => setXAmount('')}
+                              className="no-print"
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 13 }}
+                            >×</button>
+                          )}
+                        </div>
+                      </div>
+                      {/* Results */}
+                      <div style={{
+                        borderTop: '1px solid rgba(20,184,166,0.2)',
+                        paddingTop: 10,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 20,
+                        flexWrap: 'wrap',
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
+                          <div style={{
+                            fontSize: 18, fontWeight: 900, fontFamily: FONT,
+                            color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>
+                            {newMarkupPct.toFixed(2)}%
+                            {xVal !== 0 && (
+                              <span style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, color: xVal < 0 ? '#dc2626' : '#16a34a' }}>
+                                ({xVal > 0 ? '+' : ''}{(newMarkupPct - currentMarkupPct).toFixed(2)}%)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
+                          <div style={{
+                            fontSize: 22, fontWeight: 900, fontFamily: FONT,
+                            color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a',
+                            fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
+                          }}>
+                            ${fmt(newGrandTotal2)}
+                            {xVal !== 0 && (
+                              <span style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, color: xVal < 0 ? '#dc2626' : '#16a34a' }}>
+                                ({xVal > 0 ? '+' : ''}${fmt(newGrandTotal2 - grandTotal)})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
 
             </tbody>
           </table>
