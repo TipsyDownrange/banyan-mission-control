@@ -340,13 +340,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           <AutocompleteInput
             value={draft.customerName}
             onChange={v => update('customerName', v)}
-            onSelect={c => setDraft(prev => ({
-              ...prev,
-              customerName: c.name || prev.customerName,
-              address:      c.address || prev.address,
-              island:       c.island  || prev.island,
-              contactPhone: c.contact || prev.contactPhone,
-            }))}
+            onSelect={c => setDraft(prev => applyCustomer(prev, c, 'customerName'))}
             placeholder="Customer or company name"
             style={INP}
             customers={customers}
@@ -361,13 +355,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
             <AutocompleteInput
               value={draft.address}
               onChange={v => update('address', v)}
-              onSelect={c => setDraft(prev => ({
-                ...prev,
-                address:      c.address || prev.address,
-                customerName: prev.customerName || c.name,
-                island:       prev.island || c.island,
-                contactPhone: prev.contactPhone || c.contact,
-              }))}
+              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'address'))}
               placeholder="Street address"
               style={INP}
               customers={customers}
@@ -398,10 +386,31 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            {FL('Contact Person')}
-            <input value={draft.contactPerson} onChange={e => update('contactPerson', e.target.value)} placeholder="Name" style={INP} />
+            {FL('Contact Person', customers.some(c => c.contactPerson))}
+            <AutocompleteInput
+              value={draft.contactPerson}
+              onChange={v => update('contactPerson', v)}
+              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'contactPerson'))}
+              placeholder="Contact name"
+              style={INP}
+              customers={customers}
+              matchField="contactPerson"
+              subField="contactPhone"
+            />
           </div>
-          <div>{FL('Contact Phone')}<input value={draft.contactPhone} onChange={e => update('contactPhone', e.target.value)} placeholder="808-XXX-XXXX" style={INP} /></div>
+          <div>
+            {FL('Contact Phone', customers.some(c => c.contactPhone))}
+            <AutocompleteInput
+              value={draft.contactPhone}
+              onChange={v => update('contactPhone', v)}
+              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'contactPhone'))}
+              placeholder="808-XXX-XXXX"
+              style={INP}
+              customers={customers}
+              matchField="contactPhone"
+              subField="contactPerson"
+            />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
