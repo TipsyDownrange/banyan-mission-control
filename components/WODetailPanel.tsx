@@ -276,6 +276,21 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               $ Quote
             </button>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/service/dispatch-pdf?wo=${encodeURIComponent(wo.id)}`);
+                  if (!res.ok) { alert('Failed to generate work order PDF'); return; }
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = `WO-${wo.id}.pdf`; a.click();
+                  URL.revokeObjectURL(url);
+                } catch { alert('Failed to generate work order PDF'); }
+              }}
+              title="Print work order for field crew"
+              style={{ padding: '7px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid rgba(21,128,61,0.2)', color: '#15803d', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              Print WO
+            </button>
             {dirty && !readOnly && (
               <button
                 onClick={handleSave}
