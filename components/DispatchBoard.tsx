@@ -5,7 +5,39 @@ type Slot = {
   slot_id: string; date: string; kID: string; project_name: string;
   island: string; men_required: string; hours_estimated: string;
   assigned_crew: string; created_by: string; status: string; confirmations: string;
+  work_type: string; notes: string;
 };
+
+const WORK_TYPES = [
+  'Site Visit / Assessment',
+  'Measurement',
+  'Installation',
+  'Service / Repair',
+  'Punch List / Warranty',
+  'Pickup / Delivery',
+  'Other',
+];
+
+const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  'Site Visit / Assessment': { color: '#0369a1', bg: '#eff6ff', border: '#bfdbfe' },
+  'Measurement':             { color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
+  'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
+  'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
+  'Punch List / Warranty':   { color: '#475569', bg: '#f8fafc', border: '#cbd5e1' },
+  'Pickup / Delivery':       { color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe' },
+  'Other':                   { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+};
+
+function WorkTypeBadge({ type, compact }: { type: string; compact?: boolean }) {
+  if (!type) return null;
+  const s = WORK_TYPE_STYLE[type] || WORK_TYPE_STYLE['Other'];
+  const label = compact ? (type === 'Site Visit / Assessment' ? 'Site Visit' : type === 'Punch List / Warranty' ? 'Punch List' : type === 'Pickup / Delivery' ? 'Pickup' : type) : type;
+  return (
+    <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 999, color: s.color, background: s.bg, border: `1px solid ${s.border}`, whiteSpace: 'nowrap', display: 'inline-block' }}>
+      {label}
+    </span>
+  );
+}
 
 function parseConfirmations(raw: string): Record<string, string> {
   const map: Record<string, string> = {};
@@ -77,6 +109,8 @@ export default function DispatchBoard() {
   const [addMen, setAddMen] = useState('2');
   const [addHours, setAddHours] = useState('');
   const [addKID, setAddKID] = useState('');
+  const [addWorkType, setAddWorkType] = useState('');
+  const [addNotes, setAddNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState<{ crewId: string; crewName: string } | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -193,12 +227,13 @@ export default function DispatchBoard() {
     const res = await fetch('/api/dispatch-schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: addDate, kID: addKID, project_name: addProject, island: addIsland, men_required: addMen, hours_estimated: addHours, created_by: 'Mission Control' }),
+      body: JSON.stringify({ date: addDate, kID: addKID, project_name: addProject, island: addIsland, men_required: addMen, hours_estimated: addHours, created_by: 'Mission Control', work_type: addWorkType, notes: addNotes }),
     });
     const data = await res.json();
     if (data.ok) {
       setShowAddSlot(false);
       setAddProject(''); setAddDate(''); setAddKID(''); setAddHours('');
+      setAddWorkType(''); setAddNotes('');
       setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All');
       load();
     }
@@ -294,6 +329,12 @@ export default function DispatchBoard() {
                         <div style={{ fontSize: 10, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {slot.project_name.length > 20 ? slot.project_name.substring(0,20)+'...' : slot.project_name}
                         </div>
+                        {/* Work type badge — compact */}
+                        {slot.work_type && (
+                          <div style={{ marginBottom: 3 }}>
+                            <WorkTypeBadge type={slot.work_type} compact />
+                          </div>
+                        )}
                         <div style={{ display: 'flex', gap: 4, marginBottom: 4, flexWrap: 'wrap' }}>
                           {slot.project_name.startsWith('[WO]') && (
                             <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: '#0d9488', background: '#ccfbf1', border: '1px solid #5eead4' }}>WO</span>
@@ -334,7 +375,9 @@ export default function DispatchBoard() {
                         {isExpanded && (
                           <div style={{ marginTop: 6, paddingTop: 5, borderTop: '1px solid #f1f5f9' }}>
                             <div style={{ fontSize: 9, color: '#475569', marginBottom: 4 }}>{slot.project_name}</div>
+                            {slot.work_type && <div style={{ marginBottom: 4 }}><WorkTypeBadge type={slot.work_type} /></div>}
                             {slot.hours_estimated && <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
+                            {slot.notes && <div style={{ fontSize: 9, color: '#475569', marginBottom: 4, fontStyle: 'italic', background: '#f8fafc', borderRadius: 6, padding: '4px 6px', border: '1px solid #e2e8f0' }}>📋 {slot.notes}</div>}
                             {/* Confirmation breakdown */}
                             {assignedNames.length > 0 && (
                               <div style={{ marginBottom: 4 }}>
@@ -546,10 +589,25 @@ export default function DispatchBoard() {
                   <option>Maui</option><option>Oahu</option><option>Kauai</option><option>Hawaii</option>
                 </select>
               </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 800, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Work Type *</label>
+                <select value={addWorkType} onChange={e => setAddWorkType(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: addWorkType ? '1px solid #e2e8f0' : '1px solid #fca5a5', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, cursor: 'pointer', background: addWorkType ? 'white' : '#fff5f5' }}>
+                  <option value="">Select work type…</option>
+                  {WORK_TYPES.map(wt => <option key={wt} value={wt}>{wt}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Notes / Instructions</label>
+                <textarea value={addNotes} onChange={e => setAddNotes(e.target.value)}
+                  placeholder="e.g. Measure all openings on 2nd floor · Bring silicone and backer rod"
+                  rows={2}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, resize: 'vertical', fontFamily: 'inherit', color: '#334155' }} />
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || saving}
+              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); setAddWorkType(''); setAddNotes(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || !addWorkType || saving}
                 style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : 'Add Slot'}
               </button>
