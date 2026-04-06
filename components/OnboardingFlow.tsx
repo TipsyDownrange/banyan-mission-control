@@ -193,6 +193,13 @@ How do you prefer to get updates — in the app when you open it, push notificat
             ))}
           </div>
 
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          {welcomeSlide > 0 && (
+            <button onClick={() => setWelcomeSlide(prev => prev - 1)}
+              style={{ padding: '14px 32px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+              ← Back
+            </button>
+          )}
           {welcomeSlide < SLIDES.length - 1 ? (
             <button onClick={() => setWelcomeSlide(prev => prev + 1)}
               style={{ padding: '14px 48px', borderRadius: 14, background: 'rgba(20,184,166,0.15)', border: '1.5px solid rgba(20,184,166,0.3)', color: '#5eead4', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
@@ -205,6 +212,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
             </button>
           )}
 
+          </div>
           <button onClick={() => { localStorage.setItem('banyan_onboarded', 'true'); onComplete(); }}
             style={{ display: 'block', margin: '16px auto 0', background: 'none', border: 'none', color: 'rgba(148,163,184,0.4)', fontSize: 12, cursor: 'pointer' }}>
             Skip onboarding
