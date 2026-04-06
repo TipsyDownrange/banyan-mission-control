@@ -44,7 +44,7 @@ const ROLE_QUESTIONS: Record<string, { workspace: string; tips: string[]; routin
   },
 };
 
-export default function OnboardingFlow({ userRole, onComplete }: { userRole: string; onComplete: () => void }) {
+export default function OnboardingFlow({ userRole, onComplete, userName: userNameProp }: { userRole: string; onComplete: () => void; userName?: string }) {
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [welcomeSlide, setWelcomeSlide] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -59,12 +59,16 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
   voiceRef.current = voiceEnabled;
   const speakRef = useRef(speak);
   speakRef.current = speak;
-  const [userName, setUserName] = useState('there');
+  const [userName, setUserName] = useState(userNameProp ? userNameProp.split(' ')[0] : 'there');
 
   useEffect(() => {
-    const stored = localStorage.getItem('banyan_demo_user');
-    if (stored) setUserName(stored.split(' ')[0]);
-  }, []);
+    if (userNameProp) {
+      setUserName(userNameProp.split(' ')[0]);
+    } else {
+      const stored = localStorage.getItem('banyan_demo_user');
+      if (stored) setUserName(stored.split(' ')[0]);
+    }
+  }, [userNameProp]);
   const roleConfig = ROLE_QUESTIONS[userRole] || ROLE_QUESTIONS['field'];
 
   useEffect(() => {

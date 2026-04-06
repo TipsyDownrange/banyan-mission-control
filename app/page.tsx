@@ -122,6 +122,7 @@ export default function Home() {
         <OnboardingFlow
           userRole={demoUserObj.role}
           onComplete={() => setShowOnboarding(false)}
+          userName={demoUser}
         />
       )}
 
