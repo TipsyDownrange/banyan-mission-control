@@ -9,7 +9,9 @@ const SHEETS = {
 
 export type CustomerRecord = {
   name: string;
-  contact: string;
+  contact: string;         // raw CONTACT # value
+  contactPerson: string;   // parsed contact name
+  contactPhone: string;    // parsed contact phone
   address: string;
   island: string;
   woCount: number;
@@ -49,7 +51,27 @@ async function fetchCustomersFromSheet(token: string, sheetId: string) {
     const contact = (rd['CONTACT #'] || '').split('\n')[0].substring(0, 60).trim();
     const address = (rd['ADDRESS'] || '').substring(0, 80).trim();
     const island = rd['Area of island'] || '';
-    return { name, contact, address, island };
+
+    // Parse contact into person name and phone number
+    let contactPerson = '';
+    let contactPhone = '';
+    if (contact) {
+      const parts = contact.split(' · ');
+      if (parts.length >= 2) {
+        contactPerson = parts[0].trim();
+        contactPhone = parts[1].trim();
+      } else {
+        const phoneMatch = contact.match(/(\d{3}[-\.\s]?\d{3}[-\.\s]?\d{4})/);
+        if (phoneMatch) {
+          contactPhone = phoneMatch[1];
+          contactPerson = contact.replace(phoneMatch[0], '').replace(/[\s·]+/g, '').trim();
+        } else {
+          contactPerson = contact;
+        }
+      }
+    }
+
+    return { name, contact, contactPerson, contactPhone, address, island };
   }).filter(r => r.name);
 }
 
@@ -77,12 +99,16 @@ export async function GET() {
         const existing = customerMap.get(key)!;
         existing.woCount++;
         if (!existing.contact && row.contact) existing.contact = row.contact;
+        if (!existing.contactPerson && row.contactPerson) existing.contactPerson = row.contactPerson;
+        if (!existing.contactPhone && row.contactPhone) existing.contactPhone = row.contactPhone;
         if (!existing.address && row.address) existing.address = row.address;
         if (!existing.island && row.island) existing.island = row.island;
       } else {
         customerMap.set(key, {
           name: toTitleCase(row.name),
           contact: row.contact,
+          contactPerson: row.contactPerson,
+          contactPhone: row.contactPhone,
           address: row.address,
           island: row.island,
           woCount: 1,

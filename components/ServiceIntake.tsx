@@ -21,7 +21,41 @@ const FL = (label: string, auto?: boolean) => (
 const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, color: '#0f172a', outline: 'none', boxSizing: 'border-box' };
 const SEL: React.CSSProperties = { ...INP, cursor: 'pointer', WebkitAppearance: 'none' };
 
-const SYSTEM_TYPES = ['Storefront','Window Wall','Curtainwall','Exterior Doors','Interior Doors','Shower Enclosure','Mirror','Skylights','Railing','Automatic Entrances','Other'];
+const SYSTEM_TYPES = [
+  // Glass replacement / service
+  'IG Unit Replacement',
+  'Single Lite Replacement',
+  'Laminated Glass Replacement',
+  'Tempered Glass Replacement',
+  // Storefront & curtainwall
+  'Storefront',
+  'Storefront Repair',
+  'Window Wall',
+  'Curtainwall',
+  'Curtainwall Repair',
+  // Doors
+  'Exterior Doors',
+  'Interior Doors',
+  'Automatic Entrances',
+  'Door Hardware / Closer',
+  'Sliding Door Repair',
+  // Specialty
+  'Shower Enclosure',
+  'Mirror',
+  'Skylights',
+  'Railing / Glass Guard',
+  'Louvers',
+  // Panels & screens
+  'Aluminum Composite Panels',
+  'Metal Screen Wall',
+  // Service-specific
+  'Window / Door Adjustment',
+  'Sealant / Caulk / Weatherseal',
+  'Screen Repair / Replacement',
+  'Board-Up / Emergency',
+  'Site Assessment / Consultation',
+  'Other',
+];
 const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
 
 // ── Autocomplete helpers ────────────────────────────────────────────────────
@@ -67,7 +101,7 @@ function AutocompleteInput({
   const fieldVal = (c: CustomerRecord) => String(c[matchField] || '');
   const filtered = value.length >= 2
     ? customers
-        .filter(c => fieldVal(c).toLowerCase().includes(value.toLowerCase()))
+        .filter(c => fieldVal(c).toLowerCase().includes(value.toLowerCase()) && fieldVal(c) !== '')
         .slice(0, 8)
     : [];
 
@@ -125,6 +159,18 @@ function AutocompleteInput({
       )}
     </div>
   );
+}
+
+// Shared auto-fill helper: populate all WO fields from a CustomerRecord
+function applyCustomer(prev: WODraft, c: CustomerRecord, primaryField: keyof WODraft): WODraft {
+  return {
+    ...prev,
+    customerName:  primaryField === 'customerName'  ? (c.name || prev.customerName)  : (prev.customerName  || c.name),
+    address:       primaryField === 'address'        ? (c.address || prev.address)    : (prev.address       || c.address),
+    island:        prev.island       || c.island,
+    contactPerson: primaryField === 'contactPerson'  ? (c.contactPerson || prev.contactPerson) : (prev.contactPerson || c.contactPerson),
+    contactPhone:  primaryField === 'contactPhone'   ? (c.contactPhone  || prev.contactPhone)  : (prev.contactPhone  || c.contactPhone  || c.contact),
+  };
 }
 
 const BLANK: WODraft = {
