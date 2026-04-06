@@ -6,11 +6,11 @@ import type { BidSummary } from '@/components/estimating/EstimatingWorkspace';
 
 interface LineItem {
   description: string;
-  amount: string; // editable dollar string
+  amount: string;
 }
 
 interface LaborLine {
-  byWhom: string;   // "___" / "Kula" / "Field"
+  byWhom: string;
   hours: string;
   rate: string;
   amount: string;
@@ -37,11 +37,15 @@ interface CarlsData {
   };
   labor: LaborLine[];
   markup: {
-    overheadOverride: string; // blank = auto (= labor subtotal)
+    overheadOverride: string;
     profitPct: string;
   };
-  taxRate: string; // GET %
+  taxRate: string;
 }
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+
+const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -102,7 +106,8 @@ interface DollarInputProps {
   width?: number | string;
 }
 
-function DollarInput({ value, onChange, placeholder = '0.00', width = 120 }: DollarInputProps) {
+function DollarInput({ value, onChange, placeholder = '0.00', width = 130 }: DollarInputProps) {
+  const [focused, setFocused] = React.useState(false);
   return (
     <input
       type="text"
@@ -110,60 +115,163 @@ function DollarInput({ value, onChange, placeholder = '0.00', width = 120 }: Dol
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
+      onFocus={e => { setFocused(true); e.currentTarget.select(); }}
+      onBlur={() => setFocused(false)}
       style={{
         width,
-        padding: '3px 6px',
-        border: '1px solid rgba(21,128,61,0.35)',
-        borderRadius: 4,
+        padding: '5px 10px',
+        border: focused ? '1px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)',
+        borderRadius: 8,
         fontSize: 13,
-        fontFamily: '"Courier New", Courier, monospace',
-        color: '#14532d',
-        background: 'rgba(240,253,244,0.8)',
+        fontFamily: FONT,
+        fontVariantNumeric: 'tabular-nums',
+        color: '#0f172a',
+        background: focused ? '#f0fdf4' : 'rgba(240,253,244,0.7)',
         outline: 'none',
         textAlign: 'right',
         boxSizing: 'border-box',
+        transition: 'border-color 0.15s, background 0.15s',
       }}
-      onFocus={e => e.currentTarget.select()}
     />
+  );
+}
+
+function SmallInput({
+  value,
+  onChange,
+  placeholder,
+  width = 48,
+  align = 'right',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  width?: number | string;
+  align?: 'left' | 'right' | 'center';
+}) {
+  const [focused, setFocused] = React.useState(false);
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      onFocus={e => { setFocused(true); e.currentTarget.select(); }}
+      onBlur={() => setFocused(false)}
+      style={{
+        width,
+        padding: '4px 6px',
+        border: focused ? '1px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)',
+        borderRadius: 6,
+        fontSize: 12,
+        fontFamily: FONT,
+        fontVariantNumeric: 'tabular-nums',
+        color: '#0f172a',
+        background: focused ? '#f0fdf4' : 'rgba(240,253,244,0.7)',
+        outline: 'none',
+        textAlign: align,
+        boxSizing: 'border-box',
+        transition: 'border-color 0.15s, background 0.15s',
+      }}
+    />
+  );
+}
+
+function DescriptionInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [focused, setFocused] = React.useState(false);
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder="Description…"
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={{
+        width: '100%',
+        border: 'none',
+        borderBottom: focused ? '1.5px solid #14b8a6' : '1px solid #e2e8f0',
+        fontSize: 12,
+        fontFamily: FONT,
+        background: 'transparent',
+        outline: 'none',
+        color: '#0f172a',
+        padding: '3px 0',
+        transition: 'border-color 0.15s',
+      }}
+    />
+  );
+}
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <tr>
+      <td colSpan={4} style={{ paddingTop: 22, paddingBottom: 0 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          paddingBottom: 8,
+          borderBottom: '1px solid #e2e8f0',
+        }}>
+          <div style={{
+            width: 3,
+            height: 14,
+            borderRadius: 2,
+            background: 'linear-gradient(180deg, #14b8a6, #0f766e)',
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: '#475569',
+            fontFamily: FONT,
+          }}>
+            {children}
+          </span>
+        </div>
+      </td>
+    </tr>
   );
 }
 
 function SubtotalRow({ label, value }: { label: string; value: number }) {
   return (
     <tr>
-      <td colSpan={2} />
-      <td style={{ textAlign: 'right', paddingTop: 6, paddingBottom: 6 }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
-          {label} =
-        </span>
-      </td>
-      <td style={{ textAlign: 'right', paddingLeft: 8, paddingTop: 6, paddingBottom: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', fontFamily: '"Courier New", Courier, monospace' }}>
-          ${fmt(value)}
-        </span>
-      </td>
-    </tr>
-  );
-}
-
-function GrandTotalRow({ label, value, color = '#0f172a', size = 14 }: {
-  label: string; value: number; color?: string; size?: number;
-}) {
-  return (
-    <tr>
-      <td colSpan={2} />
-      <td colSpan={2} style={{ paddingTop: 8, paddingBottom: 8 }}>
+      <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 2 }}>
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           alignItems: 'center',
-          borderTop: '2px solid #334155',
-          paddingTop: 6,
+          gap: 16,
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 8,
+          padding: '6px 12px',
+          marginTop: 4,
         }}>
-          <span style={{ fontSize: size - 1, fontWeight: 800, color, letterSpacing: '0.04em' }}>
-            {label} =
+          <span style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: '#64748b',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            fontFamily: FONT,
+          }}>
+            {label}
           </span>
-          <span style={{ fontSize: size, fontWeight: 900, color, fontFamily: '"Courier New", Courier, monospace' }}>
+          <span style={{
+            fontSize: 13,
+            fontWeight: 800,
+            color: '#0f172a',
+            fontFamily: FONT,
+            fontVariantNumeric: 'tabular-nums',
+            minWidth: 110,
+            textAlign: 'right',
+          }}>
             ${fmt(value)}
           </span>
         </div>
@@ -172,20 +280,80 @@ function GrandTotalRow({ label, value, color = '#0f172a', size = 14 }: {
   );
 }
 
-function SectionHeader({ children }: { children: React.ReactNode }) {
+function GrandTotalRow({ label, value, prominent = false }: {
+  label: string;
+  value: number;
+  prominent?: boolean;
+}) {
+  if (prominent) {
+    return (
+      <tr>
+        <td colSpan={4} style={{ paddingTop: 8, paddingBottom: 4 }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: '#0f172a',
+            borderRadius: 12,
+            padding: '14px 20px',
+          }}>
+            <span style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: 'rgba(255,255,255,0.9)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              fontFamily: FONT,
+            }}>
+              {label}
+            </span>
+            <span style={{
+              fontSize: 22,
+              fontWeight: 900,
+              color: '#fff',
+              fontFamily: FONT,
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '-0.02em',
+            }}>
+              ${fmt(value)}
+            </span>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <tr>
-      <td colSpan={4} style={{ paddingTop: 18, paddingBottom: 4 }}>
+      <td colSpan={4} style={{ paddingTop: 4, paddingBottom: 4 }}>
         <div style={{
-          fontSize: 10,
-          fontWeight: 900,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: '#334155',
-          borderBottom: '1.5px solid #334155',
-          paddingBottom: 4,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: '#1e293b',
+          borderRadius: 10,
+          padding: '10px 16px',
+          marginTop: 4,
         }}>
-          {children}
+          <span style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: 'rgba(148,163,184,0.9)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            fontFamily: FONT,
+          }}>
+            {label}
+          </span>
+          <span style={{
+            fontSize: 15,
+            fontWeight: 900,
+            color: '#f8fafc',
+            fontFamily: FONT,
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            ${fmt(value)}
+          </span>
         </div>
       </td>
     </tr>
@@ -195,17 +363,102 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 function MarketCell({ market }: { market?: string }) {
   return (
     <td style={{
-      width: 100,
+      width: 90,
       fontSize: 10,
       color: '#cbd5e1',
       fontStyle: 'italic',
       textAlign: 'right',
       paddingLeft: 8,
+      fontFamily: FONT,
     }}>
       {market ?? '—'}
     </td>
   );
 }
+
+function AmountDisplay({ value }: { value: number }) {
+  return (
+    <span style={{
+      fontSize: 13,
+      fontFamily: FONT,
+      fontVariantNumeric: 'tabular-nums',
+      color: '#0f766e',
+      fontWeight: 600,
+    }}>
+      ${fmt(value)}
+    </span>
+  );
+}
+
+// ─── Print styles injected into DOM ──────────────────────────────────────────
+
+const PRINT_STYLES = `
+@media print {
+  @page {
+    margin: 0.65in 0.75in;
+    size: letter;
+  }
+
+  body > *:not(#__next),
+  header, nav, aside, footer,
+  [data-no-print], .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #carls-print-root {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    overflow: auto;
+    background: white;
+    z-index: 99999;
+    padding: 0;
+    margin: 0;
+  }
+
+  #carls-print-area {
+    font-family: -apple-system, "SF Pro Display", Inter, system-ui, sans-serif !important;
+    font-size: 11pt;
+    color: #0f172a;
+    max-width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  #carls-print-area input,
+  #carls-print-area select,
+  #carls-print-area textarea {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    pointer-events: none;
+  }
+
+  #carls-print-area .no-print,
+  #carls-print-area button:not(.print-show) {
+    display: none !important;
+  }
+
+  .print-grand-total {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+`;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -303,469 +556,563 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
   // ─── PDF Export ──────────────────────────────────────────────────────────────
 
   function handlePrintPDF() {
-    const style = document.createElement('style');
-    style.textContent = `
-      @media print {
-        body * { visibility: hidden !important; }
-        #carls-print-area, #carls-print-area * { visibility: visible !important; }
-        #carls-print-area { position: fixed; inset: 0; padding: 32px; background: white !important; }
-        @page { margin: 0.75in; size: letter; }
-      }
-    `;
-    document.head.appendChild(style);
+    const styleEl = document.createElement('style');
+    styleEl.id = 'carls-print-style';
+    styleEl.textContent = PRINT_STYLES;
+    document.head.appendChild(styleEl);
     window.print();
-    setTimeout(() => document.head.removeChild(style), 1000);
+    setTimeout(() => {
+      const el = document.getElementById('carls-print-style');
+      if (el) document.head.removeChild(el);
+    }, 2000);
   }
 
   // ─── Formatted date ──────────────────────────────────────────────────────────
 
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
+  // Shared cell style for body rows
+  const bodyCell: React.CSSProperties = {
+    paddingTop: 5,
+    paddingBottom: 5,
+    verticalAlign: 'middle',
+    fontFamily: FONT,
+    fontSize: 12,
+    color: '#374151',
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div style={{ padding: 48, textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+      <div style={{ padding: 48, textAlign: 'center', color: '#64748b', fontSize: 13, fontFamily: FONT }}>
         Loading estimate…
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px 28px', maxWidth: 960 }}>
+    <div style={{ padding: '20px 28px', maxWidth: 960, fontFamily: FONT }}>
 
-      {/* Toolbar */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-        gap: 12,
-      }}>
+      {/* Inject print styles */}
+      <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
+
+      {/* ── Toolbar ── */}
+      <div
+        className="no-print"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 20,
+          gap: 12,
+          padding: '10px 16px',
+          background: 'white',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: '#0f172a' }}>Carl&apos;s Method</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
+            Carl&apos;s Method
+          </span>
           {saving ? (
-            <span style={{ fontSize: 10, color: '#94a3b8' }}>Saving…</span>
+            <span style={{
+              fontSize: 10, color: '#94a3b8', fontWeight: 600,
+              background: '#f8fafc', padding: '2px 8px', borderRadius: 6,
+            }}>
+              Saving…
+            </span>
           ) : lastSaved ? (
-            <span style={{ fontSize: 10, color: '#16a34a' }}>✓ Saved</span>
+            <span style={{
+              fontSize: 10, color: '#16a34a', fontWeight: 700,
+              background: 'rgba(22,163,74,0.07)', padding: '2px 8px', borderRadius: 6,
+              border: '1px solid rgba(22,163,74,0.15)',
+            }}>
+              ✓ Saved
+            </span>
           ) : null}
         </div>
+
         <button
           onClick={handlePrintPDF}
           style={{
-            padding: '8px 18px',
-            borderRadius: 999,
+            padding: '8px 20px',
+            borderRadius: 10,
             background: '#0f172a',
             color: 'white',
             border: 'none',
             fontSize: 11,
             fontWeight: 800,
-            letterSpacing: '0.06em',
+            letterSpacing: '0.07em',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
+            fontFamily: FONT,
+            textTransform: 'uppercase',
           }}
         >
           🖨 Export PDF
         </button>
       </div>
 
-      {/* The Estimate Sheet */}
+      {/* ── The Estimate Sheet ── */}
       <div
         id="carls-print-area"
         style={{
-          background: '#fefefe',
+          background: '#fff',
           border: '1px solid #e2e8f0',
-          borderRadius: 12,
-          padding: '32px 36px',
-          fontFamily: '"Times New Roman", Times, serif',
-          boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
+          borderRadius: 16,
+          overflow: 'hidden',
+          boxShadow: '0 1px 8px rgba(15,23,42,0.05)',
         }}
       >
 
-        {/* Company Header */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: '0.06em', color: '#0f172a', textTransform: 'uppercase' }}>
-            Kula Glass Co., Inc.
+        {/* ── Company Header (dark) ── */}
+        <div
+          className="print-grand-total"
+          style={{
+            background: '#0f172a',
+            padding: '20px 28px 18px',
+          }}
+        >
+          {/* Brand line */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div>
+              <div style={{
+                fontSize: 18,
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                color: '#fff',
+                textTransform: 'uppercase',
+                fontFamily: FONT,
+              }}>
+                Kula Glass Co., Inc.
+              </div>
+              <div style={{
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                color: 'rgba(20,184,166,0.85)',
+                textTransform: 'uppercase',
+                marginTop: 3,
+                fontFamily: FONT,
+              }}>
+                Estimate Form · Carl&apos;s Method
+              </div>
+            </div>
+            {/* Print date (hidden in screen toolbar, shown in PDF) */}
+            <div style={{
+              textAlign: 'right',
+              fontSize: 10,
+              color: 'rgba(148,163,184,0.7)',
+              fontFamily: FONT,
+            }}>
+              <div>Generated {today}</div>
+            </div>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: '#475569', textTransform: 'uppercase', marginTop: 2 }}>
-            Estimate Form
+
+          {/* Project meta row */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr 1fr',
+            gap: '8px 20px',
+          }}>
+            {[
+              { label: 'Job Name', value: bid.projectName },
+              { label: 'Location', value: bid.island },
+              { label: 'Date', value: bid.bidDate || today },
+              { label: 'Estimator', value: bid.estimator },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <div style={{
+                  fontSize: 8,
+                  fontWeight: 800,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(148,163,184,0.6)',
+                  marginBottom: 3,
+                  fontFamily: FONT,
+                }}>
+                  {label}
+                </div>
+                <div style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: '#f8fafc',
+                  fontFamily: FONT,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {value || '—'}
+                </div>
+              </div>
+            ))}
           </div>
-          <div style={{ borderBottom: '2px solid #334155', marginTop: 10 }} />
         </div>
 
-        {/* Header Fields */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 24px', marginBottom: 24, fontSize: 12 }}>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 800, color: '#475569', minWidth: 90, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.1em' }}>Job Name:</span>
-            <span style={{ fontFamily: '"Courier New", Courier, monospace', color: '#0f172a', fontWeight: 700 }}>{bid.projectName || '—'}</span>
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 800, color: '#475569', minWidth: 60, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.1em' }}>Date:</span>
-            <span style={{ fontFamily: '"Courier New", Courier, monospace', color: '#0f172a' }}>{bid.bidDate || today}</span>
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 800, color: '#475569', minWidth: 90, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.1em' }}>Location:</span>
-            <span style={{ fontFamily: '"Courier New", Courier, monospace', color: '#0f172a', fontWeight: 700 }}>{bid.island || '—'}</span>
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 800, color: '#475569', minWidth: 60, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.1em' }}>Estimator:</span>
-            <span style={{ fontFamily: '"Courier New", Courier, monospace', color: '#0f172a' }}>{bid.estimator || '—'}</span>
-          </div>
-        </div>
+        {/* ── Estimate Body ── */}
+        <div style={{ padding: '16px 24px 28px' }}>
 
-        {/* Column Headers */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-          <thead>
-            <tr style={{ borderBottom: '1.5px solid #334155' }}>
-              <th style={{ textAlign: 'left', paddingBottom: 6, fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#475569', width: '38%' }}>
-                Item Description
-              </th>
-              <th style={{ textAlign: 'left', paddingBottom: 6, fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#475569', width: '25%' }}>
-                Notes
-              </th>
-              <th style={{ textAlign: 'right', paddingBottom: 6, fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#cbd5e1', width: 100 }}>
-                Market
-              </th>
-              <th style={{ textAlign: 'right', paddingBottom: 6, fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#475569', width: 130 }}>
-                Cost
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-
-            {/* ── ALUMINUM ── */}
-            <SectionHeader>Aluminum</SectionHeader>
-            {data.aluminum.map((item, i) => (
-              <tr key={i}>
-                <td style={{ paddingTop: 4, paddingBottom: 4, paddingRight: 8, verticalAlign: 'middle' }}>
-                  <input
-                    type="text"
-                    value={item.description}
-                    onChange={e => update(d => ({
-                      ...d,
-                      aluminum: d.aluminum.map((x, j) => j === i ? { ...x, description: e.target.value } : x),
-                    }))}
-                    placeholder="Description…"
-                    style={{
-                      width: '100%', border: 'none', borderBottom: '1px solid #e2e8f0',
-                      fontSize: 12, fontFamily: '"Courier New", Courier, monospace',
-                      background: 'transparent', outline: 'none', color: '#0f172a', padding: '2px 0',
-                    }}
-                  />
-                </td>
-                <td />
-                <MarketCell />
-                <td style={{ textAlign: 'right', paddingTop: 4, paddingBottom: 4 }}>
-                  <DollarInput
-                    value={item.amount}
-                    onChange={v => update(d => ({
-                      ...d,
-                      aluminum: d.aluminum.map((x, j) => j === i ? { ...x, amount: v } : x),
-                    }))}
-                  />
-                </td>
+          {/* Column header row */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th style={{
+                  textAlign: 'left', paddingBottom: 8,
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                  textTransform: 'uppercase', color: '#94a3b8',
+                  borderBottom: '1px solid #e2e8f0', width: '40%',
+                  fontFamily: FONT,
+                }}>
+                  Item Description
+                </th>
+                <th style={{
+                  textAlign: 'left', paddingBottom: 8,
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                  textTransform: 'uppercase', color: '#94a3b8',
+                  borderBottom: '1px solid #e2e8f0', width: '22%',
+                  fontFamily: FONT,
+                }}>
+                  Notes
+                </th>
+                <th style={{
+                  textAlign: 'right', paddingBottom: 8,
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                  textTransform: 'uppercase', color: '#cbd5e1',
+                  borderBottom: '1px solid #e2e8f0', width: 90,
+                  fontFamily: FONT,
+                }}>
+                  Market
+                </th>
+                <th style={{
+                  textAlign: 'right', paddingBottom: 8,
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                  textTransform: 'uppercase', color: '#94a3b8',
+                  borderBottom: '1px solid #e2e8f0', width: 140,
+                  fontFamily: FONT,
+                }}>
+                  Cost
+                </th>
               </tr>
-            ))}
-            <tr>
-              <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 4 }}>
-                <button
-                  onClick={() => update(d => ({ ...d, aluminum: [...d.aluminum, { description: '', amount: '' }] }))}
-                  style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                >
-                  + add line
-                </button>
-              </td>
-            </tr>
-            <SubtotalRow label="Metal Subtotal" value={metalSubtotal} />
+            </thead>
+            <tbody>
 
-            {/* ── GLASS ── */}
-            <SectionHeader>Glass</SectionHeader>
-            {data.glass.map((item, i) => (
-              <tr key={i}>
-                <td style={{ paddingTop: 4, paddingBottom: 4, paddingRight: 8, verticalAlign: 'middle' }}>
-                  <input
-                    type="text"
-                    value={item.description}
-                    onChange={e => update(d => ({
-                      ...d,
-                      glass: d.glass.map((x, j) => j === i ? { ...x, description: e.target.value } : x),
-                    }))}
-                    placeholder="Description…"
-                    style={{
-                      width: '100%', border: 'none', borderBottom: '1px solid #e2e8f0',
-                      fontSize: 12, fontFamily: '"Courier New", Courier, monospace',
-                      background: 'transparent', outline: 'none', color: '#0f172a', padding: '2px 0',
-                    }}
-                  />
-                </td>
-                <td />
-                <MarketCell />
-                <td style={{ textAlign: 'right', paddingTop: 4, paddingBottom: 4 }}>
-                  <DollarInput
-                    value={item.amount}
-                    onChange={v => update(d => ({
-                      ...d,
-                      glass: d.glass.map((x, j) => j === i ? { ...x, amount: v } : x),
-                    }))}
-                  />
-                </td>
-              </tr>
-            ))}
-            <tr>
-              <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 4 }}>
-                <button
-                  onClick={() => update(d => ({ ...d, glass: [...d.glass, { description: '', amount: '' }] }))}
-                  style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                >
-                  + add line
-                </button>
-              </td>
-            </tr>
-            <SubtotalRow label="Glass Subtotal" value={glassSubtotal} />
-
-            {/* ── MISC MATERIALS ── */}
-            <SectionHeader>Misc Materials</SectionHeader>
-            {([
-              ['caulking',       'Caulking'],
-              ['tapeGasketsBlks','Tape, Gaskets, Blks, etc.'],
-              ['fasteners',      'Fasteners'],
-              ['shims',          'Shims'],
-              ['flashing',       'Flashing'],
-              ['shopDrawings',   'Shop Drawings / Structural Calcs'],
-              ['travel',         'Travel'],
-              ['totalFreight',   'Total Freight'],
-            ] as [keyof CarlsData['misc'], string][]).map(([key, label]) => (
-              <tr key={key}>
-                <td style={{ paddingTop: 3, paddingBottom: 3, paddingRight: 8, fontSize: 12, color: '#374151', fontFamily: '"Courier New", Courier, monospace' }}>
-                  {label}
-                </td>
-                <td />
-                <MarketCell />
-                <td style={{ textAlign: 'right', paddingTop: 3, paddingBottom: 3 }}>
-                  <DollarInput
-                    value={data.misc[key]}
-                    onChange={v => update(d => ({ ...d, misc: { ...d.misc, [key]: v } }))}
-                  />
-                </td>
-              </tr>
-            ))}
-            <SubtotalRow label="Misc Subtotal" value={miscSubtotal} />
-
-            {/* ── OTHER COST ITEMS ── */}
-            <SectionHeader>Other Cost Items</SectionHeader>
-            {([
-              ['equipmentRental', 'Equipment Rental'],
-              ['misc',            'Misc'],
-              ['travel',          'Travel'],
-              ['freight',         'Freight (misc)'],
-            ] as [keyof CarlsData['other'], string][]).map(([key, label]) => (
-              <tr key={key}>
-                <td style={{ paddingTop: 3, paddingBottom: 3, paddingRight: 8, fontSize: 12, color: '#374151', fontFamily: '"Courier New", Courier, monospace' }}>
-                  {label}
-                </td>
-                <td />
-                <MarketCell />
-                <td style={{ textAlign: 'right', paddingTop: 3, paddingBottom: 3 }}>
-                  <DollarInput
-                    value={data.other[key]}
-                    onChange={v => update(d => ({ ...d, other: { ...d.other, [key]: v } }))}
-                  />
-                </td>
-              </tr>
-            ))}
-
-            {/* Grand Total Materials */}
-            <GrandTotalRow label="Grand Total Materials" value={grandTotalMaterials} color="#0f172a" />
-
-            {/* ── LABOR ── */}
-            <SectionHeader>Labor</SectionHeader>
-            {data.labor.map((line, i) => (
-              <tr key={i}>
-                <td style={{ paddingTop: 4, paddingBottom: 4, fontFamily: '"Courier New", Courier, monospace', fontSize: 12, color: '#374151' }}>
-                  Fab by{' '}
-                  <input
-                    type="text"
-                    value={line.byWhom}
-                    onChange={e => update(d => ({
-                      ...d,
-                      labor: d.labor.map((l, j) => j === i ? { ...l, byWhom: e.target.value } : l),
-                    }))}
-                    style={{
-                      width: 60, border: 'none', borderBottom: '1px solid #e2e8f0',
-                      fontSize: 12, fontFamily: 'inherit', background: 'transparent',
-                      outline: 'none', color: '#0f172a', textAlign: 'center',
-                    }}
-                  />
-                </td>
-                <td style={{ paddingTop: 4, paddingBottom: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: '"Courier New", Courier, monospace', color: '#374151' }}>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={line.hours}
-                      onChange={e => update(d => ({
+              {/* ── ALUMINUM ── */}
+              <SectionHeader>Aluminum</SectionHeader>
+              {data.aluminum.map((item, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={bodyCell}>
+                    <DescriptionInput
+                      value={item.description}
+                      onChange={v => update(d => ({
                         ...d,
-                        labor: d.labor.map((l, j) => j === i ? { ...l, hours: e.target.value, amount: '' } : l),
+                        aluminum: d.aluminum.map((x, j) => j === i ? { ...x, description: v } : x),
                       }))}
-                      placeholder="hrs"
-                      style={{
-                        width: 48, padding: '3px 4px', border: '1px solid rgba(21,128,61,0.35)',
-                        borderRadius: 4, fontSize: 12, fontFamily: 'inherit',
-                        color: '#14532d', background: 'rgba(240,253,244,0.8)', outline: 'none', textAlign: 'right',
-                      }}
                     />
-                    <span>@</span>
-                    <span>$</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={line.rate}
-                      onChange={e => update(d => ({
+                  </td>
+                  <td style={bodyCell} />
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <DollarInput
+                      value={item.amount}
+                      onChange={v => update(d => ({
                         ...d,
-                        labor: d.labor.map((l, j) => j === i ? { ...l, rate: e.target.value, amount: '' } : l),
+                        aluminum: d.aluminum.map((x, j) => j === i ? { ...x, amount: v } : x),
                       }))}
-                      style={{
-                        width: 52, padding: '3px 4px', border: '1px solid rgba(21,128,61,0.35)',
-                        borderRadius: 4, fontSize: 12, fontFamily: 'inherit',
-                        color: '#14532d', background: 'rgba(240,253,244,0.8)', outline: 'none', textAlign: 'right',
-                      }}
                     />
-                    <span>/hr</span>
+                  </td>
+                </tr>
+              ))}
+              <tr className="no-print">
+                <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
+                  <button
+                    onClick={() => update(d => ({ ...d, aluminum: [...d.aluminum, { description: '', amount: '' }] }))}
+                    style={{
+                      fontSize: 10, color: '#94a3b8', background: 'none',
+                      border: 'none', cursor: 'pointer', padding: 0,
+                      fontFamily: FONT, fontWeight: 600,
+                    }}
+                  >
+                    + add line
+                  </button>
+                </td>
+              </tr>
+              <SubtotalRow label="Metal Subtotal" value={metalSubtotal} />
+
+              {/* ── GLASS ── */}
+              <SectionHeader>Glass</SectionHeader>
+              {data.glass.map((item, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={bodyCell}>
+                    <DescriptionInput
+                      value={item.description}
+                      onChange={v => update(d => ({
+                        ...d,
+                        glass: d.glass.map((x, j) => j === i ? { ...x, description: v } : x),
+                      }))}
+                    />
+                  </td>
+                  <td style={bodyCell} />
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <DollarInput
+                      value={item.amount}
+                      onChange={v => update(d => ({
+                        ...d,
+                        glass: d.glass.map((x, j) => j === i ? { ...x, amount: v } : x),
+                      }))}
+                    />
+                  </td>
+                </tr>
+              ))}
+              <tr className="no-print">
+                <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
+                  <button
+                    onClick={() => update(d => ({ ...d, glass: [...d.glass, { description: '', amount: '' }] }))}
+                    style={{
+                      fontSize: 10, color: '#94a3b8', background: 'none',
+                      border: 'none', cursor: 'pointer', padding: 0,
+                      fontFamily: FONT, fontWeight: 600,
+                    }}
+                  >
+                    + add line
+                  </button>
+                </td>
+              </tr>
+              <SubtotalRow label="Glass Subtotal" value={glassSubtotal} />
+
+              {/* ── MISC MATERIALS ── */}
+              <SectionHeader>Misc Materials</SectionHeader>
+              {([
+                ['caulking',       'Caulking'],
+                ['tapeGasketsBlks','Tape, Gaskets, Blks, etc.'],
+                ['fasteners',      'Fasteners'],
+                ['shims',          'Shims'],
+                ['flashing',       'Flashing'],
+                ['shopDrawings',   'Shop Drawings / Structural Calcs'],
+                ['travel',         'Travel'],
+                ['totalFreight',   'Total Freight'],
+              ] as [keyof CarlsData['misc'], string][]).map(([key, label]) => (
+                <tr key={key} style={{ borderBottom: '1px solid #f8fafc' }}>
+                  <td style={bodyCell}>{label}</td>
+                  <td style={bodyCell} />
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <DollarInput
+                      value={data.misc[key]}
+                      onChange={v => update(d => ({ ...d, misc: { ...d.misc, [key]: v } }))}
+                    />
+                  </td>
+                </tr>
+              ))}
+              <SubtotalRow label="Misc Subtotal" value={miscSubtotal} />
+
+              {/* ── OTHER COST ITEMS ── */}
+              <SectionHeader>Other Cost Items</SectionHeader>
+              {([
+                ['equipmentRental', 'Equipment Rental'],
+                ['misc',            'Misc'],
+                ['travel',          'Travel'],
+                ['freight',         'Freight (misc)'],
+              ] as [keyof CarlsData['other'], string][]).map(([key, label]) => (
+                <tr key={key} style={{ borderBottom: '1px solid #f8fafc' }}>
+                  <td style={bodyCell}>{label}</td>
+                  <td style={bodyCell} />
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <DollarInput
+                      value={data.other[key]}
+                      onChange={v => update(d => ({ ...d, other: { ...d.other, [key]: v } }))}
+                    />
+                  </td>
+                </tr>
+              ))}
+
+              {/* Grand Total Materials — mid-tier dark */}
+              <tr><td colSpan={4} style={{ paddingTop: 6 }} /></tr>
+              <GrandTotalRow label="Grand Total Materials" value={grandTotalMaterials} />
+
+              {/* ── LABOR ── */}
+              <SectionHeader>Labor</SectionHeader>
+              {data.labor.map((line, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={bodyCell}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: '#64748b', fontSize: 12 }}>Fab by</span>
+                      <SmallInput
+                        value={line.byWhom}
+                        onChange={v => update(d => ({
+                          ...d,
+                          labor: d.labor.map((l, j) => j === i ? { ...l, byWhom: v } : l),
+                        }))}
+                        align="center"
+                        width={64}
+                      />
+                    </div>
+                  </td>
+                  <td style={bodyCell}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
+                      <SmallInput
+                        value={line.hours}
+                        onChange={v => update(d => ({
+                          ...d,
+                          labor: d.labor.map((l, j) => j === i ? { ...l, hours: v, amount: '' } : l),
+                        }))}
+                        placeholder="hrs"
+                        width={44}
+                      />
+                      <span style={{ color: '#94a3b8' }}>@</span>
+                      <span style={{ color: '#64748b' }}>$</span>
+                      <SmallInput
+                        value={line.rate}
+                        onChange={v => update(d => ({
+                          ...d,
+                          labor: d.labor.map((l, j) => j === i ? { ...l, rate: v, amount: '' } : l),
+                        }))}
+                        width={52}
+                      />
+                      <span style={{ color: '#94a3b8' }}>/hr</span>
+                    </div>
+                  </td>
+                  <MarketCell />
+                  <td style={{ ...bodyCell, textAlign: 'right' }}>
+                    <DollarInput
+                      value={line.amount || (line.hours && line.rate ? fmt(laborAmount(line)) : '')}
+                      onChange={v => update(d => ({
+                        ...d,
+                        labor: d.labor.map((l, j) => j === i ? { ...l, amount: v } : l),
+                      }))}
+                      placeholder={line.hours && line.rate ? fmt(laborAmount(line)) : '0.00'}
+                    />
+                  </td>
+                </tr>
+              ))}
+              <SubtotalRow label="Subtotal Labor" value={laborSubtotal} />
+
+              {/* ── MARKUP ── */}
+              <SectionHeader>Markup</SectionHeader>
+              <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+                <td style={bodyCell}>Overhead</td>
+                <td style={{ ...bodyCell, fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+                  (= labor cost)
+                </td>
+                <MarketCell />
+                <td style={{ ...bodyCell, textAlign: 'right' }}>
+                  <DollarInput
+                    value={data.markup.overheadOverride}
+                    onChange={v => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: v } }))}
+                    placeholder={fmt(laborSubtotal)}
+                  />
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+                <td style={bodyCell}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span>Profit @</span>
+                    <SmallInput
+                      value={data.markup.profitPct}
+                      onChange={v => update(d => ({ ...d, markup: { ...d.markup, profitPct: v } }))}
+                      width={44}
+                    />
+                    <span style={{ color: '#94a3b8' }}>%</span>
                   </div>
                 </td>
+                <td style={bodyCell} />
                 <MarketCell />
-                <td style={{ textAlign: 'right', paddingTop: 4, paddingBottom: 4 }}>
-                  <DollarInput
-                    value={line.amount || (line.hours && line.rate ? fmt(laborAmount(line)) : '')}
-                    onChange={v => update(d => ({
-                      ...d,
-                      labor: d.labor.map((l, j) => j === i ? { ...l, amount: v } : l),
-                    }))}
-                    placeholder={line.hours && line.rate ? fmt(laborAmount(line)) : '0.00'}
-                  />
+                <td style={{ ...bodyCell, textAlign: 'right' }}>
+                  <AmountDisplay value={profit} />
                 </td>
               </tr>
-            ))}
-            <SubtotalRow label="Subtotal Labor" value={laborSubtotal} />
 
-            {/* ── MARKUP ── */}
-            <SectionHeader>Markup</SectionHeader>
-            <tr>
-              <td style={{ paddingTop: 4, paddingBottom: 4, fontSize: 12, fontFamily: '"Courier New", Courier, monospace', color: '#374151' }}>
-                Overhead
-              </td>
-              <td style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic', paddingLeft: 4, verticalAlign: 'middle' }}>
-                (= labor cost)
-              </td>
-              <MarketCell />
-              <td style={{ textAlign: 'right', paddingTop: 4, paddingBottom: 4 }}>
-                <DollarInput
-                  value={data.markup.overheadOverride}
-                  onChange={v => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: v } }))}
-                  placeholder={fmt(laborSubtotal)}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td style={{ paddingTop: 4, paddingBottom: 4, verticalAlign: 'middle' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: '"Courier New", Courier, monospace', color: '#374151' }}>
-                  Profit @
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={data.markup.profitPct}
-                    onChange={e => update(d => ({ ...d, markup: { ...d.markup, profitPct: e.target.value } }))}
-                    style={{
-                      width: 44, padding: '3px 4px', border: '1px solid rgba(21,128,61,0.35)',
-                      borderRadius: 4, fontSize: 12, fontFamily: 'inherit',
-                      color: '#14532d', background: 'rgba(240,253,244,0.8)', outline: 'none', textAlign: 'right',
-                    }}
-                  />
-                  <span>%</span>
-                </div>
-              </td>
-              <td />
-              <MarketCell />
-              <td style={{ textAlign: 'right', paddingTop: 4, paddingBottom: 4 }}>
-                <span style={{ fontSize: 13, fontFamily: '"Courier New", Courier, monospace', color: '#14532d' }}>
-                  ${fmt(profit)}
-                </span>
-              </td>
-            </tr>
+              {/* Total Costs */}
+              <tr><td colSpan={4} style={{ paddingTop: 4 }} /></tr>
+              <GrandTotalRow label="Total Costs" value={totalCosts} />
 
-            {/* Total Costs */}
-            <GrandTotalRow label="Total Costs" value={totalCosts} color="#0f172a" />
+              {/* ── TAX ── */}
+              <SectionHeader>Tax</SectionHeader>
+              <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+                <td style={bodyCell}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span>GET Tax @</span>
+                    <SmallInput
+                      value={data.taxRate}
+                      onChange={v => update(d => ({ ...d, taxRate: v }))}
+                      width={44}
+                    />
+                    <span style={{ color: '#94a3b8' }}>%</span>
+                  </div>
+                </td>
+                <td style={bodyCell} />
+                <MarketCell />
+                <td style={{ ...bodyCell, textAlign: 'right' }}>
+                  <AmountDisplay value={taxAmt} />
+                </td>
+              </tr>
 
-            {/* ── TAX ── */}
-            <tr>
-              <td style={{ paddingTop: 8, paddingBottom: 4, verticalAlign: 'middle' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: '"Courier New", Courier, monospace', color: '#374151' }}>
-                  GET Tax @
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={data.taxRate}
-                    onChange={e => update(d => ({ ...d, taxRate: e.target.value }))}
-                    style={{
-                      width: 44, padding: '3px 4px', border: '1px solid rgba(21,128,61,0.35)',
-                      borderRadius: 4, fontSize: 12, fontFamily: 'inherit',
-                      color: '#14532d', background: 'rgba(240,253,244,0.8)', outline: 'none', textAlign: 'right',
-                    }}
-                  />
-                  <span>%</span>
-                </div>
-              </td>
-              <td />
-              <MarketCell />
-              <td style={{ textAlign: 'right', paddingTop: 8, paddingBottom: 4 }}>
-                <span style={{ fontSize: 13, fontFamily: '"Courier New", Courier, monospace', color: '#14532d' }}>
-                  ${fmt(taxAmt)}
-                </span>
-              </td>
-            </tr>
+              {/* ── GRAND TOTAL ── */}
+              <tr><td colSpan={4} style={{ paddingTop: 10 }} /></tr>
+              <GrandTotalRow label="Grand Total" value={grandTotal} prominent />
 
-            {/* Grand Total */}
-            <tr>
-              <td colSpan={4} style={{ paddingTop: 12 }}>
+            </tbody>
+          </table>
+
+          {/* ── Summary footer ── */}
+          <div style={{
+            marginTop: 24,
+            paddingTop: 16,
+            borderTop: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 20,
+            flexWrap: 'wrap',
+          }}>
+            {[
+              { label: 'Materials', value: grandTotalMaterials },
+              { label: 'Labor', value: laborSubtotal },
+              { label: 'Overhead', value: overhead },
+              { label: `Profit (${data.markup.profitPct}%)`, value: profit },
+              { label: `GET (${data.taxRate}%)`, value: taxAmt },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ textAlign: 'right' }}>
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  borderTop: '3px double #0f172a',
-                  paddingTop: 10,
-                  paddingBottom: 4,
+                  fontSize: 8, fontWeight: 800, color: '#94a3b8',
+                  textTransform: 'uppercase', letterSpacing: '0.12em',
+                  fontFamily: FONT, marginBottom: 2,
                 }}>
-                  <span style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    Grand Total
-                  </span>
-                  <span style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', fontFamily: '"Courier New", Courier, monospace', letterSpacing: '-0.01em' }}>
-                    ${fmt(grandTotal)}
-                  </span>
+                  {label}
                 </div>
-              </td>
-            </tr>
+                <div style={{
+                  fontSize: 12, fontWeight: 700, color: '#334155',
+                  fontFamily: FONT, fontVariantNumeric: 'tabular-nums',
+                }}>
+                  ${fmt(value)}
+                </div>
+              </div>
+            ))}
+          </div>
 
-          </tbody>
-        </table>
-
-        {/* Footer summary for print */}
-        <div style={{ marginTop: 32, borderTop: '1px solid #e2e8f0', paddingTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 24 }}>
-          {[
-            { label: 'Materials', value: grandTotalMaterials },
-            { label: 'Labor', value: laborSubtotal },
-            { label: 'Overhead', value: overhead },
-            { label: `Profit (${data.markup.profitPct}%)`, value: profit },
-            { label: `GET (${data.taxRate}%)`, value: taxAmt },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', fontFamily: '"Courier New", Courier, monospace' }}>${fmt(value)}</div>
+          {/* ── Print-only footer ── */}
+          <div style={{
+            marginTop: 20,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: 12,
+            borderTop: '1px solid #e2e8f0',
+          }}>
+            <div style={{ fontSize: 9, color: '#94a3b8', fontFamily: FONT }}>
+              Generated by BanyanOS · {today}
             </div>
-          ))}
-        </div>
+            <div style={{ fontSize: 9, color: '#94a3b8', fontFamily: FONT }}>
+              Kula Glass Co., Inc. — Confidential Estimate
+            </div>
+          </div>
 
+        </div>
       </div>
     </div>
   );
