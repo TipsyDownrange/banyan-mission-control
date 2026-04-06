@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
+import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 
 // Smartsheet column IDs for WORK ORDERS sheet (7905619916154756)
 const COL = {
@@ -98,6 +99,16 @@ export async function POST(req: Request) {
     if (!res.ok) {
       return NextResponse.json({ error: data.message || 'Smartsheet write failed' }, { status: 500 });
     }
+
+    // Fire-and-forget customer DB backfeed — never blocks WO creation
+    fireAndForgetCustomerUpdate({
+      name:           customerName,
+      island:         island || city || '',
+      address:        address,
+      city:           city,
+      primaryContact: contactPerson,
+      phone:          contactPhone,
+    });
 
     return NextResponse.json({ ok: true, rowId: data.result?.[0]?.id, woNumber: wo });
   } catch (err) {

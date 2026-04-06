@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
+import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import {
   calculateSiteVisitFee, getJobTypeDefaults, listJobTypes,
   LABOR_RATES, GET_RATE, estimateDriveTime, DEFAULT_SERVICE_CREW,
@@ -134,6 +135,18 @@ export async function POST(req: Request) {
 
     if (!island || !siteAddress) {
       return NextResponse.json({ error: 'island and siteAddress required' }, { status: 400 });
+    }
+
+    // Fire-and-forget customer DB backfeed — never blocks quote generation
+    if (customerName || customerPhone || customerEmail) {
+      fireAndForgetCustomerUpdate({
+        name:    customerName,
+        phone:   customerPhone,
+        email:   customerEmail,
+        address: customerAddress,
+        island:  island,
+        source:  'quote',
+      });
     }
 
     // ─── Labor calculation ────────────────────────────────────────────────────

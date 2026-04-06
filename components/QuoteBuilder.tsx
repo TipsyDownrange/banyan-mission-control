@@ -67,7 +67,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharge[]>([]);
   // Labor
   const [crewCount, setCrewCount] = useState(2);
-  const [hourlyRate, setHourlyRate] = useState(89.10);
+  const [hourlyRate, setHourlyRate] = useState(120.00);
   const [laborHours, setLaborHours] = useState('');
   // Site visit
   const [includeSiteVisit, setIncludeSiteVisit] = useState(false);
@@ -319,13 +319,10 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                 style={INP} min={1} max={10} />
             </div>
             <div>
-              <label style={LBL}>Rate / hr</label>
-              <select value={hourlyRate} onChange={e => setHourlyRate(parseFloat(e.target.value))}
-                style={{ ...INP, cursor: 'pointer', WebkitAppearance: 'none' }}>
-                <option value={89.10}>Journeyman $89.10</option>
-                <option value={93.10}>Leadperson $93.10</option>
-                <option value={73.05}>Apprentice 70% $73.05</option>
-              </select>
+              <label style={LBL}>Bid Rate / hr ($)</label>
+              <input type="number" value={hourlyRate}
+                onChange={e => setHourlyRate(parseFloat(e.target.value) || 120)}
+                style={INP} step={0.01} min={0} placeholder="120.00" />
             </div>
             <div>
               <label style={LBL}>Hours on Site</label>

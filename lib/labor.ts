@@ -2,17 +2,17 @@
 // Source: Glaziers Union Local 1889 Exhibit A
 
 export const LABOR_RATES = {
-  journeyman:  89.10,  // total package $/hr
-  leadperson:  93.10,  // foreman equivalent
-  apprentice_70: 73.05, // 4,001–5,000 hr period (mid-level)
-  apprentice_50: 62.35, // 1,001–2,000 hr period (entry)
+  journeyman:  120.00, // bid rate $/hr (default)
+  leadperson:  125.00, // lead/foreman bid rate
+  apprentice_70: 95.00, // apprentice bid rate (senior)
+  apprentice_50: 80.00, // apprentice bid rate (entry)
 };
 
 // Default crew for service quoting
 export const DEFAULT_SERVICE_CREW = {
   count: 2,
   rate: LABOR_RATES.journeyman,
-  label: '2 Journeymen',
+  label: '2-Person Crew',
 };
 
 // GET rate
