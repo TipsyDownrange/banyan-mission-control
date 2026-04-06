@@ -218,7 +218,7 @@ export default function DispatchBoard() {
     const res = await fetch('/api/dispatch-schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: addDate, kID: addKID, project_name: addProject, island: addIsland, men_required: addMen, hours_estimated: addHours, created_by: 'Mission Control', work_type: addWorkType, notes: addNotes }),
+      body: JSON.stringify({ date: addDate, kID: addKID, project_name: addProject, island: addIsland, men_required: addMen, hours_estimated: addHours, start_time: addStartTime, end_time: addEndTime, created_by: 'Mission Control', work_type: addWorkType, notes: addNotes }),
     });
     const data = await res.json();
     if (data.ok) {
@@ -657,12 +657,11 @@ export default function DispatchBoard() {
                   <input value={addProject} onChange={e => setAddProject(e.target.value)} placeholder="Job name..." style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Date *</label>
                   <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div>
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Start Time</label>
                   <input type="time" value={addStartTime} onChange={e => setAddStartTime(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
@@ -675,10 +674,10 @@ export default function DispatchBoard() {
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Men Needed</label>
                   <input type="number" value={addMen} onChange={e => setAddMen(e.target.value)} min="1" max="12" style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
-                <div>
+              </div>
+              <div>
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Est. Hours</label>
                   <input type="number" value={addHours} onChange={e => setAddHours(e.target.value)} placeholder="8" style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
-                </div>
               </div>
               <div>
                 <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Island</label>
