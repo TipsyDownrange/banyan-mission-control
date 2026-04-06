@@ -701,17 +701,29 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       {!loading && data && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 24, padding: 18, borderRadius: 24, background: 'linear-gradient(135deg,rgba(255,255,255,0.98) 0%,rgba(240,249,255,0.92) 50%,rgba(248,250,252,0.96) 100%)', border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}>
           {[
-            { label: 'Active WOs',      value: data.stats.active,          helper: 'Open pipeline' },
-            { label: 'Need scheduling', value: data.stats.needsScheduling, helper: 'Waiting for date' },
-            { label: 'In progress',     value: data.stats.inProgress,      helper: 'Measuring or fabricating' },
-            { label: 'Completed',       value: data.stats.completed,       helper: 'All time' },
-          ].map(s => (
-            <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
-              <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
-            </div>
-          ))}
+            { label: 'Active WOs',      value: data.stats.active,          helper: 'Open pipeline',             filterKey: 'all' },
+            { label: 'Need scheduling', value: data.stats.needsScheduling, helper: 'Waiting for date',           filterKey: 'approved' },
+            { label: 'In progress',     value: data.stats.inProgress,      helper: 'Measuring or fabricating',  filterKey: 'in_progress' },
+            { label: 'Completed',       value: data.stats.completed,       helper: 'All time',                  filterKey: 'closed' },
+          ].map(s => {
+            const isActive = filter === s.filterKey;
+            return (
+              <button
+                key={s.label}
+                onClick={() => setFilter(isActive ? 'all' : s.filterKey)}
+                style={{
+                  padding: '14px 16px', borderRadius: 18, textAlign: 'left',
+                  background: isActive ? 'rgba(15,118,110,0.08)' : 'rgba(255,255,255,0.78)',
+                  border: isActive ? '2px solid rgba(15,118,110,0.45)' : '1px solid rgba(226,232,240,0.95)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  boxShadow: isActive ? '0 2px 12px rgba(15,118,110,0.12)' : 'none',
+                }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? '#0f766e' : '#64748b' }}>{s.label}</div>
+                <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: isActive ? '#0f766e' : '#0f172a', lineHeight: 1 }}>{s.value}</div>
+                <div style={{ marginTop: 6, fontSize: 11, color: isActive ? '#0f766e' : '#94a3b8' }}>{s.helper}</div>
+              </button>
+            );
+          })}
         </div>
       )}
 

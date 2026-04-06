@@ -148,7 +148,18 @@ export async function GET() {
       getFolderLinks(),
     ]);
 
-    const all = [...active, ...quoted, ...completed].map(wo => ({
+    // Deduplicate WOs — active > quoted > completed (first occurrence wins)
+    // Key: WO# if present, otherwise WO name (trimmed)
+    const seen = new Map<string, typeof active[0]>();
+    for (const wo of [...active, ...quoted, ...completed]) {
+      const key = (wo.id || wo.name).trim();
+      if (key && !seen.has(key)) {
+        seen.set(key, wo);
+      }
+    }
+    const deduped = [...seen.values()];
+
+    const all = deduped.map(wo => ({
       ...wo,
       folderUrl: matchFolderUrl(wo.name, folderLinks),
     }));
