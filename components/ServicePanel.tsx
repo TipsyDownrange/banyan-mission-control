@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
+import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar';
 import ServiceIntake from '@/components/ServiceIntake';
 import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
@@ -64,7 +65,7 @@ function toTitleCase(str: string): string {
 }
 
 function WOCard({
-  wo, expanded, onToggle, onStageChange, onSave, allCrew, onQuote, onDetail,
+  wo, expanded, onToggle, onStageChange, onSave, allCrew, onQuote, onDetail, onLinkFolder,
 }: {
   wo: WorkOrder;
   expanded: boolean;
@@ -74,10 +75,14 @@ function WOCard({
   allCrew: CrewMember[];
   onQuote: (woId: string) => void;
   onDetail: (wo: WorkOrder) => void;
+  onLinkFolder: (woId: string, woName: string, folderUrl: string) => Promise<void>;
 }) {
   const [mode, setMode] = useState<'view' | 'dispatch' | 'edit' | 'close'>('view');
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
+  const [linkingFolder, setLinkingFolder] = useState(false);
+  const [linkFolderInput, setLinkFolderInput] = useState('');
+  const [linkFolderSaving, setLinkFolderSaving] = useState(false);
 
   const [editDraft, setEditDraft] = useState({
     description: wo.description,
@@ -220,14 +225,20 @@ function WOCard({
               style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               ✎
             </button>
-            {/* Files / Drive folder link — only show if matched */}
-            {wo.folderUrl && (
+            {/* Files / Drive folder link — or Link Folder button */}
+            {wo.folderUrl ? (
               <a href={wo.folderUrl} target="_blank" rel="noreferrer"
                 title="Open project files in Drive"
-                onClick={e => e.stopPropagation()}
+                onClick={e => { e.stopPropagation(); e.preventDefault(); window.open(wo.folderUrl, '_blank', 'noopener,noreferrer'); }}
                 style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, textDecoration: 'none' }}>
                 📁
               </a>
+            ) : (
+              <button title="Link Drive folder"
+                onClick={e => { e.stopPropagation(); setLinkingFolder(p => !p); }}
+                style={{ width: 28, height: 28, borderRadius: 8, border: linkingFolder ? '1px solid rgba(3,105,161,0.5)' : '1px solid rgba(203,213,225,0.7)', background: linkingFolder ? 'rgba(239,246,255,0.96)' : 'rgba(255,255,255,0.7)', color: linkingFolder ? '#0369a1' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                🔗
+              </button>
             )}
             {/* Print dispatch sheet */}
             <button title="Print dispatch sheet for crew"
@@ -275,6 +286,43 @@ function WOCard({
           </div>
         )}
       </div>
+
+      {/* Link Folder inline form */}
+      {linkingFolder && (
+        <div onClick={e => e.stopPropagation()} style={{ padding: '8px 16px 12px 20px', borderTop: '1px solid rgba(59,130,246,0.15)', background: 'rgba(239,246,255,0.5)' }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0369a1', marginBottom: 6 }}>Link Drive Folder</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input
+              type="url"
+              value={linkFolderInput}
+              onChange={e => setLinkFolderInput(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              placeholder="Paste Google Drive folder URL..."
+              autoFocus
+              style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(3,105,161,0.3)', fontSize: 12, outline: 'none', background: 'white', color: '#0f172a' }}
+            />
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (!linkFolderInput || linkFolderSaving) return;
+                setLinkFolderSaving(true);
+                await onLinkFolder(wo.id, wo.name, linkFolderInput);
+                setLinkingFolder(false);
+                setLinkFolderInput('');
+                setLinkFolderSaving(false);
+              }}
+              disabled={!linkFolderInput || linkFolderSaving}
+              style={{ padding: '7px 14px', borderRadius: 8, background: linkFolderInput && !linkFolderSaving ? '#0369a1' : '#e2e8f0', color: linkFolderInput && !linkFolderSaving ? 'white' : '#94a3b8', border: 'none', fontSize: 12, fontWeight: 700, cursor: linkFolderInput && !linkFolderSaving ? 'pointer' : 'default', flexShrink: 0 }}>
+              {linkFolderSaving ? '...' : 'Save'}
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); setLinkingFolder(false); setLinkFolderInput(''); }}
+              style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}>
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Expanded body */}
       {expanded && (
@@ -466,6 +514,8 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('date_desc');
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
   // Local optimistic state overrides: woId → partial WO
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<WorkOrder>>>({});
@@ -520,6 +570,20 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
     }
   }
 
+  async function handleLinkFolder(woId: string, woName: string, folderUrl: string) {
+    // Optimistic update
+    setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], folderUrl } }));
+    try {
+      await fetch('/api/service/folder-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ woName, folderUrl }),
+      });
+    } catch {
+      // Non-fatal: optimistic update stays, will be confirmed on next refresh
+    }
+  }
+
   async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string; }) {
     // Optimistic update
     setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], ...fields } }));
@@ -548,11 +612,47 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
     }
   }
 
-  const filtered = mergedWorkOrders.filter(wo => {
-    if (filter === 'all') return wo.status !== 'closed' && wo.status !== 'lost';
-    if (filter === 'completed') return wo.status === 'closed';
-    return wo.status === filter;
+  // Search + filter + sort applied to all views
+  const searchLower = search.toLowerCase();
+  const filteredWOs = mergedWorkOrders.filter(wo => {
+    if (wo.status === 'lost') return false;
+    if (filter !== 'all' && wo.status !== filter) return false;
+    if (search) {
+      const q = searchLower;
+      if (!(
+        wo.name.toLowerCase().includes(q) ||
+        wo.description.toLowerCase().includes(q) ||
+        wo.contact.toLowerCase().includes(q) ||
+        wo.island.toLowerCase().includes(q) ||
+        wo.address.toLowerCase().includes(q) ||
+        wo.id.toLowerCase().includes(q) ||
+        wo.assignedTo.toLowerCase().includes(q)
+      )) return false;
+    }
+    return true;
   });
+
+  const sortedWOs = [...filteredWOs].sort((a, b) => {
+    switch (sort) {
+      case 'name': return a.name.localeCompare(b.name);
+      case 'status': {
+        const ai = STAGES.findIndex(s => s.key === a.status);
+        const bi = STAGES.findIndex(s => s.key === b.status);
+        return ai - bi;
+      }
+      case 'date_asc': return (a.dateReceived || '').localeCompare(b.dateReceived || '');
+      case 'date_desc': return (b.dateReceived || '').localeCompare(a.dateReceived || '');
+      default: return 0;
+    }
+  });
+
+  const filteredByStatus: Record<string, WorkOrder[]> = {};
+  for (const stage of STAGES) {
+    filteredByStatus[stage.key] = sortedWOs.filter(w => w.status === stage.key);
+  }
+
+  // Keep 'filtered' alias for list view
+  const filtered = sortedWOs;
 
   return (
     <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto' }}>
@@ -631,21 +731,50 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       )}
 
       {/* KANBAN */}
+      {/* Shared FilterBar — above both kanban and list */}
+      {!loading && data && (
+        <FilterBar
+          chips={[
+            { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && w.status !== 'closed').length, color: '#64748b' },
+            { id: 'lead',        label: 'Leads',          count: mergedByStatus['lead']?.length || 0,        color: '#64748b' },
+            { id: 'quote',       label: 'Quote',          count: mergedByStatus['quote']?.length || 0,       color: '#0369a1' },
+            { id: 'approved',    label: 'Need Schedule',  count: mergedByStatus['approved']?.length || 0,    color: '#92400e' },
+            { id: 'scheduled',   label: 'Scheduled',      count: mergedByStatus['scheduled']?.length || 0,   color: '#4338ca' },
+            { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: '#0f766e' },
+            { id: 'closed',      label: 'Completed',      count: mergedByStatus['closed']?.length || 0,      color: '#15803d' },
+          ] as FilterChip[]}
+          activeChip={filter}
+          onChipChange={setFilter}
+          sortOptions={[
+            { id: 'date_desc', label: 'Date (Newest)' },
+            { id: 'date_asc',  label: 'Date (Oldest)' },
+            { id: 'name',      label: 'Name A→Z' },
+            { id: 'status',    label: 'Status' },
+          ] as SortOption[]}
+          sortValue={sort}
+          onSortChange={setSort}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search WOs by name, customer, island..."
+          resultCount={sortedWOs.length}
+        />
+      )}
+
       {!loading && data && view === 'kanban' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 12, alignItems: 'start' }}>
           {STAGES.slice(0, 5).map(stage => {
-            const wos = mergedByStatus[stage.key] || [];
+            const wos = filteredByStatus[stage.key] || [];
             return (
               <div key={stage.key}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color }} />
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{stage.label}</div>
-                  <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{mergedWorkOrders.length}</div>
+                  <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{wos.length}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {mergedWorkOrders.length === 0 ? (
+                  {wos.length === 0 ? (
                     <div style={{ padding: '20px 16px', borderRadius: 16, background: 'rgba(248,250,252,0.5)', border: '1px dashed rgba(226,232,240,0.8)', textAlign: 'center', fontSize: 12, color: '#cbd5e1' }}>
-                      No work orders
+                      {search ? 'No matches' : 'No work orders'}
                     </div>
                   ) : wos.map(wo => (
                     <WOCard key={wo.id || wo.name} wo={wo}
@@ -655,6 +784,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
                       onSave={handleSave}
                       onQuote={(id) => setQuoteWO(id)}
                       onDetail={(w) => setDetailWO(w)}
+                      onLinkFolder={handleLinkFolder}
                       allCrew={allCrew}
                     />
                   ))}
@@ -668,20 +798,6 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       {/* LIST */}
       {!loading && data && view === 'list' && (
         <>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-            {[
-              ['all', 'Active', mergedWorkOrders.filter(w => w.status !== 'closed' && w.status !== 'lost').length],
-              ['quote', 'Quote', mergedByStatus.quote?.length || 0],
-              ['approved', 'Need Schedule', mergedByStatus.approved?.length || 0],
-              ['in_progress', 'In Progress', mergedByStatus.in_progress?.length || 0],
-              ['completed', 'Completed', mergedByStatus.closed?.length || 0],
-            ].map(([k, l, count]) => (
-              <button key={k} onClick={() => setFilter(k as string)}
-                style={{ padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: filter === k ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: filter === k ? 'rgba(240,253,250,0.96)' : 'white', color: filter === k ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
-                {l} · {count}
-              </button>
-            ))}
-          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filtered.map(wo => (
               <WOCard key={wo.id || wo.name} wo={wo}
@@ -691,10 +807,11 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
                 onSave={handleSave}
                 onQuote={(id) => setQuoteWO(id)}
                 onDetail={(w) => setDetailWO(w)}
+                onLinkFolder={handleLinkFolder}
                 allCrew={allCrew}
               />
             ))}
-            {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No work orders in this view</div>}
+            {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>{search ? `No results for "${search}"` : 'No work orders in this view'}</div>}
           </div>
         </>
       )}

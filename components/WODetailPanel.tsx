@@ -65,9 +65,10 @@ interface WODetailPanelProps {
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
   onStageChange: (woId: string, stage: string) => Promise<void>;
   onQuote: (woId: string) => void;
+  onFolderLinked?: (woId: string, folderUrl: string) => void;
 }
 
-export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote }: WODetailPanelProps) {
+export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onFolderLinked }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
@@ -75,6 +76,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [saveError, setSaveError] = useState('');
   const [stageError, setStageError] = useState('');
+  const [linkingFolder, setLinkingFolder] = useState(false);
+  const [linkFolderInput, setLinkFolderInput] = useState('');
+  const [linkFolderSaving, setLinkFolderSaving] = useState(false);
+  const [linkedFolderUrl, setLinkedFolderUrl] = useState<string | undefined>(undefined);
+
+  // Sync linkedFolderUrl from wo prop
+  useEffect(() => { setLinkedFolderUrl(wo?.folderUrl); }, [wo?.folderUrl]);
+
+  async function handleLinkFolder() {
+    if (!linkFolderInput || !wo) return;
+    setLinkFolderSaving(true);
+    try {
+      await fetch('/api/service/folder-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ woName: wo.name, folderUrl: linkFolderInput }),
+      });
+      setLinkedFolderUrl(linkFolderInput);
+      onFolderLinked?.(wo.id, linkFolderInput);
+      setLinkingFolder(false);
+      setLinkFolderInput('');
+    } catch {
+      // swallow — not critical
+    } finally {
+      setLinkFolderSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (!wo) return;
@@ -221,15 +249,23 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {wo.folderUrl && (
+            {(linkedFolderUrl || wo.folderUrl) ? (
               <a
-                href={wo.folderUrl}
+                href={linkedFolderUrl || wo.folderUrl}
                 target="_blank"
                 rel="noreferrer"
                 title="Open project files in Drive"
+                onClick={e => e.stopPropagation()}
                 style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 📁 Files
               </a>
+            ) : (
+              <button
+                onClick={() => setLinkingFolder(p => !p)}
+                title="Link Drive folder"
+                style={{ padding: '7px 14px', borderRadius: 10, background: linkingFolder ? 'rgba(239,246,255,0.96)' : '#f8fafc', border: linkingFolder ? '1px solid rgba(3,105,161,0.4)' : '1px solid #e2e8f0', color: linkingFolder ? '#0369a1' : '#64748b', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                🔗 Link Folder
+              </button>
             )}
             <button
               onClick={() => onQuote(wo.id)}
@@ -261,6 +297,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>⚠️ {stageError}</span>
             <button onClick={() => setStageError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 16 }}>×</button>
+          </div>
+        )}
+
+        {/* Link Folder input bar */}
+        {linkingFolder && (
+          <div style={{ padding: '10px 20px 12px', background: 'rgba(239,246,255,0.8)', borderBottom: '1px solid rgba(59,130,246,0.15)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#0369a1', flexShrink: 0 }}>Folder URL:</span>
+            <input
+              type="url"
+              value={linkFolderInput}
+              onChange={e => setLinkFolderInput(e.target.value)}
+              placeholder="Paste Google Drive folder URL..."
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleLinkFolder(); if (e.key === 'Escape') { setLinkingFolder(false); setLinkFolderInput(''); } }}
+              style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(3,105,161,0.3)', fontSize: 12, outline: 'none', background: 'white', color: '#0f172a' }}
+            />
+            <button
+              onClick={handleLinkFolder}
+              disabled={!linkFolderInput || linkFolderSaving}
+              style={{ padding: '8px 16px', borderRadius: 8, background: linkFolderInput && !linkFolderSaving ? '#0369a1' : '#e2e8f0', color: linkFolderInput && !linkFolderSaving ? 'white' : '#94a3b8', border: 'none', fontSize: 12, fontWeight: 700, cursor: linkFolderInput && !linkFolderSaving ? 'pointer' : 'default', flexShrink: 0 }}>
+              {linkFolderSaving ? 'Saving...' : 'Save Link'}
+            </button>
+            <button
+              onClick={() => { setLinkingFolder(false); setLinkFolderInput(''); }}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', fontSize: 14, cursor: 'pointer', flexShrink: 0, lineHeight: 1 }}>
+              ✕
+            </button>
           </div>
         )}
 
