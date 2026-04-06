@@ -164,23 +164,8 @@ How do you prefer to get updates — in the app when you open it, push notificat
     return (
       <div style={PAGE}>
         <div style={{ textAlign: 'center', maxWidth: 440, padding: '0 24px' }}>
-          <div style={{ marginBottom: 24 }}>
-            {welcomeSlide === 0 ? (
-              <img src="/banyan-logo-white.png" alt="BanyanOS" style={{ width: 120, height: 'auto', opacity: 0.9 }} />
-            ) : welcomeSlide === 1 ? (
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                <rect x="8" y="8" width="48" height="48" rx="16" fill="#14b8a6" opacity="0.12"/>
-                <rect x="16" y="16" width="32" height="32" rx="10" fill="#14b8a6" opacity="0.2"/>
-                <path d="M28 24h8v4h-8zm-4 8h16v4H24zm-2 8h20v4H22z" fill="#14b8a6" opacity="0.5"/>
-              </svg>
-            ) : (
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                <circle cx="32" cy="32" r="24" fill="#14b8a6" opacity="0.1"/>
-                <circle cx="32" cy="32" r="12" fill="#14b8a6" opacity="0.25"/>
-                <circle cx="32" cy="32" r="4" fill="#14b8a6"/>
-                <path d="M32 8v8M32 48v8M8 32h8M48 32h8" stroke="#14b8a6" strokeWidth="1.5" opacity="0.3"/>
-              </svg>
-            )}
+          <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+            <img src="/banyan-tree.png" alt="BanyanOS" style={{ width: welcomeSlide === 0 ? 160 : 100, height: 'auto', transition: 'width 0.3s' }} />
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 8px' }}>
             {slide.title.includes('Banyan') ? <>Banyan<span style={{ color: '#14b8a6' }}>OS</span></> : slide.title}
@@ -372,7 +357,9 @@ How do you prefer to get updates — in the app when you open it, push notificat
     return (
       <div style={PAGE}>
         <div style={{ textAlign: 'center' }}>
-          <img src="/banyan-logo-white.png" alt="BanyanOS" style={{ width: 80, height: 'auto', opacity: 0.9, marginBottom: 20 }} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <img src="/banyan-tree.png" alt="BanyanOS" style={{ width: 80, height: 'auto' }} />
+          </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>You're all set!</h2>
           <p style={{ fontSize: 14, color: 'rgba(148,163,184,0.6)' }}>
             Welcome to BanyanOS. Kai is always here if you need help.
