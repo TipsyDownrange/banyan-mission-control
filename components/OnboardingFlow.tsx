@@ -55,6 +55,10 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
   const [updatePref, setUpdatePref] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const { speaking, listening, voiceEnabled, setVoiceEnabled, speak, stopSpeaking, startListening, stopListening } = useVoice();
+  const voiceRef = useRef(true);
+  voiceRef.current = voiceEnabled;
+  const speakRef = useRef(speak);
+  speakRef.current = speak;
   const userName = typeof window !== 'undefined' ? (localStorage.getItem('banyan_demo_user') || 'there').split(' ')[0] : 'there';
   const roleConfig = ROLE_QUESTIONS[userRole] || ROLE_QUESTIONS['field'];
 
@@ -68,7 +72,11 @@ export default function OnboardingFlow({ userRole, onComplete }: { userRole: str
       setMessages(prev => [...prev, { role: 'kai', text, options }]);
       setTyping(false);
       // Kai speaks the message
-      if (voiceEnabled) speak(text.replace(/\*\*/g, ''));
+      console.log('[Onboarding] voiceEnabled:', voiceRef.current, 'text:', text.substring(0, 40));
+      if (voiceRef.current) {
+        console.log('[Onboarding] Calling speak...');
+        speakRef.current(text.replace(/\*\*/g, ''));
+      }
     }, 600);
   }
 
