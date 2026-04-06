@@ -543,11 +543,6 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
       <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', marginBottom: 16 }}>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 12, borderBottom: '1px solid #0f766e22', paddingBottom: 6 }}>Pricing Summary</div>
-        {materialsSubtotal > 0 && <SummaryRow label="Materials" value={materialsSubtotal} sub />}
-        <SummaryRow label={`Labor (${laborSteps.length} step${laborSteps.length !== 1 ? 's' : ''})`} value={laborSubtotal} sub />
-        {driveTotal > 0 && <SummaryRow label={`Drive Time (${driveTime.trips} trips × ${driveTime.hoursPerTrip}h @ ${fmt(parseNum(driveTime.rate))}/hr)`} value={driveTotal} sub />}
-        {additionalTotal > 0 && <SummaryRow label="Equipment & Other" value={additionalTotal} sub />}
-        <Divider />
         <SummaryRow label="Subtotal" value={subtotal} />
         {overheadAmt > 0 && <SummaryRow label={`Overhead (${markup.overheadPct}%)`} value={overheadAmt} sub />}
         {profitAmt > 0 && <SummaryRow label={`Profit (${markup.profitPct}%)`} value={profitAmt} sub />}
@@ -579,7 +574,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
       {/* Header */}
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>Service — Quote Builder v2</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>Service Quote</div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>WO {woNumber} — {wo?.name?.substring(0, 45)}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
