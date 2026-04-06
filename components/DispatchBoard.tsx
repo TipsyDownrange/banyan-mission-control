@@ -104,6 +104,8 @@ export default function DispatchBoard() {
   const [addIsland, setAddIsland] = useState('Maui');
   const [addMen, setAddMen] = useState('2');
   const [addHours, setAddHours] = useState('');
+  const [addStartTime, setAddStartTime] = useState('07:00');
+  const [addEndTime, setAddEndTime] = useState('15:30');
   const [addKID, setAddKID] = useState('');
   const [addWorkType, setAddWorkType] = useState('');
   const [addNotes, setAddNotes] = useState('');
@@ -659,6 +661,15 @@ export default function DispatchBoard() {
                 <div>
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Date *</label>
                   <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Start Time</label>
+                  <input type="time" value={addStartTime} onChange={e => setAddStartTime(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>End Time</label>
+                  <input type="time" value={addEndTime} onChange={e => setAddEndTime(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Men Needed</label>

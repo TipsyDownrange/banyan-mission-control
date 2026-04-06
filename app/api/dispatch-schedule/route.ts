@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const row = [slot_id, date, kID||'', project_name, island||'', men_required||'1', hours_estimated||'', '', created_by||'', 'open', '', body.work_type||'', body.notes||''];
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A1',
-      valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS',
+      valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS',
       requestBody: { values: [row] },
     });
 
