@@ -23,9 +23,9 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'tts-1',
         input: text.substring(0, 4096), // Max 4096 chars
-        voice: 'onyx', // Deep, warm, professional — fits Kai
+        voice: 'echo', // Warm, smooth — fits Kai
         response_format: 'mp3',
-        speed: 1.05,
+        speed: 1.2,
       }),
     });
 
