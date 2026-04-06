@@ -194,8 +194,7 @@ export default function Home() {
         {activeView === 'Safety'        && <AdminPanel section="safety" />}
         {activeView === 'Fleet'         && <AdminPanel section="fleet" />}
 
-        {/* KaiFloat is hidden on Estimating Workspace — it has its own Kai panel */}
-        {activeView !== 'Estimating Workspace' && <KaiFloat activeView={activeView} />}
+        <KaiFloat activeView={activeView} />
         <SuggestionButton />
       </main>
     </div>
