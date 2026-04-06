@@ -21,11 +21,12 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
+        model: 'gpt-4o-mini-tts',
         input: text.substring(0, 4096), // Max 4096 chars
-        voice: 'echo', // Warm, smooth — fits Kai
+        voice: 'alloy',
+        instructions: 'Speak as a calm, patient teacher. Warm and clear, never rushed. Explain things like you genuinely want the listener to understand.',
         response_format: 'mp3',
-        speed: 1.2,
+        speed: 1.15,
       }),
     });
 
