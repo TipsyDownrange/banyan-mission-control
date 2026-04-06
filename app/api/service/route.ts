@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSSToken } from '@/lib/gauth';
+import { getSSToken, getGoogleAuth } from '@/lib/gauth';
+import { google } from 'googleapis';
 
 const SHEETS = {
   active: '7905619916154756',
@@ -62,16 +63,95 @@ async function fetchSheet(token: string, sheetId: string, lane: string) {
   }).filter(wo => wo.name);
 }
 
+// Simple in-process cache for folder links (refreshes every 10 minutes)
+let folderLinkCache: { data: FolderLink[]; ts: number } | null = null;
+
+type FolderLink = {
+  folder_name: string;
+  folder_id: string;
+  folder_url: string;
+  source: string;
+};
+
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/\b(wo|work order|#|no\.?|job|igu|lami|glass|window|door|shower)\b/gi, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenSetRatio(a: string, b: string): number {
+  const setA = new Set(a.split(' ').filter(Boolean));
+  const setB = new Set(b.split(' ').filter(Boolean));
+  const intersection = [...setA].filter(t => setB.has(t));
+  if (!setA.size || !setB.size) return 0;
+  const union = new Set([...setA, ...setB]);
+  return Math.round((intersection.length / union.size) * 100);
+}
+
+async function getFolderLinks(): Promise<FolderLink[]> {
+  const now = Date.now();
+  if (folderLinkCache && now - folderLinkCache.ts < 10 * 60 * 1000) {
+    return folderLinkCache.data;
+  }
+  try {
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    const sheets = google.sheets({ version: 'v4', auth });
+    const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'WO_Folder_Links!A:D',
+    });
+    const rows = res.data.values || [];
+    const headers = rows[0] || [];
+    const nameIdx = headers.indexOf('folder_name');
+    const idIdx = headers.indexOf('folder_id');
+    const urlIdx = headers.indexOf('folder_url');
+    const srcIdx = headers.indexOf('source');
+    const links: FolderLink[] = rows.slice(1).map(row => ({
+      folder_name: row[nameIdx] || '',
+      folder_id: row[idIdx] || '',
+      folder_url: row[urlIdx] || '',
+      source: row[srcIdx] || '',
+    })).filter(l => l.folder_name && l.folder_url);
+    folderLinkCache = { data: links, ts: now };
+    return links;
+  } catch {
+    return folderLinkCache?.data || [];
+  }
+}
+
+function matchFolderUrl(woName: string, links: FolderLink[]): string {
+  if (!woName || !links.length) return '';
+  const norm = normalize(woName);
+  let best = 0;
+  let bestUrl = '';
+  for (const link of links) {
+    const score = tokenSetRatio(norm, normalize(link.folder_name));
+    if (score > best && score >= 45) {
+      best = score;
+      bestUrl = link.folder_url;
+    }
+  }
+  return bestUrl;
+}
+
 export async function GET() {
   try {
     const token = getSSToken();
-    const [active, completed, quoted] = await Promise.all([
+    const [active, completed, quoted, folderLinks] = await Promise.all([
       fetchSheet(token, SHEETS.active, 'active'),
       fetchSheet(token, SHEETS.completed, 'completed'),
       fetchSheet(token, SHEETS.quoted, 'quoted'),
+      getFolderLinks(),
     ]);
 
-    const all = [...active, ...quoted, ...completed];
+    const all = [...active, ...quoted, ...completed].map(wo => ({
+      ...wo,
+      folderUrl: matchFolderUrl(wo.name, folderLinks),
+    }));
 
     const byStatus = {
       lead: all.filter(w => w.status === 'lead'),

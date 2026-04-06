@@ -13,6 +13,7 @@ type WorkOrder = {
   hoursEstimated: string; hoursActual: string; hoursToMeasure: string;
   men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
+  folderUrl?: string;
 };
 
 type ServiceData = {
@@ -219,6 +220,15 @@ function WOCard({
               style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               ✎
             </button>
+            {/* Files / Drive folder link — only show if matched */}
+            {wo.folderUrl && (
+              <a href={wo.folderUrl} target="_blank" rel="noreferrer"
+                title="Open project files in Drive"
+                onClick={e => e.stopPropagation()}
+                style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, textDecoration: 'none' }}>
+                📁
+              </a>
+            )}
             {/* Print dispatch sheet */}
             <button title="Print dispatch sheet for crew"
               onClick={(e) => { e.stopPropagation(); window.open(`/api/service/dispatch-pdf?wo=${encodeURIComponent(wo.id)}`, '_blank'); }}

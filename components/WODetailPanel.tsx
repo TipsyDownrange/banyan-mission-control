@@ -9,6 +9,7 @@ type WorkOrder = {
   hoursEstimated: string; hoursActual: string; hoursToMeasure: string;
   men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
+  folderUrl?: string;
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
@@ -220,6 +221,16 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {wo.folderUrl && (
+              <a
+                href={wo.folderUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Open project files in Drive"
+                style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                📁 Files
+              </a>
+            )}
             <button
               onClick={() => onQuote(wo.id)}
               title="Build quote"
