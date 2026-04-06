@@ -185,7 +185,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
     }
 
     // Also update job fields if passed
-    if (body.project_name || body.island || body.client_gc_name || body.bid_due_date) {
+    if (body.project_name || body.island || body.client_gc_name || body.bid_due_date || body.project_folder_url) {
       const jobId = rows[rowIndex][1];
       const jobRes = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,

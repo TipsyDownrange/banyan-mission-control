@@ -103,16 +103,32 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: Bi
     notes: bid.notes ?? '',
   });
 
+  function normalizeFolderUrl(input: string): string {
+    const trimmed = input.trim();
+    if (!trimmed) return trimmed;
+    if (trimmed.startsWith('https://drive.google.com/')) return trimmed;
+    // Extract folder ID from a pasted Drive URL fragment
+    const match = trimmed.match(/folders\/([a-zA-Z0-9_-]+)/);
+    if (match) return `https://drive.google.com/drive/folders/${match[1]}`;
+    // If it looks like a bare folder ID (no slashes, min 15 chars)
+    if (/^[a-zA-Z0-9_-]{15,}$/.test(trimmed)) {
+      return `https://drive.google.com/drive/folders/${trimmed}`;
+    }
+    return trimmed;
+  }
+
   async function handleLinkFolder() {
-    if (!folderUrl.trim()) return;
+    const normalized = normalizeFolderUrl(folderUrl);
+    if (!normalized) return;
     setFolderSaving(true);
     try {
       await fetch(`/api/estimating/bids/${bid.bidVersionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_folder_url: folderUrl.trim() }),
+        body: JSON.stringify({ project_folder_url: normalized }),
       });
-      onBidUpdate({ bidFolderUrl: folderUrl.trim() });
+      onBidUpdate({ bidFolderUrl: normalized });
+      setFolderUrl(normalized);
       setShowFolderModal(false);
     } catch (err) {
       console.error('Folder link failed', err);
@@ -523,15 +539,39 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: Bi
             <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
               📁 Link Bid Folder
             </h3>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
-              Paste the Google Drive folder URL for this bid. Plans, specs, quotes, and submittals should live here.
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
+              Link the Google Drive folder for this bid. Plans, specs, quotes, and submittals should live here.
             </p>
+
+            {/* Browse Drive button */}
+            <a
+              href="https://drive.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', borderRadius: 10,
+                border: '1.5px solid rgba(37,99,235,0.35)',
+                background: 'rgba(239,246,255,0.7)',
+                color: '#1d4ed8', fontSize: 12, fontWeight: 700,
+                textDecoration: 'none', marginBottom: 12,
+              }}
+            >
+              <span style={{ fontSize: 16 }}>🗂️</span>
+              <div>
+                <div>Browse Google Drive →</div>
+                <div style={{ fontSize: 10, fontWeight: 500, color: '#60a5fa', marginTop: 1 }}>
+                  Navigate to the folder, then copy the URL from your browser and paste below
+                </div>
+              </div>
+            </a>
+
             <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 6 }}>
-              Google Drive Folder URL
+              Folder URL or ID
             </label>
             <input
-              type="url"
-              placeholder="https://drive.google.com/drive/folders/..."
+              type="text"
+              placeholder="Paste URL or folder ID from Drive..."
               value={folderUrl}
               onChange={e => setFolderUrl(e.target.value)}
               style={{
@@ -540,10 +580,14 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: Bi
                 fontSize: 12, color: '#0f172a',
                 background: 'rgba(240,253,250,0.4)',
                 outline: 'none', boxSizing: 'border-box',
-                marginBottom: 20,
+                marginBottom: 6,
               }}
               autoFocus
             />
+            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 20 }}>
+              Accepts full Drive URLs or bare folder IDs — we&apos;ll detect both automatically.
+            </div>
+
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowFolderModal(false)}

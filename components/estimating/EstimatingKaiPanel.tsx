@@ -56,16 +56,29 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
   const [folderUrl, setFolderUrl] = useState(bid.bidFolderUrl ?? '');
   const [folderSaving, setFolderSaving] = useState(false);
 
+  function normalizeFolderUrl(input: string): string {
+    const trimmed = input.trim();
+    if (!trimmed) return trimmed;
+    if (trimmed.startsWith('https://drive.google.com/')) return trimmed;
+    const match = trimmed.match(/folders\/([a-zA-Z0-9_-]+)/);
+    if (match) return `https://drive.google.com/drive/folders/${match[1]}`;
+    if (/^[a-zA-Z0-9_-]{15,}$/.test(trimmed)) {
+      return `https://drive.google.com/drive/folders/${trimmed}`;
+    }
+    return trimmed;
+  }
+
   async function handleLinkFolder() {
-    if (!folderUrl.trim()) return;
+    const normalized = normalizeFolderUrl(folderUrl);
+    if (!normalized) return;
     setFolderSaving(true);
     try {
       await fetch(`/api/estimating/bids/${bid.bidVersionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_folder_url: folderUrl.trim() }),
+        body: JSON.stringify({ project_folder_url: normalized }),
       });
-      onBidUpdate?.({ bidFolderUrl: folderUrl.trim() });
+      onBidUpdate?.({ bidFolderUrl: normalized });
       setShowLinkModal(false);
     } catch (err) {
       console.error('Folder link failed', err);
@@ -246,21 +259,38 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
               boxShadow: '0 20px 60px rgba(15,23,42,0.2)',
             }} onClick={e => e.stopPropagation()}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Link Bid Folder</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>Paste a Google Drive, Dropbox, or any folder URL.</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10 }}>Paste the Google Drive folder URL for this bid.</div>
+              <a
+                href="https://drive.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 8,
+                  border: '1px solid rgba(37,99,235,0.3)',
+                  background: 'rgba(239,246,255,0.7)',
+                  color: '#1d4ed8', fontSize: 11, fontWeight: 700,
+                  textDecoration: 'none', marginBottom: 12,
+                }}
+              >
+                🗂️ Browse Google Drive →
+                <span style={{ fontSize: 10, fontWeight: 500, color: '#60a5fa', marginLeft: 4 }}>copy the folder URL, paste below</span>
+              </a>
               <input
-                type="url"
+                type="text"
                 value={folderUrl}
                 onChange={e => setFolderUrl(e.target.value)}
-                placeholder="https://drive.google.com/..."
+                placeholder="Paste URL or folder ID..."
                 autoFocus
                 style={{
                   width: '100%', padding: '9px 12px',
                   border: '1px solid rgba(20,184,166,0.4)',
                   borderRadius: 9, fontSize: 12, color: '#0f172a',
                   background: 'rgba(240,253,250,0.5)', outline: 'none',
-                  boxSizing: 'border-box', marginBottom: 14,
+                  boxSizing: 'border-box', marginBottom: 6,
                 }}
               />
+              <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 14 }}>Full URLs or bare folder IDs both work.</div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button onClick={() => setShowLinkModal(false)} style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                 <button
