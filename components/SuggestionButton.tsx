@@ -33,7 +33,7 @@ export default function SuggestionButton() {
       <button onClick={() => setOpen(true)}
         title="Got a suggestion? Tell Kai!"
         style={{
-          position: 'fixed', bottom: 24, right: 80, zIndex: 50,
+          position: 'fixed', bottom: 80, right: 24, zIndex: 999,
           width: 44, height: 44, borderRadius: 999,
           background: 'linear-gradient(135deg, #0f766e, #14b8a6)',
           border: 'none', cursor: 'pointer',
