@@ -21,6 +21,7 @@ import AssetsPanel from '@/components/AssetsPanel';
 import BidIntakePanel from '@/components/BidIntakePanel';
 import BidQueuePanel from '@/components/BidQueuePanel';
 import EstimatorWorkspace from '@/components/EstimatorWorkspace';
+import EstimatingWorkspace from '@/components/estimating/EstimatingWorkspace';
 import ServicePanel from '@/components/ServicePanel';
 import CustomersPanel from '@/components/CustomersPanel';
 import KaiPanel from '@/components/KaiPanel';
@@ -172,7 +173,7 @@ export default function Home() {
         {activeView === 'Crew'          && <CrewPanel />}
 
         {activeView === 'Bid Queue'           && <BidQueuePanel />}
-        {activeView === 'Estimating Workspace' && <BidQueuePanel />}
+        {activeView === 'Estimating Workspace' && <EstimatingWorkspace />}
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Work Orders'   && <ServicePanel readOnly={isReadOnly('Work Orders')} />}
