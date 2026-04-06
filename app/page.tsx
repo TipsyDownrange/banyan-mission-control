@@ -27,6 +27,8 @@ import KaiFloat from '@/components/KaiFloat';
 import OrgChartPanel from '@/components/OrgChartPanel';
 import AdminPanel from '@/components/AdminPanel';
 import InstallTrackingPanel from '@/components/InstallTrackingPanel';
+import OnboardingFlow from '@/components/OnboardingFlow';
+import SuggestionButton from '@/components/SuggestionButton';
 import { useState, useEffect } from 'react';
 
 export type AppView =
@@ -46,6 +48,13 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [demoUser, setDemoUser] = useState('Sean Daniels');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Check if user has completed onboarding
+    const onboarded = localStorage.getItem('banyan_onboarded');
+    if (!onboarded) setShowOnboarding(true);
+  }, []);
   const [projectsList, setProjectsList] = useState<{kID:string;name:string}[]>([]);
 
   useEffect(() => {
@@ -93,6 +102,14 @@ export default function Home() {
 
   return (
     <div style={{ display: 'flex', height: '100dvh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif' }}>
+
+      {/* Onboarding overlay */}
+      {showOnboarding && (
+        <OnboardingFlow
+          userRole={demoUserObj.role}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
 
       {/* Sidebar — desktop */}
       {!isMobile && <Sidebar {...sidebarProps} />}
@@ -161,6 +178,7 @@ export default function Home() {
         {activeView === 'Fleet'         && <AdminPanel section="fleet" />}
 
         <KaiFloat activeView={activeView} />
+        <SuggestionButton />
       </main>
     </div>
   );
