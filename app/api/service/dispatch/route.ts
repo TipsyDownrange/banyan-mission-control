@@ -46,16 +46,16 @@ export async function POST(req: Request) {
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
     const cells = [
-      { columnId: COL.taskName,     value: taskName, strict: false },
-      { columnId: COL.woNumber,     value: wo, strict: false },
-      { columnId: COL.description,  value: description, strict: false },
-      { columnId: COL.island,       value: island, strict: false },
-      { columnId: COL.address,      value: addressStr, strict: false },
-      { columnId: COL.contact,      value: contactStr, strict: false },
-      { columnId: COL.status,       value: statusStr, strict: false },
-      { columnId: COL.assignedTo,   value: assignedTo || '', strict: false },
-      { columnId: COL.dateReceived, value: today, strict: false },
-      { columnId: COL.comments,     value: notesStr, strict: false },
+      { columnId: COL.taskName,     value: taskName },
+      { columnId: COL.woNumber,     value: wo },
+      { columnId: COL.description,  value: description },
+      { columnId: COL.island,       value: island },
+      { columnId: COL.address,      value: addressStr },
+      { columnId: COL.contact,      value: contactStr },
+      { columnId: COL.status,       value: statusStr },
+      { columnId: COL.assignedTo,   value: assignedTo || '' },
+      { columnId: COL.dateReceived, value: today },
+      { columnId: COL.comments,     value: notesStr },
     ];
 
     const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${SHEET_ID}/rows`, {
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([{ toBottom: true, cells }]),
+      body: JSON.stringify([{ toBottom: true, strict: false, cells }]),
     });
 
     const data = await res.json() as { result?: { id: number }[]; message?: string };
