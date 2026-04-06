@@ -542,6 +542,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={() => setQuote(null)} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>← Edit</button>
+          <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>✕ Close</button>
           <button disabled={downloading} onClick={async () => {
             setDownloading(true);
             try {
