@@ -31,6 +31,14 @@ function formatTime(raw: string): string {
   } catch { return raw; }
 }
 
+type QboKpis = { revenueThisMonth: number; netIncomeYtd: number; arOutstanding: number; apOutstanding: number } | null;
+
+function fmtKpi(n: number) {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toFixed(0)}`;
+}
+
 export default function OverviewPanel() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -39,6 +47,7 @@ export default function OverviewPanel() {
   const [cos, setCos] = useState<COSummary>({ total: 0, pending: 0, approved: 0, totalExposure: 0 });
   const [crewDeployed, setCrewDeployed] = useState(0);
   const [crewTotal, setCrewTotal] = useState(42);
+  const [qboKpis, setQboKpis] = useState<QboKpis>(null);
 
   useEffect(() => {
     Promise.all([
@@ -73,6 +82,11 @@ export default function OverviewPanel() {
       setSubmittals({ total: subs.length, pending: pending.length, approved: approved.length, overdue: 0 });
     }).catch(() => {});
 
+    // QBO KPIs — non-blocking, best-effort
+    fetch('/api/qbo/kpis').then(r => r.json()).then(d => {
+      if (!d.error) setQboKpis(d);
+    }).catch(() => {});
+
     fetch('/api/pm/change-orders').then(r => r.json()).then(d => {
       const items = d.cos || [];
       const pending = items.filter((c: Record<string, string>) => c.status === 'PENDING' || c.status === 'IDENTIFIED' || c.status === 'SUBMITTED' || c.status === 'IN_NEGOTIATION');
@@ -87,7 +101,35 @@ export default function OverviewPanel() {
   const byIsland = projects.reduce((acc, p) => { acc[p.island] = (acc[p.island] || 0) + 1; return acc; }, {} as Record<string, number>);
   const utilizationPct = crewTotal > 0 ? Math.round((crewDeployed / crewTotal) * 100) : 0;
 
+  const qboKpiCards: KPI[] = qboKpis ? [
+    {
+      label: 'Revenue This Month',
+      value: fmtKpi(qboKpis.revenueThisMonth),
+      subtitle: 'From QuickBooks',
+      color: '#0f766e',
+    },
+    {
+      label: 'AR Outstanding',
+      value: fmtKpi(qboKpis.arOutstanding),
+      subtitle: 'Unpaid invoices',
+      color: qboKpis.arOutstanding > 200000 ? '#d97706' : '#0f172a',
+    },
+    {
+      label: 'AP Outstanding',
+      value: fmtKpi(qboKpis.apOutstanding),
+      subtitle: 'Unpaid bills',
+      color: qboKpis.apOutstanding > 100000 ? '#d97706' : '#0f172a',
+    },
+    {
+      label: 'Net Income YTD',
+      value: fmtKpi(Math.abs(qboKpis.netIncomeYtd)),
+      subtitle: qboKpis.netIncomeYtd >= 0 ? 'Profitable YTD' : 'Loss YTD',
+      color: qboKpis.netIncomeYtd >= 0 ? '#059669' : '#dc2626',
+    },
+  ] : [];
+
   const kpis: KPI[] = [
+    ...qboKpiCards,
     {
       label: 'Active Projects',
       value: projects.length,
