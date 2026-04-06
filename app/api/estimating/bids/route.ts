@@ -102,19 +102,20 @@ export async function GET() {
     const bids = bidVersions.map(bv => {
       const job = jobMap.get(bv.job_id);
       return {
-        bid_version_id: bv.bid_version_id,
-        job_id: bv.job_id,
-        project_name: job?.project_name || '',
+        bidVersionId: bv.bid_version_id,
+        jobId: bv.job_id,
+        projectName: job?.project_name || '',
         island: job?.island || '',
-        client_gc_name: job?.client_gc_name || '',
+        clientGC: job?.client_gc_name || '',
         estimator: bv.estimator,
-        bid_date: bv.bid_date,
-        status: bv.status,
-        total_estimate: bv.total_estimate,
-        get_rate: bv.get_rate,
-        overhead_method: bv.overhead_method,
-        profit_pct: bv.profit_pct,
-        version_number: bv.version_number,
+        bidDate: bv.bid_date,
+        status: bv.status.toLowerCase(),
+        totalEstimate: bv.total_estimate,
+        getRate: bv.get_rate,
+        overheadMethod: bv.overhead_method,
+        profitPct: bv.profit_pct,
+        version: bv.version_number,
+        notes: bv.notes,
       };
     });
 
