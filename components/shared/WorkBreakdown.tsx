@@ -49,52 +49,15 @@ interface JobDocs {
 
 // ─── Step Templates ────────────────────────────────────────────────────────────
 
-const STEP_TEMPLATES: Record<string, { name: string; hours: number }[]> = {
-  'Sliding Door': [
-    { name: 'Remove existing door', hours: 0.5 },
-    { name: 'Install track', hours: 1.0 },
-    { name: 'Set panels', hours: 1.0 },
-    { name: 'Seal frame', hours: 0.5 },
-    { name: 'Install weatherstrip', hours: 0.5 },
-    { name: 'QA / Final check', hours: 0.25 },
-  ],
-  'Storefront': [
-    { name: 'Layout and snap lines', hours: 0.5 },
-    { name: 'Install frame', hours: 2.0 },
-    { name: 'Set glass', hours: 1.5 },
-    { name: 'Seal', hours: 0.75 },
-    { name: 'Install hardware', hours: 0.5 },
-    { name: 'QA / Final check', hours: 0.25 },
-  ],
+// Templates are loaded from Step_Templates sheet tab via API
+// Fallback hardcoded templates in case API fails
+const FALLBACK_TEMPLATES: Record<string, { name: string; hours: number; category?: string }[]> = {
   'IGU Replacement': [
-    { name: 'Remove existing IGU', hours: 0.5 },
-    { name: 'Clean opening', hours: 0.25 },
-    { name: 'Install new IGU', hours: 0.75 },
-    { name: 'Seal', hours: 0.5 },
-    { name: 'QA / Final check', hours: 0.25 },
-  ],
-  'Mirror': [
-    { name: 'Measure and mark wall', hours: 0.25 },
-    { name: 'Cut mirror to size', hours: 0.5 },
-    { name: 'Install mirror', hours: 0.75 },
-    { name: 'Clean and inspect', hours: 0.25 },
-  ],
-  'Shower Enclosure': [
-    { name: 'Template and measure', hours: 0.75 },
-    { name: 'Install track and channels', hours: 1.0 },
-    { name: 'Set glass panels', hours: 1.5 },
-    { name: 'Install hardware', hours: 0.5 },
-    { name: 'Seal', hours: 0.5 },
-    { name: 'QA / Final check', hours: 0.25 },
-  ],
-  'Curtainwall': [
-    { name: 'Anchor installation', hours: 1.5 },
-    { name: 'Frame assembly', hours: 2.0 },
-    { name: 'Set glass', hours: 2.0 },
-    { name: 'Install pressure plate', hours: 1.0 },
-    { name: 'Install cap', hours: 0.75 },
-    { name: 'Seal', hours: 1.0 },
-    { name: 'QA / Final check', hours: 0.5 },
+    { name: 'Remove existing IGU', hours: 0.5, category: 'Demobilization' },
+    { name: 'Clean opening', hours: 0.25, category: 'Installation' },
+    { name: 'Install new IGU', hours: 0.75, category: 'Installation' },
+    { name: 'Seal', hours: 0.5, category: 'Installation' },
+    { name: 'QA / Final check', hours: 0.25, category: 'QA/Punch' },
   ],
 };
 
@@ -188,6 +151,7 @@ function HoursDelta({ quoted, planned, actual }: { quoted?: number; planned: num
 
 export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = false }: WorkBreakdownProps) {
   const [plans, setPlans] = useState<InstallPlan[]>([]);
+  const [STEP_TEMPLATES, setStepTemplates] = useState<Record<string, { name: string; hours: number; category?: string }[]>>(FALLBACK_TEMPLATES);
   const [steps, setSteps] = useState<InstallStep[]>([]);
   const [completions, setCompletions] = useState<StepCompletion[]>([]);
   const [docs, setDocs] = useState<JobDocs>({ install_instructions: '', msds: '', drawings: '' });
@@ -262,6 +226,24 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   }, [jobId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Load step templates from sheet
+  useEffect(() => {
+    fetch('/api/step-templates')
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok && d.templates) {
+          const mapped: Record<string, { name: string; hours: number; category?: string }[]> = {};
+          for (const [k, steps] of Object.entries(d.templates)) {
+            mapped[k] = (steps as { step_name: string; default_hours: number; category?: string }[]).map(s => ({
+              name: s.step_name, hours: s.default_hours, category: s.category,
+            }));
+          }
+          setStepTemplates(mapped);
+        }
+      })
+      .catch(() => {}); // fall back to hardcoded
+  }, []);
 
   // ─── Auto-expand for simple WOs ─────────────────────────────────────────────
   useEffect(() => {
