@@ -9,6 +9,8 @@ type WODraft = {
   assignedTo: string; notes: string;
 };
 
+type StepTemplate = { step_name: string; default_hours: number; category?: string };
+
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const FL = (label: string, auto?: boolean) => (
@@ -191,8 +193,12 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   const [pms, setPms] = useState<CrewMember[]>([]);
   const [fieldCrew, setFieldCrew] = useState<CrewMember[]>([]);
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [templateNames, setTemplateNames] = useState<Set<string>>(new Set());
+  // Multi-select system types
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [allSystemTypes, setAllSystemTypes] = useState<string[]>(SYSTEM_TYPES);
 
-  // Load PMs + customers on mount
+  // Load PMs + customers + step templates on mount
   useEffect(() => {
     fetch('/api/crew')
       .then(r => r.json())
@@ -204,6 +210,23 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     fetch('/api/service/customers')
       .then(r => r.json())
       .then(d => setCustomers(d.customers || []))
+      .catch(() => {});
+    fetch('/api/step-templates')
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok && d.templates) {
+          const names = new Set(Object.keys(d.templates));
+          setTemplateNames(names);
+          // Merge template names into system types (dedupe)
+          setAllSystemTypes(prev => {
+            const combined = [...prev];
+            for (const name of names) {
+              if (!combined.includes(name)) combined.splice(combined.length - 1, 0, name); // insert before 'Other'
+            }
+            return combined;
+          });
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -218,6 +241,14 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
   function update(key: keyof WODraft, val: string) {
     setDraft(prev => ({ ...prev, [key]: val }));
+  }
+
+  function toggleSystemType(type: string) {
+    setSelectedTypes(prev => {
+      const next = prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type];
+      setDraft(d => ({ ...d, systemType: next.join(',') }));
+      return next;
+    });
   }
 
   async function enrichWithKai() {
@@ -244,6 +275,11 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           systemType:    wo.systemType    || prev.systemType,
           urgency:       wo.urgency       || prev.urgency,
         }));
+        // Sync multi-select chips from Kai-filled systemType
+        if (wo.systemType) {
+          const types = wo.systemType.split(',').map((t: string) => t.trim()).filter(Boolean);
+          setSelectedTypes(types);
+        }
       }
     } catch {}
     setLoading(false);
@@ -430,10 +466,47 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             {FL('System Type')}
-            <select value={draft.systemType} onChange={e => update('systemType', e.target.value)} style={SEL}>
-              <option value="">Select type</option>
-              {SYSTEM_TYPES.map(t => <option key={t}>{t}</option>)}
-            </select>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+              {allSystemTypes.map(t => {
+                const isSelected = selectedTypes.includes(t);
+                const hasTemplate = templateNames.has(t);
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => toggleSystemType(t)}
+                    style={{
+                      padding: '5px 10px',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      border: isSelected ? '1px solid #0f766e' : '1px solid #e2e8f0',
+                      background: isSelected ? 'rgba(15,118,110,0.1)' : 'white',
+                      color: isSelected ? '#0f766e' : '#475569',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    {t}
+                    {hasTemplate && (
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.12)', padding: '1px 4px', borderRadius: 4, border: '1px solid rgba(15,118,110,0.2)' }}>
+                        ✓
+                      </span>
+                    )}
+                    {isSelected && (
+                      <span style={{ fontSize: 10, color: '#0f766e', fontWeight: 900, lineHeight: 1 }}>×</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedTypes.length > 0 && (
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
+                Selected: {selectedTypes.join(', ')}
+              </div>
+            )}
           </div>
           <div>
             {FL('Assign To')}

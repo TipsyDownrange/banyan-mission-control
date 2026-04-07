@@ -72,6 +72,7 @@ interface WorkBreakdownProps {
   jobType: 'wo' | 'project';
   quotedHours?: number;
   readOnly?: boolean;
+  systemTypes?: string; // comma-separated system types from WO
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -153,7 +154,7 @@ function HoursDelta({ quoted, planned, actual }: { quoted?: number; planned: num
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = false }: WorkBreakdownProps) {
+export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = false, systemTypes }: WorkBreakdownProps) {
   const [plans, setPlans] = useState<InstallPlan[]>([]);
   const [STEP_TEMPLATES, setStepTemplates] = useState<Record<string, { name: string; hours: number; category?: string }[]>>(FALLBACK_TEMPLATES);
   const [steps, setSteps] = useState<InstallStep[]>([]);
@@ -174,6 +175,10 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   // Form state
   const [scopeForm, setScopeForm] = useState({ system_type: '', location: '', estimated_total_hours: '', estimated_qty: '1' });
   const [stepForm, setStepForm] = useState({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N' });
+
+  // Template recommendation banner
+  const [creatingFromTemplates, setCreatingFromTemplates] = useState(false);
+  const [templateBannerDismissed, setTemplateBannerDismissed] = useState(false);
 
   // Bulk create
   const [showBulkCreate, setShowBulkCreate] = useState(false);
@@ -1487,6 +1492,114 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     );
   }
 
+  // ─── Template Recommendation Banner ─────────────────────────────────────────
+
+  async function handleCreateFromTemplates(matchingTypes: string[]) {
+    setCreatingFromTemplates(true);
+    try {
+      for (const sysType of matchingTypes) {
+        const template = STEP_TEMPLATES[sysType];
+        if (!template) continue;
+        // Create plan
+        const planRes = await fetch(`/api/work-breakdown/${jobId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'plan',
+            system_type: sysType,
+            location: sysType,
+            estimated_total_hours: template.reduce((s, t) => s + t.hours, 0),
+            estimated_qty: 1,
+          }),
+        });
+        const planData = await planRes.json();
+        const planId = planData.install_plan_id;
+        if (!planId) continue;
+        // Create steps
+        for (let i = 0; i < template.length; i++) {
+          await fetch(`/api/work-breakdown/${jobId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'step',
+              install_plan_id: planId,
+              step_seq: i + 1,
+              step_name: template[i].name,
+              allotted_hours: template[i].hours,
+              acceptance_criteria: '',
+              required_photo_yn: 'N',
+              category: template[i].category || '',
+            }),
+          });
+        }
+      }
+      setTemplateBannerDismissed(true);
+      await loadData();
+    } catch {
+      alert('Failed to create from templates');
+    } finally {
+      setCreatingFromTemplates(false);
+    }
+  }
+
+  function renderTemplateBanner() {
+    if (readOnly || templateBannerDismissed || plans.length > 0 || !systemTypes) return null;
+    const types = systemTypes.split(',').map(t => t.trim()).filter(Boolean);
+    if (types.length === 0) return null;
+    const matchingTypes = types.filter(t => STEP_TEMPLATES[t]);
+    if (matchingTypes.length === 0) return null;
+
+    return (
+      <div style={{
+        padding: '14px 16px',
+        background: 'rgba(240,253,250,0.9)',
+        borderRadius: 12,
+        border: '1px solid rgba(15,118,110,0.2)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+              💡 Recommended scopes based on job type
+            </div>
+            <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}>
+              {matchingTypes.join(', ')}
+            </div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+              Step Library templates available for these system types.
+            </div>
+          </div>
+          <button
+            onClick={() => setTemplateBannerDismissed(true)}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 16, padding: '2px 4px', flexShrink: 0 }}
+          >×</button>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => handleCreateFromTemplates(matchingTypes)}
+            disabled={creatingFromTemplates}
+            style={{
+              padding: '9px 18px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: creatingFromTemplates ? 'default' : 'pointer',
+              background: creatingFromTemplates ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+              color: creatingFromTemplates ? '#94a3b8' : 'white',
+              boxShadow: creatingFromTemplates ? 'none' : '0 2px 8px rgba(15,118,110,0.25)',
+            }}
+          >
+            {creatingFromTemplates ? 'Creating…' : `⚡ Create from templates (${matchingTypes.length} scope${matchingTypes.length !== 1 ? 's' : ''})`}
+          </button>
+          <button
+            onClick={() => setTemplateBannerDismissed(true)}
+            style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          >
+            Skip
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Main render ─────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -1517,6 +1630,9 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
       {/* Job Documents */}
       {renderJobDocs()}
+
+      {/* Template recommendation banner */}
+      {renderTemplateBanner()}
 
       {/* Primary action buttons — at top, always visible */}
       {!readOnly && (

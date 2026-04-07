@@ -11,6 +11,7 @@ type WorkOrder = {
   men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
   folderUrl?: string;
+  systemType?: string;
   // QBO invoice fields (columns AA–AE)
   qbo_invoice_id?: string;
   invoice_number?: string;
@@ -472,6 +473,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   jobType="wo"
                   quotedHours={parseFloat(wo.hoursEstimated) || undefined}
                   readOnly={readOnly}
+                  systemTypes={wo.systemType}
                 />
               </div>
 

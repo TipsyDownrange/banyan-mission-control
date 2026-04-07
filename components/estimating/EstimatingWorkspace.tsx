@@ -11,6 +11,48 @@ import TakeoffTab from '@/components/estimating/TakeoffTab';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+export interface StepTemplateStep {
+  step_seq: number;
+  step_name: string;
+  default_hours: number;
+  category: string;
+  notes: string;
+}
+
+export type StepTemplates = Record<string, StepTemplateStep[]>;
+
+export interface GoldDataEntry {
+  system_type: string;
+  step_name: string;
+  step_category: string;
+  avg_hours: number;
+  sample_count: number;
+  min_hours: number;
+  max_hours: number;
+  avg_allotted: number;
+  avg_delta: number;
+  last_updated: string;
+}
+
+export interface GoldDataSummary {
+  total_templates: number;
+  templates_with_data: number;
+  most_accurate: { template: string; avg_abs_delta: number } | null;
+  needs_review: { template: string; avg_delta: number } | null;
+  last_computed: string;
+  by_step: GoldDataEntry[];
+  by_category: {
+    system_type: string;
+    step_category: string;
+    avg_hours: number;
+    sample_count: number;
+    min_hours: number;
+    max_hours: number;
+    avg_delta: number;
+    last_updated: string;
+  }[];
+}
+
 export interface BidSummary {
   bidVersionId: string;
   jobId: string;
@@ -172,6 +214,8 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
   const [sort, setSort] = useState('date_desc');
   const [search, setSearch] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [stepTemplates, setStepTemplates] = useState<StepTemplates>({});
+  const [goldData, setGoldData] = useState<GoldDataSummary | null>(null);
 
   const loadBids = useCallback(async () => {
     setLoading(true);
@@ -188,6 +232,29 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Fetch Step Library templates + Gold Data once on mount
+  useEffect(() => {
+    async function loadLibraryData() {
+      try {
+        const [templatesRes, goldRes] = await Promise.all([
+          fetch('/api/step-templates'),
+          fetch('/api/gold-data'),
+        ]);
+        const templatesJson = await templatesRes.json();
+        if (templatesJson.ok && templatesJson.templates) {
+          setStepTemplates(templatesJson.templates);
+        }
+        const goldJson = await goldRes.json();
+        if (goldJson.ok && goldJson.summary) {
+          setGoldData(goldJson.summary);
+        }
+      } catch (err) {
+        console.error('Failed to load library data', err);
+      }
+    }
+    loadLibraryData();
   }, []);
 
   useEffect(() => {
@@ -437,7 +504,9 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
               />
             )}
             {activeTab === 'carls' && (
-              <CarlsMethodTab bid={selectedBid} />
+              <CarlsMethodTab
+                bid={selectedBid}
+              />
             )}
             {activeTab === 'takeoff' && (
               <TakeoffTab bid={selectedBid} />

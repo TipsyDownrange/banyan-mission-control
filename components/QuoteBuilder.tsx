@@ -563,6 +563,9 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   const [quote, setQuote] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
   const [jobTypes, setJobTypes] = useState<string[]>([]);
+  // Work breakdown baseline
+  const [wbBaselineHours, setWbBaselineHours] = useState<number | null>(null);
+  const [wbLaborLines, setWbLaborLines] = useState<{ category: string; hours: number }[]>([]);
 
   // Section open/close
   const [openSections, setOpenSections] = useState({
@@ -664,6 +667,41 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
         setLoading(false);
       })
       .catch(e => { setError(String(e)); setLoading(false); });
+  }, [woNumber]);
+
+  // ─── Load work breakdown baseline on mount ───────────────────────────────
+
+  useEffect(() => {
+    if (!woNumber) return;
+    fetch(`/api/work-breakdown/${encodeURIComponent(woNumber)}`)
+      .then(r => r.json())
+      .then(d => {
+        const steps: Array<{ allotted_hours: number; category?: string }> = d.steps || [];
+        if (steps.length === 0) return;
+        const total = steps.reduce((sum: number, s) => sum + (s.allotted_hours || 0), 0);
+        setWbBaselineHours(total);
+        // Group by category
+        const catMap: Record<string, number> = {};
+        for (const s of steps) {
+          const cat = s.category || 'Installation';
+          catMap[cat] = (catMap[cat] || 0) + (s.allotted_hours || 0);
+        }
+        const lines = Object.entries(catMap).map(([category, hours]) => ({ category, hours }));
+        setWbLaborLines(lines);
+        // Pre-fill labor steps from work breakdown if no config is loaded yet
+        if (total > 0) {
+          const rate = '120';
+          const newSteps: LaborStep[] = lines.map(l => ({
+            id: uid(),
+            description: `${l.category} (From Step Library)`,
+            hours: String(l.hours),
+            rate,
+            amountOverride: '',
+          }));
+          setLaborSteps(newSteps);
+        }
+      })
+      .catch(() => {}); // silently fail — labor works manually if no breakdown
   }, [woNumber]);
 
   // ─── Load configs for this job ─────────────────────────────────────────────
@@ -1395,6 +1433,22 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           <SectionToggle label="Labor Steps" color="#4338ca" open={openSections.labor} onToggle={() => toggleSection('labor')} />
           {openSections.labor && (
             <div style={{ paddingTop: 10 }}>
+              {wbBaselineHours !== null && wbBaselineHours > 0 && (
+                <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(240,253,250,0.9)', border: '1px solid rgba(15,118,110,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+                      📚 From Step Library
+                    </div>
+                    <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 700 }}>
+                      {wbBaselineHours.toFixed(1)}h baseline — {wbLaborLines.map(l => `${l.hours.toFixed(1)}h ${l.category}`).join(', ')}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>Pre-filled from work breakdown. Adjust hours as needed.</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'rgba(15,118,110,0.1)', color: '#0f766e', border: '1px solid rgba(15,118,110,0.2)', whiteSpace: 'nowrap' as const }}>
+                    {fmt(wbBaselineHours * 120)} baseline
+                  </span>
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 28px', gap: 6, marginBottom: 4, padding: '0 2px' }}>
                 {['Description', 'Hours', 'Rate/hr', 'Amount', ''].map(h => (
                   <div key={h} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{h}</div>
