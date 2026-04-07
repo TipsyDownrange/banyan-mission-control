@@ -22,6 +22,7 @@ const COL = {
   hours_estimated: 19,
   men_required:   21,
   comments:       22,
+  folder_url:     23,
 };
 
 export async function GET(req: Request) {
@@ -68,6 +69,31 @@ export async function GET(req: Request) {
 
     const pdfBuffer = await generateDispatchWOPDF(dispatchData);
     const filename = `Dispatch-WO-${woNumber}-${dispatchData.scheduled_date || dispatchData.date}.pdf`;
+
+    // Auto-save copy to WO folder in Drive (non-blocking)
+    try {
+      const saKeyB64 = process.env.GOOGLE_SA_KEY_B64 || process.env.GOOGLE_SA_KEY_BASE64;
+      if (saKeyB64) {
+        const keyJson = JSON.parse(Buffer.from(saKeyB64, 'base64').toString('utf-8'));
+        const driveAuth = new (await import('googleapis')).google.auth.JWT({
+          email: keyJson.client_email, key: keyJson.private_key,
+          scopes: ['https://www.googleapis.com/auth/drive'],
+        });
+        const drive = (await import('googleapis')).google.drive({ version: 'v3', auth: driveAuth });
+        const folderUrl = g(COL.folder_url);
+        if (folderUrl) {
+          const folderId = folderUrl.match(/folders\/([^/?]+)/)?.[1];
+          if (folderId) {
+            const { Readable } = await import('stream');
+            await drive.files.create({
+              requestBody: { name: filename, parents: [folderId], mimeType: 'application/pdf' },
+              media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
+              supportsAllDrives: true,
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch { /* non-fatal */ }
 
     return new Response(pdfBuffer as unknown as BodyInit, {
       headers: {
