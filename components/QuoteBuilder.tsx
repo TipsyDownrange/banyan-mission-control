@@ -887,9 +887,9 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                 { title: 'Freight / Shipping', subtitle: 'Materials shipping costs', items: freight, setter: setFreight },
               ].map(({ title, subtitle, items, setter }) => (
                 <div key={title} style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#92400e', letterSpacing: '0.08em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', letterSpacing: '0.08em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ textTransform: 'uppercase' }}>{title}</span>
-                    <span style={{ fontWeight: 400, color: '#a8a29e', fontSize: 10, textTransform: 'none', letterSpacing: 0 }}>— {subtitle}</span>
+                    <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 10, textTransform: 'none', letterSpacing: 0 }}>— {subtitle}</span>
                   </div>
 
                   {/* Column headers */}
@@ -969,7 +969,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                   })}
 
                   <button onClick={() => { setter(prev => [...prev, newMaterialLine()]); scheduleAutoSave(); }}
-                    style={{ fontSize: 11, color: '#92400e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 0' }}>
+                    style={{ fontSize: 11, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 0' }}>
                     + Add {title.toLowerCase()} line
                   </button>
                 </div>
