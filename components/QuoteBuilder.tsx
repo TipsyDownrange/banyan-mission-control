@@ -554,7 +554,17 @@ function defaultMarkup(): Markup {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; onClose: () => void }) {
+export interface EstimatePreFill {
+  materialsTotal: number;
+  laborSubtotal: number;
+  overhead: number;
+  profit: number;
+  taxAmt: number;
+  grandTotal: number;
+  profitPct: number;
+}
+
+export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { woNumber: string; onClose: () => void; estimatePreFill?: EstimatePreFill }) {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -668,6 +678,22 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
       })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [woNumber]);
+
+  // Pre-fill from estimate data when provided
+  useEffect(() => {
+    if (!estimatePreFill || loading) return;
+    if (estimatePreFill.materialsTotal > 0) {
+      setMainMaterials([{ id: uid(), description: 'Materials (from estimate)', qty: '1', unit: 'ea', unitCost: String(Math.round(estimatePreFill.materialsTotal * 100) / 100), totalOverride: '', width: '', height: '', length: '' }]);
+    }
+    if (estimatePreFill.laborSubtotal > 0) {
+      const rate = 117;
+      const hours = Math.round(estimatePreFill.laborSubtotal / rate * 10) / 10;
+      setLaborSteps([{ id: uid(), description: 'Labor (from estimate)', hours: String(hours), rate: String(rate), amountOverride: '' }]);
+    }
+    if (estimatePreFill.profitPct) {
+      setMarkup(prev => ({ ...prev, profitPct: String(estimatePreFill.profitPct) }));
+    }
+  }, [estimatePreFill, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Load work breakdown baseline on mount ───────────────────────────────
 

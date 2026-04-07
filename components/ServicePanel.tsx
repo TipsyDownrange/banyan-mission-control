@@ -460,6 +460,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [showIntake, setShowIntake] = useState(false);
   const [quoteWO, setQuoteWO] = useState<string | null>(null);
+  const [quoteEstimateData, setQuoteEstimateData] = useState<EstimateTotals | undefined>(undefined);
   const [estimateWO, setEstimateWO] = useState<WorkOrder | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
@@ -789,7 +790,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       {quoteWO && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: 'white', borderRadius: 28, width: '100%', maxWidth: 640, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
-            <QuoteBuilder woNumber={quoteWO} onClose={() => setQuoteWO(null)} />
+            <QuoteBuilder woNumber={quoteWO} onClose={() => { setQuoteWO(null); setQuoteEstimateData(undefined); }} estimatePreFill={quoteEstimateData} />
           </div>
         </div>
       )}
@@ -799,8 +800,9 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         <WOEstimatePanel
           wo={estimateWO}
           onClose={() => setEstimateWO(null)}
-          onGenerateQuote={(woId: string, _totals: EstimateTotals) => {
+          onGenerateQuote={(woId: string, totals: EstimateTotals) => {
             setEstimateWO(null);
+            setQuoteEstimateData(totals);
             setQuoteWO(woId);
           }}
         />
