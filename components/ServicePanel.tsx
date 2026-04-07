@@ -80,9 +80,6 @@ function WOCard({
   const [mode, setMode] = useState<'view' | 'dispatch' | 'edit' | 'close'>('view');
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
-  const [linkingFolder, setLinkingFolder] = useState(false);
-  const [linkFolderInput, setLinkFolderInput] = useState('');
-  const [linkFolderSaving, setLinkFolderSaving] = useState(false);
 
   const [editDraft, setEditDraft] = useState({
     description: wo.description,
@@ -206,13 +203,8 @@ function WOCard({
           )}
           {/* Spacer */}
           <div style={{ flex: 1 }} />
-          {/* Icon-only buttons — no text labels, no overflow */}
+          {/* Card actions — minimal: dispatch, edit, close only. Quote/Files/Print live in the detail view */}
           <div style={{ display: 'flex', gap: 3, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-            {/* Quote */}
-            <button title="Build quote / proposal" onClick={() => onQuote(wo.id)}
-              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              $
-            </button>
             {/* Dispatch */}
             <button title="Schedule & dispatch crew"
               onClick={() => { setMode(mode === 'dispatch' ? 'view' : 'dispatch'); if (!expanded) onToggle(); }}
@@ -224,27 +216,6 @@ function WOCard({
               onClick={() => { setMode(mode === 'edit' ? 'view' : 'edit'); if (!expanded) onToggle(); }}
               style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               ✎
-            </button>
-            {/* Files / Drive folder link — or Link Folder button */}
-            {wo.folderUrl ? (
-              <a href={wo.folderUrl} target="_blank" rel="noreferrer"
-                title="Open project files in Drive"
-                onClick={e => { e.stopPropagation(); e.preventDefault(); window.open(wo.folderUrl, '_blank', 'noopener,noreferrer'); }}
-                style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#0369a1', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, textDecoration: 'none' }}>
-                📁
-              </a>
-            ) : (
-              <button title="Link Drive folder"
-                onClick={e => { e.stopPropagation(); setLinkingFolder(p => !p); }}
-                style={{ width: 28, height: 28, borderRadius: 8, border: linkingFolder ? '1px solid rgba(3,105,161,0.5)' : '1px solid rgba(203,213,225,0.7)', background: linkingFolder ? 'rgba(239,246,255,0.96)' : 'rgba(255,255,255,0.7)', color: linkingFolder ? '#0369a1' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                🔗
-              </button>
-            )}
-            {/* Print dispatch sheet */}
-            <button title="Print dispatch sheet for crew"
-              onClick={(e) => { e.stopPropagation(); window.open(`/api/service/dispatch-pdf?wo=${encodeURIComponent(wo.id)}`, '_blank'); }}
-              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(203,213,225,0.7)', background: 'rgba(255,255,255,0.7)', color: '#64748b', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              🖨
             </button>
             {/* Close WO — only show if not already closed */}
             {wo.status !== 'closed' && (
@@ -286,43 +257,6 @@ function WOCard({
           </div>
         )}
       </div>
-
-      {/* Link Folder inline form */}
-      {linkingFolder && (
-        <div onClick={e => e.stopPropagation()} style={{ padding: '8px 16px 12px 20px', borderTop: '1px solid rgba(59,130,246,0.15)', background: 'rgba(239,246,255,0.5)' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0369a1', marginBottom: 6 }}>Link Drive Folder</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <input
-              type="url"
-              value={linkFolderInput}
-              onChange={e => setLinkFolderInput(e.target.value)}
-              onClick={e => e.stopPropagation()}
-              placeholder="Paste Google Drive folder URL..."
-              autoFocus
-              style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(3,105,161,0.3)', fontSize: 12, outline: 'none', background: 'white', color: '#0f172a' }}
-            />
-            <button
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (!linkFolderInput || linkFolderSaving) return;
-                setLinkFolderSaving(true);
-                await onLinkFolder(wo.id, wo.name, linkFolderInput);
-                setLinkingFolder(false);
-                setLinkFolderInput('');
-                setLinkFolderSaving(false);
-              }}
-              disabled={!linkFolderInput || linkFolderSaving}
-              style={{ padding: '7px 14px', borderRadius: 8, background: linkFolderInput && !linkFolderSaving ? '#0369a1' : '#e2e8f0', color: linkFolderInput && !linkFolderSaving ? 'white' : '#94a3b8', border: 'none', fontSize: 12, fontWeight: 700, cursor: linkFolderInput && !linkFolderSaving ? 'pointer' : 'default', flexShrink: 0 }}>
-              {linkFolderSaving ? '...' : 'Save'}
-            </button>
-            <button
-              onClick={e => { e.stopPropagation(); setLinkingFolder(false); setLinkFolderInput(''); }}
-              style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}>
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Expanded body */}
       {expanded && (
