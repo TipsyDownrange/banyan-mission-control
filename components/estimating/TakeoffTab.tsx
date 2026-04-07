@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import ExpandableTable, { ColumnDef, ExpandableRow } from '@/components/shared/ExpandableTable';
-import type { BidSummary } from '@/components/estimating/EstimatingWorkspace';
+import type { BidSummary, StepTemplates } from '@/components/estimating/EstimatingWorkspace';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -109,9 +109,10 @@ interface AddRowFormProps {
   bidVersionId: string;
   onSave: (row: Row) => void;
   onCancel: () => void;
+  stepTemplates?: StepTemplates;
 }
 
-function AddRowForm({ subView, bidVersionId, onSave, onCancel }: AddRowFormProps) {
+function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {} }: AddRowFormProps) {
   const [fields, setFields] = useState<Row>({ Bid_Version_ID: bidVersionId });
   const [saving, setSaving] = useState(false);
 
@@ -205,17 +206,33 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel }: AddRowFormProps
   }
 
   function select(key: string, label: string, options: string[]) {
+    const isSystemType = key === 'System_Type' || key === 'System_Type_Context';
+    const selectedVal = fields[key] ?? '';
+    const templateKey = isSystemType
+      ? Object.keys(stepTemplates).find(k => k.toLowerCase() === selectedVal.toLowerCase())
+      : undefined;
+    const templateSteps = templateKey ? stepTemplates[templateKey] : null;
+    const templateHours = templateSteps ? templateSteps.reduce((s, t) => s + t.default_hours, 0) : null;
+
     return (
       <div key={key}>
         <label style={labelStyle}>{label}</label>
         <select
-          value={fields[key] ?? ''}
+          value={selectedVal}
           onChange={e => set(key, e.target.value)}
           style={{ ...inputStyle, cursor: 'pointer' }}
         >
-          <option value="">Select…</option>
-          {options.map(o => <option key={o} value={o}>{o}</option>)}
+          <option value="">…</option>
+          {options.map(o => {
+            const tKey = isSystemType ? Object.keys(stepTemplates).find(k => k.toLowerCase() === o.toLowerCase()) : undefined;
+            return <option key={o} value={o}>{tKey ? `${o} ✓` : o}</option>;
+          })}
         </select>
+        {isSystemType && templateHours !== null && (
+          <div style={{ fontSize: 10, color: '#0f766e', marginTop: 3, fontWeight: 600 }}>
+            📋 Template: {templateSteps!.length} steps, {templateHours.toFixed(2)}h total
+          </div>
+        )}
       </div>
     );
   }
@@ -402,12 +419,13 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel }: AddRowFormProps
 
 // ─── Sub-views ─────────────────────────────────────────────────────────────────
 
-function SystemsView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
+function SystemsView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplates = {} }: {
   rows: Row[];
   bidVersionId: string;
   onUpdate: (rowId: string, field: string, value: string) => void;
   onDelete: (rowId: string) => void;
   onAdd: (row: Row) => void;
+  stepTemplates?: StepTemplates;
 }) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -484,6 +502,7 @@ function SystemsView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
           bidVersionId={bidVersionId}
           onSave={row => { onAdd(row); setAddOpen(false); }}
           onCancel={() => setAddOpen(false)}
+          stepTemplates={stepTemplates}
         />
       )}
       <ExpandableTable
@@ -497,12 +516,13 @@ function SystemsView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
   );
 }
 
-function DoorsView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
+function DoorsView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplates = {} }: {
   rows: Row[];
   bidVersionId: string;
   onUpdate: (rowId: string, field: string, value: string) => void;
   onDelete: (rowId: string) => void;
   onAdd: (row: Row) => void;
+  stepTemplates?: StepTemplates;
 }) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -572,6 +592,7 @@ function DoorsView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
           bidVersionId={bidVersionId}
           onSave={row => { onAdd(row); setAddOpen(false); }}
           onCancel={() => setAddOpen(false)}
+          stepTemplates={stepTemplates}
         />
       )}
       <ExpandableTable
@@ -585,12 +606,13 @@ function DoorsView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
   );
 }
 
-function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
+function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplates = {} }: {
   rows: Row[];
   bidVersionId: string;
   onUpdate: (rowId: string, field: string, value: string) => void;
   onDelete: (rowId: string) => void;
   onAdd: (row: Row) => void;
+  stepTemplates?: StepTemplates;
 }) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -713,6 +735,7 @@ function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
           bidVersionId={bidVersionId}
           onSave={row => { onAdd(row); setAddOpen(false); }}
           onCancel={() => setAddOpen(false)}
+          stepTemplates={stepTemplates}
         />
       )}
       <ExpandableTable
@@ -726,12 +749,13 @@ function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
   );
 }
 
-function SealantView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
+function SealantView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplates = {} }: {
   rows: Row[];
   bidVersionId: string;
   onUpdate: (rowId: string, field: string, value: string) => void;
   onDelete: (rowId: string) => void;
   onAdd: (row: Row) => void;
+  stepTemplates?: StepTemplates;
 }) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -803,6 +827,7 @@ function SealantView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
           bidVersionId={bidVersionId}
           onSave={row => { onAdd(row); setAddOpen(false); }}
           onCancel={() => setAddOpen(false)}
+          stepTemplates={stepTemplates}
         />
       )}
       <ExpandableTable
@@ -816,12 +841,13 @@ function SealantView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
   );
 }
 
-function FastenersView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
+function FastenersView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplates = {} }: {
   rows: Row[];
   bidVersionId: string;
   onUpdate: (rowId: string, field: string, value: string) => void;
   onDelete: (rowId: string) => void;
   onAdd: (row: Row) => void;
+  stepTemplates?: StepTemplates;
 }) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -894,6 +920,7 @@ function FastenersView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
           bidVersionId={bidVersionId}
           onSave={row => { onAdd(row); setAddOpen(false); }}
           onCancel={() => setAddOpen(false)}
+          stepTemplates={stepTemplates}
         />
       )}
       <ExpandableTable
@@ -907,12 +934,13 @@ function FastenersView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
   );
 }
 
-function FlashingView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
+function FlashingView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplates = {} }: {
   rows: Row[];
   bidVersionId: string;
   onUpdate: (rowId: string, field: string, value: string) => void;
   onDelete: (rowId: string) => void;
   onAdd: (row: Row) => void;
+  stepTemplates?: StepTemplates;
 }) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -987,6 +1015,7 @@ function FlashingView({ rows, bidVersionId, onUpdate, onDelete, onAdd }: {
           bidVersionId={bidVersionId}
           onSave={row => { onAdd(row); setAddOpen(false); }}
           onCancel={() => setAddOpen(false)}
+          stepTemplates={stepTemplates}
         />
       )}
       <ExpandableTable
@@ -1030,9 +1059,10 @@ const SUB_VIEWS: { id: SubView; label: string }[] = [
 
 interface TakeoffTabProps {
   bid: BidSummary;
+  stepTemplates?: StepTemplates;
 }
 
-export default function TakeoffTab({ bid }: TakeoffTabProps) {
+export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps) {
   const [activeView, setActiveView] = useState<SubView>('systems');
   const [data, setData] = useState<TakeoffData>({
     assembly_summary: [],
@@ -1230,6 +1260,7 @@ export default function TakeoffTab({ bid }: TakeoffTabProps) {
           onUpdate={makeUpdateHandler('assembly_summary', 'Line_ID')}
           onDelete={(rowId) => handleDelete('assembly_summary', 'Line_ID', rowId)}
           onAdd={makeAddHandler('assembly_summary')}
+          stepTemplates={stepTemplates}
         />
       )}
 
@@ -1240,6 +1271,7 @@ export default function TakeoffTab({ bid }: TakeoffTabProps) {
           onUpdate={makeUpdateHandler('doors', 'Door_Line_ID')}
           onDelete={(rowId) => handleDelete('doors', 'Door_Line_ID', rowId)}
           onAdd={makeAddHandler('doors')}
+          stepTemplates={stepTemplates}
         />
       )}
 
@@ -1250,6 +1282,7 @@ export default function TakeoffTab({ bid }: TakeoffTabProps) {
           onUpdate={makeUpdateHandler('glass', 'Glass_Line_ID')}
           onDelete={(rowId) => handleDelete('glass', 'Glass_Line_ID', rowId)}
           onAdd={makeAddHandler('glass')}
+          stepTemplates={stepTemplates}
         />
       )}
 
@@ -1260,6 +1293,7 @@ export default function TakeoffTab({ bid }: TakeoffTabProps) {
           onUpdate={makeUpdateHandler('sealant', 'Seal_Line_ID')}
           onDelete={(rowId) => handleDelete('sealant', 'Seal_Line_ID', rowId)}
           onAdd={makeAddHandler('sealant')}
+          stepTemplates={stepTemplates}
         />
       )}
 
@@ -1270,6 +1304,7 @@ export default function TakeoffTab({ bid }: TakeoffTabProps) {
           onUpdate={makeUpdateHandler('fasteners', 'Fast_Line_ID')}
           onDelete={(rowId) => handleDelete('fasteners', 'Fast_Line_ID', rowId)}
           onAdd={makeAddHandler('fasteners')}
+          stepTemplates={stepTemplates}
         />
       )}
 
@@ -1280,6 +1315,7 @@ export default function TakeoffTab({ bid }: TakeoffTabProps) {
           onUpdate={makeUpdateHandler('flashing', 'Flash_Line_ID')}
           onDelete={(rowId) => handleDelete('flashing', 'Flash_Line_ID', rowId)}
           onAdd={makeAddHandler('flashing')}
+          stepTemplates={stepTemplates}
         />
       )}
 

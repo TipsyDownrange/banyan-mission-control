@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import type { BidSummary } from '@/components/estimating/EstimatingWorkspace';
+import type { BidSummary, StepTemplates, GoldDataSummary } from '@/components/estimating/EstimatingWorkspace';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -466,16 +466,68 @@ const PRINT_STYLES = `
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-interface CarlsMethodTabProps {
-  bid: BidSummary;
+// ─── Helper: compute template hours for a set of system types ──────────────────
+
+function computeTemplateBaseline(
+  systemTypes: string[],
+  templates: StepTemplates,
+): { totalHours: number; breakdown: { systemType: string; hours: number }[] } {
+  const breakdown: { systemType: string; hours: number }[] = [];
+  let totalHours = 0;
+  const seen = new Set<string>();
+  for (const st of systemTypes) {
+    const key = Object.keys(templates).find(
+      k => k.toLowerCase() === st.toLowerCase()
+    );
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      const hours = templates[key].reduce((sum, s) => sum + s.default_hours, 0);
+      breakdown.push({ systemType: st, hours });
+      totalHours += hours;
+    }
+  }
+  return { totalHours, breakdown };
 }
 
-export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
+// ─── Gold data: total hours for a set of system types ─────────────────────────
+
+function goldHoursForSystems(
+  systemTypes: string[],
+  goldData: GoldDataSummary | null,
+): { totalHours: number; sampleCount: number } | null {
+  if (!goldData || !goldData.by_step || goldData.by_step.length === 0) return null;
+  const lower = new Set(systemTypes.map(s => s.toLowerCase()));
+  let total = 0;
+  let count = 0;
+  const seen = new Set<string>();
+  for (const entry of goldData.by_step) {
+    if (lower.has(entry.system_type.toLowerCase())) {
+      const key = `${entry.system_type}|||${entry.step_name}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        total += entry.avg_hours;
+        count = Math.max(count, entry.sample_count);
+      }
+    }
+  }
+  if (total === 0) return null;
+  return { totalHours: total, sampleCount: count };
+}
+
+interface CarlsMethodTabProps {
+  bid: BidSummary;
+  stepTemplates?: StepTemplates;
+  goldData?: GoldDataSummary | null;
+}
+
+export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = null }: CarlsMethodTabProps) {
   const [data, setData] = useState<CarlsData>(() => defaultData(bid));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [xAmount, setXAmount] = useState('');
+  const [takeoffSystemTypes, setTakeoffSystemTypes] = useState<string[]>([]);
+  const [templateBaselineApplied, setTemplateBaselineApplied] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Load ───────────────────────────────────────────────────────────────────
@@ -483,8 +535,32 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/estimating/carls-method?bidVersionId=${bid.bidVersionId}`);
-        const json = await res.json();
+        const [carlsRes, takeoffRes] = await Promise.all([
+          fetch(`/api/estimating/carls-method?bidVersionId=${bid.bidVersionId}`),
+          fetch(`/api/estimating/takeoff/${bid.bidVersionId}`),
+        ]);
+        const json = await carlsRes.json();
+        const takeoffJson = await takeoffRes.json();
+
+        // Extract unique system types from takeoff
+        const seenTypes = new Set<string>();
+        const systemTypes: string[] = [];
+        const addTypes = (rows: Record<string, string>[] | undefined, col: string) => {
+          for (const row of rows || []) {
+            const st = row[col];
+            if (st && !seenTypes.has(st)) {
+              seenTypes.add(st);
+              systemTypes.push(st);
+            }
+          }
+        };
+        if (takeoffJson) {
+          addTypes(takeoffJson.assembly_summary, 'System_Type');
+          addTypes(takeoffJson.glass, 'System_Type');
+          addTypes(takeoffJson.doors, 'System_Type_Context');
+        }
+        setTakeoffSystemTypes(systemTypes);
+
         if (json.data) {
           const loaded = { ...defaultData(bid), ...json.data };
           // Migrate old byWhom field to description
@@ -498,6 +574,21 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
           if (!loaded.otherExtra) loaded.otherExtra = [];
           setData(loaded);
           if (json.updatedAt) setLastSaved(json.updatedAt);
+          setTemplateBaselineApplied(false); // existing saved data — don't auto-overwrite
+        } else if (systemTypes.length > 0 && Object.keys(stepTemplates).length > 0) {
+          // New bid with no saved data — auto-populate Field Labor from templates
+          const baseline = computeTemplateBaseline(systemTypes, stepTemplates);
+          if (baseline.totalHours > 0) {
+            setData(prev => ({
+              ...prev,
+              labor: prev.labor.map(l =>
+                l.description === 'Field Labor'
+                  ? { ...l, hours: baseline.totalHours.toFixed(2) }
+                  : l
+              ),
+            }));
+            setTemplateBaselineApplied(true);
+          }
         }
       } catch {
         // use defaults
@@ -507,6 +598,27 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
     }
     load();
   }, [bid.bidVersionId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When templates arrive after data (async race), apply baseline if Field Labor is empty
+  useEffect(() => {
+    if (!loading && !templateBaselineApplied && takeoffSystemTypes.length > 0 && Object.keys(stepTemplates).length > 0) {
+      const fieldLaborLine = data.labor.find(l => l.description === 'Field Labor');
+      if (fieldLaborLine && !fieldLaborLine.hours && !fieldLaborLine.amount) {
+        const baseline = computeTemplateBaseline(takeoffSystemTypes, stepTemplates);
+        if (baseline.totalHours > 0) {
+          setData(prev => ({
+            ...prev,
+            labor: prev.labor.map(l =>
+              l.description === 'Field Labor'
+                ? { ...l, hours: baseline.totalHours.toFixed(2) }
+                : l
+            ),
+          }));
+          setTemplateBaselineApplied(true);
+        }
+      }
+    }
+  }, [stepTemplates, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Auto-save (debounced) ──────────────────────────────────────────────────
 
@@ -1050,6 +1162,79 @@ export default function CarlsMethodTab({ bid }: CarlsMethodTabProps) {
 
               {/* ── LABOR ── */}
               <SectionHeader>Labor</SectionHeader>
+              {/* Step Library Baseline + Gold Data indicators */}
+              {(() => {
+                const baseline = computeTemplateBaseline(takeoffSystemTypes, stepTemplates);
+                const gold = goldHoursForSystems(takeoffSystemTypes, goldData);
+                if (baseline.totalHours === 0 && !gold) return null;
+
+                // Color-code gold vs template
+                let goldColor = '#16a34a';
+                if (gold && baseline.totalHours > 0) {
+                  const diff = Math.abs(gold.totalHours - baseline.totalHours) / baseline.totalHours;
+                  if (diff > 0.20) goldColor = '#dc2626';
+                  else if (diff > 0.10) goldColor = '#d97706';
+                }
+
+                return (
+                  <tr>
+                    <td colSpan={4} style={{ paddingTop: 4, paddingBottom: 6 }}>
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 10,
+                        padding: '6px 10px',
+                        background: 'rgba(20,184,166,0.04)',
+                        border: '1px solid rgba(20,184,166,0.15)',
+                        borderRadius: 8,
+                        alignItems: 'center',
+                      }}>
+                        {baseline.totalHours > 0 && (
+                          <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600 }}>
+                            📋 Template: {baseline.totalHours.toFixed(2)}h
+                            <span style={{ fontWeight: 400, color: '#64748b', marginLeft: 4 }}>
+                              ({baseline.breakdown.map(b => `${b.systemType} ${b.hours.toFixed(2)}h`).join(' + ')})
+                            </span>
+                          </span>
+                        )}
+                        {gold && (
+                          <span style={{ fontSize: 11, color: goldColor, fontWeight: 600 }}>
+                            · Gold Data: avg {gold.totalHours.toFixed(2)}h across {gold.sampleCount} job{gold.sampleCount !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (baseline.totalHours > 0) {
+                              update(d => ({
+                                ...d,
+                                labor: d.labor.map(l =>
+                                  l.description === 'Field Labor'
+                                    ? { ...l, hours: baseline.totalHours.toFixed(2), amount: '' }
+                                    : l
+                                ),
+                              }));
+                            }
+                          }}
+                          style={{
+                            marginLeft: 'auto',
+                            fontSize: 10,
+                            color: '#0f766e',
+                            background: 'none',
+                            border: '1px solid rgba(20,184,166,0.35)',
+                            borderRadius: 6,
+                            padding: '2px 8px',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                          title="Apply template hours to Field Labor"
+                        >
+                          Apply baseline
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })()}
               {data.labor.map((line, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={bodyCell}>

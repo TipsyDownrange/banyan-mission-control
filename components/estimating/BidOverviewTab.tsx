@@ -1,12 +1,14 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StatusPipeline, { PipelineStage } from '@/components/shared/StatusPipeline';
-import type { BidSummary } from '@/components/estimating/EstimatingWorkspace';
+import type { BidSummary, StepTemplates, GoldDataSummary } from '@/components/estimating/EstimatingWorkspace';
 
 interface BidOverviewTabProps {
   bid: BidSummary;
   onBidUpdate: (updates: Partial<BidSummary>) => void;
   onStatusAdvance: (toStage: string) => Promise<void>;
+  stepTemplates?: StepTemplates;
+  goldData?: GoldDataSummary | null;
 }
 
 const PIPELINE_STAGES: PipelineStage[] = [
@@ -88,12 +90,37 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: BidOverviewTabProps) {
+export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, stepTemplates = {}, goldData = null }: BidOverviewTabProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [folderUrl, setFolderUrl] = useState(bid.bidFolderUrl ?? '');
   const [folderSaving, setFolderSaving] = useState(false);
+  const [takeoffSystemTypes, setTakeoffSystemTypes] = useState<{ name: string; qty: string }[]>([]);
+
+  // Load takeoff system types
+  useEffect(() => {
+    async function loadTakeoff() {
+      try {
+        const res = await fetch(`/api/estimating/takeoff/${bid.bidVersionId}`);
+        const json = await res.json();
+        const seen = new Set<string>();
+        const systems: { name: string; qty: string }[] = [];
+        for (const row of (json?.assembly_summary || [])) {
+          const st = row['System_Type'];
+          if (st && !seen.has(st)) {
+            seen.add(st);
+            const qty = [row['Qty_SF_DLO'] && `${row['Qty_SF_DLO']} SF`, row['Qty_EA'] && `${row['Qty_EA']} EA`].filter(Boolean).join(' / ');
+            systems.push({ name: st, qty });
+          }
+        }
+        setTakeoffSystemTypes(systems);
+      } catch {
+        // silent
+      }
+    }
+    loadTakeoff();
+  }, [bid.bidVersionId]);
   const [draft, setDraft] = useState({
     projectName: bid.projectName ?? '',
     clientGC: bid.clientGC ?? '',
@@ -403,6 +430,137 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance }: Bi
           </div>
         </div>
       </div>
+
+      {/* Systems Section */}
+      {takeoffSystemTypes.length > 0 && (
+        <div style={{
+          background: 'white',
+          border: '1px solid #e2e8f0',
+          borderRadius: 16,
+          overflow: 'hidden',
+          boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+          marginBottom: 20,
+        }}>
+          <div style={{
+            background: '#0f172a',
+            padding: '14px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+            <span style={{ fontSize: 14 }}>🏗️</span>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.8)' }}>
+              Systems Overview
+            </span>
+            <span style={{
+              marginLeft: 'auto',
+              fontSize: 9, fontWeight: 700,
+              padding: '2px 8px', borderRadius: 999,
+              background: 'rgba(20,184,166,0.15)', color: '#14b8a6',
+              border: '1px solid rgba(20,184,166,0.25)',
+            }}>
+              Step Library
+            </span>
+          </div>
+          <div style={{ padding: '16px 20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(() => {
+                let totalTemplateHours = 0;
+                const rows = takeoffSystemTypes.map(sys => {
+                  // Find template for this system type
+                  const key = Object.keys(stepTemplates).find(
+                    k => k.toLowerCase() === sys.name.toLowerCase()
+                  );
+                  const templateHours = key
+                    ? stepTemplates[key].reduce((s, step) => s + step.default_hours, 0)
+                    : null;
+                  const stepCount = key ? stepTemplates[key].length : null;
+
+                  // Gold data for this system
+                  const goldEntry = goldData?.by_step?.filter(
+                    e => e.system_type.toLowerCase() === sys.name.toLowerCase()
+                  );
+                  const goldTotal = goldEntry && goldEntry.length > 0
+                    ? goldEntry.reduce((s, e) => s + e.avg_hours, 0)
+                    : null;
+                  const goldSamples = goldEntry && goldEntry.length > 0
+                    ? Math.max(...goldEntry.map(e => e.sample_count))
+                    : 0;
+
+                  if (templateHours) totalTemplateHours += templateHours;
+
+                  // Color gold vs template
+                  let goldColor = '#16a34a';
+                  if (goldTotal && templateHours) {
+                    const diff = Math.abs(goldTotal - templateHours) / templateHours;
+                    if (diff > 0.20) goldColor = '#dc2626';
+                    else if (diff > 0.10) goldColor = '#d97706';
+                  }
+
+                  return (
+                    <div key={sys.name} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '8px 12px',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: 10,
+                      flexWrap: 'wrap',
+                    }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', minWidth: 140 }}>
+                        {sys.name}
+                      </span>
+                      {sys.qty && (
+                        <span style={{ fontSize: 11, color: '#64748b' }}>{sys.qty}</span>
+                      )}
+                      {templateHours !== null ? (
+                        <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600, marginLeft: 'auto' }}>
+                          📋 {templateHours.toFixed(2)}h template
+                          {stepCount ? <span style={{ color: '#94a3b8', fontWeight: 400 }}> ({stepCount} steps)</span> : null}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto', fontStyle: 'italic' }}>
+                          No template
+                        </span>
+                      )}
+                      {goldTotal !== null && (
+                        <span style={{ fontSize: 11, color: goldColor, fontWeight: 600 }}>
+                          · Gold: {goldTotal.toFixed(2)}h ({goldSamples} job{goldSamples !== 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </div>
+                  );
+                });
+
+                return (
+                  <>
+                    {rows}
+                    {totalTemplateHours > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
+                        gap: 8,
+                        paddingTop: 8,
+                        borderTop: '1px solid #e2e8f0',
+                        marginTop: 4,
+                      }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          Total Baseline
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 900, color: '#0f766e' }}>
+                          {totalTemplateHours.toFixed(2)}h
+                        </span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Kai Summary placeholder */}
       <div style={{

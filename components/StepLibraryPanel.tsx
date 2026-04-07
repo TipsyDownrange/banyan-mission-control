@@ -14,6 +14,9 @@ interface Step {
 interface Template {
   name: string;
   steps: Step[];
+  system_type: string;
+  manufacturer: string;
+  installation_type: string;
 }
 
 interface GoldDataEntry {
@@ -46,6 +49,12 @@ const CATEGORIES = [
   'Demobilization',
   'QA/Punch',
   'Admin/Paperwork',
+];
+
+// Common system type options (editable free-form too)
+const SYSTEM_TYPE_OPTIONS = [
+  '', 'Storefront', 'Curtainwall', 'Window Wall', 'IGU', 'Mirror', 'Shower',
+  'Sliding Door', 'Railing', 'Automatic Entrances', 'Window',
 ];
 
 function uid() {
@@ -244,6 +253,96 @@ function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
   );
 }
 
+// ─── Metadata Badge ────────────────────────────────────────────────────────────
+function MetaBadge({ label }: { label: string }) {
+  if (!label) return null;
+  return (
+    <span style={{
+      display: 'inline-block',
+      background: 'rgba(20,184,166,0.1)',
+      border: '1px solid rgba(20,184,166,0.2)',
+      color: 'rgba(20,184,166,0.7)',
+      fontSize: 10, fontWeight: 600,
+      padding: '1px 7px', borderRadius: 99,
+      letterSpacing: '0.02em',
+    }}>
+      {label}
+    </span>
+  );
+}
+
+// ─── Metadata Field ────────────────────────────────────────────────────────────
+function MetaField({ label, value, options, onChange }: {
+  label: string;
+  value: string;
+  options?: string[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 140 }}>
+      <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.5)' }}>
+        {label}
+      </label>
+      {options ? (
+        <select
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{
+            ...inputStyle(),
+            background: 'rgba(255,255,255,0.05)',
+            cursor: 'pointer',
+          }}
+        >
+          {options.map(o => (
+            <option key={o} value={o} style={{ background: '#0d1f2d' }}>{o || '— none —'}</option>
+          ))}
+          {/* If current value not in options, show it */}
+          {value && !options.includes(value) && (
+            <option value={value} style={{ background: '#0d1f2d' }}>{value}</option>
+          )}
+        </select>
+      ) : (
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="—"
+          style={inputStyle()}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Filter Select ─────────────────────────────────────────────────────────────
+function FilterSelect({ label, value, options, onChange }: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      title={label}
+      style={{
+        flex: 1, minWidth: 0,
+        background: value ? 'rgba(20,184,166,0.12)' : 'rgba(255,255,255,0.05)',
+        border: value ? '1px solid rgba(20,184,166,0.35)' : '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 7, padding: '6px 8px',
+        color: value ? '#14b8a6' : 'rgba(148,163,184,0.5)',
+        fontSize: 12, fontWeight: value ? 600 : 400,
+        cursor: 'pointer', outline: 'none',
+      }}
+    >
+      <option value="" style={{ background: '#0d1f2d', color: '#94a3b8' }}>{label}</option>
+      {options.map(o => (
+        <option key={o} value={o} style={{ background: '#0d1f2d', color: '#e2e8f0' }}>{o}</option>
+      ))}
+    </select>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function StepLibraryPanel() {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -254,6 +353,11 @@ export default function StepLibraryPanel() {
   const [editingName, setEditingName] = useState(false);
   const [pendingName, setPendingName] = useState('');
   const [search, setSearch] = useState('');
+
+  // Filter state
+  const [filterSystemType, setFilterSystemType] = useState('');
+  const [filterManufacturer, setFilterManufacturer] = useState('');
+  const [filterInstallationType, setFilterInstallationType] = useState('');
 
   // Gold data state
   const [goldSummary, setGoldSummary] = useState<GoldSummary | null>(null);
@@ -275,8 +379,12 @@ export default function StepLibraryPanel() {
         console.error('Step templates API error:', data.error);
         showToast(`API error: ${data.error}`, 'error');
       } else if (data.templates) {
+        const meta = data.template_meta || {};
         const parsed: Template[] = Object.entries(data.templates).map(([name, steps]) => ({
           name,
+          system_type: meta[name]?.system_type || '',
+          manufacturer: meta[name]?.manufacturer || '',
+          installation_type: meta[name]?.installation_type || '',
           steps: (steps as { step_seq: number; step_name: string; default_hours: number; category: string; notes: string }[]).map(s => ({
             id: uid(),
             step_seq: s.step_seq,
@@ -321,7 +429,6 @@ export default function StepLibraryPanel() {
       const res = await fetch('/api/gold-data', { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        // Reload from Production_Rates
         await loadGoldData();
         showToast('Gold data refreshed!');
       } else {
@@ -333,7 +440,7 @@ export default function StepLibraryPanel() {
     setRefreshingGold(false);
   }
 
-  // ── Get gold entry for a step (by system_type = selected template name, step_name) ─
+  // ── Get gold entry for a step ─────────────────────────────────────────────
   function getGoldEntry(templateName: string, stepName: string): GoldDataEntry | null {
     if (!goldSummary) return null;
     return goldSummary.by_step.find(
@@ -349,13 +456,11 @@ export default function StepLibraryPanel() {
 
     setSaving(true);
     try {
-      // Update local state immediately
       updateSelected(t => ({
         ...t,
         steps: t.steps.map(s => s.id === step.id ? { ...s, default_hours: newHours } : s),
       }));
 
-      // Persist to sheet via gold-data PATCH
       const res = await fetch('/api/gold-data', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -384,6 +489,24 @@ export default function StepLibraryPanel() {
     setTemplates(prev => prev.map(t => t.name === selectedName ? fn(t) : t));
   }
 
+  // ── Save template metadata ────────────────────────────────────────────────
+  async function handleSaveMeta(field: 'system_type' | 'manufacturer' | 'installation_type', value: string) {
+    if (!selected) return;
+    try {
+      const res = await fetch('/api/step-templates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_name: selected.name, [field]: value }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        showToast(d.error || 'Failed to save', 'error');
+      }
+    } catch {
+      showToast('Failed to save metadata', 'error');
+    }
+  }
+
   // ── New template ──────────────────────────────────────────────────────────
   async function handleNewTemplate() {
     const name = `New Template ${templates.length + 1}`;
@@ -399,7 +522,7 @@ export default function StepLibraryPanel() {
         showToast(d.error || 'Failed to create template', 'error');
         return;
       }
-      const newT: Template = { name, steps: [] };
+      const newT: Template = { name, steps: [], system_type: '', manufacturer: '', installation_type: '' };
       setTemplates(prev => [...prev, newT]);
       setSelectedName(name);
       showToast('Template created');
@@ -418,6 +541,9 @@ export default function StepLibraryPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           template_name: t.name,
+          system_type: t.system_type,
+          manufacturer: t.manufacturer,
+          installation_type: t.installation_type,
           steps: t.steps.map((s, i) => ({
             step_seq: i + 1,
             step_name: s.step_name,
@@ -496,6 +622,9 @@ export default function StepLibraryPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           template_name: newName,
+          system_type: selected.system_type,
+          manufacturer: selected.manufacturer,
+          installation_type: selected.installation_type,
           steps: selected.steps.map((s, i) => ({
             step_seq: i + 1,
             step_name: s.step_name,
@@ -511,7 +640,13 @@ export default function StepLibraryPanel() {
         setSaving(false);
         return;
       }
-      const duped: Template = { name: newName, steps: selected.steps.map(s => ({ ...s, id: uid() })) };
+      const duped: Template = {
+        name: newName,
+        system_type: selected.system_type,
+        manufacturer: selected.manufacturer,
+        installation_type: selected.installation_type,
+        steps: selected.steps.map(s => ({ ...s, id: uid() })),
+      };
       setTemplates(prev => [...prev, duped]);
       setSelectedName(newName);
       showToast('Template duplicated');
@@ -567,10 +702,21 @@ export default function StepLibraryPanel() {
     return { totalActual, totalEstimated, covered: entries.length, total: t.steps.length };
   }
 
+  // ── Unique filter options from loaded templates ────────────────────────────
+  const uniqueSystemTypes = [...new Set(templates.map(t => t.system_type).filter(Boolean))].sort();
+  const uniqueManufacturers = [...new Set(templates.map(t => t.manufacturer).filter(Boolean))].sort();
+  const uniqueInstallationTypes = [...new Set(templates.map(t => t.installation_type).filter(Boolean))].sort();
+
+  const hasFilters = filterSystemType || filterManufacturer || filterInstallationType;
+
   // ── Filtered sidebar ──────────────────────────────────────────────────────
-  const filteredTemplates = templates.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTemplates = templates.filter(t => {
+    if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterSystemType && t.system_type !== filterSystemType) return false;
+    if (filterManufacturer && t.manufacturer !== filterManufacturer) return false;
+    if (filterInstallationType && t.installation_type !== filterInstallationType) return false;
+    return true;
+  });
 
   // ── Gold data for current template ────────────────────────────────────────
   const selectedGold = selected ? templateGoldSummary(selected) : null;
@@ -610,6 +756,7 @@ export default function StepLibraryPanel() {
               + New
             </button>
           </div>
+
           {/* Search */}
           <input
             value={search}
@@ -619,9 +766,56 @@ export default function StepLibraryPanel() {
               width: '100%', boxSizing: 'border-box',
               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 8, padding: '8px 12px', color: '#e2e8f0', fontSize: 13,
-              outline: 'none',
+              outline: 'none', marginBottom: 8,
             }}
           />
+
+          {/* Filter bar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <FilterSelect
+                label="System Type"
+                value={filterSystemType}
+                options={uniqueSystemTypes}
+                onChange={setFilterSystemType}
+              />
+              <FilterSelect
+                label="Manufacturer"
+                value={filterManufacturer}
+                options={uniqueManufacturers}
+                onChange={setFilterManufacturer}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <FilterSelect
+                label="Install Type"
+                value={filterInstallationType}
+                options={uniqueInstallationTypes}
+                onChange={setFilterInstallationType}
+              />
+              {hasFilters && (
+                <button
+                  onClick={() => { setFilterSystemType(''); setFilterManufacturer(''); setFilterInstallationType(''); }}
+                  style={{
+                    background: 'none', border: '1px solid rgba(239,68,68,0.3)',
+                    borderRadius: 7, padding: '5px 10px',
+                    color: 'rgba(239,68,68,0.6)', fontSize: 11, fontWeight: 600,
+                    cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  }}
+                  title="Clear all filters"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filter status */}
+          {hasFilters && (
+            <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(20,184,166,0.5)', fontWeight: 600 }}>
+              {filteredTemplates.length} of {templates.length} shown
+            </div>
+          )}
         </div>
 
         {/* Template list */}
@@ -635,6 +829,7 @@ export default function StepLibraryPanel() {
               const isActive = t.name === selectedName;
               const hrs = totalHours(t.steps);
               const gs = templateGoldSummary(t);
+              const hasBadges = t.manufacturer || t.installation_type;
               return (
                 <button
                   key={t.name}
@@ -649,7 +844,7 @@ export default function StepLibraryPanel() {
                     cursor: 'pointer', transition: 'all 0.12s ease',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: hasBadges ? 4 : 0 }}>
                     <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? '#14b8a6' : '#cbd5e1', letterSpacing: '-0.01em' }}>
                       {t.name}
                     </span>
@@ -661,6 +856,15 @@ export default function StepLibraryPanel() {
                       {t.steps.length}
                     </span>
                   </div>
+
+                  {/* Metadata badges */}
+                  {hasBadges && (
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 4 }}>
+                      {t.manufacturer && <MetaBadge label={t.manufacturer} />}
+                      {t.installation_type && <MetaBadge label={t.installation_type} />}
+                    </div>
+                  )}
+
                   <div style={{ fontSize: 11, color: isActive ? 'rgba(20,184,166,0.7)' : 'rgba(148,163,184,0.4)' }}>
                     {hrs.toFixed(1)} hrs
                     {gs && (
@@ -754,6 +958,42 @@ export default function StepLibraryPanel() {
                     {saving ? 'Saving…' : 'Save Steps'}
                   </button>
                 </div>
+              </div>
+
+              {/* ── Template metadata fields ── */}
+              <div style={{
+                marginTop: 16,
+                padding: '14px 16px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 10,
+                display: 'flex', gap: 16, flexWrap: 'wrap',
+              }}>
+                <MetaField
+                  label="System Type"
+                  value={selected.system_type}
+                  options={SYSTEM_TYPE_OPTIONS}
+                  onChange={v => {
+                    updateSelected(t => ({ ...t, system_type: v }));
+                    handleSaveMeta('system_type', v);
+                  }}
+                />
+                <MetaField
+                  label="Manufacturer"
+                  value={selected.manufacturer}
+                  onChange={v => {
+                    updateSelected(t => ({ ...t, manufacturer: v }));
+                    handleSaveMeta('manufacturer', v);
+                  }}
+                />
+                <MetaField
+                  label="Installation Type"
+                  value={selected.installation_type}
+                  onChange={v => {
+                    updateSelected(t => ({ ...t, installation_type: v }));
+                    handleSaveMeta('installation_type', v);
+                  }}
+                />
               </div>
             </div>
 
