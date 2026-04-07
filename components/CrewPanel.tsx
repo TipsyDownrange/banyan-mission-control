@@ -134,11 +134,25 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                       <input style={INP} value={draft.role || ''} onChange={e => update('role', e.target.value)} />
                     </div>
                     <div>
-                      <label style={LBL}>Department</label>
-                      <select style={INP} value={draft.department || ''} onChange={e => update('department', e.target.value)}>
-                        <option value="">Select…</option>
-                        {['PM','Estimating','Service','Admin','Superintendent','Field'].map(d => <option key={d}>{d}</option>)}
-                      </select>
+                      <label style={LBL}>Departments (multi)</label>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                        {['PM','Estimating','Service','Admin','Superintendent','Field','Leadership','Sales'].map(d => {
+                          const depts = (draft.departments_multi || draft.department || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+                          const active = depts.includes(d);
+                          return (
+                            <button key={d} type="button" onClick={() => {
+                              const next = active ? depts.filter((x: string) => x !== d) : [...depts, d];
+                              update('departments_multi' as keyof typeof draft, next.join(','));
+                              update('department' as keyof typeof draft, next[0] || '');
+                            }} style={{
+                              padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer',
+                              border: active ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
+                              background: active ? '#f0fdfa' : 'white',
+                              color: active ? '#0f766e' : '#94a3b8',
+                            }}>{d}</button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
