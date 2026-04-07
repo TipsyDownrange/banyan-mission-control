@@ -104,6 +104,12 @@ const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?:
 export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: EstimatingKaiPanelProps) {
   const ctx = TAB_CONTEXT[activeTab] ?? TAB_CONTEXT.overview;
 
+  // Trigger Takeoff state
+  const [showTakeoffTrigger, setShowTakeoffTrigger] = useState(false);
+  const [driveFiles, setDriveFiles] = useState<Array<{ id: string; name: string; mimeType: string; webViewLink: string }>>([]);
+  const [driveLoading, setDriveLoading] = useState(false);
+  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+
   // Folder link state
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [folderUrl, setFolderUrl] = useState(bid.bidFolderUrl ?? '');
@@ -187,6 +193,55 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
     } finally {
       setChatLoading(false);
     }
+  }
+
+  async function handleTriggerTakeoff() {
+    // Get folder ID from bid's folder URL
+    const folderUrl = bid.bidFolderUrl ?? '';
+    const folderMatch = folderUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
+    const folderId = folderMatch ? folderMatch[1] : null;
+
+    setShowTakeoffTrigger(true);
+    setDriveFiles([]);
+    setSelectedDocs([]);
+
+    if (folderId) {
+      setDriveLoading(true);
+      try {
+        const res = await fetch(`/api/drive/list?folderId=${folderId}`);
+        const data = await res.json();
+        if (Array.isArray(data.files)) {
+          setDriveFiles(data.files.filter((f: { isFolder?: boolean }) => !f.isFolder));
+        }
+      } catch {
+        setDriveFiles([]);
+      } finally {
+        setDriveLoading(false);
+      }
+    }
+  }
+
+  function handleLaunchTakeoffPrompt() {
+    const jobName = bid.projectName ?? bid.bidVersionId;
+    const docList = selectedDocs.length > 0
+      ? selectedDocs.join(', ')
+      : driveFiles.map(f => f.name).join(', ') || '[No documents listed]';
+
+    const prompt = `Generate a complete takeoff for ${jobName} (${bid.bidVersionId}) using the estimating rules.
+
+Documents available:
+${docList}
+
+Output in the standard takeoff tab format:
+- One row per system type
+- Include: Assembly_ID, System_Type, Qty_SF, Qty_EA, Key_Assumptions, Glass_Spec, Labor_Hours, Benchmark_Status
+- Use DLO + bite methodology for all glass calculations
+- Flag any missing information as TBD and generate RFI items
+- Include Gold Data section at the end`;
+
+    setShowTakeoffTrigger(false);
+    setShowChat(true);
+    setChatInput(prompt);
   }
 
   async function handleValidateTakeoff() {
@@ -476,6 +531,127 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   <div style={{ fontSize: 10, color: '#475569', lineHeight: 1.5 }}>{rule.body}</div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Trigger Takeoff */}
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+            Takeoff Trigger
+          </div>
+          <button
+            onClick={handleTriggerTakeoff}
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 10,
+              border: '1px solid rgba(20,184,166,0.4)',
+              background: 'linear-gradient(135deg, rgba(15,118,110,0.08), rgba(20,184,166,0.05))',
+              color: '#0f766e', fontSize: 12, fontWeight: 800,
+              cursor: 'pointer', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(20,184,166,0.14)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(135deg, rgba(15,118,110,0.08), rgba(20,184,166,0.05))'; }}
+          >
+            <span style={{ fontSize: 16 }}>📄</span>
+            <div>
+              <div>Generate Takeoff from Documents</div>
+              <div style={{ fontSize: 9, fontWeight: 500, color: '#64748b', marginTop: 1 }}>Select docs → AI generates structured takeoff</div>
+            </div>
+          </button>
+
+          {/* Takeoff Trigger Modal */}
+          {showTakeoffTrigger && (
+            <div style={{
+              position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 200,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            }} onClick={() => setShowTakeoffTrigger(false)}>
+              <div style={{
+                background: 'white', borderRadius: 16, padding: 24,
+                width: '100%', maxWidth: 520, maxHeight: '80vh',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: '0 20px 60px rgba(15,23,42,0.25)',
+              }} onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>📄 Generate Takeoff from Documents</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 16 }}>
+                  {bid.projectName} · {bid.bidVersionId}
+                </div>
+
+                {driveLoading ? (
+                  <div style={{ fontSize: 12, color: '#94a3b8', padding: '24px 0', textAlign: 'center' }}>Loading documents from Drive…</div>
+                ) : driveFiles.length > 0 ? (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 8 }}>
+                      Select documents to include ({selectedDocs.length > 0 ? selectedDocs.length + ' selected' : 'all will be used if none selected'}):
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 10, padding: 8, marginBottom: 16 }}>
+                      {driveFiles.map(f => (
+                        <label key={f.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '6px 8px', borderRadius: 8,
+                          cursor: 'pointer',
+                          background: selectedDocs.includes(f.name) ? 'rgba(20,184,166,0.08)' : 'transparent',
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedDocs.includes(f.name)}
+                            onChange={e => {
+                              if (e.target.checked) setSelectedDocs(prev => [...prev, f.name]);
+                              else setSelectedDocs(prev => prev.filter(n => n !== f.name));
+                            }}
+                            style={{ accentColor: '#0f766e' }}
+                          />
+                          <div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>{f.name}</div>
+                            {f.webViewLink && (
+                              <a href={f.webViewLink} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: 9, color: '#2563eb', textDecoration: 'none' }}
+                                onClick={e => e.stopPropagation()}>
+                                View in Drive ↗
+                              </a>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{
+                    padding: '16px', borderRadius: 10, background: '#f8fafc',
+                    border: '1px solid #e2e8f0', marginBottom: 16, textAlign: 'center',
+                  }}>
+                    {bid.bidFolderUrl ? (
+                      <>
+                        <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
+                          Could not load documents from Drive folder. The service account may not have access.
+                        </div>
+                        <a href={bid.bidFolderUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 11, color: '#2563eb', fontWeight: 600 }}>
+                          Open Folder ↗
+                        </a>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: 11, color: '#64748b' }}>
+                        No Drive folder linked. Link a folder first to load documents.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
+                  <button
+                    onClick={() => setShowTakeoffTrigger(false)}
+                    style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  >Cancel</button>
+                  <button
+                    onClick={handleLaunchTakeoffPrompt}
+                    style={{
+                      padding: '8px 20px', borderRadius: 9, border: 'none',
+                      background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >⚡ Generate Takeoff →</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
