@@ -1,3 +1,4 @@
+import { hawaiiToday } from '@/lib/hawaii-time';
 /**
  * POST /api/service/proposal
  * Accepts quote data from QuoteBuilder, generates PDF, uploads to Drive, emails customer
@@ -131,7 +132,7 @@ export async function POST(req: Request) {
     // Map quote builder output to PDF data model
     const pdfData: ServiceWOData = {
       wo_number:             quote.woNumber || 'DRAFT',
-      quote_date:            quote.quoteDate || new Date().toISOString().slice(0, 10),
+      quote_date:            quote.quoteDate || hawaiiToday(),
       customer_name:         quote.customerName || '',
       customer_email:        quote.customerEmail || '',
       customer_phone:        quote.customerPhone || '',

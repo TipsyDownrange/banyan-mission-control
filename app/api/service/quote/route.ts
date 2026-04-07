@@ -1,3 +1,4 @@
+import { hawaiiToday } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
@@ -242,7 +243,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       quote: {
         woNumber,
-        quoteDate: new Date().toISOString().slice(0, 10),
+        quoteDate: hawaiiToday(),
         customerName, customerEmail, customerPhone, customerAddress,
         projectDescription,
         siteAddress, island,

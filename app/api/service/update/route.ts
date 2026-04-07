@@ -1,3 +1,4 @@
+import { hawaiiNow } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
@@ -99,7 +100,7 @@ export async function PATCH(req: Request) {
 
     // Sheet row number: data starts at row 2 (header is row 1)
     const sheetRow = targetRowIdx + 2;
-    const now = new Date().toISOString();
+    const now = hawaiiNow();
 
     // Build field updates
     const updates: { col: string; value: string }[] = [];

@@ -1,3 +1,4 @@
+import { hawaiiToday } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 import { generateDispatchWOPDF } from '@/lib/pdf-work-order-dispatch';
 import { getGoogleAuth } from '@/lib/gauth';
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
 
     const dispatchData = {
       wo_number:          g(COL.wo_number) || woNumber,
-      date:               new Date().toISOString().slice(0, 10),
+      date:               hawaiiToday(),
       scheduled_date:     g(COL.scheduled_date),
       project_name:       g(COL.name),
       address:            g(COL.address),

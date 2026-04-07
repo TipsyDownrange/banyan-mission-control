@@ -1,3 +1,4 @@
+import { hawaiiToday, hawaiiNow, hawaiiYear2 } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
@@ -107,9 +108,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const now = new Date().toISOString();
-    const today = dateReceived || now.slice(0, 10);
-    const wo = woNumber || `${new Date().getFullYear().toString().slice(-2)}-${Math.floor(Math.random() * 9000) + 1000}`;
+    const now = hawaiiNow();
+    const today = dateReceived || hawaiiToday();
+    const wo = woNumber || `${hawaiiYear2()}-${Math.floor(Math.random() * 9000) + 1000}`;
     const woId = `WO-${wo.replace(/[^A-Za-z0-9\-]/g, '')}`;
     const name = systemType ? `${customerName} — ${systemType}` : customerName;
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');

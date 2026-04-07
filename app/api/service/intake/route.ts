@@ -1,3 +1,4 @@
+import { hawaiiToday, hawaiiYear2 } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY!;
@@ -66,10 +67,10 @@ Return only the JSON object, no other text.`;
     }
 
     // Generate a WO number
-    const year = new Date().getFullYear().toString().slice(-2);
+    const year = hawaiiYear2();
     const seq = Math.floor(Math.random() * 9000) + 1000;
     parsed.woNumber = `${year}-${seq}`;
-    parsed.dateReceived = new Date().toISOString().slice(0, 10);
+    parsed.dateReceived = hawaiiToday();
     parsed.status = 'REQUESTING A PROPOSAL';
 
     return NextResponse.json({ workOrder: parsed, confidence: 'high' });
