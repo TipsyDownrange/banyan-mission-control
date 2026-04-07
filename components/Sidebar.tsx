@@ -309,6 +309,39 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
               </select>
             </div>
           )}
+          {/* Permissions link — GM/Owner only */}
+          {(() => {
+            const currentUserRole = allUsers?.find(u => u.name === demoUser)?.role || '';
+            if (currentUserRole === 'gm' || currentUserRole === 'owner') {
+              return (
+                <a
+                  href="/admin/permissions"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    padding: '6px 8px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(20,184,166,0.2)',
+                    background: 'rgba(20,184,166,0.06)',
+                    color: 'rgba(20,184,166,0.7)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    marginBottom: 8,
+                    letterSpacing: '0.01em',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(20,184,166,0.12)'; (e.currentTarget as HTMLAnchorElement).style.color = '#14b8a6'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(20,184,166,0.06)'; (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(20,184,166,0.7)'; }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Permissions
+                </a>
+              );
+            }
+            return null;
+          })()}
           <div style={{ fontSize: 9, color: 'rgba(94,234,212,0.2)', fontWeight: 600 }}>BanyanOS · Field Phase</div>
         </div>
       )}

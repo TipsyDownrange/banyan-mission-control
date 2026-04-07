@@ -19,29 +19,64 @@ export type Permission =
   | 'finance:view'
   | 'dispatch:assign'
   | 'dispatch:create'
-  | 'admin:all';
+  | 'admin:all'
+  // Future modules
+  | 'project:view'
+  | 'project:edit'
+  | 'project:create'
+  | 'estimating:view'
+  | 'estimating:edit'
+  | 'field:log'
+  | 'field:photo'
+  | 'crew:view'
+  | 'crew:edit'
+  | 'reports:view';
 
-// ── Role → Permissions Map ────────────────────────────────────────────────────
+// ── Role → Permissions Map (hardcoded fallback) ───────────────────────────────
 
-const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+export const ROLE_PERMISSIONS_DEFAULT: Record<string, Permission[]> = {
   gm:         ['admin:all'],
   owner:      ['admin:all'],
-  service_pm: ['wo:create', 'wo:edit', 'wo:view'],
-  super:      ['wo:create', 'wo:edit', 'wo:view', 'dispatch:assign', 'dispatch:create'],
-  pm:         ['wo:view'],
-  estimator:  ['wo:view'],
-  admin_mgr:  ['wo:view', 'finance:view'],
-  admin:      ['wo:view'],
-  field:      ['wo:view'],
-  pm_track:   ['wo:view'],
-  sales:      ['wo:view'],
+  service_pm: ['wo:create', 'wo:edit', 'wo:view', 'project:view', 'crew:view', 'reports:view'],
+  super:      ['wo:create', 'wo:edit', 'wo:view', 'dispatch:assign', 'dispatch:create', 'project:view', 'crew:view', 'crew:edit', 'field:log', 'field:photo'],
+  pm:         ['wo:view', 'project:view', 'project:edit', 'reports:view', 'crew:view'],
+  estimator:  ['wo:view', 'project:view', 'estimating:view', 'estimating:edit'],
+  admin_mgr:  ['wo:view', 'finance:view', 'project:view', 'crew:view', 'crew:edit', 'reports:view'],
+  admin:      ['wo:view', 'project:view', 'crew:view'],
+  field:      ['wo:view', 'field:log', 'field:photo'],
+  pm_track:   ['wo:view', 'project:view', 'reports:view'],
+  sales:      ['wo:view', 'estimating:view', 'project:view'],
   none:       [],
 };
+
+// ── Legacy alias ──────────────────────────────────────────────────────────────
+// Keep ROLE_PERMISSIONS pointing at the default map for any code that imports it directly
+export const ROLE_PERMISSIONS = ROLE_PERMISSIONS_DEFAULT;
+
+// ── In-Memory Permissions Cache ───────────────────────────────────────────────
+
+let permissionsCache: Record<string, Permission[]> | null = null;
+
+/** Called by the POST endpoint after saving to sheet */
+export function refreshPermissionsCache(): void {
+  permissionsCache = null;
+}
+
+/** Used internally to update cache after a successful sheet write */
+export function setPermissionsCache(data: Record<string, Permission[]>): void {
+  permissionsCache = data;
+}
+
+/** Returns the current cache, or null if not loaded */
+export function getPermissionsCache(): Record<string, Permission[]> | null {
+  return permissionsCache;
+}
 
 // ── Core Permission Check ─────────────────────────────────────────────────────
 
 export function roleHasPermission(role: string, permission: Permission): boolean {
-  const perms = ROLE_PERMISSIONS[role] || [];
+  const source = permissionsCache || ROLE_PERMISSIONS_DEFAULT;
+  const perms = source[role] || [];
   if (perms.includes('admin:all')) return true;
   return perms.includes(permission);
 }
