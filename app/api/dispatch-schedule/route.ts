@@ -9,9 +9,10 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { checkPermission } from '@/lib/permissions';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
-const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes'];
+const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time'];
 
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:M5000',
+      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:O5000',
     });
 
     const fromDate = new Date(from);
@@ -52,6 +53,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // Permission check — dispatch:create required (Nate, Sean)
+  const { allowed } = await checkPermission(req, 'dispatch:create');
+  if (!allowed) return NextResponse.json({ error: 'Forbidden: dispatch:create required' }, { status: 403 });
+
   try {
     const body = await req.json();
     const { date, kID, project_name, island, men_required, hours_estimated, created_by } = body;
@@ -65,7 +70,7 @@ export async function POST(req: Request) {
     const count = (existing.data.values || []).filter(r => r[0]).length;
     const slot_id = `SLOT-${date.replace(/-/g,'')}-${String(count + 1).padStart(3,'0')}`;
 
-    const row = [slot_id, date, kID||'', project_name, island||'', men_required||'1', hours_estimated||'', '', created_by||'', 'open', '', body.work_type||'', body.notes||''];
+    const row = [slot_id, date, kID||'', project_name, island||'', men_required||'1', hours_estimated||'', '', created_by||'', 'open', '', body.work_type||'', body.notes||'', body.start_time||'', body.end_time||''];
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A1',
       valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS',
@@ -79,6 +84,10 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  // Permission check — dispatch:assign required (Nate, Sean)
+  const { allowed } = await checkPermission(req, 'dispatch:assign');
+  if (!allowed) return NextResponse.json({ error: 'Forbidden: dispatch:assign required' }, { status: 403 });
+
   try {
     const body = await req.json();
     const { slot_id, assigned_crew, status, ...updates } = body;
@@ -87,14 +96,14 @@ export async function PATCH(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:M5000' });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:O5000' });
     const rows = res.data.values || [];
     const rowIdx = rows.findIndex(r => r[0] === slot_id);
     if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
 
     const existing = rows[rowIdx].map(String);
-    // Ensure row is long enough for all 13 cols
-    while (existing.length < 13) existing.push('');
+    // Ensure row is long enough for all 15 cols (including start_time, end_time)
+    while (existing.length < 15) existing.push('');
     const updated = [...existing];
     if (assigned_crew !== undefined) updated[7] = Array.isArray(assigned_crew) ? assigned_crew.join(', ') : assigned_crew;
     if (status !== undefined) updated[9] = status;
@@ -113,7 +122,7 @@ export async function PATCH(req: Request) {
     COLS.forEach((c, i) => { if (updates[c] !== undefined) updated[i] = updates[c]; });
 
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:M${rowIdx + 2}`,
+      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:O${rowIdx + 2}`,
       valueInputOption: 'USER_ENTERED', requestBody: { values: [updated] },
     });
 
@@ -206,7 +215,7 @@ export async function DELETE(req: Request) {
     if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
 
     // Clear the row
-    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:M${rowIdx+2}` });
+    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:O${rowIdx+2}` });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });

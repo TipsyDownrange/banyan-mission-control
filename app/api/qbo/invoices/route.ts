@@ -1,3 +1,4 @@
+import { checkPermissionServer } from '@/lib/permissions';
 import { NextRequest, NextResponse } from 'next/server';
 import { qboFetch } from '@/lib/qbo';
 
@@ -11,6 +12,9 @@ function getStatus(inv: Record<string, unknown>): string {
 }
 
 export async function GET(req: NextRequest) {
+  // Permission check — finance:view required
+  const { allowed: _fa } = await checkPermissionServer("finance:view");
+  if (!_fa) return (await import("next/server")).NextResponse.json({ error: "Forbidden: finance:view required" }, { status: 403 });
   try {
     const { searchParams } = new URL(req.url);
     const days = parseInt(searchParams.get('days') || '90');

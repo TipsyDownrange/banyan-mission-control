@@ -1,7 +1,11 @@
+import { checkPermissionServer } from '@/lib/permissions';
 import { NextResponse } from 'next/server';
 import { qboFetch } from '@/lib/qbo';
 
 export async function GET() {
+  // Permission check — finance:view required
+  const { allowed: _fa } = await checkPermissionServer("finance:view");
+  if (!_fa) return (await import("next/server")).NextResponse.json({ error: "Forbidden: finance:view required" }, { status: 403 });
   try {
     const res = await qboFetch('companyinfo/' + process.env.QBO_REALM_ID);
     if (!res.ok) {

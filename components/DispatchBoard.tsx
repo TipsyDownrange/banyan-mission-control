@@ -5,7 +5,7 @@ type Slot = {
   slot_id: string; date: string; kID: string; project_name: string;
   island: string; men_required: string; hours_estimated: string;
   assigned_crew: string; created_by: string; status: string; confirmations: string;
-  work_type: string; notes: string;
+  work_type: string; notes: string; start_time: string; end_time: string;
 };
 
 const WORK_TYPES = [
@@ -159,9 +159,7 @@ export default function DispatchBoard() {
     return crew.filter(c => fieldRoles.some(r => c.role.includes(r)));
   }
 
-  function crewForIsland(island: string): CrewMember[] {
-    return fieldCrew().filter(c => island === 'All' || c.island === island);
-  }
+
 
   /** Count how many slots this week a crew member appears in */
   function crewAssignmentCount(crewName: string): number {
@@ -231,8 +229,6 @@ export default function DispatchBoard() {
     setSaving(false);
   }
 
-  const availableCrew = crewForIsland(islandFilter);
-
   // Crew picker filtered list
   const crewPickerSlot = crewPickerSlotId ? slots.find(s => s.slot_id === crewPickerSlotId) : null;
   const crewPickerAssigned = crewPickerSlot?.assigned_crew
@@ -250,12 +246,7 @@ export default function DispatchBoard() {
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
       {/* Responsive: hide crew sidebar on mobile */}
-      <style>{`
-        @media (max-width: 640px) {
-          .dispatch-board-grid { grid-template-columns: 1fr !important; }
-          .dispatch-crew-sidebar { display: none !important; }
-        }
-      `}</style>
+
 
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
@@ -290,7 +281,7 @@ export default function DispatchBoard() {
         </div>
       </div>
 
-      <div className="dispatch-board-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
+      <div style={{ display: 'block' }}>
         {/* Week grid */}
         <div>
           {/* Day headers */}
@@ -387,6 +378,7 @@ export default function DispatchBoard() {
                           <div style={{ marginTop: 6, paddingTop: 5, borderTop: '1px solid #f1f5f9' }}>
                             <div style={{ fontSize: 9, color: '#475569', marginBottom: 4 }}>{slot.project_name}</div>
                             {slot.work_type && <div style={{ marginBottom: 4 }}><WorkTypeBadge type={slot.work_type} /></div>}
+                            {(slot.start_time || slot.end_time) && <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 3 }}>⏰ {slot.start_time}{slot.start_time && slot.end_time ? '–' : ''}{slot.end_time}</div>}
                             {slot.hours_estimated && <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
                             {slot.notes && <div style={{ fontSize: 9, color: '#475569', marginBottom: 4, fontStyle: 'italic', background: '#f8fafc', borderRadius: 6, padding: '4px 6px', border: '1px solid #e2e8f0' }}>📋 {slot.notes}</div>}
                             {/* Confirmation breakdown */}
@@ -420,34 +412,7 @@ export default function DispatchBoard() {
           </div>
         </div>
 
-        {/* Crew panel — read-only reference, hidden on mobile */}
-        <div className="dispatch-crew-sidebar">
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 }}>
-            {islandFilter === 'All' ? 'All Islands' : islandFilter} Crew
-          </div>
-          <div style={{ fontSize: 9, color: '#cbd5e1', marginBottom: 10, fontWeight: 500 }}>
-            Reference — use slot button to assign
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {availableCrew.map(member => {
-              const count = crewAssignmentCount(member.name);
-              return (
-                <div key={member.user_id}
-                  style={{ padding: '8px 10px', borderRadius: 10, background: 'white', border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}33`, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${ISLAND_COLOR[member.island] || '#64748b'}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: ISLAND_COLOR[member.island] || '#64748b', flexShrink: 0 }}>
-                    {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name.split(' ')[0]}</div>
-                    <div style={{ fontSize: 9, color: count > 0 ? '#92400e' : '#94a3b8', fontWeight: count > 0 ? 700 : 400 }}>
-                      {count > 0 ? `${count} job${count > 1 ? 's' : ''}` : 'Available'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+
       </div>
 
       {/* ─── Crew Picker Modal ─── */}

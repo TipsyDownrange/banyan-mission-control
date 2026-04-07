@@ -2,12 +2,17 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
+import { checkPermission } from '@/lib/permissions';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
 
 // POST — create new work order row in backend sheet
 export async function POST(req: Request) {
+  // Permission check — wo:create required (Joey, Sean, Jody)
+  const { allowed } = await checkPermission(req, 'wo:create');
+  if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:create required' }, { status: 403 });
+
   try {
     const body = await req.json();
     const {

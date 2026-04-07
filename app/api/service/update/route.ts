@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { checkPermission } from '@/lib/permissions';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -54,6 +55,10 @@ function colLetter(idx: number): string {
 //         scheduledDate?, startDate?, notes?, hoursEstimated?, hoursActual?,
 //         men?, contactPhone?, contactEmail?, contactPerson?, folderUrl?, island? }
 export async function PATCH(req: Request) {
+  // Permission check — wo:edit required (Joey, Nate, Sean, Jody)
+  const { allowed } = await checkPermission(req, 'wo:edit');
+  if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
+
   try {
     const body = await req.json();
     const { woId, woNumber, stage, status } = body;

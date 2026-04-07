@@ -1,3 +1,4 @@
+import { checkPermissionServer } from '@/lib/permissions';
 /**
  * Consolidated finance summary for AdminPanel.
  * Returns AR summary, AP summary, P&L snapshot, recent invoices, recent bills.
@@ -42,6 +43,9 @@ function billStatus(bill: Record<string, unknown>): string {
 }
 
 export async function GET() {
+  // Permission check — finance:view required
+  const { allowed: _fa } = await checkPermissionServer("finance:view");
+  if (!_fa) return (await import("next/server")).NextResponse.json({ error: "Forbidden: finance:view required" }, { status: 403 });
   try {
     const [invRes, billRes, plRes] = await Promise.all([
       qboFetch(`query?query=${encodeURIComponent(`SELECT * FROM Invoice WHERE TxnDate >= '${daysAgo(90)}' ORDERBY TxnDate DESC MAXRESULTS 200`)}`),

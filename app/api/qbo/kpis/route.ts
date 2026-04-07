@@ -1,3 +1,4 @@
+import { checkPermissionServer } from '@/lib/permissions';
 /**
  * Quick KPI summary for Operations Overview dashboard cards.
  * Returns: revenue this month, AR outstanding, AP outstanding, net income YTD.
@@ -14,6 +15,9 @@ function monthStart() {
 function today() { return new Date().toISOString().split('T')[0]; }
 
 export async function GET() {
+  // Permission check — finance:view required
+  const { allowed: _fa } = await checkPermissionServer("finance:view");
+  if (!_fa) return (await import("next/server")).NextResponse.json({ error: "Forbidden: finance:view required" }, { status: 403 });
   try {
     const [arRes, apRes, plMonthRes, plYtdRes] = await Promise.all([
       // AR: unpaid invoices

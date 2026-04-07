@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar';
 import ServiceIntake from '@/components/ServiceIntake';
@@ -440,6 +441,13 @@ const READ_ONLY_BANNER = (
 );
 
 export default function ServicePanel({ readOnly = false }: { readOnly?: boolean }) {
+  const { data: session } = useSession();
+  const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
+  // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
+  const defaultFilter = userRole === 'super' ? 'approved' : 'all';
+  // GM and service_pm can create new leads; supers and others cannot
+  const canCreateLeads = ['gm', 'owner', 'service_pm'].includes(userRole);
+
   const [data, setData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
@@ -447,7 +455,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   const [quoteWO, setQuoteWO] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState(defaultFilter);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('date_desc');
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
@@ -613,7 +621,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Work Orders</h1>
           <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
-            {!readOnly && <button onClick={() => setShowIntake(true)}
+            {(!readOnly && canCreateLeads) && <button onClick={() => setShowIntake(true)}
               style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
               + New Lead
             </button>}

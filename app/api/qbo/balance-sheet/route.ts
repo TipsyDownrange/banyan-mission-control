@@ -1,3 +1,4 @@
+import { checkPermissionServer } from '@/lib/permissions';
 import { NextResponse } from 'next/server';
 import { qboReportFetch } from '@/lib/qbo';
 
@@ -15,6 +16,9 @@ function extractBalance(
 }
 
 export async function GET() {
+  // Permission check — finance:view required
+  const { allowed: _fa } = await checkPermissionServer("finance:view");
+  if (!_fa) return (await import("next/server")).NextResponse.json({ error: "Forbidden: finance:view required" }, { status: 403 });
   try {
     const now = new Date().toISOString().split('T')[0];
     const res = await qboReportFetch('BalanceSheet', { date: now });

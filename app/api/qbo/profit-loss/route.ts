@@ -1,3 +1,4 @@
+import { checkPermissionServer } from '@/lib/permissions';
 import { NextRequest, NextResponse } from 'next/server';
 import { qboReportFetch } from '@/lib/qbo';
 
@@ -72,6 +73,9 @@ function extractSections(rows: Record<string, unknown>[]): {
 }
 
 export async function GET(req: NextRequest) {
+  // Permission check — finance:view required
+  const { allowed: _fa } = await checkPermissionServer("finance:view");
+  if (!_fa) return (await import("next/server")).NextResponse.json({ error: "Forbidden: finance:view required" }, { status: 403 });
   try {
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'ytd';
