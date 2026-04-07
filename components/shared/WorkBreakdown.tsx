@@ -549,6 +549,28 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     }
   }
 
+  async function handleDeletePlan(planId: string) {
+    if (!confirm('Delete this entire scope and all its steps?')) return;
+    try {
+      // Delete all steps for this plan first
+      const planSteps = getStepsForPlan(planId);
+      for (const s of planSteps) {
+        await fetch(`/api/work-breakdown/${jobId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'step', id: s.install_step_id }),
+        });
+      }
+      // Then delete the plan
+      await fetch(`/api/work-breakdown/${jobId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'plan', id: planId }),
+      });
+      await loadData();
+    } catch { /* silently fail */ }
+  }
+
   async function handleBulkCreate() {
     const start = parseInt(bulkForm.start);
     const end = parseInt(bulkForm.end);
@@ -1189,6 +1211,15 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               <HoursDelta quoted={quotedHours} planned={plannedHours} actual={actualHours} />
             </div>
           </div>
+          {!readOnly && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDeletePlan(plan.install_plan_id); }}
+              style={{ background:'none', border:'none', color:'#cbd5e1', cursor:'pointer', fontSize:18, padding:'8px', lineHeight:1, flexShrink:0 }}
+              title="Delete scope"
+            >
+              ×
+            </button>
+          )}
         </button>
 
         {/* Scope body */}
