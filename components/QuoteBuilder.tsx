@@ -679,7 +679,7 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [woNumber]);
 
-  // Pre-fill from estimate data when provided
+  // Pre-fill from estimate data when provided (prop-based fallback)
   useEffect(() => {
     if (!estimatePreFill || loading) return;
     if (estimatePreFill.materialsTotal > 0) {
@@ -694,6 +694,92 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
       setMarkup(prev => ({ ...prev, profitPct: String(estimatePreFill.profitPct) }));
     }
   }, [estimatePreFill, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-fill from saved estimate in API (reliable: reads persisted data)
+  const [estimatePrefillBanner, setEstimatePrefillBanner] = useState(false);
+  useEffect(() => {
+    if (loading || !woNumber) return;
+    fetch(`/api/service/estimate?wo=${encodeURIComponent(woNumber)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (!d.data) return;
+        const est = d.data;
+        // Calculate totals from estimate data
+        function parseDollar(s: string): number {
+          const n = parseFloat(String(s || '').replace(/[$,]/g, ''));
+          return isNaN(n) ? 0 : n;
+        }
+        function sumItems(items: Array<{amount: string}>): number {
+          return (items || []).reduce((a, i) => a + parseDollar(i.amount), 0);
+        }
+        const metalSubtotal = sumItems(est.aluminum || []);
+        const glassSubtotal = sumItems(est.glass || []);
+        const miscSubtotal = Object.values(est.misc || {}).reduce((a: number, v) => a + parseDollar(v as string), 0)
+          + sumItems(est.miscExtra || []);
+        const otherSubtotal = Object.values(est.other || {}).reduce((a: number, v) => a + parseDollar(v as string), 0)
+          + sumItems(est.otherExtra || []);
+        const materialsTotal = metalSubtotal + glassSubtotal + miscSubtotal + otherSubtotal;
+
+        const driveTrips = parseFloat(est.driveTime?.trips) || 0;
+        const driveHoursPerTrip = parseFloat(est.driveTime?.hoursPerTrip) || 0;
+        const driveRate = parseFloat(est.driveTime?.rate) || 117;
+        const driveTimeAmt = driveTrips * driveHoursPerTrip * driveRate;
+
+        type LaborLine = { hours: string; rate: string; amount: string };
+        const laborSubtotal = (est.labor || []).reduce((a: number, l: LaborLine) => {
+          const h = parseFloat(l.hours) || 0;
+          const r = parseFloat(l.rate) || 0;
+          return a + (l.amount ? parseDollar(l.amount) : h * r);
+        }, 0) + driveTimeAmt;
+
+        const profitPct = parseFloat(est.markup?.profitPct) || 10;
+        const getRate = parseFloat(est.taxRate) || 4.17;
+
+        let changed = false;
+
+        // Set materials as a single line if estimate has materials
+        if (materialsTotal > 0) {
+          setMainMaterials([{
+            id: uid(),
+            description: 'Materials per estimate',
+            qty: '1',
+            unit: 'ea',
+            unitCost: String(Math.round(materialsTotal * 100) / 100),
+            totalOverride: '',
+            width: '', height: '', length: '',
+          }]);
+          changed = true;
+        }
+
+        // Set labor hours derived from estimate
+        if (laborSubtotal > 0) {
+          const rate = 117;
+          const hours = Math.round(laborSubtotal / rate * 10) / 10;
+          setLaborSteps([{ id: uid(), description: 'Labor per estimate', hours: String(hours), rate: String(rate), amountOverride: '' }]);
+          changed = true;
+        }
+
+        // Set drive time from estimate
+        if (driveTrips > 0 || driveHoursPerTrip > 0) {
+          setDriveTime(prev => ({
+            ...prev,
+            trips: String(driveTrips || 2),
+            hoursPerTrip: String(driveHoursPerTrip || prev.hoursPerTrip),
+            rate: String(driveRate),
+          }));
+          changed = true;
+        }
+
+        // Set markup from estimate
+        if (profitPct) {
+          setMarkup(prev => ({ ...prev, profitPct: String(profitPct), getRate: String(getRate) }));
+          changed = true;
+        }
+
+        if (changed) setEstimatePrefillBanner(true);
+      })
+      .catch(() => {}); // silent — estimate is optional
+  }, [loading, woNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Load work breakdown baseline on mount ───────────────────────────────
 
@@ -1338,6 +1424,14 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {error && <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c' }}>{error}</div>}
+
+        {/* Pre-filled from estimate banner */}
+        {estimatePrefillBanner && (
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid rgba(22,163,74,0.3)', fontSize: 12, color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>✅ Pre-filled from Simple Estimate</span>
+            <button onClick={() => setEstimatePrefillBanner(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a', fontSize: 14 }}>×</button>
+          </div>
+        )}
 
         {/* Address + drive area banner */}
         {wo?.address && (

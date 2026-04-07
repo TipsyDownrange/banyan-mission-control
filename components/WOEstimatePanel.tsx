@@ -48,6 +48,7 @@ interface WOEstimateData {
     profitPct: string;
   };
   taxRate: string;
+  xModifier: string;
 }
 
 interface WorkOrder {
@@ -156,6 +157,7 @@ function defaultData(wo: WorkOrder): WOEstimateData {
     },
     markup: { overheadOverride: '', profitPct: '10' },
     taxRate: String(getGetRate(wo.island)),
+    xModifier: '',
   };
 }
 
@@ -301,6 +303,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [saveError, setSaveError] = useState('');
+  const [stepLibraryLabel, setStepLibraryLabel] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Load existing estimate ────────────────────────────────────────────────
@@ -326,10 +329,13 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
             if (stJson.templates && wo.systemType) {
               const systemTypes = wo.systemType.split(',').map((s: string) => s.trim()).filter(Boolean);
               let totalHours = 0;
+              const matchedTypes: string[] = [];
               for (const st of systemTypes) {
                 const key = Object.keys(stJson.templates).find(k => k.toLowerCase() === st.toLowerCase());
                 if (key) {
-                  totalHours += stJson.templates[key].reduce((sum: number, s: { default_hours: number }) => sum + s.default_hours, 0);
+                  const hrs = stJson.templates[key].reduce((sum: number, s: { default_hours: number }) => sum + s.default_hours, 0);
+                  totalHours += hrs;
+                  matchedTypes.push(key);
                 }
               }
               if (totalHours > 0) {
@@ -341,6 +347,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                       : l
                   ),
                 }));
+                setStepLibraryLabel(`📋 From Step Library: ${matchedTypes.join(', ')} = ${totalHours.toFixed(1)}h`);
               }
             }
           } catch {
@@ -413,8 +420,9 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
 
   const laborSubtotal = data.labor.reduce((a, l) => a + laborAmount(l), 0) + driveTimeAmt;
 
-  // X modifier (what-if negotiation tool — local state only, not saved)
-  const [xAmount, setXAmount] = useState('');
+  // X modifier (what-if negotiation tool — saved with estimate data)
+  const xAmount = data.xModifier ?? '';
+  const setXAmount = (v: string) => update(d => ({ ...d, xModifier: v }));
   const xVal = parseDollar(xAmount);
 
   const overhead = data.markup.overheadOverride
@@ -610,6 +618,11 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               {/* Labor */}
               <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
                 <span style={SEC}>Labor</span>
+                {stepLibraryLabel && (
+                  <div style={{ marginBottom: 8, padding: '6px 10px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, fontSize: 11, color: '#0f766e', fontWeight: 600 }}>
+                    {stepLibraryLabel}
+                  </div>
+                )}
                 {data.labor.map((line, i) => (
                   <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
