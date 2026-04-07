@@ -1,209 +1,155 @@
 import { NextResponse } from 'next/server';
-import { getSSToken, getGoogleAuth } from '@/lib/gauth';
+import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 
-const SHEETS = {
-  active: '7905619916154756',
-  completed: '8935301818148740',
-  quoted: '1349614456229764',
+const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const TAB = 'Service_Work_Orders';
+
+// Column order must match the migration script HEADERS array
+const COL = {
+  wo_id:           0,
+  wo_number:       1,
+  name:            2,
+  description:     3,
+  status:          4,
+  island:          5,
+  area_of_island:  6,
+  address:         7,
+  contact_person:  8,
+  contact_title:   9,
+  contact_phone:   10,
+  contact_email:   11,
+  customer_name:   12,
+  system_type:     13,
+  assigned_to:     14,
+  date_received:   15,
+  due_date:        16,
+  scheduled_date:  17,
+  start_date:      18,
+  hours_estimated: 19,
+  hours_actual:    20,
+  men_required:    21,
+  comments:        22,
+  folder_url:      23,
+  quote_total:     24,
+  quote_status:    25,
+  created_at:      26,
+  updated_at:      27,
+  source:          28,
 };
 
-const STATUS_MAP: Record<string, string> = {
-  'REQUESTING A PROPOSAL': 'quote',
-  'AWAITING RESPONSE FROM THE PROPOSAL': 'quote',
-  'PROPOSAL REQUIRED': 'quote',
-  'NEED TO SCHEDULE': 'approved',
-  'NEED TO SCHEDULE INSTALL': 'approved',
-  'NEED TO MEASURE': 'approved',
-  'QUOTED AND ACCEPTED FOR FIELD': 'approved',
-  'QUOTED AND ACCEPTED FOR FIELD  FABRICATION': 'approved',
-  'MEASURED': 'scheduled',
-  'MEASURE': 'scheduled',
-  'ORDERED': 'in_progress',
-  'FABRICATING': 'in_progress',
-  'FABRICATING   ALUMINUM & LAMI REQUIRED': 'in_progress',
-  'WAITING ON PARTS': 'in_progress',
-  'WAITING FOR AVAILABILITY': 'in_progress',
-  'TO BE DELIVERED': 'in_progress',
-  'SCHEDULED': 'dispatched',
-  'COMPLETED': 'closed',
-  'LOST': 'lost',
-  'REJECTED': 'lost',
-  'RE-WORK / WARRANTY': 'in_progress',
-};
+// Simple in-process cache (10 minute TTL)
+let cache: { data: ReturnType<typeof buildResponse>; ts: number } | null = null;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
-async function fetchSheet(token: string, sheetId: string, lane: string) {
-  const res = await fetch(
-    `https://api.smartsheet.com/2.0/sheets/${sheetId}?pageSize=100`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const data = await res.json() as {
-    columns?: { id: number; title: string }[];
-    rows?: { cells: { columnId: number; value?: unknown; displayValue?: string }[] }[];
+function rowToWO(row: string[]) {
+  const g = (idx: number) => (row[idx] || '').trim();
+  return {
+    id:             g(COL.wo_id),
+    wo_id:          g(COL.wo_id),
+    wo_number:      g(COL.wo_number),
+    name:           g(COL.name),
+    description:    g(COL.description),
+    status:         g(COL.status) || 'lead',
+    island:         g(COL.island),
+    area_of_island: g(COL.area_of_island),
+    address:        g(COL.address),
+    // Parsed contact fields — separate columns now
+    contact_person: g(COL.contact_person),
+    contact_title:  g(COL.contact_title),
+    contact_phone:  g(COL.contact_phone),
+    contact_email:  g(COL.contact_email),
+    customer_name:  g(COL.customer_name),
+    // Legacy 'contact' field for any frontend that still uses it
+    contact:        [g(COL.contact_person), g(COL.contact_phone)].filter(Boolean).join(' · ').substring(0, 60),
+    systemType:     g(COL.system_type),
+    assignedTo:     g(COL.assigned_to),
+    dateReceived:   g(COL.date_received),
+    dueDate:        g(COL.due_date),
+    scheduledDate:  g(COL.scheduled_date),
+    startDate:      g(COL.start_date),
+    hoursEstimated: g(COL.hours_estimated),
+    hoursActual:    g(COL.hours_actual),
+    men:            g(COL.men_required),
+    comments:       g(COL.comments),
+    folderUrl:      g(COL.folder_url),
+    quoteTotal:     g(COL.quote_total),
+    quoteStatus:    g(COL.quote_status),
+    createdAt:      g(COL.created_at),
+    updatedAt:      g(COL.updated_at),
+    source:         g(COL.source),
+    // Legacy compat
+    lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
+    done:           g(COL.status) === 'closed',
   };
-  const cols: Record<number, string> = {};
-  for (const c of data.columns || []) cols[c.id] = c.title;
-
-  return (data.rows || []).map(row => {
-    const rd: Record<string, string> = {};
-    for (const cell of row.cells || []) {
-      if (cols[cell.columnId]) rd[cols[cell.columnId]] = cell.displayValue || String(cell.value || '');
-    }
-    const rawStatus = rd['Status'] || '';
-    const status = STATUS_MAP[rawStatus.toUpperCase()] || STATUS_MAP[rawStatus] || (lane === 'completed' ? 'closed' : 'lead');
-    return {
-      id: rd['WORK ORDER #'] || rd['Job Name/WO Number'] || '',
-      name: (rd['Task Name / Job Name'] || rd['Job Name/WO Number'] || '').split('\n')[0].substring(0, 80),
-      description: rd['DESCRIPTION'] || '',
-      status,
-      rawStatus,
-      island: rd['Area of island'] || '',
-      assignedTo: rd['Assigned To'] || '',
-      dateReceived: rd['DATE RECEIVED'] || '',
-      dueDate: rd['Due Date'] || rd['FINISH DATES'] || '',
-      scheduledDate: rd['Scheduled Date'] || '',
-      hoursEstimated: rd['Hours on project Joey to input'] || '',
-      hoursActual: rd['Hours on project'] || '',
-      hoursToMeasure: rd['Hours to measure'] || '',
-      men: rd['Men'] || '',
-      startDate: rd['START DATE'] || '',
-      done: rd['Done'] === 'true' || rd['Done'] === '1',
-      comments: rd['Latest Comment'] || rd['Comments / leave date and hours spent on project'] || '',
-      contact: (rd['CONTACT #'] || '').split('\n')[0].substring(0, 60),
-      address: (rd['ADDRESS'] || '').substring(0, 60),
-      lane,
-    };
-  }).filter(wo => wo.name);
 }
 
-// Simple in-process cache for folder links (refreshes every 10 minutes)
-let folderLinkCache: { data: FolderLink[]; ts: number } | null = null;
+function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
+  const byStatus = {
+    lead:        wos.filter(w => w.status === 'lead'),
+    quote:       wos.filter(w => w.status === 'quote'),
+    approved:    wos.filter(w => w.status === 'approved'),
+    scheduled:   wos.filter(w => w.status === 'scheduled'),
+    in_progress: wos.filter(w => w.status === 'in_progress'),
+    closed:      wos.filter(w => w.status === 'closed').slice(0, 10),
+    lost:        wos.filter(w => w.status === 'lost').slice(0, 5),
+  };
 
-type FolderLink = {
-  folder_name: string;
-  folder_id: string;
-  folder_url: string;
-  source: string;
-};
+  const active = wos.filter(w => !['closed', 'lost'].includes(w.status));
+  const closed = wos.filter(w => w.status === 'closed');
 
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/\b(wo|work order|#|no\.?|job|igu|lami|glass|window|door|shower)\b/gi, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function tokenSetRatio(a: string, b: string): number {
-  const setA = new Set(a.split(' ').filter(Boolean));
-  const setB = new Set(b.split(' ').filter(Boolean));
-  const intersection = [...setA].filter(t => setB.has(t));
-  if (!setA.size || !setB.size) return 0;
-  const union = new Set([...setA, ...setB]);
-  return Math.round((intersection.length / union.size) * 100);
-}
-
-async function getFolderLinks(): Promise<FolderLink[]> {
-  const now = Date.now();
-  if (folderLinkCache && now - folderLinkCache.ts < 10 * 60 * 1000) {
-    return folderLinkCache.data;
-  }
-  try {
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
-    const sheets = google.sheets({ version: 'v4', auth });
-    const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: 'WO_Folder_Links!A:D',
-    });
-    const rows = res.data.values || [];
-    const headers = rows[0] || [];
-    const nameIdx = headers.indexOf('folder_name');
-    const idIdx = headers.indexOf('folder_id');
-    const urlIdx = headers.indexOf('folder_url');
-    const srcIdx = headers.indexOf('source');
-    const links: FolderLink[] = rows.slice(1).map(row => ({
-      folder_name: row[nameIdx] || '',
-      folder_id: row[idIdx] || '',
-      folder_url: row[urlIdx] || '',
-      source: row[srcIdx] || '',
-    })).filter(l => l.folder_name && l.folder_url);
-    folderLinkCache = { data: links, ts: now };
-    return links;
-  } catch {
-    return folderLinkCache?.data || [];
-  }
-}
-
-function matchFolderUrl(woName: string, links: FolderLink[]): string {
-  if (!woName || !links.length) return '';
-  const norm = normalize(woName);
-  let best = 0;
-  let bestUrl = '';
-  for (const link of links) {
-    const score = tokenSetRatio(norm, normalize(link.folder_name));
-    if (score > best && score >= 45) {
-      best = score;
-      bestUrl = link.folder_url;
-    }
-  }
-  return bestUrl;
+  return {
+    workOrders: wos,
+    byStatus,
+    stats: {
+      active:          active.length,
+      completed:       closed.length,
+      needsScheduling: byStatus.approved.length,
+      inProgress:      byStatus.in_progress.length,
+      total:           wos.length,
+    },
+  };
 }
 
 export async function GET() {
+  // Return cached response if fresh
+  const now = Date.now();
+  if (cache && now - cache.ts < CACHE_TTL_MS) {
+    return NextResponse.json(cache.data);
+  }
+
   try {
-    const token = getSSToken();
-    const [active, completed, quoted, folderLinks] = await Promise.all([
-      fetchSheet(token, SHEETS.active, 'active'),
-      fetchSheet(token, SHEETS.completed, 'completed'),
-      fetchSheet(token, SHEETS.quoted, 'quoted'),
-      getFolderLinks(),
-    ]);
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    const sheets = google.sheets({ version: 'v4', auth });
 
-    // Deduplicate WOs — prefer the version with a real status over blank/lead
-    // Key: WO# if present, otherwise WO name (trimmed)
-    const seen = new Map<string, typeof active[0]>();
-    for (const wo of [...active, ...quoted, ...completed]) {
-      const key = (wo.id || wo.name).trim();
-      if (!key) continue;
-      const existing = seen.get(key);
-      if (!existing) {
-        seen.set(key, wo);
-      } else if (existing.status === 'lead' && wo.status !== 'lead') {
-        // Replace blank/lead with a real status
-        seen.set(key, wo);
-      }
-    }
-    const deduped = [...seen.values()];
-
-    const all = deduped.map(wo => ({
-      ...wo,
-      folderUrl: matchFolderUrl(wo.name, folderLinks),
-    }));
-
-    const byStatus = {
-      lead: all.filter(w => w.status === 'lead'),
-      quote: all.filter(w => w.status === 'quote'),
-      approved: all.filter(w => w.status === 'approved'),
-      scheduled: all.filter(w => w.status === 'scheduled' || w.status === 'dispatched'),
-      in_progress: all.filter(w => w.status === 'in_progress'),
-      closed: all.filter(w => w.status === 'closed').slice(0, 10),
-      lost: all.filter(w => w.status === 'lost').slice(0, 5),
-    };
-
-    return NextResponse.json({
-      workOrders: all,
-      byStatus,
-      stats: {
-        active: active.length + quoted.length,
-        completed: completed.length,
-        needsScheduling: active.filter(w => w.rawStatus === 'NEED TO SCHEDULE').length,
-        inProgress: active.filter(w => ['FABRICATING','MEASURED'].includes(w.rawStatus)).length,
-      }
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: BACKEND_SHEET_ID,
+      range: `${TAB}!A2:AC5000`,
     });
+
+    const rows = res.data.values || [];
+    const wos = rows
+      .filter(row => row.length > 2 && (row[0] || row[2])) // wo_id or name present
+      .map(row => rowToWO(row as string[]));
+
+    const response = buildResponse(wos);
+    cache = { data: response, ts: now };
+
+    return NextResponse.json(response);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg, workOrders: [], byStatus: {}, stats: {} }, { status: 500 });
+    // Return stale cache on error rather than empty
+    if (cache) {
+      return NextResponse.json({ ...cache.data, _stale: true });
+    }
+    return NextResponse.json(
+      { error: msg, workOrders: [], byStatus: {}, stats: {} },
+      { status: 500 }
+    );
   }
+}
+
+// Invalidate cache (called by write routes after mutations)
+export function invalidateCache() {
+  cache = null;
 }

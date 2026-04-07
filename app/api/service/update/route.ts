@@ -1,135 +1,195 @@
 import { NextResponse } from 'next/server';
-import { getSSToken, getGoogleAuth } from '@/lib/gauth';
+import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 
-const COL = {
-  woNumber:       4363127736821636,
-  status:         8866727364192132,
-  assignedTo:     1196534248826756,
-  description:    70634341984132,
-  scheduledDate:  198316698324868,
-  comments:       7951933689882500,
-  hoursEstimated: 5700133876197252, // "Hours to measure"
+const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const TAB = 'Service_Work_Orders';
+
+// Column index map (0-based, must match migration HEADERS)
+const COL_IDX: Record<string, number> = {
+  wo_id:           0,
+  wo_number:       1,
+  name:            2,
+  description:     3,
+  status:          4,
+  island:          5,
+  area_of_island:  6,
+  address:         7,
+  contact_person:  8,
+  contact_title:   9,
+  contact_phone:   10,
+  contact_email:   11,
+  customer_name:   12,
+  system_type:     13,
+  assigned_to:     14,
+  date_received:   15,
+  due_date:        16,
+  scheduled_date:  17,
+  start_date:      18,
+  hours_estimated: 19,
+  hours_actual:    20,
+  men_required:    21,
+  comments:        22,
+  folder_url:      23,
+  quote_total:     24,
+  quote_status:    25,
+  created_at:      26,
+  updated_at:      27,
+  source:          28,
 };
 
-// BanyanOS stage → Smartsheet status string
-const STAGE_TO_STATUS: Record<string, string> = {
-  lead:        'REQUESTING A PROPOSAL',
-  quote:       'REQUESTING A PROPOSAL',
-  approved:    'NEED TO SCHEDULE',
-  scheduled:   'SCHEDULED',
-  in_progress: 'FABRICATING',
-  closed:      'COMPLETED',
-};
+function colLetter(idx: number): string {
+  // 0-based index → spreadsheet column letter (A, B, ... Z, AA, ...)
+  let result = '';
+  let n = idx;
+  do {
+    result = String.fromCharCode(65 + (n % 26)) + result;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return result;
+}
 
-const SHEET_ID = '7905619916154756';
-
-type SheetData = {
-  columns?: { id: number; title: string }[];
-  rows?: { id: number; cells: { columnId: number; value?: unknown; displayValue?: string }[] }[];
-};
-
-// PATCH — update an existing row by work order number or row ID
-// Body: { rowId?, woNumber?, stage?, assignedTo?, description?, scheduledDate?, notes?, hoursEstimated?, hoursActual? }
+// PATCH — update an existing WO row by wo_id or wo_number
+// Body: { woId?, woNumber?, stage?, status?, assignedTo?, description?,
+//         scheduledDate?, startDate?, notes?, hoursEstimated?, hoursActual?,
+//         men?, contactPhone?, contactEmail?, contactPerson?, folderUrl?, island? }
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { rowId, woNumber, woName, stage, assignedTo, description, scheduledDate, notes, hoursEstimated, hoursActual } = body;
-    let island: string = body.island || '';
+    const { woId, woNumber, stage, status } = body;
 
-    if (!rowId && !woNumber) {
-      return NextResponse.json({ error: 'rowId or woNumber required' }, { status: 400 });
+    if (!woId && !woNumber) {
+      return NextResponse.json({ error: 'woId or woNumber required' }, { status: 400 });
     }
 
-    const token = getSSToken();
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth });
 
-    // Always fetch sheet when we need to find row by WO# or look up hoursActual column
-    const needsSheetFetch = (!rowId && woNumber) || hoursActual !== undefined;
-    let targetRowId: number = rowId;
-    let hoursActualColId: number | null = null;
-    let sheetData: SheetData | null = null;
+    // Fetch all rows to find the target
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: BACKEND_SHEET_ID,
+      range: `${TAB}!A2:AC5000`,
+    });
 
-    if (needsSheetFetch) {
-      const searchRes = await fetch(
-        `https://api.smartsheet.com/2.0/sheets/${SHEET_ID}?pageSize=200`,
-        { headers: { Authorization: `Bearer ${token}` } }
+    const rows = res.data.values || [];
+    let targetRowIdx = -1;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i] as string[];
+      const rowWoId = (row[COL_IDX.wo_id] || '').trim();
+      const rowWoNum = (row[COL_IDX.wo_number] || '').trim();
+      if (woId && rowWoId === woId) { targetRowIdx = i; break; }
+      if (woNumber && (rowWoNum === woNumber || rowWoId === `WO-${woNumber}`)) {
+        targetRowIdx = i;
+        break;
+      }
+    }
+
+    if (targetRowIdx === -1) {
+      return NextResponse.json(
+        { error: `WO not found: ${woId || woNumber}` },
+        { status: 404 }
       );
-      const sheet = await searchRes.json() as SheetData;
-      sheetData = sheet;
+    }
 
-      // Find row by WO number if no rowId
-      if (!targetRowId && woNumber) {
-        const row = sheet.rows?.find(r =>
-          r.cells.some(c => c.columnId === COL.woNumber && (c.value === woNumber || c.displayValue === woNumber))
-        );
-        if (!row) return NextResponse.json({ error: `Row not found for WO ${woNumber}` }, { status: 404 });
-        targetRowId = row.id;
-      }
+    // Sheet row number: data starts at row 2 (header is row 1)
+    const sheetRow = targetRowIdx + 2;
+    const now = new Date().toISOString();
 
-      // Find "Hours on project" column dynamically
-      if (hoursActual !== undefined) {
-        hoursActualColId = sheet.columns?.find(c =>
-          c.title.toLowerCase().includes('hours on project') ||
-          c.title.toLowerCase().includes('actual hours') ||
-          c.title.toLowerCase() === 'hours'
-        )?.id ?? null;
+    // Build field updates
+    const updates: { col: string; value: string }[] = [];
+
+    const fieldMap: Record<string, string> = {
+      status:          'status',
+      assignedTo:      'assigned_to',
+      description:     'description',
+      scheduledDate:   'scheduled_date',
+      startDate:       'start_date',
+      notes:           'comments',
+      hoursEstimated:  'hours_estimated',
+      hoursActual:     'hours_actual',
+      men:             'men_required',
+      contactPhone:    'contact_phone',
+      contactEmail:    'contact_email',
+      contactPerson:   'contact_person',
+      contactTitle:    'contact_title',
+      customerName:    'customer_name',
+      folderUrl:       'folder_url',
+      island:          'island',
+      quoteTotal:      'quote_total',
+      quoteStatus:     'quote_status',
+    };
+
+    // Handle stage → status mapping (legacy frontend compat)
+    const stageToStatus: Record<string, string> = {
+      lead:        'lead',
+      quote:       'quote',
+      approved:    'approved',
+      scheduled:   'scheduled',
+      in_progress: 'in_progress',
+      closed:      'closed',
+      lost:        'lost',
+    };
+
+    const resolvedStatus = status || (stage ? stageToStatus[stage] : undefined);
+    if (resolvedStatus) {
+      updates.push({
+        col: colLetter(COL_IDX.status),
+        value: resolvedStatus,
+      });
+    }
+
+    // Map all other fields
+    for (const [bodyKey, colKey] of Object.entries(fieldMap)) {
+      if (bodyKey === 'status') continue; // handled above
+      if (body[bodyKey] !== undefined) {
+        updates.push({
+          col: colLetter(COL_IDX[colKey]),
+          value: String(body[bodyKey]),
+        });
       }
     }
 
-    const cells: { columnId: number; value: string }[] = [];
-    if (stage && STAGE_TO_STATUS[stage])   cells.push({ columnId: COL.status,         value: STAGE_TO_STATUS[stage] });
-    if (assignedTo !== undefined)          cells.push({ columnId: COL.assignedTo,      value: assignedTo });
-    if (description !== undefined)         cells.push({ columnId: COL.description,     value: description });
-    if (scheduledDate !== undefined)       cells.push({ columnId: COL.scheduledDate,   value: scheduledDate });
-    if (notes !== undefined)               cells.push({ columnId: COL.comments,        value: notes });
-    if (hoursEstimated !== undefined)      cells.push({ columnId: COL.hoursEstimated,  value: String(hoursEstimated) });
-    if (hoursActual !== undefined && hoursActualColId) {
-      cells.push({ columnId: hoursActualColId, value: String(hoursActual) });
-    }
+    // Always update updated_at
+    updates.push({
+      col: colLetter(COL_IDX.updated_at),
+      value: now,
+    });
 
-    if (cells.length === 0) {
+    if (updates.length === 1) {
+      // Only updated_at — nothing else changed
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
-    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${SHEET_ID}/rows`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+    // Write each updated cell individually (avoids range conflicts)
+    const requests = updates.map(({ col, value }) => ({
+      range: `${TAB}!${col}${sheetRow}`,
+      values: [[value]],
+    }));
+
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: BACKEND_SHEET_ID,
+      requestBody: {
+        valueInputOption: 'RAW',
+        data: requests,
       },
-      body: JSON.stringify([{ id: targetRowId, cells }]),
     });
 
-    const data = await res.json() as { message?: string };
-    if (!res.ok) {
-      return NextResponse.json({ error: data.message || 'Smartsheet update failed' }, { status: 500 });
-    }
+    // If this is a dispatch update (scheduledDate + assignedTo both provided),
+    // also write to Dispatch_Schedule for the field crew calendar
+    const { scheduledDate, assignedTo } = body;
+    const resolvedWoNumber = woNumber || rows[targetRowIdx]?.[COL_IDX.wo_number] || woId;
+    const woName = rows[targetRowIdx]?.[COL_IDX.name] || '';
+    const woIsland = body.island || rows[targetRowIdx]?.[COL_IDX.island] || '';
 
-    // If this is a dispatch (scheduledDate + assignedTo both provided), also write to Dispatch_Schedule
     if (scheduledDate && assignedTo) {
       try {
         const fieldSheetId = process.env.FIELD_BACKEND_SHEET_ID;
         if (fieldSheetId) {
-          const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-          const sheets = google.sheets({ version: 'v4', auth });
-
-          const slotId = `SVC-${woNumber || rowId}-${scheduledDate}`;
+          const slotId = `SVC-${resolvedWoNumber}-${scheduledDate}`;
           const menRequired = body.men || '1';
-          const displayName = woName || (woNumber ? `Service WO ${woNumber}` : 'Service Work Order');
+          const displayName = woName || `Service WO ${resolvedWoNumber}`;
 
-          // Try to get island from sheet if not passed in body
-          if (!island && sheetData) {
-            const woRow = sheetData.rows?.find(r => r.id === targetRowId);
-            if (woRow) {
-              const islandColId = sheetData.columns?.find(c => c.title.toLowerCase() === 'island' || c.title.toLowerCase().includes('location'))?.id;
-              if (islandColId) {
-                const cell = woRow.cells.find(c => c.columnId === islandColId);
-                island = String(cell?.displayValue || cell?.value || '');
-              }
-            }
-          }
-
-          // Check if slot already exists for this WO + date (avoid duplicates)
           const existing = await sheets.spreadsheets.values.get({
             spreadsheetId: fieldSheetId,
             range: 'Dispatch_Schedule!A2:J5000',
@@ -144,21 +204,14 @@ export async function PATCH(req: Request) {
               valueInputOption: 'RAW',
               requestBody: {
                 values: [[
-                  slotId,           // slot_id
-                  scheduledDate,    // date
-                  `SVC-${woNumber || rowId}`, // kID
-                  displayName,      // project_name
-                  island,           // island
-                  menRequired,      // men_required
-                  body.hoursEstimated || '', // hours_estimated
-                  assignedTo,       // assigned_crew
-                  'Joey Ritthaler', // created_by
-                  'filled',         // status
+                  slotId, scheduledDate, `SVC-${resolvedWoNumber}`,
+                  displayName, woIsland, menRequired,
+                  body.hoursEstimated || '', assignedTo,
+                  'Joey Ritthaler', 'filled',
                 ]],
               },
             });
           } else {
-            // Update existing slot's assigned_crew and status
             const rowIndex = existingRows.findIndex(r => r[0] === slotId);
             if (rowIndex >= 0) {
               await sheets.spreadsheets.values.update({
@@ -171,12 +224,11 @@ export async function PATCH(req: Request) {
           }
         }
       } catch {
-        // Non-fatal: log to console but don't block the WO update response
         console.error('[schedule-sync] Failed to write to Dispatch_Schedule');
       }
     }
 
-    return NextResponse.json({ ok: true, rowId: targetRowId });
+    return NextResponse.json({ ok: true, sheetRow, woId: woId || resolvedWoNumber });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg }, { status: 500 });

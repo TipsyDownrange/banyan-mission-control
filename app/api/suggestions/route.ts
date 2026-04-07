@@ -44,9 +44,9 @@ export async function POST(req: Request) {
     });
 
     // Also create a Task so the suggestion is visible on the Task Board
-    const taskId = `TASK-SUG-${Date.now().toString(36).toUpperCase()}`;
+    const taskId = `TSK-SUG-${Date.now()}`;
     const taskTitle = `[SUGGESTION] ${description.slice(0, 60)}`;
-    const taskDetail = `${description}\n\nFrom: ${userName} at ${now}`;
+    const taskDetail = `${description} | From: ${userName} (${email || session.user?.email || ''}) at ${now}`;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: 'Tasks!A1',
