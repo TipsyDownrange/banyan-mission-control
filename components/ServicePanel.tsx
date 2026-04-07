@@ -717,11 +717,11 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       )}
 
       {!loading && data && view === 'kanban' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 12, alignItems: 'start' }}>
-          {STAGES.slice(0, 5).map(stage => {
+        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', alignItems: 'start', paddingBottom: 12, minHeight: 200 }}>
+          {STAGES.filter(s => s.key !== 'lost').map(stage => {
             const wos = filteredByStatus[stage.key] || [];
             return (
-              <div key={stage.key}>
+              <div key={stage.key} style={{ minWidth: 240, flex: '0 0 240px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color }} />
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{stage.label}</div>
