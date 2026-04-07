@@ -121,7 +121,7 @@ export function readOnlyViewsForRole(role: string): string[] {
   switch (role) {
     case 'pm':        return ['Work Orders', 'Schedules', 'Submittals', 'Budget', 'Change Orders'];
     case 'estimator': return ['Projects', 'Schedules', 'Submittals', 'Budget', 'Change Orders', 'Overview'];
-    case 'super':     return ['Work Orders', 'Overview', 'Forecasting'];
+    case 'super':     return [];
     default:          return [];
   }
 }

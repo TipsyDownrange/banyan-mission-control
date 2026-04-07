@@ -27,7 +27,7 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   gm:         ['admin:all'],
   owner:      ['admin:all'],
   service_pm: ['wo:create', 'wo:edit', 'wo:view'],
-  super:      ['wo:edit', 'wo:view', 'dispatch:assign', 'dispatch:create'],
+  super:      ['wo:create', 'wo:edit', 'wo:view', 'dispatch:assign', 'dispatch:create'],
   pm:         ['wo:view'],
   estimator:  ['wo:view'],
   admin_mgr:  ['wo:view', 'finance:view'],
