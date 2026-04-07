@@ -954,11 +954,36 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   {step.step_name}
                 </span>
               )}
-              {step.allotted_hours > 0 && (
+              {!readOnly ? (
+                <input
+                  type="number"
+                  value={step.allotted_hours || ''}
+                  onChange={async (e) => {
+                    const hrs = parseFloat(e.target.value) || 0;
+                    try {
+                      await fetch(`/api/work-breakdown/${jobId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'step', id: step.install_step_id, allotted_hours: hrs }),
+                      });
+                    } catch {}
+                  }}
+                  onBlur={() => loadData()}
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    width: 48, fontSize: 11, fontWeight: 600, color: '#0f766e',
+                    background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.15)',
+                    borderRadius: 6, padding: '2px 4px', textAlign: 'center', outline: 'none',
+                  }}
+                  placeholder="hrs"
+                  step="0.25"
+                  min="0"
+                />
+              ) : step.allotted_hours > 0 ? (
                 <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>
                   {step.allotted_hours}h
                 </span>
-              )}
+              ) : null}
               {step.required_photo_yn === 'Y' && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#eff6ff', color: '#0369a1', border: '1px solid #bfdbfe' }}>
                   PHOTO
