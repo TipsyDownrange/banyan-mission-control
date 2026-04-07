@@ -75,10 +75,11 @@ interface WODetailPanelProps {
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
   onStageChange: (woId: string, stage: string) => Promise<void>;
   onQuote: (woId: string) => void;
+  onEstimate: (wo: WorkOrder) => void;
   onFolderLinked?: (woId: string, folderUrl: string) => void;
 }
 
-export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onFolderLinked }: WODetailPanelProps) {
+export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onEstimate, onFolderLinked }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
@@ -281,8 +282,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               </button>
             )}
             <button
+              onClick={() => onEstimate(wo)}
+              title="Open Carl's Method estimate"
+              style={{ padding: '7px 14px', borderRadius: 10, background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              📊 Estimate
+            </button>
+            <button
               onClick={() => onQuote(wo.id)}
-              title="Build quote"
+              title="Build quote (skip estimate)"
               style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               $ Quote
             </button>

@@ -68,8 +68,9 @@ Return only the JSON object, no other text.`;
 
     // Generate a WO number
     const year = hawaiiYear2();
-    const seq = Math.floor(Math.random() * 9000) + 1000;
-    parsed.woNumber = `${year}-${seq}`;
+    // Sequential: will be finalized by dispatch API
+    // Use timestamp as temp placeholder - dispatch API assigns real sequential number
+    parsed.woNumber = '';
     parsed.dateReceived = hawaiiToday();
     parsed.status = 'REQUESTING A PROPOSAL';
 

@@ -117,9 +117,26 @@ export async function POST(req: Request) {
       );
     }
 
+    const auth0 = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const sheets = google.sheets({ version: 'v4', auth: auth0 });
+
     const now = hawaiiNow();
     const today = dateReceived || hawaiiToday();
-    const wo = woNumber || `${hawaiiYear2()}-${Math.floor(Math.random() * 9000) + 1000}`;
+    // Sequential WO numbering: WO-26-XXXX
+    let wo = woNumber;
+    if (!wo) {
+      const yr = hawaiiYear2();
+      // Find the highest existing WO number for this year
+      const existingWOs = await sheets.spreadsheets.values.get({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: 'Service_Work_Orders!B2:B2000',
+      });
+      const nums = (existingWOs.data.values || []).flat()
+        .filter((v: string) => v && v.startsWith(yr + '-'))
+        .map((v: string) => parseInt(v.split('-')[1]) || 0);
+      const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+      wo = `${yr}-${String(nextNum).padStart(4, '0')}`;
+    }
     const woId = `WO-${wo.replace(/[^A-Za-z0-9\-]/g, '')}`;
     const name = systemType ? `${customerName} — ${systemType}` : customerName;
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
@@ -160,9 +177,6 @@ export async function POST(req: Request) {
       now,                   // updated_at
       'banyan_dispatch',     // source
     ];
-
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-    const sheets = google.sheets({ version: 'v4', auth });
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: BACKEND_SHEET_ID,

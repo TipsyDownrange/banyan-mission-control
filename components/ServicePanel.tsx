@@ -6,6 +6,7 @@ import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar
 import ServiceIntake from '@/components/ServiceIntake';
 import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
+import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -455,6 +456,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [showIntake, setShowIntake] = useState(false);
   const [quoteWO, setQuoteWO] = useState<string | null>(null);
+  const [estimateWO, setEstimateWO] = useState<WorkOrder | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
   const [filter, setFilter] = useState(defaultFilter);
@@ -783,6 +785,18 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         </div>
       )}
 
+      {/* WO Estimate (Carl's Method) modal */}
+      {estimateWO && (
+        <WOEstimatePanel
+          wo={estimateWO}
+          onClose={() => setEstimateWO(null)}
+          onGenerateQuote={(woId: string, _totals: EstimateTotals) => {
+            setEstimateWO(null);
+            setQuoteWO(woId);
+          }}
+        />
+      )}
+
       {/* Full detail panel */}
       {detailWO && (
         <WODetailPanel
@@ -793,6 +807,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
           onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
           onStageChange={async (id, stage) => { await handleStageChange(id, stage); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
           onQuote={(id) => { setQuoteWO(id); setDetailWO(null); }}
+          onEstimate={(wo) => { setEstimateWO(wo); setDetailWO(null); }}
         />
       )}
 
