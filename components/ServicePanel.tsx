@@ -30,6 +30,8 @@ type CrewMember = { user_id: string; name: string; role: string; island: string 
 const STAGES: { key: string; label: string; color: string; bg: string; border: string }[] = [
   { key: 'lead',        label: 'New Lead',        color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
   { key: 'quote',       label: 'Quote Requested', color: '#0369a1', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.22)' },
+  { key: 'quoted',      label: 'Quoted',           color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(139,92,246,0.22)' },
+  { key: 'accepted',    label: 'Accepted',         color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(16,185,129,0.25)' },
   { key: 'approved',    label: 'Need to Schedule',color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
   { key: 'scheduled',   label: 'Scheduled',        color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
   { key: 'in_progress', label: 'In Progress',      color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },

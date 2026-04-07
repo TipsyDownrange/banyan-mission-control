@@ -129,6 +129,8 @@ export async function PATCH(req: Request) {
     const stageToStatus: Record<string, string> = {
       lead:        'lead',
       quote:       'quote',
+      quoted:      'quoted',
+      accepted:    'accepted',
       approved:    'approved',
       scheduled:   'scheduled',
       in_progress: 'in_progress',
