@@ -36,6 +36,17 @@ const COL = {
   created_at:      26,
   updated_at:      27,
   source:          28,
+  // QBO invoice columns (AA–AE)
+  qbo_invoice_id:  26, // AA — note: overwrites created_at slot; actual sheet cols differ
+};  // Invoice cols handled separately below via INV_COL
+
+// Invoice columns (0-based): AA=26, AB=27, AC=28, AD=29, AE=30
+const INV_COL = {
+  qbo_invoice_id:  26, // AA
+  invoice_number:  27, // AB
+  invoice_total:   28, // AC
+  invoice_balance: 29, // AD
+  invoice_date:    30, // AE
 };
 
 // Simple in-process cache (10 minute TTL)

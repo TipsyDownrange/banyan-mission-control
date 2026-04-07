@@ -11,6 +11,12 @@ type WorkOrder = {
   men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
   folderUrl?: string;
+  // QBO invoice fields (columns AA–AE)
+  qbo_invoice_id?: string;
+  invoice_number?: string;
+  invoice_total?: string;
+  invoice_balance?: string;
+  invoice_date?: string;
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
@@ -415,6 +421,48 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   placeholder="Internal notes, follow-ups, customer requests…"
                 />
               </div>
+
+              {/* QBO Invoice */}
+              {wo.qbo_invoice_id && (
+                <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                  <div style={SECTION_TITLE}>Invoice</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>#{wo.invoice_number || wo.qbo_invoice_id}</div>
+                    {(() => {
+                      const balance = parseFloat(wo.invoice_balance || '0');
+                      const isPaid = balance === 0;
+                      return (
+                        <span style={{
+                          fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 999,
+                          background: isPaid ? 'rgba(21,128,61,0.1)' : 'rgba(234,179,8,0.1)',
+                          color: isPaid ? '#15803d' : '#a16207',
+                          border: isPaid ? '1px solid rgba(21,128,61,0.3)' : '1px solid rgba(234,179,8,0.3)',
+                        }}>
+                          {isPaid ? '✓ Paid' : '⚠ Outstanding'}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                    <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
+                      <div style={{ ...LBL, marginBottom: 2 }}>Invoice Total</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                        ${parseFloat(wo.invoice_total || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
+                      <div style={{ ...LBL, marginBottom: 2 }}>Balance Due</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: parseFloat(wo.invoice_balance || '0') > 0 ? '#a16207' : '#15803d' }}>
+                        ${parseFloat(wo.invoice_balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
+                      <div style={{ ...LBL, marginBottom: 2 }}>Invoice Date</div>
+                      <div style={{ fontSize: 12, color: '#475569' }}>{wo.invoice_date || '—'}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Work Breakdown */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
