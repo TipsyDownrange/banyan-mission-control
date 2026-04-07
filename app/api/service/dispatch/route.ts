@@ -134,7 +134,7 @@ export async function POST(req: Request) {
       wo,             // wo_number
       name,           // name
       description,    // description
-      'approved',     // status — new WOs start as approved (need to schedule)
+      'lead',         // status — new WOs start as New Lead
       island || city || '', // island
       island || city || '', // area_of_island
       [address, city].filter(Boolean).join(', '), // address
