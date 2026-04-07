@@ -128,11 +128,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                     <label style={LBL}>Job Title</label>
                     <input style={INP} value={draft.title || ''} onChange={e => update('title', e.target.value)} placeholder="e.g. Journeyman Glazier" />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div>
-                      <label style={LBL}>Role / Level</label>
-                      <input style={INP} value={draft.role || ''} onChange={e => update('role', e.target.value)} />
-                    </div>
+                  <div style={{ display: 'grid', gap: 10 }}>
                     <div>
                       <label style={LBL}>Departments (multi)</label>
                       <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
