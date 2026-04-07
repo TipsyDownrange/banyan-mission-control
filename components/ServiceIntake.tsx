@@ -3,7 +3,9 @@ import { useState, useEffect, useRef } from 'react';
 import type { CustomerRecord } from '@/app/api/service/customers/route';
 
 type WODraft = {
-  customerName: string; address: string; city: string; island: string;
+  businessName: string;  // Maps to name column (C)
+  customerName: string;  // Maps to customer_name column (M)
+  address: string; city: string; island: string; areaOfIsland: string;
   contactPerson: string; contactPhone: string; contactEmail: string;
   description: string; systemType: string; urgency: string;
   assignedTo: string; notes: string;
@@ -164,20 +166,81 @@ function AutocompleteInput({
   );
 }
 
-// Shared auto-fill helper: populate all WO fields from a CustomerRecord
-function applyCustomer(prev: WODraft, c: CustomerRecord, primaryField: keyof WODraft): WODraft {
+// ── Hawaii city → island + area detection ──────────────────────────────────
+
+const HAWAII_CITY_MAP: Array<{ patterns: string[]; island: string; area: string }> = [
+  // Maui
+  { patterns: ['kahului', 'wailuku'], island: 'Maui', area: 'Central Maui' },
+  { patterns: ['lahaina', 'napili', 'kapalua', 'kaanapali', 'olowalu'], island: 'Maui', area: 'West Maui' },
+  { patterns: ['kihei', 'wailea', 'makena', 'maalaea'], island: 'Maui', area: 'South Maui' },
+  { patterns: ['kula', 'makawao', 'pukalani', 'upcountry', 'keokea', 'omaopio'], island: 'Maui', area: 'Upcountry Maui' },
+  { patterns: ['paia', 'haiku', 'haliimaile', 'kuau'], island: 'Maui', area: 'North Maui' },
+  { patterns: ['hana', 'kipahulu', 'keanae'], island: 'Maui', area: 'East Maui' },
+  // Oahu
+  { patterns: ['honolulu', 'waikiki', 'manoa', 'kaimuki', 'nuuanu', 'downtown', 'palolo', 'moiliili'], island: 'Oahu', area: 'Honolulu' },
+  { patterns: ['kailua', 'kaneohe', 'waimanalo', 'hauula', 'laie', 'kahuku', 'kaaawa'], island: 'Oahu', area: 'Windward Oahu' },
+  { patterns: ['pearl city', 'aiea', 'waipahu', 'mililani', 'wahiawa', 'halawa'], island: 'Oahu', area: 'Central Oahu' },
+  { patterns: ['ewa beach', 'ewa', 'kapolei', 'ko olina', 'makakilo', 'barbers point'], island: 'Oahu', area: 'Leeward Oahu' },
+  { patterns: ['hawaii kai', 'aina haina', 'portlock', 'kuliouou', 'east honolulu'], island: 'Oahu', area: 'East Oahu' },
+  { patterns: ['north shore', 'haleiwa', 'waialua', 'pupukea', 'sunset beach'], island: 'Oahu', area: 'North Shore Oahu' },
+  // Kauai
+  { patterns: ['lihue', 'kapaa', 'wailua'], island: 'Kauai', area: 'East Kauai' },
+  { patterns: ['poipu', 'koloa', 'omao', 'lawai', 'kalaheo'], island: 'Kauai', area: 'South Kauai' },
+  { patterns: ['princeville', 'hanalei', 'kilauea'], island: 'Kauai', area: 'North Kauai' },
+  { patterns: ['waimea', 'hanapepe', 'eleele', 'kekaha', 'pakala'], island: 'Kauai', area: 'West Kauai' },
+  // Big Island
+  { patterns: ['hilo', 'keaau', 'mountain view'], island: 'Hawaii', area: 'Hilo' },
+  { patterns: ['kailua-kona', 'kailua kona', 'keauhou', 'holualoa', 'honalo', 'captain cook', 'kealakekua'], island: 'Hawaii', area: 'Kona' },
+  { patterns: ['kamuela', 'kohala', 'waikoloa', 'kawaihae'], island: 'Hawaii', area: 'Kohala' },
+  { patterns: ['pahoa', 'lanipuna', 'kalapana'], island: 'Hawaii', area: 'Puna' },
+  { patterns: ['volcano', 'naalehu', 'pahala'], island: 'Hawaii', area: "Ka'u" },
+  // Molokai + Lanai
+  { patterns: ['kaunakakai', 'molokai'], island: 'Molokai', area: 'Molokai' },
+  { patterns: ['lanai city', 'lanai'], island: 'Lanai', area: 'Lanai' },
+];
+
+function detectIslandAndArea(text: string): { island: string; area: string } {
+  if (!text) return { island: '', area: '' };
+  const lower = text.toLowerCase();
+  for (const entry of HAWAII_CITY_MAP) {
+    if (entry.patterns.some(p => lower.includes(p))) {
+      return { island: entry.island, area: entry.area };
+    }
+  }
+  for (const isl of ['Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai']) {
+    if (lower.includes(isl.toLowerCase())) return { island: isl, area: '' };
+  }
+  return { island: '', area: '' };
+}
+
+// Apply a full customer record (from Customer/Account Name or Contact Person autocomplete)
+function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
+  const det = detectIslandAndArea(c.address);
   return {
     ...prev,
-    customerName:  primaryField === 'customerName'  ? (c.name || prev.customerName)  : (prev.customerName  || c.name),
-    address:       primaryField === 'address'        ? (c.address || prev.address)    : (prev.address       || c.address),
-    island:        prev.island       || c.island,
-    contactPerson: primaryField === 'contactPerson'  ? (c.contactPerson || prev.contactPerson) : (prev.contactPerson || c.contactPerson),
-    contactPhone:  primaryField === 'contactPhone'   ? (c.contactPhone  || prev.contactPhone)  : (prev.contactPhone  || c.contactPhone  || c.contact),
+    customerName:  c.company || prev.customerName,
+    address:       prev.address || c.address,
+    island:        prev.island || c.island || det.island,
+    areaOfIsland:  prev.areaOfIsland || det.area,
+    contactPerson: prev.contactPerson || c.contactPerson,
+    contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
+    contactEmail:  prev.contactEmail || c.email,
+  };
+}
+
+// Apply address selection only (address autocomplete)
+function applyAddressRecord(prev: WODraft, c: CustomerRecord): WODraft {
+  const det = detectIslandAndArea(c.address);
+  return {
+    ...prev,
+    address:      c.address,
+    island:       prev.island || c.island || det.island,
+    areaOfIsland: prev.areaOfIsland || det.area,
   };
 }
 
 const BLANK: WODraft = {
-  customerName: '', address: '', city: '', island: '',
+  businessName: '', customerName: '', address: '', city: '', island: '', areaOfIsland: '',
   contactPerson: '', contactPhone: '', contactEmail: '',
   description: '', systemType: '', urgency: 'normal',
   assignedTo: '', notes: '',
@@ -263,12 +326,14 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       const data = await res.json();
       if (data.workOrder) {
         const wo = data.workOrder;
+        const det = detectIslandAndArea(wo.address || '');
         setDraft(prev => ({
           ...prev,
           customerName:  wo.customerName  || prev.customerName,
           address:       wo.address       || prev.address,
           city:          wo.city          || prev.city,
-          island:        wo.island        || prev.island,
+          island:        wo.island        || prev.island || det.island,
+          areaOfIsland:  prev.areaOfIsland || det.area,
           contactPerson: wo.contactPerson || prev.contactPerson,
           contactPhone:  wo.contactPhone  || prev.contactPhone,
           description:   wo.description   || prev.description,
@@ -293,7 +358,11 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       const res = await fetch('/api/service/dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: JSON.stringify({
+          ...draft,
+          businessName: draft.businessName,
+          areaOfIsland: draft.areaOfIsland,
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
@@ -310,7 +379,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     setSaving(false);
   }
 
-  const canSubmit = !saving && draft.customerName && draft.description && draft.island;
+  const canSubmit = !saving && (draft.businessName || draft.customerName) && draft.description && draft.island;
 
   // PM options — always available regardless of island
   const pmOptions = pms.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i);
@@ -328,10 +397,10 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Work Order Created</div>
-      <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>{draft.customerName} · {draft.island}</div>
+      <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>{draft.businessName || draft.customerName} · {draft.island}</div>
       {createdWO && <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>WO# {createdWO}</div>}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-        <button onClick={() => { setStep('form'); setDraft({ ...BLANK }); setCreatedWO(''); }}
+        <button onClick={() => { setStep('form'); setDraft({ ...BLANK }); setSelectedTypes([]); setCreatedWO(''); }}
           style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           + Another
         </button>
@@ -371,95 +440,105 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Paste a description and hit Fill → to auto-populate fields</div>
         </div>
 
-        {/* Customer */}
-        <div>
-          {FL('Customer / Company')}
-          <AutocompleteInput
-            value={draft.customerName}
-            onChange={v => update('customerName', v)}
-            onSelect={c => setDraft(prev => applyCustomer(prev, c, 'customerName'))}
-            placeholder="Customer or company name"
-            style={INP}
-            customers={customers}
-            matchField="name"
-            subField="address"
-          />
-        </div>
+        {/* Customer & Site Information */}
+        <div style={{ background: 'rgba(248,250,252,0.8)', borderRadius: 12, border: '1px solid #e2e8f0', padding: '14px 16px', display: 'grid', gap: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>Customer &amp; Site Information</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            {FL('Address')}
+            {FL('Business / Property Name')}
+            <input
+              value={draft.businessName}
+              onChange={e => update('businessName', e.target.value)}
+              placeholder='"Shell Station", "Westin Nanea", "John&apos;s Residence"'
+              style={INP}
+            />
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>The specific site or property — goes in the WO name</div>
+          </div>
+
+          <div>
+            {FL('Customer / Account Name')}
+            <AutocompleteInput
+              value={draft.customerName}
+              onChange={v => update('customerName', v)}
+              onSelect={c => setDraft(prev => applyCustomerRecord(prev, c))}
+              placeholder='"Shell Oil Co", "Starwood Hotels", "John Smith"'
+              style={INP}
+              customers={customers}
+              matchField="company"
+              subField="address"
+            />
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>The billing account — selecting auto-fills address &amp; contacts below</div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              {FL('Contact Person', customers.some(c => c.contactPerson))}
+              <AutocompleteInput
+                value={draft.contactPerson}
+                onChange={v => update('contactPerson', v)}
+                onSelect={c => setDraft(prev => applyCustomerRecord(prev, c))}
+                placeholder="Person on site"
+                style={INP}
+                customers={customers}
+                matchField="contactPerson"
+                subField="company"
+              />
+            </div>
+            <div>
+              {FL('Contact Phone')}
+              <input type="tel" value={draft.contactPhone} onChange={e => update('contactPhone', e.target.value)} placeholder="808-XXX-XXXX" style={INP} />
+            </div>
+          </div>
+
+          <div>
+            {FL('Contact Email')}
+            <input type="email" value={draft.contactEmail} onChange={e => update('contactEmail', e.target.value)} placeholder="email@example.com" style={INP} />
+          </div>
+
+          <div>
+            {FL('Site Address')}
             <AutocompleteInput
               value={draft.address}
               onChange={v => update('address', v)}
-              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'address'))}
+              onSelect={c => setDraft(prev => applyAddressRecord(prev, c))}
               placeholder="Street address"
               style={INP}
               customers={customers}
               matchField="address"
-              subField="name"
+              subField="company"
             />
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Selecting from existing addresses auto-detects island &amp; area</div>
           </div>
-          <div>{FL('City')}<input value={draft.city} onChange={e => update('city', e.target.value)} placeholder="City" style={INP} /></div>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div>
-            {FL('Island')}
-            <select value={draft.island} onChange={e => update('island', e.target.value)} style={SEL}>
-              <option value="">Select island</option>
-              {ISLANDS.map(i => <option key={i}>{i}</option>)}
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              {FL('Island')}
+              <select value={draft.island} onChange={e => update('island', e.target.value)} style={SEL}>
+                <option value="">Select island</option>
+                {ISLANDS.map(i => <option key={i}>{i}</option>)}
+              </select>
+            </div>
+            <div>
+              {FL('Area of Island', !!draft.island)}
+              <input
+                value={draft.areaOfIsland}
+                onChange={e => update('areaOfIsland', e.target.value)}
+                placeholder={draft.island === 'Maui' ? 'e.g. South Maui' : draft.island === 'Oahu' ? 'e.g. Honolulu' : draft.island === 'Kauai' ? 'e.g. East Kauai' : draft.island === 'Hawaii' ? 'e.g. Kona' : 'Auto-detected from address'}
+                style={INP}
+              />
+            </div>
           </div>
-          <div>
-            {FL('Urgency')}
-            <select value={draft.urgency} onChange={e => update('urgency', e.target.value)} style={SEL}>
-              <option value="normal">Normal</option>
-              <option value="urgent">⚡ Urgent</option>
-              <option value="low">Low priority</option>
-            </select>
-          </div>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div>
-            {FL('Contact Person', customers.some(c => c.contactPerson))}
-            <AutocompleteInput
-              value={draft.contactPerson}
-              onChange={v => update('contactPerson', v)}
-              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'contactPerson'))}
-              placeholder="Contact name"
-              style={INP}
-              customers={customers}
-              matchField="contactPerson"
-              subField="contactPhone"
-            />
-          </div>
-          <div>
-            {FL('Contact Phone', customers.some(c => c.contactPhone))}
-            <AutocompleteInput
-              value={draft.contactPhone}
-              onChange={v => update('contactPhone', v)}
-              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'contactPhone'))}
-              placeholder="808-XXX-XXXX"
-              style={INP}
-              customers={customers}
-              matchField="contactPhone"
-              subField="contactPerson"
-            />
-          </div>
-          <div>
-            {FL('Contact Email', customers.some(c => c.email))}
-            <AutocompleteInput
-              value={draft.contactEmail}
-              onChange={v => update('contactEmail', v)}
-              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'contactEmail'))}
-              placeholder="email@example.com"
-              style={INP}
-              customers={customers}
-              matchField="email"
-              subField="contactPerson"
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>{FL('City')}<input value={draft.city} onChange={e => update('city', e.target.value)} placeholder="City" style={INP} /></div>
+            <div>
+              {FL('Urgency')}
+              <select value={draft.urgency} onChange={e => update('urgency', e.target.value)} style={SEL}>
+                <option value="normal">Normal</option>
+                <option value="urgent">⚡ Urgent</option>
+                <option value="low">Low priority</option>
+              </select>
+            </div>
           </div>
         </div>
 

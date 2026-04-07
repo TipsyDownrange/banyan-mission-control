@@ -10,13 +10,17 @@ import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 
 type WorkOrder = {
   id: string; name: string; description: string;
-  status: string; rawStatus: string; island: string;
+  status: string; rawStatus: string; island: string; area_of_island?: string;
   assignedTo: string; dateReceived: string; dueDate: string;
   scheduledDate: string; startDate: string;
   hoursEstimated: string; hoursActual: string; hoursToMeasure: string;
   men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
+  // Separate contact + customer fields
+  contact_person?: string; contact_phone?: string; contact_email?: string;
+  customer_name?: string;
   folderUrl?: string;
+  systemType?: string;
 };
 
 type ServiceData = {
@@ -547,6 +551,11 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
           notes: fields.comments,
           hoursEstimated: fields.hoursEstimated,
           hoursActual: fields.hoursActual,
+          // Separate contact + customer fields from WODetailPanel
+          contactPerson: (fields as WorkOrder & { contact_person?: string }).contact_person,
+          contactPhone:  (fields as WorkOrder & { contact_phone?: string }).contact_phone,
+          contactEmail:  (fields as WorkOrder & { contact_email?: string }).contact_email,
+          customerName:  (fields as WorkOrder & { customer_name?: string }).customer_name,
         }),
       });
     } catch {
@@ -785,7 +794,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         </div>
       )}
 
-      {/* WO Estimate (Carl's Method) modal */}
+      {/* WO Estimate (Simple Estimate) modal */}
       {estimateWO && (
         <WOEstimatePanel
           wo={estimateWO}

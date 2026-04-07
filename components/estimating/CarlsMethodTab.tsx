@@ -757,7 +757,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
-            Carl&apos;s Method
+            Simple Estimate
           </span>
           {saving ? (
             <span style={{
@@ -842,7 +842,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 marginTop: 3,
                 fontFamily: FONT,
               }}>
-                Estimate Form · Carl&apos;s Method
+                Estimate Form · Simple Estimate
               </div>
             </div>
             {/* Print date (hidden in screen toolbar, shown in PDF) */}

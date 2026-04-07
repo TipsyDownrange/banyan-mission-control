@@ -121,13 +121,21 @@ export async function PATCH(req: Request) {
       hoursEstimated:  'hours_estimated',
       hoursActual:     'hours_actual',
       men:             'men_required',
+      // camelCase (legacy frontend compat)
       contactPhone:    'contact_phone',
       contactEmail:    'contact_email',
       contactPerson:   'contact_person',
       contactTitle:    'contact_title',
       customerName:    'customer_name',
+      // snake_case (WODetailPanel new fields)
+      contact_phone:   'contact_phone',
+      contact_email:   'contact_email',
+      contact_person:  'contact_person',
+      customer_name:   'customer_name',
       folderUrl:       'folder_url',
       island:          'island',
+      areaOfIsland:    'area_of_island',
+      area_of_island:  'area_of_island',
       quoteTotal:      'quote_total',
       quoteStatus:     'quote_status',
     };

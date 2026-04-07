@@ -89,7 +89,7 @@ function getStatusStyle(status: string) {
 
 const WORKSPACE_TABS: WorkspaceTab[] = [
   { id: 'overview',   label: 'Overview' },
-  { id: 'carls',      label: "Carl's Method" },
+  { id: 'carls',      label: "Simple Estimate" },
   { id: 'takeoff',    label: 'Takeoff' },
   { id: 'estimate',   label: 'Estimate' },
   { id: 'quotes',     label: 'Quotes' },

@@ -461,7 +461,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
         }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 900, color: 'white', letterSpacing: '-0.01em' }}>
-              Carl&apos;s Method Estimate
+              Simple Estimate
             </div>
             <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.8)', marginTop: 2 }}>
               {wo.name} · {wo.island}
@@ -709,6 +709,12 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               Close
+            </button>
+            <button
+              onClick={() => window.print()}
+              style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#0f172a', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            >
+              🖨 Print
             </button>
             <button
               onClick={() => {

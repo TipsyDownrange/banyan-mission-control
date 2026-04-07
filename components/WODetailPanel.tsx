@@ -4,12 +4,15 @@ import WorkBreakdown from '@/components/shared/WorkBreakdown';
 
 type WorkOrder = {
   id: string; name: string; description: string;
-  status: string; rawStatus: string; island: string;
+  status: string; rawStatus: string; island: string; area_of_island?: string;
   assignedTo: string; dateReceived: string; dueDate: string;
   scheduledDate: string; startDate: string;
   hoursEstimated: string; hoursActual: string; hoursToMeasure: string;
   men: string; done: boolean;
   comments: string; contact: string; address: string; lane: string;
+  // Separate contact + customer fields
+  contact_person?: string; contact_phone?: string; contact_email?: string;
+  customer_name?: string;
   folderUrl?: string;
   systemType?: string;
   // QBO invoice fields (columns AA–AE)
@@ -133,7 +136,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       men: wo.men,
       comments: wo.comments,
       lane: wo.lane,
-    });
+      // Separate contact + customer fields
+      contact_person: wo.contact_person,
+      contact_phone:  wo.contact_phone,
+      contact_email:  wo.contact_email,
+      customer_name:  wo.customer_name,
+    } as Partial<WorkOrder>);
     setSelectedCrew(wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : []);
     setDirty(false);
   }, [wo]);
@@ -283,7 +291,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             )}
             <button
               onClick={() => onEstimate(wo)}
-              title="Open Carl's Method estimate"
+              title="Open Simple Estimate"
               style={{ padding: '7px 14px', borderRadius: 10, background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               📊 Estimate
             </button>
@@ -405,11 +413,25 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
               {/* Customer & Site */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Customer & Site</div>
+                <div style={SECTION_TITLE}>Customer &amp; Site</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
-                    <label style={LBL}>Contact Person / Phone</label>
-                    <input style={INP} value={draft.contact || ''} onChange={e => update('contact', e.target.value)} placeholder="Name · 808-XXX-XXXX" />
+                    <label style={LBL}>Customer / Account Name</label>
+                    <input style={INP} value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''} onChange={e => update('customer_name', e.target.value)} placeholder="Billing account name" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={LBL}>Contact Person</label>
+                      <input style={INP} value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? ''} onChange={e => update('contact_person', e.target.value)} placeholder="Person on site" />
+                    </div>
+                    <div>
+                      <label style={LBL}>Contact Phone</label>
+                      <input type="tel" style={INP} value={(draft as WorkOrder & { contact_phone?: string }).contact_phone ?? wo.contact_phone ?? ''} onChange={e => update('contact_phone', e.target.value)} placeholder="808-XXX-XXXX" />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={LBL}>Contact Email</label>
+                    <input type="email" style={INP} value={(draft as WorkOrder & { contact_email?: string }).contact_email ?? wo.contact_email ?? ''} onChange={e => update('contact_email', e.target.value)} placeholder="email@example.com" />
                   </div>
                   <div>
                     <label style={LBL}>Address</label>

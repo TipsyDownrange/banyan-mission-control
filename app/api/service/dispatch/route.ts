@@ -104,15 +104,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      customerName, address, city, island,
+      businessName, customerName, address, city, island, areaOfIsland,
       contactPerson, contactPhone, contactEmail, contactTitle,
       description, systemType, urgency,
       assignedTo, notes, woNumber, dateReceived,
     } = body;
 
-    if (!customerName || !description) {
+    if ((!businessName && !customerName) || !description) {
       return NextResponse.json(
-        { error: 'customerName and description are required' },
+        { error: 'customerName (or businessName) and description are required' },
         { status: 400 }
       );
     }
@@ -138,7 +138,9 @@ export async function POST(req: Request) {
       wo = `${yr}-${String(nextNum).padStart(4, '0')}`;
     }
     const woId = `WO-${wo.replace(/[^A-Za-z0-9\-]/g, '')}`;
-    const name = systemType ? `${customerName} — ${systemType}` : customerName;
+    // Column C (name): use businessName if provided; otherwise derive from customerName + systemType
+    const name = businessName ||
+      (systemType ? `${customerName} — ${systemType}` : customerName);
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
     // Create Drive folder structure before writing the sheet row
@@ -152,14 +154,14 @@ export async function POST(req: Request) {
       name,           // name
       description,    // description
       'lead',         // status — new WOs start as New Lead
-      island || city || '', // island
-      island || city || '', // area_of_island
-      [address, city].filter(Boolean).join(', '), // address
-      contactPerson || '',   // contact_person
-      contactTitle || '',    // contact_title
-      contactPhone || '',    // contact_phone
-      contactEmail || '',    // contact_email
-      customerName,          // customer_name
+      island || city || '',                           // island (F)
+      areaOfIsland || island || city || '',            // area_of_island (G)
+      [address, city].filter(Boolean).join(', '),      // address (H)
+      contactPerson || '',                             // contact_person (I)
+      contactTitle || '',                              // contact_title (J)
+      contactPhone || '',                              // contact_phone (K)
+      contactEmail || '',                              // contact_email (L)
+      customerName || businessName || '',              // customer_name (M)
       systemType || '',      // system_type
       assignedTo || '',      // assigned_to
       today,                 // date_received
@@ -188,7 +190,7 @@ export async function POST(req: Request) {
 
     // Fire-and-forget customer DB backfeed — never blocks WO creation
     fireAndForgetCustomerUpdate({
-      name:           customerName,
+      name:           customerName || businessName || '',
       island:         island || city || '',
       address:        address,
       city:           city,

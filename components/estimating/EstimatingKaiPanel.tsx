@@ -66,8 +66,8 @@ const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?:
     actions: ['Upload Plans', 'Upload Specs'],
   },
   carls: {
-    title: "Carl's Method",
-    suggestion: "Kai can sync from the detailed estimate to pre-fill Carl's Method. Manual overrides are preserved.",
+    title: "Simple Estimate",
+    suggestion: "Kai can sync from the detailed estimate to pre-fill Simple Estimate. Manual overrides are preserved.",
     actions: ['Sync from Estimate', 'Export PDF'],
   },
   takeoff: {
@@ -93,7 +93,7 @@ const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?:
   proposal: {
     title: 'Proposal',
     suggestion: 'Once estimate is complete, generate the customer proposal with one click.',
-    actions: ['Generate Proposal', "Generate Carl's PDF"],
+    actions: ['Generate Proposal', "Generate Estimate PDF"],
   },
   gold: {
     title: 'Gold Data',
