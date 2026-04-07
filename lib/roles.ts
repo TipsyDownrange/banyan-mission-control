@@ -110,7 +110,7 @@ export function navSectionsForRole(role: string): string[] {
 
 export function hiddenItemsForRole(role: string): string[] {
   switch (role) {
-    case 'estimator': return ['Forecasting', 'Dispatch Board', 'Event Feed', 'Issues'];
+    case 'estimator': return ['Forecasting', 'Dispatch Board', 'Event Feed', 'Issues', 'Step Library'];
     case 'super':     return ['Event Feed', 'Issues'];
     case 'glazier':   return ['Inbox', 'Crew', 'Customers', 'Assets'];
     default:          return [];
