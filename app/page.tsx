@@ -183,7 +183,7 @@ export default function Home() {
         {activeView === 'Customers'     && <CustomersPanel />}
         {activeView === 'Assets'        && <AssetsPanel />}
         {activeView === 'Org Chart'     && <OrgChartPanel />}
-        {activeView === 'Forecasting'   && <SchedulingPanel readOnly={isReadOnly('Forecasting')} />}
+        {activeView === 'Forecasting'   && <SuperSchedulingPanel />}
         {activeView === 'Scheduling'     && <SuperSchedulingPanel />}
         {activeView === 'Dispatch Board'&& <DispatchBoard />}
         {activeView === 'Schedule'        && <DispatchBoard />}
