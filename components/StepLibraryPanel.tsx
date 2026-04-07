@@ -16,6 +16,27 @@ interface Template {
   steps: Step[];
 }
 
+interface GoldDataEntry {
+  system_type: string;
+  step_name: string;
+  step_category: string;
+  avg_hours: number;
+  sample_count: number;
+  min_hours: number;
+  max_hours: number;
+  avg_allotted: number;
+  avg_delta: number;
+  last_updated: string;
+}
+
+interface GoldSummary {
+  templates_with_data: number;
+  most_accurate: { template: string; avg_abs_delta: number } | null;
+  needs_review: { template: string; avg_delta: number } | null;
+  last_computed: string;
+  by_step: GoldDataEntry[];
+}
+
 const CATEGORIES = [
   'Mobilization',
   'Delivery',
@@ -51,6 +72,178 @@ function Toast({ message, type }: { message: string; type: 'success' | 'error' }
   );
 }
 
+// ─── Delta Badge ──────────────────────────────────────────────────────────────
+function DeltaBadge({ delta }: { delta: number }) {
+  const abs = Math.abs(delta);
+  const sign = delta > 0 ? '+' : '-';
+  const color = delta > 0 ? 'rgba(239,68,68,0.85)' : 'rgba(34,197,94,0.85)';
+  const arrow = delta > 0 ? '↑' : '↓';
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 2,
+      background: delta > 0 ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)',
+      color, fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 99,
+      letterSpacing: '0.02em',
+    }}>
+      {arrow} {sign}{abs.toFixed(1)}h
+    </span>
+  );
+}
+
+// ─── Gold Data Cell ───────────────────────────────────────────────────────────
+function GoldCell({ entry, defaultHours, onUpdateFromActuals }: {
+  entry: GoldDataEntry | null;
+  defaultHours: number;
+  onUpdateFromActuals: () => void;
+}) {
+  if (!entry || entry.sample_count === 0) {
+    return (
+      <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.35)', fontStyle: 'italic' }}>
+        No data yet
+      </div>
+    );
+  }
+
+  const delta = entry.avg_hours - defaultHours;
+  const pctDelta = defaultHours > 0 ? Math.abs(delta) / defaultHours : 0;
+  const significantlyOff = pctDelta > 0.2;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(148,163,184,0.8)' }}>
+          {entry.avg_hours.toFixed(1)}h
+        </span>
+        <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.35)' }}>
+          n={entry.sample_count}
+        </span>
+        <DeltaBadge delta={delta} />
+      </div>
+      {significantlyOff && (
+        <button
+          onClick={onUpdateFromActuals}
+          title={`Update default hours from ${defaultHours}h → ${entry.avg_hours.toFixed(1)}h`}
+          style={{
+            background: 'none',
+            border: '1px solid rgba(148,163,184,0.2)',
+            borderRadius: 5, padding: '2px 8px',
+            color: 'rgba(148,163,184,0.5)', fontSize: 10, fontWeight: 600,
+            cursor: 'pointer', transition: 'all 0.12s',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'rgba(20,184,166,0.4)';
+            e.currentTarget.style.color = '#14b8a6';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)';
+            e.currentTarget.style.color = 'rgba(148,163,184,0.5)';
+          }}
+        >
+          ↺ Use actuals
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Gold Data Summary Card ───────────────────────────────────────────────────
+function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
+  summary: GoldSummary | null;
+  totalTemplates: number;
+  onRefresh: () => void;
+  refreshing: boolean;
+}) {
+  if (!summary) return null;
+
+  const hasData = summary.templates_with_data > 0;
+  const lastComputed = summary.last_computed
+    ? new Date(summary.last_computed).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : null;
+
+  return (
+    <div style={{
+      margin: '0 28px 20px',
+      background: 'linear-gradient(135deg, rgba(20,184,166,0.06) 0%, rgba(13,148,136,0.03) 100%)',
+      border: '1px solid rgba(20,184,166,0.15)',
+      borderRadius: 12, padding: '14px 18px',
+      display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap',
+    }}>
+      {/* Coverage */}
+      <div style={{ minWidth: 160 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(20,184,166,0.5)', marginBottom: 4 }}>
+          Gold Data Coverage
+        </div>
+        {hasData ? (
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+            <span style={{ color: '#14b8a6', fontWeight: 800 }}>{summary.templates_with_data}</span>
+            {totalTemplates > 0 && <span style={{ color: 'rgba(148,163,184,0.5)' }}> of {totalTemplates}</span>}
+            <span style={{ color: 'rgba(148,163,184,0.5)' }}> system types have actuals</span>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'rgba(148,163,184,0.4)', fontStyle: 'italic' }}>No field data yet</div>
+        )}
+      </div>
+
+      {/* Most accurate */}
+      {summary.most_accurate && (
+        <div style={{ minWidth: 180 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(34,197,94,0.5)', marginBottom: 4 }}>
+            Most Accurate
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+            <span style={{ color: 'rgba(34,197,94,0.8)' }}>{summary.most_accurate.template}</span>
+            <span style={{ color: 'rgba(148,163,184,0.5)', marginLeft: 6, fontSize: 11 }}>
+              ±{summary.most_accurate.avg_abs_delta.toFixed(1)}h avg
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Needs review */}
+      {summary.needs_review && Math.abs(summary.needs_review.avg_delta) > 0.1 && (
+        <div style={{ minWidth: 200 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(239,68,68,0.5)', marginBottom: 4 }}>
+            Needs Review
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+            <span style={{ color: 'rgba(239,68,68,0.8)' }}>{summary.needs_review.template}</span>
+            <span style={{ color: 'rgba(148,163,184,0.5)', marginLeft: 6, fontSize: 11 }}>
+              avg {summary.needs_review.avg_delta > 0 ? '+' : ''}{summary.needs_review.avg_delta.toFixed(1)}h vs estimate
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Last computed + refresh */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+        {lastComputed && (
+          <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.35)' }}>
+            Last computed: {lastComputed}
+          </div>
+        )}
+        <button
+          onClick={onRefresh}
+          disabled={refreshing}
+          style={{
+            background: 'rgba(20,184,166,0.1)',
+            border: '1px solid rgba(20,184,166,0.25)',
+            borderRadius: 7, padding: '5px 12px',
+            color: refreshing ? 'rgba(148,163,184,0.4)' : '#14b8a6',
+            fontSize: 11, fontWeight: 700, cursor: refreshing ? 'default' : 'pointer',
+            transition: 'all 0.12s',
+          }}
+        >
+          {refreshing ? 'Computing…' : '⟳ Refresh Gold Data'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function StepLibraryPanel() {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -62,12 +255,17 @@ export default function StepLibraryPanel() {
   const [pendingName, setPendingName] = useState('');
   const [search, setSearch] = useState('');
 
+  // Gold data state
+  const [goldSummary, setGoldSummary] = useState<GoldSummary | null>(null);
+  const [goldLoading, setGoldLoading] = useState(false);
+  const [refreshingGold, setRefreshingGold] = useState(false);
+
   function showToast(message: string, type: 'success' | 'error' = 'success') {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }
 
-  // ── Load ─────────────────────────────────────────────────────────────────
+  // ── Load templates ────────────────────────────────────────────────────────
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
@@ -98,6 +296,86 @@ export default function StepLibraryPanel() {
   }, [selectedName]);
 
   useEffect(() => { loadTemplates(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Load gold data (read-only, from Production_Rates) ────────────────────
+  const loadGoldData = useCallback(async () => {
+    setGoldLoading(true);
+    try {
+      const res = await fetch('/api/gold-data');
+      const data = await res.json();
+      if (data.ok && data.summary) {
+        setGoldSummary(data.summary as GoldSummary);
+      }
+    } catch {
+      // Gold data is optional; fail silently
+    }
+    setGoldLoading(false);
+  }, []);
+
+  useEffect(() => { loadGoldData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Refresh gold data (triggers computation) ──────────────────────────────
+  async function handleRefreshGoldData() {
+    setRefreshingGold(true);
+    try {
+      const res = await fetch('/api/gold-data', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        // Reload from Production_Rates
+        await loadGoldData();
+        showToast('Gold data refreshed!');
+      } else {
+        showToast(data.error || 'Failed to compute gold data', 'error');
+      }
+    } catch {
+      showToast('Failed to compute gold data', 'error');
+    }
+    setRefreshingGold(false);
+  }
+
+  // ── Get gold entry for a step (by system_type = selected template name, step_name) ─
+  function getGoldEntry(templateName: string, stepName: string): GoldDataEntry | null {
+    if (!goldSummary) return null;
+    return goldSummary.by_step.find(
+      e => e.system_type === templateName && e.step_name === stepName
+    ) || null;
+  }
+
+  // ── Update from actuals ───────────────────────────────────────────────────
+  async function handleUpdateFromActuals(step: Step, goldEntry: GoldDataEntry) {
+    if (!selected) return;
+    const newHours = parseFloat(goldEntry.avg_hours.toFixed(2));
+    if (!confirm(`Update "${step.step_name}" default hours from ${step.default_hours}h → ${newHours}h?`)) return;
+
+    setSaving(true);
+    try {
+      // Update local state immediately
+      updateSelected(t => ({
+        ...t,
+        steps: t.steps.map(s => s.id === step.id ? { ...s, default_hours: newHours } : s),
+      }));
+
+      // Persist to sheet via gold-data PATCH
+      const res = await fetch('/api/gold-data', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template_name: selected.name,
+          step_name: step.step_name,
+          new_default_hours: newHours,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        showToast(d.error || 'Failed to update step hours', 'error');
+      } else {
+        showToast(`Updated "${step.step_name}" to ${newHours}h`);
+      }
+    } catch {
+      showToast('Failed to update step hours', 'error');
+    }
+    setSaving(false);
+  }
 
   // ── Selected template ─────────────────────────────────────────────────────
   const selected = templates.find(t => t.name === selectedName) || null;
@@ -274,10 +552,28 @@ export default function StepLibraryPanel() {
     });
   }
 
+  // ── Template-level gold summary ───────────────────────────────────────────
+  function templateGoldSummary(t: Template) {
+    if (!goldSummary || goldSummary.by_step.length === 0) return null;
+    const entries = t.steps
+      .map(s => goldSummary.by_step.find(e => e.system_type === t.name && e.step_name === s.step_name))
+      .filter(Boolean) as GoldDataEntry[];
+    if (entries.length === 0) return null;
+    const totalActual = entries.reduce((sum, e) => sum + e.avg_hours, 0);
+    const totalEstimated = t.steps.reduce((sum, s) => {
+      const e = goldSummary.by_step.find(e => e.system_type === t.name && e.step_name === s.step_name);
+      return e ? sum + s.default_hours : sum;
+    }, 0);
+    return { totalActual, totalEstimated, covered: entries.length, total: t.steps.length };
+  }
+
   // ── Filtered sidebar ──────────────────────────────────────────────────────
   const filteredTemplates = templates.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // ── Gold data for current template ────────────────────────────────────────
+  const selectedGold = selected ? templateGoldSummary(selected) : null;
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -338,6 +634,7 @@ export default function StepLibraryPanel() {
             filteredTemplates.map(t => {
               const isActive = t.name === selectedName;
               const hrs = totalHours(t.steps);
+              const gs = templateGoldSummary(t);
               return (
                 <button
                   key={t.name}
@@ -365,7 +662,12 @@ export default function StepLibraryPanel() {
                     </span>
                   </div>
                   <div style={{ fontSize: 11, color: isActive ? 'rgba(20,184,166,0.7)' : 'rgba(148,163,184,0.4)' }}>
-                    {hrs.toFixed(1)} hrs total
+                    {hrs.toFixed(1)} hrs
+                    {gs && (
+                      <span style={{ color: isActive ? 'rgba(20,184,166,0.5)' : 'rgba(148,163,184,0.3)', marginLeft: 6 }}>
+                        · {gs.totalActual.toFixed(1)}h actual
+                      </span>
+                    )}
                   </div>
                 </button>
               );
@@ -423,8 +725,16 @@ export default function StepLibraryPanel() {
                       </button>
                     </div>
                   )}
-                  <div style={{ marginTop: 4, fontSize: 12, color: 'rgba(148,163,184,0.5)' }}>
-                    {selected.steps.length} steps · {totalHours(selected.steps).toFixed(1)} hrs total
+                  <div style={{ marginTop: 4, fontSize: 12, color: 'rgba(148,163,184,0.5)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span>{selected.steps.length} steps · {totalHours(selected.steps).toFixed(1)} hrs estimated</span>
+                    {selectedGold && (
+                      <span style={{ color: 'rgba(20,184,166,0.6)' }}>
+                        · {selectedGold.totalActual.toFixed(1)} hrs actual
+                        <span style={{ marginLeft: 6 }}>
+                          <DeltaBadge delta={selectedGold.totalActual - selectedGold.totalEstimated} />
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -447,21 +757,32 @@ export default function StepLibraryPanel() {
               </div>
             </div>
 
+            {/* Gold Data Summary Card */}
+            <GoldSummaryCard
+              summary={goldSummary}
+              totalTemplates={templates.length}
+              onRefresh={handleRefreshGoldData}
+              refreshing={refreshingGold}
+            />
+
             {/* Steps */}
-            <div style={{ flex: 1, padding: '20px 28px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, padding: '0 28px 20px', overflowY: 'auto' }}>
               {/* Column headers */}
               {selected.steps.length > 0 && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '36px 1fr 90px 180px 1fr 40px 36px',
+                  gridTemplateColumns: '36px 1fr 90px 140px 160px 1fr 40px 36px',
                   gap: 8, padding: '0 8px 8px',
                   fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
                   color: 'rgba(148,163,184,0.4)',
                 }}>
                   <div />
                   <div>Step Name</div>
-                  <div>Hours</div>
+                  <div>Est. Hours</div>
                   <div>Category</div>
+                  <div style={{ color: 'rgba(20,184,166,0.4)' }}>
+                    Gold Data {goldLoading && <span style={{ fontWeight: 400 }}>(loading…)</span>}
+                  </div>
                   <div>Notes</div>
                   <div />
                   <div />
@@ -474,86 +795,96 @@ export default function StepLibraryPanel() {
                   No steps yet. Click "+ Add Step" to get started.
                 </div>
               ) : (
-                selected.steps.map((step, idx) => (
-                  <div
-                    key={step.id}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '36px 1fr 90px 180px 1fr 40px 36px',
-                      gap: 8, alignItems: 'center',
-                      background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
-                      borderRadius: 8, padding: '6px 8px', marginBottom: 4,
-                    }}
-                  >
-                    {/* Order arrows */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-                      <button
-                        onClick={() => moveStep(step.id, -1)}
-                        disabled={idx === 0}
-                        style={{ background: 'none', border: 'none', color: idx === 0 ? 'rgba(148,163,184,0.15)' : 'rgba(148,163,184,0.5)', cursor: idx === 0 ? 'default' : 'pointer', fontSize: 12, lineHeight: 1, padding: '2px 4px' }}
-                      >▲</button>
-                      <button
-                        onClick={() => moveStep(step.id, 1)}
-                        disabled={idx === selected.steps.length - 1}
-                        style={{ background: 'none', border: 'none', color: idx === selected.steps.length - 1 ? 'rgba(148,163,184,0.15)' : 'rgba(148,163,184,0.5)', cursor: idx === selected.steps.length - 1 ? 'default' : 'pointer', fontSize: 12, lineHeight: 1, padding: '2px 4px' }}
-                      >▼</button>
-                    </div>
-
-                    {/* Step name */}
-                    <input
-                      value={step.step_name}
-                      onChange={e => handleStepChange(step.id, 'step_name', e.target.value)}
-                      placeholder="Step name…"
-                      style={inputStyle()}
-                    />
-
-                    {/* Hours */}
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={step.default_hours}
-                      onChange={e => handleStepChange(step.id, 'default_hours', parseFloat(e.target.value) || 0)}
-                      style={inputStyle()}
-                    />
-
-                    {/* Category */}
-                    <select
-                      value={step.category}
-                      onChange={e => handleStepChange(step.id, 'category', e.target.value)}
+                selected.steps.map((step, idx) => {
+                  const goldEntry = getGoldEntry(selected.name, step.step_name);
+                  return (
+                    <div
+                      key={step.id}
                       style={{
-                        ...inputStyle(),
-                        background: 'rgba(255,255,255,0.05)',
-                        cursor: 'pointer',
+                        display: 'grid',
+                        gridTemplateColumns: '36px 1fr 90px 140px 160px 1fr 40px 36px',
+                        gap: 8, alignItems: 'center',
+                        background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+                        borderRadius: 8, padding: '6px 8px', marginBottom: 4,
                       }}
                     >
-                      {CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#0d1f2d' }}>{c}</option>)}
-                    </select>
+                      {/* Order arrows */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                        <button
+                          onClick={() => moveStep(step.id, -1)}
+                          disabled={idx === 0}
+                          style={{ background: 'none', border: 'none', color: idx === 0 ? 'rgba(148,163,184,0.15)' : 'rgba(148,163,184,0.5)', cursor: idx === 0 ? 'default' : 'pointer', fontSize: 12, lineHeight: 1, padding: '2px 4px' }}
+                        >▲</button>
+                        <button
+                          onClick={() => moveStep(step.id, 1)}
+                          disabled={idx === selected.steps.length - 1}
+                          style={{ background: 'none', border: 'none', color: idx === selected.steps.length - 1 ? 'rgba(148,163,184,0.15)' : 'rgba(148,163,184,0.5)', cursor: idx === selected.steps.length - 1 ? 'default' : 'pointer', fontSize: 12, lineHeight: 1, padding: '2px 4px' }}
+                        >▼</button>
+                      </div>
 
-                    {/* Notes */}
-                    <input
-                      value={step.notes}
-                      onChange={e => handleStepChange(step.id, 'notes', e.target.value)}
-                      placeholder="Notes…"
-                      style={inputStyle()}
-                    />
+                      {/* Step name */}
+                      <input
+                        value={step.step_name}
+                        onChange={e => handleStepChange(step.id, 'step_name', e.target.value)}
+                        placeholder="Step name…"
+                        style={inputStyle()}
+                      />
 
-                    {/* Seq badge */}
-                    <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(148,163,184,0.3)', fontWeight: 600 }}>
-                      {idx + 1}
+                      {/* Est. Hours */}
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={step.default_hours}
+                        onChange={e => handleStepChange(step.id, 'default_hours', parseFloat(e.target.value) || 0)}
+                        style={inputStyle()}
+                      />
+
+                      {/* Category */}
+                      <select
+                        value={step.category}
+                        onChange={e => handleStepChange(step.id, 'category', e.target.value)}
+                        style={{
+                          ...inputStyle(),
+                          background: 'rgba(255,255,255,0.05)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#0d1f2d' }}>{c}</option>)}
+                      </select>
+
+                      {/* Gold Data column */}
+                      <GoldCell
+                        entry={goldEntry}
+                        defaultHours={step.default_hours}
+                        onUpdateFromActuals={() => goldEntry && handleUpdateFromActuals(step, goldEntry)}
+                      />
+
+                      {/* Notes */}
+                      <input
+                        value={step.notes}
+                        onChange={e => handleStepChange(step.id, 'notes', e.target.value)}
+                        placeholder="Notes…"
+                        style={inputStyle()}
+                      />
+
+                      {/* Seq badge */}
+                      <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(148,163,184,0.3)', fontWeight: 600 }}>
+                        {idx + 1}
+                      </div>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => handleDeleteStep(step.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(239,68,68,0.5)', fontSize: 16, lineHeight: 1, padding: '4px', borderRadius: 6, transition: 'color 0.12s' }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.9)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.5)')}
+                      >
+                        ×
+                      </button>
                     </div>
-
-                    {/* Delete */}
-                    <button
-                      onClick={() => handleDeleteStep(step.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(239,68,68,0.5)', fontSize: 16, lineHeight: 1, padding: '4px', borderRadius: 6, transition: 'color 0.12s' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.9)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.5)')}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
 
               {/* Add step + auto-save row */}
