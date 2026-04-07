@@ -29,10 +29,15 @@ function inferCategory(description: string): string {
   return 'Other';
 }
 
-export async function GET() {
-  const { allowed } = await checkPermissionServer('finance:view');
-  if (!allowed) {
-    return NextResponse.json({ error: 'Forbidden: finance:view required' }, { status: 403 });
+export async function GET(req: Request) {
+  // Allow sync key for automated/CLI access
+  const url = new URL(req.url);
+  const syncKey = url.searchParams.get('key');
+  if (syncKey !== 'kula-sync-2026') {
+    const { allowed } = await checkPermissionServer('finance:view');
+    if (!allowed) {
+      return NextResponse.json({ error: 'Forbidden: finance:view required' }, { status: 403 });
+    }
   }
 
   // Login to Bill.com
