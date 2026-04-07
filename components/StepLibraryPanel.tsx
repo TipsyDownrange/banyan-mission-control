@@ -73,7 +73,10 @@ export default function StepLibraryPanel() {
     try {
       const res = await fetch('/api/step-templates');
       const data = await res.json();
-      if (data.templates) {
+      if (data.error) {
+        console.error('Step templates API error:', data.error);
+        showToast(`API error: ${data.error}`, 'error');
+      } else if (data.templates) {
         const parsed: Template[] = Object.entries(data.templates).map(([name, steps]) => ({
           name,
           steps: (steps as { step_seq: number; step_name: string; default_hours: number; category: string; notes: string }[]).map(s => ({

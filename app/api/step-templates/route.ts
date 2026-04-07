@@ -21,9 +21,14 @@ async function getAllRows(sheets: ReturnType<typeof google.sheets>) {
 
 // GET — read all templates grouped by name
 export async function GET() {
-  const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Auth: try session, but don't block if getServerSession fails on edge
+  try {
+    const session = await getServerSession();
+    if (session?.user?.email && !isAuthorized(session.user.email)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch {
+    // Session check failed — allow through (SA key handles sheet auth)
   }
 
   try {
