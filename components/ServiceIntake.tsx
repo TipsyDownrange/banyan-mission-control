@@ -411,6 +411,19 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               subField="contactPerson"
             />
           </div>
+          <div>
+            {FL('Contact Email', customers.some(c => c.email))}
+            <AutocompleteInput
+              value={draft.contactEmail}
+              onChange={v => update('contactEmail', v)}
+              onSelect={c => setDraft(prev => applyCustomer(prev, c, 'contactEmail'))}
+              placeholder="email@example.com"
+              style={INP}
+              customers={customers}
+              matchField="email"
+              subField="contactPerson"
+            />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
