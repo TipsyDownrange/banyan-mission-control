@@ -19,6 +19,7 @@ interface BulkTemplateStep {
   allotted_hours: number;
   acceptance_criteria?: string;
   required_photo_yn?: string;
+  category?: string;
 }
 
 function rowToInstallPlan(r: string[]) {
@@ -42,6 +43,7 @@ function rowToInstallStep(r: string[]) {
     allotted_hours: parseFloat(r[4]) || 0,
     acceptance_criteria: r[5] || '',
     required_photo_yn: r[6] || 'N',
+    category: r[8] || '',
   };
 }
 
@@ -153,14 +155,14 @@ export async function POST(
     }
 
     if (type === 'step') {
-      const { install_plan_id, step_seq, step_name, allotted_hours, acceptance_criteria, required_photo_yn } = body;
+      const { install_plan_id, step_seq, step_name, allotted_hours, acceptance_criteria, required_photo_yn, category } = body;
       const newId = `IS-${Date.now()}`;
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
         range: 'Install_Steps!A:G',
         valueInputOption: 'RAW',
         requestBody: {
-          values: [[newId, install_plan_id, step_seq || 1, step_name || '', allotted_hours || 0, acceptance_criteria || '', required_photo_yn || 'N']],
+          values: [[newId, install_plan_id, step_seq || 1, step_name || '', allotted_hours || 0, acceptance_criteria || '', required_photo_yn || 'N', '', category || '']],
         },
       });
       return NextResponse.json({ install_step_id: newId });
@@ -360,10 +362,12 @@ export async function PATCH(
         fields.allotted_hours ?? existing[4],
         fields.acceptance_criteria ?? existing[5],
         fields.required_photo_yn ?? existing[6],
+        existing[7] || '',
+        fields.category ?? existing[8] ?? '',
       ];
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `Install_Steps!A${sheetRow}:G${sheetRow}`,
+        range: `Install_Steps!A${sheetRow}:I${sheetRow}`,
         valueInputOption: 'RAW',
         requestBody: { values: [updated] },
       });

@@ -21,7 +21,13 @@ interface InstallStep {
   allotted_hours: number;
   acceptance_criteria: string;
   required_photo_yn: string;
+  category?: string;
 }
+
+const STEP_CATEGORIES = [
+  'Mobilization', 'Delivery', 'Material Handling', 'Spotting',
+  'Installation', 'Demobilization', 'QA/Punch', 'Admin/Paperwork',
+] as const;
 
 interface StepCompletion {
   step_completion_id: string;
@@ -989,6 +995,30 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   PHOTO
                 </span>
               )}
+              {!readOnly ? (
+                <select
+                  value={step.category || ''}
+                  onChange={async (e) => {
+                    try {
+                      await fetch(`/api/work-breakdown/${jobId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'step', id: step.install_step_id, category: e.target.value }),
+                      });
+                      await loadData();
+                    } catch {}
+                  }}
+                  onClick={e => e.stopPropagation()}
+                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid #e2e8f0', background: step.category ? '#f0fdfa' : 'white', color: step.category ? '#0f766e' : '#94a3b8', cursor: 'pointer', outline: 'none' }}
+                >
+                  <option value="">Category</option>
+                  {STEP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              ) : step.category ? (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#f0fdfa', color: '#0f766e', border: '1px solid rgba(15,118,110,0.15)' }}>
+                  {step.category}
+                </span>
+              ) : null}
             </div>
             {step.acceptance_criteria && (
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{step.acceptance_criteria}</div>
