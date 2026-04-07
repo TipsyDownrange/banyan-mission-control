@@ -54,6 +54,29 @@ type WOData = {
   assignedTo: string;
 };
 
+type QuoteConfig = {
+  config_id: string;
+  job_id: string;
+  config_name: string;
+  version: string;
+  status: string;
+  created_at: string;
+  created_by: string;
+  total_amount: string;
+  labor_json: string;
+  materials_json: string;
+  markup_pct: string;
+  get_rate: string;
+  overhead_method: string;
+  breakdown_type: string;
+  notes: string;
+  quote_pdf_url: string;
+  versions?: QuoteConfig[];
+  versionCount?: number;
+};
+
+type BreakdownType = 'lump_sum' | 'per_floor' | 'per_sqft' | 'per_elevation' | 'per_unit';
+
 // ─── Drive time lookup ────────────────────────────────────────────────────────
 
 function lookupDriveHours(address: string): number {
@@ -68,7 +91,6 @@ function lookupDriveHours(address: string): number {
   if (a.includes('kula') || a.includes('makawao') || a.includes('pukalani')) return 1;
   if (a.includes('wailuku')) return 0.5;
   if (a.includes('kahului')) return 0.5;
-  // Default for unknown
   return 1;
 }
 
@@ -111,7 +133,6 @@ function uid() { return `id-${++_id}-${Math.random().toString(36).slice(2, 6)}`;
 
 const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
 
-// Green input (editable)
 const GREEN_INPUT: React.CSSProperties = {
   padding: '6px 10px',
   border: '1px solid rgba(20,184,166,0.35)',
@@ -126,7 +147,6 @@ const GREEN_INPUT: React.CSSProperties = {
   width: '100%',
 };
 
-// Orange display (auto-calc)
 const ORANGE_DISPLAY: React.CSSProperties = {
   padding: '6px 10px',
   border: '1px solid rgba(245,158,11,0.3)',
@@ -155,6 +175,13 @@ function fmt(n: number): string {
 
 function fmtNum(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(iso: string): string {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return iso; }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -247,6 +274,261 @@ function Divider() {
   return <div style={{ borderTop: '1px solid #e2e8f0', margin: '6px 0' }} />;
 }
 
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  return (
+    <div style={{
+      position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+      background: '#0f172a', color: 'white', borderRadius: 12, padding: '10px 20px',
+      fontSize: 13, fontWeight: 700, fontFamily: FONT, zIndex: 9999,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.25)', whiteSpace: 'nowrap',
+    }}>
+      ✓ {message}
+    </div>
+  );
+}
+
+// ─── Version Badge ─────────────────────────────────────────────────────────────
+
+function VersionBadge({ version }: { version: string | number }) {
+  return (
+    <span style={{
+      fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 999,
+      background: 'rgba(99,102,241,0.12)', color: '#6366f1',
+      border: '1px solid rgba(99,102,241,0.25)', fontFamily: FONT, letterSpacing: '0.05em',
+    }}>
+      v{version}
+    </span>
+  );
+}
+
+// ─── Save Config Modal ────────────────────────────────────────────────────────
+
+function SaveConfigModal({
+  onSave, onClose, initialName = '', isSaveAs = false,
+}: {
+  onSave: (name: string, breakdown: BreakdownType, notes: string) => void;
+  onClose: () => void;
+  initialName?: string;
+  isSaveAs?: boolean;
+}) {
+  const [name, setName] = useState(initialName);
+  const [breakdown, setBreakdown] = useState<BreakdownType>('lump_sum');
+  const [notes, setNotes] = useState('');
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{
+        background: 'white', borderRadius: 20, padding: 28, width: 420,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.18)', fontFamily: FONT,
+      }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+          {isSaveAs ? 'Save as New Configuration' : 'Save Configuration'}
+        </div>
+        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>
+          {isSaveAs ? 'Creates a separate configuration from the current state.' : 'Saves all quote data. Future edits will create new versions.'}
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Configuration Name</label>
+          <input
+            autoFocus
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="e.g. Base Bid — Arcadia glass"
+            style={{ ...GREEN_INPUT, fontSize: 14 }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Breakdown Type</label>
+          <select
+            value={breakdown}
+            onChange={e => setBreakdown(e.target.value as BreakdownType)}
+            style={{ ...GREEN_INPUT, cursor: 'pointer', WebkitAppearance: 'none' }}
+          >
+            <option value="lump_sum">Lump Sum (single total)</option>
+            <option value="per_floor">Per Floor</option>
+            <option value="per_sqft">Per Square Foot</option>
+            <option value="per_elevation">Per Elevation</option>
+            <option value="per_unit">Per Unit</option>
+          </select>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={2}
+            placeholder="What makes this config unique?"
+            style={{ ...GREEN_INPUT, resize: 'none', lineHeight: 1.5 }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button
+            onClick={() => { if (name.trim()) onSave(name.trim(), breakdown, notes); }}
+            disabled={!name.trim()}
+            style={{
+              flex: 2, padding: '11px', borderRadius: 12, border: 'none',
+              background: name.trim() ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+              color: name.trim() ? 'white' : '#94a3b8', fontSize: 13, fontWeight: 700,
+              cursor: name.trim() ? 'pointer' : 'default',
+              boxShadow: name.trim() ? '0 4px 16px rgba(15,118,110,0.3)' : 'none',
+            }}
+          >
+            💾 Save Configuration
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Compare Modal ────────────────────────────────────────────────────────────
+
+function CompareModal({
+  configs, onClose,
+}: {
+  configs: QuoteConfig[];
+  onClose: () => void;
+}) {
+  const [leftId, setLeftId] = useState(configs[0]?.config_id || '');
+  const [rightId, setRightId] = useState(configs[1]?.config_id || '');
+
+  const left = configs.find(c => c.config_id === leftId);
+  const right = configs.find(c => c.config_id === rightId);
+
+  function parseLaborTotal(config: QuoteConfig): number {
+    try {
+      const steps = JSON.parse(config.labor_json || '[]') as Array<{ amount?: number; hours?: number; rate?: number }>;
+      return steps.reduce((sum, s) => sum + (s.amount || (s.hours || 0) * (s.rate || 0)), 0);
+    } catch { return 0; }
+  }
+
+  function parseMatTotal(config: QuoteConfig): number {
+    try {
+      const mats = JSON.parse(config.materials_json || '{}');
+      const allLines: Array<{ totalOverride?: string; qty?: string; unitCost?: string }> = [
+        ...(mats.mainMaterials || []),
+        ...(mats.consumables || []),
+        ...(mats.freight || []),
+      ];
+      return allLines.reduce((sum, m) => {
+        if (m.totalOverride) return sum + parseNum(m.totalOverride);
+        return sum + parseNum(m.qty || '0') * parseNum(m.unitCost || '0');
+      }, 0);
+    } catch { return 0; }
+  }
+
+  const isDiff = (a: string | number, b: string | number) => String(a) !== String(b);
+
+  const CompareCell = ({ label, leftVal, rightVal }: { label: string; leftVal: string; rightVal: string }) => {
+    const diff = isDiff(leftVal, rightVal);
+    return (
+      <div style={{ display: 'contents' }}>
+        <div style={{ padding: '8px 10px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #f1f5f9' }}>{label}</div>
+        <div style={{ padding: '8px 10px', fontSize: 13, fontVariantNumeric: 'tabular-nums', borderBottom: '1px solid #f1f5f9', background: diff ? 'rgba(234,179,8,0.08)' : undefined, fontWeight: diff ? 700 : 400 }}>{leftVal}</div>
+        <div style={{ padding: '8px 10px', fontSize: 13, fontVariantNumeric: 'tabular-nums', borderBottom: '1px solid #f1f5f9', background: diff ? 'rgba(234,179,8,0.08)' : undefined, fontWeight: diff ? 700 : 400 }}>{rightVal}</div>
+      </div>
+    );
+  };
+
+  const leftTotal = left ? parseNum(left.total_amount) : 0;
+  const rightTotal = right ? parseNum(right.total_amount) : 0;
+  const diff = leftTotal - rightTotal;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 680, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.2)', fontFamily: FONT }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Compare Configurations</div>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: '#94a3b8' }}>×</button>
+        </div>
+
+        {/* Config selectors */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Config A</label>
+            <select value={leftId} onChange={e => setLeftId(e.target.value)} style={{ ...GREEN_INPUT, cursor: 'pointer' }}>
+              {configs.map(c => <option key={c.config_id} value={c.config_id}>{c.config_name} (v{c.version})</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Config B</label>
+            <select value={rightId} onChange={e => setRightId(e.target.value)} style={{ ...GREEN_INPUT, cursor: 'pointer' }}>
+              {configs.map(c => <option key={c.config_id} value={c.config_id}>{c.config_name} (v{c.version})</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Difference summary */}
+        {left && right && diff !== 0 && (
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', fontSize: 12, color: '#92400e', fontWeight: 700, marginBottom: 16 }}>
+            {diff > 0
+              ? `Config A is ${fmt(Math.abs(diff))} more expensive${parseLaborTotal(left) > parseLaborTotal(right) ? ` and uses ${Math.round((parseLaborTotal(left) - parseLaborTotal(right)) / 120)} more labor hours` : ''}.`
+              : `Config B is ${fmt(Math.abs(diff))} more expensive${parseLaborTotal(right) > parseLaborTotal(left) ? ` and uses ${Math.round((parseLaborTotal(right) - parseLaborTotal(left)) / 120)} more labor hours` : ''}.`
+            }
+          </div>
+        )}
+
+        {/* Comparison grid */}
+        {left && right && (
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', borderBottom: '2px solid #e2e8f0' }}>Field</div>
+            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: '#0f172a', borderBottom: '2px solid #e2e8f0' }}>
+              {left.config_name} <VersionBadge version={left.version} />
+            </div>
+            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: '#0f172a', borderBottom: '2px solid #e2e8f0' }}>
+              {right.config_name} <VersionBadge version={right.version} />
+            </div>
+
+            <CompareCell label="Grand Total" leftVal={fmt(parseNum(left.total_amount))} rightVal={fmt(parseNum(right.total_amount))} />
+            <CompareCell label="Labor Total" leftVal={fmt(parseLaborTotal(left))} rightVal={fmt(parseLaborTotal(right))} />
+            <CompareCell label="Materials Total" leftVal={fmt(parseMatTotal(left))} rightVal={fmt(parseMatTotal(right))} />
+            <CompareCell label="Markup %" leftVal={left.markup_pct + '%'} rightVal={right.markup_pct + '%'} />
+            <CompareCell label="GET Rate" leftVal={left.get_rate + '%'} rightVal={right.get_rate + '%'} />
+            <CompareCell label="Breakdown" leftVal={left.breakdown_type} rightVal={right.breakdown_type} />
+            <CompareCell label="Date" leftVal={fmtDate(left.created_at)} rightVal={fmtDate(right.created_at)} />
+            {left.notes || right.notes ? <CompareCell label="Notes" leftVal={left.notes} rightVal={right.notes} /> : null}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Unsaved Warning Modal ────────────────────────────────────────────────────
+
+function UnsavedWarning({ onSave, onDiscard, onCancel }: { onSave: () => void; onDiscard: () => void; onCancel: () => void }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: 'white', borderRadius: 20, padding: 28, width: 380, boxShadow: '0 24px 64px rgba(0,0,0,0.18)', fontFamily: FONT }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Unsaved Changes</div>
+        <div style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>You have unsaved changes. What would you like to do?</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button onClick={onSave} style={{ padding: '11px', borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>💾 Save First</button>
+          <button onClick={onDiscard} style={{ padding: '11px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(254,242,242,0.8)', color: '#dc2626', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Discard Changes</button>
+          <button onClick={onCancel} style={{ padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
 function defaultLaborSteps(): LaborStep[] {
@@ -334,6 +616,29 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
+  // ─── Config / Version State ────────────────────────────────────────────────
+
+  const [configs, setConfigs] = useState<QuoteConfig[]>([]);
+  const [configsLoading, setConfigsLoading] = useState(false);
+  const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
+  const [activeVersion, setActiveVersion] = useState<number>(1);
+  const [hasUnsaved, setHasUnsaved] = useState(false);
+  const [breakdownType, setBreakdownType] = useState<BreakdownType>('lump_sum');
+  const [sqft, setSqft] = useState('');
+  const [floorCount, setFloorCount] = useState('');
+  const [elevationCount, setElevationCount] = useState('');
+  const [unitCount, setUnitCount] = useState('');
+
+  // UI modals
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showSaveAsModal, setShowSaveAsModal] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const pendingLoadConfig = useRef<QuoteConfig | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [configSaving, setConfigSaving] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+
   // ─── Load WO ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -349,10 +654,8 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
         if (phoneMatch) setCustomerPhone(phoneMatch[1]);
         const namepart = contact.split(/\d/)[0].trim().replace(/[^a-zA-Z\s]/g, '').trim();
         if (namepart) setCustomerName(namepart);
-        // Init drive time from address
         const addr = d.wo?.address || '';
         setDriveTime(defaultDriveTime(addr));
-        // Defaults from API
         if (d.defaults?.hourlyRate) {
           const rate = String(d.defaults.hourlyRate);
           setLaborSteps(prev => prev.map(s => ({ ...s, rate })));
@@ -362,6 +665,22 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
       })
       .catch(e => { setError(String(e)); setLoading(false); });
   }, [woNumber]);
+
+  // ─── Load configs for this job ─────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!woNumber) return;
+    setConfigsLoading(true);
+    fetch(`/api/quote-configs?job_id=${encodeURIComponent(woNumber)}`)
+      .then(r => r.json())
+      .then(d => { setConfigs(d.configs || []); })
+      .catch(() => { /* silent */ })
+      .finally(() => setConfigsLoading(false));
+  }, [woNumber]);
+
+  // ─── Mark dirty on any change ──────────────────────────────────────────────
+
+  const markDirty = useCallback(() => setHasUnsaved(true), []);
 
   // ─── Derived calculations ──────────────────────────────────────────────────
 
@@ -385,19 +704,15 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   }
 
   const laborSubtotal = laborSteps.reduce((a, s) => a + laborStepAmount(s), 0);
-
   const driveTotal = (() => {
     if (driveTime.totalOverride) return parseNum(driveTime.totalOverride);
     return parseNum(driveTime.trips) * parseNum(driveTime.hoursPerTrip) * parseNum(driveTime.rate);
   })();
-
   const mainMatTotal = mainMaterials.reduce((a, m) => a + materialLineTotal(m), 0);
   const consumablesTotal = consumables.reduce((a, m) => a + materialLineTotal(m), 0);
   const freightTotal = freight.reduce((a, m) => a + materialLineTotal(m), 0);
   const materialsSubtotal = mainMatTotal + consumablesTotal + freightTotal;
-
   const additionalTotal = additionalCosts.reduce((a, c) => a + parseNum(c.amount), 0);
-
   const subtotal = materialsSubtotal + laborSubtotal + driveTotal + additionalTotal;
   const overheadAmt = subtotal * (parseNum(markup.overheadPct) / 100);
   const profitAmt = (subtotal + overheadAmt) * (parseNum(markup.profitPct) / 100);
@@ -406,9 +721,21 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   const grandTotal = totalBeforeTax + getAmt;
   const deposit = grandTotal * 0.5;
 
+  // ─── Breakdown display ─────────────────────────────────────────────────────
+
+  function breakdownDisplay(): string {
+    if (breakdownType === 'lump_sum') return fmt(grandTotal);
+    if (breakdownType === 'per_sqft' && parseNum(sqft) > 0) return fmt(grandTotal / parseNum(sqft)) + '/SF';
+    if (breakdownType === 'per_floor' && parseNum(floorCount) > 0) return fmt(grandTotal / parseNum(floorCount)) + '/floor';
+    if (breakdownType === 'per_elevation' && parseNum(elevationCount) > 0) return fmt(grandTotal / parseNum(elevationCount)) + '/elevation';
+    if (breakdownType === 'per_unit' && parseNum(unitCount) > 0) return fmt(grandTotal / parseNum(unitCount)) + '/unit';
+    return fmt(grandTotal);
+  }
+
   // ─── Auto-save (debounced) ─────────────────────────────────────────────────
 
   const scheduleAutoSave = useCallback(() => {
+    markDirty();
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaving(true);
@@ -427,12 +754,151 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
     }, 1500);
   }, [woNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Load a config into state ──────────────────────────────────────────────
+
+  function applyConfig(config: QuoteConfig) {
+    try {
+      const labor = JSON.parse(config.labor_json || '[]') as LaborStep[];
+      const mats = JSON.parse(config.materials_json || '{}');
+      if (Array.isArray(labor) && labor.length > 0) setLaborSteps(labor.map(s => ({ ...s, id: s.id || uid() })));
+      if (mats.mainMaterials) setMainMaterials(mats.mainMaterials.map((m: MaterialLine) => ({ ...m, id: m.id || uid() })));
+      if (mats.consumables) setConsumables(mats.consumables.map((m: MaterialLine) => ({ ...m, id: m.id || uid() })));
+      if (mats.freight) setFreight(mats.freight.map((m: MaterialLine) => ({ ...m, id: m.id || uid() })));
+      if (mats.driveTime) setDriveTime(mats.driveTime);
+      if (mats.additionalCosts) setAdditionalCosts(mats.additionalCosts.map((c: AdditionalCost) => ({ ...c, id: c.id || uid() })));
+      if (mats.markup) setMarkup(mats.markup);
+      if (mats.customerName !== undefined) setCustomerName(mats.customerName);
+      if (mats.customerEmail !== undefined) setCustomerEmail(mats.customerEmail);
+      if (mats.customerPhone !== undefined) setCustomerPhone(mats.customerPhone);
+      if (mats.scopeNarrative !== undefined) setScopeNarrative(mats.scopeNarrative);
+      if (mats.jobType !== undefined) setJobType(mats.jobType);
+      if (mats.sqft !== undefined) setSqft(mats.sqft);
+      if (mats.floorCount !== undefined) setFloorCount(mats.floorCount);
+      if (mats.elevationCount !== undefined) setElevationCount(mats.elevationCount);
+      if (mats.unitCount !== undefined) setUnitCount(mats.unitCount);
+      setBreakdownType((config.breakdown_type as BreakdownType) || 'lump_sum');
+      setActiveConfigId(config.config_id);
+      setActiveVersion(parseInt(config.version) || 1);
+      setHasUnsaved(false);
+    } catch (e) {
+      setError('Failed to load configuration: ' + String(e));
+    }
+  }
+
+  // ─── Request load (with unsaved check) ────────────────────────────────────
+
+  function requestLoadConfig(config: QuoteConfig) {
+    if (hasUnsaved) {
+      pendingLoadConfig.current = config;
+      setShowUnsavedWarning(true);
+    } else {
+      applyConfig(config);
+    }
+  }
+
+  // ─── Build config payload ──────────────────────────────────────────────────
+
+  function buildConfigPayload(configName: string, breakdown: BreakdownType, notes: string) {
+    return {
+      job_id: woNumber,
+      config_name: configName,
+      total_amount: String(grandTotal.toFixed(2)),
+      labor_json: JSON.stringify(laborSteps),
+      materials_json: JSON.stringify({
+        mainMaterials, consumables, freight, driveTime, additionalCosts, markup,
+        customerName, customerEmail, customerPhone, scopeNarrative, jobType,
+        sqft, floorCount, elevationCount, unitCount,
+      }),
+      markup_pct: markup.profitPct,
+      get_rate: markup.getRate,
+      overhead_method: markup.overheadPct ? `overhead_${markup.overheadPct}pct` : 'none',
+      breakdown_type: breakdown,
+      notes,
+      created_by: 'mission-control',
+    };
+  }
+
+  // ─── Save as new config ────────────────────────────────────────────────────
+
+  async function handleSaveNew(configName: string, breakdown: BreakdownType, notes: string) {
+    setConfigSaving(true);
+    setShowSaveModal(false);
+    try {
+      const res = await fetch('/api/quote-configs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildConfigPayload(configName, breakdown, notes)),
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setActiveConfigId(data.config_id);
+      setActiveVersion(1);
+      setHasUnsaved(false);
+      setToast(`Configuration saved as v1`);
+      // Reload configs
+      const r2 = await fetch(`/api/quote-configs?job_id=${encodeURIComponent(woNumber)}`);
+      const d2 = await r2.json();
+      setConfigs(d2.configs || []);
+    } catch (e) { setError(String(e)); }
+    finally { setConfigSaving(false); }
+  }
+
+  // ─── Save as new version of active config ─────────────────────────────────
+
+  async function handleSaveVersion() {
+    if (!activeConfigId) { setShowSaveModal(true); return; }
+    setConfigSaving(true);
+    try {
+      const activeConf = configs.find(c => c.config_id === activeConfigId);
+      const res = await fetch('/api/quote-configs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          config_id: activeConfigId,
+          ...buildConfigPayload(activeConf?.config_name || 'Config', breakdownType, ''),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setActiveVersion(data.version);
+      setHasUnsaved(false);
+      setToast(`Saved as v${data.version}`);
+      const r2 = await fetch(`/api/quote-configs?job_id=${encodeURIComponent(woNumber)}`);
+      const d2 = await r2.json();
+      setConfigs(d2.configs || []);
+    } catch (e) { setError(String(e)); }
+    finally { setConfigSaving(false); }
+  }
+
+  // ─── Duplicate config ──────────────────────────────────────────────────────
+
+  async function handleDuplicate() {
+    const activeConf = configs.find(c => c.config_id === activeConfigId);
+    const newName = `${activeConf?.config_name || 'Config'} (copy)`;
+    setConfigSaving(true);
+    try {
+      const res = await fetch('/api/quote-configs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildConfigPayload(newName, breakdownType, 'Duplicated')),
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setToast(`Duplicated as "${newName}"`);
+      const r2 = await fetch(`/api/quote-configs?job_id=${encodeURIComponent(woNumber)}`);
+      const d2 = await r2.json();
+      setConfigs(d2.configs || []);
+    } catch (e) { setError(String(e)); }
+    finally { setConfigSaving(false); }
+  }
+
   // ─── Labor helpers ─────────────────────────────────────────────────────────
 
   function addLaborStep(preset?: Partial<LaborStep>) {
     setLaborSteps(prev => [...prev, {
       id: uid(), description: preset?.description || '', hours: '2', rate: '120', amountOverride: '', ...preset,
     }]);
+    markDirty();
   }
 
   function updateLaborStep(id: string, patch: Partial<LaborStep>) {
@@ -479,7 +945,6 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           island: wo?.island,
           scopeNarrative,
           jobType,
-          // V2 fields
           laborSteps: laborSteps.map(s => ({
             description: s.description,
             hours: parseNum(s.hours),
@@ -503,7 +968,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           getRate: parseNum(markup.getRate),
           getAmt,
           grandTotal,
-          // Legacy compat
+          breakdownType,
           installationIncluded: true,
           crewCount: 1,
           hourlyRate: 120,
@@ -520,6 +985,11 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
   const row: React.CSSProperties = { display: 'grid', gap: 8, marginBottom: 8 };
   const label: React.CSSProperties = { fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 3, display: 'block', fontFamily: FONT };
+
+  // ─── Active config info ────────────────────────────────────────────────────
+
+  const activeConf = configs.find(c => c.config_id === activeConfigId);
+  const activeVersions = activeConf?.versions || [];
 
   // ─── Loading ───────────────────────────────────────────────────────────────
 
@@ -584,6 +1054,12 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           <span>GRAND TOTAL</span>
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(grandTotal)}</span>
         </div>
+        {breakdownType !== 'lump_sum' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0 0', fontSize: 13, color: '#6366f1', fontWeight: 700, fontFamily: FONT }}>
+            <span>Breakdown ({breakdownType.replace('_', ' ')})</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{breakdownDisplay()}</span>
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0 0', fontSize: 13, color: '#0f766e', fontWeight: 700, fontFamily: FONT }}>
           <span>50% Deposit Required</span>
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(deposit)}</span>
@@ -601,6 +1077,45 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh', fontFamily: FONT }}>
 
+      {/* Modals */}
+      {showSaveModal && (
+        <SaveConfigModal
+          onSave={handleSaveNew}
+          onClose={() => setShowSaveModal(false)}
+        />
+      )}
+      {showSaveAsModal && (
+        <SaveConfigModal
+          onSave={handleSaveNew}
+          onClose={() => setShowSaveAsModal(false)}
+          initialName={activeConf ? `${activeConf.config_name} (alt)` : ''}
+          isSaveAs
+        />
+      )}
+      {showCompare && configs.length >= 2 && (
+        <CompareModal configs={configs} onClose={() => setShowCompare(false)} />
+      )}
+      {showUnsavedWarning && (
+        <UnsavedWarning
+          onSave={() => {
+            setShowUnsavedWarning(false);
+            setShowSaveModal(true);
+          }}
+          onDiscard={() => {
+            setShowUnsavedWarning(false);
+            if (pendingLoadConfig.current) {
+              applyConfig(pendingLoadConfig.current);
+              pendingLoadConfig.current = null;
+            }
+          }}
+          onCancel={() => {
+            setShowUnsavedWarning(false);
+            pendingLoadConfig.current = null;
+          }}
+        />
+      )}
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+
       {/* Header */}
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
@@ -610,8 +1125,149 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {saving && <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>Saving…</span>}
           {!saving && lastSaved && <span style={{ fontSize: 10, color: '#16a34a', fontWeight: 700 }}>✓ Saved</span>}
+          {hasUnsaved && activeConfigId && (
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)' }}>
+              UNSAVED
+            </span>
+          )}
           <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
         </div>
+      </div>
+
+      {/* ── CONFIGURATIONS BAR ─────────────────────────────────────────────── */}
+      <div style={{ padding: '10px 20px', borderBottom: '1px solid #f1f5f9', background: '#fafafa', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+
+          {/* Config selector dropdown */}
+          <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
+            <select
+              value={activeConfigId || ''}
+              onChange={e => {
+                const conf = configs.find(c => c.config_id === e.target.value);
+                if (conf) requestLoadConfig(conf);
+              }}
+              style={{
+                width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontFamily: FONT,
+                border: activeConfigId ? '1px solid rgba(99,102,241,0.4)' : '1px solid #e2e8f0',
+                background: activeConfigId ? 'rgba(238,242,255,0.7)' : 'white',
+                color: activeConfigId ? '#4338ca' : '#64748b',
+                cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value="">
+                {configsLoading ? 'Loading configs…' : configs.length === 0 ? 'No saved configs' : '— Load a configuration —'}
+              </option>
+              {configs.map(c => (
+                <option key={c.config_id} value={c.config_id}>
+                  {c.config_name} (v{c.version}) — {fmt(parseNum(c.total_amount))} · {fmtDate(c.created_at)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Active config badge + version info */}
+          {activeConf && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <VersionBadge version={activeVersion} />
+              {activeVersions.length > 1 && (
+                <button
+                  onClick={() => setShowVersionHistory(v => !v)}
+                  style={{ fontSize: 10, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline' }}
+                >
+                  {activeVersions.length} versions
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {/* Save / Save Version */}
+            {activeConfigId ? (
+              <button
+                onClick={handleSaveVersion}
+                disabled={configSaving}
+                style={{
+                  padding: '5px 12px', borderRadius: 8, border: 'none',
+                  background: hasUnsaved ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+                  color: hasUnsaved ? 'white' : '#94a3b8',
+                  fontSize: 11, fontWeight: 700, cursor: hasUnsaved ? 'pointer' : 'default',
+                  boxShadow: hasUnsaved ? '0 2px 8px rgba(15,118,110,0.25)' : 'none',
+                }}
+              >
+                {configSaving ? 'Saving…' : '💾 Save'}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowSaveModal(true)}
+                disabled={configSaving}
+                style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.25)' }}
+              >
+                💾 Save Config
+              </button>
+            )}
+
+            {/* Save As New */}
+            {activeConfigId && (
+              <button
+                onClick={() => setShowSaveAsModal(true)}
+                style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(238,242,255,0.7)', color: '#4338ca', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+              >
+                + Save As
+              </button>
+            )}
+
+            {/* Duplicate */}
+            {activeConfigId && (
+              <button
+                onClick={handleDuplicate}
+                style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(8,145,178,0.3)', background: 'rgba(224,242,254,0.7)', color: '#0369a1', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                title="Duplicate this config"
+              >
+                ⎘ Duplicate
+              </button>
+            )}
+
+            {/* Compare */}
+            {configs.length >= 2 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(109,40,217,0.3)', background: 'rgba(237,233,254,0.7)', color: '#6d28d9', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+              >
+                ⇄ Compare
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Version history timeline */}
+        {showVersionHistory && activeVersions.length > 1 && (
+          <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'white', border: '1px solid rgba(99,102,241,0.15)' }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6366f1', marginBottom: 8 }}>Version History</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[...activeVersions].sort((a, b) => parseInt(b.version) - parseInt(a.version)).map((v, idx) => (
+                <div key={v.version} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: idx < activeVersions.length - 1 ? '1px solid #f1f5f9' : undefined }}>
+                  <VersionBadge version={v.version} />
+                  <span style={{ fontSize: 11, color: '#0f172a', fontWeight: parseInt(v.version) === activeVersion ? 800 : 400 }}>
+                    {fmt(parseNum(v.total_amount))}
+                  </span>
+                  <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtDate(v.created_at)}</span>
+                  {parseInt(v.version) === activeVersion && (
+                    <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 4, background: '#ecfdf5', color: '#059669', border: '1px solid rgba(5,150,105,0.2)' }}>CURRENT</span>
+                  )}
+                  {parseInt(v.version) !== activeVersion && (
+                    <button
+                      onClick={() => { applyConfig(v); setShowVersionHistory(false); }}
+                      style={{ fontSize: 10, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      Restore
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Scrollable body */}
@@ -632,10 +1288,10 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           {openSections.customer && (
             <div style={{ paddingTop: 10 }}>
               <div style={{ ...row, gridTemplateColumns: '1fr 1fr' }}>
-                <div><label style={label}>Name</label><GreenInput value={customerName} onChange={setCustomerName} placeholder="Customer / company" /></div>
-                <div><label style={label}>Phone</label><GreenInput value={customerPhone} onChange={setCustomerPhone} placeholder="808-XXX-XXXX" /></div>
+                <div><label style={label}>Name</label><GreenInput value={customerName} onChange={v => { setCustomerName(v); markDirty(); }} placeholder="Customer / company" /></div>
+                <div><label style={label}>Phone</label><GreenInput value={customerPhone} onChange={v => { setCustomerPhone(v); markDirty(); }} placeholder="808-XXX-XXXX" /></div>
               </div>
-              <div><label style={label}>Email</label><GreenInput value={customerEmail} onChange={setCustomerEmail} placeholder="customer@email.com" /></div>
+              <div><label style={label}>Email</label><GreenInput value={customerEmail} onChange={v => { setCustomerEmail(v); markDirty(); }} placeholder="customer@email.com" /></div>
             </div>
           )}
         </div>
@@ -647,14 +1303,14 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
             <div style={{ paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div>
                 <label style={label}>Job Type</label>
-                <select value={jobType} onChange={e => setJobType(e.target.value)} style={{ ...GREEN_INPUT, cursor: 'pointer', WebkitAppearance: 'none' }}>
+                <select value={jobType} onChange={e => { setJobType(e.target.value); markDirty(); }} style={{ ...GREEN_INPUT, cursor: 'pointer', WebkitAppearance: 'none' }}>
                   <option value="">Select job type…</option>
                   {jobTypes.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div>
                 <label style={label}>Scope Description</label>
-                <textarea value={scopeNarrative} onChange={e => setScopeNarrative(e.target.value)} rows={3}
+                <textarea value={scopeNarrative} onChange={e => { setScopeNarrative(e.target.value); markDirty(); }} rows={3}
                   style={{ ...GREEN_INPUT, resize: 'none', lineHeight: '1.5' }} placeholder="Describe the full scope of work…" />
               </div>
             </div>
@@ -739,7 +1395,6 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
           <SectionToggle label="Labor Steps" color="#4338ca" open={openSections.labor} onToggle={() => toggleSection('labor')} />
           {openSections.labor && (
             <div style={{ paddingTop: 10 }}>
-              {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 28px', gap: 6, marginBottom: 4, padding: '0 2px' }}>
                 {['Description', 'Hours', 'Rate/hr', 'Amount', ''].map(h => (
                   <div key={h} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{h}</div>
@@ -748,63 +1403,29 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
 
               {laborSteps.map(step => {
                 const autoAmt = parseNum(step.hours) * parseNum(step.rate);
-                const displayAmt = step.amountOverride ? parseNum(step.amountOverride) : autoAmt;
                 return (
                   <div key={step.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 28px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
-                    <GreenInput
-                      value={step.description}
-                      onChange={v => updateLaborStep(step.id, { description: v })}
-                      placeholder="Step description"
-                    />
-                    <GreenInput
-                      value={step.hours}
-                      onChange={v => updateLaborStep(step.id, { hours: v, amountOverride: '' })}
-                      placeholder="hrs"
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      style={{ textAlign: 'right' }}
-                    />
-                    <GreenInput
-                      value={step.rate}
-                      onChange={v => updateLaborStep(step.id, { rate: v, amountOverride: '' })}
-                      placeholder="120"
-                      type="number"
-                      step="1"
-                      min="0"
-                      style={{ textAlign: 'right' }}
-                    />
+                    <GreenInput value={step.description} onChange={v => updateLaborStep(step.id, { description: v })} placeholder="Step description" />
+                    <GreenInput value={step.hours} onChange={v => updateLaborStep(step.id, { hours: v, amountOverride: '' })} placeholder="hrs" type="number" step="0.5" min="0" style={{ textAlign: 'right' }} />
+                    <GreenInput value={step.rate} onChange={v => updateLaborStep(step.id, { rate: v, amountOverride: '' })} placeholder="120" type="number" step="1" min="0" style={{ textAlign: 'right' }} />
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="number" step="0.01" min="0"
                       value={step.amountOverride || fmtNum(autoAmt)}
                       onChange={e => updateLaborStep(step.id, { amountOverride: e.target.value })}
                       title={step.amountOverride ? 'MANUAL — click to reset' : 'Auto-calculated'}
-                      style={{
-                        ...ORANGE_DISPLAY,
-                        border: step.amountOverride ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(245,158,11,0.3)',
-                        background: step.amountOverride ? 'rgba(255,251,235,1)' : 'rgba(255,251,235,0.8)',
-                        cursor: 'text',
-                        textAlign: 'right',
-                      }}
+                      style={{ ...ORANGE_DISPLAY, border: step.amountOverride ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(245,158,11,0.3)', background: step.amountOverride ? 'rgba(255,251,235,1)' : 'rgba(255,251,235,0.8)', cursor: 'text', textAlign: 'right' }}
                     />
-                    <button
-                      onClick={() => removeLaborStep(step.id)}
-                      disabled={laborSteps.length <= 1}
-                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', cursor: laborSteps.length <= 1 ? 'default' : 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: laborSteps.length <= 1 ? 0.3 : 1 }}
-                    >×</button>
+                    <button onClick={() => removeLaborStep(step.id)} disabled={laborSteps.length <= 1}
+                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', cursor: laborSteps.length <= 1 ? 'default' : 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: laborSteps.length <= 1 ? 0.3 : 1 }}>×</button>
                   </div>
                 );
               })}
 
-              {/* Subtotal */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, padding: '6px 0 10px' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Labor Subtotal</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#4338ca', fontVariantNumeric: 'tabular-nums' }}>{fmt(laborSubtotal)}</span>
               </div>
 
-              {/* Add buttons */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {[
                   { label: '+ Spotting / Staging', desc: 'Spotting / Material Staging', hours: '1' },
@@ -830,32 +1451,15 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                 📍 Auto-calculated from shop (Kahului) to <strong>{wo?.address ? driveAreaLabel(wo.address) : 'job site'}</strong>
                 {!driveTime.hoursManual && wo?.address && <> · {lookupDriveHours(wo.address)}h/trip estimated</>}
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-                <div>
-                  <label style={label}>Round Trips</label>
-                  <GreenInput value={driveTime.trips} onChange={v => { setDriveTime(p => ({ ...p, trips: v, totalOverride: '' })); scheduleAutoSave(); }} type="number" min="1" step="1" style={{ textAlign: 'right' }} />
-                </div>
-                <div>
-                  <label style={label}>Hrs / Trip</label>
-                  <GreenInput
-                    value={driveTime.hoursPerTrip}
-                    onChange={v => { setDriveTime(p => ({ ...p, hoursPerTrip: v, hoursManual: true, totalOverride: '' })); scheduleAutoSave(); }}
-                    type="number" min="0" step="0.5"
-                    style={{ textAlign: 'right' }}
-                  />
-                </div>
-                <div>
-                  <label style={label}>Rate / hr ($)</label>
-                  <GreenInput value={driveTime.rate} onChange={v => { setDriveTime(p => ({ ...p, rate: v, totalOverride: '' })); scheduleAutoSave(); }} type="number" min="0" step="1" style={{ textAlign: 'right' }} />
-                </div>
+                <div><label style={label}>Round Trips</label><GreenInput value={driveTime.trips} onChange={v => { setDriveTime(p => ({ ...p, trips: v, totalOverride: '' })); scheduleAutoSave(); }} type="number" min="1" step="1" style={{ textAlign: 'right' }} /></div>
+                <div><label style={label}>Hrs / Trip</label><GreenInput value={driveTime.hoursPerTrip} onChange={v => { setDriveTime(p => ({ ...p, hoursPerTrip: v, hoursManual: true, totalOverride: '' })); scheduleAutoSave(); }} type="number" min="0" step="0.5" style={{ textAlign: 'right' }} /></div>
+                <div><label style={label}>Rate / hr ($)</label><GreenInput value={driveTime.rate} onChange={v => { setDriveTime(p => ({ ...p, rate: v, totalOverride: '' })); scheduleAutoSave(); }} type="number" min="0" step="1" style={{ textAlign: 'right' }} /></div>
               </div>
-
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ flex: 1 }}>
                   <label style={label}>Total Drive Cost (override)</label>
-                  <input
-                    type="number" step="0.01" min="0"
+                  <input type="number" step="0.01" min="0"
                     value={driveTime.totalOverride || fmtNum(parseNum(driveTime.trips) * parseNum(driveTime.hoursPerTrip) * parseNum(driveTime.rate))}
                     onChange={e => { setDriveTime(p => ({ ...p, totalOverride: e.target.value })); scheduleAutoSave(); }}
                     style={{ ...ORANGE_DISPLAY, border: driveTime.totalOverride ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(245,158,11,0.3)', cursor: 'text' }}
@@ -868,7 +1472,6 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                   </button>
                 )}
               </div>
-
               <div style={{ marginTop: 8, fontSize: 11, color: '#0891b2', fontWeight: 700 }}>
                 Drive time line item: {driveTime.trips} trips × {driveTime.hoursPerTrip}h × {fmt(parseNum(driveTime.rate))}/hr = <strong>{fmt(driveTotal)}</strong>
               </div>
@@ -891,8 +1494,6 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                     <span style={{ textTransform: 'uppercase' }}>{title}</span>
                     <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 10, textTransform: 'none', letterSpacing: 0 }}>— {subtitle}</span>
                   </div>
-
-                  {/* Column headers */}
                   {items.length > 0 && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 55px 60px 80px 90px 28px', gap: 5, marginBottom: 3, padding: '0 2px' }}>
                       {['Description', 'Qty', 'Type', 'Unit $', 'Total', ''].map(h => (
@@ -900,7 +1501,6 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                       ))}
                     </div>
                   )}
-
                   {items.map(m => {
                     const effectiveUnitType = m.unitType || detectUnitType(m.description);
                     const autoTotal = materialLineTotal(m);
@@ -909,16 +1509,12 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 55px 60px 80px 90px 28px', gap: 5, alignItems: 'center' }}>
                           <GreenInput value={m.description} onChange={v => updateMaterial(setter, m.id, { description: v })} placeholder="Description" />
                           <GreenInput value={m.qty} onChange={v => updateMaterial(setter, m.id, { qty: v, totalOverride: '' })} type="number" min="0" step="1" style={{ textAlign: 'right' }} />
-                          <select
-                            value={effectiveUnitType}
-                            onChange={e => updateMaterial(setter, m.id, { unitType: e.target.value as MaterialLine['unitType'], totalOverride: '' })}
-                            style={{ ...GREEN_INPUT, cursor: 'pointer', textAlign: 'center', fontSize: 11, padding: '6px 4px' }}
-                          >
+                          <select value={effectiveUnitType} onChange={e => updateMaterial(setter, m.id, { unitType: e.target.value as MaterialLine['unitType'], totalOverride: '' })}
+                            style={{ ...GREEN_INPUT, cursor: 'pointer', textAlign: 'center', fontSize: 11, padding: '6px 4px' }}>
                             {(['SF', 'LF', 'EA', 'Tube'] as const).map(ut => <option key={ut} value={ut}>{ut}</option>)}
                           </select>
                           <GreenInput value={m.unitCost} onChange={v => updateMaterial(setter, m.id, { unitCost: v, totalOverride: '' })} placeholder="0.00" type="number" step="0.01" min="0" style={{ textAlign: 'right' }} />
-                          <input
-                            type="number" step="0.01" min="0"
+                          <input type="number" step="0.01" min="0"
                             value={m.totalOverride || fmtNum(autoTotal)}
                             onChange={e => updateMaterial(setter, m.id, { totalOverride: e.target.value })}
                             style={{ ...ORANGE_DISPLAY, border: m.totalOverride ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(245,158,11,0.3)', cursor: 'text' }}
@@ -928,19 +1524,9 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                         {effectiveUnitType === 'SF' && (
                           <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center', paddingLeft: 2 }}>
                             <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>W×H (in):</span>
-                            <GreenInput
-                              value={m.width || ''}
-                              onChange={v => updateMaterial(setter, m.id, { width: v, totalOverride: '' })}
-                              placeholder="W" type="number" step="0.125" min="0"
-                              style={{ width: 64, textAlign: 'right' }}
-                            />
+                            <GreenInput value={m.width || ''} onChange={v => updateMaterial(setter, m.id, { width: v, totalOverride: '' })} placeholder="W" type="number" step="0.125" min="0" style={{ width: 64, textAlign: 'right' }} />
                             <span style={{ fontSize: 12, color: '#94a3b8' }}>×</span>
-                            <GreenInput
-                              value={m.height || ''}
-                              onChange={v => updateMaterial(setter, m.id, { height: v, totalOverride: '' })}
-                              placeholder="H" type="number" step="0.125" min="0"
-                              style={{ width: 64, textAlign: 'right' }}
-                            />
+                            <GreenInput value={m.height || ''} onChange={v => updateMaterial(setter, m.id, { height: v, totalOverride: '' })} placeholder="H" type="number" step="0.125" min="0" style={{ width: 64, textAlign: 'right' }} />
                             {(m.width && m.height) && (
                               <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>
                                 = {((parseNum(m.width) * parseNum(m.height) / 144) * parseNum(m.qty || '1')).toFixed(2)} SF
@@ -951,12 +1537,7 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                         {effectiveUnitType === 'LF' && (
                           <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center', paddingLeft: 2 }}>
                             <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>Length (ft):</span>
-                            <GreenInput
-                              value={m.length || ''}
-                              onChange={v => updateMaterial(setter, m.id, { length: v, totalOverride: '' })}
-                              placeholder="ft" type="number" step="0.5" min="0"
-                              style={{ width: 80, textAlign: 'right' }}
-                            />
+                            <GreenInput value={m.length || ''} onChange={v => updateMaterial(setter, m.id, { length: v, totalOverride: '' })} placeholder="ft" type="number" step="0.5" min="0" style={{ width: 80, textAlign: 'right' }} />
                             {m.length && (
                               <span style={{ fontSize: 10, color: '#0891b2', fontWeight: 700, flexShrink: 0, fontFamily: FONT }}>
                                 × {m.qty || '1'} = {(parseNum(m.length) * parseNum(m.qty || '1')).toFixed(1)} LF
@@ -967,14 +1548,12 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                       </div>
                     );
                   })}
-
                   <button onClick={() => { setter(prev => [...prev, newMaterialLine()]); scheduleAutoSave(); }}
                     style={{ fontSize: 11, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 0' }}>
                     + Add {title.toLowerCase()} line
                   </button>
                 </div>
               ))}
-
               <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Materials Subtotal</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#92400e', fontVariantNumeric: 'tabular-nums' }}>{fmt(materialsSubtotal)}</span>
@@ -1039,6 +1618,33 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                 </div>
               </div>
 
+              {/* Breakdown type + divisor inputs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+                <div>
+                  <label style={label}>Breakdown Type</label>
+                  <select value={breakdownType} onChange={e => { setBreakdownType(e.target.value as BreakdownType); markDirty(); }}
+                    style={{ ...GREEN_INPUT, cursor: 'pointer', WebkitAppearance: 'none' }}>
+                    <option value="lump_sum">Lump Sum</option>
+                    <option value="per_floor">Per Floor</option>
+                    <option value="per_sqft">Per Sq Ft</option>
+                    <option value="per_elevation">Per Elevation</option>
+                    <option value="per_unit">Per Unit</option>
+                  </select>
+                </div>
+                {breakdownType === 'per_sqft' && (
+                  <div><label style={label}>Total Sq Ft</label><GreenInput value={sqft} onChange={v => { setSqft(v); markDirty(); }} type="number" min="1" placeholder="e.g. 5000" style={{ textAlign: 'right' }} /></div>
+                )}
+                {breakdownType === 'per_floor' && (
+                  <div><label style={label}>Floor Count</label><GreenInput value={floorCount} onChange={v => { setFloorCount(v); markDirty(); }} type="number" min="1" placeholder="e.g. 4" style={{ textAlign: 'right' }} /></div>
+                )}
+                {breakdownType === 'per_elevation' && (
+                  <div><label style={label}>Elevations</label><GreenInput value={elevationCount} onChange={v => { setElevationCount(v); markDirty(); }} type="number" min="1" placeholder="e.g. 4" style={{ textAlign: 'right' }} /></div>
+                )}
+                {breakdownType === 'per_unit' && (
+                  <div><label style={label}>Unit Count</label><GreenInput value={unitCount} onChange={v => { setUnitCount(v); markDirty(); }} type="number" min="1" placeholder="e.g. 24" style={{ textAlign: 'right' }} /></div>
+                )}
+              </div>
+
               {/* Summary breakdown */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
                 <SummaryRow label="Materials Subtotal" value={materialsSubtotal} sub />
@@ -1057,6 +1663,12 @@ export default function QuoteBuilder({ woNumber, onClose }: { woNumber: string; 
                   <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: FONT }}>Grand Total</span>
                   <span style={{ fontSize: 20, fontWeight: 900, color: 'white', fontVariantNumeric: 'tabular-nums', fontFamily: FONT }}>{fmt(grandTotal)}</span>
                 </div>
+                {breakdownType !== 'lump_sum' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 14px 0', fontSize: 12, fontWeight: 700, color: '#6366f1', fontFamily: FONT }}>
+                    <span>Breakdown ({breakdownType.replace('_', ' ')})</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{breakdownDisplay()}</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 14px 0', fontSize: 12, fontWeight: 700, color: '#0f766e', fontFamily: FONT }}>
                   <span>50% Deposit Required</span>
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(deposit)}</span>
