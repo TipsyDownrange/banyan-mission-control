@@ -317,7 +317,9 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   }
 
   // Auto-detect simple vs complex
-  const isSimple = plans.length <= 1 && plans[0]?.estimated_qty <= 1;
+  // Simple = flat step list (most WOs). Complex = grouped by marks (bulk-created projects)
+  // Use simple mode when there's only 1 plan, regardless of qty, UNLESS it was bulk-created (has >1 plan)
+  const isSimple = plans.length <= 1;
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
