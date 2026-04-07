@@ -1,39 +1,58 @@
 import { NextResponse } from 'next/server';
-import { getSSToken } from '@/lib/gauth';
+import { getGoogleAuth } from '@/lib/gauth';
+import { google } from 'googleapis';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import {
   calculateSiteVisitFee, getJobTypeDefaults, listJobTypes,
   LABOR_RATES, GET_RATE, estimateDriveTime, DEFAULT_SERVICE_CREW,
 } from '@/lib/labor';
 
-const WO_SHEET_ID = '7905619916154756'; // Active WOs
+const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
-// Fetch a single WO from Smartsheet by WO number
-async function fetchWO(token: string, woNumber: string) {
-  const res = await fetch(
-    `https://api.smartsheet.com/2.0/sheets/${WO_SHEET_ID}?pageSize=200`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const sheet = await res.json() as {
-    columns?: { id: number; title: string }[];
-    rows?: { id: number; cells: { columnId: number; value?: unknown; displayValue?: string }[] }[];
-  };
+// Column indices in Service_Work_Orders tab (0-based, row starts at A)
+const COL = {
+  wo_id:          0,
+  wo_number:      1,
+  name:           2,
+  description:    3,
+  status:         4,
+  island:         5,
+  address:        7,
+  contact_person: 8,
+  contact_phone:  10,
+  contact_email:  11,
+  assigned_to:    14,
+  scheduled_date: 17,
+};
 
-  const cols: Record<number, string> = {};
-  for (const c of sheet.columns || []) cols[c.id] = c.title;
-
-  const WO_COL = Object.entries(cols).find(([, v]) => v === 'WORK ORDER #')?.[0];
-  const row = sheet.rows?.find(r =>
-    r.cells.some(c => String(c.value || c.displayValue || '') === woNumber && String(c.columnId) === WO_COL)
+// Fetch a single WO from the backend Google Sheet by WO number or wo_id
+async function fetchWO(woNumber: string) {
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+  const sheets = google.sheets({ version: 'v4', auth });
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'Service_Work_Orders!A2:AB2000',
+  });
+  const rows = res.data.values || [];
+  const row = rows.find(r =>
+    (r[COL.wo_number] || '') === woNumber || (r[COL.wo_id] || '') === woNumber
   );
   if (!row) return null;
-
-  const rd: Record<string, string> = {};
-  for (const cell of row.cells) {
-    if (cols[cell.columnId]) rd[cols[cell.columnId]] = cell.displayValue || String(cell.value ?? '');
-  }
-  const result: Record<string, unknown> = { rowId: row.id, ...rd };
-  return result;
+  const g = (i: number) => (row[i] || '') as string;
+  return {
+    wo_id:          g(COL.wo_id),
+    wo_number:      g(COL.wo_number),
+    name:           g(COL.name),
+    description:    g(COL.description),
+    status:         g(COL.status),
+    island:         g(COL.island),
+    address:        g(COL.address),
+    contact_person: g(COL.contact_person),
+    contact_phone:  g(COL.contact_phone),
+    contact_email:  g(COL.contact_email),
+    assigned_to:    g(COL.assigned_to),
+    scheduled_date: g(COL.scheduled_date),
+  };
 }
 
 // GET /api/service/quote?wo=26-2040 — fetch WO + auto-calculated defaults
@@ -50,18 +69,16 @@ export async function GET(req: Request) {
 
     if (!woNumber) return NextResponse.json({ error: 'wo parameter required' }, { status: 400 });
 
-    const token = getSSToken();
-    const woRaw = await fetchWO(token, woNumber);
-    if (!woRaw) return NextResponse.json({ error: `WO ${woNumber} not found` }, { status: 404 });
-    const wo = woRaw as Record<string, unknown>;
+    const wo = await fetchWO(woNumber);
+    if (!wo) return NextResponse.json({ error: `WO ${woNumber} not found` }, { status: 404 });
 
     // Extract key fields
-    const address   = String(wo['ADDRESS'] || '');
-    const island    = String(wo['Area of island'] || 'Maui');
-    const contact   = String(wo['CONTACT #'] || '');
-    const name      = String(wo['Task Name / Job Name'] || wo['Job Name/WO Number'] || '');
-    const desc      = String(wo['DESCRIPTION'] || '');
-    const assignedTo = String(wo['Assigned To'] || '');
+    const address    = wo.address;
+    const island     = wo.island || 'Maui';
+    const contact    = [wo.contact_person, wo.contact_phone].filter(Boolean).join(' · ');
+    const name       = wo.name;
+    const desc       = wo.description;
+    const assignedTo = wo.assigned_to;
 
     // Calculate site visit fee defaults
     const siteVisit = calculateSiteVisitFee({ address, island });
@@ -75,15 +92,17 @@ export async function GET(req: Request) {
     return NextResponse.json({
       wo: {
         woNumber,
-        rowId: woRaw?.rowId,
+        wo_id: wo.wo_id,
         name,
         address,
         island,
         contact,
+        contactPhone: wo.contact_phone,
+        contactEmail: wo.contact_email,
         description: desc,
         assignedTo,
-        status: String(wo['Status'] || ''),
-        scheduledDate: String(wo['Scheduled Date'] || ''),
+        status: wo.status,
+        scheduledDate: wo.scheduled_date,
       },
       defaults: {
         crewCount: DEFAULT_SERVICE_CREW.count,

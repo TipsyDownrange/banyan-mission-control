@@ -1,24 +1,27 @@
 import { NextResponse } from 'next/server';
 import { generateDispatchWOPDF } from '@/lib/pdf-work-order-dispatch';
-import { getSSToken } from '@/lib/gauth';
+import { getGoogleAuth } from '@/lib/gauth';
+import { google } from 'googleapis';
 
-const SHEET_ID = '7905619916154756';
+const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
-const COL_MAP: Record<number, string> = {
-  5281432546895748: 'name',
-  2111327923136388: 'address',
-  6614927550506884: 'contact',
-  4363127736821636: 'wo_number',
-  6826033783039876: 'island',
-  70634341984132:   'description',
-  8866727364192132: 'status',
-  1196534248826756: 'assigned_to',
-  3153803953786756: 'date_received',
-  198316698324868:  'scheduled_date',
-  5700133876197252: 'hours_to_measure',
-  3448334062512004: 'hours_estimated',
-  4279703860629380: 'men',
-  7951933689882500: 'comments',
+// Column indices in Service_Work_Orders tab (0-based)
+const COL = {
+  wo_id:          0,
+  wo_number:      1,
+  name:           2,
+  description:    3,
+  status:         4,
+  island:         5,
+  address:        7,
+  contact_person: 8,
+  contact_phone:  10,
+  contact_email:  11,
+  assigned_to:    14,
+  scheduled_date: 17,
+  hours_estimated: 19,
+  men_required:   21,
+  comments:       22,
 };
 
 export async function GET(req: Request) {
@@ -27,45 +30,40 @@ export async function GET(req: Request) {
     const woNumber = searchParams.get('wo') || '';
     if (!woNumber) return NextResponse.json({ error: 'wo required' }, { status: 400 });
 
-    const token = getSSToken();
-    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${SHEET_ID}?pageSize=200`, {
-      headers: { Authorization: `Bearer ${token}` },
+    // Fetch from Service_Work_Orders tab
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'Service_Work_Orders!A2:AB2000',
     });
-    const sheet = await res.json() as { columns?: { id: number; title: string }[]; rows?: { id: number; cells: { columnId: number; value?: unknown; displayValue?: string }[] }[] };
-
-    const woColId = sheet.columns?.find(c => c.title === 'WORK ORDER #')?.id;
-    const row = sheet.rows?.find(r => r.cells.some(c => c.columnId === woColId && (c.displayValue === woNumber || c.value === woNumber)));
+    const rows = res.data.values || [];
+    const row = rows.find(r =>
+      (r[COL.wo_number] || '') === woNumber || (r[COL.wo_id] || '') === woNumber
+    );
     if (!row) return NextResponse.json({ error: `WO ${woNumber} not found` }, { status: 404 });
 
-    const rd: Record<string, string> = {};
-    for (const cell of row.cells) {
-      const key = COL_MAP[cell.columnId];
-      if (key) rd[key] = cell.displayValue || String(cell.value ?? '');
-    }
+    const g = (i: number) => (row[i] || '') as string;
 
-    // Parse assigned crew
-    const crewNames = (rd.assigned_to || '').split(',').map(s => s.trim()).filter(Boolean);
+    // Parse assigned crew from assigned_to field
+    const crewNames = g(COL.assigned_to).split(',').map(s => s.trim()).filter(Boolean);
     const crew = crewNames.map(name => ({ name, role: 'Glazier' }));
 
-    // Parse contact
-    const contact = rd.contact || '';
-    const phoneMatch = contact.match(/(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})/);
-
     const dispatchData = {
-      wo_number: rd.wo_number || woNumber,
-      date: new Date().toISOString().slice(0, 10),
-      scheduled_date: rd.scheduled_date || '',
-      project_name: rd.name || '',
-      address: rd.address || '',
-      island: rd.island || '',
-      contact_name: contact.replace(/[\d\s\-\.()]+/g, '').trim() || '',
-      contact_phone: phoneMatch?.[1] || '',
-      scope_description: rd.description || '',
+      wo_number:          g(COL.wo_number) || woNumber,
+      date:               new Date().toISOString().slice(0, 10),
+      scheduled_date:     g(COL.scheduled_date),
+      project_name:       g(COL.name),
+      address:            g(COL.address),
+      island:             g(COL.island),
+      contact_name:       g(COL.contact_person),
+      contact_phone:      g(COL.contact_phone),
+      scope_description:  g(COL.description),
       crew,
-      foreman: crewNames[0] || '',
-      estimated_hours: rd.hours_estimated || rd.hours_to_measure || '',
-      men_count: rd.men || String(crewNames.length) || '',
-      special_instructions: rd.comments || '',
+      foreman:            crewNames[0] || '',
+      estimated_hours:    g(COL.hours_estimated),
+      men_count:          g(COL.men_required) || String(crewNames.length),
+      special_instructions: g(COL.comments),
     };
 
     const pdfBuffer = await generateDispatchWOPDF(dispatchData);
