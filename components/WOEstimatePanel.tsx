@@ -147,7 +147,6 @@ function defaultData(wo: WorkOrder): WOEstimateData {
     other: { equipmentRental: '', misc: '', travel: '', freight: '' },
     otherExtra: [],
     labor: [
-      { description: 'Fab Labor', hours: '', rate: '117', amount: '' },
       { description: 'Field Labor', hours: '', rate: '117', amount: '' },
     ],
     driveTime: {
@@ -563,7 +562,6 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                   ['shims', 'Shims'],
                   ['flashing', 'Flashing'],
                   ['shopDrawings', 'Shop Drawings'],
-                  ['travel', 'Travel'],
                   ['totalFreight', 'Freight'],
                 ] as [keyof WOEstimateData['misc'], string][]).map(([key, label]) => (
                   <FixedRow key={key} label={label} value={data.misc[key]}
@@ -587,7 +585,6 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                 {([
                   ['equipmentRental', 'Equipment Rental'],
                   ['misc', 'Misc'],
-                  ['travel', 'Travel'],
                   ['freight', 'Freight'],
                 ] as [keyof WOEstimateData['other'], string][]).map(([key, label]) => (
                   <FixedRow key={key} label={label} value={data.other[key]}
