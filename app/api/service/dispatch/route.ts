@@ -72,6 +72,15 @@ async function createWOFolderStructure(
       findOrCreateFolder(drive, 'Correspondence', woFolderId),
     ]);
 
+    // Share with @kulaglass.com domain
+    try {
+      await drive.permissions.create({
+        fileId: woFolderId,
+        supportsAllDrives: true,
+        requestBody: { type: 'domain', domain: 'kulaglass.com', role: 'writer' },
+      });
+    } catch { /* non-fatal if already shared via drive inheritance */ }
+
     // Get the webViewLink
     const meta = await drive.files.get({
       fileId: woFolderId,
