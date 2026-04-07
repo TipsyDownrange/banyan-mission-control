@@ -43,7 +43,7 @@ export const C = {
 export const COMPANY = {
   name:    'KULA GLASS COMPANY, INC.',
   address: '289 Pakana Street  •  Wailuku, Hawaii 96793',
-  contact: 'P: (808) 242-8999  •  F: (808) 242-7822  •  Lic. C-20080',
+  contact: 'P: (808) 242-8999  •  Lic. C-20080',
 };
 
 // ─── T&C (2025) ───────────────────────────────────────────────────────────────
