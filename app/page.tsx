@@ -32,11 +32,12 @@ import InstallTrackingPanel from '@/components/InstallTrackingPanel';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import SuggestionButton from '@/components/SuggestionButton';
 import StepLibraryPanel from '@/components/StepLibraryPanel';
+import SuperSchedulingPanel from '@/components/SuperSchedulingPanel';
 import { useState, useEffect } from 'react';
 
 export type AppView =
   | 'Today' | 'Inbox' | 'Calendar'
-  | 'Overview' | 'Forecasting' | 'Dispatch Board' | 'Schedule' | 'Event Feed' | 'Issues'
+  | 'Overview' | 'Forecasting' | 'Scheduling' | 'Dispatch Board' | 'Schedule' | 'Event Feed' | 'Issues'
   | 'Projects' | 'Schedules' | 'Submittals' | 'Budget' | 'Change Orders'
   | 'Crew' | 'Customers' | 'Assets' | 'Org Chart'
   | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
@@ -183,6 +184,7 @@ export default function Home() {
         {activeView === 'Assets'        && <AssetsPanel />}
         {activeView === 'Org Chart'     && <OrgChartPanel />}
         {activeView === 'Forecasting'   && <SchedulingPanel readOnly={isReadOnly('Forecasting')} />}
+        {activeView === 'Scheduling'     && <SuperSchedulingPanel />}
         {activeView === 'Dispatch Board'&& <DispatchBoard />}
         {activeView === 'Schedule'        && <DispatchBoard />}
         {activeView === 'Approvals'     && <ApprovalsPanel />}

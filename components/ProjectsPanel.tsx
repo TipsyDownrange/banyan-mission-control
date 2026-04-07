@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
+import WorkBreakdown from '@/components/shared/WorkBreakdown';
+import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -92,7 +94,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'qa'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'qa'|'work-breakdown'|'matrix'>('overview');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -122,6 +124,8 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'budget', label: 'Budget' },
     { key: 'qa', label: `QA/Install (${install.items?.length || 0})` },
+    { key: 'work-breakdown', label: 'Work Breakdown' },
+    { key: 'matrix', label: 'Matrix View' },
   ] as const;
 
   const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
@@ -299,6 +303,14 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                     </div>
                   )}
                 </div>
+              )}
+
+              {activeTab === 'work-breakdown' && (
+                <WorkBreakdown jobId={project.kID} jobType="project" />
+              )}
+
+              {activeTab === 'matrix' && (
+                <ProjectMatrixView jobId={project.kID} />
               )}
             </>
           )}

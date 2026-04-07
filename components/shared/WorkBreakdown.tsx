@@ -22,6 +22,10 @@ interface InstallStep {
   acceptance_criteria: string;
   required_photo_yn: string;
   category?: string;
+  planned_start_date?: string;
+  planned_end_date?: string;
+  assigned_crew?: string;
+  predecessor_step_id?: string;
 }
 
 const STEP_CATEGORIES = [
@@ -1006,6 +1010,83 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             </div>
             {step.acceptance_criteria && (
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{step.acceptance_criteria}</div>
+            )}
+
+            {/* ─── Scheduling fields ──────────────────────────────────────── */}
+            {!readOnly && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6, alignItems: 'center' }}>
+                {/* Planned Start Date */}
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Start</span>
+                  <input
+                    type="date"
+                    value={step.planned_start_date || ''}
+                    onChange={async (e) => {
+                      try {
+                        await fetch(`/api/work-breakdown/${jobId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ type: 'step', id: step.install_step_id, planned_start_date: e.target.value }),
+                        });
+                        await loadData();
+                      } catch {}
+                    }}
+                    onClick={ev => ev.stopPropagation()}
+                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', background: step.planned_start_date ? '#f0fdfa' : 'white', color: '#0f172a' }}
+                  />
+                </label>
+
+                {/* Planned End Date */}
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>End</span>
+                  <input
+                    type="date"
+                    value={step.planned_end_date || ''}
+                    onChange={async (e) => {
+                      try {
+                        await fetch(`/api/work-breakdown/${jobId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ type: 'step', id: step.install_step_id, planned_end_date: e.target.value }),
+                        });
+                        await loadData();
+                      } catch {}
+                    }}
+                    onClick={ev => ev.stopPropagation()}
+                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', background: step.planned_end_date ? '#f0fdfa' : 'white', color: '#0f172a' }}
+                  />
+                </label>
+
+                {/* Assigned Crew */}
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Crew</span>
+                  <input
+                    type="text"
+                    value={step.assigned_crew || ''}
+                    placeholder="Names, comma-sep"
+                    onChange={async (e) => {
+                      try {
+                        await fetch(`/api/work-breakdown/${jobId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ type: 'step', id: step.install_step_id, assigned_crew: e.target.value }),
+                        });
+                      } catch {}
+                    }}
+                    onBlur={() => loadData()}
+                    onClick={ev => ev.stopPropagation()}
+                    style={{ fontSize: 11, padding: '2px 6px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', width: 120, background: step.assigned_crew ? '#f0fdfa' : 'white', color: '#0f172a' }}
+                  />
+                </label>
+              </div>
+            )}
+
+            {/* Show assigned crew if read-only */}
+            {readOnly && (step.planned_start_date || step.assigned_crew) && (
+              <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 10, color: '#94a3b8', flexWrap: 'wrap' }}>
+                {step.planned_start_date && <span>📅 {step.planned_start_date}{step.planned_end_date ? ` → ${step.planned_end_date}` : ''}</span>}
+                {step.assigned_crew && <span>👷 {step.assigned_crew}</span>}
+              </div>
             )}
           </div>
 
