@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 
-const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
+const SHEET_ID = process.env.GOOGLE_SHEET_ID || '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const RANGE_BASE = 'Step_Templates';
 const DATA_RANGE = 'Step_Templates!A2:F2000';
 
