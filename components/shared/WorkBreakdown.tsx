@@ -222,6 +222,14 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   const [renamingPlan, setRenamingPlan] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
+  // Rename mark
+  const [renamingMark, setRenamingMark] = useState<string | null>(null);
+  const [renamingMarkValue, setRenamingMarkValue] = useState('');
+
+  // Edit step name
+  const [editingStep, setEditingStep] = useState<string | null>(null);
+  const [editingStepValue, setEditingStepValue] = useState('');
+
   // Saving state
   const [savingNote, setSavingNote] = useState<string | null>(null);
 
@@ -495,6 +503,52 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     }
   }
 
+  async function handleRenameMarkLabel(plan: InstallPlan, oldLabel: string, newLabel: string) {
+    if (!newLabel.trim() || newLabel.trim() === oldLabel) {
+      setRenamingMark(null);
+      return;
+    }
+    const trimmed = newLabel.trim();
+    const planSteps = getStepsForPlan(plan.install_plan_id);
+    const stepsToUpdate = planSteps.filter(s => s.step_name.includes(oldLabel));
+    try {
+      await Promise.all(stepsToUpdate.map(step =>
+        fetch(`/api/work-breakdown/${jobId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'step',
+            id: step.install_step_id,
+            step_name: step.step_name.replaceAll(oldLabel, trimmed),
+          }),
+        })
+      ));
+      if (stepsToUpdate.length > 0) await loadData();
+    } catch {
+      // silently fail
+    } finally {
+      setRenamingMark(null);
+    }
+  }
+
+  async function handleEditStepName(stepId: string, newName: string) {
+    const trimmed = newName.trim();
+    setEditingStep(null);
+    if (!trimmed) return;
+    const existing = steps.find(s => s.install_step_id === stepId);
+    if (existing && trimmed === existing.step_name) return;
+    try {
+      await fetch(`/api/work-breakdown/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'step', id: stepId, step_name: trimmed }),
+      });
+      await loadData();
+    } catch {
+      // silently fail
+    }
+  }
+
   async function handleBulkCreate() {
     const start = parseInt(bulkForm.start);
     const end = parseInt(bulkForm.end);
@@ -584,16 +638,32 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
         {editingDocs && !readOnly ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {docLinks.map(({ key, label, icon }) => (
+            {docLinks.map(({ key, label, icon, color }) => (
               <div key={key}>
                 <label style={LBL}>{icon} {label}</label>
-                <input
-                  style={INP}
-                  value={docsForm[key]}
-                  onChange={e => setDocsForm(f => ({ ...f, [key]: e.target.value }))}
-                  placeholder="Paste Google Drive or web link…"
-                  type="url"
-                />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    style={INP}
+                    value={docsForm[key]}
+                    onChange={e => setDocsForm(f => ({ ...f, [key]: e.target.value }))}
+                    placeholder="Paste Google Drive or web link…"
+                    type="url"
+                  />
+                  {docsForm[key] ? (
+                    <a
+                      href={docsForm[key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color, fontSize: 20, lineHeight: 1, flexShrink: 0, textDecoration: 'none' }}
+                      title="Open link"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      🔗
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0, color: '#e2e8f0' }} title="Paste a link first">🔗</span>
+                  )}
+                </div>
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -825,13 +895,43 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{
-                fontSize: 13, fontWeight: 600,
-                color: status === 'complete' ? '#64748b' : '#0f172a',
-                textDecoration: status === 'complete' ? 'line-through' : 'none',
-              }}>
-                {step.step_name}
-              </span>
+              {editingStep === step.install_step_id && !readOnly ? (
+                <input
+                  value={editingStepValue}
+                  onChange={e => setEditingStepValue(e.target.value)}
+                  onBlur={() => handleEditStepName(step.install_step_id, editingStepValue)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleEditStepName(step.install_step_id, editingStepValue);
+                    if (e.key === 'Escape') setEditingStep(null);
+                  }}
+                  autoFocus
+                  style={{
+                    fontSize: 13, fontWeight: 600,
+                    border: '1px solid #14b8a6', borderRadius: 5,
+                    padding: '3px 8px', background: 'white', outline: 'none',
+                    flex: 1, minWidth: 80,
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: status === 'complete' ? '#64748b' : '#0f172a',
+                    textDecoration: status === 'complete' ? 'line-through' : 'none',
+                    cursor: readOnly || status === 'complete' ? 'default' : 'text',
+                    borderBottom: readOnly || status === 'complete' ? 'none' : '1px dashed #e2e8f0',
+                    padding: '1px 0',
+                  }}
+                  onClick={() => {
+                    if (readOnly || status === 'complete') return;
+                    setEditingStep(step.install_step_id);
+                    setEditingStepValue(step.step_name);
+                  }}
+                  title={readOnly || status === 'complete' ? undefined : 'Tap to edit'}
+                >
+                  {step.step_name}
+                </span>
+              )}
               {step.allotted_hours > 0 && (
                 <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>
                   {step.allotted_hours}h
@@ -895,26 +995,66 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
       return (
         <div key={mark.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden', background: 'white' }}>
           {/* Mark header */}
-          <button
-            onClick={() => setExpandedMarks(prev => {
-              const n = new Set(prev);
-              if (n.has(markKey)) n.delete(markKey); else n.add(markKey);
-              return n;
-            })}
+          <div
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer',
-              textAlign: 'left',
+              padding: '10px 14px',
             }}
           >
-            <span style={{ fontSize: 11, color: '#94a3b8', width: 14, flexShrink: 0 }}>
-              {isExpanded ? '▼' : '▶'}
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', flex: 1 }}>
-              {mark.label}
-            </span>
+            <button
+              onClick={() => setExpandedMarks(prev => {
+                const n = new Set(prev);
+                if (n.has(markKey)) n.delete(markKey); else n.add(markKey);
+                return n;
+              })}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+            >
+              <span style={{ fontSize: 11, color: '#94a3b8', width: 14, flexShrink: 0 }}>
+                {isExpanded ? '▼' : '▶'}
+              </span>
+            </button>
+
+            {/* Mark label — tap to edit */}
+            {renamingMark === markKey && !readOnly ? (
+              <input
+                value={renamingMarkValue}
+                onChange={e => setRenamingMarkValue(e.target.value)}
+                onBlur={() => handleRenameMarkLabel(plan, mark.label, renamingMarkValue)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleRenameMarkLabel(plan, mark.label, renamingMarkValue);
+                  if (e.key === 'Escape') setRenamingMark(null);
+                }}
+                onClick={e => e.stopPropagation()}
+                autoFocus
+                style={{
+                  fontSize: 13, fontWeight: 700, color: '#0f172a',
+                  border: '1px solid #14b8a6', borderRadius: 5,
+                  padding: '3px 8px', background: 'white', outline: 'none',
+                  flex: 1, minWidth: 80,
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  fontSize: 13, fontWeight: 700, color: '#0f172a', flex: 1,
+                  cursor: readOnly ? 'default' : 'text',
+                  borderBottom: readOnly ? 'none' : '1px dashed #e2e8f0',
+                  padding: '1px 0',
+                }}
+                onClick={e => {
+                  if (readOnly) return;
+                  e.stopPropagation();
+                  setRenamingMark(markKey);
+                  setRenamingMarkValue(mark.label);
+                }}
+                title={readOnly ? undefined : 'Tap to rename'}
+              >
+                {mark.label}
+              </span>
+            )}
+
             <StatusDot status={markStatus} />
-          </button>
+          </div>
 
           {/* Steps */}
           {isExpanded && (
@@ -1227,6 +1367,63 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
       {/* Job Documents */}
       {renderJobDocs()}
 
+      {/* Primary action buttons — at top, always visible */}
+      {!readOnly && plans.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {renderBulkCreate()}
+          <button
+            onClick={() => { setShowAddScope(p => !p); setShowBulkCreate(false); }}
+            style={{
+              width: '100%', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              background: showAddScope ? '#0f172a' : 'white',
+              color: showAddScope ? 'white' : '#0f172a',
+              border: '1px dashed #e2e8f0',
+              textAlign: 'center',
+            }}
+          >
+            {showAddScope ? '— Cancel' : '+ Add Scope / System'}
+          </button>
+          {/* Add Scope form */}
+          {showAddScope && (
+            <div style={{ padding: 16, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>New Scope</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={LBL}>System Type</label>
+                  <input style={INP} value={scopeForm.system_type} onChange={e => setScopeForm(f => ({ ...f, system_type: e.target.value }))} placeholder="e.g. Sliding Glass Door" list="system-types" autoFocus />
+                  <datalist id="system-types">{Object.keys(STEP_TEMPLATES).map(t => <option key={t} value={t} />)}</datalist>
+                </div>
+                <div>
+                  <label style={LBL}>Location / Area</label>
+                  <input style={INP} value={scopeForm.location} onChange={e => setScopeForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. Master Bedroom" />
+                </div>
+                <div>
+                  <label style={LBL}>Est. Total Hours</label>
+                  <input style={INP} type="number" value={scopeForm.estimated_total_hours} onChange={e => setScopeForm(f => ({ ...f, estimated_total_hours: e.target.value }))} placeholder="0" min="0" step="0.5" />
+                </div>
+                <div>
+                  <label style={LBL}>Number of Marks / Units</label>
+                  <input style={INP} type="number" value={scopeForm.estimated_qty} onChange={e => setScopeForm(f => ({ ...f, estimated_qty: e.target.value }))} placeholder="1" min="1" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={handleAddScope}
+                  disabled={!scopeForm.system_type || !scopeForm.location}
+                  style={{
+                    padding: '9px 22px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none', cursor: 'pointer',
+                    background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+                    color: scopeForm.system_type && scopeForm.location ? 'white' : '#94a3b8',
+                  }}
+                >
+                  Create Scope
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Summary bar */}
       {plans.length > 0 && (
         <div style={{
@@ -1304,98 +1501,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         </div>
       )}
 
-      {/* Action buttons row (when there are already plans) */}
-      {!readOnly && plans.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <button
-            onClick={() => { setShowAddScope(p => !p); setShowBulkCreate(false); }}
-            style={{
-              width: '100%', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              background: showAddScope ? '#0f172a' : 'white',
-              color: showAddScope ? 'white' : '#0f172a',
-              border: '1px dashed #e2e8f0',
-              textAlign: 'center',
-            }}
-          >
-            {showAddScope ? '— Cancel' : '+ Add Scope / System'}
-          </button>
-
-          {/* Bulk create */}
-          {renderBulkCreate()}
-        </div>
-      )}
-
-      {/* Add Scope form */}
-      {showAddScope && !readOnly && (
-        <div style={{ padding: 16, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            New Scope
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <label style={LBL}>System Type</label>
-              <input
-                style={INP}
-                value={scopeForm.system_type}
-                onChange={e => setScopeForm(f => ({ ...f, system_type: e.target.value }))}
-                placeholder="e.g. Sliding Glass Door"
-                list="system-types"
-                autoFocus
-              />
-              <datalist id="system-types">
-                {Object.keys(STEP_TEMPLATES).map(t => <option key={t} value={t} />)}
-              </datalist>
-            </div>
-            <div>
-              <label style={LBL}>Location / Area</label>
-              <input
-                style={INP}
-                value={scopeForm.location}
-                onChange={e => setScopeForm(f => ({ ...f, location: e.target.value }))}
-                placeholder="e.g. Master Bedroom"
-              />
-            </div>
-            <div>
-              <label style={LBL}>Est. Total Hours</label>
-              <input
-                style={INP}
-                type="number"
-                value={scopeForm.estimated_total_hours}
-                onChange={e => setScopeForm(f => ({ ...f, estimated_total_hours: e.target.value }))}
-                placeholder="0"
-                min="0"
-                step="0.5"
-              />
-            </div>
-            <div>
-              <label style={LBL}>Number of Marks / Units</label>
-              <input
-                style={INP}
-                type="number"
-                value={scopeForm.estimated_qty}
-                onChange={e => setScopeForm(f => ({ ...f, estimated_qty: e.target.value }))}
-                placeholder="1"
-                min="1"
-              />
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={handleAddScope}
-              disabled={!scopeForm.system_type || !scopeForm.location}
-              style={{
-                padding: '9px 22px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none', cursor: 'pointer',
-                background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-                color: scopeForm.system_type && scopeForm.location ? 'white' : '#94a3b8',
-              }}
-            >
-              Create Scope
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk create (when no plans yet — shown inline here too) */}
+      {/* Bulk create (when no plans yet) */}
       {!readOnly && plans.length === 0 && showBulkCreate && renderBulkCreate()}
     </div>
   );
