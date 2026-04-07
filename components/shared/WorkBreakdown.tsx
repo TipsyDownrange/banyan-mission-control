@@ -35,6 +35,12 @@ interface StepCompletion {
   photo_urls: string;
 }
 
+interface JobDocs {
+  install_instructions: string;
+  msds: string;
+  drawings: string;
+}
+
 // ─── Step Templates ────────────────────────────────────────────────────────────
 
 const STEP_TEMPLATES: Record<string, { name: string; hours: number }[]> = {
@@ -147,7 +153,6 @@ function StatusDot({ status }: { status: 'not_started' | 'in_progress' | 'comple
 
 function HoursDelta({ quoted, planned, actual }: { quoted?: number; planned: number; actual: number }) {
   const overPlanned = actual > planned && planned > 0;
-  const underPlanned = actual <= planned || planned === 0;
 
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -179,12 +184,12 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   const [plans, setPlans] = useState<InstallPlan[]>([]);
   const [steps, setSteps] = useState<InstallStep[]>([]);
   const [completions, setCompletions] = useState<StepCompletion[]>([]);
+  const [docs, setDocs] = useState<JobDocs>({ install_instructions: '', msds: '', drawings: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // UI state
   const [expandedScopes, setExpandedScopes] = useState<Set<string>>(new Set());
-  const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [expandedMarks, setExpandedMarks] = useState<Set<string>>(new Set());
 
   // Add forms
@@ -195,6 +200,27 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   // Form state
   const [scopeForm, setScopeForm] = useState({ system_type: '', location: '', estimated_total_hours: '', estimated_qty: '1' });
   const [stepForm, setStepForm] = useState({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N' });
+
+  // Bulk create
+  const [showBulkCreate, setShowBulkCreate] = useState(false);
+  const [bulkForm, setBulkForm] = useState({
+    template: 'Shower Enclosure',
+    system_type: 'Shower Enclosure',
+    location_prefix: '',
+    id_prefix: 'Room',
+    start: '301',
+    end: '354',
+  });
+  const [bulkCreating, setBulkCreating] = useState(false);
+
+  // Docs
+  const [editingDocs, setEditingDocs] = useState(false);
+  const [docsForm, setDocsForm] = useState<JobDocs>({ install_instructions: '', msds: '', drawings: '' });
+  const [savingDocs, setSavingDocs] = useState(false);
+
+  // Rename plan
+  const [renamingPlan, setRenamingPlan] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   // Saving state
   const [savingNote, setSavingNote] = useState<string | null>(null);
@@ -211,6 +237,9 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
       setPlans(data.plans || []);
       setSteps(data.steps || []);
       setCompletions(data.completions || []);
+      const docsData: JobDocs = data.docs || { install_instructions: '', msds: '', drawings: '' };
+      setDocs(docsData);
+      setDocsForm(docsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load');
     } finally {
@@ -430,6 +459,329 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     await loadData();
   }
 
+  async function handleRenamePlan(planId: string, newLocation: string) {
+    if (!newLocation.trim()) {
+      setRenamingPlan(null);
+      return;
+    }
+    try {
+      await fetch(`/api/work-breakdown/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'plan', id: planId, location: newLocation.trim() }),
+      });
+      await loadData();
+    } catch {
+      // silently fail
+    } finally {
+      setRenamingPlan(null);
+    }
+  }
+
+  async function handleSaveDocs() {
+    setSavingDocs(true);
+    try {
+      await fetch(`/api/work-breakdown/${jobId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'docs', ...docsForm }),
+      });
+      await loadData();
+      setEditingDocs(false);
+    } catch {
+      alert('Failed to save document links');
+    } finally {
+      setSavingDocs(false);
+    }
+  }
+
+  async function handleBulkCreate() {
+    const start = parseInt(bulkForm.start);
+    const end = parseInt(bulkForm.end);
+    if (!bulkForm.system_type || !bulkForm.id_prefix || isNaN(start) || isNaN(end) || end < start) {
+      alert('Please fill in all fields with valid numbers.');
+      return;
+    }
+    setBulkCreating(true);
+    const templateSteps = (STEP_TEMPLATES[bulkForm.template] || []).map(s => ({
+      name: s.name,
+      allotted_hours: s.hours,
+      acceptance_criteria: '',
+      required_photo_yn: 'N',
+    }));
+    try {
+      const res = await fetch(`/api/work-breakdown/${jobId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'bulk',
+          system_type: bulkForm.system_type,
+          location_prefix: bulkForm.location_prefix,
+          id_prefix: bulkForm.id_prefix,
+          start,
+          end,
+          template_steps: templateSteps,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setShowBulkCreate(false);
+      await loadData();
+    } catch {
+      alert('Failed to bulk create openings');
+    } finally {
+      setBulkCreating(false);
+    }
+  }
+
+  // ─── Render: Job Docs ────────────────────────────────────────────────────────
+
+  function renderJobDocs() {
+    const hasDocs = docs.install_instructions || docs.msds || docs.drawings;
+    if (readOnly && !hasDocs) return null;
+
+    const docLinks = [
+      {
+        key: 'install_instructions' as keyof JobDocs,
+        label: 'Install Instructions',
+        icon: '📋',
+        color: '#0369a1',
+        bg: '#eff6ff',
+        border: '#bfdbfe',
+      },
+      {
+        key: 'msds' as keyof JobDocs,
+        label: 'MSDS / Safety',
+        icon: '⚠️',
+        color: '#b45309',
+        bg: '#fffbeb',
+        border: '#fde68a',
+      },
+      {
+        key: 'drawings' as keyof JobDocs,
+        label: 'Drawings',
+        icon: '📐',
+        color: '#7c3aed',
+        bg: '#f5f3ff',
+        border: '#ddd6fe',
+      },
+    ];
+
+    return (
+      <div style={{ padding: 14, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Job Documents
+          </span>
+          {!readOnly && (
+            <button
+              onClick={() => setEditingDocs(p => !p)}
+              style={{ fontSize: 12, color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 6px' }}
+            >
+              {editingDocs ? 'Cancel' : 'Edit Links'}
+            </button>
+          )}
+        </div>
+
+        {editingDocs && !readOnly ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {docLinks.map(({ key, label, icon }) => (
+              <div key={key}>
+                <label style={LBL}>{icon} {label}</label>
+                <input
+                  style={INP}
+                  value={docsForm[key]}
+                  onChange={e => setDocsForm(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder="Paste Google Drive or web link…"
+                  type="url"
+                />
+              </div>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={handleSaveDocs}
+                disabled={savingDocs}
+                style={{
+                  padding: '9px 20px', borderRadius: 8, fontSize: 12, fontWeight: 800, border: 'none',
+                  cursor: savingDocs ? 'default' : 'pointer',
+                  background: savingDocs ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+                  color: savingDocs ? '#94a3b8' : 'white',
+                }}
+              >
+                {savingDocs ? 'Saving…' : 'Save Links'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {docLinks.map(({ key, label, icon, color, bg, border }) => {
+              const url = docs[key];
+              return url ? (
+                <a
+                  key={key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 4,
+                    padding: '12px 10px', borderRadius: 10,
+                    background: bg, border: `1px solid ${border}`,
+                    textDecoration: 'none', cursor: 'pointer',
+                    transition: 'opacity 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{icon}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color, lineHeight: 1.3 }}>{label}</span>
+                  <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600 }}>Open ↗</span>
+                </a>
+              ) : (
+                <div
+                  key={key}
+                  onClick={() => !readOnly && setEditingDocs(true)}
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 4,
+                    padding: '12px 10px', borderRadius: 10,
+                    background: '#f8fafc', border: '1px dashed #e2e8f0',
+                    cursor: readOnly ? 'default' : 'pointer', opacity: 0.55,
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{icon}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', lineHeight: 1.3 }}>{label}</span>
+                  {!readOnly && <span style={{ fontSize: 9, color: '#cbd5e1' }}>Add link</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── Render: Bulk Create ─────────────────────────────────────────────────────
+
+  function renderBulkCreate() {
+    if (readOnly) return null;
+
+    const start = parseInt(bulkForm.start);
+    const end = parseInt(bulkForm.end);
+    const count = !isNaN(start) && !isNaN(end) && end >= start ? end - start + 1 : 0;
+    const templateStepCount = (STEP_TEMPLATES[bulkForm.template] || []).length;
+    const isValid = !!bulkForm.system_type && !!bulkForm.id_prefix && count > 0;
+
+    return (
+      <div>
+        <button
+          onClick={() => { setShowBulkCreate(p => !p); setShowAddScope(false); }}
+          style={{
+            width: '100%', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            background: showBulkCreate ? '#7c3aed' : 'white',
+            color: showBulkCreate ? 'white' : '#7c3aed',
+            border: `1px dashed ${showBulkCreate ? '#7c3aed' : 'rgba(124,58,237,0.4)'}`,
+            textAlign: 'center',
+          }}
+        >
+          {showBulkCreate ? '— Cancel' : '⚡ Bulk Create Openings'}
+        </button>
+
+        {showBulkCreate && (
+          <div style={{ marginTop: 8, padding: 16, background: 'white', borderRadius: 12, border: '1px solid rgba(124,58,237,0.2)' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
+              ⚡ Bulk Create Openings
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Template selector */}
+              <div>
+                <label style={LBL}>System Template</label>
+                <select
+                  style={{ ...INP, cursor: 'pointer' }}
+                  value={bulkForm.template}
+                  onChange={e => setBulkForm(f => ({ ...f, template: e.target.value, system_type: e.target.value }))}
+                >
+                  {Object.keys(STEP_TEMPLATES).map(name => (
+                    <option key={name} value={name}>
+                      {name} ({STEP_TEMPLATES[name].length} steps)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={LBL}>Building / Area</label>
+                  <input
+                    style={INP}
+                    value={bulkForm.location_prefix}
+                    onChange={e => setBulkForm(f => ({ ...f, location_prefix: e.target.value }))}
+                    placeholder="e.g. Building 1 (optional)"
+                  />
+                </div>
+                <div>
+                  <label style={LBL}>Opening Prefix</label>
+                  <input
+                    style={INP}
+                    value={bulkForm.id_prefix}
+                    onChange={e => setBulkForm(f => ({ ...f, id_prefix: e.target.value }))}
+                    placeholder="e.g. Room, Unit, Suite"
+                  />
+                </div>
+                <div>
+                  <label style={LBL}>Start #</label>
+                  <input
+                    style={INP}
+                    type="number"
+                    value={bulkForm.start}
+                    onChange={e => setBulkForm(f => ({ ...f, start: e.target.value }))}
+                    placeholder="301"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label style={LBL}>End #</label>
+                  <input
+                    style={INP}
+                    type="number"
+                    value={bulkForm.end}
+                    onChange={e => setBulkForm(f => ({ ...f, end: e.target.value }))}
+                    placeholder="354"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              {/* Preview */}
+              {isValid && (
+                <div style={{ padding: '10px 14px', background: '#f5f3ff', borderRadius: 8, border: '1px solid rgba(124,58,237,0.15)' }}>
+                  <div style={{ fontSize: 12, color: '#7c3aed', fontWeight: 700 }}>
+                    Creates {count} opening{count !== 1 ? 's' : ''} × {templateStepCount} steps = {count * templateStepCount} total steps
+                  </div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                    {bulkForm.id_prefix} {bulkForm.start} → {bulkForm.id_prefix} {bulkForm.end}
+                    {bulkForm.location_prefix && ` · ${bulkForm.location_prefix}`}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={handleBulkCreate}
+                  disabled={!isValid || bulkCreating}
+                  style={{
+                    padding: '10px 24px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none',
+                    cursor: isValid && !bulkCreating ? 'pointer' : 'default',
+                    background: isValid && !bulkCreating ? 'linear-gradient(135deg,#7c3aed,#a78bfa)' : '#e2e8f0',
+                    color: isValid && !bulkCreating ? 'white' : '#94a3b8',
+                  }}
+                >
+                  {bulkCreating ? 'Creating…' : `Create ${count > 0 ? count : ''} Opening${count !== 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // ─── Render helpers ──────────────────────────────────────────────────────────
 
   function renderStepRow(step: InstallStep, markId: string) {
@@ -522,7 +874,15 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     const planSteps = getStepsForPlan(plan.install_plan_id);
     const stepIds = planSteps.map(s => s.install_step_id);
     const markCount = plan.estimated_qty;
+
     const marks = Array.from({ length: markCount }, (_, i) => {
+      if (markCount === 1) {
+        // Single-opening plans (e.g., bulk created): use location as mark label, plan ID for stability
+        return {
+          id: `${plan.install_plan_id}-m1`,
+          label: plan.location || `${plan.system_type}-1`,
+        };
+      }
       const prefix = plan.system_type.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3);
       return { id: `${prefix}-${i + 1}`, label: `${prefix}-${i + 1}` };
     });
@@ -602,6 +962,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     const isExpanded = expandedScopes.has(plan.install_plan_id);
     const isAddingStep = addingStepToPlan === plan.install_plan_id;
     const isShowingTemplate = showTemplateFor === plan.install_plan_id;
+    const isRenaming = renamingPlan === plan.install_plan_id;
 
     return (
       <div key={plan.install_plan_id} style={{
@@ -631,9 +992,48 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
                 {plan.system_type || 'Unnamed Scope'}
               </span>
+
+              {/* Editable location/opening name */}
               {plan.location && (
-                <span style={{ fontSize: 11, color: '#64748b' }}>{plan.location}</span>
+                isRenaming ? (
+                  <input
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onBlur={() => handleRenamePlan(plan.install_plan_id, renameValue)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleRenamePlan(plan.install_plan_id, renameValue);
+                      if (e.key === 'Escape') setRenamingPlan(null);
+                    }}
+                    onClick={e => e.stopPropagation()}
+                    autoFocus
+                    style={{
+                      fontSize: 11, color: '#0f172a', fontWeight: 600,
+                      border: '1px solid #14b8a6', borderRadius: 5,
+                      padding: '2px 8px', background: 'white', outline: 'none',
+                      minWidth: 80,
+                    }}
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: 11, color: '#64748b',
+                      cursor: readOnly ? 'default' : 'text',
+                      borderBottom: readOnly ? 'none' : '1px dashed #cbd5e1',
+                      padding: '1px 0',
+                    }}
+                    onClick={e => {
+                      if (readOnly) return;
+                      e.stopPropagation();
+                      setRenamingPlan(plan.install_plan_id);
+                      setRenameValue(plan.location);
+                    }}
+                    title={readOnly ? undefined : 'Tap to rename'}
+                  >
+                    {plan.location}
+                  </span>
+                )
               )}
+
               <span style={{
                 fontSize: 10, fontWeight: 700,
                 padding: '2px 8px', borderRadius: 999,
@@ -660,7 +1060,6 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             ) : (
               /* Complex mode: area > mark > steps */
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {/* Areas — group by location (just using the plan's single location for now) */}
                 <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
                   <div style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{plan.location || 'Default Area'}</span>
@@ -824,6 +1223,10 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+      {/* Job Documents */}
+      {renderJobDocs()}
+
       {/* Summary bar */}
       {plans.length > 0 && (
         <div style={{
@@ -876,15 +1279,23 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         <div style={{ padding: '32px 16px', textAlign: 'center', background: 'white', borderRadius: 12, border: '1px dashed #e2e8f0' }}>
           <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>
             No work breakdown defined yet.
-            {!readOnly && ' Add a scope to get started.'}
+            {!readOnly && ' Add a scope or bulk-create openings to get started.'}
           </div>
           {!readOnly && (
-            <button
-              onClick={() => setShowAddScope(true)}
-              style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
-            >
-              + Add Scope
-            </button>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowAddScope(true)}
+                style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+              >
+                + Add Scope
+              </button>
+              <button
+                onClick={() => setShowBulkCreate(true)}
+                style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+              >
+                ⚡ Bulk Create
+              </button>
+            </div>
           )}
         </div>
       ) : (
@@ -893,20 +1304,25 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         </div>
       )}
 
-      {/* Add Scope button (when there are already scopes) */}
+      {/* Action buttons row (when there are already plans) */}
       {!readOnly && plans.length > 0 && (
-        <button
-          onClick={() => setShowAddScope(p => !p)}
-          style={{
-            width: '100%', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            background: showAddScope ? '#0f172a' : 'white',
-            color: showAddScope ? 'white' : '#0f172a',
-            border: '1px dashed #e2e8f0',
-            textAlign: 'center',
-          }}
-        >
-          {showAddScope ? '— Cancel' : '+ Add Scope / System'}
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            onClick={() => { setShowAddScope(p => !p); setShowBulkCreate(false); }}
+            style={{
+              width: '100%', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              background: showAddScope ? '#0f172a' : 'white',
+              color: showAddScope ? 'white' : '#0f172a',
+              border: '1px dashed #e2e8f0',
+              textAlign: 'center',
+            }}
+          >
+            {showAddScope ? '— Cancel' : '+ Add Scope / System'}
+          </button>
+
+          {/* Bulk create */}
+          {renderBulkCreate()}
+        </div>
       )}
 
       {/* Add Scope form */}
@@ -978,6 +1394,9 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           </div>
         </div>
       )}
+
+      {/* Bulk create (when no plans yet — shown inline here too) */}
+      {!readOnly && plans.length === 0 && showBulkCreate && renderBulkCreate()}
     </div>
   );
 }

@@ -14,6 +14,13 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 // Step_Completions: A=Step_Completion_ID, B=Install_Step_ID, C=Mark_ID,
 //   D=Date, E=Crew_Lead, F=Hours_Spent, G=Percent_Complete, H=Notes, I=Photo_URLs
 
+interface BulkTemplateStep {
+  name: string;
+  allotted_hours: number;
+  acceptance_criteria?: string;
+  required_photo_yn?: string;
+}
+
 function rowToInstallPlan(r: string[]) {
   return {
     install_plan_id: r[0] || '',
@@ -91,13 +98,23 @@ export async function GET(
     const allSteps = (stepsRes.data.values || []).map(rowToInstallStep);
     const allCompletions = (completionsRes.data.values || []).map(rowToCompletion);
 
-    const plans = allPlans.filter(p => p.job_id === jobId);
+    // Extract docs from special __JOB_DOCS__ plan row
+    const docsRow = allPlans.find(p => p.job_id === jobId && p.system_type === '__JOB_DOCS__');
+    let docs = { install_instructions: '', msds: '', drawings: '' };
+    if (docsRow) {
+      try {
+        docs = JSON.parse(docsRow.location);
+      } catch {}
+    }
+
+    // Filter out __JOB_DOCS__ plans from the main list
+    const plans = allPlans.filter(p => p.job_id === jobId && p.system_type !== '__JOB_DOCS__');
     const planIds = new Set(plans.map(p => p.install_plan_id));
     const steps = allSteps.filter(s => planIds.has(s.install_plan_id));
     const stepIds = new Set(steps.map(s => s.install_step_id));
     const completions = allCompletions.filter(c => stepIds.has(c.install_step_id));
 
-    return NextResponse.json({ plans, steps, completions });
+    return NextResponse.json({ plans, steps, completions, docs });
   } catch (err) {
     console.error('Work breakdown GET error:', err);
     return NextResponse.json({ error: 'Failed to load work breakdown', detail: String(err) }, { status: 500 });
@@ -163,6 +180,113 @@ export async function POST(
       return NextResponse.json({ step_completion_id: newId });
     }
 
+    // ─── Bulk create: N openings × M steps ────────────────────────────────────
+    if (type === 'bulk') {
+      const { system_type, location_prefix, id_prefix, start, end, template_steps } = body as {
+        system_type: string;
+        location_prefix: string;
+        id_prefix: string;
+        start: number;
+        end: number;
+        template_steps: BulkTemplateStep[];
+      };
+
+      if (!system_type || !id_prefix || start < 0 || end < start) {
+        return NextResponse.json({ error: 'Invalid bulk params' }, { status: 400 });
+      }
+
+      const ts = Date.now();
+      const planRows: (string | number)[][] = [];
+      const stepRows: (string | number)[][] = [];
+      const planIds: string[] = [];
+
+      for (let num = start; num <= end; num++) {
+        const planId = `IP-${jobId}-${ts}-${num}`;
+        planIds.push(planId);
+        const openingLabel = location_prefix
+          ? `${location_prefix} - ${id_prefix} ${num}`
+          : `${id_prefix} ${num}`;
+
+        planRows.push([planId, jobId, system_type, openingLabel, 0, 1, 'Active']);
+
+        if (Array.isArray(template_steps)) {
+          template_steps.forEach((step, si) => {
+            const stepId = `IS-${ts}-${num}-${si}`;
+            stepRows.push([
+              stepId,
+              planId,
+              si + 1,
+              step.name || '',
+              step.allotted_hours || 0,
+              step.acceptance_criteria || '',
+              step.required_photo_yn || 'N',
+            ]);
+          });
+        }
+      }
+
+      // Batch append all plans in 2 calls
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: 'Install_Plans!A:G',
+        valueInputOption: 'RAW',
+        requestBody: { values: planRows },
+      });
+
+      if (stepRows.length > 0) {
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SHEET_ID,
+          range: 'Install_Steps!A:G',
+          valueInputOption: 'RAW',
+          requestBody: { values: stepRows },
+        });
+      }
+
+      return NextResponse.json({ created: planIds.length, plans: planIds });
+    }
+
+    // ─── Docs: save job document links ────────────────────────────────────────
+    if (type === 'docs') {
+      const { install_instructions, msds, drawings } = body;
+      const docsJson = JSON.stringify({
+        install_instructions: install_instructions || '',
+        msds: msds || '',
+        drawings: drawings || '',
+      });
+
+      // Check if __JOB_DOCS__ row already exists for this job
+      const plansRes = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Install_Plans!A2:G5000',
+      });
+      const rows = plansRes.data.values || [];
+      const existingIdx = rows.findIndex(r => r[1] === jobId && r[2] === '__JOB_DOCS__');
+
+      if (existingIdx !== -1) {
+        const sheetRow = existingIdx + 2; // 1-indexed + header
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `Install_Plans!A${sheetRow}:G${sheetRow}`,
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: [[rows[existingIdx][0], jobId, '__JOB_DOCS__', docsJson, 0, 1, 'Active']],
+          },
+        });
+      } else {
+        const newId = `IP-${jobId}-DOCS`;
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SHEET_ID,
+          range: 'Install_Plans!A:G',
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: [[newId, jobId, '__JOB_DOCS__', docsJson, 0, 1, 'Active']],
+          },
+        });
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
     return NextResponse.json({ error: 'Unknown type' }, { status: 400 });
   } catch (err) {
     console.error('Work breakdown POST error:', err);
@@ -186,6 +310,35 @@ export async function PATCH(
 
   try {
     const sheets = await getSheets();
+
+    if (type === 'plan') {
+      const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Install_Plans!A2:G5000',
+      });
+      const rows = res.data.values || [];
+      const rowIdx = rows.findIndex(r => r[0] === id);
+      if (rowIdx === -1) return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+
+      const sheetRow = rowIdx + 2;
+      const existing = rows[rowIdx];
+      const updated = [
+        id,
+        existing[1],
+        fields.system_type ?? existing[2],
+        fields.location ?? existing[3],
+        fields.estimated_total_hours ?? existing[4],
+        fields.estimated_qty ?? existing[5],
+        fields.status ?? existing[6],
+      ];
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `Install_Plans!A${sheetRow}:G${sheetRow}`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [updated] },
+      });
+      return NextResponse.json({ ok: true });
+    }
 
     if (type === 'step') {
       // Find the row in Install_Steps
