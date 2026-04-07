@@ -130,6 +130,13 @@ export async function POST(req: Request) {
     if (!quote) return NextResponse.json({ error: 'quote object required' }, { status: 400 });
 
     // Map quote builder output to PDF data model
+    // Overhead + profit are baked into laborSubtotal for clean customer display:
+    // Customer sees only: Materials + Labor + GET = Total (no internal markup visible)
+    const rawLaborSubtotal = quote.labor?.subtotal || 0;
+    const overheadAmt = typeof quote.overheadAmt === 'number' ? quote.overheadAmt : 0;
+    const profitAmt   = typeof quote.profitAmt   === 'number' ? quote.profitAmt   : 0;
+    const cleanLaborSubtotal = rawLaborSubtotal + overheadAmt + profitAmt;
+
     const pdfData: ServiceWOData = {
       wo_number:             quote.woNumber || 'DRAFT',
       quote_date:            quote.quoteDate || hawaiiToday(),
@@ -144,11 +151,11 @@ export async function POST(req: Request) {
       line_items:            quote.lineItems || [],
       installation_included: quote.installationIncluded ?? true,
       materials_total:       quote.materialsTotal || 0,
-      labor_subtotal:        quote.labor?.subtotal || 0,
-      equipment_charges:     quote.equipmentCharges || 0,
-      additional_charges:    quote.additionalCharges || [],
-      site_visit_fee:        quote.siteVisit?.fee,
-      site_visit_credit:     quote.siteVisit?.creditApplied,
+      labor_subtotal:        cleanLaborSubtotal,
+      equipment_charges:     0, // hidden from proposal — baked into labor
+      additional_charges:    [], // hidden from proposal
+      site_visit_fee:        undefined, // hidden from proposal
+      site_visit_credit:     undefined,
       subtotal:              quote.subtotal || 0,
       get_amount:            quote.getAmount || 0,
       total:                 quote.total || 0,

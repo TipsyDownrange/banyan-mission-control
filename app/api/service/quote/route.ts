@@ -295,6 +295,8 @@ export async function POST(req: Request) {
         additionalCharges: additionalCharges ?? [],
         // Totals
         subtotal,
+        overheadAmt,
+        profitAmt,
         getRate: GET_RATE,
         getAmount,
         total,

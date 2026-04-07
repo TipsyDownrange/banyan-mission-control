@@ -38,14 +38,11 @@ export type ServiceWOData = {
 };
 
 function ServiceWOPDF({ data }: { data: ServiceWOData }) {
+  // Clean customer-facing totals — no internal breakdown
   const totalLines = [
     ...(data.materials_total ? [{ label: 'Materials', value: data.materials_total }] : []),
     ...(data.labor_subtotal ? [{ label: 'Labor', value: data.labor_subtotal }] : []),
-    ...(data.equipment_charges ? [{ label: 'Equipment', value: data.equipment_charges }] : []),
-    ...(data.site_visit_fee ? [{ label: 'Site Visit', value: data.site_visit_fee }] : []),
-    ...((data.site_visit_credit || 0) > 0 ? [{ label: 'Site Visit Credit', value: -(data.site_visit_credit!) }] : []),
-    ...(data.additional_charges || []).map(c => ({ label: c.label, value: c.amount })),
-    { label: 'Hawaii GET (4.5%)', value: data.get_amount },
+    { label: `${data.island || 'Hawaii'} GET`, value: data.get_amount },
   ];
 
   return (
@@ -140,12 +137,6 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
         {/* Terms */}
         <SectionHead title="Terms" />
         <TermsBox deposit={data.deposit} validityDays={data.validity_days} />
-
-        {/* Labor tracking (internal) */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-          <Text style={{ fontSize: 8, color: C.slateLight }}>Manpower: ___________   Hours: ___________</Text>
-          <Text style={{ fontSize: 8, color: C.slateLight }}>Balance Due: $ ___________</Text>
-        </View>
 
         {/* Signatures */}
         <DualSigBlock

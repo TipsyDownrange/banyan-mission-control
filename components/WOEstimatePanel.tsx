@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { estimateDriveTime } from '@/lib/labor';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,11 @@ interface WOEstimateData {
   };
   otherExtra: LineItem[];
   labor: LaborLine[];
+  driveTime: {
+    trips: string;
+    hoursPerTrip: string;
+    rate: string;
+  };
   markup: {
     overheadOverride: string;
     profitPct: string;
@@ -132,6 +138,7 @@ function sumItems(items: LineItem[]): number {
 // ─── Default state factory ────────────────────────────────────────────────────
 
 function defaultData(wo: WorkOrder): WOEstimateData {
+  const driveEst = estimateDriveTime(wo.address || '', wo.island || 'Maui');
   return {
     aluminum: [{ description: '', amount: '' }],
     glass: [{ description: '', amount: '' }],
@@ -143,6 +150,11 @@ function defaultData(wo: WorkOrder): WOEstimateData {
       { description: 'Fab Labor', hours: '', rate: '117', amount: '' },
       { description: 'Field Labor', hours: '', rate: '117', amount: '' },
     ],
+    driveTime: {
+      trips: '2',
+      hoursPerTrip: String(driveEst.roundTripHours),
+      rate: '117',
+    },
     markup: { overheadOverride: '', profitPct: '10' },
     taxRate: String(getGetRate(wo.island)),
   };
@@ -304,6 +316,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
           const loaded = { ...defaultData(wo), ...json.data };
           if (!loaded.miscExtra) loaded.miscExtra = [];
           if (!loaded.otherExtra) loaded.otherExtra = [];
+          if (!loaded.driveTime) loaded.driveTime = defaultData(wo).driveTime;
           setData(loaded);
           if (json.updatedAt) setLastSaved(json.updatedAt);
         } else {
@@ -393,7 +406,17 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
     + sumItems(data.otherExtra ?? []);
   const materialsTotal = metalSubtotal + glassSubtotal + miscSubtotal + otherSubtotal;
 
-  const laborSubtotal = data.labor.reduce((a, l) => a + laborAmount(l), 0);
+  const driveTimeTrips = parseFloat(data.driveTime?.trips) || 0;
+  const driveTimeHoursPerTrip = parseFloat(data.driveTime?.hoursPerTrip) || 0;
+  const driveTimeHours = driveTimeTrips * driveTimeHoursPerTrip;
+  const driveTimeRate = parseFloat(data.driveTime?.rate) || 117;
+  const driveTimeAmt = driveTimeHours * driveTimeRate;
+
+  const laborSubtotal = data.labor.reduce((a, l) => a + laborAmount(l), 0) + driveTimeAmt;
+
+  // X modifier (what-if negotiation tool — local state only, not saved)
+  const [xAmount, setXAmount] = useState('');
+  const xVal = parseDollar(xAmount);
 
   const overhead = data.markup.overheadOverride
     ? parseDollar(data.markup.overheadOverride)
@@ -407,6 +430,15 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
   const taxRate = parseFloat(data.taxRate) / 100 || 0;
   const taxAmt = totalCosts * taxRate;
   const grandTotal = totalCosts + taxAmt;
+
+  const grossCost = materialsTotal + laborSubtotal;
+  const currentMarkupPct = grossCost > 0 ? ((overhead + profit) / grossCost) * 100 : 0;
+  const newProfit = profit + xVal;
+  const newTotalCostsBeforeProfit2 = materialsTotal + laborSubtotal + overhead;
+  const newTotalCosts2 = newTotalCostsBeforeProfit2 + newProfit;
+  const newTaxAmt2 = newTotalCosts2 * taxRate;
+  const newGrandTotal2 = newTotalCosts2 + newTaxAmt2;
+  const newMarkupPct = grossCost > 0 ? ((overhead + newProfit) / grossCost) * 100 : 0;
 
   const estimateTotals: EstimateTotals = {
     materialsTotal,
@@ -612,6 +644,40 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                   </div>
                 ))}
                 <button onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: '117', amount: '' }] }))} style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add labor line</button>
+
+                {/* Drive Time */}
+                <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(20,184,166,0.05)', borderRadius: 8, border: '1px solid rgba(20,184,166,0.2)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 6 }}>Drive Time</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <SmallNum
+                      value={data.driveTime?.trips || '2'}
+                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { hoursPerTrip: '0', rate: '117' }), trips: v } }))}
+                      placeholder="2"
+                      width={40}
+                    />
+                    <span style={{ fontSize: 11, color: '#64748b' }}>trips ×</span>
+                    <SmallNum
+                      value={data.driveTime?.hoursPerTrip || '0'}
+                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', rate: '117' }), hoursPerTrip: v } }))}
+                      placeholder="hrs"
+                      width={48}
+                    />
+                    <span style={{ fontSize: 11, color: '#64748b' }}>h/trip @</span>
+                    <span style={{ fontSize: 11, color: '#64748b' }}>$</span>
+                    <SmallNum
+                      value={data.driveTime?.rate || '117'}
+                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', hoursPerTrip: '0' }), rate: v } }))}
+                      width={52}
+                    />
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>/hr</span>
+                    <span style={{ flex: 1 }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>${fmt(driveTimeAmt)}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic' }}>
+                    {driveTimeTrips} trips × {driveTimeHoursPerTrip}h = {fmt(driveTimeHours)}h total drive
+                  </div>
+                </div>
+
                 <SubtotalBar label="Labor Subtotal" value={laborSubtotal} />
               </div>
 
@@ -683,6 +749,50 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               <div style={{ padding: '10px 14px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.15)', borderRadius: 10, fontSize: 11, color: '#0f766e' }}>
                 <div style={{ fontWeight: 700, marginBottom: 2 }}>Overhead = Labor (Kula Glass standard)</div>
                 <div style={{ color: '#475569' }}>Customer quote will hide overhead &amp; profit breakdown. Quote total = ${fmt(grandTotal)}</div>
+              </div>
+
+              {/* X Modifier / What-If */}
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid rgba(20,184,166,0.25)', padding: 14 }}>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 10 }}>🧠 What-If / Negotiation Tool</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: '#475569', fontFamily: FONT }}>Current Mark-Up = (OH + Profit) / Gross Cost</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>{currentMarkupPct.toFixed(2)}%</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <label style={{ fontSize: 12, color: '#475569', fontFamily: FONT, flexShrink: 0 }}>If profit adjusted by X =</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <AmtInput value={xAmount} onChange={setXAmount} placeholder="-2000" width={120} />
+                      {xAmount && (
+                        <button onClick={() => setXAmount('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 13 }}>×</button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(20,184,166,0.2)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
+                        {newMarkupPct.toFixed(2)}%
+                        {xVal !== 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, color: xVal < 0 ? '#dc2626' : '#16a34a' }}>
+                            ({xVal > 0 ? '+' : ''}{(newMarkupPct - currentMarkupPct).toFixed(2)}%)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                        ${fmt(newGrandTotal2)}
+                        {xVal !== 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, color: xVal < 0 ? '#dc2626' : '#16a34a' }}>
+                            ({xVal > 0 ? '+' : ''}${fmt(newGrandTotal2 - grandTotal)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
             </div>
