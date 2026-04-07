@@ -6,10 +6,12 @@ import { NextResponse } from 'next/server';
 import { generateServiceWOPDF, type ServiceWOData } from '@/lib/pdf-service-wo';
 import { google } from 'googleapis';
 
+const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
+
 async function uploadPDFToDrive(
   pdfBuffer: Buffer,
   filename: string,
-  projectName: string
+  woId?: string,
 ): Promise<string | null> {
   try {
     const keyJson = process.env.GOOGLE_SA_KEY_B64
@@ -23,19 +25,33 @@ async function uploadPDFToDrive(
     });
     const drive = google.drive({ version: 'v3', auth });
 
-    // Find the SRV-26-0001 Work Orders folder or fallback to AI Command Center
-    const search = await drive.files.list({
-      q: `name contains 'Work Orders' and mimeType = 'application/vnd.google-apps.folder'`,
-      driveId: '0AKSVpf3AnH7CUk9PVA',
-      includeItemsFromAllDrives: true,
-      supportsAllDrives: true,
-      corpora: 'drive',
-      fields: 'files(id,name)',
-    });
+    let parentId = BANYAN_DRIVE_ID;
 
-    let parentId = '0AKSVpf3AnH7CUk9PVA';
-    if (search.data.files && search.data.files.length > 0) {
-      parentId = search.data.files[0].id!;
+    // If we have a WO ID, find the WO folder and place PDF in its Quotes/ subfolder
+    if (woId) {
+      const woSearch = await drive.files.list({
+        q: `name contains '${woId}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+        driveId: BANYAN_DRIVE_ID,
+        includeItemsFromAllDrives: true,
+        supportsAllDrives: true,
+        corpora: 'drive',
+        fields: 'files(id,name)',
+      });
+      if (woSearch.data.files && woSearch.data.files.length > 0) {
+        const woFolderId = woSearch.data.files[0].id!;
+        // Look for Quotes/ subfolder
+        const quotesSearch = await drive.files.list({
+          q: `name = 'Quotes' and mimeType = 'application/vnd.google-apps.folder' and '${woFolderId}' in parents and trashed = false`,
+          supportsAllDrives: true,
+          includeItemsFromAllDrives: true,
+          fields: 'files(id)',
+        });
+        if (quotesSearch.data.files && quotesSearch.data.files.length > 0) {
+          parentId = quotesSearch.data.files[0].id!;
+        } else {
+          parentId = woFolderId;
+        }
+      }
     }
 
     const { Readable } = await import('stream');
@@ -149,8 +165,8 @@ export async function POST(req: Request) {
     const pdfBuffer = await generateServiceWOPDF(pdfData);
     const filename = `Proposal-WO-${pdfData.wo_number}-${pdfData.quote_date}.pdf`;
 
-    // Upload to Drive
-    const driveLink = await uploadPDFToDrive(pdfBuffer, filename, pdfData.project_description);
+    // Upload to Drive — use WO ID to place file in the right folder
+    const driveLink = await uploadPDFToDrive(pdfBuffer, filename, quote.woId || quote.woNumber ? `WO-${(quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, '')}` : undefined);
 
     // Email customer (optional)
     let emailSent = false;
