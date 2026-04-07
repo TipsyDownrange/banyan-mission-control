@@ -33,20 +33,15 @@ const COL = {
   folder_url:      23,
   quote_total:     24,
   quote_status:    25,
-  created_at:      26,
-  updated_at:      27,
-  source:          28,
-  // QBO invoice columns (AA–AE)
-  qbo_invoice_id:  26, // AA — note: overwrites created_at slot; actual sheet cols differ
-};  // Invoice cols handled separately below via INV_COL
-
-// Invoice columns (0-based): AA=26, AB=27, AC=28, AD=29, AE=30
-const INV_COL = {
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
+  created_at:      26, // AA
+  updated_at:      27, // AB
+  source:          28, // AC
+  // QBO invoice columns — AD through AH (after system metadata)
+  qbo_invoice_id:  29, // AD
+  invoice_number:  30, // AE
+  invoice_total:   31, // AF
+  invoice_balance: 32, // AG
+  invoice_date:    33, // AH
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -89,6 +84,12 @@ function rowToWO(row: string[]) {
     createdAt:      g(COL.created_at),
     updatedAt:      g(COL.updated_at),
     source:         g(COL.source),
+    // QBO invoice fields
+    qbo_invoice_id:  g(COL.qbo_invoice_id),
+    invoice_number:  g(COL.invoice_number),
+    invoice_total:   g(COL.invoice_total),
+    invoice_balance: g(COL.invoice_balance),
+    invoice_date:    g(COL.invoice_date),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',
@@ -135,7 +136,7 @@ export async function GET() {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A2:AC5000`,
+      range: `${TAB}!A2:AH5000`,
     });
 
     const rows = res.data.values || [];

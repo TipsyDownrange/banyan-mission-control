@@ -15,13 +15,14 @@ import { google } from 'googleapis';
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
 
-// Invoice columns (0-based): AA=26, AB=27, AC=28, AD=29, AE=30
+// Invoice columns — AD through AH (after existing metadata cols AA–AC)
+// 0-based: AD=29, AE=30, AF=31, AG=32, AH=33
 const INV_COL = {
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
+  qbo_invoice_id:  29, // AD
+  invoice_number:  30, // AE
+  invoice_total:   31, // AF
+  invoice_balance: 32, // AG
+  invoice_date:    33, // AH
 };
 const CUSTOMER_NAME_COL = 12; // M (0-based)
 const WO_ID_COL = 0; // A
@@ -82,7 +83,7 @@ export async function GET() {
     // 1. Fetch WO rows from sheet
     const woRes = await sheets.spreadsheets.values.get({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A2:AE5000`,
+      range: `${TAB}!A2:AH5000`,
     });
     const rows = (woRes.data.values || []) as string[][];
 

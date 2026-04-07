@@ -35,9 +35,15 @@ const COL_IDX: Record<string, number> = {
   folder_url:      23,
   quote_total:     24,
   quote_status:    25,
-  created_at:      26,
-  updated_at:      27,
-  source:          28,
+  created_at:      26, // AA
+  updated_at:      27, // AB
+  source:          28, // AC
+  // QBO invoice fields — AD through AH
+  qbo_invoice_id:  29, // AD
+  invoice_number:  30, // AE
+  invoice_total:   31, // AF
+  invoice_balance: 32, // AG
+  invoice_date:    33, // AH
 };
 
 function colLetter(idx: number): string {

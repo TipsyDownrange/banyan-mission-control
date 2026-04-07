@@ -21,11 +21,12 @@ const WO_COL = {
   wo_id:           0,
   name:            2,
   customer_name:   12,
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
+  // Invoice columns — AD through AH
+  qbo_invoice_id:  29, // AD
+  invoice_number:  30, // AE
+  invoice_total:   31, // AF
+  invoice_balance: 32, // AG
+  invoice_date:    33, // AH
 };
 
 export async function GET() {
@@ -42,7 +43,7 @@ export async function GET() {
     const [woRes, costsRes] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
-        range: `${WO_TAB}!A2:AE5000`,
+        range: `${WO_TAB}!A2:AH5000`,
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
