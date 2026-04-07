@@ -1,6 +1,7 @@
 import { checkPermissionServer } from '@/lib/permissions';
 import { NextResponse } from 'next/server';
 import { qboFetch } from '@/lib/qbo';
+import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 
 export async function GET() {
   // Permission check — finance:view required
@@ -27,7 +28,17 @@ export async function GET() {
         active: c.Active,
       };
     });
-    return NextResponse.json({ customers, total: customers.length });
+    // Wire QBO customers into the Customer DB (merge/upsert) — non-blocking
+    for (const c of customers) {
+      fireAndForgetCustomerUpdate({
+        name:  String(c.name || ''),
+        email: c.email || '',
+        phone: c.phone || '',
+        source: 'qbo',
+      });
+    }
+
+    return NextResponse.json({ customers, total: customers.length, synced: customers.length });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
