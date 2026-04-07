@@ -11,6 +11,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { checkPermissionServer } from '@/lib/permissions';
 import type { Permission } from '@/lib/permissions';
+import { ROLE_MAP } from '@/lib/auth';
 import {
   ROLE_PERMISSIONS_DEFAULT,
   refreshPermissionsCache,
@@ -207,13 +208,20 @@ export async function GET() {
     const userRows = usersRes.data.values || [];
     const users = userRows
       .filter(r => r[0] && r[1])
-      .map(r => ({
-        user_id: (r[0] || '').trim(),
-        name:    (r[1] || '').trim(),
-        role:    (r[2] || '').trim(),
-        email:   (r[3] || '').trim(),
-        island:  (r[5] || '').trim(),
-      }));
+      .map(r => {
+        const email = (r[3] || '').trim().toLowerCase();
+        const sheetRole = (r[2] || '').trim();
+        // Map email to permission role code, fall back to sheet role
+        const permRole = ROLE_MAP[email] || 'field';
+        return {
+          user_id: (r[0] || '').trim(),
+          name:    (r[1] || '').trim(),
+          role:    permRole,
+          displayRole: sheetRole,
+          email:   (r[3] || '').trim(),
+          island:  (r[5] || '').trim(),
+        };
+      });
 
     return NextResponse.json({
       matrix,

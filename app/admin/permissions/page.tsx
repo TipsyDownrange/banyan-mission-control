@@ -12,6 +12,7 @@ interface UserRow {
   user_id: string;
   name: string;
   role: string;
+  displayRole?: string;
   email: string;
   island: string;
 }
@@ -297,21 +298,24 @@ export default function PermissionsPage() {
                     <th key={perm} style={{
                       background: '#0c2330',
                       borderBottom: '1px solid rgba(255,255,255,0.08)',
-                      padding: '8px 4px 0',
+                      padding: '0 2px',
                       verticalAlign: 'bottom',
-                      width: 52,
-                      minWidth: 52,
+                      width: 56,
+                      minWidth: 56,
+                      height: 120,
                       textAlign: 'center',
+                      position: 'relative',
                     }}>
                       <div style={{
-                        writingMode: 'vertical-lr',
-                        transform: 'rotate(180deg)',
+                        position: 'absolute',
+                        bottom: 8,
+                        left: '50%',
+                        transformOrigin: 'bottom left',
+                        transform: 'rotate(-45deg) translateX(-50%)',
                         fontSize: 11,
                         fontWeight: 600,
-                        color: 'rgba(203,213,225,0.65)',
+                        color: 'rgba(203,213,225,0.85)',
                         whiteSpace: 'nowrap',
-                        paddingBottom: 8,
-                        paddingTop: 4,
                         lineHeight: 1.2,
                         letterSpacing: '0.01em',
                       }}>
@@ -473,7 +477,7 @@ export default function PermissionsPage() {
               <div style={{ textAlign: 'center' }}>Permissions</div>
             </div>
 
-            {users.filter(u => u.role && allRoles.includes(u.role)).map((user, idx) => {
+            {users.map((user, idx) => {
               const currentRole = userRoles[user.user_id] || user.role;
               const isGmOwner = currentRole === 'gm' || currentRole === 'owner';
 
