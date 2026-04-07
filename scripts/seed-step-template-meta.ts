@@ -1,16 +1,29 @@
 /**
  * Seed system_type for existing Step Library templates.
- * Run with: npx tsx scripts/seed-step-template-meta.ts
+ * Requires GOOGLE_SA_KEY_B64 env var (same as the Next.js app).
+ * Run with: GOOGLE_SA_KEY_B64=... npx tsx scripts/seed-step-template-meta.ts
+ * Or: source .vercel/.env.development.local && npx tsx scripts/seed-step-template-meta.ts
  */
 import { google } from 'googleapis';
-import path from 'path';
-import fs from 'fs';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const DATA_RANGE = 'Step_Templates!A2:I2000';
 const RANGE_BASE = 'Step_Templates';
 
-// Map of template name substrings → system_type
+// Explicit seeds for the 9 known templates
+const EXPLICIT_SEEDS: Record<string, string> = {
+  'Storefront': 'Storefront',
+  'Curtainwall': 'Curtainwall',
+  'IGU Replacement': 'IGU',
+  'Mirror': 'Mirror',
+  'Shower Enclosure': 'Shower',
+  'Sliding Door': 'Sliding Door',
+  'Glass Handrail': 'Railing',
+  'Automatic Door': 'Automatic Entrances',
+  'BLOCK FRAME WINDOW': 'Window',
+};
+
+// Fallback regex map for partial matches
 const SEED_MAP: { match: RegExp; system_type: string }[] = [
   { match: /storefront/i, system_type: 'Storefront' },
   { match: /curtainwall|curtain wall/i, system_type: 'Curtainwall' },
@@ -24,34 +37,28 @@ const SEED_MAP: { match: RegExp; system_type: string }[] = [
 ];
 
 function getSystemType(name: string): string {
+  // Exact match first
+  if (EXPLICIT_SEEDS[name]) return EXPLICIT_SEEDS[name];
+  // Partial regex fallback
   for (const { match, system_type } of SEED_MAP) {
     if (match.test(name)) return system_type;
   }
   return '';
 }
 
-async function getGoogleAuth(scopes: string[]) {
-  // Try service account key file locations
-  const candidates = [
-    process.env.GOOGLE_SA_KEY_PATH,
-    path.join(process.cwd(), 'service-account.json'),
-    path.join(process.cwd(), 'google-service-account.json'),
-  ].filter(Boolean) as string[];
-
-  for (const keyPath of candidates) {
-    if (fs.existsSync(keyPath)) {
-      const auth = new google.auth.GoogleAuth({ keyFile: keyPath, scopes });
-      return auth;
-    }
-  }
-
-  // Fall back to application default credentials
-  const auth = new google.auth.GoogleAuth({ scopes });
-  return auth;
+function getGoogleAuth(scopes: string[]) {
+  const b64 = process.env.GOOGLE_SA_KEY_B64;
+  if (!b64) throw new Error('GOOGLE_SA_KEY_B64 env var not set');
+  const key = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+  return new google.auth.JWT({
+    email: key.client_email,
+    key: key.private_key,
+    scopes,
+  });
 }
 
 async function main() {
-  const auth = await getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
   const sheets = google.sheets({ version: 'v4', auth });
 
   // Load current rows
@@ -66,7 +73,6 @@ async function main() {
     return;
   }
 
-  // Track which template names we've already seeded (first row per template gets the system_type)
   const seenTemplates = new Set<string>();
   let updatedCount = 0;
 
@@ -77,7 +83,6 @@ async function main() {
     const row = [...r];
     while (row.length < 9) row.push('');
 
-    // Only set system_type on first row for this template if it's currently blank
     if (!seenTemplates.has(name)) {
       seenTemplates.add(name);
       const existingSystemType = row[6] || '';
@@ -86,12 +91,12 @@ async function main() {
         if (systemType) {
           row[6] = systemType;
           updatedCount++;
-          console.log(`  ✓ ${name} → system_type: ${systemType}`);
+          console.log(`  ✓ "${name}" → system_type: ${systemType}`);
         } else {
-          console.log(`  – ${name} → no match (skipped)`);
+          console.log(`  – "${name}" → no match (skipped)`);
         }
       } else {
-        console.log(`  ○ ${name} → already has system_type: ${existingSystemType}`);
+        console.log(`  ○ "${name}" → already has system_type: ${existingSystemType}`);
       }
     }
 
@@ -103,7 +108,7 @@ async function main() {
     return;
   }
 
-  console.log(`\nWriting ${updatedCount} updates to sheet…`);
+  console.log(`\nWriting ${updatedCount} update(s) to sheet…`);
 
   await sheets.spreadsheets.values.clear({
     spreadsheetId: SHEET_ID,
