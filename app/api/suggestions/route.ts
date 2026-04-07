@@ -19,6 +19,9 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const id = `SUG-${Date.now().toString(36)}`;
+    const now = new Date().toISOString();
+    const userName = name || session.user?.name || email || session.user?.email || 'Unknown';
+
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: 'Suggestions!A1',
@@ -28,14 +31,41 @@ export async function POST(req: Request) {
         values: [[
           id,
           email || session.user?.email || '',
-          name || session.user?.name || '',
+          userName,
           description,
           '', // kai_interpretation (to be filled by Kai)
           '', // category
           'New',
-          new Date().toISOString(),
+          now,
           '',
           '',
+        ]],
+      },
+    });
+
+    // Also create a Task so the suggestion is visible on the Task Board
+    const taskId = `TASK-SUG-${Date.now().toString(36).toUpperCase()}`;
+    const taskTitle = `[SUGGESTION] ${description.slice(0, 60)}`;
+    const taskDetail = `${description}\n\nFrom: ${userName} at ${now}`;
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: 'Tasks!A1',
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [[
+          taskId,       // Task_ID
+          taskTitle,    // Title
+          taskDetail,   // Detail
+          'queued',     // Status
+          'medium',     // Priority
+          'Suggestion', // Category
+          'Kai',        // Assigned_To
+          now,          // Created_At
+          now,          // Updated_At
+          '',           // Due_Date
+          '',           // Blocked_By
+          '',           // Parent_Task_ID
         ]],
       },
     });

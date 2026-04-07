@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'gpt-5.4',
-        max_tokens: 1024,
+        max_completion_tokens: 1024,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT + bidContext + projectContext },
           ...messages.slice(-20),
