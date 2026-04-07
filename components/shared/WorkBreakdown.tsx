@@ -1519,7 +1519,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
       {renderJobDocs()}
 
       {/* Primary action buttons — at top, always visible */}
-      {!readOnly && plans.length > 0 && (
+      {!readOnly && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {renderBulkCreate()}
           <button

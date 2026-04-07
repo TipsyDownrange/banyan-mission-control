@@ -54,6 +54,7 @@ const SYSTEM_TYPES = [
   'Screen Repair / Replacement',
   'Board-Up / Emergency',
   'Site Assessment / Consultation',
+  'Block Frame Window',
   'Other',
 ];
 const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
