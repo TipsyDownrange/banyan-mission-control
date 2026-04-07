@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import WorkBreakdown from '@/components/shared/WorkBreakdown';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -410,6 +411,17 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   value={draft.comments || ''}
                   onChange={e => update('comments', e.target.value)}
                   placeholder="Internal notes, follow-ups, customer requests…"
+                />
+              </div>
+
+              {/* Work Breakdown */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Work Breakdown</div>
+                <WorkBreakdown
+                  jobId={wo.id}
+                  jobType="wo"
+                  quotedHours={parseFloat(wo.hoursEstimated) || undefined}
+                  readOnly={readOnly}
                 />
               </div>
 

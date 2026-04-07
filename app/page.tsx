@@ -35,7 +35,7 @@ import { useState, useEffect } from 'react';
 
 export type AppView =
   | 'Today' | 'Inbox' | 'Calendar'
-  | 'Overview' | 'Forecasting' | 'Dispatch Board' | 'Event Feed' | 'Issues'
+  | 'Overview' | 'Forecasting' | 'Dispatch Board' | 'Schedule' | 'Event Feed' | 'Issues'
   | 'Projects' | 'Schedules' | 'Submittals' | 'Budget' | 'Change Orders'
   | 'Crew' | 'Customers' | 'Assets' | 'Org Chart'
   | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
@@ -182,6 +182,7 @@ export default function Home() {
         {activeView === 'Org Chart'     && <OrgChartPanel />}
         {activeView === 'Forecasting'   && <SchedulingPanel readOnly={isReadOnly('Forecasting')} />}
         {activeView === 'Dispatch Board'&& <DispatchBoard />}
+        {activeView === 'Schedule'        && <DispatchBoard />}
         {activeView === 'Approvals'     && <ApprovalsPanel />}
         {activeView === 'Cost & Usage'  && <CostPanel />}
         {activeView === 'Workflows'     && <CronPanel />}
