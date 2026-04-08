@@ -94,12 +94,11 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
     const superNode = toNode(s);
     superNode.note = `Superintendent — ${s.island}`;
     // Assign field crew: match by island, or if super is "Outer Island" give them Kauai/Lanai/Molokai/Hawaii crew
-    // Each super covers their island + outer islands not covered by other supers
-    const otherSuperIslands = supers.filter(os => os.name !== s.name).map(os => os.island.toLowerCase());
+    // Maui super covers Maui + all outer islands (Kauai, Lanai, Molokai, Hawaii)
+    // Other supers cover only their base island
     const superIslands = [s.island.toLowerCase()];
-    // Add outer islands (Kauai, Lanai, Molokai, Hawaii) to Maui super if no other super covers them
-    for (const outerIsland of ['kauai', 'lanai', 'molokai', 'hawaii']) {
-      if (!otherSuperIslands.includes(outerIsland)) {
+    if (s.island.toLowerCase() === 'maui') {
+      for (const outerIsland of ['kauai', 'lanai', 'molokai', 'hawaii']) {
         superIslands.push(outerIsland);
       }
     }
