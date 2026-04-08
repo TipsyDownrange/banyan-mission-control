@@ -774,25 +774,7 @@ export default function QuoteBuilder({
               <ReadField label="Description" value={wo.description || wo.name || ''} />
             )}
 
-            {/* Labor steps table */}
-            {t && t.laborLines.length > 0 && (
-              <div style={{ marginTop: 6 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Labor Steps</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 70px 90px', gap: '4px 10px', alignItems: 'end', padding: '0 2px', marginBottom: 4 }}>
-                  {['Step', 'Hours', 'Rate/hr', 'Amount'].map(h => (
-                    <div key={h} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{h}</div>
-                  ))}
-                </div>
-                {t.laborLines.map((l, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 70px 90px', gap: '4px 10px', alignItems: 'center', padding: '5px 2px', borderBottom: i < t.laborLines.length - 1 ? '1px solid #f1f5f9' : undefined }}>
-                    <span style={{ fontSize: 12, color: '#0f172a', fontWeight: 500 }}>{l.description}</span>
-                    <span style={{ fontSize: 12, color: '#4338ca', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{l.hours.toFixed(1)}</span>
-                    <span style={{ fontSize: 12, color: '#64748b', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{fmt(l.rate)}</span>
-                    <span style={{ fontSize: 12, color: '#4338ca', fontVariantNumeric: 'tabular-nums', textAlign: 'right', fontWeight: 700 }}>{fmt(l.amount)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Scope description only — no labor step breakdown (internal detail) */}
           </div>
         </div>
 
@@ -802,60 +784,12 @@ export default function QuoteBuilder({
             <SectionHeader label="Pricing Summary" color="#0f172a" />
             <div style={{ paddingTop: 12 }}>
 
-              {/* Materials */}
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#92400e', marginBottom: 4 }}>Materials</div>
-                {t.metalTotal > 0 && <SummaryRow label="Aluminum" value={t.metalTotal} sub />}
-                {t.glassTotal > 0 && <SummaryRow label="Glass" value={t.glassTotal} sub />}
-                {t.miscTotal > 0 && <SummaryRow label="Misc" value={t.miscTotal} sub />}
-                {t.otherTotal > 0 && <SummaryRow label="Other" value={t.otherTotal} sub />}
-                {t.xMod !== 0 && <SummaryRow label="X Modifier" value={t.xMod} sub />}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 2px', borderTop: '1px solid #f1f5f9', marginTop: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>Materials Total</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#92400e', fontVariantNumeric: 'tabular-nums' }}>{fmt(t.materialsTotal)}</span>
-                </div>
-              </div>
-
+              {/* Customer-facing: Materials + Labor + Tax = Total */}
+              <SummaryRow label="Materials" value={t.materialsTotal} />
+              <SummaryRow label="Labor" value={t.laborTotal + t.driveTotal + t.overheadAmt + t.profitAmt} />
               <Divider />
-
-              {/* Labor */}
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#4338ca', marginBottom: 4 }}>Labor</div>
-                {t.laborLines.map((l, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0', fontSize: 12, color: '#64748b' }}>
-                    <span>{l.description}: {l.hours.toFixed(1)}h × {fmt(l.rate)}/hr</span>
-                    <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{fmt(l.amount)}</span>
-                  </div>
-                ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 2px', borderTop: '1px solid #f1f5f9', marginTop: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#4338ca' }}>Labor Total</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4338ca', fontVariantNumeric: 'tabular-nums' }}>{fmt(t.laborTotal)}</span>
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Drive Time */}
-              {t.driveTotal > 0 && (
-                <>
-                  <div style={{ marginBottom: 10 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0891b2', marginBottom: 4 }}>Drive Time</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b' }}>
-                      <span>{t.driveTrips} trips × {t.driveHoursPerTrip}h × {fmt(t.driveRate)}/hr</span>
-                      <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: '#0891b2' }}>{fmt(t.driveTotal)}</span>
-                    </div>
-                  </div>
-                  <Divider />
-                </>
-              )}
-
-              {/* Subtotals + markup */}
-              <SummaryRow label="Subtotal" value={t.subtotal} />
-              <SummaryRow label="Overhead (labor-equal)" value={t.overheadAmt} sub />
-              <SummaryRow label={`Profit (${t.profitPct}%)`} value={t.profitAmt} sub />
-              <Divider />
-              <SummaryRow label="Total Before Tax" value={t.totalBeforeTax} />
-              <SummaryRow label={`GET (${t.getRate}%)`} value={t.getAmt} sub />
+              <SummaryRow label="Subtotal" value={t.materialsTotal + t.laborTotal + t.driveTotal + t.overheadAmt + t.profitAmt} />
+              <SummaryRow label={`General Excise Tax (${t.getRate}%)`} value={t.getAmt} sub />
               <Divider />
 
               {/* Grand total */}
