@@ -143,12 +143,24 @@ function calcTotals(est: EstimateData) {
 
   const grandTotal = totalBeforeTax + getAmt;
 
+  // Customer-facing: distribute overhead + profit proportionally into Materials and Labor
+  // so visible line items add up to the total (no hidden markup lines)
+  const laborSubtotalForDisplay = laborTotal + driveTotal;
+  const costBase = materialsTotal + laborSubtotalForDisplay;
+  const toDistribute = overheadAmt + profitAmt;
+  const matShare = costBase > 0 ? materialsTotal / costBase : 0;
+  const laborShare = costBase > 0 ? laborSubtotalForDisplay / costBase : 0;
+  const customerMaterials = materialsTotal + (toDistribute * matShare);
+  const customerLabor = laborSubtotalForDisplay + (toDistribute * laborShare);
+
   return {
     metalTotal, glassTotal, miscTotal, otherTotal, xMod, materialsTotal,
     laborLines, laborTotal,
     driveTrips, driveHoursPerTrip, driveRate, driveTotal,
     subtotal, overheadAmt, profitPct, profitAmt,
     totalBeforeTax, getRate, getAmt, grandTotal,
+    // Customer-facing (markup distributed)
+    customerMaterials, customerLabor,
   };
 }
 
@@ -597,10 +609,10 @@ export default function QuoteBuilder({
           driveTimeTrips: totals.driveTrips,
           driveTimeHoursPerTrip: totals.driveHoursPerTrip,
           driveTimeRate: totals.driveRate,
-          materialsTotal: totals.materialsTotal,
+          materialsTotal: totals.customerMaterials,  // markup distributed
           additionalCosts: [],
           additionalTotal: 0,
-          laborSubtotal: totals.laborTotal,
+          laborSubtotal: totals.customerLabor,  // markup distributed
           subtotal: totals.subtotal,
           overheadPct: totals.laborTotal > 0 && totals.subtotal > 0
             ? Math.round((totals.overheadAmt / totals.subtotal) * 100)
@@ -787,12 +799,10 @@ export default function QuoteBuilder({
             <SectionHeader label="Pricing Summary" color="#0f172a" />
             <div style={{ paddingTop: 12 }}>
 
-              {/* Customer-facing: Materials + Labor + Tax = Total */}
-              <SummaryRow label="Materials" value={t.materialsTotal} />
-              <SummaryRow label="Labor" value={t.laborTotal + t.driveTotal + t.overheadAmt + t.profitAmt} />
-              <Divider />
-              <SummaryRow label="Subtotal" value={t.materialsTotal + t.laborTotal + t.driveTotal + t.overheadAmt + t.profitAmt} />
-              <SummaryRow label={`General Excise Tax (${t.getRate}%)`} value={t.getAmt} sub />
+              {/* Customer-facing: Materials + Labor + GET = Total (markup distributed proportionally) */}
+              <SummaryRow label="Materials" value={t.customerMaterials} />
+              <SummaryRow label="Labor" value={t.customerLabor} />
+              <SummaryRow label={`General Excise Tax (${t.getRate}%)`} value={t.getAmt} />
               <Divider />
 
               {/* Grand total */}
