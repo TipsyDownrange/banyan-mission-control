@@ -107,8 +107,19 @@ export async function GET(
     const allSteps = (stepsRes.data.values || []).map(rowToInstallStep);
     const allCompletions = (completionsRes.data.values || []).map(rowToCompletion);
 
+    // Build a set of job_id aliases: match by exact id OR by stripping WO- prefix variants
+    // WO IDs can be stored as "WO-26-0001" (wo_id) or "26-0001" / "WO-26-0001" (wo_number)
+    // Allow flexible matching so existing records created under any format still load
+    function jobIdMatches(planJobId: string): boolean {
+      if (planJobId === jobId) return true;
+      // Strip leading "WO-" from both sides and compare
+      const stripped = (s: string) => s.replace(/^WO-/i, '');
+      if (stripped(planJobId) === stripped(jobId)) return true;
+      return false;
+    }
+
     // Extract docs from special __JOB_DOCS__ plan row
-    const docsRow = allPlans.find(p => p.job_id === jobId && p.system_type === '__JOB_DOCS__');
+    const docsRow = allPlans.find(p => jobIdMatches(p.job_id) && p.system_type === '__JOB_DOCS__');
     let docs = { install_instructions: '', msds: '', drawings: '' };
     if (docsRow) {
       try {
@@ -117,7 +128,7 @@ export async function GET(
     }
 
     // Filter out __JOB_DOCS__ plans from the main list
-    const plans = allPlans.filter(p => p.job_id === jobId && p.system_type !== '__JOB_DOCS__');
+    const plans = allPlans.filter(p => jobIdMatches(p.job_id) && p.system_type !== '__JOB_DOCS__');
     const planIds = new Set(plans.map(p => p.install_plan_id));
     const steps = allSteps.filter(s => planIds.has(s.install_plan_id));
     const stepIds = new Set(steps.map(s => s.install_step_id));

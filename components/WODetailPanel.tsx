@@ -26,18 +26,16 @@ type WorkOrder = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES = [
-  { key: 'lead',        label: 'New Lead',         color: '#64748b' },
-  { key: 'quote',       label: 'Quote Requested',   color: '#0369a1' },
+  { key: 'lead',        label: 'New Lead',          color: '#64748b' },
   { key: 'quoted',      label: 'Quoted',             color: '#7c3aed' },
-  { key: 'accepted',    label: 'Accepted',           color: '#059669' },
-  { key: 'approved',    label: 'Need to Schedule',  color: '#92400e' },
+  { key: 'approved',    label: 'Needs to Schedule', color: '#92400e' },
   { key: 'scheduled',   label: 'Scheduled',          color: '#4338ca' },
   { key: 'in_progress', label: 'In Progress',        color: '#0f766e' },
   { key: 'closed',      label: 'Completed',          color: '#15803d' },
 ];
 
 const STAGE_BG: Record<string, string> = {
-  lead: '#f8fafc', quote: '#eff6ff', quoted: '#f5f3ff', accepted: '#ecfdf5',
+  lead: '#f8fafc', quoted: '#f5f3ff',
   approved: '#fffbeb', scheduled: '#eef2ff', in_progress: '#f0fdfa', closed: '#f0fdf4',
 };
 

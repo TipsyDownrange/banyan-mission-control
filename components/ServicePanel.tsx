@@ -33,15 +33,23 @@ type ServiceData = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES: { key: string; label: string; color: string; bg: string; border: string }[] = [
-  { key: 'lead',        label: 'New Lead',        color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
-  { key: 'quote',       label: 'Quote Requested', color: '#0369a1', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.22)' },
-  { key: 'quoted',      label: 'Quoted',           color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(139,92,246,0.22)' },
-  { key: 'accepted',    label: 'Accepted',         color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(16,185,129,0.25)' },
-  { key: 'approved',    label: 'Need to Schedule',color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
-  { key: 'scheduled',   label: 'Scheduled',        color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
-  { key: 'in_progress', label: 'In Progress',      color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },
-  { key: 'closed',      label: 'Completed',        color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
+  { key: 'lead',        label: 'New Lead',          color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
+  { key: 'quoted',      label: 'Quoted',             color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(139,92,246,0.22)' },
+  { key: 'approved',    label: 'Needs to Schedule', color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
+  { key: 'scheduled',   label: 'Scheduled',          color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
+  { key: 'in_progress', label: 'In Progress',        color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },
+  { key: 'closed',      label: 'Completed',          color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
 ];
+
+// Normalize raw Smartsheet statuses to display stages
+function normalizeStatus(raw: string): string {
+  switch (raw) {
+    case 'quote':
+    case 'quote_requested': return 'lead';
+    case 'accepted':        return 'approved';
+    default:                return raw || 'lead';
+  }
+}
 
 const AREA_COLOR: Record<string, string> = {
   // Maui areas
@@ -151,8 +159,8 @@ function WOCard({
       _woName: wo.name,
       _island: woIsland || wo.island,
     });
-    // Also move to scheduled stage if still in approved/quote/lead
-    if (['lead','quote','approved'].includes(wo.status)) {
+    // Also move to scheduled stage if still in approved/lead
+    if (['lead','quoted','approved'].includes(wo.status)) {
       await onStageChange(wo.id, 'scheduled');
     }
     setSaving(false);
@@ -492,9 +500,13 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   }, []);
 
   // Merge local overrides into work orders for optimistic UI
+  // Also normalize raw statuses (quote/quote_requested→lead, accepted→approved)
   const mergedWorkOrders = (data?.workOrders || []).map(wo => {
     const key = wo.id || wo.name;
-    return localOverrides[key] ? { ...wo, ...localOverrides[key] } : wo;
+    const base = localOverrides[key] ? { ...wo, ...localOverrides[key] } : wo;
+    // Normalize status unless a local override already set it to a valid stage
+    const normalizedStatus = normalizeStatus(base.status);
+    return normalizedStatus !== base.status ? { ...base, rawStatus: base.status, status: normalizedStatus } : base;
   });
 
   const mergedByStatus: Record<string, WorkOrder[]> = {};
@@ -615,20 +627,18 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       {readOnly && READ_ONLY_BANNER}
       {/* Dashboard */}
       {(() => {
-        const needsAction = mergedWorkOrders.filter(w => w.status === 'lead' || w.status === 'quote');
+        const needsAction = mergedWorkOrders.filter(w => w.status === 'lead');
         const scheduled = mergedWorkOrders.filter(w => w.status === 'scheduled' || w.status === 'in_progress');
         const completed = mergedWorkOrders.filter(w => w.status === 'closed' || w.status === 'completed');
         const kpis: KPI[] = [
           { label: 'Open Work Orders', value: mergedWorkOrders.length - completed.length, subtitle: `${completed.length} completed` },
-          { label: 'Needs Action', value: needsAction.length, subtitle: 'Leads + quotes pending', color: needsAction.length > 5 ? '#d97706' : '#059669' },
+          { label: 'Needs Action', value: needsAction.length, subtitle: 'New leads', color: needsAction.length > 5 ? '#d97706' : '#059669' },
           { label: 'Scheduled', value: scheduled.length, subtitle: 'In the pipeline', color: '#0369a1' },
           { label: 'Completed', value: completed.length, color: '#059669' },
         ];
         const ai: ActionItem[] = [];
         const leads = mergedWorkOrders.filter(w => w.status === 'lead');
         if (leads.length > 0) ai.push({ text: 'New leads', severity: 'high', count: leads.length });
-        const quotes = mergedWorkOrders.filter(w => w.status === 'quote');
-        if (quotes.length > 0) ai.push({ text: 'Quotes pending', severity: 'medium', count: quotes.length });
         return <DashboardHeader title="Service" subtitle={`${mergedWorkOrders.length} work orders`} kpis={kpis} actionItems={ai} />;
       })()}
       <div style={{ marginBottom: 28 }}>
@@ -704,8 +714,8 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         <FilterBar
           chips={[
             { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && w.status !== 'closed').length, color: '#64748b' },
-            { id: 'lead',        label: 'Leads',          count: mergedByStatus['lead']?.length || 0,        color: '#64748b' },
-            { id: 'quote',       label: 'Quote',          count: mergedByStatus['quote']?.length || 0,       color: '#0369a1' },
+            { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: '#64748b' },
+            { id: 'quoted',      label: 'Quoted',         count: mergedByStatus['quoted']?.length || 0,      color: '#7c3aed' },
             { id: 'approved',    label: 'Need Schedule',  count: mergedByStatus['approved']?.length || 0,    color: '#92400e' },
             { id: 'scheduled',   label: 'Scheduled',      count: mergedByStatus['scheduled']?.length || 0,   color: '#4338ca' },
             { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: '#0f766e' },

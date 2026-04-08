@@ -545,45 +545,42 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             {FL('System Type')}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+            {/* Compact dropdown + chip list */}
+            <select
+              value=""
+              onChange={e => { if (e.target.value) toggleSystemType(e.target.value); }}
+              style={{ ...SEL, marginBottom: selectedTypes.length > 0 ? 6 : 0 }}
+            >
+              <option value="">Add system type…</option>
               {allSystemTypes.map(t => {
-                const isSelected = selectedTypes.includes(t);
                 const hasTemplate = templateNames.has(t);
+                const isSelected = selectedTypes.includes(t);
                 return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => toggleSystemType(t)}
-                    style={{
-                      padding: '5px 10px',
-                      borderRadius: 8,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      border: isSelected ? '1px solid #0f766e' : '1px solid #e2e8f0',
-                      background: isSelected ? 'rgba(15,118,110,0.1)' : 'white',
-                      color: isSelected ? '#0f766e' : '#475569',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    {t}
-                    {hasTemplate && (
-                      <span style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.12)', padding: '1px 4px', borderRadius: 4, border: '1px solid rgba(15,118,110,0.2)' }}>
-                        ✓
-                      </span>
-                    )}
-                    {isSelected && (
-                      <span style={{ fontSize: 10, color: '#0f766e', fontWeight: 900, lineHeight: 1 }}>×</span>
-                    )}
-                  </button>
+                  <option key={t} value={t} disabled={isSelected}>
+                    {hasTemplate ? `✓ ${t}` : t}{isSelected ? ' (selected)' : ''}
+                  </option>
                 );
               })}
-            </div>
+            </select>
             {selectedTypes.length > 0 && (
-              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
-                Selected: {selectedTypes.join(', ')}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                {selectedTypes.map(t => {
+                  const hasTemplate = templateNames.has(t);
+                  return (
+                    <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: 'rgba(15,118,110,0.1)', color: '#0f766e', border: '1px solid rgba(15,118,110,0.25)' }}>
+                      {t}
+                      {hasTemplate && (
+                        <span style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.12)', padding: '1px 4px', borderRadius: 4, border: '1px solid rgba(15,118,110,0.2)' }}>✓</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => toggleSystemType(t)}
+                        style={{ background: 'none', border: 'none', color: '#0f766e', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, fontWeight: 900, display: 'flex', alignItems: 'center' }}
+                        aria-label={`Remove ${t}`}
+                      >×</button>
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>
