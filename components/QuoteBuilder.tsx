@@ -102,8 +102,9 @@ function calcTotals(est: EstimateData) {
   const otherTotal =
     Object.values(est.other || {}).reduce((a, v) => a + parseDollar(v), 0) +
     (est.otherExtra || []).reduce((a, i) => a + parseDollar(i.amount), 0);
+  // X modifier is a PROFIT adjustment (what-if negotiation tool), NOT a materials adjustment
   const xMod = parseDollar(est.xModifier || '0');
-  const materialsTotal = metalTotal + glassTotal + miscTotal + otherTotal + xMod;
+  const materialsTotal = metalTotal + glassTotal + miscTotal + otherTotal;
 
   const laborLines = (est.labor || []).map(l => ({
     description: l.description,
@@ -129,7 +130,8 @@ function calcTotals(est: EstimateData) {
     : laborTotal;
 
   const profitPct = parseFloat(est.markup?.profitPct ?? '10') || 10;
-  const profitAmt = (subtotal + overheadAmt) * (profitPct / 100);
+  const baseProfitAmt = (subtotal + overheadAmt) * (profitPct / 100);
+  const profitAmt = baseProfitAmt + xMod; // X modifier adjusts profit (negotiation tool)
 
   const totalBeforeTax = subtotal + overheadAmt + profitAmt;
 

@@ -504,13 +504,19 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
   const newGrandTotal2 = newTotalCosts2 + newTaxAmt2;
   const newMarkupPct = grossCost > 0 ? ((overhead + newProfit) / grossCost) * 100 : 0;
 
+  // If X modifier is set, use the adjusted values for the quote
+  const quoteProfit = xVal !== 0 ? newProfit : profit;
+  const quoteTotalCosts = xVal !== 0 ? newTotalCosts2 : totalCosts;
+  const quoteTaxAmt = xVal !== 0 ? newTaxAmt2 : taxAmt;
+  const quoteGrandTotal = xVal !== 0 ? newGrandTotal2 : grandTotal;
+
   const estimateTotals: EstimateTotals = {
     materialsTotal,
     laborSubtotal,
     overhead,
-    profit,
-    taxAmt,
-    grandTotal,
+    profit: quoteProfit,
+    taxAmt: quoteTaxAmt,
+    grandTotal: quoteGrandTotal,
     profitPct: parseFloat(data.markup.profitPct) || 10,
     taxRate: parseFloat(data.taxRate) || getGetRate(wo.island),
   };
