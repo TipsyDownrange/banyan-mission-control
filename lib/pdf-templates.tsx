@@ -50,7 +50,7 @@ export const COMPANY = {
 // ─── Service Work Order T&C (short — residential & light commercial) ─────────
 export const SERVICE_TERMS = [
   { num: '1', title: 'Acceptance',         body: 'A signed proposal and 50% deposit are required before materials are ordered or work is scheduled. Remaining balance is due upon completion.' },
-  { num: '2', title: 'Pricing',            body: 'Price includes materials, labor, and Hawaii GET (4.5%) as stated. Any additional work discovered on site requires a written change order before proceeding.' },
+  { num: '2', title: 'Pricing',            body: 'Price includes materials, labor, and Hawaii General Excise Tax as stated. Any additional work discovered on site requires a written change order before proceeding.' },
   { num: '3', title: 'Measurements',       body: 'Customer or their representative must confirm all field dimensions prior to fabrication. Kula Glass is not responsible for costs arising from incorrect dimensions provided by others.' },
   { num: '4', title: 'Lead Times',         body: 'Material lead times are estimates only and subject to supplier availability. Kula Glass will notify customer of delays as soon as known. Lead time begins upon receipt of deposit and approved dimensions.' },
   { num: '5', title: 'Warranty',           body: 'Kula Glass warrants its installation workmanship for one (1) year from completion. Glass and material warranties are per manufacturer. Warranty does not cover breakage, scratching, or damage caused by others after installation.' },
