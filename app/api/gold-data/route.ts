@@ -46,7 +46,7 @@ export async function GET() {
     // Read Production_Rates tab
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Production_Rates!A2:J5000',
+      range: 'Production_Rates!A2:K5000',
     });
     const rows = res.data.values || [];
 

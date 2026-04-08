@@ -36,12 +36,12 @@ const COL = {
   created_at:      26, // AA
   updated_at:      27, // AB
   source:          28, // AC
-  // QBO invoice columns — AA through AE
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
+  // QBO invoice columns — AD through AH
+  qbo_invoice_id:  29, // AD
+  invoice_number:  30, // AE
+  invoice_total:   31, // AF
+  invoice_balance: 32, // AG
+  invoice_date:    33, // AH
 };
 
 // Simple in-process cache (10 minute TTL)

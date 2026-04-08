@@ -51,7 +51,7 @@ export async function PATCH(req: Request) {
 
     // Build updated row
     const updatedRow = headers.map(h => data[h] !== undefined ? data[h] : (rows[rowIndex][headers.indexOf(h)] || ''));
-    const sheetName = tab === 'gc' ? 'GC_Contacts' : 'Customers';
+    const sheetName = tab === 'gc' ? 'GC_Contacts' : tab === 'gc_people' ? 'GC_People' : 'Customers';
     await sheets.spreadsheets.values.update({
       spreadsheetId: CUSTOMER_DB,
       range: `${sheetName}!A${rowIndex + 1}`,
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
-    const sheetName = tab === 'gc' ? 'GC_Contacts' : 'Customers';
+    const sheetName = tab === 'gc' ? 'GC_Contacts' : tab === 'gc_people' ? 'GC_People' : 'Customers';
     const range = `${sheetName}!A1:J1`;
     const headerRes = await sheets.spreadsheets.values.get({ spreadsheetId: CUSTOMER_DB, range: `${sheetName}!A1:N1` });
     const headers = headerRes.data.values?.[0] as string[] || [];
