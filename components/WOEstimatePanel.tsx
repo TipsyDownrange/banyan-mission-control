@@ -926,20 +926,21 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               🖨 Print
             </button>
             <button
-              onClick={() => {
-                // Save first, then open quote
+              onClick={async () => {
+                // Force save estimate, wait for completion, THEN open quote
                 if (saveTimer.current) clearTimeout(saveTimer.current);
                 if (!isLocked) {
-                  fetch('/api/service/estimate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ woId: wo.id, data }),
-                  }).finally(() => {
-                    onGenerateQuote(wo.id, estimateTotals);
-                  });
-                } else {
-                  onGenerateQuote(wo.id, estimateTotals);
+                  setSaving(true);
+                  try {
+                    await fetch('/api/service/estimate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ woId: wo.id, data }),
+                    });
+                    setLastSaved(new Date().toISOString());
+                  } catch {} finally { setSaving(false); }
                 }
+                onGenerateQuote(wo.id, estimateTotals);
               }}
               style={{
                 padding: '9px 22px',

@@ -797,7 +797,13 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       {quoteWO && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: 'white', borderRadius: 28, width: '100%', maxWidth: 640, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
-            <QuoteBuilder woNumber={quoteWO} onClose={() => { setQuoteWO(null); setQuoteEstimateData(undefined); }} estimatePreFill={quoteEstimateData} />
+            <QuoteBuilder woNumber={quoteWO} onClose={() => {
+              // "Back to Estimate" — reopen estimate form if WO exists
+              const woObj = mergedWorkOrders.find(w => w.id === quoteWO);
+              setQuoteWO(null);
+              setQuoteEstimateData(undefined);
+              if (woObj) setEstimateWO(woObj);
+            }} estimatePreFill={quoteEstimateData} />
           </div>
         </div>
       )}
