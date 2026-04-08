@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        max_completion_tokens: 2048,
+        model: 'gpt-5.4',
+        max_completion_tokens: 4096,
         messages: [
           // If caller already includes a system message (e.g. estimating GPT), use it;
           // otherwise prepend the default Kai system prompt
