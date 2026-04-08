@@ -169,27 +169,27 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftRef = useRef(draft);
+  draftRef.current = draft; // always up to date
 
   function update(field: string, value: string) {
-    setDraft(prev => {
-      const next = { ...prev, [field]: value };
-      // Auto-save after 2s of inactivity
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-      autoSaveTimer.current = setTimeout(async () => {
-        setSaving(true);
-        try {
-          await onSave(safeWo.id, {
-            ...next,
-            assignedTo: selectedCrew.join(', '),
-            _woName: next.name || safeWo.name,
-            _island: next.island || safeWo.island,
-          });
-          setDirty(false);
-        } catch {} finally { setSaving(false); }
-      }, 2000);
-      return next;
-    });
+    setDraft(prev => ({ ...prev, [field]: value }));
     setDirty(true);
+    // Auto-save after 2s of inactivity — reads latest draft via ref
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      const latest = { ...draftRef.current, [field]: value };
+      setSaving(true);
+      try {
+        await onSave(safeWo.id, {
+          ...latest,
+          assignedTo: selectedCrew.join(', '),
+          _woName: latest.name || safeWo.name,
+          _island: latest.island || safeWo.island,
+        });
+        setDirty(false);
+      } catch {} finally { setSaving(false); }
+    }, 2000);
   }
 
   function toggleCrew(name: string) {

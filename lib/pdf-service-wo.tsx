@@ -30,6 +30,7 @@ export type ServiceWOData = {
   site_visit_credit?: number;
   subtotal: number;
   get_amount: number;
+  get_rate?: string;
   total: number;
   deposit: number;
   exclusions_extra?: string[];
@@ -42,7 +43,7 @@ function ServiceWOPDF({ data }: { data: ServiceWOData }) {
   const totalLines = [
     ...(data.materials_total ? [{ label: 'Materials', value: data.materials_total }] : []),
     ...(data.labor_subtotal ? [{ label: 'Labor', value: data.labor_subtotal }] : []),
-    { label: `${data.island || 'Hawaii'} GET`, value: data.get_amount },
+    { label: `${data.island || 'Hawaii'} GET (${data.get_rate ? data.get_rate + '%' : '4.712%'})`, value: data.get_amount },
   ];
 
   return (

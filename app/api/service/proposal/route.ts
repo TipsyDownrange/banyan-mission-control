@@ -158,6 +158,7 @@ export async function POST(req: Request) {
       site_visit_credit:     undefined,
       subtotal:              quote.subtotal || 0,
       get_amount:            quote.getAmount || 0,
+      get_rate:              quote.getRate ? String(quote.getRate) : '4.712',
       total:                 quote.total || 0,
       deposit:               quote.deposit || 0,
       exclusions_extra:      [],
