@@ -992,11 +992,40 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   Bid: {step.bid_hours}h
                 </span>
               )}
-              {step.planned_hours != null && (
+              {step.bid_hours != null && !readOnly && !isLocked ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                  Plan:
+                  <input
+                    type="number"
+                    value={step.planned_hours ?? ''}
+                    onChange={async (e) => {
+                      const hrs = parseFloat(e.target.value) || 0;
+                      try {
+                        await fetch(`/api/work-breakdown/${jobId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ type: 'step', id: step.install_step_id, planned_hours: hrs }),
+                        });
+                      } catch {}
+                    }}
+                    onBlur={() => loadData()}
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                      width: 36, fontSize: 10, fontWeight: 700, color: '#1d4ed8',
+                      background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+                      borderRadius: 4, padding: '1px 3px', textAlign: 'center', outline: 'none',
+                    }}
+                    placeholder={String(step.bid_hours ?? '')}
+                    step="0.25"
+                    min="0"
+                  />
+                  h
+                </span>
+              ) : step.planned_hours != null ? (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
                   Plan: {step.planned_hours}h
                 </span>
-              )}
+              ) : null}
               {step.required_photo_yn === 'Y' && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#eff6ff', color: '#0369a1', border: '1px solid #bfdbfe' }}>
                   PHOTO
