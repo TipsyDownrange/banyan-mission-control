@@ -106,7 +106,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
         const json = await res.json();
         const seen = new Set<string>();
         const systems: { name: string; qty: string }[] = [];
-        for (const row of (json?.assembly_summary || [])) {
+        for (const row of (json?.tables?.assembly_summary || json?.assembly_summary || [])) {
           const st = row['System_Type'];
           if (st && !seen.has(st)) {
             seen.add(st);
@@ -167,10 +167,20 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
   async function handleSave() {
     setSaving(true);
     try {
+      // Transform camelCase draft to snake_case API fields
+      const apiPayload = {
+        project_name: draft.projectName,
+        client_gc_name: draft.clientGC,
+        island: draft.island,
+        bid_date: draft.bidDate,
+        bid_due_date: draft.bidDate, // sync to Jobs table too
+        estimator: draft.estimator,
+        notes: draft.notes,
+      };
       await fetch(`/api/estimating/bids/${bid.bidVersionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(apiPayload),
       });
       onBidUpdate(draft);
       setEditing(false);

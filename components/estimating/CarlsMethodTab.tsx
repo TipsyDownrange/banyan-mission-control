@@ -555,9 +555,10 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
           }
         };
         if (takeoffJson) {
-          addTypes(takeoffJson.assembly_summary, 'System_Type');
-          addTypes(takeoffJson.glass, 'System_Type');
-          addTypes(takeoffJson.doors, 'System_Type_Context');
+          const tables = takeoffJson.tables || takeoffJson;
+          addTypes(tables.assembly_summary, 'System_Type');
+          addTypes(tables.glass, 'System_Type');
+          addTypes(tables.doors, 'System_Type_Context');
         }
         setTakeoffSystemTypes(systemTypes);
 

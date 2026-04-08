@@ -497,6 +497,8 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
             {activeTab === 'overview' && (
               <BidOverviewTab
                 bid={selectedBid}
+                stepTemplates={stepTemplates}
+                goldData={goldData}
                 onBidUpdate={(updates) => {
                   setSelectedBid(prev => prev ? { ...prev, ...updates } : null);
                   setBids(prev => prev.map(b =>
@@ -509,10 +511,12 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
             {activeTab === 'carls' && (
               <CarlsMethodTab
                 bid={selectedBid}
+                stepTemplates={stepTemplates}
+                goldData={goldData}
               />
             )}
             {activeTab === 'takeoff' && (
-              <TakeoffTab bid={selectedBid} />
+              <TakeoffTab bid={selectedBid} stepTemplates={stepTemplates} />
             )}
             {activeTab !== 'overview' && activeTab !== 'carls' && activeTab !== 'takeoff' && (
               <PlaceholderTab tabId={activeTab} />

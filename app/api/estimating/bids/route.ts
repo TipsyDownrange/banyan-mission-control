@@ -109,7 +109,7 @@ export async function GET() {
         clientGC: job?.client_gc_name || '',
         estimator: bv.estimator,
         bidDate: bv.bid_date,
-        status: bv.status.toLowerCase(),
+        status: bv.status || 'Draft',
         totalEstimate: bv.total_estimate,
         getRate: bv.get_rate,
         overheadMethod: bv.overhead_method,
