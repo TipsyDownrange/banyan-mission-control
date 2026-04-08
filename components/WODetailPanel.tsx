@@ -422,11 +422,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       </select>
                     </div>
                     <div>
-                      <label style={LBL}>Lane</label>
-                      <input style={INP} value={draft.lane || ''} onChange={e => update('lane', e.target.value)} placeholder="Service lane" />
+                      {/* Lane field removed — was a derived status, not real data */}
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Work Breakdown — top priority, shows labor steps */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Work Breakdown</div>
+                <WorkBreakdown
+                  jobId={wo.id}
+                  jobType="wo"
+                  quotedHours={parseFloat(wo.hoursEstimated) || undefined}
+                  readOnly={readOnly}
+                  systemTypes={wo.systemType}
+                />
               </div>
 
               {/* Customer & Site */}
@@ -512,19 +523,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </div>
               )}
 
-              {/* Work Breakdown */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Work Breakdown</div>
-                <WorkBreakdown
-                  jobId={wo.id}
-                  jobType="wo"
-                  quotedHours={parseFloat(wo.hoursEstimated) || undefined}
-                  readOnly={readOnly}
-                  systemTypes={wo.systemType}
-                />
-              </div>
-
-              {/* Job Files */}
+              {/* Job Files — Work Breakdown moved to top of layout */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <input
                   ref={fileInputRef}
