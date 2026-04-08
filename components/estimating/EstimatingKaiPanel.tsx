@@ -235,24 +235,38 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
     const folderMatch = folderUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
     const folderId = folderMatch ? folderMatch[1] : null;
 
-    setShowTakeoffTrigger(true);
     setDriveFiles([]);
     setSelectedDocs([]);
 
     if (folderId) {
       setDriveLoading(true);
+      let files: Array<{ id: string; name: string; mimeType: string; webViewLink: string; folder?: string }> = [];
       try {
         const res = await fetch(`/api/drive/list?folderId=${folderId}`);
         const data = await res.json();
         if (Array.isArray(data.files)) {
-          setDriveFiles(data.files);
+          files = data.files;
+          setDriveFiles(files);
         }
       } catch {
         setDriveFiles([]);
       } finally {
         setDriveLoading(false);
       }
+
+      // Auto-launch takeoff with all docs — no extra click needed
+      if (files.length > 0) {
+        const docList = files.map(f => f.name).join(', ');
+        const jobName = bid.projectName ?? bid.bidVersionId;
+        const prompt = `Generate a complete takeoff for ${jobName} (${bid.bidVersionId}) using the estimating rules.\n\nDocuments available:\n${docList}\n\nOutput in the standard takeoff tab format:\n- One row per system type\n- Include: Assembly_ID, System_Type, Qty_SF, Qty_EA, Key_Assumptions, Glass_Spec, Labor_Hours, Benchmark_Status\n- Use DLO + bite methodology for all glass calculations\n- Flag any missing information as TBD and generate RFI items\n- Include Gold Data section at the end`;
+        setShowChat(true);
+        sendChatMessage(prompt);
+        return;
+      }
     }
+
+    // Only show modal if no files found (need user to link folder or pick docs)
+    setShowTakeoffTrigger(true);
   }
 
   function handleLaunchTakeoffPrompt() {
