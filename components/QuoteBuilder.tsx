@@ -640,13 +640,39 @@ export default function QuoteBuilder({
   // ─── Download PDF ──────────────────────────────────────────────────────────
 
   async function handleDownload() {
-    if (!quote) { await generateQuote(); return; }
     setDownloading(true);
     try {
+      // Build proposal payload directly from WO data + calculated totals
+      // Don't depend on quote state (avoids double-click issue)
+      const proposalQuote = quote || {};
       const res = await fetch('/api/service/proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quote: { ...quote, materialsTotal: t?.customerMaterials, laborSubtotal: t?.customerLabor, getRate: t?.getRate }, sendEmail: false }),
+        body: JSON.stringify({
+          quote: {
+            ...proposalQuote,
+            woNumber,
+            quoteDate: new Date().toISOString().slice(0, 10),
+            customerName,
+            customerEmail,
+            customerPhone: wo?.contactPhone || '',
+            customerAddress: wo?.address || '',
+            projectDescription: wo?.name || '',
+            siteAddress: wo?.address || '',
+            island: wo?.island || '',
+            scopeNarrative: wo?.description || wo?.name || '',
+            installationIncluded: true,
+            materialsTotal: t?.customerMaterials || 0,
+            laborSubtotal: t?.customerLabor || 0,
+            getRate: t?.getRate || 4.712,
+            getAmount: t?.getAmt || 0,
+            total: t?.grandTotal || 0,
+            deposit: t ? Math.round(t.grandTotal * 50) / 100 : 0,
+            validityDays: 30,
+            preparedBy: { name: 'Joey Ritthaler', email: 'joey@kulaglass.com', phone: '808-242-8999 ext. 22' },
+          },
+          sendEmail: false,
+        }),
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
