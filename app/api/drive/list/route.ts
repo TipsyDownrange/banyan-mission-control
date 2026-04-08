@@ -22,6 +22,8 @@ export async function GET(req: Request) {
       fields: 'files(id,name,mimeType,webViewLink,size,modifiedTime,iconLink)',
       orderBy: 'name',
       pageSize: 100,
+      includeItemsFromAllDrives: true,
+      supportsAllDrives: true,
     });
 
     const files = (res.data.files || []).map(f => ({
