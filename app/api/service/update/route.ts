@@ -197,6 +197,125 @@ export async function PATCH(req: Request) {
       },
     });
 
+    // ─── Acceptance trigger: write bid_hours to Install_Steps ────────────────
+    if (resolvedStatus === 'approved') {
+      try {
+        const acceptedWoId = woId || rows[targetRowIdx]?.[COL_IDX.wo_id] || '';
+        const estimateRes = await fetch(
+          `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/service/estimate?wo=${encodeURIComponent(acceptedWoId)}`,
+          { headers: { 'x-internal': '1' } }
+        );
+        const estimateJson = await estimateRes.json();
+        const estimateData = estimateJson.data;
+
+        if (estimateData && !estimateData.locked_at) {
+          const wbRes = await fetch(
+            `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/work-breakdown/${encodeURIComponent(acceptedWoId)}`,
+            { headers: { 'x-internal': '1' } }
+          );
+          const wbJson = await wbRes.json();
+          const installSteps: Array<{ install_step_id: string; step_name: string }> = wbJson.steps || [];
+          const laborLines: Array<{ install_step_id?: string; hours: string; description: string; rate: string; custom?: boolean }> =
+            estimateData.labor || [];
+
+          // Get current Install_Steps sheet data
+          const stepsSheetRes = await sheets.spreadsheets.values.get({
+            spreadsheetId: BACKEND_SHEET_ID,
+            range: 'Install_Steps!A2:P5000',
+          });
+          const stepRows = stepsSheetRes.data.values || [];
+
+          // Build set of install_step_ids present in estimate
+          const estimateStepIds = new Set(
+            laborLines.filter(l => l.install_step_id).map(l => l.install_step_id!)
+          );
+
+          // Build set of all install_step_ids for this WO
+          const woStepIds = new Set(installSteps.map(s => s.install_step_id));
+
+          const stepUpdates: { range: string; values: string[][] }[] = [];
+
+          for (const laborLine of laborLines) {
+            if (laborLine.install_step_id) {
+              // Update bid_hours on existing Install_Step
+              const rowIdx = stepRows.findIndex(r => r[0] === laborLine.install_step_id);
+              if (rowIdx !== -1) {
+                const sheetRowNum = rowIdx + 2;
+                const existing = stepRows[rowIdx];
+                while (existing.length < 16) existing.push('');
+                existing[13] = String(parseFloat(laborLine.hours) || 0);
+                stepUpdates.push({
+                  range: `Install_Steps!A${sheetRowNum}:P${sheetRowNum}`,
+                  values: [existing.slice(0, 16)],
+                });
+              }
+            } else if (laborLine.custom) {
+              // Create new Install_Step for custom labor line
+              // Find the install_plan_id for this WO (use first plan)
+              const plansRes2 = await sheets.spreadsheets.values.get({
+                spreadsheetId: BACKEND_SHEET_ID,
+                range: 'Install_Plans!A2:G5000',
+              });
+              const planRows = plansRes2.data.values || [];
+              const woPlan = planRows.find(r => r[1] === acceptedWoId || r[1] === acceptedWoId.replace(/^WO-/i, ''));
+              const planId = woPlan ? woPlan[0] : '';
+              if (planId) {
+                const nextSeq = installSteps.length + 1;
+                const newStepId = `IS-CUSTOM-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                await sheets.spreadsheets.values.append({
+                  spreadsheetId: BACKEND_SHEET_ID,
+                  range: 'Install_Steps!A:P',
+                  valueInputOption: 'RAW',
+                  requestBody: {
+                    values: [[newStepId, planId, nextSeq, laborLine.description, parseFloat(laborLine.hours) || 0, '', 'N', '', '', '', '', '', '', String(parseFloat(laborLine.hours) || 0), '', '']],
+                  },
+                });
+              }
+            }
+          }
+
+          // Delete Install_Steps that were removed from the estimate
+          for (const step of installSteps) {
+            if (!estimateStepIds.has(step.install_step_id) && woStepIds.has(step.install_step_id)) {
+              const rowIdx = stepRows.findIndex(r => r[0] === step.install_step_id);
+              if (rowIdx !== -1) {
+                const sheetRowNum = rowIdx + 2;
+                stepUpdates.push({
+                  range: `Install_Steps!A${sheetRowNum}:P${sheetRowNum}`,
+                  values: [['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']],
+                });
+              }
+            }
+          }
+
+          // Batch write bid_hours updates
+          if (stepUpdates.length > 0) {
+            await sheets.spreadsheets.values.batchUpdate({
+              spreadsheetId: BACKEND_SHEET_ID,
+              requestBody: {
+                valueInputOption: 'RAW',
+                data: stepUpdates,
+              },
+            });
+          }
+
+          // Lock the estimate by writing locked_at to Carls_Method
+          const lockedData = { ...estimateData, locked_at: now };
+          await fetch(
+            `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/service/estimate`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-internal': '1' },
+              body: JSON.stringify({ woId: acceptedWoId, data: lockedData }),
+            }
+          );
+        }
+      } catch (acceptErr) {
+        console.error('[acceptance-trigger] Failed to write bid_hours:', acceptErr);
+        // Non-fatal — WO status update already succeeded
+      }
+    }
+
     // If this is a dispatch update (scheduledDate + assignedTo both provided),
     // also write to Dispatch_Schedule for the field crew calendar
     const { scheduledDate, assignedTo } = body;

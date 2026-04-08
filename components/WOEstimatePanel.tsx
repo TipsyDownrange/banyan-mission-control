@@ -14,6 +14,8 @@ interface LaborLine {
   hours: string;
   rate: string;
   amount: string;
+  install_step_id?: string;
+  custom?: boolean;
 }
 
 interface WOEstimateData {
@@ -304,6 +306,8 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [saveError, setSaveError] = useState('');
   const [stepLibraryLabel, setStepLibraryLabel] = useState<string | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockedAt, setLockedAt] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Load existing estimate ────────────────────────────────────────────────
@@ -311,18 +315,71 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
   useEffect(() => {
     async function load() {
       try {
-        // Use WO id as Bid_Version_ID (prefixed for uniqueness)
-        const res = await fetch(`/api/service/estimate?wo=${encodeURIComponent(wo.id)}`);
-        const json = await res.json();
-        if (json.data) {
-          const loaded = { ...defaultData(wo), ...json.data };
+        // Load estimate JSON and Install_Steps in parallel
+        const [estimateRes, workBreakdownRes] = await Promise.all([
+          fetch(`/api/service/estimate?wo=${encodeURIComponent(wo.id)}`),
+          fetch(`/api/work-breakdown/${wo.id}`),
+        ]);
+        const [estimateJson, wbJson] = await Promise.all([
+          estimateRes.json(),
+          workBreakdownRes.json(),
+        ]);
+
+        // Extract Install_Steps from work breakdown
+        const installSteps: Array<{
+          install_step_id: string;
+          step_name: string;
+          allotted_hours: number;
+        }> = (wbJson.steps || []);
+
+        if (estimateJson.data) {
+          const loaded = { ...defaultData(wo), ...estimateJson.data };
           if (!loaded.miscExtra) loaded.miscExtra = [];
           if (!loaded.otherExtra) loaded.otherExtra = [];
           if (!loaded.driveTime) loaded.driveTime = defaultData(wo).driveTime;
+
+          // Check locked state
+          if (loaded.locked_at) {
+            setIsLocked(true);
+            setLockedAt(loaded.locked_at);
+          }
+
+          // If estimate has no labor lines with install_step_id (old format),
+          // merge Install_Steps into labor lines
+          const hasStepMappedLines = loaded.labor?.some((l: LaborLine) => l.install_step_id);
+          if (!hasStepMappedLines && installSteps.length > 0) {
+            // Build labor from Install_Steps, using existing hours if description matches
+            loaded.labor = installSteps.map((step) => {
+              const existing = loaded.labor?.find((l: LaborLine) =>
+                l.description?.toLowerCase() === step.step_name?.toLowerCase()
+              );
+              return {
+                description: step.step_name,
+                hours: existing ? existing.hours : String(step.allotted_hours || ''),
+                rate: existing ? existing.rate : '117',
+                amount: '',
+                install_step_id: step.install_step_id,
+                custom: false,
+              };
+            });
+          }
+
           setData(loaded);
-          if (json.updatedAt) setLastSaved(json.updatedAt);
+          if (estimateJson.updatedAt) setLastSaved(estimateJson.updatedAt);
+        } else if (installSteps.length > 0) {
+          // No saved estimate yet — initialize labor from Install_Steps
+          const laborLines: LaborLine[] = installSteps.map((step) => ({
+            description: step.step_name,
+            hours: String(step.allotted_hours || ''),
+            rate: '117',
+            amount: '',
+            install_step_id: step.install_step_id,
+            custom: false,
+          }));
+          setData(prev => ({ ...prev, labor: laborLines }));
+          setStepLibraryLabel(`📋 ${installSteps.length} steps loaded from work breakdown`);
         } else {
-          // Try to pre-populate Field Labor from Step Library
+          // Fallback: try Step Library for total hours (legacy path)
           try {
             const stRes = await fetch('/api/step-templates');
             const stJson = await stRes.json();
@@ -618,33 +675,60 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               {/* Labor */}
               <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
                 <span style={SEC}>Labor</span>
-                {stepLibraryLabel && (
+                {isLocked && lockedAt && (
+                  <div style={{ marginBottom: 10, padding: '8px 12px', background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)', borderRadius: 8, fontSize: 11, color: '#b45309', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    🔒 Estimate locked — quote accepted {new Date(lockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                )}
+                {stepLibraryLabel && !isLocked && (
                   <div style={{ marginBottom: 8, padding: '6px 10px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, fontSize: 11, color: '#0f766e', fontWeight: 600 }}>
                     {stepLibraryLabel}
                   </div>
                 )}
                 {data.labor.map((line, i) => (
-                  <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
+                  <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: line.custom ? 'rgba(99,102,241,0.04)' : '#f8fafc', borderRadius: 8, border: line.custom ? '1px solid rgba(99,102,241,0.2)' : '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-                      <DescInput value={line.description} onChange={v => update(d => ({ ...d, labor: d.labor.map((l, j) => j === i ? { ...l, description: v } : l) }))} placeholder="Labor description…" />
-                      {data.labor.length > 1 && (
-                        <button onClick={() => update(d => ({ ...d, labor: d.labor.filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 14, padding: '0 2px', lineHeight: 1, flexShrink: 0 }}>×</button>
+                      {line.custom ? null : (
+                        <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>{i + 1}.</span>
+                      )}
+                      {line.custom && (
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)', flexShrink: 0 }}>CUSTOM</span>
+                      )}
+                      {isLocked ? (
+                        <span style={{ flex: 1, fontSize: 12, color: '#374151', fontFamily: FONT }}>{line.description}</span>
+                      ) : (
+                        <DescInput value={line.description} onChange={v => update(d => ({ ...d, labor: d.labor.map((l, j) => j === i ? { ...l, description: v } : l) }))} placeholder="Labor description…" />
+                      )}
+                      {!isLocked && (
+                        <button
+                          onClick={() => update(d => ({ ...d, labor: d.labor.filter((_, j) => j !== i) }))}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 14, padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
+                          title="Remove from estimate"
+                        >×</button>
                       )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <SmallNum
-                        value={line.hours}
-                        onChange={v => update(d => ({ ...d, labor: d.labor.map((l, j) => j === i ? { ...l, hours: v, amount: '' } : l) }))}
-                        placeholder="hrs"
-                        width={52}
-                      />
+                      {isLocked ? (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums', width: 52, textAlign: 'right' }}>{line.hours}</span>
+                      ) : (
+                        <SmallNum
+                          value={line.hours}
+                          onChange={v => update(d => ({ ...d, labor: d.labor.map((l, j) => j === i ? { ...l, hours: v, amount: '' } : l) }))}
+                          placeholder="hrs"
+                          width={52}
+                        />
+                      )}
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>hrs @</span>
                       <span style={{ fontSize: 11, color: '#64748b' }}>$</span>
-                      <SmallNum
-                        value={line.rate}
-                        onChange={v => update(d => ({ ...d, labor: d.labor.map((l, j) => j === i ? { ...l, rate: v, amount: '' } : l) }))}
-                        width={52}
-                      />
+                      {isLocked ? (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums', width: 52, textAlign: 'right' }}>{line.rate}</span>
+                      ) : (
+                        <SmallNum
+                          value={line.rate}
+                          onChange={v => update(d => ({ ...d, labor: d.labor.map((l, j) => j === i ? { ...l, rate: v, amount: '' } : l) }))}
+                          width={52}
+                        />
+                      )}
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>/hr</span>
                       <span style={{ flex: 1 }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>
@@ -653,7 +737,12 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                     </div>
                   </div>
                 ))}
-                <button onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: '117', amount: '' }] }))} style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add labor line</button>
+                {!isLocked && (
+                  <button
+                    onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: '117', amount: '', custom: true }] }))}
+                    style={{ fontSize: 10, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 700 }}
+                  >+ Add Custom Step</button>
+                )}
 
                 {/* Drive Time */}
                 <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(20,184,166,0.05)', borderRadius: 8, border: '1px solid rgba(20,184,166,0.2)' }}>
@@ -840,27 +929,35 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               onClick={() => {
                 // Save first, then open quote
                 if (saveTimer.current) clearTimeout(saveTimer.current);
-                fetch('/api/service/estimate', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ woId: wo.id, data }),
-                }).finally(() => {
+                if (!isLocked) {
+                  fetch('/api/service/estimate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ woId: wo.id, data }),
+                  }).finally(() => {
+                    onGenerateQuote(wo.id, estimateTotals);
+                  });
+                } else {
                   onGenerateQuote(wo.id, estimateTotals);
-                });
+                }
               }}
               style={{
                 padding: '9px 22px',
                 borderRadius: 10,
-                background: 'linear-gradient(135deg,#0f766e,#14b8a6)',
+                background: isLocked
+                  ? 'linear-gradient(135deg,#b45309,#d97706)'
+                  : 'linear-gradient(135deg,#0f766e,#14b8a6)',
                 color: 'white',
                 border: 'none',
                 fontSize: 12,
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(15,118,110,0.3)',
+                boxShadow: isLocked
+                  ? '0 2px 8px rgba(180,83,9,0.3)'
+                  : '0 2px 8px rgba(15,118,110,0.3)',
               }}
             >
-              Generate Quote →
+              {isLocked ? 'View Quote →' : 'Generate Quote →'}
             </button>
           </div>
         </div>

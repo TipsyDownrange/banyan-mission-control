@@ -26,6 +26,9 @@ interface InstallStep {
   planned_end_date?: string;
   assigned_crew?: string;
   predecessor_step_id?: string;
+  bid_hours?: number | null;
+  planned_hours?: number | null;
+  actual_hours?: number | null;
 }
 
 const STEP_CATEGORIES = [
@@ -954,7 +957,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   {step.step_name}
                 </span>
               )}
-              {!readOnly && !isLocked ? (
+              {!readOnly && !isLocked && !step.bid_hours ? (
                 <input
                   type="number"
                   value={step.allotted_hours || ''}
@@ -984,6 +987,16 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   {step.allotted_hours}h
                 </span>
               ) : null}
+              {step.bid_hours != null && (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+                  Bid: {step.bid_hours}h
+                </span>
+              )}
+              {step.planned_hours != null && (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                  Plan: {step.planned_hours}h
+                </span>
+              )}
               {step.required_photo_yn === 'Y' && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#eff6ff', color: '#0369a1', border: '1px solid #bfdbfe' }}>
                   PHOTO
