@@ -130,6 +130,19 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
     notes: bid.notes ?? '',
   });
 
+  // Sync draft when switching between bids
+  useEffect(() => {
+    setDraft({
+      projectName: bid.projectName ?? '',
+      clientGC: bid.clientGC ?? '',
+      island: bid.island ?? 'Maui',
+      bidDate: bid.bidDate ?? '',
+      estimator: bid.estimator ?? '',
+      notes: bid.notes ?? '',
+    });
+    setEditing(false);
+  }, [bid.bidVersionId]);
+
   function normalizeFolderUrl(input: string): string {
     const trimmed = input.trim();
     if (!trimmed) return trimmed;

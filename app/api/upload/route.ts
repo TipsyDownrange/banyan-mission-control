@@ -51,7 +51,7 @@ function detectSubfolder(filename: string): { subfolder: string; reason: string 
 
 async function getOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
   const existing = await drive.files.list({
-    q: `name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    q: `name='${name.replace(/'/g, "\\'")}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)', includeItemsFromAllDrives: true, supportsAllDrives: true,
   });
   if (existing.data.files?.length) return existing.data.files[0].id!;
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File;
     const bidKID = formData.get('bidKID') as string;
     const bidName = formData.get('bidName') as string;
-    const estimator = formData.get('estimator') as string || 'Kyle Shimizu';
+    const estimator = formData.get('estimator') as string || 'Unassigned';
     const targetFolder = formData.get('targetFolder') as string || ''; // manual override
 
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });

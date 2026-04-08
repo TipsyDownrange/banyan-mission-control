@@ -202,9 +202,13 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
     const userMsg = (directMessage ?? chatInput).trim();
     if (!userMsg || chatLoading) return;
     if (!directMessage) setChatInput('');
-    const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: userMsg }];
-    setChatMessages(newMessages);
     setChatLoading(true);
+    // Use functional update to avoid stale closure on chatMessages
+    let updatedMessages: ChatMessage[] = [];
+    setChatMessages(prev => {
+      updatedMessages = [...prev, { role: 'user', content: userMsg }];
+      return updatedMessages;
+    });
     try {
       // Build context-rich system message with estimating instructions + job context
       const jobContext = `\n\nCURRENT JOB CONTEXT:\nJob: ${bid.projectName ?? 'Unknown'}\nBid Version: ${bid.bidVersionId}\nStatus: ${bid.status}\nEstimator: ${bid.estimator ?? 'TBD'}\nIsland: ${bid.island ?? 'TBD'}\nTotal Estimate: ${bid.totalEstimate ?? 'TBD'}`;
@@ -216,14 +220,18 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
         body: JSON.stringify({
           messages: [
             { role: 'system', content: systemWithContext },
-            ...newMessages,
+            ...updatedMessages,
           ],
         }),
       });
       const data = await res.json();
-      setChatMessages([...newMessages, { role: 'assistant', content: data.reply ?? 'No response.' }]);
+      if (res.status === 401) {
+        setChatMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Please sign in with your @kulaglass.com account to use Kai.' }]);
+      } else {
+        setChatMessages(prev => [...prev, { role: 'assistant', content: data.reply ?? 'No response.' }]);
+      }
     } catch {
-      setChatMessages([...newMessages, { role: 'assistant', content: 'Error contacting Kai. Please try again.' }]);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: 'Error contacting Kai. Please try again.' }]);
     } finally {
       setChatLoading(false);
     }

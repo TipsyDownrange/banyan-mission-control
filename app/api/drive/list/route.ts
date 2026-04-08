@@ -10,8 +10,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const folderId = searchParams.get('folderId');
     const recursive = searchParams.get('recursive') !== 'false'; // default true
-    if (!folderId) {
-      return NextResponse.json({ error: 'folderId is required' }, { status: 400 });
+    if (!folderId || !/^[a-zA-Z0-9_-]+$/.test(folderId)) {
+      return NextResponse.json({ error: 'folderId is required and must be a valid Drive ID' }, { status: 400 });
     }
 
     const auth = getGoogleAuth([

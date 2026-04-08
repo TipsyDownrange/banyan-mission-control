@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { BidSummary, StepTemplates, GoldDataSummary } from '@/components/estimating/EstimatingWorkspace';
 
+// Default labor rate — update here when rates change
+const DEFAULT_LABOR_RATE = '117';
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface LineItem {
@@ -89,9 +92,9 @@ function defaultData(bid: BidSummary): CarlsData {
     },
     otherExtra: [],
     labor: [
-      { description: 'Fab by ___', hours: '', rate: '117', amount: '' },
-      { description: 'Fab by Kula', hours: '', rate: '117', amount: '' },
-      { description: 'Field Labor', hours: '', rate: '117', amount: '' },
+      { description: 'Fab by ___', hours: '', rate: DEFAULT_LABOR_RATE, amount: '' },
+      { description: 'Fab by Kula', hours: '', rate: DEFAULT_LABOR_RATE, amount: '' },
+      { description: 'Field Labor', hours: '', rate: DEFAULT_LABOR_RATE, amount: '' },
     ],
     markup: {
       overheadOverride: '',
@@ -1297,7 +1300,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
               <tr className="no-print">
                 <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
                   <button
-                    onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: '117', amount: '' }] }))}
+                    onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: DEFAULT_LABOR_RATE, amount: '' }] }))}
                     style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
                   >+ add labor line</button>
                 </td>

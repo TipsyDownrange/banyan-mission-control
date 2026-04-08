@@ -220,18 +220,17 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
   const [newBidDraft, setNewBidDraft] = useState({ project_name: '', client_gc_name: '', island: 'Maui', job_type: 'Commercial', bid_due_date: '', estimator: '', notes: '' });
   const [newBidSaving, setNewBidSaving] = useState(false);
 
-  const loadBids = useCallback(async () => {
+  const loadBids = useCallback(async (): Promise<BidSummary[]> => {
     setLoading(true);
     try {
       const res = await fetch('/api/estimating/bids');
       const data = await res.json();
-      if (Array.isArray(data.bids)) {
-        setBids(data.bids);
-      } else if (Array.isArray(data)) {
-        setBids(data);
-      }
+      const list = Array.isArray(data.bids) ? data.bids : Array.isArray(data) ? data : [];
+      setBids(list);
+      return list;
     } catch (err) {
       console.error('Failed to load bids', err);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -612,9 +611,9 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
                     if (data.ok) {
                       setShowNewBidModal(false);
                       setNewBidDraft({ project_name: '', client_gc_name: '', island: 'Maui', job_type: 'Commercial', bid_due_date: '', estimator: '', notes: '' });
-                      await loadBids();
-                      // Auto-select the new bid
-                      const newBid = bids.find(b => b.bidVersionId === data.bid_version_id);
+                      const freshBids = await loadBids();
+                      // Auto-select the new bid from fresh data (not stale closure)
+                      const newBid = freshBids.find(b => b.bidVersionId === data.bid_version_id);
                       if (newBid) { setSelectedBid(newBid); setActiveTab('overview'); }
                     }
                   } catch (err) { console.error('Create bid failed', err); }
