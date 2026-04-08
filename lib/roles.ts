@@ -47,7 +47,8 @@ export const ALL_USERS: { name: string; role: string; group: string; email?: str
   { name: 'Santia-Jacob Pascual',     role: 'glazier',    group: 'Field — Oahu' },
   { name: 'Chachleigh Clarabal',      role: 'glazier',    group: 'Field — Oahu' },
   { name: 'Elijah-David Meheula-Lando', role: 'glazier', group: 'Field — Oahu' },
-  { name: 'Nathan Nakamura',          role: 'glazier',    group: 'Field — Maui' },
+  // Nathan Nakamura is Nate Nakamura (super) — removed duplicate glazier entry
+  // Rule: when a user holds multiple roles, use highest authority level
   { name: 'Mark Villados',            role: 'glazier',    group: 'Field — Maui' },
   { name: 'Tyler Niemeyer',           role: 'glazier',    group: 'Field — Maui' },
   { name: 'Tyson Omura',              role: 'glazier',    group: 'Field — Maui' },
@@ -60,6 +61,21 @@ export const ALL_USERS: { name: string; role: string; group: string; email?: str
   { name: 'Joshua Moore',             role: 'glazier',    group: 'Field — Kauai' },
   { name: 'Troy Sliter',              role: 'glazier',    group: 'Field — Kauai' },
 ];
+
+// ── Role hierarchy: highest credential always wins ─────────────────────────
+const ROLE_RANK: Record<string, number> = {
+  owner: 100, gm: 90,
+  pm: 70, estimator: 70, service_pm: 70, sales: 70, admin_mgr: 70,
+  super: 60,
+  pm_track: 50, admin: 50,
+  glazier: 10,
+};
+
+/** When a user has multiple roles, return the highest-authority one. */
+export function highestRole(roles: string[]): string {
+  if (!roles.length) return 'glazier';
+  return roles.reduce((best, r) => (ROLE_RANK[r] || 0) > (ROLE_RANK[best] || 0) ? r : best, roles[0]);
+}
 
 // ── Authority level → nav sections ──────────────────────────────────────────
 // This is the single source of truth for what each person can see.
