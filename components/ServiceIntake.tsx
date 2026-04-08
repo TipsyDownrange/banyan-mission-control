@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import type { CustomerRecord } from '@/app/api/service/customers/route';
+import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 
 type WODraft = {
   businessName: string;  // Maps to name column (C)
@@ -483,13 +484,13 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
             </div>
             <div>
               {FL('Contact Phone')}
-              <input type="tel" value={draft.contactPhone} onChange={e => update('contactPhone', e.target.value)} placeholder="808-XXX-XXXX" style={INP} />
+              <input type="tel" value={draft.contactPhone} onChange={e => update('contactPhone', e.target.value)} onBlur={e => update('contactPhone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" style={INP} />
             </div>
           </div>
 
           <div>
             {FL('Contact Email')}
-            <input type="email" value={draft.contactEmail} onChange={e => update('contactEmail', e.target.value)} placeholder="email@example.com" style={INP} />
+            <input type="email" value={draft.contactEmail} onChange={e => update('contactEmail', e.target.value)} onBlur={e => update('contactEmail', normalizeEmail(e.target.value))} placeholder="email@example.com" style={INP} />
           </div>
 
           <div>

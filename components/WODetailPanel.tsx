@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
+import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -434,7 +435,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
                     <label style={LBL}>Customer / Account Name</label>
-                    <input style={INP} value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''} onChange={e => update('customer_name', e.target.value)} placeholder="Billing account name" />
+                    <input style={INP} value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''} onChange={e => update('customer_name', e.target.value)} onBlur={e => update('customer_name', normalizeName(e.target.value))} placeholder="Billing account name" />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
@@ -443,12 +444,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                     <div>
                       <label style={LBL}>Contact Phone</label>
-                      <input type="tel" style={INP} value={(draft as WorkOrder & { contact_phone?: string }).contact_phone ?? wo.contact_phone ?? ''} onChange={e => update('contact_phone', e.target.value)} placeholder="808-XXX-XXXX" />
+                      <input type="tel" style={INP} value={(draft as WorkOrder & { contact_phone?: string }).contact_phone ?? wo.contact_phone ?? ''} onChange={e => update('contact_phone', e.target.value)} onBlur={e => update('contact_phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" />
                     </div>
                   </div>
                   <div>
                     <label style={LBL}>Contact Email</label>
-                    <input type="email" style={INP} value={(draft as WorkOrder & { contact_email?: string }).contact_email ?? wo.contact_email ?? ''} onChange={e => update('contact_email', e.target.value)} placeholder="email@example.com" />
+                    <input type="email" style={INP} value={(draft as WorkOrder & { contact_email?: string }).contact_email ?? wo.contact_email ?? ''} onChange={e => update('contact_email', e.target.value)} onBlur={e => update('contact_email', normalizeEmail(e.target.value))} placeholder="email@example.com" />
                   </div>
                   <div>
                     <label style={LBL}>Address</label>

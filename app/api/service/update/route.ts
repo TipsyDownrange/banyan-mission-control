@@ -4,6 +4,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
+import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -162,13 +163,23 @@ export async function PATCH(req: Request) {
       });
     }
 
+    // Normalize fields that need canonical formatting
+    const PHONE_FIELDS = new Set(['contactPhone', 'contact_phone']);
+    const EMAIL_FIELDS = new Set(['contactEmail', 'contact_email']);
+    const NAME_FIELDS = new Set(['customerName', 'customer_name', 'contactPerson', 'contact_person']);
+
     // Map all other fields
     for (const [bodyKey, colKey] of Object.entries(fieldMap)) {
       if (bodyKey === 'status') continue; // handled above
       if (body[bodyKey] !== undefined) {
+        let val = String(body[bodyKey]);
+        // Normalize on write
+        if (PHONE_FIELDS.has(bodyKey)) val = normalizePhone(val);
+        else if (EMAIL_FIELDS.has(bodyKey)) val = normalizeEmail(val);
+        else if (NAME_FIELDS.has(bodyKey)) val = normalizeName(val);
         updates.push({
           col: colLetter(COL_IDX[colKey]),
-          value: String(body[bodyKey]),
+          value: val,
         });
       }
     }
