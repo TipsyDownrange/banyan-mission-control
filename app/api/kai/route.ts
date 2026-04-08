@@ -71,11 +71,15 @@ export async function POST(req: NextRequest) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5.4',
-        max_completion_tokens: 1024,
+        model: 'gpt-4o',
+        max_completion_tokens: 2048,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT + bidContext + projectContext },
-          ...messages.slice(-20),
+          // If caller already includes a system message (e.g. estimating GPT), use it;
+          // otherwise prepend the default Kai system prompt
+          ...(messages[0]?.role === 'system'
+            ? [{ role: 'system', content: messages[0].content + bidContext + projectContext }, ...messages.slice(1).slice(-20)]
+            : [{ role: 'system', content: SYSTEM_PROMPT + bidContext + projectContext }, ...messages.slice(-20)]
+          ),
         ],
       }),
     });
