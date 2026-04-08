@@ -125,9 +125,12 @@ function calcTotals(est: EstimateData) {
 
   const subtotal = materialsTotal + laborTotal + driveTotal;
 
+  // Overhead = labor-equal method: overhead matches labor subtotal (labor + drive)
+  // Must match WOEstimatePanel which uses laborSubtotal = laborTotal + driveTime
+  const laborSubtotalForOverhead = laborTotal + driveTotal;
   const overheadAmt = est.markup?.overheadOverride
     ? parseDollar(est.markup.overheadOverride)
-    : laborTotal;
+    : laborSubtotalForOverhead;
 
   const profitPct = parseFloat(est.markup?.profitPct ?? '10') || 10;
   const baseProfitAmt = (subtotal + overheadAmt) * (profitPct / 100);
