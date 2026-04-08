@@ -877,6 +877,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
   function renderStepRow(step: InstallStep, markId: string) {
     const status = getStepStatus(step.install_step_id, markId);
+    const isLocked = status === 'complete';
     const completion = completions.find(c => c.install_step_id === step.install_step_id && c.mark_id === markId);
     const isSaving = savingNote === step.install_step_id + markId;
 
@@ -916,7 +917,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {editingStep === step.install_step_id && !readOnly ? (
+              {editingStep === step.install_step_id && !readOnly && !isLocked ? (
                 <input
                   value={editingStepValue}
                   onChange={e => setEditingStepValue(e.target.value)}
@@ -939,21 +940,21 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     fontSize: 13, fontWeight: 600,
                     color: status === 'complete' ? '#64748b' : '#0f172a',
                     textDecoration: status === 'complete' ? 'line-through' : 'none',
-                    cursor: readOnly || status === 'complete' ? 'default' : 'text',
-                    borderBottom: readOnly || status === 'complete' ? 'none' : '1px dashed #e2e8f0',
+                    cursor: readOnly || isLocked ? 'default' : 'text',
+                    borderBottom: readOnly || isLocked ? 'none' : '1px dashed #e2e8f0',
                     padding: '1px 0',
                   }}
                   onClick={() => {
-                    if (readOnly || status === 'complete') return;
+                    if (readOnly || isLocked) return;
                     setEditingStep(step.install_step_id);
                     setEditingStepValue(step.step_name);
                   }}
-                  title={readOnly || status === 'complete' ? undefined : 'Tap to edit'}
+                  title={isLocked ? 'Step is locked (completed)' : readOnly ? undefined : 'Tap to edit'}
                 >
                   {step.step_name}
                 </span>
               )}
-              {!readOnly ? (
+              {!readOnly && !isLocked ? (
                 <input
                   type="number"
                   value={step.allotted_hours || ''}
@@ -988,7 +989,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   PHOTO
                 </span>
               )}
-              {!readOnly ? (
+              {!readOnly && !isLocked ? (
                 <select
                   value={step.category || ''}
                   onChange={async (e) => {
@@ -1018,7 +1019,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             )}
 
             {/* ─── Scheduling fields ──────────────────────────────────────── */}
-            {!readOnly && (
+            {!readOnly && !isLocked && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6, alignItems: 'center' }}>
                 {/* Planned Start Date */}
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1095,7 +1096,16 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             )}
           </div>
 
-          {!readOnly && (
+          {isLocked && (
+            <span
+              title="Step locked — completed"
+              style={{ fontSize: 14, color: '#15803d', padding: '4px 6px', lineHeight: 1, flexShrink: 0 }}
+              aria-label="Locked"
+            >
+              🔒
+            </span>
+          )}
+          {!readOnly && !isLocked && (
             <button
               onClick={() => handleDeleteStep(step.install_step_id)}
               style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: 16, padding: '4px 6px', lineHeight: 1 }}
@@ -1658,7 +1668,10 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 <div>
                   <label style={LBL}>System Type</label>
                   <input style={INP} value={scopeForm.system_type} onChange={e => setScopeForm(f => ({ ...f, system_type: e.target.value }))} placeholder="e.g. Sliding Glass Door" list="system-types" autoFocus />
-                  <datalist id="system-types">{Object.keys(STEP_TEMPLATES).map(t => <option key={t} value={t} />)}</datalist>
+                  <datalist id="system-types">
+                    {Object.keys(STEP_TEMPLATES).map(t => <option key={t} value={t} />)}
+                    {systemTypes && systemTypes.split(',').map(t => t.trim()).filter(t => t && !STEP_TEMPLATES[t]).map(t => <option key={`sys-${t}`} value={t} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label style={LBL}>Location / Area</label>

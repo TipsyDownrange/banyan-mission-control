@@ -278,16 +278,13 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       .then(r => r.json())
       .then(d => {
         if (d.ok && d.templates) {
-          const names = new Set(Object.keys(d.templates));
+          const names = new Set<string>(Object.keys(d.templates));
           setTemplateNames(names);
-          // Merge template names into system types (dedupe)
-          setAllSystemTypes(prev => {
-            const combined = [...prev];
-            for (const name of names) {
-              if (!combined.includes(name)) combined.splice(combined.length - 1, 0, name); // insert before 'Other'
-            }
-            return combined;
-          });
+          // Build unified list: Step Library templates FIRST (primary source),
+          // then any SYSTEM_TYPES entries not already covered by a template.
+          const templateList = Array.from(names);
+          const fallbackOnly = SYSTEM_TYPES.filter(t => !names.has(t));
+          setAllSystemTypes([...templateList, ...fallbackOnly]);
         }
       })
       .catch(() => {});

@@ -621,8 +621,31 @@ interface UnscheduledQueueProps {
   onSchedule: (job: UnscheduledJob) => void;
 }
 
+const ISLAND_FILTERS = ['Maui', 'Oahu', 'Kauai', 'Hawaii'];
+const STATUS_FILTERS = ['approved', 'in_progress', 'scheduled'];
+
 function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
   const [expanded, setExpanded] = useState(true);
+  const [search, setSearch] = useState('');
+  const [islandFilters, setIslandFilters] = useState<string[]>([]);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+
+  function toggleFilter<T>(arr: T[], val: T, set: (a: T[]) => void) {
+    set(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]);
+  }
+
+  const filtered = jobs.filter(job => {
+    if (search) {
+      const q = search.toLowerCase();
+      const matches = job.name.toLowerCase().includes(q) ||
+        (job.customer || '').toLowerCase().includes(q) ||
+        (job.kID || '').toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+    if (islandFilters.length > 0 && !islandFilters.some(f => (job.island || '').toLowerCase().includes(f.toLowerCase()))) return false;
+    if (statusFilters.length > 0 && !statusFilters.includes(job.status)) return false;
+    return true;
+  });
 
   if (jobs.length === 0) {
     return (
@@ -632,10 +655,64 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
     );
   }
 
-  const visible = expanded ? jobs : jobs.slice(0, 3);
+  const visible = expanded ? filtered : filtered.slice(0, 3);
 
   return (
     <div>
+      {/* Search + Filter controls */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+        <input
+          type="text"
+          placeholder="Search by job name, customer, WO#…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{
+            width: '100%', padding: '8px 12px', borderRadius: 8,
+            border: '1px solid rgba(251,191,36,0.25)', background: 'rgba(251,191,36,0.05)',
+            color: '#f1f5f9', fontSize: 12, outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {ISLAND_FILTERS.map(isl => {
+            const active = islandFilters.includes(isl);
+            const c = islandColor(isl);
+            return (
+              <button key={isl} onClick={() => toggleFilter(islandFilters, isl, setIslandFilters)}
+                style={{
+                  padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 800, cursor: 'pointer',
+                  background: active ? c.bg : 'rgba(255,255,255,0.04)',
+                  border: active ? `1px solid ${c.border}` : '1px solid rgba(255,255,255,0.1)',
+                  color: active ? c.text : '#64748b',
+                }}>{isl}</button>
+            );
+          })}
+          <div style={{ width: 1, background: 'rgba(255,255,255,0.08)', margin: '0 2px' }} />
+          {STATUS_FILTERS.map(st => {
+            const active = statusFilters.includes(st);
+            return (
+              <button key={st} onClick={() => toggleFilter(statusFilters, st, setStatusFilters)}
+                style={{
+                  padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 800, cursor: 'pointer',
+                  background: active ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.04)',
+                  border: active ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                  color: active ? '#fbbf24' : '#64748b',
+                  textTransform: 'capitalize',
+                }}>{st.replace('_', ' ')}</button>
+            );
+          })}
+          {(islandFilters.length > 0 || statusFilters.length > 0 || search) && (
+            <button onClick={() => { setIslandFilters([]); setStatusFilters([]); setSearch(''); }}
+              style={{ padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 800, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
+              Clear
+            </button>
+          )}
+        </div>
+        {filtered.length !== jobs.length && (
+          <div style={{ fontSize: 10, color: '#64748b' }}>
+            Showing {filtered.length} of {jobs.length} jobs
+          </div>
+        )}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {visible.map(job => {
           const colors = islandColor(job.island);
@@ -690,7 +767,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
           );
         })}
       </div>
-      {jobs.length > 3 && (
+      {filtered.length > 3 && (
         <button
           onClick={() => setExpanded(e => !e)}
           style={{
@@ -699,7 +776,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
             borderRadius: 8, color: '#64748b', fontSize: 11, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          {expanded ? `Show less ↑` : `Show all ${jobs.length} ↓`}
+          {expanded ? `Show less ↑` : `Show all ${filtered.length} ↓`}
         </button>
       )}
     </div>
