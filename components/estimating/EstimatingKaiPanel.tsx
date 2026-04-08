@@ -104,6 +104,38 @@ const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?:
 export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: EstimatingKaiPanelProps) {
   const ctx = TAB_CONTEXT[activeTab] ?? TAB_CONTEXT.overview;
 
+  // Upload refs
+  const plansInputRef = useRef<HTMLInputElement>(null);
+  const specsInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState<string | null>(null); // 'plans' | 'specs' | null
+  const [uploadResult, setUploadResult] = useState<{ name: string; link?: string } | null>(null);
+
+  async function handleFileUpload(files: FileList | null, category: string) {
+    if (!files || files.length === 0) return;
+    setUploading(category);
+    setUploadResult(null);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const form = new FormData();
+        form.append('file', file);
+        form.append('bidKID', bid.bidVersionId);
+        form.append('bidName', bid.projectName ?? 'Unknown');
+        form.append('estimator', bid.estimator ?? '');
+        form.append('targetFolder', category === 'plans' ? '03 - Drawings' : '03 - Drawings');
+        const res = await fetch('/api/upload', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.success) {
+          setUploadResult({ name: data.fileName, link: data.webViewLink });
+        }
+      }
+    } catch (err) {
+      console.error('Upload failed', err);
+    } finally {
+      setUploading(null);
+    }
+  }
+
   // Trigger Takeoff state
   const [showTakeoffTrigger, setShowTakeoffTrigger] = useState(false);
   const [driveFiles, setDriveFiles] = useState<Array<{ id: string; name: string; mimeType: string; webViewLink: string }>>([]);
@@ -663,11 +695,45 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               Quick Actions
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {/* Hidden file inputs for upload */}
+              <input
+                ref={plansInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.dwg,.png,.jpg,.jpeg,.tiff,.tif"
+                style={{ display: 'none' }}
+                onChange={e => handleFileUpload(e.target.files, 'plans')}
+              />
+              <input
+                ref={specsInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.docx,.doc,.txt"
+                style={{ display: 'none' }}
+                onChange={e => handleFileUpload(e.target.files, 'specs')}
+              />
+              {uploading && (
+                <div style={{ fontSize: 11, color: '#0f766e', fontWeight: 600, padding: '6px 0' }}>
+                  Uploading {uploading}…
+                </div>
+              )}
+              {uploadResult && (
+                <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, padding: '6px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  ✓ {uploadResult.name}
+                  {uploadResult.link && (
+                    <a href={uploadResult.link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: 10 }}>View ↗</a>
+                  )}
+                </div>
+              )}
               {ctx.actions.map((action) => (
                 <button
                   key={action}
                   onClick={() => {
-                    if (action === 'Validate Takeoff') handleValidateTakeoff();
+                    if (action === 'Upload Plans') {
+                      plansInputRef.current?.click();
+                    } else if (action === 'Upload Specs') {
+                      specsInputRef.current?.click();
+                    } else if (action === 'Validate Takeoff') handleValidateTakeoff();
                     else if (action === 'Generate Takeoff' || action === 'Generate Estimate') {
                       setShowChat(true);
                       setChatInput(`Generate a ${action === 'Generate Takeoff' ? 'full takeoff' : 'full estimate'} for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
