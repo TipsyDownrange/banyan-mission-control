@@ -198,10 +198,10 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
     }
   }
 
-  async function sendChatMessage() {
-    const userMsg = chatInput.trim();
+  async function sendChatMessage(directMessage?: string) {
+    const userMsg = (directMessage ?? chatInput).trim();
     if (!userMsg || chatLoading) return;
-    setChatInput('');
+    if (!directMessage) setChatInput('');
     const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: userMsg }];
     setChatMessages(newMessages);
     setChatLoading(true);
@@ -275,7 +275,7 @@ Output in the standard takeoff tab format:
 
     setShowTakeoffTrigger(false);
     setShowChat(true);
-    setChatInput(prompt);
+    sendChatMessage(prompt);
   }
 
   async function handleValidateTakeoff() {
@@ -510,7 +510,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   }}
                 />
                 <button
-                  onClick={sendChatMessage}
+                  onClick={() => sendChatMessage()}
                   disabled={chatLoading || !chatInput.trim()}
                   style={{
                     padding: '8px 12px', borderRadius: 9, border: 'none',
@@ -760,27 +760,27 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                       handleValidateTakeoff();
                     } else if (action === 'Generate Takeoff') {
                       setShowChat(true);
-                      setChatInput(`Generate a full takeoff for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
+                      sendChatMessage(`Generate a full takeoff for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
                     } else if (action === 'Generate Estimate') {
                       setShowChat(true);
-                      setChatInput(`Generate a full estimate for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
+                      sendChatMessage(`Generate a full estimate for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
                     } else if (action === 'Sync from Estimate') {
                       setShowChat(true);
-                      setChatInput(`Sync the Simple Estimate for ${bid.bidVersionId} from the detailed estimate data`);
+                      sendChatMessage(`Sync the Simple Estimate for ${bid.bidVersionId} from the detailed estimate data`);
                     } else if (action === 'Export PDF') {
                       window.print();
                     } else if (action === 'Parse Quote PDF') {
                       setShowChat(true);
-                      setChatInput(`Parse uploaded vendor quote PDFs for ${bid.bidVersionId} into the coverage matrix`);
+                      sendChatMessage(`Parse uploaded vendor quote PDFs for ${bid.bidVersionId} into the coverage matrix`);
                     } else if (action === 'Auto-populate Gaps') {
                       setShowChat(true);
-                      setChatInput(`Analyze the takeoff and specs for ${bid.bidVersionId} and auto-populate the Bid Gap Log with scope gaps, ambiguities, and risk items`);
+                      sendChatMessage(`Analyze the takeoff and specs for ${bid.bidVersionId} and auto-populate the Bid Gap Log with scope gaps, ambiguities, and risk items`);
                     } else if (action === 'Generate Proposal') {
                       setShowChat(true);
-                      setChatInput(`Generate the customer proposal for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'} with pricing table, exclusions, and qualifications`);
+                      sendChatMessage(`Generate the customer proposal for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'} with pricing table, exclusions, and qualifications`);
                     } else if (action === 'Generate Estimate PDF') {
                       setShowChat(true);
-                      setChatInput(`Generate the Carl's Method PDF for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
+                      sendChatMessage(`Generate the Carl's Method PDF for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
                     }
                   }}
                   style={{
