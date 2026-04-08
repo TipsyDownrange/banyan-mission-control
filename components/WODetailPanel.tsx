@@ -598,18 +598,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
               {/* Scheduling */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Scheduling</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                  <div>
-                    <label style={LBL}>Scheduled Date</label>
-                    <input type="date" style={INP} value={draft.scheduledDate || ''} onChange={e => update('scheduledDate', e.target.value)} />
-                  </div>
-                  <div>
-                    <label style={LBL}>Due Date</label>
-                    <input type="date" style={INP} value={draft.dueDate || ''} onChange={e => update('dueDate', e.target.value)} />
-                  </div>
-                </div>
-                {/* Legacy hour fields removed — hours tracked per-step in Work Breakdown */}
+                {/* Scheduling section removed — all scheduling data lives in:
+                   - Install_Steps: planned_start_date, planned_end_date per step
+                   - Dispatch_Schedule: dispatch slots created by Nate
+                   - No flat WO-level schedule/due date fields (redundant)
+                   Hours: bid_hours, planned_hours, actual_hours per step in Install_Steps */}
                 {/* Read-only meta */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {wo.dateReceived && (
