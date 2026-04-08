@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
+import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -367,6 +368,25 @@ export async function PATCH(req: Request) {
       } catch {
         console.error('[schedule-sync] Failed to write to Dispatch_Schedule');
       }
+    }
+
+    // Write-back customer data to Customer DB (fire-and-forget)
+    const custName = body.customerName || body.customer_name;
+    const custPhone = body.contactPhone || body.contact_phone;
+    const custEmail = body.contactEmail || body.contact_email;
+    const custPerson = body.contactPerson || body.contact_person;
+    const custIsland = body.island;
+    const custAddress = body.address;
+    if (custName || custPhone || custEmail) {
+      fireAndForgetCustomerUpdate({
+        name: custName,
+        phone: custPhone,
+        email: custEmail,
+        primaryContact: custPerson,
+        island: custIsland,
+        address: custAddress,
+        source: 'wo_update',
+      });
     }
 
     return NextResponse.json({ ok: true, sheetRow, woId: woId || resolvedWoNumber });

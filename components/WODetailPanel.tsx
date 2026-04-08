@@ -167,8 +167,27 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
   const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
 
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   function update(field: string, value: string) {
-    setDraft(prev => ({ ...prev, [field]: value }));
+    setDraft(prev => {
+      const next = { ...prev, [field]: value };
+      // Auto-save after 2s of inactivity
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = setTimeout(async () => {
+        setSaving(true);
+        try {
+          await onSave(safeWo.id, {
+            ...next,
+            assignedTo: selectedCrew.join(', '),
+            _woName: next.name || safeWo.name,
+            _island: next.island || safeWo.island,
+          });
+          setDirty(false);
+        } catch {} finally { setSaving(false); }
+      }, 2000);
+      return next;
+    });
     setDirty(true);
   }
 
