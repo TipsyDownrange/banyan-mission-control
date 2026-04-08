@@ -117,24 +117,39 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
     return superNode;
   });
 
-  // Build PM/office nodes
-  const pmNodes: OrgNode[] = pms.map(p => { const n = toNode(p); n.note = 'Management Team'; return n; });
+  // Find Frank (Oahu operations lead) and other PMs
+  const frank = pms.find(p => p.role.toLowerCase().includes('senior'));
+  const oahuSuper = superNodes.find(s => s.island.toLowerCase() === 'oahu');
+  const mauiSuper = superNodes.find(s => s.island.toLowerCase() === 'maui');
+  const otherPms = pms.filter(p => p.name !== frank?.name);
   const adminNodes: OrgNode[] = adminStaff.map(a => toNode(a));
 
-  // Build GM node
+  // Build Frank's Oahu operations node — Frank runs Oahu, Karl Sr reports to Frank
+  const frankNode: OrgNode = frank ? toNode(frank) : null as unknown as OrgNode;
+  if (frankNode) {
+    frankNode.note = 'Oahu Operations Lead';
+    frankNode.children = oahuSuper ? [oahuSuper] : [];
+  }
+
+  // Build Sean/GM node — runs Maui + outer islands
   const gmNode: OrgNode = gm ? toNode(gm) : {
     id: 'gm', name: 'General Manager', title: 'GM', island: 'Maui', color: '#0369a1', children: [],
   };
-  if (gm) gmNode.note = 'Management Team';
+  if (gm) gmNode.note = 'Maui + Outer Islands';
 
-  // GM's direct reports: PMs, admin staff, supers
-  gmNode.children = [...pmNodes, ...adminNodes, ...superNodes];
+  // Sean's direct reports: other PMs, admin staff, Nate (Maui super)
+  // Frank's Oahu team is separate
+  const mauiTeam = [...otherPms.map(p => { const n = toNode(p); n.note = 'Management Team'; return n; }), ...adminNodes];
+  if (mauiSuper) mauiTeam.push(mauiSuper);
+  gmNode.children = mauiTeam;
 
-  // Build owner node
+  // Build owner node — floats above all
   const ownerNode: OrgNode = owner ? toNode(owner) : {
-    id: 'owner', name: 'Owner', title: 'Owner / President', island: 'Oahu', color: '#0f172a', children: [],
+    id: 'owner', name: 'Owner', title: 'Owner / President', island: 'Maui', color: '#0f172a', children: [],
   };
+  // Owner's direct reports: Sean (Maui+outer) and Frank (Oahu)
   ownerNode.children = [gmNode];
+  if (frankNode) ownerNode.children.push(frankNode);
 
   return ownerNode;
 }
@@ -305,26 +320,20 @@ export default function OrgChartPanel() {
   const orgTree = buildOrgTree(crew);
 
   // Extract sections for layout
-  const owner = orgTree;
-  const gm = orgTree?.children[0];
-  const gmReports = gm?.children || [];
+  // Jody (owner) at top, then two branches: Sean (Maui+outer) and Frank (Oahu)
+  const ownerNode = orgTree;
+  const seanBranch = orgTree?.children.find(c => c.title.toLowerCase().includes('general manager'));
+  const frankBranch = orgTree?.children.find(c => c.title.toLowerCase().includes('senior') || c.note?.includes('Oahu'));
 
-  // Group GM's reports by island for display
-  const mauiOffice = gmReports.filter(n =>
-    n.island.toLowerCase() === 'maui' || n.note?.toLowerCase().includes('maui')
-  );
-  const oahuOffice = gmReports.filter(n =>
-    n.island.toLowerCase() === 'oahu' && !mauiOffice.includes(n)
-  );
-  const otherOffice = gmReports.filter(n =>
-    !mauiOffice.includes(n) && !oahuOffice.includes(n)
-  );
+  // Sean's reports for Maui office
+  const seanReports = seanBranch?.children || [];
+  const mauiSuper = seanReports.find(n => n.note?.includes('Superintendent'));
+  const mauiStaff = seanReports.filter(n => n !== mauiSuper);
 
-  // Find superintendents for island sections
-  const mauiSuper = mauiOffice.find(n => n.note?.includes('Superintendent'));
-  const oahuSuper = oahuOffice.find(n => n.note?.includes('Superintendent'));
-  const mauiStaff = mauiOffice.filter(n => n !== mauiSuper);
-  const oahuStaff = oahuOffice.filter(n => n !== oahuSuper);
+  // Frank's reports for Oahu office
+  const frankReports = frankBranch?.children || [];
+  const oahuSuper = frankReports.find(n => n.note?.includes('Superintendent'));
+  const oahuStaff = frankReports.filter(n => n !== oahuSuper);
 
   return (
     <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
@@ -357,45 +366,51 @@ export default function OrgChartPanel() {
       ) : (
         <div style={{ overflowX: 'auto', paddingBottom: 24 }}>
           <div style={{ minWidth: 900 }}>
-            {/* Owner */}
-            {owner && (
+            {/* Owner — floats above all */}
+            {ownerNode && (
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
-                <NodeCard node={owner} />
+                <NodeCard node={{ ...ownerNode, children: [] }} />
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: 2, height: 20, background: '#e2e8f0' }} />
             </div>
 
-            {/* GM */}
-            {gm && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
-                <NodeCard node={{ ...gm, children: [] }} />
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ width: 2, height: 20, background: '#e2e8f0' }} />
-            </div>
-
-            {/* Horizontal connector */}
+            {/* Horizontal connector — two branches */}
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
-              <div style={{ height: 2, background: '#e2e8f0', width: '85%', maxWidth: 1100 }} />
+              <div style={{ height: 2, background: '#e2e8f0', width: '60%', maxWidth: 800 }} />
             </div>
 
-            {/* Island offices */}
-            <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {/* Two branches: Sean (Maui+Outer) and Frank (Oahu) */}
+            <div style={{ display: 'flex', gap: 40, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+
+              {/* MAUI + OUTER ISLANDS — Sean's branch */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
+                {seanBranch && (
+                  <div style={{ marginBottom: 12 }}>
+                    <NodeCard node={{ ...seanBranch, children: [] }} />
+                  </div>
+                )}
+                <div style={{ width: 2, height: 12, background: '#e2e8f0' }} />
                 <IslandSection
-                  label="Maui Office — HQ"
+                  label="Maui Office — HQ + Outer Islands"
                   color="#0f766e"
                   borderColor="rgba(15,118,110,0.15)"
                   superNode={mauiSuper}
                   officeStaff={mauiStaff}
                 />
               </div>
+
+              {/* OAHU — Frank's branch */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
+                {frankBranch && (
+                  <div style={{ marginBottom: 12 }}>
+                    <NodeCard node={{ ...frankBranch, children: [] }} />
+                  </div>
+                )}
+                <div style={{ width: 2, height: 12, background: '#e2e8f0' }} />
                 <IslandSection
                   label="Oahu Office"
                   color="#0369a1"
@@ -404,17 +419,6 @@ export default function OrgChartPanel() {
                   officeStaff={oahuStaff}
                 />
               </div>
-              {otherOffice.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
-                  <IslandSection
-                    label="Other"
-                    color="#64748b"
-                    borderColor="rgba(100,116,139,0.15)"
-                    officeStaff={otherOffice}
-                  />
-                </div>
-              )}
             </div>
           </div>
         </div>
