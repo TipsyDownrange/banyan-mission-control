@@ -201,7 +201,7 @@ export default function Home() {
         {activeView === 'Fleet'         && <AdminPanel section="fleet" />}
         {activeView === 'Step Library'   && <StepLibraryPanel />}
 
-        <KaiFloat activeView={activeView} />
+        <KaiFloat activeView={activeView} sessionEmail={authSession?.user?.email || ''} />
         <SuggestionButton />
       </main>
     </div>

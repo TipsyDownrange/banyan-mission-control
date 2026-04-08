@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { AppView } from '@/app/page';
 
 // Icon mapping — SVG paths for each nav item
@@ -147,6 +147,25 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
 
+  // Easter egg: 5 rapid taps on brand area unlocks Golden Kai
+  const tapTimesRef = useRef<number[]>([]);
+  const [logoGold, setLogoGold] = useState(false);
+  const handleBrandTap = useCallback(() => {
+    const now = Date.now();
+    tapTimesRef.current.push(now);
+    // Keep only taps in last 3 seconds
+    tapTimesRef.current = tapTimesRef.current.filter(t => now - t < 3000);
+    if (tapTimesRef.current.length >= 5) {
+      tapTimesRef.current = [];
+      setLogoGold(true);
+      // Trigger the golden unlock in KaiFloat
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const unlock = (window as any).__goldenKaiUnlock;
+      if (typeof unlock === 'function') unlock();
+      setTimeout(() => setLogoGold(false), 3000);
+    }
+  }, []);
+
   const activeSection = NAV.find(n => n.items.some(i => i.label === activeView))?.section;
 
   function toggleSection(s: string) {
@@ -176,15 +195,15 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
       {/* Brand */}
       <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', flexShrink: 0 }}>
         {!collapsed ? (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#2E6DA4', letterSpacing: '0.05em', marginBottom: 2 }}>Kula Glass Company</div>
+          <div onClick={handleBrandTap} style={{ cursor: 'default', userSelect: 'none' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: logoGold ? '#ffd700' : '#2E6DA4', letterSpacing: '0.05em', marginBottom: 2, transition: 'color 0.5s ease' }}>Kula Glass Company</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 16, height: 16, borderRadius: 3, overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: 16, height: 16, borderRadius: 3, overflow: 'hidden', flexShrink: 0, transition: 'filter 0.5s ease', filter: logoGold ? 'brightness(1.5) sepia(1) saturate(3) hue-rotate(15deg)' : 'none' }}>
                 <img src="/banyan-icon.png" alt="" style={{ width: 16, height: 16, objectFit: 'cover', opacity: 0.9 } as React.CSSProperties}
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
-              <span style={{ fontSize: 12, fontWeight: 800, color: 'rgba(248,250,252,0.7)', letterSpacing: '-0.01em' }}>
-                Banyan<span style={{ color: 'rgba(20,184,166,0.8)' }}>OS</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: logoGold ? '#ffd700' : 'rgba(248,250,252,0.7)', letterSpacing: '-0.01em', transition: 'color 0.5s ease' }}>
+                Banyan<span style={{ color: logoGold ? '#daa520' : 'rgba(20,184,166,0.8)', transition: 'color 0.5s ease' }}>OS</span>
               </span>
             </div>
           </div>
