@@ -156,6 +156,17 @@ interface QuickScheduleModalProps {
   onScheduled: () => void;
 }
 
+// Map area_of_island / city names to canonical island
+function areaToIsland(area: string): string {
+  const a = (area || '').toLowerCase();
+  if (['oahu','honolulu','kapolei','kailua','kaneohe','pearl city','aiea','ewa','hawaii kai','waipahu','mililani'].some(c => a.includes(c))) return 'Oahu';
+  if (['maui','kahului','kihei','lahaina','wailuku','wailea','kapalua','paia','makawao','haiku','maalaea','pukalani','kaanapali'].some(c => a.includes(c))) return 'Maui';
+  if (['kauai','lihue','kapaa','poipu','princeville','koloa','waimea'].some(c => a.includes(c))) return 'Kauai';
+  if (['big island','hawaii','hilo','kona','waimea','kohala','kailua-kona','volcano'].some(c => a.includes(c))) return 'Hawaii';
+  if (['lanai','molokai'].some(c => a.includes(c))) return 'Outer Islands';
+  return area; // fallback
+}
+
 function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickScheduleModalProps) {
   const [date, setDate] = useState(tomorrow());
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
@@ -167,7 +178,9 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
   useEffect(() => {
     if (!job) return;
-    setIsland(job.island || '');
+    // Auto-resolve island from area_of_island or island field
+    const resolvedIsland = areaToIsland((job as any).area_of_island || job.island || '');
+    setIsland(resolvedIsland);
     setHoursEst(job.hours_est || '');
     setNotes('');
     setDate(tomorrow());
@@ -286,27 +299,18 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
           />
         </div>
 
-        {/* Island */}
+        {/* Island — auto-populated from WO */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-            Island
+            Island {(job as any)?.area_of_island ? `— ${(job as any).area_of_island}` : ''}
           </label>
-          <select
-            value={island}
-            onChange={e => setIsland(e.target.value)}
-            style={{
-              width: '100%', padding: '10px 12px',
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 10, color: '#f1f5f9', fontSize: 14,
-              boxSizing: 'border-box',
-            }}
-          >
-            <option value="">Select island…</option>
-            <option value="Oahu">Oahu</option>
-            <option value="Maui">Maui</option>
-            <option value="Kauai">Kauai</option>
-            <option value="Big Island">Big Island</option>
-          </select>
+          <div style={{
+            padding: '10px 12px',
+            background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)',
+            borderRadius: 10, color: '#5eead4', fontSize: 14, fontWeight: 700,
+          }}>
+            {island || 'Not set'}
+          </div>
         </div>
 
         {/* Hours */}

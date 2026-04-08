@@ -545,6 +545,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             {FL('System Type')}
+            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>✓ = has install steps in Step Library</div>
             {/* Compact dropdown + chip list */}
             <select
               value=""
