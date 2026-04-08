@@ -62,8 +62,8 @@ interface ValidationResult {
 const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?: string[] }> = {
   overview: {
     title: 'Bid Overview',
-    suggestion: 'Upload plans and specs to unlock AI takeoff generation and compliance assessment.',
-    actions: ['Upload Plans', 'Upload Specs'],
+    suggestion: 'Upload documents or link a Drive folder to unlock AI takeoff generation and compliance assessment.',
+    actions: [],
   },
   carls: {
     title: "Simple Estimate",
@@ -104,16 +104,17 @@ const TAB_CONTEXT: Record<string, { title: string; suggestion: string; actions?:
 export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: EstimatingKaiPanelProps) {
   const ctx = TAB_CONTEXT[activeTab] ?? TAB_CONTEXT.overview;
 
-  // Upload refs
-  const plansInputRef = useRef<HTMLInputElement>(null);
-  const specsInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState<string | null>(null); // 'plans' | 'specs' | null
-  const [uploadResult, setUploadResult] = useState<{ name: string; link?: string } | null>(null);
+  // Upload state
+  const dropInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [uploadResults, setUploadResults] = useState<Array<{ name: string; link?: string; folder: string }>>([]);
+  const [dragOver, setDragOver] = useState(false);
 
-  async function handleFileUpload(files: FileList | null, category: string) {
+  async function handleFileUpload(files: FileList | null) {
     if (!files || files.length === 0) return;
-    setUploading(category);
-    setUploadResult(null);
+    setUploading(`${files.length} file${files.length > 1 ? 's' : ''}`);
+    setUploadResults([]);
+    const results: Array<{ name: string; link?: string; folder: string }> = [];
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -122,13 +123,14 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
         form.append('bidKID', bid.bidVersionId);
         form.append('bidName', bid.projectName ?? 'Unknown');
         form.append('estimator', bid.estimator ?? '');
-        form.append('targetFolder', category === 'plans' ? '03 - Drawings' : '03 - Drawings');
+        // Let the upload API auto-detect the subfolder from filename/extension
         const res = await fetch('/api/upload', { method: 'POST', body: form });
         const data = await res.json();
         if (data.success) {
-          setUploadResult({ name: data.fileName, link: data.webViewLink });
+          results.push({ name: data.fileName, link: data.webViewLink, folder: data.path?.split('/').slice(-2, -1)[0] || 'auto-sorted' });
         }
       }
+      setUploadResults(results);
     } catch (err) {
       console.error('Upload failed', err);
     } finally {
@@ -694,51 +696,67 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
         </div>
 
         {/* Quick Actions */}
+        {/* Drop Zone for document uploads */}
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+            Upload Documents
+          </div>
+          <input
+            ref={dropInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.dwg,.png,.jpg,.jpeg,.tiff,.tif,.docx,.doc,.xls,.xlsx,.txt"
+            style={{ display: 'none' }}
+            onChange={e => handleFileUpload(e.target.files)}
+          />
+          <div
+            onClick={() => dropInputRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => { e.preventDefault(); setDragOver(false); handleFileUpload(e.dataTransfer.files); }}
+            style={{
+              padding: '16px 12px',
+              borderRadius: 10,
+              border: `2px dashed ${dragOver ? '#0f766e' : 'rgba(20,184,166,0.3)'}`,
+              background: dragOver ? 'rgba(20,184,166,0.08)' : 'rgba(240,253,250,0.4)',
+              cursor: 'pointer',
+              textAlign: 'center',
+              transition: 'all 0.15s',
+            }}
+          >
+            <div style={{ fontSize: 20, marginBottom: 4 }}>📄</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>
+              {uploading ? `Uploading ${uploading}…` : 'Drop files or click to upload'}
+            </div>
+            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>
+              Plans, specs, quotes, submittals — Kai auto-sorts into the right folder
+            </div>
+          </div>
+          {uploadResults.length > 0 && (
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {uploadResults.map((r, i) => (
+                <div key={i} style={{ fontSize: 10, color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  ✓ {r.name}
+                  <span style={{ color: '#94a3b8', fontWeight: 400 }}>→ {r.folder}</span>
+                  {r.link && <a href={r.link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: 9 }}>View ↗</a>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
         {ctx.actions && ctx.actions.length > 0 && (
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
               Quick Actions
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {/* Hidden file inputs for upload */}
-              <input
-                ref={plansInputRef}
-                type="file"
-                multiple
-                accept=".pdf,.dwg,.png,.jpg,.jpeg,.tiff,.tif"
-                style={{ display: 'none' }}
-                onChange={e => handleFileUpload(e.target.files, 'plans')}
-              />
-              <input
-                ref={specsInputRef}
-                type="file"
-                multiple
-                accept=".pdf,.docx,.doc,.txt"
-                style={{ display: 'none' }}
-                onChange={e => handleFileUpload(e.target.files, 'specs')}
-              />
-              {uploading && (
-                <div style={{ fontSize: 11, color: '#0f766e', fontWeight: 600, padding: '6px 0' }}>
-                  Uploading {uploading}…
-                </div>
-              )}
-              {uploadResult && (
-                <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, padding: '6px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  ✓ {uploadResult.name}
-                  {uploadResult.link && (
-                    <a href={uploadResult.link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: 10 }}>View ↗</a>
-                  )}
-                </div>
-              )}
               {ctx.actions.map((action) => (
                 <button
                   key={action}
                   onClick={() => {
-                    if (action === 'Upload Plans') {
-                      plansInputRef.current?.click();
-                    } else if (action === 'Upload Specs') {
-                      specsInputRef.current?.click();
-                    } else if (action === 'Validate Takeoff') {
+                    if (action === 'Validate Takeoff') {
                       handleValidateTakeoff();
                     } else if (action === 'Generate Takeoff') {
                       setShowChat(true);
