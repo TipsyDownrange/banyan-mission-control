@@ -301,7 +301,7 @@ export async function GET(req: Request) {
         if (scheduledProjectNames.has(wo.name.toLowerCase().trim())) return false;
         return true;
       })
-      .slice(0, 100) // Show up to 100 unscheduled WOs
+      // No artificial limit — frontend has search/filters to handle the full list
       .map(wo => ({
         type: 'wo' as const,
         id: wo.wo_number || wo.wo_id,
@@ -459,6 +459,36 @@ export async function POST(req: Request) {
 
     const slotObj: Record<string, string> = {};
     DISPATCH_COLS.forEach((c, i) => { slotObj[c] = newRow[i] as string; });
+
+    // Also update the WO status to 'scheduled' if it's not already in_progress or closed
+    if (kID) {
+      try {
+        const woRes2 = await sheets.spreadsheets.values.get({
+          spreadsheetId: SHEET_ID,
+          range: 'Service_Work_Orders!A2:E2000',
+        });
+        const woRows = woRes2.data.values || [];
+        for (let i = 0; i < woRows.length; i++) {
+          const rowWoId = (woRows[i][0] || '').trim();
+          const rowWoNum = (woRows[i][1] || '').trim();
+          const rowStatus = (woRows[i][4] || '').toLowerCase().trim();
+          if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+            // Only upgrade status if not already further in pipeline
+            if (!['in_progress', 'closed', 'completed', 'scheduled'].includes(rowStatus)) {
+              await sheets.spreadsheets.values.update({
+                spreadsheetId: SHEET_ID,
+                range: `Service_Work_Orders!E${i + 2}`,
+                valueInputOption: 'RAW',
+                requestBody: { values: [['scheduled']] },
+              });
+            }
+            break;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to update WO status to scheduled:', e);
+      }
+    }
 
     return NextResponse.json({ success: true, slot: slotObj });
 
