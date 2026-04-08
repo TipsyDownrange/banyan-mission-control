@@ -739,21 +739,36 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
         const driveRate = parseFloat(est.driveTime?.rate) || 117;
         const driveTimeAmt = driveTrips * driveHoursPerTrip * driveRate;
 
-        type LaborLine = { hours: string; rate: string; amount: string };
-        const laborSubtotal = (est.labor || []).reduce((a: number, l: LaborLine) => {
+        type LaborLine = { description: string; hours: string; rate: string; amount: string };
+        const laborLines: LaborLine[] = est.labor || [];
+        const laborSubtotal = laborLines.reduce((a: number, l: LaborLine) => {
           const h = parseFloat(l.hours) || 0;
           const r = parseFloat(l.rate) || 0;
           return a + (l.amount ? parseDollar(l.amount) : h * r);
-        }, 0) + driveTimeAmt;
+        }, 0);
 
         const profitPct = parseFloat(est.markup?.profitPct) || 10;
         const getRate = parseFloat(est.taxRate) || 4.17;
+        const xModifier = parseDollar(est.xModifier || '0');
+
+        // Overhead: Carl's Method uses labor-equal (overhead = labor subtotal) when no override
+        const overheadOverride = est.markup?.overheadOverride;
+        let overheadPct = 0;
+        if (overheadOverride && parseFloat(overheadOverride) > 0) {
+          // Explicit overhead amount — convert to percentage of subtotal for QuoteBuilder
+          const totalBeforeOverhead = materialsTotal + laborSubtotal + driveTimeAmt;
+          overheadPct = totalBeforeOverhead > 0 ? Math.round((parseFloat(overheadOverride) / totalBeforeOverhead) * 100) : 0;
+        } else if (laborSubtotal > 0) {
+          // Labor-equal method: overhead = labor subtotal → calculate as % of total
+          const totalBeforeOverhead = materialsTotal + laborSubtotal + driveTimeAmt;
+          overheadPct = totalBeforeOverhead > 0 ? Math.round((laborSubtotal / totalBeforeOverhead) * 100) : 0;
+        }
 
         let changed = false;
 
-        // Set materials as a single line if estimate has materials
-        if (materialsTotal > 0) {
-          setMainMaterials([{
+        // Set materials — include xModifier as additional line if present
+        if (materialsTotal > 0 || xModifier !== 0) {
+          const matLines: MaterialLine[] = [{
             id: uid(),
             description: 'Materials per estimate',
             qty: '1',
@@ -761,19 +776,35 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
             unitCost: String(Math.round(materialsTotal * 100) / 100),
             totalOverride: '',
             width: '', height: '', length: '',
-          }]);
+          }];
+          if (xModifier !== 0) {
+            matLines.push({
+              id: uid(),
+              description: `Adjustment (X modifier)`,
+              qty: '1',
+              unit: 'ea',
+              unitCost: String(xModifier),
+              totalOverride: '',
+              width: '', height: '', length: '',
+            });
+          }
+          setMainMaterials(matLines);
           changed = true;
         }
 
-        // Set labor hours derived from estimate
-        if (laborSubtotal > 0) {
-          const rate = 117;
-          const hours = Math.round(laborSubtotal / rate * 10) / 10;
-          setLaborSteps([{ id: uid(), description: 'Labor per estimate', hours: String(hours), rate: String(rate), amountOverride: '' }]);
+        // Set labor — preserve individual line items from estimate
+        if (laborLines.length > 0 && laborSubtotal > 0) {
+          setLaborSteps(laborLines.map(l => ({
+            id: uid(),
+            description: l.description || 'Labor',
+            hours: l.hours || '0',
+            rate: l.rate || '117',
+            amountOverride: l.amount || '',
+          })));
           changed = true;
         }
 
-        // Set drive time from estimate
+        // Set drive time from estimate (NOT added to labor — separate section)
         if (driveTrips > 0 || driveHoursPerTrip > 0) {
           setDriveTime(prev => ({
             ...prev,
@@ -784,9 +815,14 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
           changed = true;
         }
 
-        // Set markup from estimate
-        if (profitPct) {
-          setMarkup(prev => ({ ...prev, profitPct: String(profitPct), getRate: String(getRate) }));
+        // Set markup from estimate — including overhead
+        if (profitPct || overheadPct || getRate) {
+          setMarkup(prev => ({
+            ...prev,
+            overheadPct: String(overheadPct),
+            profitPct: String(profitPct),
+            getRate: String(getRate),
+          }));
           changed = true;
         }
 
