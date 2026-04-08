@@ -127,6 +127,9 @@ function NavIcon({ path, size = 15, color }: { path: string; size?: number; colo
   );
 }
 
+// Emails allowed to see the Preview-as dropdown (dev/QA accounts)
+const PREVIEW_ALLOWED_EMAILS = ['kai@kulaglass.com', 'sean@kulaglass.com'];
+
 type Props = {
   activeView: AppView;
   onSelect: (v: AppView) => void;
@@ -137,9 +140,10 @@ type Props = {
   visibleSections?: string[];
   hiddenItems?: string[];
   allUsers?: { name: string; role: string; group: string }[];
+  sessionEmail?: string;
 };
 
-export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, hiddenItems, allUsers }: Props) {
+export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, hiddenItems, allUsers, sessionEmail }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
 
@@ -285,7 +289,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
       {/* Footer */}
       {!collapsed && (
         <div style={{ padding: '10px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-          {onUserChange && (
+          {onUserChange && PREVIEW_ALLOWED_EMAILS.includes((sessionEmail || '').toLowerCase()) && (
             <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.4)', marginBottom: 4 }}>🧪 Preview as</div>
               <select value={demoUser} onChange={e => onUserChange(e.target.value)}
@@ -312,10 +316,11 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
               </select>
             </div>
           )}
-          {/* Permissions link — GM/Owner only */}
+          {/* Permissions link — GM/Owner or dev accounts */}
           {(() => {
             const currentUserRole = allUsers?.find(u => u.name === demoUser)?.role || '';
-            if (currentUserRole === 'gm' || currentUserRole === 'owner') {
+            const isDevAccount = PREVIEW_ALLOWED_EMAILS.includes((sessionEmail || '').toLowerCase());
+            if (currentUserRole === 'gm' || currentUserRole === 'owner' || isDevAccount) {
               return (
                 <a
                   href="/admin/permissions"

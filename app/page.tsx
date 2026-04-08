@@ -116,6 +116,7 @@ export default function Home() {
     visibleSections,
     hiddenItems,
     allUsers: ALL_USERS,
+    sessionEmail: authSession?.user?.email || '',
   };
 
   return (

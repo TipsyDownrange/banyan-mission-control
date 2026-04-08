@@ -7,6 +7,7 @@ import GoogleProvider from 'next-auth/providers/google';
 
 // Role map — must match lib/roles.ts ALL_USERS exactly
 export const ROLE_MAP: Record<string, string> = {
+  'kai@kulaglass.com':        'gm',  // Kai AI account — full admin access for QA/testing
   'sean@kulaglass.com':       'gm',
   'jody@kulaglass.com':       'owner',
   'frank@kulaglass.com':      'pm',
