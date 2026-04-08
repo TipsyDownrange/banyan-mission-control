@@ -46,6 +46,22 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kID: issueProject, description: issueDesc, severity: issueSeverity, type: 'FIELD_ISSUE' }),
       });
+      // Also create a task on the Task Board
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks: [{
+          id: `TSK-ISS-${Date.now()}`,
+          title: `[ISSUE] ${issueDesc.slice(0, 60)}`,
+          detail: `${issueDesc} | Project: ${issueProject} | Severity: ${issueSeverity}`,
+          status: issueSeverity === 'CRITICAL' ? 'in_progress' : 'queued',
+          priority: issueSeverity.toLowerCase(),
+          category: 'Bug Report',
+          assignedTo: 'Kai',
+          createdAt: new Date().toISOString().split('T')[0],
+          updatedAt: new Date().toISOString().split('T')[0],
+        }]}),
+      }).catch(() => {});
       setShowLogIssue(false);
       setIssueProject('');
       setIssueDesc('');
