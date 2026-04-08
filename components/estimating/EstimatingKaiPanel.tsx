@@ -138,7 +138,7 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
 
   // Trigger Takeoff state
   const [showTakeoffTrigger, setShowTakeoffTrigger] = useState(false);
-  const [driveFiles, setDriveFiles] = useState<Array<{ id: string; name: string; mimeType: string; webViewLink: string }>>([]);
+  const [driveFiles, setDriveFiles] = useState<Array<{ id: string; name: string; mimeType: string; webViewLink: string; folder?: string }>>([]);
   const [driveLoading, setDriveLoading] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
 
@@ -243,7 +243,7 @@ export default function EstimatingKaiPanel({ bid, activeTab, onBidUpdate }: Esti
         const res = await fetch(`/api/drive/list?folderId=${folderId}`);
         const data = await res.json();
         if (Array.isArray(data.files)) {
-          setDriveFiles(data.files.filter((f: { isFolder?: boolean }) => !f.isFolder));
+          setDriveFiles(data.files);
         }
       } catch {
         setDriveFiles([]);
@@ -635,13 +635,18 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                           />
                           <div>
                             <div style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>{f.name}</div>
-                            {f.webViewLink && (
-                              <a href={f.webViewLink} target="_blank" rel="noopener noreferrer"
-                                style={{ fontSize: 9, color: '#2563eb', textDecoration: 'none' }}
-                                onClick={e => e.stopPropagation()}>
-                                View in Drive ↗
-                              </a>
-                            )}
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                              {f.folder && (
+                                <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600 }}>📁 {f.folder}</span>
+                              )}
+                              {f.webViewLink && (
+                                <a href={f.webViewLink} target="_blank" rel="noopener noreferrer"
+                                  style={{ fontSize: 9, color: '#2563eb', textDecoration: 'none' }}
+                                  onClick={e => e.stopPropagation()}>
+                                  View ↗
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </label>
                       ))}
