@@ -931,10 +931,28 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               Close
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={async () => {
+                const res = await fetch('/api/service/estimate-pdf', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ woId: wo.id }),
+                });
+                if (!res.ok) {
+                  const err = await res.json().catch(() => ({}));
+                  alert(`PDF error: ${err.error || res.statusText}`);
+                  return;
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Estimate-${wo.id}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
               style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#0f172a', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
             >
-              🖨 Print
+              🖨 Print PDF
             </button>
             <button
               onClick={async () => {
