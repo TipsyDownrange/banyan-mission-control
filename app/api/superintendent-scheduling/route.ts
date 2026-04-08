@@ -110,11 +110,14 @@ const WO_COL = {
   wo_id:        0,
   wo_number:    1,
   name:         2,
-  customer:     3,
+  description:  3,
   status:       4,
   island:       5,
+  area_of_island: 6,
+  customer:     12,
   assigned_to:  14,
-  hours_est:    16,
+  hours_est:    19,
+  men_required: 21,
   scheduled_date: 17,
 };
 
@@ -124,11 +127,14 @@ function rowToWO(r: string[]) {
     wo_id:          g(WO_COL.wo_id),
     wo_number:      g(WO_COL.wo_number),
     name:           g(WO_COL.name).split('\n')[0].substring(0, 80),
+    description:    g(WO_COL.description),
     customer:       g(WO_COL.customer),
     status:         g(WO_COL.status),
     island:         g(WO_COL.island),
+    area_of_island: g(WO_COL.area_of_island),
     assigned_to:    g(WO_COL.assigned_to),
     hours_est:      g(WO_COL.hours_est),
+    men_required:   g(WO_COL.men_required),
     scheduled_date: g(WO_COL.scheduled_date),
   };
 }
@@ -264,7 +270,7 @@ export async function GET(req: Request) {
 
     // ── Unscheduled Jobs ─────────────────────────────────────────────────────
     // Active WO statuses that need scheduling
-    const ACTIVE_WO_STATUSES = new Set(['in_progress', 'scheduled', 'need_schedule', 'accepted', 'open', 'active', 'pending', 'dispatched']);
+    const ACTIVE_WO_STATUSES = new Set(['approved', 'in_progress', 'scheduled', 'need_schedule', 'accepted', 'open', 'active', 'pending', 'dispatched']);
 
     // Get kIDs/WO IDs that already have upcoming dispatch slots (next 28 days)
     const futureDate = addDays(today, 28);
@@ -294,16 +300,19 @@ export async function GET(req: Request) {
         if (scheduledProjectNames.has(wo.name.toLowerCase().trim())) return false;
         return true;
       })
-      .slice(0, 50) // Cap at 50 to avoid huge lists
+      .slice(0, 100) // Show up to 100 unscheduled WOs
       .map(wo => ({
         type: 'wo' as const,
         id: wo.wo_number || wo.wo_id,
         kID: wo.wo_number || wo.wo_id,
         name: wo.name,
+        description: wo.description,
         customer: wo.customer,
         island: wo.island,
+        area_of_island: wo.area_of_island,
         assigned_crew: wo.assigned_to,
         hours_est: wo.hours_est,
+        men_required: wo.men_required,
         status: wo.status,
       }));
 
