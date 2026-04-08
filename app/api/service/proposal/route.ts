@@ -147,7 +147,7 @@ export async function POST(req: Request) {
       line_items:            quote.lineItems || [],
       installation_included: quote.installationIncluded ?? true,
       materials_total:       quote.materialsTotal || 0,
-      labor_subtotal:        quote.laborSubtotal || 0,  // already includes proportional OH+profit from QuoteBuilder
+      labor_subtotal:        quote.laborSubtotal || quote.labor?.subtotal || 0,  // check both paths: direct field or nested labor.subtotal
       equipment_charges:     0, // hidden from proposal — baked into labor
       additional_charges:    [], // hidden from proposal
       site_visit_fee:        undefined, // hidden from proposal

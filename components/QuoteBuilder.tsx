@@ -646,7 +646,7 @@ export default function QuoteBuilder({
       const res = await fetch('/api/service/proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quote, sendEmail: false }),
+        body: JSON.stringify({ quote: { ...quote, materialsTotal: t?.customerMaterials, laborSubtotal: t?.customerLabor, getRate: t?.getRate }, sendEmail: false }),
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -672,7 +672,7 @@ export default function QuoteBuilder({
       const res = await fetch('/api/service/proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quote, sendEmail: true }),
+        body: JSON.stringify({ quote: { ...quote, materialsTotal: t?.customerMaterials, laborSubtotal: t?.customerLabor, getRate: t?.getRate }, sendEmail: true }),
       });
       const data = await res.json();
       if (data.success) {

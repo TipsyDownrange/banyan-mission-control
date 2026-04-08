@@ -116,7 +116,7 @@ export async function GET(req: Request) {
         hourlyRate: LABOR_RATES.journeyman,
         journeymanRate: LABOR_RATES.journeyman,
         leadpersonRate: LABOR_RATES.leadperson,
-        getRate: GET_RATE * 100,  // percentage (4.712) not decimal
+        getRate: Math.round(GET_RATE * 100 * 1000) / 1000,  // 4.712 (clean, no float noise)
         siteVisit,
         driveEstimate: driveEst,
         suggestedLabor,
@@ -303,7 +303,7 @@ export async function POST(req: Request) {
         subtotal,
         overheadAmt,
         profitAmt,
-        getRate: GET_RATE * 100,  // percentage (4.712) not decimal
+        getRate: Math.round(GET_RATE * 100 * 1000) / 1000,  // 4.712 (clean, no float noise)
         getAmount,
         total,
         deposit,
