@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
+// Allow up to 120 seconds for GPT-5.4 complex prompts
+export const maxDuration = 120;
+
 const SYSTEM_PROMPT = `You are Kai, the AI assistant for BanyanOS — the operating system for Kula Glass Company, a commercial glass and glazing subcontractor in Hawaii.
 
 You have deep knowledge of:
@@ -24,41 +27,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: 'No API key configured. Set OPENAI_API_KEY in Vercel environment variables.' });
   }
 
-  // Inject live bid log context
+  // Inject live bid log + project context in parallel
   let bidContext = '';
+  let projectContext = '';
   try {
     const saKeyBase64 = process.env.GOOGLE_SA_KEY_BASE64;
+    const backendSheetId = process.env.GOOGLE_SHEET_ID || process.env.BACKEND_SHEET_ID;
     if (saKeyBase64) {
       const { google } = await import('googleapis');
       const keyJson = JSON.parse(Buffer.from(saKeyBase64, 'base64').toString('utf-8'));
       const auth = new google.auth.JWT({ email: keyJson.client_email, key: keyJson.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
       const sheets = google.sheets({ version: 'v4', auth });
-      const result = await sheets.spreadsheets.values.get({ spreadsheetId: '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA', range: 'Bids!A1:J50' });
-      const rows = result.data.values || [];
-      if (rows.length > 1) {
-        const headers = rows[0];
-        const bids = rows.slice(1).map(r => { const b: Record<string,string> = {}; headers.forEach((h,i) => { b[h as string] = r[i] || ''; }); return b; });
-        const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Win / Loss'] || '') && !['Won','Lost','No Bid'].includes(b['Status'] || '')).slice(0, 30);
-        bidContext = `\n\nLIVE BID LOG (active bids, first 30):\n${active.map(b => `${b['kID']} | ${b['Job Name']} | ${b['Assigned To'] || 'Unassigned'} | ${b['Status']} | Due: ${b['Due Date'] || 'TBD'}`).join('\n')}`;
-      }
-    }
-  } catch { /* silent */ }
 
-  // Inject live project list
-  let projectContext = '';
-  try {
-    const saKeyBase64 = process.env.GOOGLE_SA_KEY_BASE64;
-    const backendSheetId = process.env.GOOGLE_SHEET_ID || process.env.BACKEND_SHEET_ID;
-    if (saKeyBase64 && backendSheetId) {
-      const { google } = await import('googleapis');
-      const keyJson = JSON.parse(Buffer.from(saKeyBase64, 'base64').toString('utf-8'));
-      const auth = new google.auth.JWT({ email: keyJson.client_email, key: keyJson.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
-      const sheets = google.sheets({ version: 'v4', auth });
-      const result = await sheets.spreadsheets.values.get({ spreadsheetId: backendSheetId, range: 'Core_Entities!A2:H200' });
-      const rows = result.data.values || [];
-      const active = rows.filter(r => r[3] === 'Active');
-      if (active.length > 0) {
-        projectContext = `\n\nACTIVE PROJECTS (${active.length} total):\n${active.map(r => `${r[0]} | ${r[2]} | PM: ${r[4] || 'TBD'} | ${r[6] || ''}`).join('\n')}`;
+      const [bidResult, projResult] = await Promise.allSettled([
+        sheets.spreadsheets.values.get({ spreadsheetId: '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA', range: 'Bids!A1:J50' }),
+        backendSheetId ? sheets.spreadsheets.values.get({ spreadsheetId: backendSheetId, range: 'Core_Entities!A2:H200' }) : Promise.resolve(null),
+      ]);
+
+      if (bidResult.status === 'fulfilled' && bidResult.value) {
+        const rows = bidResult.value.data.values || [];
+        if (rows.length > 1) {
+          const headers = rows[0];
+          const bids = rows.slice(1).map(r => { const b: Record<string,string> = {}; headers.forEach((h,i) => { b[h as string] = r[i] || ''; }); return b; });
+          const active = bids.filter(b => !['Won','Lost','No Bid'].includes(b['Win / Loss'] || '') && !['Won','Lost','No Bid'].includes(b['Status'] || '')).slice(0, 30);
+          bidContext = `\n\nLIVE BID LOG (active bids, first 30):\n${active.map(b => `${b['kID']} | ${b['Job Name']} | ${b['Assigned To'] || 'Unassigned'} | ${b['Status']} | Due: ${b['Due Date'] || 'TBD'}`).join('\n')}`;
+        }
+      }
+
+      if (projResult.status === 'fulfilled' && projResult.value) {
+        const rows = projResult.value.data.values || [];
+        const active = rows.filter(r => r[3] === 'Active');
+        if (active.length > 0) {
+          projectContext = `\n\nACTIVE PROJECTS (${active.length} total):\n${active.map(r => `${r[0]} | ${r[2]} | PM: ${r[4] || 'TBD'} | ${r[6] || ''}`).join('\n')}`;
+        }
       }
     }
   } catch { /* silent */ }
