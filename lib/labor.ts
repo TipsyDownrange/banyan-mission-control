@@ -16,7 +16,9 @@ export const DEFAULT_SERVICE_CREW = {
 };
 
 // GET rate
-export const GET_RATE = 0.045;
+// Hawaii GET pass-on rate — all counties 4.712% through 12/31/2030
+// Source: tax.hawaii.gov/geninfo/countysurcharge/
+export const GET_RATE = 0.04712;
 
 // ─── Drive Time Estimates ─────────────────────────────────────────────────────
 // From shop: 289 Pakana St, Wailuku HI 96793

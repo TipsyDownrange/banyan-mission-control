@@ -82,15 +82,20 @@ export interface EstimateTotals {
 
 // ─── GET rates by island ──────────────────────────────────────────────────────
 
+// Hawaii GET pass-on rates — source: tax.hawaii.gov/geninfo/countysurcharge/
+// ALL counties are 4.7120% effective through 12/31/2030
+// Maui adopted 0.5% surcharge effective 1/1/2024 (was 4.1667% before)
 const GET_RATES: Record<string, number> = {
   Oahu: 4.712,
-  Maui: 4.17,
-  Kauai: 4.5,
-  Hawaii: 4.44,
+  Maui: 4.712,
+  Kauai: 4.712,
+  Hawaii: 4.712,
+  Lanai: 4.712,
+  Molokai: 4.712,
 };
 
 function getGetRate(island: string): number {
-  return GET_RATES[island] ?? 4.17;
+  return GET_RATES[island] ?? 4.712;
 }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────

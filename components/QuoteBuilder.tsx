@@ -135,7 +135,7 @@ function calcTotals(est: EstimateData) {
 
   const totalBeforeTax = subtotal + overheadAmt + profitAmt;
 
-  const getRate = parseFloat(est.taxRate ?? '4.17') || 4.17;
+  const getRate = parseFloat(est.taxRate ?? '4.712') || 4.712;
   const getAmt = totalBeforeTax * (getRate / 100);
 
   const grandTotal = totalBeforeTax + getAmt;
