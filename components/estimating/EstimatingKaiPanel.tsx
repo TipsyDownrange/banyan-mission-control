@@ -733,10 +733,31 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                       plansInputRef.current?.click();
                     } else if (action === 'Upload Specs') {
                       specsInputRef.current?.click();
-                    } else if (action === 'Validate Takeoff') handleValidateTakeoff();
-                    else if (action === 'Generate Takeoff' || action === 'Generate Estimate') {
+                    } else if (action === 'Validate Takeoff') {
+                      handleValidateTakeoff();
+                    } else if (action === 'Generate Takeoff') {
                       setShowChat(true);
-                      setChatInput(`Generate a ${action === 'Generate Takeoff' ? 'full takeoff' : 'full estimate'} for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
+                      setChatInput(`Generate a full takeoff for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
+                    } else if (action === 'Generate Estimate') {
+                      setShowChat(true);
+                      setChatInput(`Generate a full estimate for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
+                    } else if (action === 'Sync from Estimate') {
+                      setShowChat(true);
+                      setChatInput(`Sync the Simple Estimate for ${bid.bidVersionId} from the detailed estimate data`);
+                    } else if (action === 'Export PDF') {
+                      window.print();
+                    } else if (action === 'Parse Quote PDF') {
+                      setShowChat(true);
+                      setChatInput(`Parse uploaded vendor quote PDFs for ${bid.bidVersionId} into the coverage matrix`);
+                    } else if (action === 'Auto-populate Gaps') {
+                      setShowChat(true);
+                      setChatInput(`Analyze the takeoff and specs for ${bid.bidVersionId} and auto-populate the Bid Gap Log with scope gaps, ambiguities, and risk items`);
+                    } else if (action === 'Generate Proposal') {
+                      setShowChat(true);
+                      setChatInput(`Generate the customer proposal for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'} with pricing table, exclusions, and qualifications`);
+                    } else if (action === 'Generate Estimate PDF') {
+                      setShowChat(true);
+                      setChatInput(`Generate the Carl's Method PDF for ${bid.bidVersionId} — ${bid.projectName ?? 'this job'}`);
                     }
                   }}
                   style={{

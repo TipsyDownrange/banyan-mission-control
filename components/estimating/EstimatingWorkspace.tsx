@@ -216,6 +216,9 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [stepTemplates, setStepTemplates] = useState<StepTemplates>({});
   const [goldData, setGoldData] = useState<GoldDataSummary | null>(null);
+  const [showNewBidModal, setShowNewBidModal] = useState(false);
+  const [newBidDraft, setNewBidDraft] = useState({ project_name: '', client_gc_name: '', island: 'Maui', job_type: 'Commercial', bid_due_date: '', estimator: '', notes: '' });
+  const [newBidSaving, setNewBidSaving] = useState(false);
 
   const loadBids = useCallback(async () => {
     setLoading(true);
@@ -538,7 +541,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
           </p>
         </div>
         <button
-          onClick={() => {/* TODO: new bid modal */}}
+          onClick={() => setShowNewBidModal(true)}
           style={{
             padding: '9px 20px',
             borderRadius: 999,
@@ -555,6 +558,72 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
           + New Bid
         </button>
       </div>
+
+      {/* New Bid Modal */}
+      {showNewBidModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowNewBidModal(false)}>
+          <div style={{ background: 'white', borderRadius: 20, padding: 32, width: '90%', maxWidth: 520, boxShadow: '0 24px 64px rgba(15,23,42,0.3)' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>New Bid</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Project Name *</label>
+                <input value={newBidDraft.project_name} onChange={e => setNewBidDraft(p => ({ ...p, project_name: e.target.value }))} placeholder="e.g. Hilton Hawaiian Village Alii Tower" autoFocus style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(20,184,166,0.4)', fontSize: 12, color: '#0f172a', background: 'rgba(240,253,250,0.4)', outline: 'none', boxSizing: 'border-box' as const }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Client / GC</label>
+                <input value={newBidDraft.client_gc_name} onChange={e => setNewBidDraft(p => ({ ...p, client_gc_name: e.target.value }))} placeholder="Hawaiian Dredging, Hensel Phelps..." style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Island</label>
+                <select value={newBidDraft.island} onChange={e => setNewBidDraft(p => ({ ...p, island: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, appearance: 'auto' as const }}>
+                  {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Bid Due Date</label>
+                <input type="date" value={newBidDraft.bid_due_date} onChange={e => setNewBidDraft(p => ({ ...p, bid_due_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Estimator</label>
+                <input value={newBidDraft.estimator} onChange={e => setNewBidDraft(p => ({ ...p, estimator: e.target.value }))} placeholder="Kyle Shimizu" style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Notes</label>
+                <textarea value={newBidDraft.notes} onChange={e => setNewBidDraft(p => ({ ...p, notes: e.target.value }))} placeholder="Products, scope notes..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, resize: 'none' as const }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button onClick={() => setShowNewBidModal(false)} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button
+                disabled={newBidSaving || !newBidDraft.project_name.trim()}
+                onClick={async () => {
+                  setNewBidSaving(true);
+                  try {
+                    const res = await fetch('/api/estimating/bids', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newBidDraft),
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                      setShowNewBidModal(false);
+                      setNewBidDraft({ project_name: '', client_gc_name: '', island: 'Maui', job_type: 'Commercial', bid_due_date: '', estimator: '', notes: '' });
+                      await loadBids();
+                      // Auto-select the new bid
+                      const newBid = bids.find(b => b.bidVersionId === data.bid_version_id);
+                      if (newBid) { setSelectedBid(newBid); setActiveTab('overview'); }
+                    }
+                  } catch (err) { console.error('Create bid failed', err); }
+                  finally { setNewBidSaving(false); }
+                }}
+                style={{ padding: '9px 24px', borderRadius: 10, border: 'none', background: newBidDraft.project_name.trim() ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : '#e2e8f0', color: 'white', fontSize: 12, fontWeight: 800, cursor: newBidDraft.project_name.trim() ? 'pointer' : 'default' }}
+              >
+                {newBidSaving ? 'Creating...' : 'Create Bid'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter bar */}
       <FilterBar
