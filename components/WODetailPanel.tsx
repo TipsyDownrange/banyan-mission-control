@@ -598,7 +598,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
               {/* Scheduling */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Scheduling & Hours</div>
+                <div style={SECTION_TITLE}>Scheduling</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                   <div>
                     <label style={LBL}>Scheduled Date</label>
@@ -608,23 +608,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <label style={LBL}>Due Date</label>
                     <input type="date" style={INP} value={draft.dueDate || ''} onChange={e => update('dueDate', e.target.value)} />
                   </div>
-                  <div>
-                    <label style={LBL}>Est. Hours</label>
-                    <input type="number" style={INP} value={draft.hoursEstimated || ''} onChange={e => update('hoursEstimated', e.target.value)} placeholder="e.g. 4" min="0" step="0.5" />
-                  </div>
-                  <div>
-                    <label style={LBL}>Actual Hours</label>
-                    <input type="number" style={INP} value={draft.hoursActual || ''} onChange={e => update('hoursActual', e.target.value)} placeholder="After close" min="0" step="0.5" />
-                  </div>
-                  <div>
-                    <label style={LBL}>Measure Hours</label>
-                    <input type="number" style={INP} value={draft.hoursToMeasure || ''} onChange={e => update('hoursToMeasure' as keyof WorkOrder, e.target.value)} placeholder="—" min="0" step="0.5" />
-                  </div>
-                  <div>
-                    <label style={LBL}>Men Required</label>
-                    <input type="number" style={INP} value={draft.men || ''} onChange={e => update('men', e.target.value)} placeholder="e.g. 2" min="1" max="12" />
-                  </div>
                 </div>
+                {/* Legacy hour fields removed — hours tracked per-step in Work Breakdown */}
                 {/* Read-only meta */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {wo.dateReceived && (
