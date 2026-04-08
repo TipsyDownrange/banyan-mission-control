@@ -661,12 +661,26 @@ export default function QuoteBuilder({ woNumber, onClose, estimatePreFill }: { w
         if (d.error) { setError(d.error); setLoading(false); return; }
         setWo(d.wo);
         setJobTypes(d.jobTypes || []);
+        // Scope: use description, fallback to name
         if (d.wo?.description) setScopeNarrative(d.wo.description);
+        else if (d.wo?.name) setScopeNarrative(d.wo.name);
+        // Customer info: dedicated fields first, then parse contact string
+        if (d.wo?.contactEmail) setCustomerEmail(d.wo.contactEmail);
+        if (d.wo?.contactPhone) setCustomerPhone(d.wo.contactPhone);
         const contact = d.wo?.contact || '';
-        const phoneMatch = contact.match(/(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})/);
-        if (phoneMatch) setCustomerPhone(phoneMatch[1]);
-        const namepart = contact.split(/\d/)[0].trim().replace(/[^a-zA-Z\s]/g, '').trim();
-        if (namepart) setCustomerName(namepart);
+        if (!d.wo?.contactPhone) {
+          const phoneMatch = contact.match(/(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})/);
+          if (phoneMatch) setCustomerPhone(phoneMatch[1]);
+        }
+        // Customer name: prefer dedicated field, then parse from contact, then from WO name
+        if (d.wo?.customerName) {
+          setCustomerName(d.wo.customerName);
+        } else {
+          const namepart = contact.split(/\d/)[0].trim().replace(/[^a-zA-Z\s]/g, '').trim();
+          if (namepart) setCustomerName(namepart);
+        }
+        // System type / job type from WO
+        if (d.wo?.systemType) setJobType(d.wo.systemType);
         const addr = d.wo?.address || '';
         setDriveTime(defaultDriveTime(addr));
         if (d.defaults?.hourlyRate) {

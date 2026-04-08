@@ -22,6 +22,8 @@ const COL = {
   contact_person: 8,
   contact_phone:  10,
   contact_email:  11,
+  customer_name:  12,
+  system_type:    13,
   assigned_to:    14,
   scheduled_date: 17,
 };
@@ -53,6 +55,8 @@ async function fetchWO(woNumber: string) {
     contact_email:  g(COL.contact_email),
     assigned_to:    g(COL.assigned_to),
     scheduled_date: g(COL.scheduled_date),
+    customer_name:  g(COL.customer_name),
+    system_type:    g(COL.system_type),
   };
 }
 
@@ -100,6 +104,8 @@ export async function GET(req: Request) {
         contact,
         contactPhone: wo.contact_phone,
         contactEmail: wo.contact_email,
+        customerName: wo.customer_name,
+        systemType: wo.system_type,
         description: desc,
         assignedTo,
         status: wo.status,
