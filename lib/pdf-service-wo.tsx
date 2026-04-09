@@ -40,9 +40,11 @@ export type ServiceWOData = {
 
 function ServiceWOPDF({ data }: { data: ServiceWOData }) {
   // Clean customer-facing totals — no internal breakdown
+    // Customer sees: Subtotal (single line) + GET + Total + Deposit
+  // No materials/labor breakdown — just one combined subtotal
+  const combinedSubtotal = (data.materials_total || 0) + (data.labor_subtotal || 0);
   const totalLines = [
-    ...(data.materials_total ? [{ label: 'Materials', value: data.materials_total }] : []),
-    ...(data.labor_subtotal ? [{ label: 'Labor', value: data.labor_subtotal }] : []),
+    { label: 'Subtotal', value: combinedSubtotal },
     { label: `${data.island || 'Hawaii'} GET (${data.get_rate ? data.get_rate + '%' : '4.712%'})`, value: data.get_amount },
   ];
 

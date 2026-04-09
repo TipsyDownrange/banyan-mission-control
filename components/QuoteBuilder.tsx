@@ -609,10 +609,10 @@ export default function QuoteBuilder({
           driveTimeTrips: totals.driveTrips,
           driveTimeHoursPerTrip: totals.driveHoursPerTrip,
           driveTimeRate: totals.driveRate,
-          materialsTotal: totals.customerMaterials,  // markup distributed
+          materialsTotal: (totals?.customerMaterials || 0) + (totals?.customerLabor || 0),  // combined subtotal
           additionalCosts: [],
           additionalTotal: 0,
-          laborSubtotal: totals.customerLabor,  // markup distributed
+          laborSubtotal: 0,  // combined into materialsTotal as single subtotal line
           subtotal: totals.subtotal,
           overheadPct: totals.laborTotal > 0 && totals.subtotal > 0
             ? Math.round((totals.overheadAmt / totals.subtotal) * 100)
@@ -826,9 +826,8 @@ export default function QuoteBuilder({
             <div style={{ paddingTop: 12 }}>
 
               {/* Customer-facing: Materials + Labor + GET = Total (markup distributed proportionally) */}
-              <SummaryRow label="Materials" value={t.customerMaterials} />
-              <SummaryRow label="Labor" value={t.customerLabor} />
-              <SummaryRow label={`General Excise Tax (${t.getRate}%)`} value={t.getAmt} />
+              <SummaryRow label="Subtotal" value={t.customerMaterials + t.customerLabor} />
+              <SummaryRow label={`${wo?.island || 'Hawaii'} GET (${t.getRate}%)`} value={t.getAmt} />
               <Divider />
 
               {/* Grand total */}
