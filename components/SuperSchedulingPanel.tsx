@@ -169,12 +169,11 @@ function fmtTime(t: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
-/** Generate time options from 5:00 AM to 6:00 PM in 30-min increments */
+/** Generate time options for full 24 hours in 30-min increments (12:00 AM to 11:30 PM) */
 function genTimeOptions(): { label: string; value: string }[] {
   const opts: { label: string; value: string }[] = [];
-  for (let h = 5; h <= 18; h++) {
+  for (let h = 0; h <= 23; h++) {
     for (const m of [0, 30]) {
-      if (h === 18 && m > 0) break;
       const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       const label = fmtTime(value);
       opts.push({ label, value });
@@ -853,80 +852,66 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {visible.map(job => {
-          const colors = islandColor(job.island);
-          return (
-            <div key={job.id} style={{
-              padding: '12px 14px',
-              borderRadius: 12,
-              background: 'rgba(251,191,36,0.05)',
-              border: '1px solid rgba(251,191,36,0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
-                    {job.name}
-                  </span>
-                  {job.island && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99,
-                      background: colors.bg, border: `1px solid ${colors.border}`, color: colors.text,
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {job.island}
-                    </span>
-                  )}
-                  <span style={{
-                    fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99,
-                    background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24',
-                  }}>
-                    {job.status || 'active'}
-                  </span>
-                </div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                  {[job.customer, job.assigned_crew && `→ ${job.assigned_crew.split(',')[0]}`, job.hours_est && `${job.hours_est}h`].filter(Boolean).join(' · ')}
-                </div>
-                {(job.total_steps !== undefined && job.total_steps > 0) && (
-                  <div style={{ fontSize: 10, marginTop: 3, color: job.unscheduled_steps! > 0 ? '#fbbf24' : '#86efac' }}>
-                    {job.unscheduled_steps! > 0
-                      ? `${job.unscheduled_steps} unscheduled / ${job.total_steps} total steps`
-                      : `All ${job.total_steps} steps scheduled ✓`
-                    }
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => onSchedule(job)}
-                style={{
-                  padding: '8px 14px', borderRadius: 9, flexShrink: 0,
-                  background: 'rgba(251,191,36,0.12)',
-                  border: '1px solid rgba(251,191,36,0.3)',
-                  color: '#fbbf24', fontSize: 12, fontWeight: 800,
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                }}
-              >
-                Schedule →
-              </button>
-            </div>
-          );
-        })}
+      {/* Compact table layout */}
+      <div style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>WO #</th>
+              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Name</th>
+              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Island</th>
+              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Steps</th>
+              <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((job, i) => {
+              const colors = islandColor(job.island);
+              const hasSteps = job.total_steps !== undefined && job.total_steps > 0;
+              const allScheduled = hasSteps && job.unscheduled_steps === 0;
+              return (
+                <tr key={job.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
+                  <td style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: '#64748b', whiteSpace: 'nowrap' }}>{job.kID}</td>
+                  <td style={{ padding: '6px 10px', fontSize: 12, color: '#e2e8f0', maxWidth: 200 }}>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.name}</div>
+                    {job.customer && <div style={{ fontSize: 10, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.customer}</div>}
+                  </td>
+                  <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                    {job.island && (
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 99, background: colors.bg, border: `1px solid ${colors.border}`, color: colors.text, whiteSpace: 'nowrap' }}>
+                        {job.island}
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    {hasSteps ? (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: allScheduled ? '#86efac' : '#fbbf24' }}>
+                        {allScheduled ? `✓ all ${job.total_steps}` : `${job.unscheduled_steps}/${job.total_steps} unsched`}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 10, color: '#475569' }}>—</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                    <button
+                      onClick={() => onSchedule(job)}
+                      style={{
+                        padding: '4px 10px', borderRadius: 6, flexShrink: 0,
+                        background: 'rgba(251,191,36,0.12)',
+                        border: '1px solid rgba(251,191,36,0.3)',
+                        color: '#fbbf24', fontSize: 11, fontWeight: 800,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Schedule →
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      {filtered.length > 3 && (
-        <button
-          onClick={() => setExpanded(e => !e)}
-          style={{
-            marginTop: 8, width: '100%', padding: '8px',
-            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: 8, color: '#64748b', fontSize: 11, fontWeight: 700, cursor: 'pointer',
-          }}
-        >
-          {expanded ? `Show less ↑` : `Show all ${filtered.length} ↓`}
-        </button>
-      )}
     </div>
   );
 }
@@ -1089,7 +1074,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
           ← Prev
         </button>
         <div style={{ display: 'flex', gap: 6 }}>
-          {[-1, 0, 1, 2].map(w => (
+          {[-2, -1, 0, 1, 2].map(w => (
             <button
               key={w}
               onClick={() => onWeekChange(w)}
@@ -1100,7 +1085,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                 color: weekOffset === w ? '#5eead4' : '#64748b',
               }}
             >
-              {w === 0 ? 'Now' : w === -1 ? '-1' : w === 1 ? '+1' : '+2'}
+              {w === 0 ? 'Now' : w === -2 ? '-2w' : w === -1 ? '-1w' : w === 1 ? '+1w' : '+2w'}
             </button>
           ))}
         </div>
@@ -1446,26 +1431,7 @@ export default function SuperSchedulingPanel() {
       {data && (
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1200, margin: '0 auto' }}>
 
-          {/* 0: Unscheduled Queue — TOP */}
-          {(data.unscheduled_jobs?.length ?? 0) > 0 && (
-            <Card>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 10px', borderBottom: '1px solid rgba(251,191,36,0.12)', background: 'rgba(251,191,36,0.04)' }}>
-                <span style={{ fontSize: 16 }}>⚠️</span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#fbbf24', letterSpacing: '0.02em' }}>Needs Scheduling</span>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>
-                  {data.unscheduled_jobs.length}
-                </span>
-              </div>
-              <CardBody>
-                <UnscheduledQueue
-                  jobs={data.unscheduled_jobs}
-                  onSchedule={(job) => setScheduleJob(job)}
-                />
-              </CardBody>
-            </Card>
-          )}
-
-          {/* A: Today's Crews */}
+          {/* A: Today's KPIs / Crews */}
           <Card>
             <SectionHeader icon="⚡" title="Today's Crews" count={data.today_slots.length} accent="#fde68a" />
             <CardBody>
@@ -1505,7 +1471,26 @@ export default function SuperSchedulingPanel() {
             </CardBody>
           </Card>
 
-          {/* E: Manpower Forecast */}
+          {/* E: Unscheduled Queue */}
+          {(data.unscheduled_jobs?.length ?? 0) > 0 && (
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 10px', borderBottom: '1px solid rgba(251,191,36,0.12)', background: 'rgba(251,191,36,0.04)' }}>
+                <span style={{ fontSize: 16 }}>⚠️</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#fbbf24', letterSpacing: '0.02em' }}>Needs Scheduling</span>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>
+                  {data.unscheduled_jobs.length}
+                </span>
+              </div>
+              <CardBody>
+                <UnscheduledQueue
+                  jobs={data.unscheduled_jobs}
+                  onSchedule={(job) => setScheduleJob(job)}
+                />
+              </CardBody>
+            </Card>
+          )}
+
+          {/* F: Manpower Forecast */}
           <Card>
             <SectionHeader icon="📊" title="4-Week Manpower Forecast" accent="#c4b5fd" />
             <CardBody>
