@@ -120,8 +120,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     }
   }
 
+  const initializedRef = useRef(false);
   useEffect(() => {
     if (!wo) return;
+    // Only initialize draft on first mount — don't wipe user edits on re-render
+    if (initializedRef.current) return;
+    initializedRef.current = true;
     setDraft({
       name: wo.name,
       description: wo.description,
