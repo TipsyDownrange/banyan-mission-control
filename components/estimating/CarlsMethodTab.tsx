@@ -1,9 +1,11 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { BidSummary, StepTemplates, GoldDataSummary } from '@/components/estimating/EstimatingWorkspace';
+import { LABOR_RATES } from '@/lib/labor';
 
-// Default labor rate — update here when rates change
-const DEFAULT_LABOR_RATE = '117';
+// Default labor rate from lib/labor.ts — single source of truth
+// Do not hardcode here; change LABOR_RATES.journeyman in lib/labor.ts instead
+const DEFAULT_LABOR_RATE = String(LABOR_RATES.journeyman);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

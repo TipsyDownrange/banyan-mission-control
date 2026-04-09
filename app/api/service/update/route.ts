@@ -117,12 +117,11 @@ export async function PATCH(req: Request) {
       status:          'status',
       assignedTo:      'assigned_to',
       description:     'description',
-      scheduledDate:   'scheduled_date',
+      // ORPHAN cols 16,17,19,20,21 — frozen do not write
+      // scheduledDate (col 17), hoursEstimated (col 19), hoursActual (col 20), men_required (col 21) removed
+      // due_date (col 16) never accepted from UI
       startDate:       'start_date',
       notes:           'comments',
-      hoursEstimated:  'hours_estimated',
-      hoursActual:     'hours_actual',
-      men:             'men_required',
       // camelCase (legacy frontend compat)
       contactPhone:    'contact_phone',
       contactEmail:    'contact_email',
@@ -155,7 +154,54 @@ export async function PATCH(req: Request) {
       lost:        'lost',
     };
 
-    const resolvedStatus = status || (stage ? stageToStatus[stage] : undefined);
+    // Derive WO status from Install_Steps + Step_Completions (single source of truth).
+    // Manual status overrides from UI are accepted only for pre-work states (lead/quote/quoted/accepted/approved).
+    // Once steps exist, status is auto-derived and cannot be manually overridden.
+    const MANUAL_STATUS_ALLOWED = new Set(['lead', 'quote', 'quoted', 'accepted', 'approved', 'lost']);
+    let resolvedStatus = status || (stage ? stageToStatus[stage] : undefined);
+    if (resolvedStatus && !MANUAL_STATUS_ALLOWED.has(resolvedStatus)) {
+      // Derive from Install_Steps — ignore the passed value
+      try {
+        const authR = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+        const sheetsR = google.sheets({ version: 'v4', auth: authR });
+        const [stepsRes, plansRes, compsRes] = await Promise.all([
+          sheetsR.spreadsheets.values.get({ spreadsheetId: BACKEND_SHEET_ID, range: 'Install_Steps!A1:Z5000' }),
+          sheetsR.spreadsheets.values.get({ spreadsheetId: BACKEND_SHEET_ID, range: 'Install_Plans!A1:Z5000' }),
+          sheetsR.spreadsheets.values.get({ spreadsheetId: BACKEND_SHEET_ID, range: 'Step_Completions!A1:Z5000' }),
+        ]);
+        const toObjs = (rows: string[][]) => {
+          if (!rows || rows.length < 2) return [];
+          const [hdr, ...data] = rows;
+          return data.map(r => Object.fromEntries(hdr.map((h, i) => [h.trim(), (r[i] || '').trim()])));
+        };
+        const plans = toObjs((plansRes.data.values || []) as string[][]);
+        const steps = toObjs((stepsRes.data.values || []) as string[][]);
+        const comps = toObjs((compsRes.data.values || []) as string[][]);
+        const jobPlans = plans.filter(p => p['Job_ID'] === woId || p['kID'] === woId);
+        const planIds = new Set(jobPlans.map(p => p['Install_Plan_ID'] || p['Plan_ID'] || '').filter(Boolean));
+        const jobSteps = steps.filter(s => planIds.has(s['Install_Plan_ID'] || s['Plan_ID'] || ''));
+        if (jobSteps.length === 0) {
+          // No steps — keep manual status if it's a valid pre-work state, otherwise 'estimated'
+          resolvedStatus = MANUAL_STATUS_ALLOWED.has(resolvedStatus) ? resolvedStatus : 'estimated';
+        } else {
+          const stepIds = new Set(jobSteps.map(s => s['Install_Step_ID'] || s['Step_ID'] || '').filter(Boolean));
+          const jobComps = comps.filter(c => stepIds.has(c['Install_Step_ID'] || c['Step_ID'] || ''));
+          if (jobComps.length === 0) {
+            resolvedStatus = 'scheduled';
+          } else {
+            const allComplete = jobSteps.every(s => {
+              const sid = s['Install_Step_ID'] || s['Step_ID'] || '';
+              const sc = jobComps.filter(c => (c['Install_Step_ID'] || c['Step_ID'] || '') === sid);
+              return sc.some(c => parseFloat(c['Percent_Complete'] || '0') >= 100);
+            });
+            resolvedStatus = allComplete ? 'completed' : 'in_progress';
+          }
+        }
+      } catch (e) {
+        console.warn('Status derivation failed, using passed value:', e);
+        // Fall through with original resolvedStatus
+      }
+    }
     if (resolvedStatus) {
       updates.push({
         col: colLetter(COL_IDX.status),

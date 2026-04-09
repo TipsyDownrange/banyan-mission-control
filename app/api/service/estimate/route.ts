@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { GET_PASS_ON_RATE } from '@/lib/tax-rates';
+// taxRate always from lib/tax-rates.ts — JSON value ignored to prevent stale data
+const CANONICAL_TAX_RATE = String(GET_PASS_ON_RATE); // '4.712'
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Carls_Method';
@@ -61,6 +64,8 @@ export async function GET(req: Request) {
 
     try {
       const data = JSON.parse(row[2] || '{}');
+      // taxRate always from lib/tax-rates.ts — JSON value ignored to prevent stale data
+      data.taxRate = CANONICAL_TAX_RATE;
       return NextResponse.json({ data, updatedAt: row[3] });
     } catch {
       return NextResponse.json({ data: null });

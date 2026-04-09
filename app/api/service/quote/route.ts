@@ -246,28 +246,8 @@ export async function POST(req: Request) {
     ];
     if (!installationIncluded) standardExclusions.push('Installation');
 
-    // Write-back: save total labor hours to WO's hours_estimated column (19)
-    try {
-      const totalLaborHours = onSiteHours + (body.driveTimeTrips || 0) * (body.driveTimeHoursPerTrip || 0);
-      const authW = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-      const sheetsW = google.sheets({ version: 'v4', auth: authW });
-      const woRes = await sheetsW.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: 'Service_Work_Orders!A2:A2000',
-      });
-      const woIds = (woRes.data.values || []).flat();
-      const woIdx = woIds.findIndex(id => id === woNumber);
-      if (woIdx >= 0) {
-        await sheetsW.spreadsheets.values.update({
-          spreadsheetId: SHEET_ID,
-          range: `Service_Work_Orders!T${woIdx + 2}`,
-          valueInputOption: 'RAW',
-          requestBody: { values: [[String(totalLaborHours)]] },
-        });
-      }
-    } catch (e) {
-      console.error('Failed to write-back labor hours:', e);
-    }
+    // ORPHAN cols 16,17,19,20,21 — frozen do not write
+    // hours_estimated (col 19 / T) write-back removed: canonical hours live in Install_Steps.Allotted_Hours
 
     return NextResponse.json({
       quote: {

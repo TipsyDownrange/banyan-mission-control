@@ -129,6 +129,29 @@ export async function POST(req: Request) {
 
     if (!quote) return NextResponse.json({ error: 'quote object required' }, { status: 400 });
 
+    // Server-side validation: reject if any required field is null/undefined/NaN/empty
+    const requiredFields: [string, unknown][] = [
+      ['customerName', quote.customerName],
+      ['total', quote.total],
+      ['getAmount', quote.getAmount],
+      ['getRate', quote.getRate],
+      ['deposit', quote.deposit],
+    ];
+    const missingOrInvalid = requiredFields.filter(([, v]) =>
+      v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)) || Number(v) === 0 && v !== 0
+    ).map(([k]) => k);
+    const nanFields = ['total', 'getAmount', 'deposit'].filter(k => {
+      const v = quote[k as keyof typeof quote];
+      return v !== undefined && isNaN(Number(v));
+    });
+    const invalidFields = [...new Set([...missingOrInvalid, ...nanFields])];
+    if (invalidFields.length > 0) {
+      return NextResponse.json(
+        { error: `Proposal rejected: missing or invalid fields: ${invalidFields.join(', ')}. Run /api/service/quote/validate first.` },
+        { status: 422 }
+      );
+    }
+
     // QuoteBuilder already distributes overhead+profit proportionally into
     // materialsTotal and laborSubtotal. DO NOT add them again here.
     // Customer sees: Materials + Labor + GET = Total (markup already baked in)

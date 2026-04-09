@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { GET_PASS_ON_RATE } from '@/lib/tax-rates';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -441,6 +442,8 @@ export default function QuoteBuilder({
   onClose: () => void;
   estimatePreFill?: EstimatePreFill; // kept for API compatibility, unused in preview mode
 }) {
+  const { data: session } = useSession();
+  const [preparedByUser, setPreparedByUser] = useState<{ name: string; email: string; phone: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -450,6 +453,20 @@ export default function QuoteBuilder({
   const [quote, setQuote] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+
+  // Look up logged-in user from Users_Roles for Prepared By on proposal
+  useEffect(() => {
+    if (!session?.user?.email) return;
+    fetch('/api/crew')
+      .then(r => r.json())
+      .then((users: Array<{ email?: string; name?: string; phone?: string }>) => {
+        const match = users.find(u => u.email?.toLowerCase() === session.user!.email!.toLowerCase());
+        if (match) {
+          setPreparedByUser({ name: match.name || session.user!.name || '', email: match.email || session.user!.email || '', phone: match.phone || '' });
+        }
+      })
+      .catch(() => { /* fall back to hardcoded default */ });
+  }, [session?.user?.email]);
 
   // Configs
   const [configs, setConfigs] = useState<QuoteConfig[]>([]);
@@ -670,7 +687,9 @@ export default function QuoteBuilder({
             total: t?.grandTotal || 0,
             deposit: t ? Math.round(t.grandTotal * 50) / 100 : 0,
             validityDays: 30,
-            preparedBy: { name: 'Joey Ritthaler', email: 'joey@kulaglass.com', phone: '808-242-8999 ext. 22' },
+            // Prepared By: from logged-in user session via Users_Roles lookup.
+            // Falls back to Joey Ritthaler only if user lookup failed (e.g. not in Users_Roles yet).
+            preparedBy: preparedByUser || { name: 'Joey Ritthaler', email: 'joey@kulaglass.com', phone: '808-242-8999 ext. 22' },
           },
           sendEmail: false,
         }),
