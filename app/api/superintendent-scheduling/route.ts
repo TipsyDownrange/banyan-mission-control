@@ -42,7 +42,7 @@ const FIELD_ROLES = new Set(['glazier', 'super', 'superintendent', 'journeyman',
 
 // ─── Row parsers ─────────────────────────────────────────────────────────────
 
-const DISPATCH_COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time'];
+const DISPATCH_COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time','step_ids'];
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
   DISPATCH_COLS.forEach((c, i) => { s[c] = row[i] || ''; });
@@ -142,6 +142,16 @@ function rowToWO(r: string[]) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Calculate end time given start time (HH:MM) and hours */
+function calcEndTime(startTime: string, hours: number): string {
+  if (!startTime || !hours) return '';
+  const [h, m] = startTime.split(':').map(Number);
+  const totalMinutes = h * 60 + m + Math.round(hours * 60);
+  const endH = Math.floor(totalMinutes / 60);
+  const endM = totalMinutes % 60;
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+}
+
 function isoToday(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -190,7 +200,7 @@ export async function GET(req: Request) {
 
     // Single batch request for all tabs
     const [dispatchRes, stepsRes, plansRes, completionsRes, usersRes, woRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:O5000' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:P5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:M5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:J5000' }),
@@ -302,20 +312,35 @@ export async function GET(req: Request) {
         return true;
       })
       // No artificial limit — frontend has search/filters to handle the full list
-      .map(wo => ({
-        type: 'wo' as const,
-        id: wo.wo_number || wo.wo_id,
-        kID: wo.wo_number || wo.wo_id,
-        name: wo.name,
-        description: wo.description,
-        customer: wo.customer,
-        island: wo.island,
-        area_of_island: wo.area_of_island,
-        assigned_crew: wo.assigned_to,
-        hours_est: wo.hours_est,
-        men_required: wo.men_required,
-        status: wo.status,
-      }));
+      .map(wo => {
+        // Compute step counts for this WO
+        const woKID = wo.wo_number || wo.wo_id;
+        const woPlans = allPlans.filter(p =>
+          p.system_type !== '__JOB_DOCS__' &&
+          (p.job_id === woKID ||
+           p.job_id === `WO-${woKID}` ||
+           p.job_id.replace(/^WO-/i, '') === woKID.replace(/^WO-/i, ''))
+        );
+        const woSteps = woPlans.flatMap(p => stepsByPlanId.get(p.install_plan_id) || []);
+        const totalSteps = woSteps.length;
+        const scheduledSteps = woSteps.filter(s => s.planned_start_date).length;
+        return {
+          type: 'wo' as const,
+          id: woKID,
+          kID: woKID,
+          name: wo.name,
+          description: wo.description,
+          customer: wo.customer,
+          island: wo.island,
+          area_of_island: wo.area_of_island,
+          assigned_crew: wo.assigned_to,
+          hours_est: wo.hours_est,
+          men_required: wo.men_required,
+          status: wo.status,
+          total_steps: totalSteps,
+          unscheduled_steps: totalSteps - scheduledSteps,
+        };
+      });
 
     // ── Crew availability ─────────────────────────────────────────────────────
     const crewAvailability = fieldCrew.map(user => {
@@ -414,11 +439,17 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { kID, project_name, date, assigned_crew, island, men_required, hours_estimated, notes, work_type } = body;
+    const { kID, project_name, date, assigned_crew, island, men_required, hours_estimated, notes, work_type, step_ids, start_time } = body;
 
     if (!project_name || !date) {
       return NextResponse.json({ error: 'project_name and date are required' }, { status: 400 });
     }
+    if (!start_time) {
+      return NextResponse.json({ error: 'start_time is required' }, { status: 400 });
+    }
+
+    const hours = parseFloat(hours_estimated) || 0;
+    const end_time = calcEndTime(start_time, hours);
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
@@ -431,14 +462,18 @@ export async function POST(req: Request) {
     const existingIds = (existingRes.data.values || []).map(r => ({ slot_id: r[0] || '' }));
     const slot_id = genSlotId(date, existingIds);
 
-    // DISPATCH_COLS order: slot_id, date, kID, project_name, island, men_required, hours_estimated, assigned_crew, created_by, status, confirmations, work_type, notes, start_time, end_time
+    const stepIdsStr = Array.isArray(step_ids) ? step_ids.join(',') : (step_ids || '');
+
+    // DISPATCH_COLS: slot_id(0), date(1), kID(2), project_name(3), island(4), men_required(5),
+    //   hours_estimated(6), assigned_crew(7), created_by(8), status(9), confirmations(10),
+    //   work_type(11), notes(12), start_time(13), end_time(14), step_ids(15)
     const newRow = [
       slot_id,
       date,
       kID || '',
       project_name,
       island || '',
-      men_required || '',
+      men_required || String(Array.isArray(assigned_crew) ? assigned_crew.length : 1),
       hours_estimated || '',
       Array.isArray(assigned_crew) ? assigned_crew.join(', ') : (assigned_crew || ''),
       'superintendent', // created_by
@@ -446,49 +481,94 @@ export async function POST(req: Request) {
       '',               // confirmations
       work_type || '',
       notes || '',
-      '',               // start_time
-      '',               // end_time
+      start_time,
+      end_time,
+      stepIdsStr,
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: 'Dispatch_Schedule!A:O',
+      range: 'Dispatch_Schedule!A:P',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [newRow] },
     });
 
-    const slotObj: Record<string, string> = {};
-    DISPATCH_COLS.forEach((c, i) => { slotObj[c] = newRow[i] as string; });
+    // Update Install_Steps planned dates for selected steps only
+    if (Array.isArray(step_ids) && step_ids.length > 0) {
+      const stepsRes2 = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Install_Steps!A2:P5000',
+      });
+      const stepRows = stepsRes2.data.values || [];
+      const stepUpdates: Promise<unknown>[] = [];
+      for (const stepId of step_ids as string[]) {
+        const rowIdx = stepRows.findIndex(r => (r[0] || '') === stepId);
+        if (rowIdx === -1) continue;
+        const ex = [...stepRows[rowIdx]];
+        while (ex.length < 16) ex.push('');
+        ex[9] = date;  // planned_start_date (col J)
+        ex[10] = date; // planned_end_date (col K)
+        const stepSheetRow = rowIdx + 2;
+        stepUpdates.push(
+          sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `Install_Steps!A${stepSheetRow}:P${stepSheetRow}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [ex] },
+          })
+        );
+      }
+      await Promise.all(stepUpdates);
 
-    // Also update the WO status to 'scheduled' if it's not already in_progress or closed
-    if (kID) {
-      try {
-        const woRes2 = await sheets.spreadsheets.values.get({
-          spreadsheetId: SHEET_ID,
-          range: 'Service_Work_Orders!A2:E2000',
-        });
-        const woRows = woRes2.data.values || [];
-        for (let i = 0; i < woRows.length; i++) {
-          const rowWoId = (woRows[i][0] || '').trim();
-          const rowWoNum = (woRows[i][1] || '').trim();
-          const rowStatus = (woRows[i][4] || '').toLowerCase().trim();
-          if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
-            // Only upgrade status if not already further in pipeline
-            if (!['in_progress', 'closed', 'completed', 'scheduled'].includes(rowStatus)) {
-              await sheets.spreadsheets.values.update({
-                spreadsheetId: SHEET_ID,
-                range: `Service_Work_Orders!E${i + 2}`,
-                valueInputOption: 'RAW',
-                requestBody: { values: [['scheduled']] },
-              });
+      // Check if ALL steps for this WO are now scheduled — if so, mark WO 'scheduled'
+      if (kID) {
+        try {
+          const allPlansRes2 = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: 'Install_Plans!A2:G5000',
+          });
+          const allStepsRes2 = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: 'Install_Steps!A2:P5000',
+          });
+          const planRows2 = (allPlansRes2.data.values || []).filter(r => {
+            const jid = r[1] || '';
+            return (jid === kID || jid === `WO-${kID}` || jid.replace(/^WO-/i, '') === kID.replace(/^WO-/i, '')) && r[2] !== '__JOB_DOCS__';
+          });
+          const planIds2 = new Set(planRows2.map(r => r[0]));
+          const allStepRows2 = (allStepsRes2.data.values || []).filter(r => planIds2.has(r[1] || ''));
+          const allScheduled = allStepRows2.length > 0 && allStepRows2.every(r => r[9]); // planned_start_date set
+          if (allScheduled) {
+            const woRes2 = await sheets.spreadsheets.values.get({
+              spreadsheetId: SHEET_ID,
+              range: 'Service_Work_Orders!A2:E2000',
+            });
+            const woRows2 = woRes2.data.values || [];
+            for (let i = 0; i < woRows2.length; i++) {
+              const rowWoId = (woRows2[i][0] || '').trim();
+              const rowWoNum = (woRows2[i][1] || '').trim();
+              const rowStatus = (woRows2[i][4] || '').toLowerCase().trim();
+              if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+                if (!['in_progress', 'closed', 'completed'].includes(rowStatus)) {
+                  await sheets.spreadsheets.values.update({
+                    spreadsheetId: SHEET_ID,
+                    range: `Service_Work_Orders!E${i + 2}`,
+                    valueInputOption: 'RAW',
+                    requestBody: { values: [['scheduled']] },
+                  });
+                }
+                break;
+              }
             }
-            break;
           }
+        } catch (e) {
+          console.error('Failed to check/update WO scheduled status:', e);
         }
-      } catch (e) {
-        console.error('Failed to update WO status to scheduled:', e);
       }
     }
+
+    const slotObj: Record<string, string> = {};
+    DISPATCH_COLS.forEach((c, i) => { slotObj[c] = newRow[i] as string; });
 
     return NextResponse.json({ success: true, slot: slotObj });
 
@@ -518,7 +598,7 @@ export async function PATCH(req: Request) {
     // Find the row with this slot_id
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Dispatch_Schedule!A2:O5000',
+      range: 'Dispatch_Schedule!A2:P5000',
     });
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => (r[0] || '') === slot_id);
@@ -538,13 +618,121 @@ export async function PATCH(req: Request) {
       }
     });
 
+    // If start_time was updated, recalculate end_time
+    if (updates.start_time || updates.hours_estimated) {
+      const st = existing[13]; // start_time
+      const hrs = parseFloat(existing[6]) || 0; // hours_estimated
+      existing[14] = calcEndTime(st, hrs);
+    }
+
     const sheetRow = rowIndex + 2; // 1-indexed + header row
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Dispatch_Schedule!A${sheetRow}:O${sheetRow}`,
+      range: `Dispatch_Schedule!A${sheetRow}:P${sheetRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [existing] },
     });
+
+    // If status is being set to 'completed', handle per-step completion logic
+    if (updates.status === 'completed') {
+      const stepIdsStr = existing[15] || ''; // step_ids col
+      const slotStepIds = stepIdsStr.split(',').map((s: string) => s.trim()).filter(Boolean);
+      const kID = existing[2] || '';
+
+      if (slotStepIds.length > 0) {
+        try {
+          const [stepsResC, plansResC, completionsResC] = await Promise.all([
+            sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:P5000' }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:I5000' }),
+          ]);
+          const stepRowsC = stepsResC.data.values || [];
+          const planRowsC = plansResC.data.values || [];
+          const completionRowsC = completionsResC.data.values || [];
+
+          const today = isoToday();
+          const completionOps: Promise<unknown>[] = [];
+          const stepActualHrsUpdates: Promise<unknown>[] = [];
+
+          for (const stepId of slotStepIds) {
+            // Create Step_Completion if not already at 100%
+            const existingComp = completionRowsC.find(r => r[1] === stepId && parseInt(r[6]) >= 100);
+            if (!existingComp) {
+              const newCompId = `SC-${Date.now()}-${stepId.slice(-4)}`;
+              const hoursForStep = (() => {
+                const sr = stepRowsC.find(r => r[0] === stepId);
+                return sr ? (parseFloat(sr[4]) || 0) : 0;
+              })();
+              completionOps.push(
+                sheets.spreadsheets.values.append({
+                  spreadsheetId: SHEET_ID,
+                  range: 'Step_Completions!A:I',
+                  valueInputOption: 'RAW',
+                  requestBody: { values: [[newCompId, stepId, '', today, 'superintendent', hoursForStep, 100, 'Completed via dispatch slot', '']] },
+                })
+              );
+              // Write actual_hours to Install_Steps col P (index 15)
+              const srIdx = stepRowsC.findIndex(r => r[0] === stepId);
+              if (srIdx !== -1) {
+                const srRow = [...stepRowsC[srIdx]];
+                while (srRow.length < 16) srRow.push('');
+                srRow[15] = String(hoursForStep);
+                stepActualHrsUpdates.push(
+                  sheets.spreadsheets.values.update({
+                    spreadsheetId: SHEET_ID,
+                    range: `Install_Steps!A${srIdx + 2}:P${srIdx + 2}`,
+                    valueInputOption: 'USER_ENTERED',
+                    requestBody: { values: [srRow] },
+                  })
+                );
+              }
+            }
+          }
+          await Promise.all([...completionOps, ...stepActualHrsUpdates]);
+
+          // Now check if ALL steps for this WO are complete to update WO status
+          if (kID) {
+            const woPlans = planRowsC.filter(r => {
+              const jid = r[1] || '';
+              return (jid === kID || jid === `WO-${kID}` || jid.replace(/^WO-/i, '') === kID.replace(/^WO-/i, '')) && r[2] !== '__JOB_DOCS__';
+            });
+            const woPlanIds = new Set(woPlans.map(r => r[0]));
+            const woStepRows = stepRowsC.filter(r => woPlanIds.has(r[1] || ''));
+
+            // Re-fetch completions to include newly added ones
+            const newCompRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:I5000' });
+            const newCompRows = newCompRes.data.values || [];
+
+            const completedStepIds = new Set(
+              newCompRows.filter(r => parseInt(r[6]) >= 100).map(r => r[1])
+            );
+            const allComplete = woStepRows.length > 0 && woStepRows.every(r => completedStepIds.has(r[0]));
+            const someComplete = woStepRows.some(r => completedStepIds.has(r[0]));
+
+            const newWOStatus = allComplete ? 'closed' : someComplete ? 'in_progress' : undefined;
+            if (newWOStatus) {
+              const woResC = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:E2000' });
+              const woRowsC = woResC.data.values || [];
+              for (let i = 0; i < woRowsC.length; i++) {
+                const rowWoId = (woRowsC[i][0] || '').trim();
+                const rowWoNum = (woRowsC[i][1] || '').trim();
+                if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+                  await sheets.spreadsheets.values.update({
+                    spreadsheetId: SHEET_ID,
+                    range: `Service_Work_Orders!E${i + 2}`,
+                    valueInputOption: 'RAW',
+                    requestBody: { values: [[newWOStatus]] },
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to process step completions:', e);
+        }
+      }
+    }
 
     const updated: Record<string, string> = {};
     DISPATCH_COLS.forEach((c, i) => { updated[c] = existing[i] || ''; });
@@ -590,7 +778,7 @@ export async function DELETE(req: Request) {
     const sheetRow = rowIndex + 2;
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,
-      range: `Dispatch_Schedule!A${sheetRow}:O${sheetRow}`,
+      range: `Dispatch_Schedule!A${sheetRow}:P${sheetRow}`,
     });
 
     return NextResponse.json({ success: true, deleted_slot_id: slot_id });

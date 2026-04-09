@@ -19,6 +19,7 @@ interface DispatchSlot {
   notes: string;
   start_time: string;
   end_time: string;
+  step_ids?: string;
   progress?: { total: number; completed: number; in_progress: number } | null;
 }
 
@@ -32,6 +33,17 @@ interface UnscheduledJob {
   assigned_crew: string;
   hours_est: string;
   status: string;
+  total_steps?: number;
+  unscheduled_steps?: number;
+}
+
+interface InstallStep {
+  install_step_id: string;
+  install_plan_id: string;
+  step_name: string;
+  allotted_hours: number;
+  category: string;
+  planned_start_date?: string;
 }
 
 interface Blocker {
@@ -147,6 +159,42 @@ function bufferBg(buffer: number): string {
   return 'rgba(220,38,38,0.12)';
 }
 
+/** Format 24h "HH:MM" to "H:MM AM/PM" */
+function fmtTime(t: string): string {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return t;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+/** Generate time options from 5:00 AM to 6:00 PM in 30-min increments */
+function genTimeOptions(): { label: string; value: string }[] {
+  const opts: { label: string; value: string }[] = [];
+  for (let h = 5; h <= 18; h++) {
+    for (const m of [0, 30]) {
+      if (h === 18 && m > 0) break;
+      const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      const label = fmtTime(value);
+      opts.push({ label, value });
+    }
+  }
+  return opts;
+}
+
+const TIME_OPTIONS = genTimeOptions();
+
+/** Add hours to a HH:MM time string */
+function addHoursToTime(startTime: string, hours: number): string {
+  if (!startTime || !hours) return '';
+  const [h, m] = startTime.split(':').map(Number);
+  const totalMinutes = h * 60 + m + Math.round(hours * 60);
+  const endH = Math.floor(totalMinutes / 60);
+  const endM = totalMinutes % 60;
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+}
+
 // ─── Quick Schedule Modal ─────────────────────────────────────────────────────
 
 interface QuickScheduleModalProps {
@@ -169,40 +217,63 @@ function areaToIsland(area: string): string {
 
 function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickScheduleModalProps) {
   const [date, setDate] = useState(tomorrow());
+  const [startTime, setStartTime] = useState('07:00');
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [island, setIsland] = useState('');
-  const [hoursEst, setHoursEst] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [steps, setSteps] = useState<InstallStep[]>([]);
+  const [selectedStepIds, setSelectedStepIds] = useState<string[]>([]);
+  const [loadingSteps, setLoadingSteps] = useState(false);
 
   useEffect(() => {
     if (!job) return;
-    // Auto-resolve island from area_of_island or island field
     const resolvedIsland = areaToIsland((job as any).area_of_island || job.island || '');
     setIsland(resolvedIsland);
-    setHoursEst(job.hours_est || '');
     setNotes('');
     setDate(tomorrow());
-    // Pre-select assigned crew
+    setStartTime('07:00');
+    setSelectedStepIds([]);
     if (job.assigned_crew) {
-      const names = job.assigned_crew.split(',').map(n => n.trim()).filter(Boolean);
-      setSelectedCrew(names);
+      setSelectedCrew(job.assigned_crew.split(',').map(n => n.trim()).filter(Boolean));
     } else {
       setSelectedCrew([]);
     }
+    // Fetch steps for this WO
+    setLoadingSteps(true);
+    fetch(`/api/work-breakdown/${job.kID}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(data => {
+        const allSteps: InstallStep[] = (data.steps || []).filter((s: InstallStep) => s.install_step_id);
+        setSteps(allSteps);
+        // Pre-select unscheduled steps
+        setSelectedStepIds(allSteps.filter(s => !s.planned_start_date).map(s => s.install_step_id));
+      })
+      .catch(() => setSteps([]))
+      .finally(() => setLoadingSteps(false));
   }, [job]);
 
   if (!job) return null;
-
-  const colors = islandColor(island);
 
   function toggleCrew(name: string) {
     setSelectedCrew(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
   }
 
+  function toggleStep(id: string) {
+    setSelectedStepIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  }
+
+  const selectedSteps = steps.filter(s => selectedStepIds.includes(s.install_step_id));
+  const totalHours = selectedSteps.reduce((sum, s) => sum + (s.allotted_hours || 0), 0);
+  const endTime = addHoursToTime(startTime, totalHours);
+
+  const stepNames = selectedSteps.map(s => s.step_name).join(', ');
+  const projectNameWithSteps = stepNames ? `${job.name} — ${stepNames}` : job.name;
+
   async function handleSchedule() {
     if (!job) return;
+    if (selectedStepIds.length === 0) { setError('Select at least one step to schedule'); return; }
     setSaving(true);
     setError('');
     try {
@@ -211,13 +282,15 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           kID: job.kID,
-          project_name: job.name,
+          project_name: projectNameWithSteps,
           date,
           assigned_crew: selectedCrew,
           island,
           men_required: String(selectedCrew.length),
-          hours_estimated: hoursEst,
+          hours_estimated: String(totalHours),
           notes,
+          start_time: startTime,
+          step_ids: selectedStepIds,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -230,13 +303,19 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
     }
   }
 
-  // Group crew by island
   const crewByIsland: Record<string, CrewListItem[]> = {};
   crewList.forEach(c => {
     const key = c.island || 'Other';
     if (!crewByIsland[key]) crewByIsland[key] = [];
     crewByIsland[key].push(c);
   });
+
+  const inputStyle = {
+    width: '100%', padding: '10px 12px',
+    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 10, color: '#f1f5f9', fontSize: 14,
+    boxSizing: 'border-box' as const,
+  };
 
   return (
     <div style={{
@@ -251,16 +330,15 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         borderBottom: 'none',
         borderRadius: '20px 20px 0 0',
         padding: '24px 20px 40px',
-        maxHeight: '90vh',
+        maxHeight: '92vh',
         overflowY: 'auto',
       }}>
-        {/* Handle */}
         <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)', margin: '0 auto 20px' }} />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(251,191,36,0.7)', marginBottom: 4 }}>
-              Schedule Job
+              Schedule Steps
             </div>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#f1f5f9', lineHeight: 1.3, maxWidth: 340 }}>
               {job.name}
@@ -281,25 +359,80 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
           </div>
         )}
 
-        {/* Date */}
+        {/* Steps */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-            Date
+            Install Steps ({selectedStepIds.length} selected · {totalHours.toFixed(1)}h total)
           </label>
-          <input
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            style={{
-              width: '100%', padding: '10px 12px',
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 10, color: '#f1f5f9', fontSize: 14,
-              boxSizing: 'border-box',
-            }}
-          />
+          {loadingSteps ? (
+            <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: 12 }}>Loading steps…</div>
+          ) : steps.length === 0 ? (
+            <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: 12, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)' }}>
+              No install steps found for this WO
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+              {steps.map(step => {
+                const checked = selectedStepIds.includes(step.install_step_id);
+                const isScheduled = !!step.planned_start_date;
+                return (
+                  <label key={step.install_step_id} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '9px 10px', borderRadius: 8, cursor: 'pointer',
+                    background: checked ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${checked ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                    marginBottom: 2, opacity: isScheduled && !checked ? 0.6 : 1,
+                  }}>
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+                      background: checked ? '#fbbf24' : 'rgba(255,255,255,0.06)',
+                      border: `1.5px solid ${checked ? '#fbbf24' : 'rgba(255,255,255,0.2)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {checked && <span style={{ fontSize: 11, color: '#000', fontWeight: 900 }}>✓</span>}
+                    </div>
+                    <input type="checkbox" checked={checked} onChange={() => toggleStep(step.install_step_id)} style={{ display: 'none' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, color: checked ? '#f1f5f9' : '#94a3b8', fontWeight: checked ? 700 : 400 }}>
+                        {step.step_name}
+                      </div>
+                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 1 }}>
+                        {step.allotted_hours}h{isScheduled ? ' · already scheduled' : ''}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Island — auto-populated from WO */}
+        {/* Date + Time row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Start Time</label>
+            <select value={startTime} onChange={e => setStartTime(e.target.value)} style={{ ...inputStyle, appearance: 'none' as const }}>
+              {TIME_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Calculated end time */}
+        {totalHours > 0 && (
+          <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.15)' }}>
+            <div style={{ fontSize: 12, color: '#5eead4' }}>
+              ⏱ {fmtTime(startTime)} → {fmtTime(endTime)} &nbsp;·&nbsp; {totalHours.toFixed(1)} hours
+            </div>
+          </div>
+        )}
+
+        {/* Island */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
             Island {(job as any)?.area_of_island ? `— ${(job as any).area_of_island}` : ''}
@@ -313,31 +446,12 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
           </div>
         </div>
 
-        {/* Hours */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-            Hours Estimated
-          </label>
-          <input
-            type="number"
-            placeholder="e.g. 8"
-            value={hoursEst}
-            onChange={e => setHoursEst(e.target.value)}
-            style={{
-              width: '100%', padding: '10px 12px',
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 10, color: '#f1f5f9', fontSize: 14,
-              boxSizing: 'border-box',
-            }}
-          />
-        </div>
-
         {/* Crew */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
             Assign Crew ({selectedCrew.length} selected)
           </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 240, overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 200, overflowY: 'auto' }}>
             {Object.entries(crewByIsland).map(([islandName, members]) => (
               <div key={islandName}>
                 <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 0 3px' }}>
@@ -394,17 +508,17 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
         <button
           onClick={handleSchedule}
-          disabled={saving || !date}
+          disabled={saving || !date || selectedStepIds.length === 0}
           style={{
             width: '100%', padding: '14px',
-            background: saving ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)',
+            background: (saving || selectedStepIds.length === 0) ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)',
             border: 'none', borderRadius: 12,
             color: '#fff', fontSize: 15, fontWeight: 800,
-            cursor: saving ? 'not-allowed' : 'pointer',
+            cursor: (saving || selectedStepIds.length === 0) ? 'not-allowed' : 'pointer',
             letterSpacing: '0.01em',
           }}
         >
-          {saving ? '⏳ Scheduling…' : '✓ Schedule This Job'}
+          {saving ? '⏳ Scheduling…' : `✓ Schedule ${selectedStepIds.length} Step${selectedStepIds.length !== 1 ? 's' : ''}`}
         </button>
       </div>
     </div>
@@ -422,6 +536,7 @@ interface EditSlotModalProps {
 
 function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps) {
   const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('07:00');
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [hours, setHours] = useState('');
   const [notes, setNotes] = useState('');
@@ -437,6 +552,14 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
     setNotes(slot.notes || '');
     setConfirmDelete(false);
     setError('');
+    // Initialize start_time — snap to nearest 30-min slot if needed
+    if (slot.start_time) {
+      const [h, m] = slot.start_time.split(':').map(Number);
+      const snapped = `${String(h).padStart(2, '0')}:${m < 30 ? '00' : '30'}`;
+      setStartTime(snapped);
+    } else {
+      setStartTime('07:00');
+    }
     if (slot.assigned_crew) {
       setSelectedCrew(slot.assigned_crew.split(',').map(n => n.trim()).filter(Boolean));
     } else {
@@ -449,6 +572,8 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
   function toggleCrew(name: string) {
     setSelectedCrew(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
   }
+
+  const endTime = addHoursToTime(startTime, parseFloat(hours) || 0);
 
   async function handleSave() {
     if (!slot) return;
@@ -464,6 +589,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           assigned_crew: selectedCrew,
           hours_estimated: hours,
           notes,
+          start_time: startTime,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -545,16 +671,30 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           </div>
         )}
 
-        {/* Date */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' }} />
+        {/* Date + Time */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' as const }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Start Time</label>
+            <select value={startTime} onChange={e => setStartTime(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' as const, appearance: 'none' as const }}>
+              {TIME_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+          </div>
         </div>
+
+        {parseFloat(hours) > 0 && (
+          <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.15)' }}>
+            <span style={{ fontSize: 12, color: '#5eead4' }}>⏱ {fmtTime(startTime)} → {fmtTime(endTime)} · {hours}h</span>
+          </div>
+        )}
 
         {/* Hours */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Hours Estimated</label>
-          <input type="number" value={hours} onChange={e => setHours(e.target.value)} placeholder="e.g. 8" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' }} />
+          <input type="number" value={hours} onChange={e => setHours(e.target.value)} placeholder="e.g. 8" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' as const }} />
         </div>
 
         {/* Crew */}
@@ -750,6 +890,14 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
                 <div style={{ fontSize: 11, color: '#94a3b8' }}>
                   {[job.customer, job.assigned_crew && `→ ${job.assigned_crew.split(',')[0]}`, job.hours_est && `${job.hours_est}h`].filter(Boolean).join(' · ')}
                 </div>
+                {(job.total_steps !== undefined && job.total_steps > 0) && (
+                  <div style={{ fontSize: 10, marginTop: 3, color: job.unscheduled_steps! > 0 ? '#fbbf24' : '#86efac' }}>
+                    {job.unscheduled_steps! > 0
+                      ? `${job.unscheduled_steps} unscheduled / ${job.total_steps} total steps`
+                      : `All ${job.total_steps} steps scheduled ✓`
+                    }
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => onSchedule(job)}
@@ -915,7 +1063,12 @@ interface WeekMatrixProps {
 }
 
 function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, onEditSlot }: WeekMatrixProps) {
-  const projectSet = new Set(weekSlots.map(s => s.project_name));
+  // Sort slots within each day by start_time
+  const sortedSlots = [...weekSlots].sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return (a.start_time || '').localeCompare(b.start_time || '');
+  });
+  const projectSet = new Set(sortedSlots.map(s => s.project_name));
   const projects = Array.from(projectSet);
 
   const weekLabel = (() => {
@@ -1002,7 +1155,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                     </div>
                   </td>
                   {weekDays.map(date => {
-                    const slot = weekSlots.find(s => s.date === date && s.project_name === project);
+                    const slot = sortedSlots.find(s => s.date === date && s.project_name === project);
                     const todayCol = isToday(date);
                     if (!slot) {
                       return (
@@ -1017,33 +1170,42 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                     }
                     const crew = slot.assigned_crew.split(',').map(n => n.trim()).filter(Boolean);
                     const pct = progressPct(slot.progress);
+                    const colors = islandColor(slot.island);
                     return (
                       <td key={date} style={{ padding: 4 }}>
                         <button
                           onClick={() => onEditSlot(slot)}
                           style={{
-                            width: '100%', height: 54, borderRadius: 8,
+                            width: '100%', minHeight: 64, borderRadius: 8,
                             background: todayCol
-                              ? 'linear-gradient(135deg, rgba(14,165,233,0.2), rgba(56,189,248,0.1))'
-                              : 'linear-gradient(135deg, rgba(20,184,166,0.15), rgba(15,118,110,0.08))',
-                            border: `1px solid ${todayCol ? 'rgba(56,189,248,0.3)' : 'rgba(20,184,166,0.2)'}`,
+                              ? `linear-gradient(135deg, rgba(14,165,233,0.2), rgba(56,189,248,0.1))`
+                              : colors.bg,
+                            border: `1px solid ${todayCol ? 'rgba(56,189,248,0.3)' : colors.border}`,
                             cursor: 'pointer', textAlign: 'left', padding: '6px 8px',
                             display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                           }}
                         >
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#e2e8f0', lineHeight: 1.2, overflow: 'hidden', maxHeight: 28 }}>
-                            {slot.work_type || slot.notes?.slice(0, 20) || '—'}
+                          {slot.start_time && (
+                            <div style={{ fontSize: 9, fontWeight: 800, color: colors.text, marginBottom: 2 }}>
+                              {fmtTime(slot.start_time)}{slot.end_time ? ` – ${fmtTime(slot.end_time)}` : ''}
+                            </div>
+                          )}
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#e2e8f0', lineHeight: 1.2, overflow: 'hidden', flex: 1 }}>
+                            {slot.project_name.split('—')[1]?.trim() || slot.work_type || slot.project_name.slice(0, 24)}
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
                             <span style={{ fontSize: 9, color: '#94a3b8' }}>
-                              {crew.length > 0 ? `${crew.length} crew` : 'No crew'}
+                              {crew.length > 0 ? crew[0].split(' ')[0] : 'No crew'}{crew.length > 1 ? ` +${crew.length - 1}` : ''}
                             </span>
-                            {pct > 0 && (
-                              <span style={{ fontSize: 9, fontWeight: 700, color: pct >= 100 ? '#86efac' : '#7dd3fc' }}>
-                                {pct}%
-                              </span>
-                            )}
+                            <span style={{ fontSize: 9, color: '#64748b' }}>
+                              {slot.hours_estimated ? `${slot.hours_estimated}h` : ''}
+                            </span>
                           </div>
+                          {pct > 0 && (
+                            <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#22c55e' : '#14b8a6', borderRadius: 2 }} />
+                            </div>
+                          )}
                         </button>
                       </td>
                     );
