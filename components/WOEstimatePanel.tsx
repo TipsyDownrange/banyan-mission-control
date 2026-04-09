@@ -82,20 +82,12 @@ export interface EstimateTotals {
 
 // ─── GET rates by island ──────────────────────────────────────────────────────
 
-// Hawaii GET pass-on rates — source: tax.hawaii.gov/geninfo/countysurcharge/
-// ALL counties are 4.7120% effective through 12/31/2030
-// Maui adopted 0.5% surcharge effective 1/1/2024 (was 4.1667% before)
-const GET_RATES: Record<string, number> = {
-  Oahu: 4.712,
-  Maui: 4.712,
-  Kauai: 4.712,
-  Hawaii: 4.712,
-  Lanai: 4.712,
-  Molokai: 4.712,
-};
+// Import GET rates from single source of truth
+import { getGETRate } from '@/lib/tax-rates';
 
+// Alias for local use
 function getGetRate(island: string): number {
-  return GET_RATES[island] ?? 4.712;
+  return getGETRate(island);
 }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -369,6 +361,9 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
             });
           }
 
+          // Always use current canonical GET rate from source of truth
+          // (overrides stale rates saved in old estimates)
+          loaded.taxRate = String(getGetRate(wo.island));
           setData(loaded);
           if (estimateJson.updatedAt) setLastSaved(estimateJson.updatedAt);
         } else if (installSteps.length > 0) {

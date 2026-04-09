@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { GET_PASS_ON_RATE } from '@/lib/tax-rates';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -138,7 +139,7 @@ function calcTotals(est: EstimateData) {
 
   const totalBeforeTax = subtotal + overheadAmt + profitAmt;
 
-  const getRate = parseFloat(est.taxRate ?? '4.712') || 4.712;
+  const getRate = parseFloat(est.taxRate ?? '0') || GET_PASS_ON_RATE;
   const getAmt = totalBeforeTax * (getRate / 100);
 
   const grandTotal = totalBeforeTax + getAmt;
