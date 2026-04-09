@@ -154,7 +154,11 @@ export async function POST(req: Request) {
       site_visit_credit:     undefined,
       subtotal:              quote.subtotal || 0,
       get_amount:            quote.getAmount || 0,
-      get_rate:              quote.getRate ? String(quote.getRate) : '4.712',
+      get_rate:              (() => {
+        const r = parseFloat(String(quote.getRate || '4.712'));
+        // If it looks like a decimal (< 1), convert to percentage
+        return String(r < 1 ? Math.round(r * 100 * 1000) / 1000 : r);
+      })(),
       total:                 quote.total || 0,
       deposit:               quote.deposit || 0,
       exclusions_extra:      [],
