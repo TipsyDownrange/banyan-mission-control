@@ -249,8 +249,7 @@ export async function POST(req: Request) {
     ];
     if (!installationIncluded) standardExclusions.push('Installation');
 
-    // ORPHAN cols 16,17,19,20,21 — frozen, do not write
-    // hours_estimated (col 19 / T) write-back removed: canonical hours live in Install_Steps.Allotted_Hours
+    // ORPHAN cols 16,17,19,20,21 — frozen do not write
 
     const session = await getServerSession(authOptions);
     const preparedByUser = await getPreparedByUser(session?.user?.email);

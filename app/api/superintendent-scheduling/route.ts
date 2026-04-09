@@ -43,7 +43,8 @@ const FIELD_ROLES = new Set(['glazier', 'super', 'superintendent', 'journeyman',
 
 // ─── Row parsers ─────────────────────────────────────────────────────────────
 
-const DISPATCH_COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time','step_ids'];
+// DISPATCH_COLS mirrors lib/schemas.ts DISPATCH_SCHEDULE_SCHEMA — keep in sync
+const DISPATCH_COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time','step_ids','hours_actual','last_modified'];
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
   DISPATCH_COLS.forEach((c, i) => { s[c] = row[i] || ''; });
@@ -201,7 +202,7 @@ export async function GET(req: Request) {
 
     // Single batch request for all tabs
     const [dispatchRes, stepsRes, plansRes, completionsRes, usersRes, woRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:P5000' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:R5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:M5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:J5000' }),
@@ -465,9 +466,8 @@ export async function POST(req: Request) {
 
     const stepIdsStr = Array.isArray(step_ids) ? step_ids.join(',') : (step_ids || '');
 
-    // DISPATCH_COLS: slot_id(0), date(1), kID(2), project_name(3), island(4), men_required(5),
-    //   hours_estimated(6), assigned_crew(7), created_by(8), status(9), confirmations(10),
-    //   work_type(11), notes(12), start_time(13), end_time(14), step_ids(15)
+    // DISPATCH_COLS: slot_id(0)..step_ids(15) hours_actual(16) last_modified(17)
+    const now = new Date().toISOString();
     const newRow = [
       slot_id,
       date,
@@ -485,11 +485,13 @@ export async function POST(req: Request) {
       start_time,
       end_time,
       stepIdsStr,
+      '',               // hours_actual (col 16 Q) — empty on create
+      now,              // last_modified (col 17 R)
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: 'Dispatch_Schedule!A:P',
+      range: 'Dispatch_Schedule!A:R',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [newRow] },
     });
@@ -579,7 +581,7 @@ export async function PATCH(req: Request) {
     // Find the row with this slot_id
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Dispatch_Schedule!A2:P5000',
+      range: 'Dispatch_Schedule!A2:R5000',
     });
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => (r[0] || '') === slot_id);
@@ -592,7 +594,18 @@ export async function PATCH(req: Request) {
     const existing = [...rows[rowIndex]];
     while (existing.length < DISPATCH_COLS.length) existing.push('');
 
+    // Optimistic concurrency: reject if last_modified has changed since client loaded
+    const clientLastModified = updates.last_modified as string | undefined;
+    const serverLastModified = existing[17]; // last_modified col R
+    if (clientLastModified && serverLastModified && clientLastModified !== serverLastModified) {
+      return NextResponse.json({
+        error: 'Conflict: slot was modified by another user since you loaded it. Reload and try again.',
+        server_last_modified: serverLastModified,
+      }, { status: 409 });
+    }
+
     DISPATCH_COLS.forEach((col, i) => {
+      if (col === 'last_modified') return; // handled below
       if (col in updates) {
         const v = updates[col];
         existing[i] = Array.isArray(v) ? v.join(', ') : (v ?? existing[i]);
@@ -606,10 +619,13 @@ export async function PATCH(req: Request) {
       existing[14] = calcEndTime(st, hrs);
     }
 
+    // Always update last_modified on any write
+    existing[17] = new Date().toISOString();
+
     const sheetRow = rowIndex + 2; // 1-indexed + header row
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Dispatch_Schedule!A${sheetRow}:P${sheetRow}`,
+      range: `Dispatch_Schedule!A${sheetRow}:R${sheetRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [existing] },
     });
@@ -739,7 +755,7 @@ export async function DELETE(req: Request) {
     const sheetRow = rowIndex + 2;
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,
-      range: `Dispatch_Schedule!A${sheetRow}:P${sheetRow}`,
+      range: `Dispatch_Schedule!A${sheetRow}:R${sheetRow}`,
     });
 
     return NextResponse.json({ success: true, deleted_slot_id: slot_id });

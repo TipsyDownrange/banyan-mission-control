@@ -5,7 +5,6 @@ import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
-import { deriveWorkOrderStatus } from '@/lib/service-status';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -60,6 +59,61 @@ function colLetter(idx: number): string {
   return result;
 }
 
+
+async function deriveWOStatus(
+  sheets: ReturnType<typeof google.sheets>,
+  woId: string,
+): Promise<'new' | 'estimated' | 'in_progress' | 'completed'> {
+  const normalizedWoId = (woId || '').trim();
+  const strippedWoId = normalizedWoId.replace(/^WO-/i, '');
+
+  const [plansRes, stepsRes, completionsRes] = await Promise.all([
+    sheets.spreadsheets.values.get({
+      spreadsheetId: BACKEND_SHEET_ID,
+      range: 'Install_Plans!A2:G5000',
+    }),
+    sheets.spreadsheets.values.get({
+      spreadsheetId: BACKEND_SHEET_ID,
+      range: 'Install_Steps!A2:P5000',
+    }),
+    sheets.spreadsheets.values.get({
+      spreadsheetId: BACKEND_SHEET_ID,
+      range: 'Step_Completions!A2:I5000',
+    }),
+  ]);
+
+  const planIds = new Set(
+    (plansRes.data.values || [])
+      .filter((row) => {
+        const jobId = (row[1] || '').trim();
+        return jobId === normalizedWoId || jobId === strippedWoId;
+      })
+      .map((row) => row[0] || '')
+      .filter(Boolean),
+  );
+
+  if (planIds.size === 0) return 'new';
+
+  const steps = (stepsRes.data.values || []).filter((row) => planIds.has(row[1] || ''));
+  if (steps.length === 0) return 'new';
+
+  const stepIds = new Set(steps.map((row) => row[0] || '').filter(Boolean));
+  const completions = (completionsRes.data.values || []).filter((row) => stepIds.has(row[1] || ''));
+  if (completions.length === 0) return 'estimated';
+
+  const completionByStep = new Map<string, number>();
+  for (const row of completions) {
+    const stepId = row[1] || '';
+    const pct = Math.max(0, parseFloat(row[6] || '0') || 0);
+    completionByStep.set(stepId, Math.max(completionByStep.get(stepId) || 0, pct));
+  }
+
+  const completedSteps = steps.filter((row) => (completionByStep.get(row[0] || '') || 0) >= 100).length;
+  if (completedSteps === 0) return 'estimated';
+  if (completedSteps === steps.length) return 'completed';
+  return 'in_progress';
+}
+
 // PATCH — update an existing WO row by wo_id or wo_number
 // Body: { woId?, woNumber?, stage?, status?, assignedTo?, description?,
 //         scheduledDate?, startDate?, notes?, hoursEstimated?, hoursActual?,
@@ -110,6 +164,7 @@ export async function PATCH(req: Request) {
     // Sheet row number: data starts at row 2 (header is row 1)
     const sheetRow = targetRowIdx + 2;
     const now = hawaiiNow();
+    const resolvedWoId = (woId || rows[targetRowIdx]?.[COL_IDX.wo_id] || '').trim();
 
     // Build field updates
     const updates: { col: string; value: string }[] = [];
@@ -118,9 +173,7 @@ export async function PATCH(req: Request) {
       status:          'status',
       assignedTo:      'assigned_to',
       description:     'description',
-      // ORPHAN cols 16,17,19,20,21 — frozen, do not write
-      // scheduledDate (col 17), hoursEstimated (col 19), hoursActual (col 20), men_required (col 21) removed
-      // due_date (col 16) never accepted from UI
+      // ORPHAN cols 16,17,19,20,21 — frozen do not write
       startDate:       'start_date',
       notes:           'comments',
       // camelCase (legacy frontend compat)
@@ -157,17 +210,14 @@ export async function PATCH(req: Request) {
 
     const requestedStatus = status || (stage ? stageToStatus[stage] : undefined);
     let resolvedStatus = requestedStatus;
-
-    // WO status is derived server-side from Install_Steps + Step_Completions.
-    // Manual status values from the client are ignored whenever they conflict with actual step state.
-    if (requestedStatus !== 'lost') {
-      const rowWoId = (rows[targetRowIdx]?.[COL_IDX.wo_id] || '').trim();
-      const rowWoNumber = (rows[targetRowIdx]?.[COL_IDX.wo_number] || '').trim();
-      resolvedStatus = await deriveWorkOrderStatus({
-        woId: woId || rowWoId,
-        woNumber: woNumber || rowWoNumber,
-        sheets,
-      });
+    if (requestedStatus && requestedStatus !== 'lost' && resolvedWoId) {
+      const derivedStatus = await deriveWOStatus(sheets, resolvedWoId);
+      const normalizedRequestedStatus = requestedStatus === 'completed' ? 'closed' : requestedStatus;
+      const normalizedDerivedStatus = derivedStatus === 'completed' ? 'closed' : derivedStatus;
+      const stepStatusValues = new Set(['new', 'estimated', 'in_progress', 'completed', 'closed']);
+      if (stepStatusValues.has(normalizedRequestedStatus) && normalizedRequestedStatus !== normalizedDerivedStatus) {
+        resolvedStatus = normalizedDerivedStatus;
+      }
     }
 
     if (resolvedStatus) {
@@ -224,7 +274,7 @@ export async function PATCH(req: Request) {
     });
 
     // ─── Acceptance trigger: write bid_hours to Install_Steps ────────────────
-    if (requestedStatus === 'approved') {
+    if (resolvedStatus === 'approved') {
       try {
         const acceptedWoId = woId || rows[targetRowIdx]?.[COL_IDX.wo_id] || '';
         const estimateRes = await fetch(

@@ -103,12 +103,12 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
     approved:    wos.filter(w => w.status === 'approved'),
     scheduled:   wos.filter(w => w.status === 'scheduled'),
     in_progress: wos.filter(w => w.status === 'in_progress'),
-    closed:      wos.filter(w => w.status === 'closed').slice(0, 10),
+    closed:      wos.filter(w => ['closed', 'completed'].includes(w.status)).slice(0, 10),
     lost:        wos.filter(w => w.status === 'lost').slice(0, 5),
   };
 
-  const active = wos.filter(w => !['closed', 'lost'].includes(w.status));
-  const closed = wos.filter(w => w.status === 'closed');
+  const active = wos.filter(w => !['closed', 'completed', 'lost'].includes(w.status));
+  const closed = wos.filter(w => ['closed', 'completed'].includes(w.status));
 
   return {
     workOrders: wos,

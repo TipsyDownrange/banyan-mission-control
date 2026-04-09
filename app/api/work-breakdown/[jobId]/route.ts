@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { validateHeaders, INSTALL_PLANS_SCHEMA, INSTALL_STEPS_SCHEMA } from '@/lib/schemas';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -90,6 +91,31 @@ export async function GET(
 
   try {
     const sheets = await getSheets();
+
+    // Fetch header rows first for schema validation
+    const [plansHdrRes, stepsHdrRes] = await Promise.all([
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A1:Z1' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A1:Z1' }),
+    ]);
+
+    const plansHeaders = (plansHdrRes.data.values?.[0] || []) as string[];
+    const stepsHeaders = (stepsHdrRes.data.values?.[0] || []) as string[];
+
+    // Validate schemas — reject early if headers don't match canonical list
+    if (plansHeaders.length > 0) {
+      const plansCheck = validateHeaders(plansHeaders, INSTALL_PLANS_SCHEMA, 'Install_Plans');
+      if (!plansCheck.valid) {
+        console.warn('Install_Plans schema mismatch:', plansCheck.message);
+        return NextResponse.json({ error: plansCheck.message, schema_error: true }, { status: 422 });
+      }
+    }
+    if (stepsHeaders.length > 0) {
+      const stepsCheck = validateHeaders(stepsHeaders, INSTALL_STEPS_SCHEMA, 'Install_Steps');
+      if (!stepsCheck.valid) {
+        console.warn('Install_Steps schema mismatch:', stepsCheck.message);
+        return NextResponse.json({ error: stepsCheck.message, schema_error: true }, { status: 422 });
+      }
+    }
 
     const [plansRes, stepsRes, completionsRes] = await Promise.all([
       sheets.spreadsheets.values.get({

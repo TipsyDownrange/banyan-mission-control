@@ -147,8 +147,7 @@ export async function POST(req: Request) {
     // Non-fatal if it fails — WO creation still proceeds
     const folderUrl = await createWOFolderStructure(woId, customerName, island || city || '');
 
-    // Row matches HEADERS order from migration script
-    const row = [
+    const rowPrefix = [
       woId,           // wo_id
       wo,             // wo_number
       name,           // name
@@ -162,31 +161,41 @@ export async function POST(req: Request) {
       contactPhone || '',                              // contact_phone (K)
       contactEmail || '',                              // contact_email (L)
       customerName || businessName || '',              // customer_name (M)
-      systemType || '',      // system_type
-      assignedTo || '',      // assigned_to
-      today,                 // date_received
-      '',                    // due_date
-      '',                    // scheduled_date
-      '',                    // start_date
-      '',                    // hours_estimated
-      '',                    // hours_actual
-      '',                    // men_required
-      notesStr,              // comments
-      folderUrl || '',       // folder_url
-      '',                    // quote_total
-      '',                    // quote_status
-      now,                   // created_at
-      now,                   // updated_at
-      'banyan_dispatch',     // source
+      systemType || '',                                // system_type
+      assignedTo || '',                                // assigned_to
+      today,                                           // date_received
+    ];
+    // ORPHAN cols 16,17,19,20,21 — frozen do not write
+    const rowSuffix = [
+      notesStr,          // comments (W)
+      folderUrl || '',   // folder_url (X)
+      '',                // quote_total (Y)
+      '',                // quote_status (Z)
+      now,               // created_at (AA)
+      now,               // updated_at (AB)
+      'banyan_dispatch', // source (AC)
     ];
 
-    await sheets.spreadsheets.values.append({
+    const appendRes = await sheets.spreadsheets.values.append({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A:AC`,
+      range: `${TAB}!A:P`,
       valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS',
-      requestBody: { values: [row] },
+      requestBody: { values: [rowPrefix] },
     });
+
+    const updatedRange = appendRes.data.updates?.updatedRange || '';
+    const rowMatch = updatedRange.match(/![A-Z]+(\d+):[A-Z]+\d+$/);
+    const sheetRow = rowMatch ? parseInt(rowMatch[1], 10) : NaN;
+
+    if (Number.isFinite(sheetRow)) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: `${TAB}!W${sheetRow}:AC${sheetRow}`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [rowSuffix] },
+      });
+    }
 
     // Fire-and-forget customer DB backfeed — never blocks WO creation
     fireAndForgetCustomerUpdate({

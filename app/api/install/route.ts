@@ -1,10 +1,3 @@
-/**
- * GET /api/install?kID=xxx
- *
- * REWIRED 2026-04-09: Install_Tracking (legacy Smartsheet backfill) removed.
- * Now reads from Install_Plans + Install_Steps + Step_Completions — the canonical tables.
- * Shape kept compatible with previous response so InstallTrackingPanel still renders.
- */
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
@@ -12,14 +5,57 @@ import { getGoogleAuth } from '@/lib/gauth';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
-function rowsToObjects(rows: string[][]): Record<string, string>[] {
-  if (!rows || rows.length < 2) return [];
-  const [headers, ...data] = rows;
-  return data.map(row => {
-    const obj: Record<string, string> = {};
-    headers.forEach((h, i) => { obj[h.trim()] = (row[i] || '').trim(); });
-    return obj;
-  });
+function rowToInstallPlan(r: string[]) {
+  return {
+    install_plan_id: r[0] || '',
+    job_id: r[1] || '',
+    system_type: r[2] || '',
+    location: r[3] || '',
+    estimated_total_hours: parseFloat(r[4]) || 0,
+    estimated_qty: parseInt(r[5]) || 1,
+    status: r[6] || 'Active',
+  };
+}
+
+function rowToInstallStep(r: string[]) {
+  return {
+    install_step_id: r[0] || '',
+    install_plan_id: r[1] || '',
+    step_seq: parseInt(r[2]) || 0,
+    step_name: r[3] || '',
+    allotted_hours: parseFloat(r[4]) || 0,
+    acceptance_criteria: r[5] || '',
+    required_photo_yn: r[6] || 'N',
+    notes: r[7] || '',
+    category: r[8] || '',
+    planned_start_date: r[9] || '',
+    planned_end_date: r[10] || '',
+    assigned_crew: r[11] || '',
+    predecessor_step_id: r[12] || '',
+    bid_hours: r[13] ? parseFloat(r[13]) : null,
+    planned_hours: r[14] ? parseFloat(r[14]) : null,
+    actual_hours: r[15] ? parseFloat(r[15]) : null,
+  };
+}
+
+function rowToCompletion(r: string[]) {
+  return {
+    step_completion_id: r[0] || '',
+    install_step_id: r[1] || '',
+    mark_id: r[2] || '',
+    date: r[3] || '',
+    crew_lead: r[4] || '',
+    hours_spent: parseFloat(r[5]) || 0,
+    percent_complete: parseFloat(r[6]) || 0,
+    notes: r[7] || '',
+    photo_urls: r[8] || '',
+  };
+}
+
+function jobIdMatches(jobId: string, targetId: string): boolean {
+  if (jobId === targetId) return true;
+  const strip = (value: string) => value.replace(/^WO-/i, '');
+  return strip(jobId) === strip(targetId);
 }
 
 export async function GET(req: Request) {
@@ -36,95 +72,90 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const [plansRes, stepsRes, completionsRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A1:Z5000' }),
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A1:Z5000' }),
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A1:Z5000' }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Install_Plans!A2:G5000',
+      }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Install_Steps!A2:P5000',
+      }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Step_Completions!A2:I5000',
+      }),
     ]);
 
-    const plans      = rowsToObjects((plansRes.data.values || []) as string[][]);
-    const steps      = rowsToObjects((stepsRes.data.values || []) as string[][]);
-    const completions = rowsToObjects((completionsRes.data.values || []) as string[][]);
+    const allPlans = (plansRes.data.values || []).map(rowToInstallPlan);
+    const allSteps = (stepsRes.data.values || []).map(rowToInstallStep);
+    const allCompletions = (completionsRes.data.values || []).map(rowToCompletion);
 
-    // Filter plans by kID if provided
-    const filteredPlans = kID
-      ? plans.filter(p => p['Job_ID'] === kID || p['kID'] === kID)
-      : plans;
+    const plans = kID
+      ? allPlans.filter((plan) => jobIdMatches(plan.job_id, kID) && plan.system_type !== '__JOB_DOCS__')
+      : allPlans.filter((plan) => plan.system_type !== '__JOB_DOCS__');
+    const planIds = new Set(plans.map((plan) => plan.install_plan_id));
+    const steps = allSteps.filter((step) => planIds.has(step.install_plan_id));
+    const stepIds = new Set(steps.map((step) => step.install_step_id));
+    const completions = allCompletions.filter((completion) => stepIds.has(completion.install_step_id));
 
-    const planIds = new Set(filteredPlans.map(p =>
-      p['Install_Plan_ID'] || p['Plan_ID'] || p['plan_id'] || ''
-    ).filter(Boolean));
+    const planById = new Map(plans.map((plan) => [plan.install_plan_id, plan]));
+    const completionsByStep = new Map<string, ReturnType<typeof rowToCompletion>[]>();
+    for (const completion of completions) {
+      const list = completionsByStep.get(completion.install_step_id) || [];
+      list.push(completion);
+      completionsByStep.set(completion.install_step_id, list);
+    }
 
-    const filteredSteps = steps.filter(s => {
-      const planRef = s['Install_Plan_ID'] || s['Plan_ID'] || s['plan_id'] || '';
-      return planIds.has(planRef);
-    });
-
-    const stepIds = new Set(filteredSteps.map(s =>
-      s['Install_Step_ID'] || s['Step_ID'] || s['step_id'] || ''
-    ).filter(Boolean));
-
-    const filteredCompletions = completions.filter(c => {
-      const stepRef = c['Install_Step_ID'] || c['Step_ID'] || c['step_id'] || '';
-      return stepIds.has(stepRef);
-    });
-
-    // Map to the shape previously returned by Install_Tracking for compatibility
-    const items = filteredSteps.map(step => {
-      const stepId = step['Install_Step_ID'] || step['Step_ID'] || step['step_id'] || '';
-      const plan = filteredPlans.find(p =>
-        (p['Install_Plan_ID'] || p['Plan_ID'] || '') === (step['Install_Plan_ID'] || step['Plan_ID'] || '')
-      );
-      const comp = filteredCompletions.filter(c =>
-        (c['Install_Step_ID'] || c['Step_ID'] || '') === stepId
-      );
-      const latestComp = comp[comp.length - 1];
-      const pct = latestComp ? parseFloat(latestComp['Percent_Complete'] || '0') : 0;
-      const status = latestComp
-        ? (pct >= 100 ? 'Complete' : pct > 0 ? 'In Progress' : 'Not Started')
-        : 'Not Started';
-
+    const items = steps.map((step) => {
+      const plan = planById.get(step.install_plan_id);
+      const stepCompletions = completionsByStep.get(step.install_step_id) || [];
+      const pctComplete = stepCompletions.reduce((max, completion) => Math.max(max, completion.percent_complete || 0), 0);
+      const hoursCompleted = stepCompletions.reduce((sum, completion) => sum + (completion.hours_spent || 0), 0);
+      const completedDate = stepCompletions
+        .map((completion) => completion.date)
+        .filter(Boolean)
+        .sort()
+        .slice(-1)[0] || '';
       return {
-        install_id:     stepId,
-        kID:            plan?.['Job_ID'] || plan?.['kID'] || kID,
-        location_ref:   step['Location'] || plan?.['Location'] || '',
-        system_type:    step['System_Type'] || plan?.['System_Type'] || '',
-        system_ref:     plan?.['Assembly_ID'] || '',
-        step_name:      step['Step_Name'] || step['step_name'] || '',
-        step_sequence:  parseInt(step['Step_Seq'] || step['step_seq'] || '0') || 0,
-        hours_assigned: parseFloat(step['Allotted_Hours'] || step['allotted_hours'] || '0') || 0,
-        hours_completed: latestComp ? parseFloat(latestComp['Hours_Spent'] || '0') || 0 : 0,
-        pct_complete:   pct,
-        status,
-        assigned_to:    step['Assigned_Crew'] || '',
-        target_date:    step['Planned_End_Date'] || '',
-        completed_date: latestComp?.['Completed_At']?.slice(0, 10) || '',
-        qc_passed:      status === 'Complete',
-        qc_notes:       latestComp?.['Notes'] || '',
-        evidence_ref:   latestComp?.['Photo_URL'] || '',
+        install_id: step.install_step_id,
+        kID: plan?.job_id || '',
+        location_ref: plan?.location || '',
+        system_type: plan?.system_type || '',
+        system_ref: step.install_plan_id,
+        step_name: step.step_name,
+        step_sequence: step.step_seq,
+        hours_assigned: step.bid_hours ?? step.planned_hours ?? step.allotted_hours,
+        hours_completed: hoursCompleted,
+        pct_complete: pctComplete,
+        status: pctComplete >= 100 ? 'Complete' : pctComplete > 0 ? 'In Progress' : 'Not Started',
+        assigned_to: step.assigned_crew,
+        target_date: step.planned_end_date || step.planned_start_date || '',
+        completed_date: pctComplete >= 100 ? completedDate : '',
+        qc_passed: pctComplete >= 100,
+        qc_notes: stepCompletions.map((completion) => completion.notes).filter(Boolean).join(' | '),
+        evidence_ref: stepCompletions.map((completion) => completion.photo_urls).filter(Boolean).join(' | '),
       };
     });
 
-    const projects = kID ? [kID] : [...new Set(items.map(r => r.kID).filter(Boolean))];
-    const summary = projects.map(pid => {
-      const pRows = items.filter(r => r.kID === pid);
-      const total = pRows.length;
-      const complete = pRows.filter(r => r.status === 'Complete').length;
-      const inProgress = pRows.filter(r => r.status === 'In Progress').length;
-      const qcPassed = pRows.filter(r => r.qc_passed).length;
-      const qcFailed = 0; // no Failed QC concept in new schema
-      const locations = [...new Set(pRows.map(r => r.location_ref))];
-      const systems = [...new Set(pRows.map(r => r.system_type).filter(Boolean))];
-      const hoursAssigned = pRows.reduce((s, r) => s + r.hours_assigned, 0);
-      const hoursCompleted = pRows.reduce((s, r) => s + r.hours_completed, 0);
+    const projectIds = [...new Set(items.map((item) => item.kID).filter(Boolean))];
+    const summary = projectIds.map((projectId) => {
+      const projectItems = items.filter((item) => item.kID === projectId);
+      const total = projectItems.length;
+      const complete = projectItems.filter((item) => item.status === 'Complete').length;
+      const inProgress = projectItems.filter((item) => item.status === 'In Progress').length;
+      const hoursAssigned = projectItems.reduce((sum, item) => sum + item.hours_assigned, 0);
+      const hoursCompleted = projectItems.reduce((sum, item) => sum + item.hours_completed, 0);
+      const locations = [...new Set(projectItems.map((item) => item.location_ref).filter(Boolean))];
+      const systems = [...new Set(projectItems.map((item) => item.system_type).filter(Boolean))];
       return {
-        kID: pid,
+        kID: projectId,
         totalSteps: total,
         completedSteps: complete,
         inProgressSteps: inProgress,
         notStartedSteps: total - complete - inProgress,
-        qcFailed,
+        qcFailed: 0,
         pctComplete: total > 0 ? Math.round((complete / total) * 100) : 0,
-        qcPassRate: complete > 0 ? Math.round((qcPassed / complete) * 100) : 0,
+        qcPassRate: complete > 0 ? 100 : 0,
         locationCount: locations.length,
         locations,
         systems,

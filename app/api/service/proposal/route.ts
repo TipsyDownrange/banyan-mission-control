@@ -4,13 +4,15 @@ import { hawaiiToday } from '@/lib/hawaii-time';
  * Accepts quote data from QuoteBuilder, generates PDF, uploads to Drive, emails customer
  */
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { generateServiceWOPDF, type ServiceWOData } from '@/lib/pdf-service-wo';
 import { google } from 'googleapis';
-import { authOptions } from '@/lib/auth';
-import { getPreparedByUser } from '@/lib/users';
 
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
+
+function asRequiredNumber(value: unknown): number {
+  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
 
 async function uploadPDFToDrive(
   pdfBuffer: Buffer,
@@ -31,7 +33,6 @@ async function uploadPDFToDrive(
 
     let parentId = BANYAN_DRIVE_ID;
 
-    // If we have a WO ID, find the WO folder and place PDF in its Quotes/ subfolder
     if (woId) {
       const woSearch = await drive.files.list({
         q: `name contains '${woId}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
@@ -43,7 +44,6 @@ async function uploadPDFToDrive(
       });
       if (woSearch.data.files && woSearch.data.files.length > 0) {
         const woFolderId = woSearch.data.files[0].id!;
-        // Look for Quotes/ subfolder
         const quotesSearch = await drive.files.list({
           q: `name = 'Quotes' and mimeType = 'application/vnd.google-apps.folder' and '${woFolderId}' in parents and trashed = false`,
           supportsAllDrives: true,
@@ -132,49 +132,6 @@ export async function POST(req: Request) {
 
     if (!quote) return NextResponse.json({ error: 'quote object required' }, { status: 400 });
 
-    const requiredFieldErrors: string[] = [];
-    const requiredString = (label: string, value: unknown) => {
-      if (typeof value !== 'string' || value.trim() === '') requiredFieldErrors.push(label);
-    };
-    const requiredNumber = (label: string, value: unknown) => {
-      const parsed = Number(value);
-      if (value === null || value === undefined || value === '' || Number.isNaN(parsed)) requiredFieldErrors.push(label);
-    };
-
-    requiredString('customer_name', quote.customerName);
-    requiredNumber('total', quote.total);
-    requiredNumber('get_amount', quote.getAmount);
-    requiredNumber('get_rate', quote.getRate);
-    requiredNumber('deposit', quote.deposit);
-
-    if (requiredFieldErrors.length > 0) {
-      return NextResponse.json(
-        { error: `Proposal rejected: missing or invalid fields: ${requiredFieldErrors.join(', ')}` },
-        { status: 422 }
-      );
-    }
-
-    // QuoteBuilder already distributes overhead+profit proportionally into
-    // materialsTotal and laborSubtotal. DO NOT add them again here.
-    // Customer sees: Materials + Labor + GET = Total (markup already baked in)
-
-    const session = await getServerSession(authOptions);
-    const preparedByUser = await getPreparedByUser(session?.user?.email);
-    const sessionPreparedBy = session?.user?.email ? {
-      name: session.user?.name || session.user.email || '',
-      email: session.user.email || '',
-      phone: '',
-    } : null;
-    const preparedBy = quote.preparedBy || (preparedByUser ? {
-      name: preparedByUser.name,
-      email: preparedByUser.email,
-      phone: preparedByUser.phone,
-    } : sessionPreparedBy);
-
-    if (!preparedBy) {
-      return NextResponse.json({ error: 'Proposal rejected: unable to resolve prepared_by from session or Users_Roles' }, { status: 422 });
-    }
-
     const pdfData: ServiceWOData = {
       wo_number:             quote.woNumber || 'DRAFT',
       quote_date:            quote.quoteDate || hawaiiToday(),
@@ -189,33 +146,56 @@ export async function POST(req: Request) {
       line_items:            quote.lineItems || [],
       installation_included: quote.installationIncluded ?? true,
       materials_total:       quote.materialsTotal || 0,
-      labor_subtotal:        quote.laborSubtotal || quote.labor?.subtotal || 0,  // check both paths: direct field or nested labor.subtotal
-      equipment_charges:     0, // hidden from proposal — baked into labor
-      additional_charges:    [], // hidden from proposal
-      site_visit_fee:        undefined, // hidden from proposal
+      labor_subtotal:        quote.laborSubtotal || quote.labor?.subtotal || 0,
+      equipment_charges:     0,
+      additional_charges:    [],
+      site_visit_fee:        undefined,
       site_visit_credit:     undefined,
       subtotal:              quote.subtotal || 0,
       get_amount:            quote.getAmount || 0,
       get_rate:              (() => {
         const r = parseFloat(String(quote.getRate || '4.712'));
-        // If it looks like a decimal (< 1), convert to percentage
         return String(r < 1 ? Math.round(r * 100 * 1000) / 1000 : r);
       })(),
       total:                 quote.total || 0,
       deposit:               quote.deposit || 0,
       exclusions_extra:      [],
       validity_days:         quote.validityDays || 30,
-      prepared_by:           preparedBy,
+      prepared_by:           quote.preparedBy || {
+        name: 'Joey Ritthaler',
+        email: 'joey@kulaglass.com',
+        phone: '808-242-8999 ext. 22',
+      },
     };
 
-    // Generate PDF
+    const validationErrors: string[] = [];
+    if (!String(pdfData.customer_name || '').trim()) validationErrors.push('customer_name is required');
+
+    const requiredNumbers = [
+      ['total', pdfData.total],
+      ['get_amount', pdfData.get_amount],
+      ['get_rate', pdfData.get_rate],
+      ['deposit', pdfData.deposit],
+    ] as const;
+
+    for (const [field, value] of requiredNumbers) {
+      const parsed = asRequiredNumber(value);
+      if (!Number.isFinite(parsed)) validationErrors.push(`${field} must be present and numeric`);
+    }
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json({ error: 'Proposal validation failed', details: validationErrors }, { status: 400 });
+    }
+
     const pdfBuffer = await generateServiceWOPDF(pdfData);
     const filename = `Proposal-WO-${pdfData.wo_number}-${pdfData.quote_date}.pdf`;
 
-    // Upload to Drive — use WO ID to place file in the right folder
-    const driveLink = await uploadPDFToDrive(pdfBuffer, filename, quote.woId || quote.woNumber ? `WO-${(quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, '')}` : undefined);
+    const driveLink = await uploadPDFToDrive(
+      pdfBuffer,
+      filename,
+      quote.woId || quote.woNumber ? `WO-${(quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, '')}` : undefined,
+    );
 
-    // Email customer (optional)
     let emailSent = false;
     if (sendEmail && pdfData.customer_email) {
       emailSent = await emailCustomer({
@@ -244,7 +224,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Return PDF as download if not emailing
     if (!sendEmail) {
       return new Response(pdfBuffer as unknown as BodyInit, {
         headers: {
@@ -261,7 +240,6 @@ export async function POST(req: Request) {
       drive_link: driveLink,
       email_sent: emailSent,
     });
-
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('Proposal generation error:', msg);

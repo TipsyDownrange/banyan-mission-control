@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
-import { GET_PASS_ON_RATE } from '@/lib/tax-rates';
-// taxRate always from lib/tax-rates.ts — JSON value ignored to prevent stale data
-const CANONICAL_TAX_RATE = String(GET_PASS_ON_RATE); // '4.712'
+import { GET_PASS_ON_RATE, getGETRate } from '@/lib/tax-rates';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Carls_Method';
@@ -38,6 +36,21 @@ async function ensureTab(sheets: ReturnType<typeof google.sheets>) {
   }
 }
 
+async function getWOIsland(sheets: ReturnType<typeof google.sheets>, woId: string): Promise<string> {
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'Service_Work_Orders!A2:F5000',
+  });
+  const normalized = woId.trim();
+  const stripped = normalized.replace(/^WO-/i, '');
+  const row = (res.data.values || []).find((current) => {
+    const currentWoId = (current[0] || '').trim();
+    const currentWoNumber = (current[1] || '').trim();
+    return currentWoId === normalized || currentWoId === `WO-${stripped}` || currentWoNumber === stripped;
+  });
+  return (row?.[5] || '').trim();
+}
+
 // GET /api/service/estimate?wo=<woId>
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -64,8 +77,9 @@ export async function GET(req: Request) {
 
     try {
       const data = JSON.parse(row[2] || '{}');
+      const island = await getWOIsland(sheets, woId);
       // taxRate always from lib/tax-rates.ts — JSON value ignored to prevent stale data
-      data.taxRate = CANONICAL_TAX_RATE;
+      data.taxRate = String(getGETRate(island || '') || GET_PASS_ON_RATE);
       return NextResponse.json({ data, updatedAt: row[3] });
     } catch {
       return NextResponse.json({ data: null });

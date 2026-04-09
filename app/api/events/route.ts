@@ -1,167 +1,147 @@
+/**
+ * GET /api/events
+ *
+ * Read Field_Events_V1 with filters. Prerequisite for PM module.
+ *
+ * Query params:
+ *   kID         — filter by target_kID (exact match)
+ *   event_type  — filter by event_type (INSTALL_STEP|FIELD_ISSUE|DAILY_LOG|PHOTO_ONLY|NOTE)
+ *   status      — filter by issue_status (OPEN|RESOLVED|CLOSED) — applies to FIELD_ISSUE events
+ *   date_from   — ISO date string, inclusive (compares against event_occurred_at)
+ *   date_to     — ISO date string, inclusive
+ *   limit       — max rows to return (default 500, max 2000)
+ *   offset      — skip N rows (for pagination)
+ *
+ * Returns:
+ *   { events: FieldEvent[], total: number, filtered: number }
+ */
+
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const TAB = 'Field_Events_V1';
 
-// Normalize event type strings from sheet
-function normalizeType(raw: string): string {
-  const t = raw.toUpperCase().replace(/[\s-]/g, '_');
-  if (t.includes('ISSUE')) return 'FIELD_ISSUE';
-  if (t.includes('DAILY') || t.includes('LOG')) return 'DAILY_LOG';
-  if (t.includes('INSTALL')) return 'INSTALL_STEP';
-  if (t.includes('QA')) return 'QA_CHECK';
-  if (t.includes('PHOTO')) return 'PHOTO_ONLY';
-  return 'NOTE';
+// Column indices matching Field App's lib/events.ts schema
+const COL = {
+  event_id:             0,
+  target_kID:           1,
+  event_type:           2,
+  event_occurred_at:    3,
+  event_recorded_at:    4,
+  performed_by:         5,
+  recorded_by:          6,
+  source_system:        7,
+  evidence_ref:         8,
+  evidence_type:        9,
+  location_group:       10,
+  unit_reference:       11,
+  qa_step_code:         12,
+  qa_status:            13,
+  issue_category:       14,
+  severity:             15,
+  blocking_flag:        16,
+  assigned_to:          17,
+  assigned_role:        18,
+  responsible_party:    19,
+  auto_flag:            20,
+  manpower_count:       21,
+  work_performed:       22,
+  delays_blockers:      23,
+  materials_received:   24,
+  inspections_visitors: 25,
+  weather_context:      26,
+  notes:                27,
+  environment:          28,
+  source_version:       29,
+  is_valid:             30,
+  issue_status:         31,
+};
+
+function rowToEvent(row: string[]): Record<string, string> {
+  const obj: Record<string, string> = {};
+  for (const [key, idx] of Object.entries(COL)) {
+    obj[key] = row[idx] || '';
+  }
+  return obj;
 }
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const kID = searchParams.get('kID') || '';
-    const type = searchParams.get('type') || '';
-    const limit = parseInt(searchParams.get('limit') || '50');
+  const session = await getServerSession();
+  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
+  const { searchParams } = new URL(req.url);
+  const kID        = searchParams.get('kID') || '';
+  const eventType  = searchParams.get('event_type') || '';
+  const status     = searchParams.get('status') || '';
+  const dateFrom   = searchParams.get('date_from') || '';
+  const dateTo     = searchParams.get('date_to') || '';
+  const limit      = Math.min(parseInt(searchParams.get('limit') || '500'), 2000);
+  const offset     = parseInt(searchParams.get('offset') || '0');
+
+  try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const [eventsRes, entitiesRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Field_Events_V1!A2:L500' }),
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Core_Entities!A2:C200' }),
-    ]);
-
-    // Build kID → project name map
-    const projectNames: Record<string, string> = {};
-    for (const r of entitiesRes.data.values || []) {
-      if (r[0] && r[2]) projectNames[r[0]] = r[2];
-    }
-
-    let events = (eventsRes.data.values || [])
-      .filter(r => r[0]) // must have event_id
-      .map(r => ({
-        id:          r[0],
-        kID:         r[1] || '',
-        projectName: projectNames[r[1]] || r[1] || 'Unknown',
-        type:        normalizeType(r[2] || 'NOTE'),
-        rawType:     r[2] || '',
-        occurredAt:  r[3] || '',
-        recordedAt:  r[4] || '',
-        performedBy: r[5] || '',
-        recordedBy:  r[6] || '',
-        source:      r[7] || '',
-        note:        r[9] || r[10] || '', // evidence_type or location_group often has the note text
-        location:    r[10] || '',
-        unit:        r[11] || '',
-      }));
-
-    // Filters
-    if (kID) events = events.filter(e => e.kID === kID);
-    if (type) events = events.filter(e => e.type === type.toUpperCase());
-
-    // Sort newest first, limit
-    events = events
-      .sort((a, b) => new Date(b.recordedAt || b.occurredAt).getTime() - new Date(a.recordedAt || a.occurredAt).getTime())
-      .slice(0, limit);
-
-    const issues = events.filter(e => e.type === 'FIELD_ISSUE');
-
-    return NextResponse.json({ events, issues, total: events.length });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg, events: [], issues: [] }, { status: 500 });
-  }
-}
-
-export async function PATCH(req: Request) {
-  try {
-    const body = await req.json();
-    const { event_id, status, assigned_to } = body;
-    if (!event_id) return NextResponse.json({ error: 'event_id required' }, { status: 400 });
-
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-    const sheets = google.sheets({ version: 'v4', auth });
-
-    // Read all events to find the row
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Field_Events_V1!A2:L500',
-    });
-    const rows = res.data.values || [];
-    const rowIndex = rows.findIndex(r => r[0] === event_id);
-    if (rowIndex === -1) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
-
-    // Update columns as needed — we use the note/source columns for status and assigned_to
-    // Column H (index 7) = source — we'll repurpose trailing text for status
-    // For now, update in-memory and write back the row
-    const row = [...rows[rowIndex]];
-    // Extend row to 12 columns if needed
-    while (row.length < 12) row.push('');
-
-    // We'll append status/assigned info to the source field (col H, index 7)
-    const updates: string[] = [];
-    if (status) updates.push(`status:${status}`);
-    if (assigned_to) updates.push(`assigned:${assigned_to}`);
-
-    if (updates.length > 0) {
-      // Store metadata in a structured way in the source column
-      const existing = row[7] || '';
-      const cleaned = existing.replace(/\[MC:.*?\]/g, '').trim();
-      row[7] = `${cleaned} [MC:${updates.join(',')}]`.trim();
-
-      const sheetRow = rowIndex + 2; // +2 because A2 is the start
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SHEET_ID,
-        range: `Field_Events_V1!A${sheetRow}:L${sheetRow}`,
-        valueInputOption: 'RAW',
-        requestBody: { values: [row] },
-      });
-    }
-
-    return NextResponse.json({ ok: true, event_id });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { kID, description, severity, type } = body;
-    if (!kID || !description) return NextResponse.json({ error: 'kID and description required' }, { status: 400 });
-
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-    const sheets = google.sheets({ version: 'v4', auth });
-
-    const now = new Date().toISOString();
-    const eventId = `EVT-${Date.now()}`;
-    const eventType = type || 'FIELD_ISSUE';
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: 'Field_Events_V1!A:L',
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [[
-          eventId,    // A: event_id
-          kID,        // B: kID
-          eventType,  // C: event_type
-          now,        // D: occurred_at
-          now,        // E: recorded_at
-          '',         // F: performed_by
-          '',         // G: recorded_by
-          `[MC:severity:${severity || 'MEDIUM'}]`, // H: source
-          '',         // I
-          description,// J: note
-          '',         // K: location
-          '',         // L: unit
-        ]],
-      },
+      range: `${TAB}!A2:AF5000`,
     });
 
-    return NextResponse.json({ ok: true, event_id: eventId });
+    const rows = (res.data.values || []) as string[][];
+    const total = rows.length;
+
+    // Apply filters
+    const filtered = rows.filter(row => {
+      // Skip soft-deleted
+      if (row[COL.is_valid] === 'FALSE') return false;
+
+      if (kID && row[COL.target_kID] !== kID) return false;
+
+      if (eventType && row[COL.event_type]?.toUpperCase() !== eventType.toUpperCase()) return false;
+
+      if (status && row[COL.issue_status]?.toUpperCase() !== status.toUpperCase()) return false;
+
+      if (dateFrom) {
+        const occurred = row[COL.event_occurred_at] || '';
+        if (occurred && occurred < dateFrom) return false;
+      }
+      if (dateTo) {
+        const occurred = row[COL.event_occurred_at] || '';
+        // dateTo is inclusive — compare up to end of day
+        const dayEnd = dateTo.length === 10 ? `${dateTo}T23:59:59` : dateTo;
+        if (occurred && occurred > dayEnd) return false;
+      }
+
+      return true;
+    });
+
+    // Sort by event_occurred_at descending (most recent first)
+    filtered.sort((a, b) => {
+      const ta = a[COL.event_occurred_at] || '';
+      const tb = b[COL.event_occurred_at] || '';
+      return tb.localeCompare(ta);
+    });
+
+    // Paginate
+    const page = filtered.slice(offset, offset + limit).map(rowToEvent);
+
+    return NextResponse.json({
+      events: page,
+      total,
+      filtered: filtered.length,
+      offset,
+      limit,
+      hasMore: offset + limit < filtered.length,
+    });
+
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    console.error('GET /api/events error:', msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

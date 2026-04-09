@@ -93,6 +93,7 @@ function getGetRate(island: string): number {
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
+const DEFAULT_LABOR_RATE = String(LABOR_RATES.journeyman);
 
 const INP: React.CSSProperties = {
   width: '100%',
@@ -136,8 +137,6 @@ function sumItems(items: LineItem[]): number {
 }
 
 // ─── Default state factory ────────────────────────────────────────────────────
-
-const DEFAULT_LABOR_RATE = String(LABOR_RATES.journeyman);
 
 function defaultData(wo: WorkOrder): WOEstimateData {
   const driveEst = estimateDriveTime(wo.address || '', wo.island || 'Maui');
