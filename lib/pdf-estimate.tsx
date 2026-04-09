@@ -199,7 +199,7 @@ function SubtotalRow({ label, value }: { label: string; value: number }) {
       flexDirection: 'row',
       padding: '5 10',
       borderTop: `1 solid ${C.border}`,
-      backgroundColor: `${C.blue}12`,
+      backgroundColor: `rgba(37,99,235,0.07)`,
     }}>
       <Text style={{ flex: 1, fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.blue, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</Text>
       <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.navy, textAlign: 'right', width: 100 }}>{fmt(value)}</Text>
@@ -313,8 +313,8 @@ function EstimatePDF({ input }: { input: EstimatePDFInput }) {
         </View>
 
         {/* Markup Section (internal) */}
-        <View style={{ backgroundColor: `${C.amber}10`, border: `1 solid ${C.amber}40`, borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
-          <View style={{ backgroundColor: `${C.amber}22`, padding: '5 12', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ backgroundColor: `rgba(146,64,14,0.06)`, border: `1 solid rgba(146,64,14,0.25)`, borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
+          <View style={{ backgroundColor: `rgba(146,64,14,0.13)`, padding: '5 12', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.amber, textTransform: 'uppercase', letterSpacing: 0.6 }}>Markup (Internal)</Text>
             <Text style={{ fontSize: 7.5, color: `${C.amber}cc` }}>— Kula Glass labor-equal overhead method</Text>
           </View>
@@ -368,8 +368,8 @@ function EstimatePDF({ input }: { input: EstimatePDFInput }) {
         {/* Internal footer notice */}
         <View style={{
           padding: '8 14',
-          backgroundColor: `${C.red}10`,
-          border: `1 solid ${C.red}40`,
+          backgroundColor: `rgba(185,28,28,0.06)`,
+          border: `1 solid rgba(185,28,28,0.25)`,
           borderRadius: 8,
           marginBottom: 10,
         }}>
