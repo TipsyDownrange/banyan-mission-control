@@ -1,50 +1,41 @@
-/**
- * POST /api/service/quote/validate
- *
- * Server-side validation and calculation of a Carls_Method estimate JSON.
- * QuoteBuilder should call this before allowing proposal generation.
- *
- * Body: { estimate: CarlsMethodData, woId?: string }
- * Returns: { valid: true, calculations: {...} } | { valid: false, errors: string[] }
- */
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { GET_PASS_ON_RATE, GET_DECIMAL_RATE } from '@/lib/tax-rates';
 
-// taxRate always from lib/tax-rates.ts — JSON value ignored to prevent stale data
-const CANONICAL_TAX_RATE = GET_PASS_ON_RATE; // 4.712
-const CANONICAL_TAX_DECIMAL = GET_DECIMAL_RATE; // 0.04712
+type EstimateData = {
+  aluminum?: Array<{ amount?: string | number | null }>;
+  glass?: Array<{ amount?: string | number | null }>;
+  misc?: Record<string, string | number | null | undefined>;
+  miscExtra?: Array<{ amount?: string | number | null }>;
+  other?: Record<string, string | number | null | undefined>;
+  otherExtra?: Array<{ amount?: string | number | null }>;
+  labor?: Array<{
+    hours?: string | number | null;
+    rate?: string | number | null;
+    amount?: string | number | null;
+  }>;
+  driveTime?: {
+    trips?: string | number | null;
+    hoursPerTrip?: string | number | null;
+    rate?: string | number | null;
+  };
+  markup?: {
+    overheadOverride?: string | number | null;
+    profitPct?: string | number | null;
+  };
+  xModifier?: string | number | null;
+  taxRate?: string | number | null;
+};
 
-interface LaborLine   { hours: string | number; rate: string | number; amount?: string | number; }
-interface MaterialLine { amount: string | number; }
-interface MiscFields   { [key: string]: unknown; }
-interface DriveTime    { trips?: string | number; hoursPerTrip?: string | number; rate?: string | number; }
-interface Markup       { overheadOverride?: string | number; profitPct?: string | number; }
-
-interface EstimateData {
-  aluminum?: MaterialLine[];
-  glass?:    MaterialLine[];
-  misc?:     MiscFields;
-  other?:    MiscFields;
-  labor?:    LaborLine[];
-  driveTime?: DriveTime;
-  markup?:   Markup;
-  xModifier?: string | number;
-  // taxRate intentionally ignored — always from lib/tax-rates.ts
+function parseAmount(value: string | number | null | undefined): number {
+  if (value === null || value === undefined || value === '') return 0;
+  const parsed = typeof value === 'number'
+    ? value
+    : parseFloat(String(value).replace(/[$,]/g, '').trim());
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
-function n(v: string | number | undefined | null): number {
-  if (v === undefined || v === null || v === '') return 0;
-  const parsed = parseFloat(String(v));
-  return isNaN(parsed) ? 0 : parsed;
-}
-
-function sumLines(lines?: MaterialLine[]): number {
-  return (lines || []).reduce((s, l) => s + n(l.amount), 0);
-}
-
-function sumMisc(obj?: MiscFields): number {
-  return Object.values(obj || {}).reduce((s: number, v) => s + n(v as string | number), 0);
+function collectRecord(values: Record<string, string | number | null | undefined> | undefined): number {
+  return Object.values(values || {}).reduce((sum: number, value) => sum + parseAmount(value), 0);
 }
 
 export async function POST(req: Request) {
@@ -53,111 +44,101 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { estimate: EstimateData; woId?: string };
+  let body: unknown;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ valid: false, errors: ['Invalid JSON body'] }, { status: 400 });
   }
 
-  const est = body.estimate;
-  if (!est || typeof est !== 'object') {
-    return NextResponse.json({ valid: false, errors: ['estimate is required'] }, { status: 400 });
+  const estimate = ((body as { estimate?: EstimateData })?.estimate || body) as EstimateData;
+  if (!estimate || typeof estimate !== 'object') {
+    return NextResponse.json({ valid: false, errors: ['Estimate JSON is required'] }, { status: 400 });
   }
 
   const errors: string[] = [];
+  const checkNonNegative = (label: string, value: number) => {
+    if (Number.isNaN(value)) errors.push(`${label} is NaN`);
+    else if (value < 0) errors.push(`${label} cannot be negative`);
+  };
 
-  // ── Materials ──────────────────────────────────────────────────────────────
-  const aluminumTotal = sumLines(est.aluminum);
-  const glassTotal    = sumLines(est.glass);
-  const miscTotal     = sumMisc(est.misc) + sumMisc(est.other);
-  const materialsSubtotal = aluminumTotal + glassTotal + miscTotal;
+  if (estimate.taxRate === null || estimate.taxRate === undefined || estimate.taxRate === '') {
+    errors.push('taxRate is required');
+  }
 
-  if (materialsSubtotal < 0) errors.push('Materials subtotal is negative');
+  for (const [index, item] of (estimate.aluminum || []).entries()) checkNonNegative(`aluminum[${index}].amount`, parseAmount(item.amount));
+  for (const [index, item] of (estimate.glass || []).entries()) checkNonNegative(`glass[${index}].amount`, parseAmount(item.amount));
+  for (const [index, item] of (estimate.miscExtra || []).entries()) checkNonNegative(`miscExtra[${index}].amount`, parseAmount(item.amount));
+  for (const [index, item] of (estimate.otherExtra || []).entries()) checkNonNegative(`otherExtra[${index}].amount`, parseAmount(item.amount));
+  for (const [key, value] of Object.entries(estimate.misc || {})) checkNonNegative(`misc.${key}`, parseAmount(value));
+  for (const [key, value] of Object.entries(estimate.other || {})) checkNonNegative(`other.${key}`, parseAmount(value));
 
-  // ── Labor ──────────────────────────────────────────────────────────────────
-  const laborLines = (est.labor || []).map(l => {
-    const hrs = n(l.hours);
-    const rate = n(l.rate);
-    const amt = l.amount !== undefined ? n(l.amount) : hrs * rate;
-    return amt;
-  });
-  const laborSubtotal = laborLines.reduce((s, a) => s + a, 0);
+  const laborBase = (estimate.labor || []).reduce((sum, line, index) => {
+    const hours = parseAmount(line.hours);
+    const rate = parseAmount(line.rate);
+    const amount = line.amount === undefined || line.amount === null || line.amount === '' ? hours * rate : parseAmount(line.amount);
+    checkNonNegative(`labor[${index}].hours`, hours);
+    checkNonNegative(`labor[${index}].rate`, rate);
+    checkNonNegative(`labor[${index}].amount`, amount);
+    return sum + amount;
+  }, 0);
 
-  if (laborSubtotal < 0) errors.push('Labor subtotal is negative');
+  const driveTrips = parseAmount(estimate.driveTime?.trips);
+  const driveHoursPerTrip = parseAmount(estimate.driveTime?.hoursPerTrip);
+  const driveRate = parseAmount(estimate.driveTime?.rate);
+  checkNonNegative('driveTime.trips', driveTrips);
+  checkNonNegative('driveTime.hoursPerTrip', driveHoursPerTrip);
+  checkNonNegative('driveTime.rate', driveRate);
 
-  // ── Drive Time ─────────────────────────────────────────────────────────────
-  const dt = est.driveTime || {};
-  const driveTrips = n(dt.trips);
-  const driveHrs   = n(dt.hoursPerTrip);
-  const driveRate  = n(dt.rate);
-  const driveTotal = driveTrips * driveHrs * driveRate;
+  const materialsSubtotal =
+    (estimate.aluminum || []).reduce((sum, item) => sum + parseAmount(item.amount), 0) +
+    (estimate.glass || []).reduce((sum, item) => sum + parseAmount(item.amount), 0) +
+    collectRecord(estimate.misc) +
+    (estimate.miscExtra || []).reduce((sum, item) => sum + parseAmount(item.amount), 0) +
+    collectRecord(estimate.other) +
+    (estimate.otherExtra || []).reduce((sum, item) => sum + parseAmount(item.amount), 0);
 
-  // ── Overhead (labor-equal method: overhead = labor + drive time) ───────────
-  const overheadOverride = est.markup?.overheadOverride !== undefined && est.markup.overheadOverride !== ''
-    ? n(est.markup.overheadOverride)
-    : null;
-  const overhead = overheadOverride !== null ? overheadOverride : (laborSubtotal + driveTotal);
+  const driveTotal = driveTrips * driveHoursPerTrip * driveRate;
+  const laborSubtotal = laborBase + driveTotal;
+  const overhead = estimate.markup?.overheadOverride !== undefined && estimate.markup?.overheadOverride !== null && estimate.markup?.overheadOverride !== ''
+    ? parseAmount(estimate.markup.overheadOverride)
+    : laborSubtotal;
+  const profitPct = estimate.markup?.profitPct === undefined || estimate.markup?.profitPct === null || estimate.markup?.profitPct === ''
+    ? 10
+    : parseAmount(estimate.markup.profitPct);
+  const xModifier = estimate.xModifier === undefined || estimate.xModifier === null || estimate.xModifier === ''
+    ? 0
+    : parseAmount(estimate.xModifier);
+  const profit = ((materialsSubtotal + laborSubtotal + overhead) * (profitPct / 100)) + xModifier;
+  const getRate = parseAmount(estimate.taxRate);
+  const getAmount = (materialsSubtotal + laborSubtotal + overhead + profit) * (getRate / 100);
+  const grandTotal = materialsSubtotal + laborSubtotal + overhead + profit + getAmount;
+  const deposit = grandTotal * 0.5;
 
-  if (overhead < 0) errors.push('Overhead is negative');
-
-  // ── Profit ─────────────────────────────────────────────────────────────────
-  const profitPct = n(est.markup?.profitPct);
-  if (profitPct < 0) errors.push('Profit percentage is negative');
-  const baseForProfit = materialsSubtotal + laborSubtotal + driveTotal + overhead;
-  const profit = baseForProfit * (profitPct / 100);
-
-  // ── X Modifier (adjusts profit only) ──────────────────────────────────────
-  const xModifier = n(est.xModifier); // positive = add, negative = reduce profit
-
-  const adjustedProfit = profit + xModifier;
-
-  // ── Pre-tax total ──────────────────────────────────────────────────────────
-  const preTaxTotal = materialsSubtotal + laborSubtotal + driveTotal + overhead + adjustedProfit;
-
-  if (preTaxTotal < 0) errors.push('Grand total before GET is negative');
-  if (isNaN(preTaxTotal)) errors.push('Grand total calculation produced NaN');
-
-  // ── GET (always from lib/tax-rates.ts — never from estimate JSON) ──────────
-  // taxRate always from lib/tax-rates.ts — JSON value ignored to prevent stale data
-  const getAmount = preTaxTotal * CANONICAL_TAX_DECIMAL;
-
-  // ── Grand Total + Deposit ──────────────────────────────────────────────────
-  const grandTotal = preTaxTotal + getAmount;
-  const deposit    = grandTotal / 2;
-
-  if (grandTotal <= 0) errors.push('Grand total must be greater than 0');
-
-  // ── Customer-facing distribution (markup proportionally across mat+labor) ──
-  const laborPlusDrive = laborSubtotal + driveTotal;
-  const totalBeforeMarkup = materialsSubtotal + laborPlusDrive;
-  const totalMarkup = overhead + adjustedProfit;
-  const matRatio   = totalBeforeMarkup > 0 ? materialsSubtotal / totalBeforeMarkup : 0.5;
-  const laborRatio = totalBeforeMarkup > 0 ? laborPlusDrive   / totalBeforeMarkup : 0.5;
-  const customerMaterials = materialsSubtotal + totalMarkup * matRatio;
-  const customerLabor     = laborPlusDrive   + totalMarkup * laborRatio;
+  for (const [label, value] of Object.entries({ materialsSubtotal, laborSubtotal, overhead, profit, getAmount, grandTotal, deposit })) {
+    if (value === null || value === undefined || Number.isNaN(value)) errors.push(`${label} is invalid`);
+  }
+  checkNonNegative('materialsSubtotal', materialsSubtotal);
+  checkNonNegative('laborSubtotal', laborSubtotal);
+  checkNonNegative('overhead', overhead);
+  checkNonNegative('getAmount', getAmount);
+  checkNonNegative('grandTotal', grandTotal);
+  checkNonNegative('deposit', deposit);
 
   if (errors.length > 0) {
-    return NextResponse.json({ valid: false, errors });
+    return NextResponse.json({ valid: false, errors }, { status: 400 });
   }
 
   return NextResponse.json({
     valid: true,
     calculations: {
-      materialsSubtotal:  Math.round(materialsSubtotal  * 100) / 100,
-      laborSubtotal:      Math.round(laborSubtotal      * 100) / 100,
-      driveTotal:         Math.round(driveTotal         * 100) / 100,
-      overhead:           Math.round(overhead           * 100) / 100,
-      profit:             Math.round(profit             * 100) / 100,
-      xModifier:          Math.round(xModifier          * 100) / 100,
-      adjustedProfit:     Math.round(adjustedProfit     * 100) / 100,
-      preTaxTotal:        Math.round(preTaxTotal        * 100) / 100,
-      taxRate:            CANONICAL_TAX_RATE,   // always 4.712
-      getAmount:          Math.round(getAmount  * 100) / 100,
-      grandTotal:         Math.round(grandTotal * 100) / 100,
-      deposit:            Math.round(deposit    * 100) / 100,
-      customerMaterials:  Math.round(customerMaterials  * 100) / 100,
-      customerLabor:      Math.round(customerLabor      * 100) / 100,
+      materialsSubtotal,
+      laborSubtotal,
+      overhead,
+      profit,
+      getAmount,
+      grandTotal,
+      deposit,
     },
   });
 }

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { GET_PASS_ON_RATE } from '@/lib/tax-rates';
+import { LABOR_RATES } from '@/lib/labor';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -122,7 +123,7 @@ function calcTotals(est: EstimateData) {
 
   const driveTrips = parseFloat(est.driveTime?.trips ?? '0') || 0;
   const driveHoursPerTrip = parseFloat(est.driveTime?.hoursPerTrip ?? '0') || 0;
-  const driveRate = parseFloat(est.driveTime?.rate ?? '117') || 117;
+  const driveRate = parseFloat(est.driveTime?.rate ?? '120') || LABOR_RATES.journeyman;
   const driveTotal = driveTrips * driveHoursPerTrip * driveRate;
 
   const subtotal = materialsTotal + laborTotal + driveTotal;
@@ -459,7 +460,8 @@ export default function QuoteBuilder({
     if (!session?.user?.email) return;
     fetch('/api/crew')
       .then(r => r.json())
-      .then((users: Array<{ email?: string; name?: string; phone?: string }>) => {
+      .then((data: { all?: Array<{ email?: string; name?: string; phone?: string }> }) => {
+        const users = data.all || [];
         const match = users.find(u => u.email?.toLowerCase() === session.user!.email!.toLowerCase());
         if (match) {
           setPreparedByUser({ name: match.name || session.user!.name || '', email: match.email || session.user!.email || '', phone: match.phone || '' });
@@ -645,7 +647,7 @@ export default function QuoteBuilder({
           breakdownType: 'lump_sum',
           installationIncluded: true,
           crewCount: 1,
-          hourlyRate: 117,
+          hourlyRate: LABOR_RATES.journeyman,
           equipmentCharges: 0,
         }),
       });

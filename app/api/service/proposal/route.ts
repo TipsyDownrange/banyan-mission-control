@@ -4,8 +4,11 @@ import { hawaiiToday } from '@/lib/hawaii-time';
  * Accepts quote data from QuoteBuilder, generates PDF, uploads to Drive, emails customer
  */
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { generateServiceWOPDF, type ServiceWOData } from '@/lib/pdf-service-wo';
 import { google } from 'googleapis';
+import { authOptions } from '@/lib/auth';
+import { getPreparedByUser } from '@/lib/users';
 
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
@@ -129,25 +132,24 @@ export async function POST(req: Request) {
 
     if (!quote) return NextResponse.json({ error: 'quote object required' }, { status: 400 });
 
-    // Server-side validation: reject if any required field is null/undefined/NaN/empty
-    const requiredFields: [string, unknown][] = [
-      ['customerName', quote.customerName],
-      ['total', quote.total],
-      ['getAmount', quote.getAmount],
-      ['getRate', quote.getRate],
-      ['deposit', quote.deposit],
-    ];
-    const missingOrInvalid = requiredFields.filter(([, v]) =>
-      v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)) || Number(v) === 0 && v !== 0
-    ).map(([k]) => k);
-    const nanFields = ['total', 'getAmount', 'deposit'].filter(k => {
-      const v = quote[k as keyof typeof quote];
-      return v !== undefined && isNaN(Number(v));
-    });
-    const invalidFields = [...new Set([...missingOrInvalid, ...nanFields])];
-    if (invalidFields.length > 0) {
+    const requiredFieldErrors: string[] = [];
+    const requiredString = (label: string, value: unknown) => {
+      if (typeof value !== 'string' || value.trim() === '') requiredFieldErrors.push(label);
+    };
+    const requiredNumber = (label: string, value: unknown) => {
+      const parsed = Number(value);
+      if (value === null || value === undefined || value === '' || Number.isNaN(parsed)) requiredFieldErrors.push(label);
+    };
+
+    requiredString('customer_name', quote.customerName);
+    requiredNumber('total', quote.total);
+    requiredNumber('get_amount', quote.getAmount);
+    requiredNumber('get_rate', quote.getRate);
+    requiredNumber('deposit', quote.deposit);
+
+    if (requiredFieldErrors.length > 0) {
       return NextResponse.json(
-        { error: `Proposal rejected: missing or invalid fields: ${invalidFields.join(', ')}. Run /api/service/quote/validate first.` },
+        { error: `Proposal rejected: missing or invalid fields: ${requiredFieldErrors.join(', ')}` },
         { status: 422 }
       );
     }
@@ -155,6 +157,18 @@ export async function POST(req: Request) {
     // QuoteBuilder already distributes overhead+profit proportionally into
     // materialsTotal and laborSubtotal. DO NOT add them again here.
     // Customer sees: Materials + Labor + GET = Total (markup already baked in)
+
+    const session = await getServerSession(authOptions);
+    const preparedByUser = await getPreparedByUser(session?.user?.email);
+    const preparedBy = quote.preparedBy || (preparedByUser ? {
+      name: preparedByUser.name,
+      email: preparedByUser.email,
+      phone: preparedByUser.phone,
+    } : null) || {
+      name: 'Joey Ritthaler',
+      email: 'joey@kulaglass.com',
+      phone: '808-242-8999 ext. 22',
+    };
 
     const pdfData: ServiceWOData = {
       wo_number:             quote.woNumber || 'DRAFT',
@@ -186,11 +200,7 @@ export async function POST(req: Request) {
       deposit:               quote.deposit || 0,
       exclusions_extra:      [],
       validity_days:         quote.validityDays || 30,
-      prepared_by:           quote.preparedBy || {
-        name: 'Joey Ritthaler',
-        email: 'joey@kulaglass.com',
-        phone: '808-242-8999 ext. 22',
-      },
+      prepared_by:           preparedBy,
     };
 
     // Generate PDF

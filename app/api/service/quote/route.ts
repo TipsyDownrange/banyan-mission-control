@@ -1,7 +1,10 @@
 import { hawaiiToday } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { authOptions } from '@/lib/auth';
+import { getPreparedByUser } from '@/lib/users';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import {
   calculateSiteVisitFee, getJobTypeDefaults, listJobTypes,
@@ -246,8 +249,11 @@ export async function POST(req: Request) {
     ];
     if (!installationIncluded) standardExclusions.push('Installation');
 
-    // ORPHAN cols 16,17,19,20,21 — frozen do not write
+    // ORPHAN cols 16,17,19,20,21 — frozen, do not write
     // hours_estimated (col 19 / T) write-back removed: canonical hours live in Install_Steps.Allotted_Hours
+
+    const session = await getServerSession(authOptions);
+    const preparedByUser = await getPreparedByUser(session?.user?.email);
 
     return NextResponse.json({
       quote: {
@@ -296,12 +302,11 @@ export async function POST(req: Request) {
           validity: `This proposal is subject to revisions if not accepted within ${validityDays ?? 30} days after date.`,
           confirmation: `Confirmation of layout & dimensions is to be provided prior to ordering or fabricating any custom materials.`,
         },
-        // Prepared by (from session in real impl)
-        preparedBy: {
-          name: 'Joey Ritthaler',
-          email: 'joey@kulaglass.com',
-          phone: '808-242-8999 ext. 22',
-        },
+        preparedBy: preparedByUser ? {
+          name: preparedByUser.name,
+          email: preparedByUser.email,
+          phone: preparedByUser.phone,
+        } : null,
       },
     });
   } catch (err) {

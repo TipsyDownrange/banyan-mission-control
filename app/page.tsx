@@ -28,7 +28,6 @@ import KaiPanel from '@/components/KaiPanel';
 import KaiFloat from '@/components/KaiFloat';
 import OrgChartPanel from '@/components/OrgChartPanel';
 import AdminPanel from '@/components/AdminPanel';
-import InstallTrackingPanel from '@/components/InstallTrackingPanel';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import SuggestionButton from '@/components/SuggestionButton';
 import StepLibraryPanel from '@/components/StepLibraryPanel';
@@ -43,7 +42,6 @@ export type AppView =
   | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
   | 'Work Orders'
   | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage'
-  | 'QA / Install'
   | 'WIP Report' | 'Financials' | 'Vendors' | 'Compliance' | 'HR' | 'Safety' | 'Fleet'
   | 'Step Library';
 // ── App ──────────────────────────────────────────────────────────────────────

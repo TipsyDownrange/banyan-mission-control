@@ -35,6 +35,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { deriveWorkOrderStatus } from '@/lib/service-status';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 // Match actual roles from Users_Roles sheet (Superintendent, Journeyman, Apprentice)
@@ -520,49 +521,29 @@ export async function POST(req: Request) {
       }
       await Promise.all(stepUpdates);
 
-      // Check if ALL steps for this WO are now scheduled — if so, mark WO 'scheduled'
       if (kID) {
         try {
-          const allPlansRes2 = await sheets.spreadsheets.values.get({
+          const derivedStatus = await deriveWorkOrderStatus({ woId: kID, woNumber: kID, sheets });
+          const woRes2 = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: 'Install_Plans!A2:G5000',
+            range: 'Service_Work_Orders!A2:E2000',
           });
-          const allStepsRes2 = await sheets.spreadsheets.values.get({
-            spreadsheetId: SHEET_ID,
-            range: 'Install_Steps!A2:P5000',
-          });
-          const planRows2 = (allPlansRes2.data.values || []).filter(r => {
-            const jid = r[1] || '';
-            return (jid === kID || jid === `WO-${kID}` || jid.replace(/^WO-/i, '') === kID.replace(/^WO-/i, '')) && r[2] !== '__JOB_DOCS__';
-          });
-          const planIds2 = new Set(planRows2.map(r => r[0]));
-          const allStepRows2 = (allStepsRes2.data.values || []).filter(r => planIds2.has(r[1] || ''));
-          const allScheduled = allStepRows2.length > 0 && allStepRows2.every(r => r[9]); // planned_start_date set
-          if (allScheduled) {
-            const woRes2 = await sheets.spreadsheets.values.get({
-              spreadsheetId: SHEET_ID,
-              range: 'Service_Work_Orders!A2:E2000',
-            });
-            const woRows2 = woRes2.data.values || [];
-            for (let i = 0; i < woRows2.length; i++) {
-              const rowWoId = (woRows2[i][0] || '').trim();
-              const rowWoNum = (woRows2[i][1] || '').trim();
-              const rowStatus = (woRows2[i][4] || '').toLowerCase().trim();
-              if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
-                if (!['in_progress', 'closed', 'completed'].includes(rowStatus)) {
-                  await sheets.spreadsheets.values.update({
-                    spreadsheetId: SHEET_ID,
-                    range: `Service_Work_Orders!E${i + 2}`,
-                    valueInputOption: 'RAW',
-                    requestBody: { values: [['scheduled']] },
-                  });
-                }
-                break;
-              }
+          const woRows2 = woRes2.data.values || [];
+          for (let i = 0; i < woRows2.length; i++) {
+            const rowWoId = (woRows2[i][0] || '').trim();
+            const rowWoNum = (woRows2[i][1] || '').trim();
+            if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+              await sheets.spreadsheets.values.update({
+                spreadsheetId: SHEET_ID,
+                range: `Service_Work_Orders!E${i + 2}`,
+                valueInputOption: 'RAW',
+                requestBody: { values: [[derivedStatus]] },
+              });
+              break;
             }
           }
         } catch (e) {
-          console.error('Failed to check/update WO scheduled status:', e);
+          console.error('Failed to derive WO status after scheduling:', e);
         }
       }
     }
@@ -690,41 +671,21 @@ export async function PATCH(req: Request) {
           }
           await Promise.all([...completionOps, ...stepActualHrsUpdates]);
 
-          // Now check if ALL steps for this WO are complete to update WO status
           if (kID) {
-            const woPlans = planRowsC.filter(r => {
-              const jid = r[1] || '';
-              return (jid === kID || jid === `WO-${kID}` || jid.replace(/^WO-/i, '') === kID.replace(/^WO-/i, '')) && r[2] !== '__JOB_DOCS__';
-            });
-            const woPlanIds = new Set(woPlans.map(r => r[0]));
-            const woStepRows = stepRowsC.filter(r => woPlanIds.has(r[1] || ''));
-
-            // Re-fetch completions to include newly added ones
-            const newCompRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:I5000' });
-            const newCompRows = newCompRes.data.values || [];
-
-            const completedStepIds = new Set(
-              newCompRows.filter(r => parseInt(r[6]) >= 100).map(r => r[1])
-            );
-            const allComplete = woStepRows.length > 0 && woStepRows.every(r => completedStepIds.has(r[0]));
-            const someComplete = woStepRows.some(r => completedStepIds.has(r[0]));
-
-            const newWOStatus = allComplete ? 'closed' : someComplete ? 'in_progress' : undefined;
-            if (newWOStatus) {
-              const woResC = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:E2000' });
-              const woRowsC = woResC.data.values || [];
-              for (let i = 0; i < woRowsC.length; i++) {
-                const rowWoId = (woRowsC[i][0] || '').trim();
-                const rowWoNum = (woRowsC[i][1] || '').trim();
-                if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
-                  await sheets.spreadsheets.values.update({
-                    spreadsheetId: SHEET_ID,
-                    range: `Service_Work_Orders!E${i + 2}`,
-                    valueInputOption: 'RAW',
-                    requestBody: { values: [[newWOStatus]] },
-                  });
-                  break;
-                }
+            const derivedStatus = await deriveWorkOrderStatus({ woId: kID, woNumber: kID, sheets });
+            const woResC = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:E2000' });
+            const woRowsC = woResC.data.values || [];
+            for (let i = 0; i < woRowsC.length; i++) {
+              const rowWoId = (woRowsC[i][0] || '').trim();
+              const rowWoNum = (woRowsC[i][1] || '').trim();
+              if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+                await sheets.spreadsheets.values.update({
+                  spreadsheetId: SHEET_ID,
+                  range: `Service_Work_Orders!E${i + 2}`,
+                  valueInputOption: 'RAW',
+                  requestBody: { values: [[derivedStatus]] },
+                });
+                break;
               }
             }
           }

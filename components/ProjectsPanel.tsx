@@ -94,7 +94,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'qa'|'work-breakdown'|'matrix'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'work-breakdown'|'matrix'>('overview');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -123,8 +123,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'rfis', label: `RFIs (${rfis.length})` },
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'budget', label: 'Budget' },
-    { key: 'qa', label: `QA/Install (${install.items?.length || 0})` },
-    { key: 'work-breakdown', label: 'Work Breakdown' },
+    { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
   ] as const;
 
@@ -193,7 +192,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                       { label: 'Submittals', value: submittals.length, sub: `${submittals.filter(s => ['APPROVED'].includes(s.status)).length} approved` },
                       { label: 'RFIs', value: rfis.length, sub: `${rfis.filter(r => r.status === 'OPEN' || !r.response_received_at).length} open` },
                       { label: 'Change Orders', value: cos.length, sub: `${cos.filter(c => c.status === 'APPROVED').length} approved` },
-                      { label: 'QA Steps', value: install.items?.length || 0, sub: install.summary?.[0] ? `${install.summary[0].pctComplete}% complete` : 'No data yet' },
+                      { label: 'Work Breakdown', value: install.items?.length || 0, sub: install.summary?.[0] ? `${install.summary[0].pctComplete}% complete` : 'No steps yet' },
                       { label: 'Field Events', value: project.eventCount, sub: `${project.issues} issues` },
                     ].map((k, i) => (
                       <div key={i} style={{ background: 'white', borderRadius: 14, padding: '14px 18px', border: '1px solid #e2e8f0' }}>
@@ -281,29 +280,6 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                 </div>
               )}
 
-              {activeTab === 'qa' && (
-                <div>
-                  {!install.items || install.items.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No QA/Install data for this project yet</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {install.items.map((item, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{item.step_name}</div>
-                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{item.location_ref} · {item.system_type}</div>
-                          </div>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
-                            background: item.status === 'Complete' ? '#f0fdfa' : '#f8fafc',
-                            color: item.status === 'Complete' ? '#059669' : '#94a3b8',
-                          }}>{item.status}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
               {activeTab === 'work-breakdown' && (
                 <WorkBreakdown jobId={project.kID} jobType="project" />

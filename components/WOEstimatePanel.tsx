@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { estimateDriveTime } from '@/lib/labor';
+import { estimateDriveTime, LABOR_RATES } from '@/lib/labor';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -137,6 +137,8 @@ function sumItems(items: LineItem[]): number {
 
 // ─── Default state factory ────────────────────────────────────────────────────
 
+const DEFAULT_LABOR_RATE = String(LABOR_RATES.journeyman);
+
 function defaultData(wo: WorkOrder): WOEstimateData {
   const driveEst = estimateDriveTime(wo.address || '', wo.island || 'Maui');
   return {
@@ -147,12 +149,12 @@ function defaultData(wo: WorkOrder): WOEstimateData {
     other: { equipmentRental: '', misc: '', travel: '', freight: '' },
     otherExtra: [],
     labor: [
-      { description: 'Field Labor', hours: '', rate: '117', amount: '' },
+      { description: 'Field Labor', hours: '', rate: DEFAULT_LABOR_RATE, amount: '' },
     ],
     driveTime: {
       trips: '2',
       hoursPerTrip: String(driveEst.roundTripHours),
-      rate: '117',
+      rate: DEFAULT_LABOR_RATE,
     },
     markup: { overheadOverride: '', profitPct: '10' },
     taxRate: String(getGetRate(wo.island)),
@@ -353,7 +355,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
               return {
                 description: step.step_name,
                 hours: existing ? existing.hours : String(step.allotted_hours || ''),
-                rate: existing ? existing.rate : '117',
+                rate: existing ? existing.rate : DEFAULT_LABOR_RATE,
                 amount: '',
                 install_step_id: step.install_step_id,
                 custom: false,
@@ -371,7 +373,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
           const laborLines: LaborLine[] = installSteps.map((step) => ({
             description: step.step_name,
             hours: String(step.allotted_hours || ''),
-            rate: '117',
+            rate: DEFAULT_LABOR_RATE,
             amount: '',
             install_step_id: step.install_step_id,
             custom: false,
@@ -472,7 +474,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
   const driveTimeTrips = parseFloat(data.driveTime?.trips) || 0;
   const driveTimeHoursPerTrip = parseFloat(data.driveTime?.hoursPerTrip) || 0;
   const driveTimeHours = driveTimeTrips * driveTimeHoursPerTrip;
-  const driveTimeRate = parseFloat(data.driveTime?.rate) || 117;
+  const driveTimeRate = parseFloat(data.driveTime?.rate) || LABOR_RATES.journeyman;
   const driveTimeAmt = driveTimeHours * driveTimeRate;
 
   const laborSubtotal = data.labor.reduce((a, l) => a + laborAmount(l), 0) + driveTimeAmt;
@@ -745,7 +747,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                 ))}
                 {!isLocked && (
                   <button
-                    onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: '117', amount: '', custom: true }] }))}
+                    onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: DEFAULT_LABOR_RATE, amount: '', custom: true }] }))}
                     style={{ fontSize: 10, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 700 }}
                   >+ Add Custom Step</button>
                 )}
@@ -756,21 +758,21 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <SmallNum
                       value={data.driveTime?.trips || '2'}
-                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { hoursPerTrip: '0', rate: '117' }), trips: v } }))}
+                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { hoursPerTrip: '0', rate: DEFAULT_LABOR_RATE }), trips: v } }))}
                       placeholder="2"
                       width={40}
                     />
                     <span style={{ fontSize: 11, color: '#64748b' }}>trips ×</span>
                     <SmallNum
                       value={data.driveTime?.hoursPerTrip || '0'}
-                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', rate: '117' }), hoursPerTrip: v } }))}
+                      onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', rate: DEFAULT_LABOR_RATE }), hoursPerTrip: v } }))}
                       placeholder="hrs"
                       width={48}
                     />
                     <span style={{ fontSize: 11, color: '#64748b' }}>h/trip @</span>
                     <span style={{ fontSize: 11, color: '#64748b' }}>$</span>
                     <SmallNum
-                      value={data.driveTime?.rate || '117'}
+                      value={data.driveTime?.rate || DEFAULT_LABOR_RATE}
                       onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', hoursPerTrip: '0' }), rate: v } }))}
                       width={52}
                     />
