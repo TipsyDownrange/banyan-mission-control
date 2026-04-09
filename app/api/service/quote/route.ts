@@ -254,6 +254,15 @@ export async function POST(req: Request) {
 
     const session = await getServerSession(authOptions);
     const preparedByUser = await getPreparedByUser(session?.user?.email);
+    const preparedBy = preparedByUser ? {
+      name: preparedByUser.name,
+      email: preparedByUser.email,
+      phone: preparedByUser.phone,
+    } : session?.user?.email ? {
+      name: session.user.name || session.user.email || '',
+      email: session.user.email || '',
+      phone: '',
+    } : null;
 
     return NextResponse.json({
       quote: {
@@ -302,11 +311,7 @@ export async function POST(req: Request) {
           validity: `This proposal is subject to revisions if not accepted within ${validityDays ?? 30} days after date.`,
           confirmation: `Confirmation of layout & dimensions is to be provided prior to ordering or fabricating any custom materials.`,
         },
-        preparedBy: preparedByUser ? {
-          name: preparedByUser.name,
-          email: preparedByUser.email,
-          phone: preparedByUser.phone,
-        } : null,
+        preparedBy,
       },
     });
   } catch (err) {

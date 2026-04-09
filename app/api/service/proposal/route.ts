@@ -160,15 +160,20 @@ export async function POST(req: Request) {
 
     const session = await getServerSession(authOptions);
     const preparedByUser = await getPreparedByUser(session?.user?.email);
+    const sessionPreparedBy = session?.user?.email ? {
+      name: session.user?.name || session.user.email || '',
+      email: session.user.email || '',
+      phone: '',
+    } : null;
     const preparedBy = quote.preparedBy || (preparedByUser ? {
       name: preparedByUser.name,
       email: preparedByUser.email,
       phone: preparedByUser.phone,
-    } : null) || {
-      name: 'Joey Ritthaler',
-      email: 'joey@kulaglass.com',
-      phone: '808-242-8999 ext. 22',
-    };
+    } : sessionPreparedBy);
+
+    if (!preparedBy) {
+      return NextResponse.json({ error: 'Proposal rejected: unable to resolve prepared_by from session or Users_Roles' }, { status: 422 });
+    }
 
     const pdfData: ServiceWOData = {
       wo_number:             quote.woNumber || 'DRAFT',

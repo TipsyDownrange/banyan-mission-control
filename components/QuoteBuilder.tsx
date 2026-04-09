@@ -689,9 +689,8 @@ export default function QuoteBuilder({
             total: t?.grandTotal || 0,
             deposit: t ? Math.round(t.grandTotal * 50) / 100 : 0,
             validityDays: 30,
-            // Prepared By: from logged-in user session via Users_Roles lookup.
-            // Falls back to Joey Ritthaler only if user lookup failed (e.g. not in Users_Roles yet).
-            preparedBy: preparedByUser || { name: 'Joey Ritthaler', email: 'joey@kulaglass.com', phone: '808-242-8999 ext. 22' },
+            // Prepared By: from logged-in user session via Users_Roles lookup, then session fallback.
+            preparedBy: preparedByUser || { name: session?.user?.name || session?.user?.email || '', email: session?.user?.email || '', phone: '' },
           },
           sendEmail: false,
         }),
