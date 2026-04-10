@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
+import ActivityTimeline from '@/components/ActivityTimeline';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -94,7 +95,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'work-breakdown'|'matrix'>('work-breakdown');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -125,6 +126,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'budget', label: 'Budget' },
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
+    { key: 'activity', label: `Activity (${project.eventCount})` },
   ] as const;
 
   const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
@@ -287,6 +289,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
               {activeTab === 'matrix' && (
                 <ProjectMatrixView jobId={project.kID} />
+              )}
+
+              {activeTab === 'activity' && (
+                <ActivityTimeline kID={project.kID} />
               )}
             </>
           )}
