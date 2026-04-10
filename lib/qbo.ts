@@ -77,8 +77,8 @@ async function saveRefreshTokenToSheet(newToken: string): Promise<void> {
 
 // ── Token refresh ─────────────────────────────────────────────────────────────
 async function refreshAccessToken(): Promise<string> {
-  const clientId = process.env.QBO_CLIENT_ID;
-  const clientSecret = process.env.QBO_CLIENT_SECRET;
+  const clientId = process.env.QBO_CLIENT_ID?.trim();
+  const clientSecret = process.env.QBO_CLIENT_SECRET?.trim();
   if (!clientId || !clientSecret) throw new Error('QBO_CLIENT_ID / QBO_CLIENT_SECRET not set');
 
   // Prefer sheet token (rotated), fall back to env var

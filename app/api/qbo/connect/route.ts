@@ -4,8 +4,8 @@ const REDIRECT_URI = 'https://banyan-mission-control.vercel.app/api/qbo/callback
 const SCOPE = 'com.intuit.quickbooks.accounting';
 
 export async function GET() {
-  const clientId = process.env.QBO_CLIENT_ID;
-  const clientSecret = process.env.QBO_CLIENT_SECRET;
+  const clientId = process.env.QBO_CLIENT_ID?.trim();
+  const clientSecret = process.env.QBO_CLIENT_SECRET?.trim();
 
   // Guard: return a clear error if env vars are missing
   // (prevents Intuit from receiving "undefined" as client_id)
