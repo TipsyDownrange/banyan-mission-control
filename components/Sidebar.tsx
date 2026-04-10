@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { AppView } from '@/app/page';
 
 // Icon mapping — SVG paths for each nav item
@@ -146,6 +146,24 @@ type Props = {
 export default function Sidebar({ activeView, onSelect, collapsed, onToggle, demoUser, onUserChange, visibleSections, hiddenItems, allUsers, sessionEmail }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
+  const [qboStatus, setQboStatus] = useState<'healthy' | 'token_expired' | 'refresh_expired' | 'unreachable' | 'unconfigured' | 'loading' | 'unknown'>('unknown');
+
+  // Poll QBO health every 5 minutes
+  useEffect(() => {
+    let cancelled = false;
+    async function checkQBO() {
+      setQboStatus('loading');
+      try {
+        const res = await fetch('/api/qbo/health');
+        if (!res.ok) { setQboStatus('unreachable'); return; }
+        const data = await res.json();
+        if (!cancelled) setQboStatus(data.status ?? 'unknown');
+      } catch { if (!cancelled) setQboStatus('unreachable'); }
+    }
+    checkQBO();
+    const interval = setInterval(checkQBO, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   // Easter egg: 5 rapid taps on brand area unlocks Golden Kai
   const tapTimesRef = useRef<number[]>([]);
@@ -368,6 +386,30 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
               );
             }
             return null;
+          })()}
+          {/* QBO connection status indicator */}
+          {(() => {
+            const isHealthy = qboStatus === 'healthy';
+            const isLoading = qboStatus === 'loading' || qboStatus === 'unknown';
+            const dotColor = isLoading ? '#64748b' : isHealthy ? '#22c55e' : '#ef4444';
+            const label = isLoading ? 'QBO checking…' : isHealthy ? 'QuickBooks connected' : qboStatus === 'refresh_expired' ? 'QBO: re-auth needed' : qboStatus === 'unconfigured' ? 'QBO: not configured' : 'QBO: connection issue';
+            return (
+              <div
+                title={label}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6, cursor: 'default' }}
+              >
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: dotColor,
+                  boxShadow: isHealthy ? '0 0 4px #22c55e88' : undefined,
+                  flexShrink: 0,
+                  animation: isLoading ? undefined : isHealthy ? undefined : 'pulse 2s infinite',
+                }} />
+                <span style={{ fontSize: 9, color: 'rgba(148,163,184,0.4)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {label}
+                </span>
+              </div>
+            );
           })()}
           <div style={{ fontSize: 9, color: 'rgba(94,234,212,0.2)', fontWeight: 600 }}>BanyanOS · Field Phase</div>
         </div>
