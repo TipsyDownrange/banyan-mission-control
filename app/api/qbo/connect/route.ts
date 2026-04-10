@@ -32,5 +32,15 @@ export async function GET() {
   authUrl.searchParams.set('scope', SCOPE);
   authUrl.searchParams.set('state', state);
 
+  // DIAGNOSTIC LOG — remove after QBO auth is confirmed working
+  console.log('[QBO CONNECT DIAGNOSTIC]');
+  console.log('  QBO_CLIENT_ID (first 8):', clientId ? clientId.slice(0, 8) + '...' : 'UNDEFINED');
+  console.log('  QBO_CLIENT_SECRET (first 8):', clientSecret ? clientSecret.slice(0, 8) + '...' : 'UNDEFINED');
+  console.log('  REDIRECT_URI:', REDIRECT_URI);
+  console.log('  SCOPE:', SCOPE);
+  console.log('  FULL AUTH URL:', authUrl.toString());
+  console.log('  client_id param value:', authUrl.searchParams.get('client_id'));
+  console.log('  redirect_uri param value:', authUrl.searchParams.get('redirect_uri'));
+
   return NextResponse.redirect(authUrl.toString());
 }
