@@ -236,7 +236,7 @@ export async function GET(req: Request) {
     // ── Date ranges ──────────────────────────────────────────────────────────
     const today = from;
     const monday = addDays(weekStart(today), weekOffset * 7);
-    const weekDates = weekDays(monday, 5); // Mon–Fri
+    const weekDates = weekDays(monday, 7); // Mon–Sun (show full 7 days so weekend slots are visible)
 
     // ── Filter dispatch slots ─────────────────────────────────────────────────
     const todaySlots = allSlots.filter(s => s.date === today);
@@ -371,7 +371,7 @@ export async function GET(req: Request) {
     for (let w = 0; w < 4; w++) {
       const wStart = addDays(forecastMonday, w * 7);
       const wEnd = addDays(wStart, 4);
-      const wDays = weekDays(wStart, 5);
+      const wDays = weekDays(wStart, 7);
 
       const dailyCounts = wDays.map(date => {
         const daySlots = allSlots.filter(s => s.date === date);
