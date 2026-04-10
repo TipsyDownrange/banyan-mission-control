@@ -23,14 +23,14 @@ const COL_INDEX = {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   const session = await getServerSession();
   if (!session?.user?.email?.endsWith('@kulaglass.com')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { eventId } = params;
+  const { eventId } = await params;
   const body = await req.json().catch(() => ({}));
   const { issue_status } = body as { issue_status?: string };
 
