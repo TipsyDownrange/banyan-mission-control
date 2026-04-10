@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const CLIENT_ID = process.env.QBO_CLIENT_ID!;
-const CLIENT_SECRET = process.env.QBO_CLIENT_SECRET!;
 const REDIRECT_URI = 'https://banyan-mission-control.vercel.app/api/qbo/callback';
 
 export async function GET(req: NextRequest) {
+  const CLIENT_ID = process.env.QBO_CLIENT_ID;
+  const CLIENT_SECRET = process.env.QBO_CLIENT_SECRET;
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    return new NextResponse('QBO OAuth misconfigured: QBO_CLIENT_ID or QBO_CLIENT_SECRET not set in this environment.', { status: 500 });
+  }
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
   const realmId = searchParams.get('realmId');
