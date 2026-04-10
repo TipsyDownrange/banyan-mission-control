@@ -79,24 +79,32 @@ async function emailCustomer(params: {
   body: string;
   pdfBuffer: Buffer;
   filename: string;
+  senderEmail?: string;
+  senderName?: string;
 }): Promise<boolean> {
   try {
-    const keyJson = process.env.GOOGLE_SA_KEY_B64
-      ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_B64, 'base64').toString('utf-8'))
+    // Fix: correct env var name (was GOOGLE_SA_KEY_B64 — missing ASE64)
+    const keyJson = process.env.GOOGLE_SA_KEY_BASE64
+      ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString('utf-8'))
       : null;
     if (!keyJson) return false;
+
+    // Sender: use the prepared_by email if it's a kulaglass.com address, otherwise joey@
+    const senderEmail = (params.senderEmail && params.senderEmail.endsWith('@kulaglass.com'))
+      ? params.senderEmail
+      : 'joey@kulaglass.com';
 
     const auth = new google.auth.JWT({
       email: keyJson.client_email,
       key: keyJson.private_key,
       scopes: ['https://www.googleapis.com/auth/gmail.send'],
-      subject: 'joey@kulaglass.com',
+      subject: senderEmail,
     });
     const gmail = google.gmail({ version: 'v1', auth });
 
     const boundary = 'boundary_proposal_' + Date.now();
     const raw = Buffer.from([
-      `From: Joey Ritthaler <joey@kulaglass.com>`,
+      `From: ${params.senderName || 'Kula Glass'} <${senderEmail}>`,
       `To: ${params.to}`,
       `Subject: ${params.subject}`,
       `MIME-Version: 1.0`,
@@ -213,14 +221,16 @@ export async function POST(req: Request) {
           ``,
           `Thank you,`,
           ``,
-          `Joey Ritthaler`,
-          `joey@kulaglass.com`,
-          `808-242-8999 ext. 22`,
+          `${pdfData.prepared_by?.name || 'Kula Glass'}`,
+          `${pdfData.prepared_by?.email || 'info@kulaglass.com'}`,
+          `${pdfData.prepared_by?.phone || '808-242-8999'}`,
           `Kula Glass Company Inc.`,
           `289 Pakana St. Wailuku HI 96793`,
         ].join('\n'),
         pdfBuffer,
         filename,
+        senderEmail: pdfData.prepared_by?.email,
+        senderName: pdfData.prepared_by?.name,
       });
     }
 
