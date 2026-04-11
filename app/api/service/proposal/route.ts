@@ -165,9 +165,7 @@ async function emailCustomer(params: {
       code: err?.code,
       message: err?.message,
       errors: err?.errors,
-      sender: senderEmail,
       to: params.to,
-      sa_client: keyJson?.client_email,
     }));
     return false;
   }
