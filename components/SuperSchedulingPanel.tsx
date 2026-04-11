@@ -543,6 +543,39 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
+  // Step picker
+  const [availableSteps, setAvailableSteps] = useState<InstallStep[]>([]);
+  const [selectedStepIds, setSelectedStepIds] = useState<string[]>([]);
+  const [loadingSteps, setLoadingSteps] = useState(false);
+
+  // Fetch steps when slot changes
+  useEffect(() => {
+    if (!slot?.kID) return;
+    setLoadingSteps(true);
+    console.log('[EditSlotModal] Fetching steps for kID:', slot.kID);
+    fetch(`/api/work-breakdown/${encodeURIComponent(slot.kID)}`)
+      .then(r => {
+        console.log('[EditSlotModal] work-breakdown response status:', r.status);
+        return r.ok ? r.json() : Promise.reject(r.status);
+      })
+      .then(data => {
+        console.log('[EditSlotModal] steps received:', (data.steps || []).length);
+        const steps: InstallStep[] = (data.steps || []).filter((s: InstallStep) => s.install_step_id);
+        setAvailableSteps(steps);
+        // Pre-select steps already assigned to this slot
+        if (slot.step_ids) {
+          const ids = slot.step_ids.split(',').map((s: string) => s.trim()).filter(Boolean);
+          setSelectedStepIds(ids);
+        } else {
+          setSelectedStepIds([]);
+        }
+      })
+      .catch((err) => {
+        console.warn('[EditSlotModal] step fetch failed:', err);
+        setAvailableSteps([]);
+      })
+      .finally(() => setLoadingSteps(false));
+  }, [slot?.kID]);
 
   useEffect(() => {
     if (!slot) return;
@@ -589,6 +622,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           hours_estimated: hours,
           notes,
           start_time: startTime,
+          step_ids: selectedStepIds,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -725,6 +759,36 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Notes</label>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} />
         </div>
+
+        {/* Step Picker */}
+        {(availableSteps.length > 0 || loadingSteps) && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+              Install Steps ({selectedStepIds.length} selected)
+            </label>
+            {loadingSteps ? (
+              <div style={{ fontSize: 12, color: '#64748b', padding: '8px 0' }}>Loading steps…</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+                {availableSteps.map(step => {
+                  const checked = selectedStepIds.includes(step.install_step_id);
+                  return (
+                    <label key={step.install_step_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', background: checked ? 'rgba(20,184,166,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${checked ? 'rgba(20,184,166,0.3)' : 'rgba(255,255,255,0.06)'}`, marginBottom: 3 }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, background: checked ? '#14b8a6' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${checked ? '#14b8a6' : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
+                      </div>
+                      <input type="checkbox" checked={checked} onChange={() => setSelectedStepIds(prev => checked ? prev.filter(id => id !== step.install_step_id) : [...prev, step.install_step_id])} style={{ display: 'none' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: checked ? '#e2e8f0' : '#94a3b8', fontWeight: checked ? 700 : 400 }}>{step.step_name}</div>
+                        {step.allotted_hours > 0 && <div style={{ fontSize: 11, color: '#475569' }}>{step.allotted_hours}h allotted</div>}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', background: saving ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)', border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', marginBottom: 10 }}>
           {saving ? '⏳ Saving…' : '✓ Save Changes'}
