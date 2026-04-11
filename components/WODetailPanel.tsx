@@ -462,7 +462,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={SECTION_TITLE}>Customer &amp; Site</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
-                    <label style={LBL}>Customer / Account Name</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <label style={{ ...LBL, marginBottom: 0 }}>Customer / Account Name</label>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
+                    </div>
                     <AutocompleteInput
                       value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''}
                       onChange={v => update('customer_name', v)}
@@ -482,7 +485,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <label style={LBL}>Contact Person</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <label style={{ ...LBL, marginBottom: 0 }}>Contact Person</label>
+                        <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
+                      </div>
                       <AutocompleteInput
                         value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? ''}
                         onChange={v => update('contact_person', v)}
@@ -509,7 +515,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <input type="email" style={INP} value={(draft as WorkOrder & { contact_email?: string }).contact_email ?? wo.contact_email ?? ''} onChange={e => update('contact_email', e.target.value)} onBlur={e => update('contact_email', normalizeEmail(e.target.value))} placeholder="email@example.com" />
                   </div>
                   <div>
-                    <label style={LBL}>Address</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <label style={{ ...LBL, marginBottom: 0 }}>Address</label>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(66,133,244,0.1)', color: '#1a56db', border: '1px solid rgba(66,133,244,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Places</span>
+                    </div>
                     <PlacesAutocomplete
                       value={draft.address || ''}
                       onChange={v => update('address', v)}

@@ -19,10 +19,11 @@ type StepTemplate = { step_name: string; default_hours: number; category?: strin
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
-const FL = (label: string, auto?: boolean) => (
+const FL = (label: string, auto?: boolean, places?: boolean) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
     <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b' }}>{label}</span>
     {auto && <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>}
+    {places && <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(66,133,244,0.1)', color: '#1a56db', border: '1px solid rgba(66,133,244,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Places</span>}
   </div>
 );
 
@@ -347,7 +348,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>Customer &amp; Site Information</div>
 
           <div>
-            {FL('Business / Property Name')}
+            {FL('Business / Property Name', true)}
             <AutocompleteInput
               value={draft.businessName}
               onChange={v => update('businessName', v)}
@@ -362,7 +363,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           </div>
 
           <div>
-            {FL('Customer / Account Name')}
+            {FL('Customer / Account Name', true)}
             <AutocompleteInput
               value={draft.customerName}
               onChange={v => update('customerName', v)}
@@ -402,7 +403,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           </div>
 
           <div>
-            {FL('Site Address')}
+            {FL('Site Address', false, true)}
             <PlacesAutocomplete
               value={draft.address}
               onChange={v => update('address', v)}
