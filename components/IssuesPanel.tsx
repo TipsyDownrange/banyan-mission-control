@@ -78,6 +78,8 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
   useEffect(() => {
     fetchIssues();
     fetch('/api/crew').then(r => r.json()).then(d => setCrew(d.all || d.crew || [])).catch(() => {});
+    const interval = setInterval(fetchIssues, 60000); // auto-refresh every 60s
+    return () => clearInterval(interval);
   }, [fetchIssues]);
 
   // Enrich issues with derived fields

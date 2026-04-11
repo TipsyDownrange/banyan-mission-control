@@ -1,0 +1,156 @@
+/**
+ * POST /api/notify/field-issue
+ *
+ * Called by the Field App after a FIELD_ISSUE event is written to the sheet.
+ * Sends email to the WO's PM + island superintendent. CCs sean@ on BLOCKING issues.
+ * Uses domain-wide delegation via kai-drive-access SA (same as proposal emails).
+ * No auth required — called cross-origin from Field App (fire-and-forget pattern).
+ */
+
+import { NextResponse } from 'next/server';
+import { google } from 'googleapis';
+
+const SA_KEY = process.env.GOOGLE_SA_KEY_BASE64 || '';
+const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SENDER = 'joey@kulaglass.com';
+
+/** RFC 2047 encode for non-ASCII subject characters */
+function rfc2047Encode(text: string): string {
+  if (/^[\x20-\x7E]*$/.test(text)) return text;
+  return `=?UTF-8?B?${Buffer.from(text, 'utf-8').toString('base64')}?=`;
+}
+
+function getSheetsAuth() {
+  const keyJson = JSON.parse(Buffer.from(SA_KEY, 'base64').toString('utf-8'));
+  return new google.auth.GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+}
+
+function getGmailAuth(subject: string) {
+  const keyJson = JSON.parse(Buffer.from(SA_KEY, 'base64').toString('utf-8'));
+  return new google.auth.JWT({
+    email: keyJson.client_email,
+    key: keyJson.private_key,
+    scopes: ['https://www.googleapis.com/auth/gmail.send'],
+    subject, // impersonate this address
+  });
+}
+
+async function lookupWO(kID: string) {
+  const auth = getSheetsAuth();
+  const sheets = google.sheets({ version: 'v4', auth });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:O2000' });
+  const rows = res.data.values || [];
+  return rows.find(r => r[0] === kID || r[0]?.includes(kID.replace('WO-', '')));
+}
+
+async function lookupUsers() {
+  const auth = getSheetsAuth();
+  const sheets = google.sheets({ version: 'v4', auth });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:F100' });
+  return (res.data.values || []).map(r => ({
+    name: r[1] || '', role: r[2] || '', email: r[3] || '', island: r[5] || '',
+  }));
+}
+
+export async function POST(req: Request) {
+  if (!SA_KEY) {
+    console.error('[notify/field-issue] GOOGLE_SA_KEY_BASE64 not set');
+    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+  }
+
+  let body: {
+    event_id: string; kID: string; project_name: string;
+    severity: string; blocking: boolean;
+    description: string; category: string; responsible_party: string;
+    reported_by: string; location: string; photo_count: number; timestamp: string;
+  };
+  try { body = await req.json(); }
+  catch (e) { console.error('[notify/field-issue] bad body:', e); return NextResponse.json({ error: 'Invalid body' }, { status: 400 }); }
+
+  const { kID, project_name, severity, blocking, description, category,
+    responsible_party, reported_by, location, photo_count, timestamp } = body;
+
+  try {
+    // Resolve recipients
+    const [woRow, users] = await Promise.all([lookupWO(kID), lookupUsers()]);
+    const woIsland = woRow?.[5] || 'Maui';
+    const assignedToName = woRow?.[9] || ''; // col J = assigned_to
+
+    // PM: match by name in assigned_to field, or fall back to joey@
+    let pmEmail = 'joey@kulaglass.com';
+    if (assignedToName) {
+      const pmUser = users.find(u => u.name.toLowerCase() === assignedToName.toLowerCase() && u.email);
+      if (pmUser?.email) pmEmail = pmUser.email;
+    }
+
+    // Superintendent: match by island + role contains Superintendent
+    const superUser = users.find(u =>
+      u.island.toLowerCase() === woIsland.toLowerCase() &&
+      u.role.toLowerCase().includes('superintendent') &&
+      u.email
+    );
+    const superEmail = superUser?.email || '';
+
+    const recipients = [pmEmail];
+    if (superEmail && superEmail !== pmEmail) recipients.push(superEmail);
+
+    // Format timestamp
+    const dt = new Date(timestamp);
+    const timeStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) +
+      ' at ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Pacific/Honolulu' }) + ' HST';
+
+    const severityLabel = severity === 'CRITICAL' ? '🔴 BLOCKING' : severity === 'HIGH' ? '🟡 Problem' : '🟢 Note';
+    const subjectText = blocking
+      ? `🚨 [BLOCKING] Field Issue — ${project_name}`
+      : `⚠️ Field Issue — ${project_name}`;
+
+    const bodyText = [
+      `FIELD ISSUE REPORTED`,
+      ``,
+      `Project: ${project_name}`,
+      `WO: ${kID}`,
+      `Severity: ${severityLabel}`,
+      `Blocking: ${blocking ? 'YES — crew stopped' : 'No'}`,
+      `Category: ${category}`,
+      `Caused By: ${responsible_party}`,
+      location ? `Location: ${location}` : null,
+      ``,
+      `Description:`,
+      description,
+      ``,
+      `Reported by: ${reported_by}`,
+      `Time: ${timeStr}`,
+      `Photos: ${photo_count} attached to event record`,
+      ``,
+      `View in Mission Control:`,
+      `https://banyan-mission-control.vercel.app`,
+      `(Issues panel → filter by project)`,
+    ].filter(l => l !== null).join('\n');
+
+    const auth = getGmailAuth(SENDER);
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    const toList = recipients.join(', ');
+    const ccList = blocking ? 'sean@kulaglass.com' : '';
+    const headerLines = [
+      `From: Kula Glass Field App <${SENDER}>`,
+      `To: ${toList}`,
+      ccList ? `Cc: ${ccList}` : null,
+      `Subject: ${rfc2047Encode(subjectText)}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/plain; charset=utf-8`,
+      ``,
+      bodyText,
+    ].filter(l => l !== null).join('\r\n');
+
+    const raw = Buffer.from(headerLines).toString('base64url');
+    const result = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+
+    console.log(`[notify/field-issue] Sent to ${toList}${ccList ? ` CC ${ccList}` : ''} | msgId: ${result.data.id}`);
+    return NextResponse.json({ ok: true, recipients, message_id: result.data.id });
+
+  } catch (err) {
+    console.error('[notify/field-issue] error:', err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
