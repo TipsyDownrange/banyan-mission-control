@@ -156,10 +156,19 @@ async function emailCustomer(params: {
       `--${boundary}--`,
     ].join('\r\n')).toString('base64url');
 
-    await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+    const result = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+    console.log('[Email] Gmail API success, message ID:', result.data?.id, 'thread:', result.data?.threadId);
     return true;
-  } catch (e) {
-    console.error('Email failed:', e);
+  } catch (e: unknown) {
+    const err = e as { code?: number; message?: string; errors?: unknown[] };
+    console.error('[Email] Gmail API FAILED:', JSON.stringify({
+      code: err?.code,
+      message: err?.message,
+      errors: err?.errors,
+      sender: senderEmail,
+      to: params.to,
+      sa_client: keyJson?.client_email,
+    }));
     return false;
   }
 }
