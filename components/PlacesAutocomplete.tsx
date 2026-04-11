@@ -1,7 +1,7 @@
 'use client';
 /**
- * PlacesAutocomplete — Places API (New) via google.maps.importLibrary("places").
- * Uses AutocompleteSuggestion + Place.fetchFields. Custom dropdown, no map tiles.
+ * PlacesAutocomplete — calls our own /api/places/* proxy (server-side key).
+ * No Google Maps JS API loaded in the browser. Custom dropdown, no map tiles.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -25,6 +25,13 @@ export interface PlacesAutocompleteProps {
   disabled?: boolean;
 }
 
+interface Suggestion {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  fullText: string;
+}
+
 function detectIsland(city: string, formatted: string): string {
   const t = (city + ' ' + formatted).toLowerCase();
   if (/kahului|lahaina|kihei|paia|makawao|haiku|wailuku|pukalani|kula|wailea|napili|kapalua|maalaea|hana|maui/.test(t)) return 'Maui';
@@ -35,78 +42,17 @@ function detectIsland(city: string, formatted: string): string {
   return '';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PlacesLib = any;
-
-let libPromise: Promise<PlacesLib> | null = null;
-
-function loadPlacesLib(apiKey: string): Promise<PlacesLib> {
-  if (libPromise) return libPromise;
-
-  libPromise = new Promise((resolve, reject) => {
-    // Inject the bootstrap script with loading=async (required for importLibrary)
-    if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
-      const s = document.createElement('script');
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async`;
-      s.async = true;
-      document.head.appendChild(s);
-    }
-
-    // Poll until google.maps.importLibrary is available
-    let attempts = 0;
-    const poll = setInterval(async () => {
-      attempts++;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const g = (window as any).google;
-      if (g?.maps?.importLibrary) {
-        clearInterval(poll);
-        try {
-          const lib = await g.maps.importLibrary('places');
-          console.log('[Places] Library loaded. AutocompleteSuggestion:', !!lib.AutocompleteSuggestion);
-          resolve(lib);
-        } catch (e) {
-          reject(e);
-        }
-      } else if (attempts > 100) {
-        clearInterval(poll);
-        reject(new Error('google.maps.importLibrary not available after 10s'));
-      }
-    }, 100);
-  });
-
-  return libPromise;
-}
-
 export default function PlacesAutocomplete({
   value, onChange, onSelect, placeholder = 'Start typing an address…', style, disabled,
 }: PlacesAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const sessionRef = useRef<unknown>(null);
-  const libRef = useRef<PlacesLib>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [ready, setReady] = useState(false);
-  const [predictions, setPredictions] = useState<unknown[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-
-  useEffect(() => {
-    if (!apiKey) { console.warn('[Places] No API key'); return; }
-    console.log('[Places] Init, key prefix:', apiKey.slice(0, 14) + '…');
-    loadPlacesLib(apiKey)
-      .then(lib => {
-        libRef.current = lib;
-        if (lib.AutocompleteSessionToken) {
-          sessionRef.current = new lib.AutocompleteSessionToken();
-        }
-        setReady(true);
-        console.log('[Places] Ready');
-      })
-      .catch(e => console.error('[Places] Load failed:', e));
-  }, [apiKey]);
-
+  // Close on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
@@ -115,77 +61,71 @@ export default function PlacesAutocomplete({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const fetchPredictions = useCallback((input: string) => {
-    if (!ready || !libRef.current || input.length < 3) { setPredictions([]); setOpen(false); return; }
+  const fetchSuggestions = useCallback((input: string) => {
+    if (input.length < 3) { setSuggestions([]); setOpen(false); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      const lib = libRef.current;
-      if (!lib?.AutocompleteSuggestion) {
-        console.error('[Places] AutocompleteSuggestion not in lib:', Object.keys(lib || {}));
-        return;
-      }
       try {
-        console.log('[Places] fetchAutocompleteSuggestions ->', input);
-        const { suggestions } = await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input,
-          includedRegionCodes: ['us'],
-          sessionToken: sessionRef.current,
-        });
-        console.log('[Places] suggestions:', suggestions?.length ?? 0);
+        const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(input)}`);
+        const data = await res.json();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setPredictions(suggestions?.map((s: any) => s.placePrediction) ?? []);
-        setOpen((suggestions?.length ?? 0) > 0);
+        const parsed: Suggestion[] = (data.suggestions || []).map((s: any) => ({
+          placeId: s.placePrediction?.placeId ?? '',
+          mainText: s.placePrediction?.structuredFormat?.mainText?.text ?? s.placePrediction?.text?.text ?? '',
+          secondaryText: s.placePrediction?.structuredFormat?.secondaryText?.text ?? '',
+          fullText: s.placePrediction?.text?.text ?? '',
+        })).filter((s: Suggestion) => s.placeId);
+        setSuggestions(parsed);
+        setOpen(parsed.length > 0);
         setActiveIdx(-1);
       } catch (e) {
-        console.error('[Places] fetchAutocompleteSuggestions error:', e);
-        setPredictions([]); setOpen(false);
+        console.error('[Places] autocomplete error:', e);
+        setSuggestions([]); setOpen(false);
       }
     }, 250);
-  }, [ready]);
+  }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function selectPrediction(pred: any) {
+  async function selectSuggestion(s: Suggestion) {
     setOpen(false);
-    setPredictions([]);
-    onChange(pred.text?.text ?? pred.mainText?.text ?? '');
+    setSuggestions([]);
+    onChange(s.fullText || s.mainText);
 
     try {
-      const place = pred.toPlace();
-      await place.fetchFields({ fields: ['formattedAddress', 'addressComponents', 'location'] });
+      const res = await fetch(`/api/places/details?placeId=${encodeURIComponent(s.placeId)}`);
+      const place = await res.json();
+      if (place.error) return;
 
-      // Refresh session token
-      const lib = libRef.current;
-      if (lib?.AutocompleteSessionToken) sessionRef.current = new lib.AutocompleteSessionToken();
-
-      const formatted = place.formattedAddress ?? pred.text?.text ?? '';
+      const formatted = place.formattedAddress ?? s.fullText;
       let street = '', city = '', state = '', zip = '';
+
       for (const c of place.addressComponents ?? []) {
-        if (c.types.includes('street_number'))    street = c.longText + ' ';
-        else if (c.types.includes('route'))       street += c.longText;
-        else if (c.types.includes('locality'))    city   = c.longText;
-        else if (c.types.includes('sublocality_level_1') && !city) city = c.longText;
-        else if (c.types.includes('administrative_area_level_1')) state = c.shortText;
-        else if (c.types.includes('postal_code')) zip    = c.longText;
+        const types: string[] = c.types ?? [];
+        if (types.includes('street_number'))              street = (c.longText ?? '') + ' ';
+        else if (types.includes('route'))                 street += (c.longText ?? '');
+        else if (types.includes('locality'))              city   = c.longText ?? '';
+        else if (types.includes('sublocality_level_1') && !city) city = c.longText ?? '';
+        else if (types.includes('administrative_area_level_1')) state = c.shortText ?? '';
+        else if (types.includes('postal_code'))           zip    = c.longText ?? '';
       }
+
       const island = detectIsland(city, formatted);
       onChange(formatted);
       onSelect({
         formatted_address: formatted,
         street: street.trim(), city, state, zip, island,
-        lat: place.location?.lat() ?? 0,
-        lng: place.location?.lng() ?? 0,
+        lat: place.location?.latitude ?? 0,
+        lng: place.location?.longitude ?? 0,
       });
     } catch (e) {
-      console.error('[Places] fetchFields error:', e);
+      console.error('[Places] details error:', e);
     }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!open || predictions.length === 0) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, predictions.length - 1)); }
+    if (!open || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, suggestions.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); selectPrediction(predictions[activeIdx] as any); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); selectSuggestion(suggestions[activeIdx]); }
     else if (e.key === 'Escape') setOpen(false);
   }
 
@@ -201,7 +141,7 @@ export default function PlacesAutocomplete({
       <input
         type="text"
         value={value}
-        onChange={e => { onChange(e.target.value); fetchPredictions(e.target.value); }}
+        onChange={e => { onChange(e.target.value); fetchSuggestions(e.target.value); }}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
@@ -211,26 +151,25 @@ export default function PlacesAutocomplete({
         aria-expanded={open}
       />
 
-      {open && predictions.length > 0 && (
+      {open && suggestions.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
           background: 'white', border: '1px solid #e2e8f0', borderRadius: 10,
           boxShadow: '0 8px 24px rgba(15,23,42,0.12)', marginTop: 4, overflow: 'hidden',
         }}>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {(predictions as any[]).map((p: any, i) => (
+          {suggestions.map((s, i) => (
             <div
-              key={p.placeId ?? i}
-              onMouseDown={e => { e.preventDefault(); selectPrediction(p); }}
+              key={s.placeId}
+              onMouseDown={e => { e.preventDefault(); selectSuggestion(s); }}
               onMouseEnter={() => setActiveIdx(i)}
               style={{
                 padding: '9px 12px', cursor: 'pointer',
                 background: i === activeIdx ? '#f0fdfa' : 'white',
-                borderBottom: i < predictions.length - 1 ? '1px solid #f1f5f9' : 'none',
+                borderBottom: i < suggestions.length - 1 ? '1px solid #f1f5f9' : 'none',
               }}
             >
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{p.mainText?.text ?? p.text?.text}</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{p.secondaryText?.text ?? ''}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{s.mainText}</div>
+              {s.secondaryText && <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{s.secondaryText}</div>}
             </div>
           ))}
           <div style={{ padding: '5px 12px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'right' }}>
