@@ -1,11 +1,11 @@
 import { google } from 'googleapis';
+import { normalizeKID } from './normalize-kid';
 import { getGoogleAuth } from '@/lib/gauth';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
-function normalizeJobId(value: string): string {
-  return value.replace(/^WO-/i, '').trim();
-}
+// Using shared normalizeKID from normalize-kid.ts
+const normalizeJobId = (value: string) => normalizeKID(value);
 
 function matchesJobId(candidate: string, jobIds: Set<string>): boolean {
   return jobIds.has(normalizeJobId(candidate || ''));

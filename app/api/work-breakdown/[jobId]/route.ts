@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { normalizeKID, kidsMatch } from '@/lib/normalize-kid';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
@@ -136,15 +137,9 @@ export async function GET(
     const allSteps = (stepsRes.data.values || []).map(rowToInstallStep);
     const allCompletions = (completionsRes.data.values || []).map(rowToCompletion);
 
-    // Build a set of job_id aliases: match by exact id OR by stripping WO- prefix variants
-    // WO IDs can be stored as "WO-26-0001" (wo_id) or "26-0001" / "WO-26-0001" (wo_number)
-    // Allow flexible matching so existing records created under any format still load
+    // Use canonical normalizer — handles WO-, PRJ-, SRV- prefixes
     function jobIdMatches(planJobId: string): boolean {
-      if (planJobId === jobId) return true;
-      // Strip leading "WO-" from both sides and compare
-      const stripped = (s: string) => s.replace(/^WO-/i, '');
-      if (stripped(planJobId) === stripped(jobId)) return true;
-      return false;
+      return kidsMatch(planJobId, jobId);
     }
 
     // Extract docs from special __JOB_DOCS__ plan row

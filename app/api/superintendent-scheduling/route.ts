@@ -33,6 +33,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { kidsMatch } from '@/lib/normalize-kid';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { deriveWorkOrderStatus } from '@/lib/service-status';
@@ -319,9 +320,7 @@ export async function GET(req: Request) {
         const woKID = wo.wo_number || wo.wo_id;
         const woPlans = allPlans.filter(p =>
           p.system_type !== '__JOB_DOCS__' &&
-          (p.job_id === woKID ||
-           p.job_id === `WO-${woKID}` ||
-           p.job_id.replace(/^WO-/i, '') === woKID.replace(/^WO-/i, ''))
+          kidsMatch(p.job_id, woKID)
         );
         const woSteps = woPlans.flatMap(p => stepsByPlanId.get(p.install_plan_id) || []);
         const totalSteps = woSteps.length;
@@ -534,7 +533,7 @@ export async function POST(req: Request) {
           for (let i = 0; i < woRows2.length; i++) {
             const rowWoId = (woRows2[i][0] || '').trim();
             const rowWoNum = (woRows2[i][1] || '').trim();
-            if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+            if (kidsMatch(rowWoId, kID) || kidsMatch(rowWoNum, kID)) {
               await sheets.spreadsheets.values.update({
                 spreadsheetId: SHEET_ID,
                 range: `Service_Work_Orders!E${i + 2}`,
@@ -694,7 +693,7 @@ export async function PATCH(req: Request) {
             for (let i = 0; i < woRowsC.length; i++) {
               const rowWoId = (woRowsC[i][0] || '').trim();
               const rowWoNum = (woRowsC[i][1] || '').trim();
-              if (rowWoId === kID || rowWoNum === kID || `WO-${rowWoNum}` === kID) {
+              if (kidsMatch(rowWoId, kID) || kidsMatch(rowWoNum, kID)) {
                 await sheets.spreadsheets.values.update({
                   spreadsheetId: SHEET_ID,
                   range: `Service_Work_Orders!E${i + 2}`,

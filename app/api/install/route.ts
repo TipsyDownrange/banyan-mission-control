@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { kidsMatch } from '@/lib/normalize-kid';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
@@ -53,9 +54,7 @@ function rowToCompletion(r: string[]) {
 }
 
 function jobIdMatches(jobId: string, targetId: string): boolean {
-  if (jobId === targetId) return true;
-  const strip = (value: string) => value.replace(/^WO-/i, '');
-  return strip(jobId) === strip(targetId);
+  return kidsMatch(jobId, targetId);
 }
 
 export async function GET(req: Request) {
@@ -139,7 +138,7 @@ export async function GET(req: Request) {
 
     const projectIds = [...new Set(items.map((item) => item.kID).filter(Boolean))];
     const summary = projectIds.map((projectId) => {
-      const projectItems = items.filter((item) => item.kID === projectId);
+      const projectItems = items.filter((item) => kidsMatch(item.kID, projectId));
       const total = projectItems.length;
       const complete = projectItems.filter((item) => item.status === 'Complete').length;
       const inProgress = projectItems.filter((item) => item.status === 'In Progress').length;

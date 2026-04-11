@@ -17,6 +17,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { kidsMatch } from '@/lib/normalize-kid';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
@@ -100,7 +101,7 @@ export async function GET(req: Request) {
       // Skip soft-deleted
       if (row[COL.is_valid] === 'FALSE') return false;
 
-      if (kID && row[COL.target_kID] !== kID) return false;
+      if (kID && !kidsMatch(row[COL.target_kID], kID)) return false;
 
       if (eventType && row[COL.event_type]?.toUpperCase() !== eventType.toUpperCase()) return false;
 
