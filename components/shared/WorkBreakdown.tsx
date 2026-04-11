@@ -1177,6 +1177,16 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             onSave={(notes) => handleSaveNote(step.install_step_id, markId, notes)}
           />
         )}
+
+        {/* View Measurement link — shown when completion notes reference a measurement event */}
+        {completion && (() => {
+          const notesStr = completion.notes || '';
+          const isMeasure = notesStr.includes('Measurement captured via Field App');
+          if (!isMeasure) return null;
+          const evtIdMatch = notesStr.match(/event_id:\s*([\w-]+)/);
+          const evtId = evtIdMatch?.[1];
+          return <MeasurementViewButton eventId={evtId} kID={jobId} />
+        })()}
       </div>
     );
   }
@@ -1842,6 +1852,71 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 }
 
 // ─── Note Field (inline) ──────────────────────────────────────────────────────
+
+function MeasurementViewButton({ eventId, kID }: { eventId?: string; kID: string }) {
+  const [data, setData] = React.useState<{ notes: string; performed_by: string; occurred_at: string } | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  async function load() {
+    setLoading(true);
+    try {
+      let event = null;
+      if (eventId) {
+        const r = await fetch(`/api/events/${eventId}`);
+        const d = await r.json();
+        event = d.event || null;
+      } else {
+        const r = await fetch(`/api/events?kID=${encodeURIComponent(kID)}&event_type=FIELD_MEASUREMENT`);
+        const d = await r.json();
+        event = d.events?.[d.events.length - 1] || null;
+      }
+      if (event) { setData(event); setOpen(true); }
+    } catch (e) { console.error('[MeasurementViewButton] fetch error:', e); }
+    setLoading(false);
+  }
+
+  let parsed: Record<string, unknown> = {};
+  try { if (data?.notes) parsed = JSON.parse(data.notes); } catch {}
+  const fields = (parsed.fields || {}) as Record<string, string | boolean>;
+  const systemType = (parsed.system_type as string) || '';
+
+  const groups = new Map<string, Array<{ key: string; label: string; type: string; unit?: string }> >();
+  for (const [k, v] of Object.entries(fields)) {
+    if (v === undefined || v === '') continue;
+    groups.set('Fields', [...(groups.get('Fields') || []), { key: k, label: k.replace(/_/g, ' '), type: typeof v === 'boolean' ? 'boolean' : 'text', unit: '' }]);
+  }
+
+  return (
+    <div style={{ marginTop: 6 }}>
+      <button
+        onClick={open ? () => setOpen(false) : load}
+        disabled={loading}
+        style={{ fontSize: 11, fontWeight: 700, color: '#0891b2', background: 'rgba(8,145,178,0.08)', border: '1px solid rgba(8,145,178,0.2)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}
+      >
+        {loading ? 'Loading…' : open ? '▴ Hide Measurement' : '📏 View Measurement'}
+      </button>
+
+      {open && data && (
+        <div style={{ marginTop: 8, padding: '12px 14px', borderRadius: 10, background: '#f0f9ff', border: '1px solid rgba(8,145,178,0.2)' }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#0891b2', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {systemType} · {data.performed_by} · {data.occurred_at ? new Date(data.occurred_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+            {Object.entries(fields).map(([k, v]) => (
+              <div key={k}>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b' }}>{k.replace(/_/g, ' ')}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                  {typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function NoteField({ value, onSave }: { value: string; onSave: (v: string) => void }) {
   const [draft, setDraft] = useState(value);
