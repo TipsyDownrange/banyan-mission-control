@@ -317,7 +317,8 @@ export async function GET(req: Request) {
       // No artificial limit — frontend has search/filters to handle the full list
       .map(wo => {
         // Compute step counts for this WO
-        const woKID = wo.wo_number || wo.wo_id;
+        // GC-D021: always use wo_id (WO- prefixed canonical ID), never wo_number
+        const woKID = wo.wo_id || (wo.wo_number ? 'WO-' + wo.wo_number : '');
         const woPlans = allPlans.filter(p =>
           p.system_type !== '__JOB_DOCS__' &&
           kidsMatch(p.job_id, woKID)

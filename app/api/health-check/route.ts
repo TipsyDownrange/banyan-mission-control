@@ -50,7 +50,8 @@ export async function GET() {
   });
 
   const results = wos.slice(0, 100).map(wo => {
-    const woKID = wo.wo_number || wo.wo_id;
+    // GC-D021: always use wo_id (canonical, WO- prefixed)
+    const woKID = wo.wo_id || (wo.wo_number ? 'WO-' + wo.wo_number : '');
     const woNorm = normalizeKID(woKID);
 
     // Plans for this WO
