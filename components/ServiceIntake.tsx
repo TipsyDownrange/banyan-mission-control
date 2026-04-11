@@ -446,11 +446,15 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
           <div>
             {FL('Business / Property Name')}
-            <input
+            <AutocompleteInput
               value={draft.businessName}
-              onChange={e => update('businessName', e.target.value)}
+              onChange={v => update('businessName', v)}
+              onSelect={c => setDraft(prev => applyCustomerRecord(prev, c))}
               placeholder='"Shell Station", "Westin Nanea", "John&apos;s Residence"'
               style={INP}
+              customers={customers}
+              matchField="company"
+              subField="address"
             />
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>The specific site or property — goes in the WO name</div>
           </div>

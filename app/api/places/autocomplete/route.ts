@@ -5,6 +5,8 @@
  */
 import { NextResponse } from 'next/server';
 
+// GOOGLE_MAPS_SERVER_KEY is unrestricted (server-only, no NEXT_PUBLIC_)
+// Falls back to the public key if the server key isn't set yet
 const API_KEY = process.env.GOOGLE_MAPS_SERVER_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 export async function GET(req: Request) {
