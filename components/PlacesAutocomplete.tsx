@@ -150,11 +150,6 @@ export default function PlacesAutocomplete({
         const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input,
           includedRegionCodes: ['us'],
-          includedPrimaryTypes: ['street_address', 'premise', 'subpremise'],
-          locationBias: {
-            center: { lat: 20.8, lng: -156.3 },
-            radius: 400000,
-          },
           sessionToken: sessionRef.current,
         });
         console.log('[Places] suggestions:', suggestions.length);
