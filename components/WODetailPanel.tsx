@@ -4,6 +4,8 @@ import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 import type { ParsedPlace } from '@/components/PlacesAutocomplete';
+import AutocompleteInput from '@/components/shared/AutocompleteInput';
+import type { CustomerRecord } from '@/app/api/service/customers/route';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -85,6 +87,7 @@ interface WODetailPanelProps {
 
 export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onEstimate, onFolderLinked }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -101,6 +104,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
   // Sync linkedFolderUrl from wo prop
   useEffect(() => { setLinkedFolderUrl(wo?.folderUrl); }, [wo?.folderUrl]);
+
+  // Load customers for autocomplete (once on mount)
+  useEffect(() => {
+    fetch('/api/service/customers')
+      .then(r => r.json())
+      .then(data => setCustomers(data.customers || data || []))
+      .catch(err => console.error('[WODetailPanel] Failed to load customers:', err));
+  }, []);
 
   async function handleLinkFolder() {
     if (!linkFolderInput || !wo) return;
@@ -194,7 +205,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           _island: latest.island || safeWo.island,
         });
         setDirty(false);
-      } catch {} finally { setSaving(false); }
+      } catch (err) { console.error('[WODetailPanel] auto-save failed:', err); } finally { setSaving(false); }
     }, 2000);
   }
 
@@ -452,13 +463,41 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
                     <label style={LBL}>Customer / Account Name</label>
-                    <input style={INP} value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''} onChange={e => update('customer_name', e.target.value)} onBlur={e => update('customer_name', normalizeName(e.target.value))} placeholder="Billing account name" />
-                    {/* Task 4b: AutocompleteInput for customer name wired in ServiceIntake; WODetailPanel uses plain input + manual autosave-on-blur (GC-D021 compliant) */}
+                    <AutocompleteInput
+                      value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''}
+                      onChange={v => update('customer_name', v)}
+                      onSelect={c => {
+                        update('customer_name', c.company || c.name || '');
+                        if (c.contactPerson) update('contact_person', c.contactPerson);
+                        if (c.phone || c.contactPhone) update('contact_phone', c.phone || c.contactPhone || '');
+                        if (c.email) update('contact_email', c.email);
+                        if (c.address) update('address', c.address);
+                      }}
+                      placeholder="Billing account name"
+                      style={INP}
+                      customers={customers}
+                      matchField="company"
+                      subField="address"
+                    />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label style={LBL}>Contact Person</label>
-                      <input style={INP} value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? ''} onChange={e => update('contact_person', e.target.value)} placeholder="Person on site" />
+                      <AutocompleteInput
+                        value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? ''}
+                        onChange={v => update('contact_person', v)}
+                        onSelect={c => {
+                          update('contact_person', c.contactPerson || '');
+                          if (c.company) update('customer_name', c.company);
+                          if (c.phone || c.contactPhone) update('contact_phone', c.phone || c.contactPhone || '');
+                          if (c.email) update('contact_email', c.email);
+                        }}
+                        placeholder="Person on site"
+                        style={INP}
+                        customers={customers}
+                        matchField="contactPerson"
+                        subField="company"
+                      />
                     </div>
                     <div>
                       <label style={LBL}>Contact Phone</label>
