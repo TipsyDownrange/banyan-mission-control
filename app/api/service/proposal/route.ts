@@ -104,6 +104,13 @@ async function uploadPDFToDrive(
   }
 }
 
+/** RFC 2047 encode a header value so non-ASCII (em dashes, curly quotes, etc.) survives SMTP */
+function rfc2047Encode(text: string): string {
+  if (/^[\x20-\x7E]*$/.test(text)) return text;
+  const encoded = Buffer.from(text, 'utf-8').toString('base64');
+  return `=?UTF-8?B?${encoded}?=`;
+}
+
 async function emailCustomer(params: {
   to: string;
   subject: string;
@@ -137,7 +144,7 @@ async function emailCustomer(params: {
     const raw = Buffer.from([
       `From: ${params.senderName || 'Kula Glass'} <${senderEmail}>`,
       `To: ${params.to}`,
-      `Subject: ${params.subject}`,
+      `Subject: ${rfc2047Encode(params.subject)}`,
       `MIME-Version: 1.0`,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       ``,

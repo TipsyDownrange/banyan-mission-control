@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
+/** RFC 2047 encode a header value so non-ASCII characters survive SMTP */
+function rfc2047Encode(text: string): string {
+  if (/^[\x20-\x7E]*$/.test(text)) return text;
+  const encoded = Buffer.from(text, 'utf-8').toString('base64');
+  return `=?UTF-8?B?${encoded}?=`;
+}
+
 export async function POST(req: Request) {
   try {
     const { messageId, delegateTo, delegateEmail, subject, snippet } = await req.json();
@@ -36,7 +43,7 @@ export async function POST(req: Request) {
     const fwdNote = [
       `---------- Forwarded message ---------`,
       `From: sean@kulaglass.com`,
-      `Subject: ${subject}`,
+      `Subject: ${rfc2047Encode(subject)}`,
       ``,
       `Delegating to you for review and action. Please add to Bid Queue or mark No Bid.`,
       ``,
@@ -58,7 +65,7 @@ export async function POST(req: Request) {
     const forwardedEmail = [
       `From: Sean Daniels <sean@kulaglass.com>`,
       `To: ${delegateTo} <${delegateEmail}>`,
-      `Subject: Fwd: ${subject}`,
+      `Subject: ${rfc2047Encode('Fwd: ' + subject)}`,
       `MIME-Version: 1.0`,
       contentType,
       ``,
