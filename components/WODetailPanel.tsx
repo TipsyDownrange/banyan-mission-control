@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
+import PlacesAutocomplete from '@/components/PlacesAutocomplete';
+import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -451,6 +453,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <div>
                     <label style={LBL}>Customer / Account Name</label>
                     <input style={INP} value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''} onChange={e => update('customer_name', e.target.value)} onBlur={e => update('customer_name', normalizeName(e.target.value))} placeholder="Billing account name" />
+                    {/* Task 4b: AutocompleteInput for customer name wired in ServiceIntake; WODetailPanel uses plain input + manual autosave-on-blur (GC-D021 compliant) */}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
@@ -468,7 +471,16 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   </div>
                   <div>
                     <label style={LBL}>Address</label>
-                    <input style={INP} value={draft.address || ''} onChange={e => update('address', e.target.value)} placeholder="Street address" />
+                    <PlacesAutocomplete
+                      value={draft.address || ''}
+                      onChange={v => update('address', v)}
+                      onSelect={(place: ParsedPlace) => {
+                        update('address', place.formatted_address);
+                        if (place.island) update('island', place.island);
+                      }}
+                      placeholder="Start typing an address…"
+                      style={INP}
+                    />
                   </div>
                 </div>
               </div>

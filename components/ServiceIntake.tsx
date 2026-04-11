@@ -1,5 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import PlacesAutocomplete from '@/components/PlacesAutocomplete';
+import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 import type { CustomerRecord } from '@/app/api/service/customers/route';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 
@@ -495,17 +497,20 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
           <div>
             {FL('Site Address')}
-            <AutocompleteInput
+            <PlacesAutocomplete
               value={draft.address}
               onChange={v => update('address', v)}
-              onSelect={c => setDraft(prev => applyAddressRecord(prev, c))}
-              placeholder="Street address"
+              onSelect={(place: ParsedPlace) => setDraft(prev => ({
+                ...prev,
+                address: place.formatted_address,
+                city: place.city || prev.city,
+                island: place.island || prev.island,
+                areaOfIsland: detectIslandAndArea(place.formatted_address).area || prev.areaOfIsland,
+              }))}
+              placeholder="Start typing an address…"
               style={INP}
-              customers={customers}
-              matchField="address"
-              subField="company"
             />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Selecting from existing addresses auto-detects island &amp; area</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Google Places — address auto-detects island &amp; area</div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
