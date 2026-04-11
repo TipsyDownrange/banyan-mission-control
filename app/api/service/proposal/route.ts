@@ -1,11 +1,42 @@
 import { hawaiiToday } from '@/lib/hawaii-time';
 /**
  * POST /api/service/proposal
- * Accepts quote data from QuoteBuilder, generates PDF, uploads to Drive, emails customer
+ * Accepts quote data from QuoteBuilder, generates PDF, uploads to Drive, emails customer.
+ * DATA FRESHNESS RULE: Customer fields are always read fresh from Service_Work_Orders at
+ * generation time. The POST body provides pricing data only. Never trust component state
+ * for customer identity data.
  */
 import { NextResponse } from 'next/server';
 import { generateServiceWOPDF, type ServiceWOData } from '@/lib/pdf-service-wo';
 import { google } from 'googleapis';
+import { getGoogleAuth } from '@/lib/gauth';
+
+const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const WO_COL = { wo_id: 0, wo_number: 1, name: 2, description: 3, status: 4, island: 5, area: 6, address: 7, contact_person: 8, assigned_to: 9, contact_phone: 10, contact_email: 11, customer_name: 12 };
+
+/** Read WO customer data fresh from Service_Work_Orders. Returns null if not found. */
+async function readWOCustomerData(woNumber: string): Promise<{ customerName: string; customerEmail: string; customerPhone: string; customerAddress: string; island: string; projectDescription: string; contactPerson: string } | null> {
+  try {
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:M2000' });
+    const rows = res.data.values || [];
+    const g = (r: string[], col: number) => (r[col] || '').trim();
+    const row = rows.find(r => g(r, WO_COL.wo_number) === woNumber || g(r, WO_COL.wo_id) === woNumber);
+    if (!row) return null;
+    return {
+      customerName:       g(row, WO_COL.customer_name) || g(row, WO_COL.contact_person),
+      customerEmail:      g(row, WO_COL.contact_email),
+      customerPhone:      g(row, WO_COL.contact_phone),
+      customerAddress:    g(row, WO_COL.address),
+      island:             g(row, WO_COL.island),
+      projectDescription: g(row, WO_COL.name),
+      contactPerson:      g(row, WO_COL.contact_person),
+    };
+  } catch {
+    return null; // non-fatal — fall back to POST body values
+  }
+}
 
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
@@ -140,16 +171,21 @@ export async function POST(req: Request) {
 
     if (!quote) return NextResponse.json({ error: 'quote object required' }, { status: 400 });
 
+    // DATA FRESHNESS: read customer identity fields fresh from Service_Work_Orders
+    const woNumber = quote.woNumber || quote.woId || '';
+    const freshWO = woNumber ? await readWOCustomerData(woNumber) : null;
+
     const pdfData: ServiceWOData = {
-      wo_number:             quote.woNumber || 'DRAFT',
+      wo_number:             woNumber || 'DRAFT',
       quote_date:            quote.quoteDate || hawaiiToday(),
-      customer_name:         quote.customerName || '',
-      customer_email:        quote.customerEmail || '',
-      customer_phone:        quote.customerPhone || '',
-      customer_address:      quote.customerAddress || '',
-      project_description:   quote.projectDescription || '',
-      site_address:          quote.siteAddress || '',
-      island:                quote.island || '',
+      // Customer identity: always prefer fresh WO data over POST body
+      customer_name:         freshWO?.customerName || quote.customerName || '',
+      customer_email:        freshWO?.customerEmail || quote.customerEmail || '',
+      customer_phone:        freshWO?.customerPhone || quote.customerPhone || '',
+      customer_address:      freshWO?.customerAddress || quote.customerAddress || '',
+      project_description:   freshWO?.projectDescription || quote.projectDescription || '',
+      site_address:          freshWO?.customerAddress || quote.siteAddress || '',
+      island:                freshWO?.island || quote.island || '',
       scope_narrative:       quote.scopeNarrative || '',
       line_items:            quote.lineItems || [],
       installation_included: quote.installationIncluded ?? true,

@@ -692,8 +692,13 @@ export default function QuoteBuilder({
   async function handleDownload() {
     setDownloading(true);
     try {
-      // Build proposal payload directly from WO data + calculated totals
-      // Don't depend on quote state (avoids double-click issue)
+      // DATA FRESHNESS RULE: Re-fetch WO to get latest customer data before generating.
+      // This ensures proposal reflects any edits made since the page loaded.
+      let freshWo = wo;
+      try {
+        const wRes = await fetch(`/api/service/quote?wo=${encodeURIComponent(woNumber)}`);
+        if (wRes.ok) { const wd = await wRes.json(); if (wd.wo) freshWo = wd.wo; }
+      } catch {} // non-fatal — fall back to loaded state
       const proposalQuote = quote || {};
       const res = await fetch('/api/service/proposal', {
         method: 'POST',
@@ -703,13 +708,13 @@ export default function QuoteBuilder({
             ...proposalQuote,
             woNumber,
             quoteDate: new Date().toISOString().slice(0, 10),
-            customerName,
-            customerEmail,
-            customerPhone: wo?.contactPhone || '',
-            customerAddress: wo?.address || '',
-            projectDescription: wo?.name || '',
-            siteAddress: wo?.address || '',
-            island: wo?.island || '',
+            customerName: (freshWo as typeof wo & { contactName?: string; customerName?: string; customer_name?: string })?.customerName || (freshWo as typeof wo & { customer_name?: string })?.customer_name || customerName,
+            customerEmail: (freshWo as typeof wo & { contactEmail?: string; contact_email?: string })?.contactEmail || (freshWo as typeof wo & { contact_email?: string })?.contact_email || customerEmail,
+            customerPhone: (freshWo as typeof wo & { contactPhone?: string; contact_phone?: string })?.contactPhone || (freshWo as typeof wo & { contact_phone?: string })?.contact_phone || wo?.contactPhone || '',
+            customerAddress: freshWo?.address || wo?.address || '',
+            projectDescription: freshWo?.name || wo?.name || '',
+            siteAddress: freshWo?.address || wo?.address || '',
+            island: freshWo?.island || wo?.island || '',
             scopeNarrative: wo?.description || wo?.name || '',
             installationIncluded: true,
             materialsTotal: t?.customerMaterials || 0,
