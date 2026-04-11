@@ -38,8 +38,8 @@ export async function GET(req: Request) {
         includedRegionCodes: ['us'],
         locationBias: {
           circle: {
-            center: { latitude: 20.8, longitude: -156.3 },
-            radius: 400000.0,
+            center: { latitude: 20.8, longitude: -156.3 }, // Center of Hawaii
+            radius: 50000.0, // Max allowed by Places API (New) is 50,000m
           },
         },
       }),
