@@ -91,15 +91,17 @@ export default function PlacesAutocomplete({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   useEffect(() => {
-    if (!apiKey) return;
+    if (!apiKey) { console.warn('[Places] No API key — NEXT_PUBLIC_GOOGLE_MAPS_API_KEY not set'); return; }
+    console.log('[Places] Loading Maps JS API, key prefix:', apiKey.slice(0, 12) + '...');
     loadGoogleMaps(apiKey).then(() => {
+      console.log('[Places] Maps JS API loaded — places available:', !!window.google?.maps?.places);
       svcRef.current = new window.google.maps.places.AutocompleteService();
       // PlacesService needs a DOM node but won't render anything visible
       const dummy = document.createElement('div');
       placesSvcRef.current = new window.google.maps.places.PlacesService(dummy);
       sessionRef.current = new window.google.maps.places.AutocompleteSessionToken();
       setReady(true);
-    }).catch(() => {/* graceful degradation — plain input */});
+    }).catch((e) => { console.error('[Places] Maps JS API load failed:', e); });
   }, [apiKey]);
 
   // Close dropdown on outside click
@@ -117,14 +119,15 @@ export default function PlacesAutocomplete({
     if (!ready || !svcRef.current || input.length < 3) { setPredictions([]); setOpen(false); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      svcRef.current!.getPlacePredictions({
+      const req = {
         input,
         sessionToken: sessionRef.current ?? undefined,
         componentRestrictions: { country: 'us' },
-        location: new window.google.maps.LatLng(20.8, -156.3), // Center of Hawaii
-        radius: 400000, // 400km covers all islands
-        types: ['address'],
-      }, (results, status) => {
+        types: ['address'] as string[],
+      };
+      console.log('[Places] getPlacePredictions ->', input);
+      svcRef.current!.getPlacePredictions(req, (results, status) => {
+        console.log('[Places] status:', status, 'results:', results?.length ?? 0);
         if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
           setPredictions(results);
           setOpen(true);
