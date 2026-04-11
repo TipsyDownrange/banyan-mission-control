@@ -304,20 +304,21 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     return true; // existence of a completion row = complete
   }
 
-  function getMarkStatus(markId: string, stepIds: string[]): 'not_started' | 'in_progress' | 'complete' {
-    const markCompletions = completions.filter(c => c.mark_id === markId && stepIds.includes(c.install_step_id));
-    if (markCompletions.length === 0) return 'not_started';
-    const doneStepIds = new Set(markCompletions.filter(isCompletionDone).map(c => c.install_step_id));
-    const allComplete = stepIds.every(id => doneStepIds.has(id));
-    if (allComplete) return 'complete';
-    if (doneStepIds.size > 0) return 'in_progress';
-    return 'not_started';
+  function getMarkStatus(_markId: string, stepIds: string[]): 'not_started' | 'in_progress' | 'complete' {
+    // Match by step_id only — ignore mark_id to handle FA completions with different mark_id format
+    const doneStepIds = new Set(
+      stepIds.filter(id => getCompletionsForStep(id).some(isCompletionDone))
+    );
+    if (doneStepIds.size === 0) return 'not_started';
+    if (stepIds.every(id => doneStepIds.has(id))) return 'complete';
+    return 'in_progress';
   }
 
-  function getStepStatus(stepId: string, markId: string): 'not_started' | 'in_progress' | 'complete' {
-    const comp = completions.find(c => c.install_step_id === stepId && (c.mark_id === markId || !markId));
-    if (!comp) return 'not_started';
-    if (isCompletionDone(comp)) return 'complete';
+  function getStepStatus(stepId: string, _markId: string): 'not_started' | 'in_progress' | 'complete' {
+    // Match by step_id only — FA completions use job_id in mark_id field, not the MC-generated mark_id
+    const comps = getCompletionsForStep(stepId);
+    if (comps.length === 0) return 'not_started';
+    if (comps.some(isCompletionDone)) return 'complete';
     return 'not_started';
   }
 
@@ -892,7 +893,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   function renderStepRow(step: InstallStep, markId: string) {
     const status = getStepStatus(step.install_step_id, markId);
     const isLocked = status === 'complete';
-    const completion = completions.find(c => c.install_step_id === step.install_step_id && c.mark_id === markId);
+    const completion = completions.find(c => c.install_step_id === step.install_step_id); // match by step only
     const isSaving = savingNote === step.install_step_id + markId;
 
     return (
