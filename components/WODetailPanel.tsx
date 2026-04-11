@@ -330,7 +330,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   if (!res.ok) { alert('Failed to generate work order PDF'); return; }
                   const blob = await res.blob();
                   const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a'); a.href = url; a.download = `WO-${wo.id}.pdf`; a.click();
+                  const a = document.createElement('a'); a.href = url; a.download = `${wo.id.startsWith('WO-') ? wo.id : 'WO-' + wo.id}.pdf`; a.click();
                   URL.revokeObjectURL(url);
                 } catch { alert('Failed to generate work order PDF'); }
               }}

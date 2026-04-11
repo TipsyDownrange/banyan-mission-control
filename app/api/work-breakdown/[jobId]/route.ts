@@ -15,8 +15,8 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 //   D=Step_Name, E=Allotted_Hours, F=Acceptance_Criteria, G=Required_Photo_YN,
 //   H=Notes, I=Category, J=Planned_Start_Date, K=Planned_End_Date,
 //   L=Assigned_Crew, M=Predecessor_Step_ID, N=Bid_Hours, O=Planned_Hours, P=Actual_Hours
-// Step_Completions: A=Step_Completion_ID, B=Install_Step_ID, C=Mark_ID,
-//   D=Date, E=Crew_Lead, F=Hours_Spent, G=Percent_Complete, H=Notes, I=Photo_URLs
+// Step_Completions canonical headers (8 cols):
+//   Completion_ID, Step_ID, Job_ID, Completed_By, Completed_At, Notes, Status, Photo_URL
 
 interface BulkTemplateStep {
   name: string;
@@ -59,17 +59,20 @@ function rowToInstallStep(r: string[]) {
   };
 }
 
-function rowToCompletion(r: string[]) {
+// Header-driven completion mapper — adapts to actual sheet column order.
+// Canonical headers: Completion_ID, Step_ID, Job_ID, Completed_By, Completed_At, Notes, Status, Photo_URL
+function rowToCompletion(r: string[], headers: string[]) {
+  const idx = (name: string) => headers.findIndex(h => h.trim().toLowerCase() === name.toLowerCase());
+  const get = (name: string) => r[idx(name)] || '';
   return {
-    step_completion_id: r[0] || '',
-    install_step_id: r[1] || '',
-    mark_id: r[2] || '',
-    date: r[3] || '',
-    crew_lead: r[4] || '',
-    hours_spent: parseFloat(r[5]) || 0,
-    percent_complete: parseInt(r[6]) || 0,
-    notes: r[7] || '',
-    photo_urls: r[8] || '',
+    step_completion_id: get('Completion_ID') || r[0] || '',
+    install_step_id: get('Step_ID') || r[1] || '',
+    job_id: get('Job_ID') || '',
+    completed_by: get('Completed_By') || '',
+    completed_at: get('Completed_At') || '',
+    notes: get('Notes') || '',
+    status: get('Status') || '',
+    photo_url: get('Photo_URL') || '',
   };
 }
 
@@ -118,7 +121,7 @@ export async function GET(
       }
     }
 
-    const [plansRes, stepsRes, completionsRes] = await Promise.all([
+    const [plansRes, stepsRes, completionsHdrRes, completionsRes] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: 'Install_Plans!A2:G5000',
@@ -129,13 +132,18 @@ export async function GET(
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: 'Step_Completions!A2:I5000',
+        range: 'Step_Completions!A1:Z1',
+      }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Step_Completions!A2:Z5000',
       }),
     ]);
 
     const allPlans = (plansRes.data.values || []).map(rowToInstallPlan);
     const allSteps = (stepsRes.data.values || []).map(rowToInstallStep);
-    const allCompletions = (completionsRes.data.values || []).map(rowToCompletion);
+    const completionHeaders = (completionsHdrRes.data.values?.[0] || []) as string[];
+    const allCompletions = (completionsRes.data.values || []).map(r => rowToCompletion(r, completionHeaders));
 
     // Use canonical normalizer — handles WO-, PRJ-, SRV- prefixes
     function jobIdMatches(planJobId: string): boolean {
@@ -156,6 +164,7 @@ export async function GET(
     const planIds = new Set(plans.map(p => p.install_plan_id));
     const steps = allSteps.filter(s => planIds.has(s.install_plan_id));
     const stepIds = new Set(steps.map(s => s.install_step_id));
+    // Match completions by Step_ID — header-driven, no positional assumption
     const completions = allCompletions.filter(c => stepIds.has(c.install_step_id));
 
     return NextResponse.json({ plans, steps, completions, docs });
@@ -211,14 +220,16 @@ export async function POST(
     }
 
     if (type === 'completion') {
-      const { install_step_id, mark_id, date, crew_lead, hours_spent, percent_complete, notes, photo_urls } = body;
+      // Canonical schema: Completion_ID, Step_ID, Job_ID, Completed_By, Completed_At, Notes, Status, Photo_URL
+      const { install_step_id, job_id, completed_by, completed_at, notes, status, photo_url } = body;
       const newId = `SC-${Date.now()}`;
+      const canonicalJobId = (job_id || jobId).startsWith('WO-') ? (job_id || jobId) : 'WO-' + (job_id || jobId);
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: 'Step_Completions!A:I',
+        range: 'Step_Completions!A:H',
         valueInputOption: 'RAW',
         requestBody: {
-          values: [[newId, install_step_id, mark_id || '', date || '', crew_lead || '', hours_spent || 0, percent_complete || 0, notes || '', photo_urls || '']],
+          values: [[newId, install_step_id, canonicalJobId, completed_by || '', completed_at || new Date().toISOString(), notes || '', status || 'INSTALLED', photo_url || '']],
         },
       });
       return NextResponse.json({ step_completion_id: newId });
@@ -435,32 +446,35 @@ export async function PATCH(
     }
 
     if (type === 'completion') {
+      // Header-driven PATCH: read headers first, update by canonical col names
+      const hdrRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A1:Z1' });
+      const headers = (hdrRes.data.values?.[0] || []) as string[];
       const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: 'Step_Completions!A2:I5000',
+        range: 'Step_Completions!A2:Z5000',
       });
       const rows = res.data.values || [];
       const rowIdx = rows.findIndex(r => r[0] === id);
       if (rowIdx === -1) return NextResponse.json({ error: 'Completion not found' }, { status: 404 });
 
       const sheetRow = rowIdx + 2;
-      const existing = rows[rowIdx];
-      const updated = [
-        id,
-        existing[1],
-        fields.mark_id ?? existing[2],
-        fields.date ?? existing[3],
-        fields.crew_lead ?? existing[4],
-        fields.hours_spent ?? existing[5],
-        fields.percent_complete ?? existing[6],
-        fields.notes ?? existing[7],
-        fields.photo_urls ?? existing[8],
-      ];
+      const existing = [...rows[rowIdx]];
+      while (existing.length < headers.length) existing.push('');
+      // Update by header position
+      const set = (name: string, val: unknown) => {
+        const i = headers.findIndex(h => h.trim().toLowerCase() === name.toLowerCase());
+        if (i !== -1 && val !== undefined) existing[i] = String(val);
+      };
+      set('Notes', fields.notes);
+      set('Status', fields.status);
+      set('Photo_URL', fields.photo_url);
+      set('Completed_By', fields.completed_by);
+      set('Completed_At', fields.completed_at);
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `Step_Completions!A${sheetRow}:I${sheetRow}`,
+        range: `Step_Completions!A${sheetRow}:${String.fromCharCode(64 + headers.length)}${sheetRow}`,
         valueInputOption: 'RAW',
-        requestBody: { values: [updated] },
+        requestBody: { values: [existing] },
       });
       return NextResponse.json({ ok: true });
     }

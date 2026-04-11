@@ -51,8 +51,8 @@ async function uploadPDFToDrive(
   woId?: string,
 ): Promise<string | null> {
   try {
-    const keyJson = process.env.GOOGLE_SA_KEY_B64
-      ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_B64, 'base64').toString('utf-8'))
+    const keyJson = process.env.GOOGLE_SA_KEY_BASE64
+      ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString('utf-8'))
       : null;
     if (!keyJson) return null;
 

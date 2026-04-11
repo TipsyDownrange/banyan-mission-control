@@ -734,7 +734,7 @@ export default function QuoteBuilder({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Proposal-WO-${woNumber}.pdf`;
+      a.download = `Proposal-${woNumber.startsWith('WO-') ? woNumber : 'WO-' + woNumber}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) { setError('PDF failed: ' + e); }
@@ -757,10 +757,12 @@ export default function QuoteBuilder({
         body: JSON.stringify({ quote: { ...quote, materialsTotal: t?.customerMaterials, laborSubtotal: t?.customerLabor, getRate: t?.getRate, preparedBy }, sendEmail: true }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.email_sent) {
         setToast(`Sent to ${customerEmail}`);
+      } else if (data.success && !data.email_sent) {
+        setError('Proposal generated but email failed to send. Check Gmail delegation settings in Google Admin Console.');
       } else {
-        setError('Email failed: ' + data.error);
+        setError('Email failed: ' + (data.error || 'Unknown error'));
       }
     } catch (e) { setError('Email failed: ' + e); }
     setEmailing(false);
@@ -808,7 +810,7 @@ export default function QuoteBuilder({
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>Service Quote</div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-            WO-{woNumber}{wo?.name ? ` — ${wo.name.substring(0, 45)}` : ''}
+            {woNumber.startsWith('WO-') ? woNumber : 'WO-' + woNumber}{wo?.name ? ` — ${wo.name.substring(0, 45)}` : ''}
           </div>
           <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -842,7 +844,7 @@ export default function QuoteBuilder({
         {/* ── No estimate warning ─────────────────────────────────────────── */}
         {!est && (
           <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.3)', fontSize: 13, color: '#92400e', fontWeight: 600 }}>
-            ⚠️ No estimate found for WO-{woNumber}. Go back to the estimate form to build pricing first.
+            ⚠️ No estimate found for {woNumber.startsWith('WO-') ? woNumber : 'WO-' + woNumber}. Go back to the estimate form to build pricing first.
           </div>
         )}
 
