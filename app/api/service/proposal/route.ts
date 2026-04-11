@@ -175,8 +175,11 @@ export async function POST(req: Request) {
     const woNumber = quote.woNumber || quote.woId || '';
     const freshWO = woNumber ? await readWOCustomerData(woNumber) : null;
 
+    // Normalize wo_number: strip WO- prefix since PDF template adds 'WO ' prefix itself
+    const normalizedWoNumber = (woNumber || 'DRAFT').replace(/^WO-/i, '');
+
     const pdfData: ServiceWOData = {
-      wo_number:             woNumber || 'DRAFT',
+      wo_number:             normalizedWoNumber,
       quote_date:            quote.quoteDate || hawaiiToday(),
       // Customer identity: always prefer fresh WO data over POST body
       customer_name:         freshWO?.customerName || quote.customerName || '',
@@ -237,7 +240,7 @@ export async function POST(req: Request) {
     const driveLink = await uploadPDFToDrive(
       pdfBuffer,
       filename,
-      quote.woId || quote.woNumber ? `WO-${(quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, '')}` : undefined,
+      (() => { const raw = (quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, ''); return raw ? (raw.startsWith('WO-') ? raw : `WO-${raw}`) : undefined; })(),
     );
 
     let emailSent = false;

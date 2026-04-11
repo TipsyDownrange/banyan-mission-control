@@ -148,6 +148,8 @@ export async function PATCH(req: Request) {
       const rowWoId = (row[COL_IDX.wo_id] || '').trim();
       const rowWoNum = (row[COL_IDX.wo_number] || '').trim();
       if (woId && rowWoId === woId) { targetRowIdx = i; break; }
+      // Also match if woNumber is actually the full wo_id (e.g. "WO-26-8289" passed as woNumber)
+      if (woNumber && rowWoId === woNumber) { targetRowIdx = i; break; }
       if (woNumber && (rowWoNum === woNumber || rowWoId === `WO-${woNumber}`)) {
         targetRowIdx = i;
         break;
