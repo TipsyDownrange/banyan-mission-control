@@ -290,23 +290,34 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     const planSteps = getStepsForPlan(planId);
     return planSteps.filter(s => {
       const comps = getCompletionsForStep(s.install_step_id);
-      return comps.some(c => c.percent_complete >= 100);
+      // A step is complete if ANY completion row exists (Field App uses Status='INSTALLED',
+      // not percent_complete, so existence of a row = complete regardless of the value)
+      return comps.length > 0;
     }).length;
+  }
+
+  // Helper: is a completion row considered 'done'?
+  // Treat ANY existing completion row as complete. Field App writes Status='INSTALLED'
+  // in col 6 (not percent_complete), so percent_complete is always 0 for FA completions.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function isCompletionDone(_c: StepCompletion): boolean {
+    return true; // existence of a completion row = complete
   }
 
   function getMarkStatus(markId: string, stepIds: string[]): 'not_started' | 'in_progress' | 'complete' {
     const markCompletions = completions.filter(c => c.mark_id === markId && stepIds.includes(c.install_step_id));
     if (markCompletions.length === 0) return 'not_started';
-    const allComplete = markCompletions.every(c => c.percent_complete >= 100);
-    if (allComplete && markCompletions.length === stepIds.length) return 'complete';
-    return 'in_progress';
+    const doneStepIds = new Set(markCompletions.filter(isCompletionDone).map(c => c.install_step_id));
+    const allComplete = stepIds.every(id => doneStepIds.has(id));
+    if (allComplete) return 'complete';
+    if (doneStepIds.size > 0) return 'in_progress';
+    return 'not_started';
   }
 
   function getStepStatus(stepId: string, markId: string): 'not_started' | 'in_progress' | 'complete' {
-    const comp = completions.find(c => c.install_step_id === stepId && c.mark_id === markId);
+    const comp = completions.find(c => c.install_step_id === stepId && (c.mark_id === markId || !markId));
     if (!comp) return 'not_started';
-    if (comp.percent_complete >= 100) return 'complete';
-    if (comp.percent_complete > 0) return 'in_progress';
+    if (isCompletionDone(comp)) return 'complete';
     return 'not_started';
   }
 
