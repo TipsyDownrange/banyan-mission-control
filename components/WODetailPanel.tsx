@@ -38,7 +38,7 @@ const STAGES = [
   { key: 'scheduled',     label: 'Scheduled',          color: '#4338ca' },
   { key: 'in_progress',   label: 'In Progress',        color: '#0f766e' },
   { key: 'work_complete', label: '✅ Work Complete',    color: '#059669' },
-  { key: 'closed',        label: 'Completed',          color: '#15803d' },
+  { key: 'closed',        label: 'Close WO',           color: '#15803d' },
 ];
 
 const STAGE_BG: Record<string, string> = {
@@ -93,6 +93,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closeActualHours, setCloseActualHours] = useState('');
+  const [closeNotes, setCloseNotes] = useState('');
+  const [closeSubmitting, setCloseSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [saveError, setSaveError] = useState('');
@@ -238,6 +242,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   async function handleStageChange(stageKey: string) {
+    // 'closed' requires confirmation modal — intercept here
+    if (stageKey === 'closed') {
+      setShowCloseModal(true);
+      return;
+    }
     setStageSaving(stageKey);
     setStageError('');
     try {
@@ -246,6 +255,37 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setStageError(err instanceof Error ? err.message : 'Failed to update stage.');
     } finally {
       setStageSaving('');
+    }
+  }
+
+  async function handleConfirmClose() {
+    setCloseSubmitting(true);
+    try {
+      // 1. Change stage to closed
+      await onStageChange(safeWo.id, 'closed');
+      // 2. Write actual hours to WO if provided
+      if (closeActualHours) {
+        await onSave(safeWo.id, { hoursActual: closeActualHours } as Parameters<typeof onSave>[1]);
+      }
+      // 3. Write NOTE event to Field_Events_V1
+      fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'NOTE',
+          target_kID: safeWo.id,
+          performed_by: 'joey@kulaglass.com',
+          recorded_by: 'joey@kulaglass.com',
+          notes: `WO closed by ${safeWo.assignedTo || 'PM'}.${closeActualHours ? ` Actual hours: ${closeActualHours}.` : ''}${closeNotes ? ` Notes: ${closeNotes}` : ''}`,
+        }),
+      }).catch(e => console.error('[WO close event]', e));
+      setShowCloseModal(false);
+      setCloseActualHours('');
+      setCloseNotes('');
+    } catch (err) {
+      setStageError(err instanceof Error ? err.message : 'Failed to close WO.');
+    } finally {
+      setCloseSubmitting(false);
     }
   }
 
@@ -752,6 +792,53 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           </div>
         )}
       </div>
+
+      {/* Close WO Modal */}
+      {showCloseModal && (
+        <>
+          <div onClick={() => setShowCloseModal(false)} style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:600, backdropFilter:'blur(2px)' }} />
+          <div style={{
+            position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+            zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
+            boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
+          }}>
+            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Close Work Order</div>
+            <div style={{ fontSize:13, color:'#64748b', marginBottom:20 }}>Enter final details before closing {safeWo.name}.</div>
+
+            <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>Actual Hours Worked</label>
+            <input type="number" step="0.5" min="0"
+              value={closeActualHours}
+              onChange={e => setCloseActualHours(e.target.value)}
+              placeholder="e.g. 12.5"
+              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:14, outline:'none', boxSizing:'border-box', marginBottom:16 }}
+            />
+
+            <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>Completion Notes (optional)</label>
+            <textarea
+              value={closeNotes}
+              onChange={e => setCloseNotes(e.target.value)}
+              placeholder="Any final notes for the record…"
+              rows={3}
+              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:13, outline:'none', resize:'none', boxSizing:'border-box', marginBottom:20 }}
+            />
+
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={() => setShowCloseModal(false)}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleConfirmClose} disabled={closeSubmitting}
+                style={{ flex:2, padding:'12px', borderRadius:12, border:'none',
+                  background: closeSubmitting ? '#e2e8f0' : 'linear-gradient(135deg,#15803d,#16a34a)',
+                  color: closeSubmitting ? '#94a3b8' : 'white', fontSize:13, fontWeight:800,
+                  cursor: closeSubmitting ? 'default' : 'pointer',
+                  boxShadow: closeSubmitting ? 'none' : '0 3px 12px rgba(21,128,61,0.3)' }}>
+                {closeSubmitting ? 'Closing…' : '✓ Close Work Order'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
