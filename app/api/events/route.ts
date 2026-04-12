@@ -88,10 +88,24 @@ export async function GET(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: `${TAB}!A2:AF5000`,
-    });
+    // Fetch events + Users_Roles in parallel for name resolution
+    const [res, usersRes] = await Promise.all([
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: `${TAB}!A2:AF5000`,
+      }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Users_Roles!A2:D100', // A=user_id, B=name, C=role, D=email
+      }).catch(() => ({ data: { values: [] } })), // non-fatal
+    ]);
+
+    // Build user ID → name map (also map email → name as fallback)
+    const userNameMap: Record<string, string> = {};
+    for (const u of (usersRes.data.values || []) as string[][]) {
+      if (u[0] && u[1]) userNameMap[u[0]] = u[1]; // USR-xxx → name
+      if (u[3] && u[1]) userNameMap[u[3].toLowerCase()] = u[1]; // email → name
+    }
 
     const rows = (res.data.values || []) as string[][];
     const total = rows.length;
@@ -129,7 +143,14 @@ export async function GET(req: Request) {
     });
 
     // Paginate
-    const page = filtered.slice(offset, offset + limit).map(rowToEvent);
+    const page = filtered.slice(offset, offset + limit).map(row => {
+      const evt = rowToEvent(row);
+      // Resolve USR- IDs and emails to display names
+      if (evt.performed_by && userNameMap[evt.performed_by]) evt.performed_by = userNameMap[evt.performed_by];
+      else if (evt.performed_by && userNameMap[evt.performed_by?.toLowerCase()]) evt.performed_by = userNameMap[evt.performed_by.toLowerCase()];
+      if (evt.recorded_by && userNameMap[evt.recorded_by]) evt.recorded_by = userNameMap[evt.recorded_by];
+      return evt;
+    });
 
     return NextResponse.json({
       events: page,
