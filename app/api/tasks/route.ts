@@ -7,8 +7,9 @@ const TAB_NAME = 'Tasks';
 const HEADERS = [
   'Task_ID', 'Title', 'Detail', 'Status', 'Priority', 'Category',
   'Assigned_To', 'Created_At', 'Updated_At', 'Due_Date', 'Blocked_By', 'Parent_Task_ID',
+  'Phase', 'Source',
 ];
-const RANGE = `${TAB_NAME}!A2:L2000`;
+const RANGE = `${TAB_NAME}!A2:N2000`;
 
 async function ensureTab(sheets: ReturnType<typeof google.sheets>) {
   const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
@@ -20,7 +21,7 @@ async function ensureTab(sheets: ReturnType<typeof google.sheets>) {
     });
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `${TAB_NAME}!A1:L1`,
+      range: `${TAB_NAME}!A1:N1`,
       valueInputOption: 'RAW',
       requestBody: { values: [HEADERS] },
     });
@@ -43,6 +44,8 @@ function rowToTask(r: string[]) {
     dueDate: r[9] || '',
     blockedBy: r[10] || '',
     parentTaskId: r[11] || '',
+    phase: r[12] || '',
+    source: r[13] || 'manual',
   };
 }
 
@@ -80,11 +83,12 @@ export async function POST(req: Request) {
       t.id, t.title, t.detail, t.status, t.priority, t.category,
       t.assignedTo, t.createdAt, t.updatedAt,
       t.dueDate || '', t.blockedBy || '', t.parentTaskId || '',
+      t.phase || '', t.source || 'manual',
     ]);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${TAB_NAME}!A:L`,
+      range: `${TAB_NAME}!A:N`,
       valueInputOption: 'RAW',
       requestBody: { values: rows },
     });
@@ -101,6 +105,7 @@ const FIELD_COL: Record<string, number> = {
   title: 1, detail: 2, status: 3, priority: 4, category: 5,
   assignedTo: 6, createdAt: 7, updatedAt: 8,
   dueDate: 9, blockedBy: 10, parentTaskId: 11,
+  phase: 12, source: 13,
 };
 
 function colLetter(idx: number) {

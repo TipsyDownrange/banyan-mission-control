@@ -68,6 +68,24 @@ export async function POST(req: Request) {
       valueInputOption: 'USER_ENTERED', requestBody: { values: [row] },
     });
 
+    // Create task card in Tasks sheet for triage
+    const now = new Date().toISOString();
+    const feedbackLabel = body.feedback_type === 'Bug Report' ? 'BUG'
+      : body.feedback_type === 'Feature Suggestion' ? 'FEATURE'
+      : body.feedback_type === 'Question' ? 'QUESTION' : 'FEEDBACK';
+    const taskId = `TSK-KFB-${Date.now()}`;
+    const taskTitle = `[${feedbackLabel}] ${(body.description || '').slice(0, 80)}`;
+    const taskDetail = `${body.description}\n\nFrom: ${body.user_name || ''} (${body.user_email || ''})\nApp: ${body.app || ''}\nPage: ${body.page_url || ''}\nSubmitted: ${now}`;
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID, range: 'Tasks!A:N',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[
+        taskId, taskTitle, taskDetail, 'queued',
+        body.feedback_type === 'Bug Report' ? 'high' : 'medium',
+        'Feedback', 'Kai', now, now, '', '', '', 'Inbox', 'feedback',
+      ]] },
+    }).catch(e => console.error('[feedback] task card failed:', e));
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[kai/feedback]', err);
