@@ -62,7 +62,7 @@ export type TMPhoto = {
 export type TMTicketData = {
   tm_number: string;          // TM-{KID}-{SEQ}
   date: string;               // YYYY-MM-DD
-  status: 'AUTHORIZED' | 'PENDING' | 'DISPUTED' | 'VOID';
+  status: 'AUTHORIZED' | 'PENDING' | 'DISPUTED' | 'VOID' | 'DRAFTED';
   kid: string;
   project_name: string;
   gc_owner: string;

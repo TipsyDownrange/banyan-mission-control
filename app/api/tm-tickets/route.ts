@@ -154,8 +154,10 @@ export async function POST(req: NextRequest) {
     const date = now.slice(0, 10);
 
     // Build PDF data
+    // Accept optional status override from FA (e.g. 'DRAFTED' for field-originated tickets)
+    const ticketStatus = (body.status === 'DRAFTED' ? 'DRAFTED' : 'AUTHORIZED') as 'DRAFTED' | 'AUTHORIZED';
     const pdfData: TMTicketData = {
-      tm_number, date, status: 'AUTHORIZED', kid: kID, project_name: project_name || kID,
+      tm_number, date, status: ticketStatus, kid: kID, project_name: project_name || kID,
       gc_owner: gc_owner || '', auth_type: authorization_type, auth_person: authorized_by,
       auth_person_title: auth_person_title || '', auth_datetime: authorized_at || now,
       triggered_by: triggering_event_id || '', verbal_agreement_id, logged_by,
@@ -176,7 +178,7 @@ export async function POST(req: NextRequest) {
 
     // Write to sheet
     const row = [
-      tm_id, tm_number, kID, 'AUTHORIZED', triggering_event_id || '', description,
+      tm_id, tm_number, kID, ticketStatus, triggering_event_id || '', description,
       laborEst.toFixed(2), matEst.toFixed(2), (laborEst + matEst).toFixed(2),
       '', '', '',
       authorization_type, authorized_by, authorized_at || now,
