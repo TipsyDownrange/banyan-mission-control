@@ -770,7 +770,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         />
       )}
 
-      {!loading && data && view === 'kanban' && (
+      {!loading && data && view === 'kanban' && !completedStatuses.has(filter) && (
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', alignItems: 'start', paddingBottom: 12, minHeight: 200 }}>
           {STAGES.filter(s => s.key !== 'lost').map(stage => {
             const isCompletedStage = completedStatuses.has(stage.key);
@@ -811,7 +811,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       )}
 
       {/* Completed WOs — separate row below active board when showCompleted is on */}
-      {!loading && data && view === 'kanban' && showCompleted && (() => {
+      {!loading && data && view === 'kanban' && (showCompleted || completedStatuses.has(filter) || (search && filteredByStatus['closed']?.length > 0)) && (() => {
         const completedWOs = [...(filteredByStatus['work_complete'] || []), ...(filteredByStatus['closed'] || [])];
         if (completedWOs.length === 0) return null;
         return (
