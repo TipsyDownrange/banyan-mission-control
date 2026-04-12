@@ -415,6 +415,34 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             {/* ── LEFT COLUMN ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
+              {/* Pipeline Stage — first thing Joey sees */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Pipeline Stage</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
+                  {STAGES.map(s => {
+                    const isActive = wo.status === s.key;
+                    const isSaving = stageSaving === s.key;
+                    return (
+                      <button key={s.key}
+                        onClick={() => !isActive && !stageSaving && handleStageChange(s.key)}
+                        disabled={isActive || !!stageSaving}
+                        style={{
+                          padding: '9px 6px', borderRadius: 10, fontSize: 10, fontWeight: 800,
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                          cursor: isActive || stageSaving ? 'default' : 'pointer',
+                          border: isActive ? `1.5px solid ${s.color}` : '1px solid #e2e8f0',
+                          background: isSaving ? '#f1f5f9' : isActive ? STAGE_BG[s.key] || '#f8fafc' : 'white',
+                          color: isActive ? s.color : '#94a3b8',
+                          opacity: stageSaving && !isActive ? 0.5 : 1,
+                          transition: 'all 0.1s',
+                        }}>
+                        {isSaving ? '…' : s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Job Details */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Job Details</div>
@@ -446,24 +474,6 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Work Breakdown — top priority, shows labor steps */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Work Breakdown</div>
-                <WorkBreakdown
-                  jobId={wo.id}
-                  jobType="wo"
-                  quotedHours={parseFloat(wo.hoursEstimated) || undefined}
-                  readOnly={readOnly}
-                  systemTypes={wo.systemType}
-                />
-              </div>
-
-              {/* Activity Timeline */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Activity Timeline</div>
-                <ActivityTimeline kID={wo.id} />
               </div>
 
               {/* Customer & Site */}
@@ -669,28 +679,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             {/* ── RIGHT COLUMN ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              {/* Scheduling */}
+              {/* Work Breakdown — first thing in right column */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                {/* Scheduling section removed — all scheduling data lives in:
-                   - Install_Steps: planned_start_date, planned_end_date per step
-                   - Dispatch_Schedule: dispatch slots created by Nate
-                   - No flat WO-level schedule/due date fields (redundant)
-                   Hours: bid_hours, planned_hours, actual_hours per step in Install_Steps */}
-                {/* Read-only meta */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {wo.dateReceived && (
-                    <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
-                      <div style={{ ...LBL, marginBottom: 2 }}>Date Received</div>
-                      <div style={{ fontSize: 12, color: '#475569' }}>{wo.dateReceived}</div>
-                    </div>
-                  )}
-                  {wo.rawStatus && (
-                    <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
-                      <div style={{ ...LBL, marginBottom: 2 }}>Smartsheet Status</div>
-                      <div style={{ fontSize: 11, color: '#475569' }}>{wo.rawStatus}</div>
-                    </div>
-                  )}
-                </div>
+                <div style={SECTION_TITLE}>Work Breakdown</div>
+                <WorkBreakdown
+                  jobId={wo.id}
+                  jobType="wo"
+                  quotedHours={parseFloat(wo.hoursEstimated) || undefined}
+                  readOnly={readOnly}
+                  systemTypes={wo.systemType}
+                />
+              </div>
+
+              {/* Activity Timeline — below Work Breakdown */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Activity Timeline</div>
+                <ActivityTimeline kID={wo.id} />
               </div>
 
               {/* Crew Assignment */}
@@ -725,33 +729,6 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 )}
               </div>
 
-              {/* Pipeline Stage */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Pipeline Stage</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
-                  {STAGES.map(s => {
-                    const isActive = wo.status === s.key;
-                    const isSaving = stageSaving === s.key;
-                    return (
-                      <button key={s.key}
-                        onClick={() => !isActive && !stageSaving && handleStageChange(s.key)}
-                        disabled={isActive || !!stageSaving}
-                        style={{
-                          padding: '9px 6px', borderRadius: 10, fontSize: 10, fontWeight: 800,
-                          textTransform: 'uppercase', letterSpacing: '0.05em',
-                          cursor: isActive || stageSaving ? 'default' : 'pointer',
-                          border: isActive ? `1.5px solid ${s.color}` : '1px solid #e2e8f0',
-                          background: isSaving ? '#f1f5f9' : isActive ? STAGE_BG[s.key] || '#f8fafc' : 'white',
-                          color: isActive ? s.color : '#94a3b8',
-                          opacity: stageSaving && !isActive ? 0.5 : 1,
-                          transition: 'all 0.1s',
-                        }}>
-                        {isSaving ? '…' : s.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
             </div>
           </div>
