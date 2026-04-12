@@ -234,7 +234,9 @@ export async function PATCH(req: Request) {
 
     const requestedStatus = status || (stage ? stageToStatus[stage] : undefined);
     let resolvedStatus = requestedStatus;
-    if (requestedStatus && requestedStatus !== 'lost' && resolvedWoId) {
+    // 'closed', 'lost', and 'work_complete' are explicit PM decisions — never override with derived status
+    const EXPLICIT_STATUSES = new Set(['closed', 'lost', 'work_complete']);
+    if (requestedStatus && !EXPLICIT_STATUSES.has(requestedStatus) && resolvedWoId) {
       const derivedStatus = await deriveWOStatus(sheets, resolvedWoId);
       const normalizedRequestedStatus = requestedStatus === 'completed' ? 'closed' : requestedStatus;
       const normalizedDerivedStatus = derivedStatus === 'completed' ? 'closed' : derivedStatus;
