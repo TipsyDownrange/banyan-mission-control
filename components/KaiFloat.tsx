@@ -32,6 +32,12 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
   const [loading, setLoading] = useState(false);
   const [isGolden, setIsGolden] = useState(false);
   const [showUnlockAnim, setShowUnlockAnim] = useState(false);
+  // Feedback form state
+  const [kaiTab, setKaiTab] = useState<'chat' | 'feedback'>('feedback');
+  const [fbType, setFbType] = useState('Bug Report');
+  const [fbDesc, setFbDesc] = useState('');
+  const [fbSubmitting, setFbSubmitting] = useState(false);
+  const [fbDone, setFbDone] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -203,8 +209,60 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             <button onClick={() => setOpen(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'rgba(148,163,184,0.7)', fontSize: 18, cursor: 'pointer', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
           </div>
 
+          {/* Tab switcher */}
+          <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+            {(['feedback','chat'] as const).map(tab => (
+              <button key={tab} onClick={() => setKaiTab(tab)} style={{
+                flex:1, padding:'8px', fontSize:11, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase',
+                border:'none', cursor:'pointer', background:'none',
+                color: kaiTab===tab ? '#14b8a6' : 'rgba(148,163,184,0.5)',
+                borderBottom: kaiTab===tab ? '2px solid #14b8a6' : '2px solid transparent',
+              }}>{tab === 'feedback' ? '💬 Feedback' : isGolden ? '✦ Chat' : 'Chat'}</button>
+            ))}
+          </div>
+
+          {/* Feedback form */}
+          {kaiTab === 'feedback' && (
+            <div style={{ padding:'14px' }}>
+              {fbDone ? (
+                <div style={{ textAlign:'center', padding:'16px 0' }}>
+                  <div style={{ fontSize:32, marginBottom:10 }}>✅</div>
+                  <div style={{ fontSize:14, fontWeight:800, color:'#f8fafc', marginBottom:4 }}>Got it!</div>
+                  <div style={{ fontSize:12, color:'rgba(148,163,184,0.7)', lineHeight:1.5 }}>Sean will review this. Thanks for helping me get better. — Kai</div>
+                  <button onClick={() => { setFbDone(false); setFbDesc(''); }} style={{ marginTop:12, padding:'8px 20px', borderRadius:10, background:'rgba(20,184,166,0.15)', border:'1px solid rgba(20,184,166,0.3)', color:'#14b8a6', fontSize:12, fontWeight:700, cursor:'pointer' }}>Send another</button>
+                </div>
+              ) : (
+                <>
+                  <select value={fbType} onChange={e=>setFbType(e.target.value)} style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.05)', color:'#f8fafc', fontSize:13, marginBottom:10, outline:'none' }}>
+                    {['Bug Report','Feature Suggestion','Question','Other'].map(t=><option key={t} style={{ background:'#0c2330' }}>{t}</option>)}
+                  </select>
+                  <textarea value={fbDesc} onChange={e=>setFbDesc(e.target.value)}
+                    placeholder={fbType==='Bug Report' ? 'What went wrong? What were you doing?' : fbType==='Feature Suggestion' ? "What would make your job easier?" : 'What do you need to know?'}
+                    rows={4}
+                    style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.05)', color:'#f8fafc', fontSize:13, resize:'none', outline:'none', boxSizing:'border-box', lineHeight:1.5, marginBottom:10 }}
+                  />
+                  <button onClick={async () => {
+                    if (!fbDesc.trim()) return;
+                    setFbSubmitting(true);
+                    try {
+                      await fetch('/api/kai/feedback', { method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({ user_name:'', user_email: sessionEmail||'', app:'mission_control', page_url: activeView, feedback_type: fbType, description: fbDesc.trim() }) });
+                      setFbDone(true);
+                    } catch(e) { console.error('[KaiFloat feedback]',e); }
+                    setFbSubmitting(false);
+                  }} disabled={!fbDesc.trim()||fbSubmitting} style={{
+                    width:'100%', padding:'11px', borderRadius:10, border:'none',
+                    background: !fbDesc.trim()||fbSubmitting ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+                    color: !fbDesc.trim()||fbSubmitting ? 'rgba(148,163,184,0.4)' : 'white',
+                    fontSize:13, fontWeight:700, cursor: !fbDesc.trim() ? 'default' : 'pointer',
+                  }}>{fbSubmitting ? 'Sending…' : 'Send to Kai →'}</button>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {kaiTab === 'chat' && <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {messages.map((m, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
@@ -227,10 +285,10 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               </div>
             )}
             <div ref={bottomRef} />
-          </div>
+          </div>}
 
-          {/* Suggestions */}
-          {messages.length <= 1 && (
+          {/* Suggestions — chat only */}
+          {kaiTab === 'chat' && messages.length <= 1 && (
             <div style={{ padding: '4px 12px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {[
                 activeView === 'Bid Intake' ? 'What needs attention today?' : null,
@@ -246,8 +304,8 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             </div>
           )}
 
-          {/* Input */}
-          <div style={{ padding: '8px 12px 14px', borderTop: '1px solid #f1f5f9' }}>
+          {/* Input — chat only */}
+          {kaiTab === 'chat' && <div style={{ padding: '8px 12px 14px', borderTop: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', padding: '8px 14px' }}>
               <input
                 ref={inputRef}
@@ -262,7 +320,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </div>
-          </div>
+          </div>}
           <style>{`
             @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
             @keyframes goldenShimmer {

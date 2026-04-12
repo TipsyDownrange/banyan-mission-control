@@ -31,6 +31,7 @@ type WorkOrder = {
   deposit_sent_date?: string; deposit_paid_date?: string;
   final_status?: string; final_amount?: string; final_invoice_num?: string;
   final_sent_date?: string; final_paid_date?: string;
+  invoices_json?: string;
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
@@ -596,64 +597,91 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </div>
               </div>
 
-              {/* Invoicing */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Invoicing</div>
-                {(['deposit', 'final'] as const).map(tier => {
-                  const statusKey = `${tier}_status` as keyof typeof wo;
-                  const amtKey = `${tier}_amount` as keyof typeof wo;
-                  const numKey = `${tier}_invoice_num` as keyof typeof wo;
-                  const sentKey = `${tier}_sent_date` as keyof typeof wo;
-                  const paidKey = `${tier}_paid_date` as keyof typeof wo;
-                  const statusVal = (draft as Record<string,string>)[statusKey] ?? (wo[statusKey] as string) ?? '';
-                  const showDates = statusVal === 'Sent' || statusVal === 'Paid';
-                  return (
-                    <div key={tier} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: tier === 'deposit' ? '1px solid #f1f5f9' : 'none' }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', marginBottom: 8 }}>
-                        {tier === 'deposit' ? '💳 Deposit Invoice' : '📄 Final Invoice'}
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                        <div>
-                          <label style={LBL}>Status</label>
-                          <select style={INP} value={statusVal}
-                            onChange={e => update(statusKey as string, e.target.value)}
-                            onBlur={e => update(statusKey as string, e.target.value)}>
-                            {['', 'Not Required', 'Pending', 'Sent', 'Paid'].map(s => <option key={s} value={s}>{s || 'Select…'}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={LBL}>Amount ($)</label>
-                          <input style={INP} type="number" step="0.01" placeholder="0.00"
-                            value={(draft as Record<string,string>)[amtKey] ?? (wo[amtKey] as string) ?? ''}
-                            onChange={e => update(amtKey as string, e.target.value)}
-                            onBlur={e => update(amtKey as string, e.target.value)} />
-                        </div>
-                        <div>
-                          <label style={LBL}>Invoice # (optional)</label>
-                          <input style={INP} placeholder="QBO invoice #"
-                            value={(draft as Record<string,string>)[numKey] ?? (wo[numKey] as string) ?? ''}
-                            onChange={e => update(numKey as string, e.target.value)}
-                            onBlur={e => update(numKey as string, e.target.value)} />
-                        </div>
-                        {showDates && <div>
-                          <label style={LBL}>Date Sent</label>
-                          <input style={INP} type="date"
-                            value={(draft as Record<string,string>)[sentKey] ?? (wo[sentKey] as string) ?? ''}
-                            onChange={e => update(sentKey as string, e.target.value)}
-                            onBlur={e => update(sentKey as string, e.target.value)} />
-                        </div>}
-                        {statusVal === 'Paid' && <div>
-                          <label style={LBL}>Date Paid</label>
-                          <input style={INP} type="date"
-                            value={(draft as Record<string,string>)[paidKey] ?? (wo[paidKey] as string) ?? ''}
-                            onChange={e => update(paidKey as string, e.target.value)}
-                            onBlur={e => update(paidKey as string, e.target.value)} />
-                        </div>}
-                      </div>
+              {/* Invoicing — Dynamic invoice list */}
+              {(() => {
+                type InvoiceRow = { id: string; type: string; status: string; amount: string; invoice_num: string; date_sent: string; date_paid: string; };
+                // Parse invoices_json, fallback to old cols for legacy data
+                const rawJson = (draft as Record<string,string>).invoices_json ?? wo.invoices_json ?? '';
+                let invoices: InvoiceRow[] = [];
+                try { if (rawJson) invoices = JSON.parse(rawJson); } catch {}
+                if (invoices.length === 0 && (wo.deposit_status || wo.final_status)) {
+                  // Migrate from old columns
+                  if (wo.deposit_status) invoices.push({ id:'INV-dep', type:'Deposit', status:wo.deposit_status||'', amount:wo.deposit_amount||'', invoice_num:wo.deposit_invoice_num||'', date_sent:wo.deposit_sent_date||'', date_paid:wo.deposit_paid_date||'' });
+                  if (wo.final_status) invoices.push({ id:'INV-fin', type:'Final', status:wo.final_status||'', amount:wo.final_amount||'', invoice_num:wo.final_invoice_num||'', date_sent:wo.final_sent_date||'', date_paid:wo.final_paid_date||'' });
+                }
+
+                function saveInvoices(updated: InvoiceRow[]) {
+                  update('invoices_json', JSON.stringify(updated));
+                }
+                function updateRow(id: string, field: keyof InvoiceRow, val: string) {
+                  const updated = invoices.map(inv => inv.id === id ? { ...inv, [field]: val } : inv);
+                  saveInvoices(updated);
+                }
+                function addRow() {
+                  const newInv: InvoiceRow = { id:`INV-${Date.now()}`, type:'Progress Payment', status:'Pending', amount:'', invoice_num:'', date_sent:'', date_paid:'' };
+                  saveInvoices([...invoices, newInv]);
+                }
+                function deleteRow(id: string) {
+                  saveInvoices(invoices.filter(inv => inv.id !== id));
+                }
+
+                const TYPE_ICONS: Record<string,string> = { 'Deposit':'💳', 'Progress Payment':'📈', 'Final':'📄', 'Retention Release':'🔐' };
+
+                return (
+                  <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                    <div style={{ ...SECTION_TITLE, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span>Invoicing</span>
+                      {invoices.length > 0 && (
+                        <span style={{ fontSize:11, color:'#64748b', fontWeight:600 }}>
+                          Total: ${invoices.reduce((s,i) => s + (parseFloat(i.amount)||0), 0).toLocaleString('en-US',{minimumFractionDigits:2})}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
+                    {invoices.length === 0 && <div style={{ fontSize:13, color:'#94a3b8', marginBottom:12 }}>No invoices added yet.</div>}
+                    {invoices.map((inv, idx) => (
+                      <div key={inv.id} style={{ marginBottom:12, padding:'12px', borderRadius:12, background:'#f8fafc', border:'1px solid #f1f5f9' }}>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+                          <span style={{ fontSize:12, fontWeight:800, color:'#334155' }}>{TYPE_ICONS[inv.type]||'💰'} {inv.type} #{idx+1}</span>
+                          <button onClick={() => deleteRow(inv.id)} style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:16, padding:'0 4px' }} title="Delete">🗑️</button>
+                        </div>
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                          <div>
+                            <label style={LBL}>Type</label>
+                            <select style={INP} value={inv.type} onChange={e=>updateRow(inv.id,'type',e.target.value)}>
+                              {['Deposit','Progress Payment','Final','Retention Release'].map(t=><option key={t}>{t}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={LBL}>Status</label>
+                            <select style={INP} value={inv.status} onChange={e=>updateRow(inv.id,'status',e.target.value)}>
+                              {['Pending','Sent','Paid','Not Required'].map(s=><option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={LBL}>Amount ($)</label>
+                            <input style={INP} type="number" step="0.01" placeholder="0.00" value={inv.amount} onChange={e=>updateRow(inv.id,'amount',e.target.value)} />
+                          </div>
+                          <div>
+                            <label style={LBL}>Invoice #</label>
+                            <input style={INP} placeholder="QBO ref" value={inv.invoice_num} onChange={e=>updateRow(inv.id,'invoice_num',e.target.value)} />
+                          </div>
+                          {(inv.status==='Sent'||inv.status==='Paid') && <div>
+                            <label style={LBL}>Date Sent</label>
+                            <input style={INP} type="date" value={inv.date_sent} onChange={e=>updateRow(inv.id,'date_sent',e.target.value)} />
+                          </div>}
+                          {inv.status==='Paid' && <div>
+                            <label style={LBL}>Date Paid</label>
+                            <input style={INP} type="date" value={inv.date_paid} onChange={e=>updateRow(inv.id,'date_paid',e.target.value)} />
+                          </div>}
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={addRow} style={{ width:'100%', padding:'10px', borderRadius:10, border:'1.5px dashed #0f766e', background:'transparent', color:'#0f766e', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                      + Add Invoice
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Notes */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
@@ -867,11 +895,18 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           }}>
             <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Close Work Order</div>
             <div style={{ fontSize:13, color:'#64748b', marginBottom: safeWo.final_status && safeWo.final_status !== 'Paid' ? 8 : 20 }}>Enter final details before closing {safeWo.name}.</div>
-            {safeWo.final_status && safeWo.final_status !== 'Paid' && safeWo.final_status !== 'Not Required' && (
-              <div style={{ padding:'10px 12px', background:'#fffbeb', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'#92400e', fontWeight:600, marginBottom:16 }}>
-                ⚠️ Final invoice has not been marked as paid (status: {safeWo.final_status}). Close anyway?
-              </div>
-            )}
+{(() => {
+              let invoices: {status:string}[] = [];
+              try { if (safeWo.invoices_json) invoices = JSON.parse(safeWo.invoices_json); } catch {}
+              // Fallback: check old columns
+              if (invoices.length === 0 && safeWo.final_status) invoices = [{ status: safeWo.final_status }];
+              const unpaid = invoices.some(i => i.status === 'Pending' || i.status === 'Sent');
+              return unpaid ? (
+                <div style={{ padding:'10px 12px', background:'#fffbeb', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'#92400e', fontWeight:600, marginBottom:16 }}>
+                  ⚠️ One or more invoices have not been marked as paid. Close anyway?
+                </div>
+              ) : null;
+            })()}
 
             <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>Actual Hours Worked</label>
             <input type="number" step="0.5" min="0"

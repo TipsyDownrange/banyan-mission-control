@@ -53,6 +53,7 @@ const COL = {
   final_invoice_num:   38, // AM
   final_sent_date:     39, // AN
   final_paid_date:     40, // AO
+  invoices_json:       41, // AP
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -112,6 +113,7 @@ function rowToWO(row: string[]) {
     final_invoice_num:   g(COL.final_invoice_num),
     final_sent_date:     g(COL.final_sent_date),
     final_paid_date:     g(COL.final_paid_date),
+    invoices_json:       g(COL.invoices_json),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',

@@ -262,12 +262,21 @@ function WOCard({
 
         {/* Invoice status badge */}
         {(() => {
-          const dep = (wo as unknown as Record<string,string>).deposit_status || '';
-          const fin = (wo as unknown as Record<string,string>).final_status || '';
-          if (dep === 'Paid' && fin === 'Paid') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#ecfdf5', color: '#059669', border: '1px solid rgba(5,150,105,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>✅ Paid in full</div>;
-          if (fin === 'Sent') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#d97706', border: '1px solid rgba(217,119,6,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Awaiting payment</div>;
-          if (dep === 'Sent') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#eff6ff', color: '#1d4ed8', border: '1px solid rgba(29,78,216,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Deposit sent</div>;
-          if (dep === 'Pending') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Deposit pending</div>;
+          const wox = wo as unknown as Record<string,string>;
+          let invoices: {status:string; type:string}[] = [];
+          try { if (wox.invoices_json) invoices = JSON.parse(wox.invoices_json); } catch {}
+          // Fallback to old columns if no JSON
+          if (invoices.length === 0) {
+            if (wox.deposit_status) invoices.push({ type:'Deposit', status: wox.deposit_status });
+            if (wox.final_status) invoices.push({ type:'Final', status: wox.final_status });
+          }
+          if (invoices.length === 0) return null;
+          const allPaid = invoices.every(i => i.status === 'Paid' || i.status === 'Not Required');
+          const anySent = invoices.some(i => i.status === 'Sent');
+          const anyPending = invoices.some(i => i.status === 'Pending');
+          if (allPaid) return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#ecfdf5', color: '#059669', border: '1px solid rgba(5,150,105,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>✅ Paid in full</div>;
+          if (anySent) return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#d97706', border: '1px solid rgba(217,119,6,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Awaiting payment</div>;
+          if (anyPending) return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Invoice pending</div>;
           return null;
         })()}
 
