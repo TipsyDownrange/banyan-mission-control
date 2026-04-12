@@ -259,6 +259,17 @@ function WOCard({
           {toTitleCase(wo.description)}
         </div>
 
+        {/* Invoice status badge */}
+        {(() => {
+          const dep = (wo as unknown as Record<string,string>).deposit_status || '';
+          const fin = (wo as unknown as Record<string,string>).final_status || '';
+          if (dep === 'Paid' && fin === 'Paid') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#ecfdf5', color: '#059669', border: '1px solid rgba(5,150,105,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>✅ Paid in full</div>;
+          if (fin === 'Sent') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#d97706', border: '1px solid rgba(217,119,6,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Awaiting payment</div>;
+          if (dep === 'Sent') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#eff6ff', color: '#1d4ed8', border: '1px solid rgba(29,78,216,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Deposit sent</div>;
+          if (dep === 'Pending') return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Deposit pending</div>;
+          return null;
+        })()}
+
         {/* Row 4: Meta — assignee + date, only if set */}
         {(wo.assignedTo || wo.scheduledDate) && (
           <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>

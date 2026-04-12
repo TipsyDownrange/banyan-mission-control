@@ -27,6 +27,10 @@ type WorkOrder = {
   invoice_total?: string;
   invoice_balance?: string;
   invoice_date?: string;
+  deposit_status?: string; deposit_amount?: string; deposit_invoice_num?: string;
+  deposit_sent_date?: string; deposit_paid_date?: string;
+  final_status?: string; final_amount?: string; final_invoice_num?: string;
+  final_sent_date?: string; final_paid_date?: string;
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
@@ -592,6 +596,65 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </div>
               </div>
 
+              {/* Invoicing */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Invoicing</div>
+                {(['deposit', 'final'] as const).map(tier => {
+                  const statusKey = `${tier}_status` as keyof typeof wo;
+                  const amtKey = `${tier}_amount` as keyof typeof wo;
+                  const numKey = `${tier}_invoice_num` as keyof typeof wo;
+                  const sentKey = `${tier}_sent_date` as keyof typeof wo;
+                  const paidKey = `${tier}_paid_date` as keyof typeof wo;
+                  const statusVal = (draft as Record<string,string>)[statusKey] ?? (wo[statusKey] as string) ?? '';
+                  const showDates = statusVal === 'Sent' || statusVal === 'Paid';
+                  return (
+                    <div key={tier} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: tier === 'deposit' ? '1px solid #f1f5f9' : 'none' }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', marginBottom: 8 }}>
+                        {tier === 'deposit' ? '💳 Deposit Invoice' : '📄 Final Invoice'}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div>
+                          <label style={LBL}>Status</label>
+                          <select style={INP} value={statusVal}
+                            onChange={e => update(statusKey as string, e.target.value)}
+                            onBlur={e => update(statusKey as string, e.target.value)}>
+                            {['', 'Not Required', 'Pending', 'Sent', 'Paid'].map(s => <option key={s} value={s}>{s || 'Select…'}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={LBL}>Amount ($)</label>
+                          <input style={INP} type="number" step="0.01" placeholder="0.00"
+                            value={(draft as Record<string,string>)[amtKey] ?? (wo[amtKey] as string) ?? ''}
+                            onChange={e => update(amtKey as string, e.target.value)}
+                            onBlur={e => update(amtKey as string, e.target.value)} />
+                        </div>
+                        <div>
+                          <label style={LBL}>Invoice # (optional)</label>
+                          <input style={INP} placeholder="QBO invoice #"
+                            value={(draft as Record<string,string>)[numKey] ?? (wo[numKey] as string) ?? ''}
+                            onChange={e => update(numKey as string, e.target.value)}
+                            onBlur={e => update(numKey as string, e.target.value)} />
+                        </div>
+                        {showDates && <div>
+                          <label style={LBL}>Date Sent</label>
+                          <input style={INP} type="date"
+                            value={(draft as Record<string,string>)[sentKey] ?? (wo[sentKey] as string) ?? ''}
+                            onChange={e => update(sentKey as string, e.target.value)}
+                            onBlur={e => update(sentKey as string, e.target.value)} />
+                        </div>}
+                        {statusVal === 'Paid' && <div>
+                          <label style={LBL}>Date Paid</label>
+                          <input style={INP} type="date"
+                            value={(draft as Record<string,string>)[paidKey] ?? (wo[paidKey] as string) ?? ''}
+                            onChange={e => update(paidKey as string, e.target.value)}
+                            onBlur={e => update(paidKey as string, e.target.value)} />
+                        </div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
               {/* Notes */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Notes & Comments</div>
@@ -803,7 +866,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
           }}>
             <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Close Work Order</div>
-            <div style={{ fontSize:13, color:'#64748b', marginBottom:20 }}>Enter final details before closing {safeWo.name}.</div>
+            <div style={{ fontSize:13, color:'#64748b', marginBottom: safeWo.final_status && safeWo.final_status !== 'Paid' ? 8 : 20 }}>Enter final details before closing {safeWo.name}.</div>
+            {safeWo.final_status && safeWo.final_status !== 'Paid' && safeWo.final_status !== 'Not Required' && (
+              <div style={{ padding:'10px 12px', background:'#fffbeb', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'#92400e', fontWeight:600, marginBottom:16 }}>
+                ⚠️ Final invoice has not been marked as paid (status: {safeWo.final_status}). Close anyway?
+              </div>
+            )}
 
             <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>Actual Hours Worked</label>
             <input type="number" step="0.5" min="0"

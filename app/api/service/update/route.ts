@@ -40,12 +40,23 @@ const COL_IDX: Record<string, number> = {
   created_at:      26, // AA
   updated_at:      27, // AB
   source:          28, // AC
-  // QBO invoice fields — AD through AH
-  qbo_invoice_id:  29, // AD
-  invoice_number:  30, // AE
-  invoice_total:   31, // AF
-  invoice_balance: 32, // AG
-  invoice_date:    33, // AH
+  // QBO invoice fields (actual sheet positions)
+  qbo_invoice_id:  26, // AA
+  invoice_number:  27, // AB
+  invoice_total:   28, // AC
+  invoice_balance: 29, // AD
+  invoice_date:    30, // AE
+  // BanyanOS invoicing tracker (AF-AO)
+  deposit_status:      31, // AF
+  deposit_amount:      32, // AG
+  deposit_invoice_num: 33, // AH
+  deposit_sent_date:   34, // AI
+  deposit_paid_date:   35, // AJ
+  final_status:        36, // AK
+  final_amount:        37, // AL
+  final_invoice_num:   38, // AM
+  final_sent_date:     39, // AN
+  final_paid_date:     40, // AO
 };
 
 function colLetter(idx: number): string {
@@ -195,6 +206,17 @@ export async function PATCH(req: Request) {
       area_of_island:  'area_of_island',
       quoteTotal:      'quote_total',
       quoteStatus:     'quote_status',
+      // Invoicing tracker fields
+      deposit_status:      'deposit_status',
+      deposit_amount:      'deposit_amount',
+      deposit_invoice_num: 'deposit_invoice_num',
+      deposit_sent_date:   'deposit_sent_date',
+      deposit_paid_date:   'deposit_paid_date',
+      final_status:        'final_status',
+      final_amount:        'final_amount',
+      final_invoice_num:   'final_invoice_num',
+      final_sent_date:     'final_sent_date',
+      final_paid_date:     'final_paid_date',
     };
 
     // Handle stage → status mapping (legacy frontend compat)

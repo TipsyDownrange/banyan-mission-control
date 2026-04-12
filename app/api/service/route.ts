@@ -36,12 +36,23 @@ const COL = {
   created_at:      26, // AA
   updated_at:      27, // AB
   source:          28, // AC
-  // QBO invoice columns — AD through AH
-  qbo_invoice_id:  29, // AD
-  invoice_number:  30, // AE
-  invoice_total:   31, // AF
-  invoice_balance: 32, // AG
-  invoice_date:    33, // AH
+  // QBO invoice columns (actual sheet positions)
+  qbo_invoice_id:  26, // AA
+  invoice_number:  27, // AB
+  invoice_total:   28, // AC
+  invoice_balance: 29, // AD
+  invoice_date:    30, // AE
+  // BanyanOS invoicing tracker (new columns AF-AO)
+  deposit_status:      31, // AF
+  deposit_amount:      32, // AG
+  deposit_invoice_num: 33, // AH
+  deposit_sent_date:   34, // AI
+  deposit_paid_date:   35, // AJ
+  final_status:        36, // AK
+  final_amount:        37, // AL
+  final_invoice_num:   38, // AM
+  final_sent_date:     39, // AN
+  final_paid_date:     40, // AO
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -90,6 +101,17 @@ function rowToWO(row: string[]) {
     invoice_total:   g(COL.invoice_total),
     invoice_balance: g(COL.invoice_balance),
     invoice_date:    g(COL.invoice_date),
+    // BanyanOS invoicing tracker
+    deposit_status:      g(COL.deposit_status),
+    deposit_amount:      g(COL.deposit_amount),
+    deposit_invoice_num: g(COL.deposit_invoice_num),
+    deposit_sent_date:   g(COL.deposit_sent_date),
+    deposit_paid_date:   g(COL.deposit_paid_date),
+    final_status:        g(COL.final_status),
+    final_amount:        g(COL.final_amount),
+    final_invoice_num:   g(COL.final_invoice_num),
+    final_sent_date:     g(COL.final_sent_date),
+    final_paid_date:     g(COL.final_paid_date),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',
