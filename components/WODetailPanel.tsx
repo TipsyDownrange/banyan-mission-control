@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
+import ActivityTimeline from '@/components/ActivityTimeline';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 import type { ParsedPlace } from '@/components/PlacesAutocomplete';
@@ -31,17 +32,19 @@ type WorkOrder = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES = [
-  { key: 'lead',        label: 'New Lead',          color: '#64748b' },
-  { key: 'quoted',      label: 'Quoted',             color: '#7c3aed' },
-  { key: 'approved',    label: 'Needs to Schedule', color: '#92400e' },
-  { key: 'scheduled',   label: 'Scheduled',          color: '#4338ca' },
-  { key: 'in_progress', label: 'In Progress',        color: '#0f766e' },
-  { key: 'closed',      label: 'Completed',          color: '#15803d' },
+  { key: 'lead',          label: 'New Lead',          color: '#64748b' },
+  { key: 'quoted',        label: 'Quoted',             color: '#7c3aed' },
+  { key: 'approved',      label: 'Needs to Schedule', color: '#92400e' },
+  { key: 'scheduled',     label: 'Scheduled',          color: '#4338ca' },
+  { key: 'in_progress',   label: 'In Progress',        color: '#0f766e' },
+  { key: 'work_complete', label: '✅ Work Complete',    color: '#059669' },
+  { key: 'closed',        label: 'Completed',          color: '#15803d' },
 ];
 
 const STAGE_BG: Record<string, string> = {
   lead: '#f8fafc', quoted: '#f5f3ff',
-  approved: '#fffbeb', scheduled: '#eef2ff', in_progress: '#f0fdfa', closed: '#f0fdf4',
+  approved: '#fffbeb', scheduled: '#eef2ff', in_progress: '#f0fdfa',
+  work_complete: '#ecfdf5', closed: '#f0fdf4',
 };
 
 function toTitleCase(str: string): string {
@@ -455,6 +458,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   readOnly={readOnly}
                   systemTypes={wo.systemType}
                 />
+              </div>
+
+              {/* Activity Timeline */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Activity Timeline</div>
+                <ActivityTimeline kID={wo.id} />
               </div>
 
               {/* Customer & Site */}
