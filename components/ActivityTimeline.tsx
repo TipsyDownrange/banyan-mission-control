@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -41,12 +41,15 @@ type FieldEvent = {
 // ─── Config ───────────────────────────────────────────────────
 
 const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
-  INSTALL_STEP:      { icon: '🔧', color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)',  label: 'QA Step' },
-  FIELD_ISSUE:       { icon: '⚠️', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',  label: 'Issue' },
+  INSTALL_STEP:      { icon: '✅', color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)',  label: 'Step Complete' },
+  FIELD_ISSUE:       { icon: '🚨', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',  label: 'Issue' },
   DAILY_LOG:         { icon: '📋', color: '#15803d', bg: 'rgba(21,128,61,0.08)',  label: 'Daily Report' },
-  FIELD_MEASUREMENT: { icon: '📐', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Measurement' },
-  PHOTO_ONLY:        { icon: '📷', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Photo/Note' },
-  NOTE:              { icon: '📷', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Photo/Note' },
+  FIELD_MEASUREMENT: { icon: '📏', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', label: 'Measurement' },
+  PHOTO_ONLY:        { icon: '📸', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Photo' },
+  NOTE:              { icon: '📝', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Note' },
+  TM_CAPTURE:        { icon: '⏱️', color: '#92400e', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
+  PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
+  SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
 };
 
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -55,7 +58,7 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
   CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
-type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY';
+type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST';
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -93,7 +96,12 @@ function getDateBoundary(filter: DateFilter): string | null {
 
 // ─── Event Card ───────────────────────────────────────────────
 
-function EventCard({ event, onResolved }: { event: FieldEvent; onResolved: (id: string) => void }) {
+function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolved: (id: string) => void; userMap: UserMap }) {
+  // Resolve user ID to display name
+  const resolveUser = (raw: string) => {
+    if (!raw) return '';
+    return userMap[raw] || userMap[raw.toLowerCase()] || raw;
+  };
   const [expanded, setExpanded] = useState(false);
   const [resolving, setResolving] = useState(false);
 
@@ -130,14 +138,17 @@ function EventCard({ event, onResolved }: { event: FieldEvent; onResolved: (id: 
   }
 
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: 14,
-      border: `1.5px solid ${iconColor}22`,
-      padding: '14px 16px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 8,
+    <div
+      onClick={() => setExpanded(e => !e)}
+      style={{
+        background: expanded ? '#fafafa' : 'white',
+        borderRadius: 14,
+        border: `1.5px solid ${expanded ? iconColor + '44' : iconColor + '22'}`,
+        padding: '14px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        cursor: 'pointer',
     }}>
       {/* Top row: icon badge + meta */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -193,7 +204,7 @@ function EventCard({ event, onResolved }: { event: FieldEvent; onResolved: (id: 
               <>
                 <span style={{ fontSize: 10, color: '#cbd5e1' }}>·</span>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>
-                  {event.performed_by}
+                  {resolveUser(event.performed_by)}
                 </span>
               </>
             )}
@@ -245,6 +256,95 @@ function EventCard({ event, onResolved }: { event: FieldEvent; onResolved: (id: 
         </div>
       )}
 
+      {/* Structured expansion per event type */}
+      {expanded && (() => {
+        const kv = (label: string, value: string | undefined, badge?: string): React.ReactElement | null => value ? (
+          <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
+            <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>{label}</span>
+            {badge
+              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? '#b91c1c' : badge === 'LOW' ? '#0f766e' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
+              : <span style={{ color: '#0f172a', fontWeight: 600 }}>{value}</span>}
+          </div>
+        ) : null;
+
+        if (event.event_type === 'FIELD_ISSUE') return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(220,38,38,0.15)' }}>
+            {kv('Severity', event.severity, event.severity)}
+            {kv('Blocking', event.blocking_flag === 'TRUE' ? 'Yes — work stopped' : 'No')}
+            {kv('Category', event.issue_category)}
+            {kv('Responsible', event.responsible_party)}
+            {kv('Status', event.issue_status)}
+            {event.delays_blockers && kv('Impact', event.delays_blockers)}
+          </div>
+        );
+
+        if (event.event_type === 'FIELD_MEASUREMENT') {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(event.notes); } catch {}
+          const fields = (parsed.fields || {}) as Record<string, string | boolean>;
+          return Object.keys(fields).length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 12px', background: 'rgba(8,145,178,0.05)', borderRadius: 10, border: '1px solid rgba(8,145,178,0.15)' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0891b2', marginBottom: 4 }}>{String(parsed.system_type || 'Measurement')}</div>
+              {Object.entries(fields).map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
+                  <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>{k.replace(/_/g,' ')}</span>
+                  <span style={{ color: '#0f172a', fontWeight: 600 }}>{typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}</span>
+                </div>
+              ))}
+            </div>
+          ) : null;
+        }
+
+        if (event.event_type === 'TM_CAPTURE') {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(event.notes); } catch {}
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(146,64,14,0.05)', borderRadius: 10, border: '1px solid rgba(146,64,14,0.15)' }}>
+              {kv('Auth Type', String(parsed.authorization_type || ''))}
+              {kv('Authorized By', String(parsed.authorized_by || ''))}
+              {kv('Crew', parsed.crew ? String(parsed.crew) + ' workers' : undefined)}
+              {kv('Hours Est.', parsed.hours_estimated ? String(parsed.hours_estimated) + 'h' : undefined)}
+              {kv('Linked Issue', parsed.triggering_event_id ? String(parsed.triggering_event_id).slice(0, 12) + '…' : undefined)}
+            </div>
+          );
+        }
+
+        if (event.event_type === 'DAILY_LOG') {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(event.notes); } catch { parsed = { raw: event.notes }; }
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(21,128,61,0.05)', borderRadius: 10, border: '1px solid rgba(21,128,61,0.15)' }}>
+              {kv('Manpower', event.manpower_count ? event.manpower_count + ' workers' : undefined)}
+              {kv('Crew', parsed.crew_on_site ? String(parsed.crew_on_site) : undefined)}
+              {kv('Hours', parsed.hours_worked ? String(parsed.hours_worked) + 'h' : undefined)}
+              {event.work_performed && kv('Work Performed', event.work_performed)}
+              {kv('Work Performed', parsed.work_performed && !event.work_performed ? String(parsed.work_performed) : undefined)}
+              {kv('Delays', event.delays_blockers || undefined)}
+              {kv('Delay type', parsed.delays && String(parsed.delays) !== 'None' ? String(parsed.delays) : undefined)}
+              {kv('Weather', event.weather_context || undefined)}
+              {kv('Materials', event.materials_received || undefined)}
+            </div>
+          );
+        }
+
+        if (event.event_type === 'PUNCH_LIST') {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(event.notes); } catch {}
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(217,119,6,0.05)', borderRadius: 10, border: '1px solid rgba(217,119,6,0.15)' }}>
+              {kv('Location', String(parsed.location || event.unit_reference || ''))}
+              {kv('Reported By', String(parsed.reported_by || ''))}
+              {kv('Responsible', String(parsed.responsible_party || event.responsible_party || ''))}
+              {kv('Priority', String(parsed.priority || ''))}
+              {kv('Fix Required', parsed.resolution_required ? String(parsed.resolution_required) : undefined)}
+              {kv('Status', event.issue_status || 'OPEN')}
+            </div>
+          );
+        }
+
+        return null;
+      })()}
+
       {/* Photo thumbnail */}
       {event.evidence_ref && (
         <a
@@ -276,12 +376,29 @@ interface ActivityTimelineProps {
   kID: string;
 }
 
+type UserMap = Record<string, string>; // user_id or email → display name
+
 export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
   const [events, setEvents] = useState<FieldEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [userMap, setUserMap] = useState<UserMap>({});
+
+  // Load users for name resolution
+  useEffect(() => {
+    fetch('/api/users').then(r => r.json()).then(users => {
+      const map: UserMap = {};
+      if (Array.isArray(users)) {
+        users.forEach((u: { user_id: string; name: string; email: string }) => {
+          if (u.user_id) map[u.user_id] = u.name;
+          if (u.email) map[u.email.toLowerCase()] = u.name;
+        });
+      }
+      setUserMap(map);
+    }).catch(() => {});
+  }, []);
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
@@ -330,6 +447,8 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     { key: 'DAILY_LOG',        label: 'Daily Report' },
     { key: 'FIELD_MEASUREMENT', label: 'Measurement' },
     { key: 'PHOTO_ONLY',       label: 'Photo / Note' },
+    { key: 'TM_CAPTURE',        label: 'T&M' },
+    { key: 'PUNCH_LIST',        label: 'Punch List' },
   ];
 
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
@@ -431,7 +550,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map(event => (
-              <EventCard key={event.event_id} event={event} onResolved={handleResolved} />
+              <EventCard key={event.event_id} event={event} onResolved={handleResolved} userMap={userMap} />
             ))}
           </div>
         </>
