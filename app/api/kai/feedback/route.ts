@@ -83,6 +83,8 @@ export async function POST(req: Request) {
         taskId, taskTitle, taskDetail, 'queued',
         body.feedback_type === 'Bug Report' ? 'high' : 'medium',
         'Feedback', 'Kai', now, now, '', '', '', 'Inbox', 'feedback',
+        '999', // Sort_Order
+        JSON.stringify([{ ts: now, action: 'created_from_feedback', by: body.user_name || 'User' }]), // Action_Log
       ]] },
     }).catch(e => console.error('[feedback] task card failed:', e));
 

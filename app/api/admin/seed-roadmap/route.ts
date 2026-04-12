@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${TAB}!A2:N2000`,
+      range: `${TAB}!A2:P2000`,
     });
     const rows = (res.data.values || []) as string[][];
 
@@ -56,6 +56,8 @@ export async function GET(req: Request) {
       // Infer phase from category if not already set
       const inferredPhase = existingPhase || CATEGORY_PHASE[category] || '';
       const inferredSource = existingSource || (category === 'Feedback' ? 'feedback' : 'manual');
+      const existingSortOrder = row[14] || '';
+      const existingActionLog = row[15] || '';
 
       let changed = false;
       if (inferredPhase && inferredPhase !== existingPhase) {
@@ -64,6 +66,14 @@ export async function GET(req: Request) {
       }
       if (inferredSource !== existingSource) {
         updates.push({ range: `${TAB}!N${rowNum}`, values: [[inferredSource]] });
+        changed = true;
+      }
+      if (!existingSortOrder) {
+        updates.push({ range: `${TAB}!O${rowNum}`, values: [[String(i + 1)]] });
+        changed = true;
+      }
+      if (!existingActionLog || existingActionLog === '') {
+        updates.push({ range: `${TAB}!P${rowNum}`, values: [['[]']] });
         changed = true;
       }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 
@@ -7,9 +8,9 @@ const TAB_NAME = 'Tasks';
 const HEADERS = [
   'Task_ID', 'Title', 'Detail', 'Status', 'Priority', 'Category',
   'Assigned_To', 'Created_At', 'Updated_At', 'Due_Date', 'Blocked_By', 'Parent_Task_ID',
-  'Phase', 'Source',
+  'Phase', 'Source', 'Sort_Order', 'Action_Log',
 ];
-const RANGE = `${TAB_NAME}!A2:N2000`;
+const RANGE = `${TAB_NAME}!A2:P2000`;
 
 async function ensureTab(sheets: ReturnType<typeof google.sheets>) {
   const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
@@ -46,6 +47,8 @@ function rowToTask(r: string[]) {
     parentTaskId: r[11] || '',
     phase: r[12] || '',
     source: r[13] || 'manual',
+    sortOrder: parseInt(r[14] || '999') || 999,
+    actionLog: (() => { try { return JSON.parse(r[15] || '[]'); } catch { return []; } })(),
   };
 }
 
@@ -79,16 +82,18 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     await ensureTab(sheets);
 
-    const rows = tasks.map((t: Record<string, string>) => [
+    const rows = tasks.map((t: Record<string, string>, i: number) => [
       t.id, t.title, t.detail, t.status, t.priority, t.category,
       t.assignedTo, t.createdAt, t.updatedAt,
       t.dueDate || '', t.blockedBy || '', t.parentTaskId || '',
       t.phase || '', t.source || 'manual',
+      t.sortOrder || String(i + 1),
+      t.actionLog || JSON.stringify([{ ts: new Date().toISOString(), action: 'created', by: t.assignedTo || 'Sean' }]),
     ]);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${TAB_NAME}!A:N`,
+      range: `${TAB_NAME}!A:P`,
       valueInputOption: 'RAW',
       requestBody: { values: rows },
     });
@@ -105,7 +110,7 @@ const FIELD_COL: Record<string, number> = {
   title: 1, detail: 2, status: 3, priority: 4, category: 5,
   assignedTo: 6, createdAt: 7, updatedAt: 8,
   dueDate: 9, blockedBy: 10, parentTaskId: 11,
-  phase: 12, source: 13,
+  phase: 12, source: 13, sortOrder: 14, actionLog: 15,
 };
 
 function colLetter(idx: number) {
@@ -129,14 +134,26 @@ export async function PATCH(req: Request) {
     if (rowIndex === -1) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
 
     const sheetRow = rowIndex + 2;
-    const now = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+    const session = await getServerSession();
+    const actor = session?.user?.name || session?.user?.email || 'Unknown';
 
     // Always stamp updatedAt
     const updateData: { range: string; values: string[][] }[] = [
-      { range: `${TAB_NAME}!${colLetter(FIELD_COL.updatedAt)}${sheetRow}`, values: [[now]] },
+      { range: `${TAB_NAME}!${colLetter(FIELD_COL.updatedAt)}${sheetRow}`, values: [[now.split('T')[0]]] },
     ];
 
+    // Auto-append to action_log when status changes
+    if (fields.status) {
+      try {
+        const existing = JSON.parse(rows[rowIndex][FIELD_COL.actionLog] || '[]');
+        existing.push({ ts: now, action: `status_changed_to_${fields.status}`, by: actor });
+        updateData.push({ range: `${TAB_NAME}!${colLetter(FIELD_COL.actionLog)}${sheetRow}`, values: [[JSON.stringify(existing)]] });
+      } catch { console.error('[tasks PATCH] action_log parse error'); }
+    }
+
     for (const [key, val] of Object.entries(fields)) {
+      if (key === 'actionLog') continue; // handled above for status changes
       const col = FIELD_COL[key];
       if (col !== undefined && val !== undefined) {
         updateData.push({
