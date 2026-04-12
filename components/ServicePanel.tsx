@@ -774,8 +774,8 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', alignItems: 'start', paddingBottom: 12, minHeight: 200 }}>
           {STAGES.filter(s => s.key !== 'lost').map(stage => {
             const isCompletedStage = completedStatuses.has(stage.key);
-            // Hide completed columns unless showCompleted toggle is on
-            if (isCompletedStage && !showCompleted && filter === 'all' && !search) return null;
+            // Completed stages always render in the separate section below, not in the main scroll
+            if (isCompletedStage) return null;
             const wos = filteredByStatus[stage.key] || [];
             // When filtering, hide empty columns
             if (filter !== 'all' && wos.length === 0) return null;
@@ -809,6 +809,33 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
           })}
         </div>
       )}
+
+      {/* Completed WOs — separate row below active board when showCompleted is on */}
+      {!loading && data && view === 'kanban' && showCompleted && (() => {
+        const completedWOs = [...(filteredByStatus['work_complete'] || []), ...(filteredByStatus['closed'] || [])];
+        if (completedWOs.length === 0) return null;
+        return (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid #f1f5f9' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Completed Work Orders ({completedWOs.length})</div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {completedWOs.map(wo => (
+                <div key={wo.id} style={{ width: 240, opacity: 0.75 }}>
+                  <WOCard wo={wo}
+                    expanded={expanded === (wo.id || wo.name)}
+                    onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
+                    onStageChange={handleStageChange}
+                    onSave={handleSave}
+                    onQuote={(id) => setQuoteWO(id)}
+                    onDetail={(w) => setDetailWO(w)}
+                    onLinkFolder={handleLinkFolder}
+                    allCrew={allCrew}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* LIST */}
       {!loading && data && view === 'list' && (
