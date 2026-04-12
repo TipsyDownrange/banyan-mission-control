@@ -14,6 +14,25 @@ const SA_KEY = process.env.GOOGLE_SA_KEY_BASE64 || '';
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const SENDER = 'joey@kulaglass.com';
 
+// Hawaii city/area → island resolver (mirrors HAWAII_CITY_MAP in ServiceIntake)
+const HAWAII_ISLAND_MAP: Array<{ patterns: string[]; island: string }> = [
+  { patterns: ['kahului','wailuku','lahaina','napili','kapalua','kaanapali','kihei','wailea','makena','maalaea','kula','makawao','pukalani','paia','haiku','hana','upcountry','maui'], island: 'Maui' },
+  { patterns: ['honolulu','waikiki','kailua','kaneohe','aiea','pearl','ewa','mililani','kapolei','waipahu','haleiwa','oahu'], island: 'Oahu' },
+  { patterns: ['lihue','kapaa','poipu','koloa','princeville','hanalei','waimea','kauai'], island: 'Kauai' },
+  { patterns: ['hilo','kona','kohala','waikoloa','pahoa','keaau','volcano','big island'], island: 'Hawaii' },
+  { patterns: ['molokai','kaunakakai'], island: 'Molokai' },
+  { patterns: ['lanai city','lanai'], island: 'Lanai' },
+];
+
+function resolveIsland(text: string): string {
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  for (const entry of HAWAII_ISLAND_MAP) {
+    if (entry.patterns.some(p => lower.includes(p))) return entry.island;
+  }
+  return '';
+}
+
 /** RFC 2047 encode for non-ASCII subject characters */
 function rfc2047Encode(text: string): string {
   if (/^[\x20-\x7E]*$/.test(text)) return text;
@@ -73,7 +92,9 @@ export async function POST(req: Request) {
   try {
     // Resolve recipients
     const [woRow, users] = await Promise.all([lookupWO(kID), lookupUsers()]);
-    const woIsland = woRow?.[5] || 'Maui';
+    // Resolve island — WO col F may contain city name (e.g. "Kihei") not island name ("Maui")
+    const rawIsland = woRow?.[5] || '';
+    const woIsland = resolveIsland(rawIsland) || rawIsland || 'Maui';
     const assignedToName = woRow?.[9] || ''; // col J = assigned_to
 
     // PM: match by name in assigned_to field, or fall back to joey@
