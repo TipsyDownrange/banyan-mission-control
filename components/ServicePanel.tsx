@@ -38,7 +38,8 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'approved',    label: 'Needs to Schedule', color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
   { key: 'scheduled',   label: 'Scheduled',          color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
   { key: 'in_progress', label: 'In Progress',        color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },
-  { key: 'closed',      label: 'Completed',          color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
+  { key: 'work_complete', label: '✅ Work Complete',  color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(5,150,105,0.22)' },
+  { key: 'closed',        label: 'Closed',             color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
 ];
 
 // Normalize raw Smartsheet statuses to display stages
@@ -483,6 +484,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   const [filter, setFilter] = useState(defaultFilter);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('date_desc');
+  const [showCompleted, setShowCompleted] = useState(false); // off by default — keeps board clean
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
   // Local optimistic state overrides: woId → partial WO
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<WorkOrder>>>({});
@@ -590,8 +592,11 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
 
   // Search + filter + sort applied to all views
   const searchLower = search.toLowerCase();
+  const completedStatuses = new Set(['closed', 'completed', 'work_complete']);
   const filteredWOs = mergedWorkOrders.filter(wo => {
     if (wo.status === 'lost') return false;
+    // Hide completed unless showCompleted is on OR we're actively filtering/searching for them
+    if (completedStatuses.has(wo.status) && !showCompleted && !search && filter === 'all') return false;
     if (filter !== 'all' && wo.status !== filter) return false;
     if (search) {
       const q = searchLower;
@@ -717,6 +722,25 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       )}
 
       {/* KANBAN */}
+      {/* Show Completed toggle */}
+      {!loading && data && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <button onClick={() => setShowCompleted(v => !v)} style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: showCompleted ? '1px solid rgba(21,128,61,0.4)' : '1px solid #e2e8f0',
+            background: showCompleted ? 'rgba(240,253,244,0.9)' : 'white',
+            color: showCompleted ? '#15803d' : '#64748b',
+          }}>
+            <span style={{ fontSize: 14 }}>{showCompleted ? '☑' : '☐'}</span>
+            Show Completed
+            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
+              {(mergedByStatus['closed']?.length || 0) + (mergedByStatus['work_complete']?.length || 0)}
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Shared FilterBar — above both kanban and list */}
       {!loading && data && (
         <FilterBar
@@ -749,11 +773,14 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
       {!loading && data && view === 'kanban' && (
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', alignItems: 'start', paddingBottom: 12, minHeight: 200 }}>
           {STAGES.filter(s => s.key !== 'lost').map(stage => {
+            const isCompletedStage = completedStatuses.has(stage.key);
+            // Hide completed columns unless showCompleted toggle is on
+            if (isCompletedStage && !showCompleted && filter === 'all' && !search) return null;
             const wos = filteredByStatus[stage.key] || [];
             // When filtering, hide empty columns
             if (filter !== 'all' && wos.length === 0) return null;
             return (
-              <div key={stage.key} style={{ minWidth: 240, flex: filter === 'all' ? '0 0 240px' : '1 1 auto' }}>
+              <div key={stage.key} style={{ minWidth: 240, flex: filter === 'all' ? '0 0 240px' : '1 1 auto', opacity: isCompletedStage ? 0.75 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color }} />
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{stage.label}</div>
