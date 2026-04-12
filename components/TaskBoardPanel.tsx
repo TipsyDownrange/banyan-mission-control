@@ -53,12 +53,14 @@ function fmtTs(iso: string): string {
 }
 
 // ── Task Row (list view) ──────────────────────────────────────────────────
-function TaskRow({ task, onClick, onDragStart, onDragOver, onDrop, isDragging }: {
+function TaskRow({ task, onClick, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDropTarget }: {
   task: Task; onClick: () => void;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
   isDragging?: boolean;
+  isDropTarget?: boolean;
 }) {
   const sc = STATUS_PILL[task.status] || STATUS_PILL.queued;
   const dotColor = PRIORITY_DOT[task.priority] || PRIORITY_DOT.medium;
@@ -71,11 +73,14 @@ function TaskRow({ task, onClick, onDragStart, onDragOver, onDrop, isDragging }:
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onDragEnd={onDragEnd}
       onClick={onClick}
       style={{
         display:'flex', alignItems:'center', gap:10, padding:'9px 12px',
-        borderRadius:8, background:'white', border:'1px solid #f1f5f9',
-        cursor:'pointer', userSelect:'none',
+        borderRadius:8, background:'white',
+        border: isDropTarget ? '2px solid #0f766e' : '1px solid #f1f5f9',
+        borderTop: isDropTarget ? '2px solid #0f766e' : undefined,
+        cursor:'grab', userSelect:'none',
         transition:'all 0.1s',
         opacity: isDragging ? 0.4 : 1,
         boxShadow: isDragging ? '0 4px 12px rgba(15,23,42,0.15)' : 'none',
@@ -318,9 +323,8 @@ export default function TaskBoardPanel() {
   const [newPriority, setNewPriority] = useState('medium');
   const [newCategory, setNewCategory] = useState('');
   const [creating, setCreating] = useState(false);
-  const dragItem = useRef<string|null>(null);
-  const dragOver = useRef<string|null>(null);
-  const [dragId, setDragId] = useState<string|null>(null);
+  const [dragId, setDragId] = useState<string|null>(null);     // being dragged
+  const [dragOverId, setDragOverId] = useState<string|null>(null); // being hovered over
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -339,30 +343,37 @@ export default function TaskBoardPanel() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleUpdate(id: string, fields: Record<string,any>) {
-    setTasks(prev => prev.map(t => t.id===id ? {...t,...fields} : t));
-    if (selectedTask?.id === id) setSelectedTask(prev => prev ? {...prev,...fields} : null);
+    // If actionLog comes in as a JSON string (from PATCH payload), parse it back to array for local state
+    const localFields = { ...fields };
+    if (typeof localFields.actionLog === 'string') {
+      try { localFields.actionLog = JSON.parse(localFields.actionLog); } catch { localFields.actionLog = []; }
+    }
+    setTasks(prev => prev.map(t => t.id===id ? {...t,...localFields} : t));
+    if (selectedTask?.id === id) setSelectedTask(prev => prev ? {...prev,...localFields} : null);
     await fetch('/api/tasks', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_id:id,...fields})})
       .catch(e => console.error('[update]',e));
   }
 
-  async function handleDrop(phase: string) {
-    if (!dragItem.current || !dragOver.current || dragItem.current===dragOver.current) return;
-    const phaseTasks = tasks.filter(t=>(t.phase||'Unassigned')===phase&&t.status!=='done'&&t.source!=='feedback');
-    const from = phaseTasks.findIndex(t=>t.id===dragItem.current);
-    const to = phaseTasks.findIndex(t=>t.id===dragOver.current);
-    if (from===-1||to===-1) return;
+  async function handleDrop(phase: string, targetId: string) {
+    if (!dragId || !targetId || dragId===targetId) { setDragId(null); setDragOverId(null); return; }
+    const phaseTasks = tasks.filter(t=>(t.phase||'Unassigned')===phase&&t.status!=='done'&&!isInboxItem(t))
+      .sort((a,b)=>(a.sortOrder||999)-(b.sortOrder||999));
+    const from = phaseTasks.findIndex(t=>t.id===dragId);
+    const to = phaseTasks.findIndex(t=>t.id===targetId);
+    if (from===-1||to===-1) { setDragId(null); setDragOverId(null); return; }
     const reordered = [...phaseTasks];
     const [moved] = reordered.splice(from,1);
     reordered.splice(to,0,moved);
     const newOrder = reordered.map(t=>t.id);
+    // Optimistic update
     setTasks(prev => {
       const map = new Map(prev.map(t=>[t.id,t]));
       newOrder.forEach((id,i)=>{ const t=map.get(id); if(t) map.set(id,{...t,sortOrder:i+1}); });
       return [...map.values()];
     });
+    setDragId(null); setDragOverId(null);
     await fetch('/api/tasks/reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phase,order:newOrder})})
       .catch(e=>console.error('[reorder]',e));
-    dragItem.current=null; dragOver.current=null;
   }
 
   async function createTask() {
@@ -377,8 +388,10 @@ export default function TaskBoardPanel() {
   }
 
   // Derived
-  const roadmapTasks = tasks.filter(t=>t.source!=='feedback'&&t.status!=='done');
-  const inboxTasks = tasks.filter(t=>(t.source==='feedback'||t.source==='suggestion')&&t.status!=='done');
+  const INBOX_PREFIXES = ['[SUGGESTION]','[BUG]','[FEATURE]','[QUESTION]','[FEEDBACK]','[ISSUE]'];
+  const isInboxItem = (t: Task) => t.source==='feedback' || t.source==='suggestion' || INBOX_PREFIXES.some(p=>t.title.startsWith(p));
+  const roadmapTasks = tasks.filter(t=>!isInboxItem(t)&&t.status!=='done');
+  const inboxTasks = tasks.filter(t=>isInboxItem(t)&&t.status!=='done');
   const archiveTasks = tasks.filter(t=>t.status==='done');
 
   const filteredRoadmap = roadmapTasks.filter(t=>{
@@ -491,10 +504,12 @@ export default function TaskBoardPanel() {
                   {phaseTasks.map(t=>(
                     <TaskRow key={t.id} task={t}
                       onClick={()=>setSelectedTask(t)}
-                      onDragStart={()=>{dragItem.current=t.id;setDragId(t.id);}}
-                      onDragOver={e=>{e.preventDefault();dragOver.current=t.id;}}
-                      onDrop={()=>{handleDrop(ph);setDragId(null);}}
+                      onDragStart={e=>{e.dataTransfer.effectAllowed='move';setDragId(t.id);}}
+                      onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='move';setDragOverId(t.id);}}
+                      onDrop={e=>{e.preventDefault();handleDrop(ph,t.id);}}
+                      onDragEnd={()=>{setDragId(null);setDragOverId(null);}}
                       isDragging={dragId===t.id}
+                      isDropTarget={dragOverId===t.id&&dragId!==t.id}
                     />
                   ))}
                 </div>
