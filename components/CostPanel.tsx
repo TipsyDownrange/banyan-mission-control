@@ -11,21 +11,29 @@ type Session = {
 type DayData = { cost: number; tokens: number; sessions: number; input: number; output: number; cache: number };
 type ModelData = { cost: number; input: number; output: number; sessions: number };
 
+type ProviderData = { api: number; subscription: number; total: number };
 type CostData = {
   sessions: Session[];
-  totalCost: number;
+  entries?: { date: string; costUsd: number; sessions: number; inputTokens: number; outputTokens: number }[];
+  totalCost: number;       // ALL-IN: API + subscriptions
+  totalApiCost?: number;   // just API
+  totalSubscriptions?: number;
   todayCost: number;
-  todayTokens: number;
-  totalInput: number;
-  totalOutput: number;
-  totalCache: number;
-  totalTokens: number;
+  todayTokens?: number;
+  totalInput?: number;
+  totalOutput?: number;
+  totalCache?: number;
+  totalTokens?: number;
   byDay: Record<string, DayData>;
   byModel: Record<string, ModelData>;
-  activeSession: Session | null;
+  byProvider?: { anthropic: ProviderData; openai: ProviderData; vercel: { subscription: number } };
+  subscriptions?: { provider: string; plan: string; monthlyCost: number; active: boolean }[];
+  activeSession?: Session | null;
   dailyBudget: number;
   overBudget: boolean;
-  lastUpdated: string;
+  lastUpdated?: string;
+  lastSync?: string;
+  dataRange?: { earliest: string; latest: string };
   error?: string;
 };
 
@@ -107,11 +115,11 @@ export default function CostPanel() {
     return true;
   }
 
-  const filteredSessions = data?.sessions.filter(s => inRange(s.date)) || [];
+  const filteredSessions = (data?.sessions || []).filter(s => inRange(s.date || ''));
   const filteredDays = Object.entries(data?.byDay || {}).filter(([d]) => inRange(d)).sort((a, b) => b[0].localeCompare(a[0]));
 
-  const rangeTotal  = filteredSessions.reduce((s, x) => s + x.estimatedCost, 0);
-  const rangeTokens = filteredSessions.reduce((s, x) => s + x.totalTokens, 0);
+  const rangeTotal  = filteredDays.reduce((s, [, d]) => s + d.cost, 0);
+  const rangeTokens = filteredDays.reduce((s, [, d]) => s + d.tokens, 0);
 
   const todayCost = data?.byDay[today]?.cost || 0;
   const budget    = data?.dailyBudget || 50;
@@ -190,8 +198,9 @@ export default function CostPanel() {
             </div>
             {/* All-time total */}
             <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: 12 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>All-time total</div>
-              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: overBudget ? '#0f172a' : '#f8fafc' }}>${data.totalCost.toFixed(2)}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>All-In Total (API + Subs)</div>
+              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#f8fafc' }}>${(data.totalCost || 0).toFixed(2)}</div>
+              {data.byProvider && <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)', marginTop: 2 }}>API ${(data.totalApiCost||0).toFixed(2)} + Subs ${(data.totalSubscriptions||0).toFixed(0)}/mo</div>}
             </div>
           </div>
         </div>
@@ -203,7 +212,7 @@ export default function CostPanel() {
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#14b8a6', animation: 'pulse 2s infinite' }} />
           <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e' }}>Active session: {modelShort(data.activeSession.model)}</span>
-          <span style={{ fontSize: 12, color: '#64748b' }}>· {fmt(data.activeSession.totalTokens)} tokens · ${data.activeSession.estimatedCost.toFixed(4)} so far</span>
+          <span style={{ fontSize: 12, color: '#64748b' }}>· {fmt(data.activeSession?.totalTokens||0)} tokens</span>
         </div>
       )}
 
@@ -257,8 +266,9 @@ export default function CostPanel() {
           {/* Model breakdown */}
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 14 }}>By Model</div>
-            {Object.entries(data.byModel).sort((a,b) => b[1].cost - a[1].cost).map(([model, d]) => {
-              const pct = data.totalCost > 0 ? (d.cost / data.totalCost) * 100 : 0;
+            {Object.entries(data.byModel || {}).sort((a,b) => b[1].cost - a[1].cost).map(([model, d]) => {
+              const apiCost = data.totalApiCost || data.totalCost || 1;
+              const pct = apiCost > 0 ? (d.cost / apiCost) * 100 : 0;
               return (
                 <div key={model} style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
@@ -280,11 +290,11 @@ export default function CostPanel() {
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 14 }}>Token Breakdown</div>
             {[
-              { label: 'Input',       value: data.totalInput,  color: '#0369a1', desc: 'Messages sent to AI' },
-              { label: 'Output',      value: data.totalOutput, color: '#0f766e', desc: 'AI responses generated' },
-              { label: 'Cache Read',  value: data.totalCache,  color: '#6d28d9', desc: 'Reused from cache (cheap)' },
+              { label: 'Input',       value: data.totalInput||0,  color: '#0369a1', desc: 'Messages sent to AI' },
+              { label: 'Output',      value: data.totalOutput||0, color: '#0f766e', desc: 'AI responses generated' },
+              { label: 'Cache Read',  value: data.totalCache||0,  color: '#6d28d9', desc: 'Reused from cache (cheap)' },
             ].map(({ label, value, color, desc }) => {
-              const total = data.totalInput + data.totalOutput + data.totalCache;
+              const total = (data.totalInput||0) + (data.totalOutput||0) + (data.totalCache||0);
               const pct = total > 0 ? (value / total) * 100 : 0;
               return (
                 <div key={label} style={{ marginBottom: 12 }}>
@@ -302,7 +312,7 @@ export default function CostPanel() {
             <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(109,40,217,0.04)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 10 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#6d28d9', marginBottom: 2 }}>Cache savings</div>
               <div style={{ fontSize: 12, color: '#475569' }}>
-                {fmt(data.totalCache)} cached tokens saved ~${((data.totalCache / 1e6) * (3.00 - 0.30)).toFixed(2)} vs uncached
+                {fmt(data.totalCache||0)} cached tokens saved ~${(((data.totalCache||0) / 1e6) * (3.00 - 0.30)).toFixed(2)} vs uncached
               </div>
             </div>
           </div>
@@ -371,7 +381,7 @@ export default function CostPanel() {
                 </div>
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', flexShrink: 0 }}>
-                ${s.estimatedCost.toFixed(4)}
+                ${((s as unknown as {cost?: number; estimatedCost?: number}).cost || (s as unknown as {cost?: number; estimatedCost?: number}).estimatedCost || 0).toFixed(4)}
               </div>
             </div>
           ))}
@@ -393,7 +403,7 @@ export default function CostPanel() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em', color: '#0f172a' }}>${d.cost.toFixed(2)}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}>{((d.cost / data.totalCost) * 100).toFixed(0)}% of total</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>{(data.totalCost ? (d.cost / data.totalCost) * 100 : 0).toFixed(0)}% of total</div>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
