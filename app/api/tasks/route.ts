@@ -153,7 +153,8 @@ export async function PATCH(req: Request) {
     }
 
     for (const [key, val] of Object.entries(fields)) {
-      if (key === 'actionLog') continue; // handled above for status changes
+      // actionLog: only skip if we auto-appended it during a status change
+      if (key === 'actionLog' && fields.status) continue;
       const col = FIELD_COL[key];
       if (col !== undefined && val !== undefined) {
         updateData.push({

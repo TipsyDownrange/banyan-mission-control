@@ -48,6 +48,7 @@ export async function GET(req: Request) {
       if (!row[0]) continue; // empty row
 
       const taskId = row[0];
+      const title = row[1] || '';
       const category = row[5] || '';
       const existingPhase = row[12] || '';
       const existingSource = row[13] || '';
@@ -55,7 +56,11 @@ export async function GET(req: Request) {
 
       // Infer phase from category if not already set
       const inferredPhase = existingPhase || CATEGORY_PHASE[category] || '';
-      const inferredSource = existingSource || (category === 'Feedback' ? 'feedback' : 'manual');
+      // Feedback: by task ID prefix, title prefix, or category
+      const isFeedback = /^TSK-(KFB|SUG|ISS)-/.test(taskId) ||
+                         /^\[(BUG|FEATURE|QUESTION|FEEDBACK|SUGGESTION|ISSUE)\]/.test(title) ||
+                         category === 'Feedback';
+      const inferredSource = existingSource || (isFeedback ? 'feedback' : 'manual');
       const existingSortOrder = row[14] || '';
       const existingActionLog = row[15] || '';
 

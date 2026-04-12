@@ -53,11 +53,12 @@ function fmtTs(iso: string): string {
 }
 
 // ── Task Row (list view) ──────────────────────────────────────────────────
-function TaskRow({ task, onClick, onDragStart, onDragOver, onDrop }: {
+function TaskRow({ task, onClick, onDragStart, onDragOver, onDrop, isDragging }: {
   task: Task; onClick: () => void;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
 }) {
   const sc = STATUS_PILL[task.status] || STATUS_PILL.queued;
   const dotColor = PRIORITY_DOT[task.priority] || PRIORITY_DOT.medium;
@@ -75,11 +76,15 @@ function TaskRow({ task, onClick, onDragStart, onDragOver, onDrop }: {
         display:'flex', alignItems:'center', gap:10, padding:'9px 12px',
         borderRadius:8, background:'white', border:'1px solid #f1f5f9',
         cursor:'pointer', userSelect:'none',
-        transition:'box-shadow 0.1s',
+        transition:'all 0.1s',
+        opacity: isDragging ? 0.4 : 1,
+        boxShadow: isDragging ? '0 4px 12px rgba(15,23,42,0.15)' : 'none',
       }}
       onMouseEnter={e => (e.currentTarget.style.boxShadow='0 2px 8px rgba(15,23,42,0.08)')}
       onMouseLeave={e => (e.currentTarget.style.boxShadow='none')}
     >
+      {/* Grip handle (roadmap only) */}
+      {!icon && onDragStart && <span style={{fontSize:12,color:'#cbd5e1',flexShrink:0,cursor:'grab',lineHeight:1}}>⠿</span>}
       {/* Priority dot or feedback icon */}
       {icon
         ? <span style={{fontSize:14,flexShrink:0}}>{icon}</span>
@@ -315,6 +320,7 @@ export default function TaskBoardPanel() {
   const [creating, setCreating] = useState(false);
   const dragItem = useRef<string|null>(null);
   const dragOver = useRef<string|null>(null);
+  const [dragId, setDragId] = useState<string|null>(null);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -485,9 +491,10 @@ export default function TaskBoardPanel() {
                   {phaseTasks.map(t=>(
                     <TaskRow key={t.id} task={t}
                       onClick={()=>setSelectedTask(t)}
-                      onDragStart={()=>{dragItem.current=t.id;}}
+                      onDragStart={()=>{dragItem.current=t.id;setDragId(t.id);}}
                       onDragOver={e=>{e.preventDefault();dragOver.current=t.id;}}
-                      onDrop={()=>handleDrop(ph)}
+                      onDrop={()=>{handleDrop(ph);setDragId(null);}}
+                      isDragging={dragId===t.id}
                     />
                   ))}
                 </div>
