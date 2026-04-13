@@ -286,6 +286,7 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
+// GC-D021: data passed to this function must be read fresh at call site — see /api/daily-report/pdf/route.ts
 export async function generateDailyReportPDF(data: DailyReportPDFData): Promise<Buffer> {
   return renderToPDF(<DailyReportPDF data={data} />);
 }
