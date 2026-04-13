@@ -24,6 +24,8 @@ export type CustomerRecord = {
   // Legacy fields kept for backwards compatibility
   contact:       string;
   contactPhone:  string;
+  // Phase 2: Organizations link
+  org_id?:       string;
 };
 
 // ── Cache ────────────────────────────────────────────────────────────────────

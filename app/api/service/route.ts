@@ -54,6 +54,7 @@ const COL = {
   final_sent_date:     39, // AN
   final_paid_date:     40, // AO
   invoices_json:       41, // AP
+  org_id:              42, // AQ — Phase 2: FK to Organizations
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -114,6 +115,7 @@ function rowToWO(row: string[]) {
     final_sent_date:     g(COL.final_sent_date),
     final_paid_date:     g(COL.final_paid_date),
     invoices_json:       g(COL.invoices_json),
+    org_id:              g(COL.org_id),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',

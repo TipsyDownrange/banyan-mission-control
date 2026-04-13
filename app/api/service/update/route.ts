@@ -58,6 +58,7 @@ const COL_IDX: Record<string, number> = {
   final_sent_date:     39, // AN
   final_paid_date:     40, // AO
   invoices_json:       41, // AP
+  org_id:              42, // AQ — Phase 2: FK to Organizations
 };
 
 function colLetter(idx: number): string {
@@ -219,6 +220,7 @@ export async function PATCH(req: Request) {
       final_sent_date:     'final_sent_date',
       final_paid_date:     'final_paid_date',
       invoices_json:        'invoices_json',
+      org_id:              'org_id',
     };
 
     // Handle stage → status mapping (legacy frontend compat)

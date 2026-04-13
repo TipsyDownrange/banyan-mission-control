@@ -13,6 +13,7 @@ type WODraft = {
   contactPerson: string; contactPhone: string; contactEmail: string;
   description: string; systemType: string; urgency: string;
   assignedTo: string; notes: string;
+  org_id?: string;       // Phase 2: FK to Organizations table
 };
 
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
@@ -131,6 +132,8 @@ function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
     contactPerson: prev.contactPerson || c.contactPerson,
     contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
     contactEmail:  prev.contactEmail || c.email,
+    // Phase 2: link org_id for relational write-back
+    org_id:        c.org_id || prev.org_id,
   };
 }
 
@@ -176,10 +179,38 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         setFieldCrew(d.crew || []);
       })
       .catch(() => {});
-    fetch('/api/service/customers')
+    // Phase 2: Use Organizations endpoint (includes org_id, primary contact, primary site)
+    fetch('/api/organizations?limit=500')
       .then(r => r.json())
-      .then(d => setCustomers(d.customers || []))
-      .catch(() => {});
+      .then(d => {
+        const orgs = d.organizations || [];
+        // Map OrgRecord to CustomerRecord shape for backward compat
+        const mapped = orgs.map((o: {org_id:string;name:string;company:string;contactPerson:string;contactPhone:string;email:string;address:string;island:string;primary_contact?:{name:string;phone:string;email:string;title:string};primary_site?:{address_line_1:string;city:string;island:string}}) => ({
+          customerId:    o.org_id,
+          name:          o.name,
+          company:       o.company || o.name,
+          contactPerson: o.primary_contact?.name || o.contactPerson || '',
+          title:         o.primary_contact?.title || '',
+          phone:         o.primary_contact?.phone || o.contactPhone || '',
+          phone2:        '',
+          email:         o.primary_contact?.email || o.email || '',
+          address:       o.primary_site?.address_line_1 || o.address || '',
+          island:        o.primary_site?.island || o.island || '',
+          woCount:       0,
+          firstWODate:   '', lastWODate: '', source: '',
+          contact:       o.primary_contact?.name || '',
+          contactPhone:  o.primary_contact?.phone || '',
+          org_id:        o.org_id,
+        }));
+        setCustomers(mapped);
+      })
+      .catch(() => {
+        // Fallback to legacy endpoint
+        fetch('/api/service/customers')
+          .then(r => r.json())
+          .then(d => setCustomers(d.customers || []))
+          .catch(() => {});
+      });
     fetch('/api/step-templates')
       .then(r => r.json())
       .then(d => {
