@@ -24,6 +24,7 @@ import EstimatorWorkspace from '@/components/EstimatorWorkspace';
 import EstimatingWorkspace from '@/components/estimating/EstimatingWorkspace';
 import ServicePanel from '@/components/ServicePanel';
 import CustomersPanel from '@/components/CustomersPanel';
+import OrganizationsPanel from '@/components/OrganizationsPanel';
 import KaiPanel from '@/components/KaiPanel';
 import KaiFloat from '@/components/KaiFloat';
 import OrgChartPanel from '@/components/OrgChartPanel';
@@ -179,7 +180,7 @@ export default function Home() {
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}
         {activeView === 'Work Orders'   && <ServicePanel readOnly={isReadOnly('Work Orders')} />}
-        {activeView === 'Customers'     && <CustomersPanel />}
+        {activeView === 'Customers'     && <OrganizationsPanel />}
         {activeView === 'Assets'        && <AssetsPanel />}
         {activeView === 'Org Chart'     && <OrgChartPanel />}
         {activeView === 'Forecasting'   && <SuperSchedulingPanel />}
