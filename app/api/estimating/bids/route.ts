@@ -1,197 +1,172 @@
+/**
+ * GET /api/estimating/bids
+ * Query the BanyanOS Bid Log — list and search bids.
+ *
+ * Query params:
+ *   q         — search by Job Name (case-insensitive contains)
+ *   island    — filter by Island
+ *   status    — filter by Status
+ *   assigned  — filter by Assigned To
+ *   result    — filter by Win/Loss (WON, LOST, PENDING, NO_BID)
+ *   type      — filter by Project Type
+ *   from      — received date range start (ISO date)
+ *   to        — received date range end (ISO date)
+ *   limit     — page size (default 50)
+ *   offset    — pagination offset (default 0)
+ *
+ * GC-D021: fresh read every request — no caching.
+ */
+
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BID_LOG_ID = '18QyNI3JPuUw_nRl2EHSUrlWItOmD8PUlu3fysrwyrcA';
+const BIDS_TAB   = 'Bids';
 
-const JOBS_TAB = 'Jobs';
-const JOBS_HEADERS = [
-  'Job_ID', 'Project_Name', 'Client_GC_Name', 'Architect', 'Island',
-  'Job_Status', 'Job_Type', 'Bid_Due_Date', 'Project_Folder_URL',
-  'Created_At', 'Notes',
-];
+export type BidRecord = {
+  kID: string;
+  jobName: string;
+  island: string;
+  projectType: string;
+  bidSource: string;
+  assignedTo: string;
+  status: string;
+  receivedDate: string;
+  dueDate: string;
+  siteVisitDone: string;
+  docsAvailable: string;
+  productsSpecs: string;
+  gcCount: string;
+  estValueLow: number;
+  estValueHigh: number;
+  submitted: string;
+  submittedDate: string;
+  decisionDate: string;
+  winLoss: string;
+  winReason: string;
+  lossReason: string;
+  competitor: string;
+  contractValue: number;
+  linkedProjectKID: string;
+  estimatingFolderPath: string;
+  notes: string;
+  createdAt: string;
+  modifiedAt: string;
+  projectAddress: string;
+  bidPlatformURL: string;
+};
 
-const BIDS_TAB = 'Bid_Versions';
-const BIDS_HEADERS = [
-  'Bid_Version_ID', 'Job_ID', 'Version_Number', 'Status', 'Estimator',
-  'Bid_Date', 'Total_Estimate', 'Markup_Pct', 'GET_Rate',
-  'Overhead_Method', 'Profit_Pct', 'Proposal_DOC_URL', 'Created_At', 'Notes',
-];
-
-async function ensureTab(
-  sheets: ReturnType<typeof google.sheets>,
-  tabName: string,
-  headers: string[]
-) {
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-  const exists = meta.data.sheets?.some(s => s.properties?.title === tabName);
-  if (!exists) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: { requests: [{ addSheet: { properties: { title: tabName } } }] },
-    });
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${tabName}!A1`,
-      valueInputOption: 'RAW',
-      requestBody: { values: [headers] },
-    });
-  }
-}
-
-function rowToJob(r: string[]) {
+function rowToRecord(headers: string[], row: string[]): BidRecord {
+  const g = (col: string) => row[headers.indexOf(col)] || '';
+  const gn = (col: string) => parseFloat(g(col).replace(/[$,]/g,'')) || 0;
   return {
-    job_id: r[0] || '',
-    project_name: r[1] || '',
-    client_gc_name: r[2] || '',
-    architect: r[3] || '',
-    island: r[4] || '',
-    job_status: r[5] || '',
-    job_type: r[6] || '',
-    bid_due_date: r[7] || '',
-    project_folder_url: r[8] || '',
-    created_at: r[9] || '',
-    notes: r[10] || '',
+    kID:                g('kID'),
+    jobName:            g('Job Name'),
+    island:             g('Island'),
+    projectType:        g('Project Type'),
+    bidSource:          g('Bid Source'),
+    assignedTo:         g('Assigned To'),
+    status:             g('Status'),
+    receivedDate:       g('Received Date'),
+    dueDate:            g('Due Date'),
+    siteVisitDone:      g('Site Visit Done'),
+    docsAvailable:      g('Docs Available'),
+    productsSpecs:      g('Products / Specs'),
+    gcCount:            g('GC Count'),
+    estValueLow:        gn('Est Value (Low)'),
+    estValueHigh:       gn('Est Value (High)'),
+    submitted:          g('Submitted'),
+    submittedDate:      g('Submitted Date'),
+    decisionDate:       g('Decision Date'),
+    winLoss:            g('Win / Loss'),
+    winReason:          g('Win Reason'),
+    lossReason:         g('Loss Reason'),
+    competitor:         g('Competitor'),
+    contractValue:      gn('Contract Value'),
+    linkedProjectKID:   g('Linked Project kID'),
+    estimatingFolderPath: g('Estimating Folder Path'),
+    notes:              g('Notes'),
+    createdAt:          g('Created At'),
+    modifiedAt:         g('Modified At'),
+    projectAddress:     g('Project Address'),
+    bidPlatformURL:     g('Bid Platform URL'),
   };
 }
 
-function rowToBidVersion(r: string[]) {
-  return {
-    bid_version_id: r[0] || '',
-    job_id: r[1] || '',
-    version_number: r[2] || '',
-    status: r[3] || 'Draft',
-    estimator: r[4] || '',
-    bid_date: r[5] || '',
-    total_estimate: r[6] || '',
-    markup_pct: r[7] || '',
-    get_rate: r[8] || '0.045',
-    overhead_method: r[9] || 'LABOR_EQUAL',
-    profit_pct: r[10] || '0.10',
-    proposal_doc_url: r[11] || '',
-    created_at: r[12] || '',
-    notes: r[13] || '',
-  };
-}
-
-// GET /api/estimating/bids — List all bids (joined Jobs + Bid_Versions)
-export async function GET() {
-  try {
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-    const sheets = google.sheets({ version: 'v4', auth });
-
-    await ensureTab(sheets, JOBS_TAB, JOBS_HEADERS);
-    await ensureTab(sheets, BIDS_TAB, BIDS_HEADERS);
-
-    const [jobsRes, bidsRes] = await Promise.all([
-      sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `${JOBS_TAB}!A2:K2000`,
-      }),
-      sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `${BIDS_TAB}!A2:N2000`,
-      }),
-    ]);
-
-    const jobs = (jobsRes.data.values || []).filter(r => r[0]).map(rowToJob);
-    const bidVersions = (bidsRes.data.values || []).filter(r => r[0]).map(rowToBidVersion);
-
-    // Join: each bid version gets the job's project_name
-    const jobMap = new Map(jobs.map(j => [j.job_id, j]));
-    const bids = bidVersions.map(bv => {
-      const job = jobMap.get(bv.job_id);
-      return {
-        bidVersionId: bv.bid_version_id,
-        jobId: bv.job_id,
-        projectName: job?.project_name || '',
-        island: job?.island || '',
-        clientGC: job?.client_gc_name || '',
-        estimator: bv.estimator,
-        bidDate: bv.bid_date,
-        status: bv.status || 'Draft',
-        totalEstimate: bv.total_estimate,
-        getRate: bv.get_rate,
-        overheadMethod: bv.overhead_method,
-        profitPct: bv.profit_pct,
-        version: bv.version_number,
-        notes: bv.notes,
-        bidFolderUrl: job?.project_folder_url || '',
-      };
-    });
-
-    return NextResponse.json({ bids, total: bids.length });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg, bids: [] }, { status: 500 });
+export async function GET(req: Request) {
+  const session = await getServerSession();
+  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-}
 
-// POST /api/estimating/bids — Create a new bid (Job + Bid_Version row)
-export async function POST(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const q        = (searchParams.get('q') || '').toLowerCase().trim();
+  const island   = (searchParams.get('island') || '').toLowerCase();
+  const status   = (searchParams.get('status') || '').toLowerCase();
+  const assigned = (searchParams.get('assigned') || '').toLowerCase();
+  const result   = (searchParams.get('result') || '').toLowerCase();
+  const type     = (searchParams.get('type') || '').toLowerCase();
+  const from     = searchParams.get('from') || '';
+  const to       = searchParams.get('to') || '';
+  const limit    = Math.min(parseInt(searchParams.get('limit') || '50'), 500);
+  const offset   = parseInt(searchParams.get('offset') || '0');
+
   try {
-    const body = await req.json();
-    const {
-      project_name,
-      client_gc_name = '',
-      architect = '',
-      island = 'Maui',
-      job_type = 'Commercial',
-      bid_due_date = '',
-      project_folder_url = '',
-      estimator = '',
-      notes = '',
-    } = body;
-
-    if (!project_name) {
-      return NextResponse.json({ error: 'project_name is required' }, { status: 400 });
-    }
-
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    await ensureTab(sheets, JOBS_TAB, JOBS_HEADERS);
-    await ensureTab(sheets, BIDS_TAB, BIDS_HEADERS);
-
-    const now = new Date().toISOString();
-    const dateStr = now.split('T')[0];
-
-    // Generate IDs
-    const jobId = `JOB-${Date.now()}`;
-    const bidVersionId = `BID-${Date.now()}-v1`;
-
-    // Write Job row
-    const jobRow = [
-      jobId, project_name, client_gc_name, architect, island,
-      'BID', job_type, bid_due_date, project_folder_url, now, notes,
-    ];
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: `${JOBS_TAB}!A:K`,
-      valueInputOption: 'RAW',
-      requestBody: { values: [jobRow] },
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: BID_LOG_ID,
+      range: `${BIDS_TAB}!A1:AD1000`,
     });
 
-    // Write Bid_Version row
-    const bidRow = [
-      bidVersionId, jobId, '1', 'Draft', estimator,
-      dateStr, '', '', '0.045',
-      'LABOR_EQUAL', '0.10', '', now, notes,
-    ];
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: `${BIDS_TAB}!A:N`,
-      valueInputOption: 'RAW',
-      requestBody: { values: [bidRow] },
+    const rows = (res.data.values || []) as string[][];
+    if (rows.length < 2) return NextResponse.json({ bids: [], meta: { total: 0, win: 0, loss: 0, winRate: 0 } });
+
+    const headers = rows[0];
+    const dataRows = rows.slice(1).filter(r => r[headers.indexOf('kID')]);
+
+    const records = dataRows.map(r => rowToRecord(headers, r));
+
+    // Apply filters
+    const filtered = records.filter(b => {
+      if (q         && !b.jobName.toLowerCase().includes(q)) return false;
+      if (island    && b.island.toLowerCase() !== island) return false;
+      if (status    && b.status.toLowerCase() !== status) return false;
+      if (assigned  && !b.assignedTo.toLowerCase().includes(assigned)) return false;
+      if (result    && b.winLoss.toLowerCase() !== result) return false;
+      if (type      && !b.projectType.toLowerCase().includes(type)) return false;
+      if (from      && b.receivedDate && b.receivedDate < from) return false;
+      if (to        && b.receivedDate && b.receivedDate > to) return false;
+      return true;
     });
+
+    // Summary stats
+    const wins   = filtered.filter(b => b.winLoss.toUpperCase() === 'WON').length;
+    const losses = filtered.filter(b => b.winLoss.toUpperCase() === 'LOST').length;
+    const decided = wins + losses;
+    const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+
+    const page = filtered.slice(offset, offset + limit);
 
     return NextResponse.json({
-      ok: true,
-      job_id: jobId,
-      bid_version_id: bidVersionId,
+      bids: page,
+      meta: {
+        total:   filtered.length,
+        offset,
+        limit,
+        hasMore: offset + limit < filtered.length,
+        win:     wins,
+        loss:    losses,
+        pending: filtered.filter(b => !b.winLoss || b.winLoss.toUpperCase() === 'PENDING').length,
+        winRate,
+      },
     });
+
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error('[/api/estimating/bids]', err);
+    return NextResponse.json({ error: String(err), bids: [] }, { status: 500 });
   }
 }
