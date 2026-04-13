@@ -1,428 +1,335 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 
-type Session = {
-  key: string; model: string; inputTokens: number; outputTokens: number;
-  cacheRead: number; cacheWrite: number; totalTokens: number;
-  estimatedCost: number; startedAt: string; updatedAt: string;
-  status: string; isSubagent: boolean; date: string;
-};
-
-type DayData = { cost: number; tokens: number; sessions: number; input: number; output: number; cache: number };
+// ── Types ──────────────────────────────────────────────────────────────────
+type DayData = { cost: number; anthropic?: number; openai?: number; tokens?: number; sessions?: number };
 type ModelData = { cost: number; input: number; output: number; sessions: number };
+type Invoice = { date: string; type: string; amount: number; status: string; notes?: string };
+type OpenAIDay = { date: string; costUsd: number; org?: string };
+type Sub = { id: string; provider: string; plan: string; monthlyCost: number; startDate: string; active: boolean };
 
-type ProviderData = { api: number; subscription: number; total: number };
 type CostData = {
-  sessions: Session[];
-  entries?: { date: string; costUsd: number; sessions: number; inputTokens: number; outputTokens: number }[];
-  totalCost: number;       // ALL-IN: API + subscriptions
-  totalApiCost?: number;   // just API
-  totalSubscriptions?: number;
-  todayCost: number;
-  todayTokens?: number;
-  totalInput?: number;
-  totalOutput?: number;
-  totalCache?: number;
-  totalTokens?: number;
-  byDay: Record<string, DayData>;
-  byModel: Record<string, ModelData>;
-  byProvider?: { anthropic: ProviderData; openai: ProviderData; vercel: { subscription: number } };
-  subscriptions?: { provider: string; plan: string; monthlyCost: number; active: boolean }[];
-  activeSession?: Session | null;
-  dailyBudget: number;
-  overBudget: boolean;
-  lastUpdated?: string;
-  lastSync?: string;
+  allInTotal?: number; totalCost?: number; totalApiCost?: number; totalSubscriptions?: number;
+  todayCost?: number; weekCost?: number; monthlyBurn?: number;
+  byProvider?: {
+    anthropic?: { apiCostToDate?: number; invoicesPaid?: number; creditsReceived?: number; todayCost?: number; subscription?: number; total?: number };
+    openai?: { apiCostToDate?: number; todayCost?: number; subscription?: number; total?: number };
+    vercel?: { totalToDate?: number; subscription?: number };
+    subscriptions?: { monthly?: number; totalToDate?: number; items?: Sub[] };
+  };
+  byDay?: Record<string, DayData>;
+  byModel?: Record<string, ModelData>;
+  sessions?: { id: string; date: string; cost?: number; estimatedCost?: number; totalTokens?: number; sessions?: number }[];
+  anthropicInvoices?: Invoice[];
+  openaiDaily?: OpenAIDay[];
+  subscriptions?: Sub[];
+  totalInput?: number; totalOutput?: number; totalCache?: number; totalTokens?: number; totalSessions?: number;
+  dailyBudget?: number; overBudget?: boolean; budgetPct?: number;
   dataRange?: { earliest: string; latest: string };
+  lastSync?: string;
   error?: string;
 };
 
-type TimeRange = 'today' | 'week' | 'month' | 'all' | 'custom';
+// ── Helpers ────────────────────────────────────────────────────────────────
+const fmt = (n: number) => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : String(n);
+const fmtUsd = (n: number | undefined, d=2) => `$${(n||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}`;
+const today = new Date().toISOString().slice(0,10);
+const weekAgo = new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+const monthAgo = new Date(Date.now()-30*86400000).toISOString().slice(0,10);
 
-function fmt(n: number): string {
-  if (n >= 1e9) return `${(n/1e9).toFixed(1)}B`;
-  if (n >= 1e6) return `${(n/1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `${(n/1e3).toFixed(0)}K`;
-  return n.toString();
+function AddInvoiceForm({ onAdded }: { onAdded: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState(today);
+  const [amount, setAmount] = useState('');
+  const [type, setType] = useState('invoice');
+  const [saving, setSaving] = useState(false);
+  async function submit() {
+    if (!amount.trim()) return;
+    setSaving(true);
+    await fetch('/api/cost/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ date, amount: parseFloat(amount), type }) })
+      .catch(e => console.error('[AddInvoice]', e));
+    setOpen(false); setAmount(''); setSaving(false);
+    onAdded();
+  }
+  if (!open) return <button onClick={() => setOpen(true)} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid #0f766e', background:'transparent', color:'#0f766e', fontSize:12, fontWeight:700, cursor:'pointer' }}>+ Add Invoice</button>;
+  return (
+    <div style={{ background:'#f8fafc', borderRadius:12, border:'1px solid #e2e8f0', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#64748b', display:'block', marginBottom:3 }}>Date</label>
+          <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
+        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#64748b', display:'block', marginBottom:3 }}>Amount ($)</label>
+          <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="257.83" style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
+        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#64748b', display:'block', marginBottom:3 }}>Type</label>
+          <select value={type} onChange={e=>setType(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const, cursor:'pointer' }}>
+            <option value="invoice">Invoice</option>
+            <option value="credit_grant">Credit Grant</option>
+          </select></div>
+      </div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={() => setOpen(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:12, fontWeight:700, cursor:'pointer' }}>Cancel</button>
+        <button onClick={submit} disabled={!amount||saving} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'#0f766e', color:'white', fontSize:12, fontWeight:800, cursor:'pointer', opacity:saving?0.7:1 }}>{saving?'Saving…':'Save Invoice'}</button>
+      </div>
+    </div>
+  );
 }
 
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  } catch { return iso; }
-}
-
-function fmtTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  } catch { return iso; }
-}
-
-const MODEL_COLOR: Record<string, string> = {
-  'claude-sonnet-4-6': '#0369a1',
-  'claude-opus-4-6':   '#6d28d9',
-  'claude-haiku-4-5':  '#0f766e',
-  'claude-haiku-3-5':  '#0f766e',
-};
-
-function modelColor(m: string): string {
-  return MODEL_COLOR[m] || '#64748b';
-}
-
-function modelShort(m: string): string {
-  return m.replace('claude-', '').replace('-4-6', ' 4.6').replace('-4-5', ' 4.5').replace('-3-5', ' 3.5');
-}
-
+// ── Main Component ─────────────────────────────────────────────────────────
 export default function CostPanel() {
   const [data, setData] = useState<CostData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState<TimeRange>('today');
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo] = useState('');
-  const [view, setView] = useState<'overview' | 'daily' | 'sessions' | 'models'>('overview');
-  const [lastRefresh, setLastRefresh] = useState('');
+  const [tab, setTab] = useState<'overview'|'anthropic'|'openai'|'subscriptions'>('overview');
+  const [range, setRange] = useState<'today'|'week'|'month'|'all'>('all');
 
-  const load = useCallback(() => {
-    fetch('/api/cost')
-      .then(r => r.json())
-      .then(d => {
-        setData(d);
-        setLoading(false);
-        setLastRefresh(new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }));
-      })
-      .catch(() => setLoading(false));
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cost');
+      const d = await res.json();
+      setData(d);
+    } catch(e) { console.error('[CostPanel]', e); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    load();
-    // Auto-refresh every 60s
-    const t = setInterval(load, 60000);
-    return () => clearInterval(t);
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const t = setInterval(load, 60000); return () => clearInterval(t); }, [load]);
 
-  // Date range filtering
-  const today = new Date().toISOString().slice(0, 10);
-  const weekAgo  = new Date(Date.now() - 7  * 86400000).toISOString().slice(0, 10);
-  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-
-  function inRange(date: string): boolean {
+  const inRange = (date: string) => {
     if (!date) return false;
-    if (range === 'today')  return date === today;
-    if (range === 'week')   return date >= weekAgo;
-    if (range === 'month')  return date >= monthAgo;
-    if (range === 'all')    return true;
-    if (range === 'custom') return (!customFrom || date >= customFrom) && (!customTo || date <= customTo);
+    if (range==='today') return date===today;
+    if (range==='week') return date>=weekAgo;
+    if (range==='month') return date>=monthAgo;
     return true;
-  }
+  };
 
-  const filteredSessions = (data?.sessions || []).filter(s => inRange(s.date || ''));
-  const filteredDays = Object.entries(data?.byDay || {}).filter(([d]) => inRange(d)).sort((a, b) => b[0].localeCompare(a[0]));
-
-  const rangeTotal  = filteredDays.reduce((s, [, d]) => s + d.cost, 0);
-  const rangeTokens = filteredDays.reduce((s, [, d]) => s + d.tokens, 0);
-
-  const todayCost = data?.byDay[today]?.cost || 0;
-  const budget    = data?.dailyBudget || 50;
+  const allIn = data?.allInTotal || data?.totalCost || 0;
+  const ant = data?.byProvider?.anthropic;
+  const oai = data?.byProvider?.openai;
+  const verc = data?.byProvider?.vercel;
+  const subs = data?.byProvider?.subscriptions;
+  const todayCost = data?.todayCost || 0;
+  const budget = data?.dailyBudget || 50;
   const budgetPct = Math.min((todayCost / budget) * 100, 100);
   const overBudget = todayCost > budget;
 
-  if (loading) return (
-    <div style={{ padding: 48, textAlign: 'center' }}>
-      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading cost data…</div>
-    </div>
-  );
+  const filteredDays = Object.entries(data?.byDay || {})
+    .filter(([d]) => inRange(d))
+    .sort((a,b) => a[0].localeCompare(b[0]));
 
-  if (!data || data.error) return (
-    <div style={{ padding: 32 }}>
-      <div style={{ background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '20px 24px' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#b91c1c', marginBottom: 6 }}>Failed to load cost data</div>
-        <div style={{ fontSize: 13, color: '#475569' }}>{data?.error || 'Network error'}</div>
-        <button onClick={load} style={{ marginTop: 12, padding: '8px 16px', borderRadius: 10, background: '#0f172a', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Retry</button>
-      </div>
+  if (loading) return (
+    <div style={{ padding:48, textAlign:'center' }}>
+      <div style={{ width:28, height:28, borderRadius:'50%', border:'2px solid rgba(15,118,110,0.12)', borderTopColor:'#14b8a6', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ fontSize:13, color:'#94a3b8' }}>Loading cost data…</div>
     </div>
   );
 
   return (
-    <div style={{ padding: '32px', maxWidth: 1000, margin: '0 auto' }}>
+    <div style={{ maxWidth:900, margin:'0 auto' }}>
+      {/* ── Dark header ─────────────────────────────────── */}
+      <div style={{ background:'linear-gradient(135deg,#071722,#0c2330)', borderRadius:'0 0 20px 20px', padding:'24px 28px', marginBottom:20 }}>
+        <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.16em', textTransform:'uppercase', color:'rgba(148,163,184,0.5)', marginBottom:4 }}>AI Command</div>
+        <div style={{ fontSize:26, fontWeight:900, color:'#f8fafc', letterSpacing:'-0.03em', marginBottom:2 }}>Cost & Usage</div>
 
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>AI Command</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Cost & Usage</h1>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>
-              Live from OpenClaw sessions · refreshes every 60s
-              {lastRefresh && <span style={{ marginLeft: 8, color: '#cbd5e1' }}>Last: {lastRefresh}</span>}
-            </div>
+        {/* ALL-IN HERO */}
+        <div style={{ fontSize:42, fontWeight:900, color:'#f8fafc', letterSpacing:'-0.04em', margin:'12px 0 4px' }}>{fmtUsd(allIn)}</div>
+        <div style={{ fontSize:13, color:'rgba(148,163,184,0.7)', marginBottom:4 }}>
+          Anthropic {fmtUsd(ant?.invoicesPaid)} · OpenAI {fmtUsd(oai?.apiCostToDate)} · Subscriptions {fmtUsd(subs?.totalToDate)} · Vercel {fmtUsd(verc?.totalToDate)}
+        </div>
+        <div style={{ fontSize:12, color:'rgba(148,163,184,0.5)' }}>Monthly burn: {fmtUsd(data?.monthlyBurn)}/mo fixed + variable API</div>
+
+        {/* Today's ticker */}
+        <div style={{ marginTop:16, background:'rgba(255,255,255,0.06)', borderRadius:14, padding:'14px 18px' }}>
+          {overBudget && <div style={{ padding:'8px 12px', background:'rgba(239,68,68,0.2)', borderRadius:8, border:'1px solid rgba(239,68,68,0.4)', fontSize:12, fontWeight:700, color:'#fca5a5', marginBottom:10 }}>⚠️ OVER DAILY BUDGET</div>}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+            <span style={{ fontSize:12, fontWeight:700, color:'rgba(148,163,184,0.8)' }}>📍 Today's API Spend</span>
+            <span style={{ fontSize:18, fontWeight:900, color: overBudget?'#fca5a5':'#f8fafc' }}>{fmtUsd(todayCost,4)}</span>
           </div>
-          <button onClick={load} style={{ padding: '8px 16px', borderRadius: 999, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 11, fontWeight: 800, cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            ↻ Refresh
-          </button>
+          <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:999, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${budgetPct}%`, background: overBudget?'#ef4444':'#14b8a6', borderRadius:999, transition:'width 0.5s' }}/>
+          </div>
+          <div style={{ fontSize:10, color:'rgba(148,163,184,0.4)', marginTop:4 }}>{budgetPct.toFixed(0)}% of {fmtUsd(budget)} daily budget · Last sync: {data?.lastSync ? new Date(data.lastSync).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '—'}</div>
         </div>
       </div>
 
-      {/* LIVE TICKER — Today's spend */}
-      <div style={{
-        background: overBudget
-          ? 'linear-gradient(135deg, #fef2f2, #fff5f5)'
-          : 'linear-gradient(135deg, #071722, #0c2330)',
-        borderRadius: 20, padding: '24px 28px', marginBottom: 20,
-        border: overBudget ? '2px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.04)',
-        boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: overBudget ? '#ef4444' : 'rgba(148,163,184,0.6)', marginBottom: 6 }}>
-              {overBudget ? '⚠ OVER DAILY BUDGET' : '📍 Today\'s Spend'}
-            </div>
-            <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-0.06em', color: overBudget ? '#b91c1c' : '#f8fafc', lineHeight: 1 }}>
-              ${todayCost.toFixed(2)}
-            </div>
-            <div style={{ fontSize: 13, color: overBudget ? '#ef4444' : 'rgba(148,163,184,0.7)', marginTop: 6 }}>
-              of ${budget} daily budget · {fmt(data.byDay[today]?.tokens || 0)} tokens
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 160 }}>
-            {/* Budget bar */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Budget used</span>
-                <span style={{ fontSize: 9, fontWeight: 800, color: overBudget ? '#ef4444' : '#14b8a6' }}>{budgetPct.toFixed(0)}%</span>
-              </div>
-              <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 999, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${budgetPct}%`, background: overBudget ? '#ef4444' : '#14b8a6', borderRadius: 999, transition: 'width 0.5s' }} />
-              </div>
-            </div>
-            {/* All-time total */}
-            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: 12 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>All-In Total (API + Subs)</div>
-              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#f8fafc' }}>${(data.totalCost || 0).toFixed(2)}</div>
-              {data.byProvider && <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)', marginTop: 2 }}>API ${(data.totalApiCost||0).toFixed(2)} + Subs ${(data.totalSubscriptions||0).toFixed(0)}/mo</div>}
-            </div>
-          </div>
+      {/* ── Range + Tabs ─────────────────────────────────── */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, padding:'0 4px' }}>
+        <div style={{ display:'flex', gap:4, background:'#f1f5f9', borderRadius:10, padding:3 }}>
+          {(['today','week','month','all'] as const).map(r=>(
+            <button key={r} onClick={()=>setRange(r)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:range===r?'#0f766e':'transparent', color:range===r?'white':'#64748b' }}>
+              {r==='today'?'Today':r==='week'?'7 Days':r==='month'?'30 Days':'All Time'}
+            </button>
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:4, background:'#f1f5f9', borderRadius:10, padding:3 }}>
+          {(['overview','anthropic','openai','subscriptions'] as const).map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:tab===t?'#0f766e':'transparent', color:tab===t?'white':'#64748b', textTransform:'capitalize' }}>
+              {t}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Active session indicator */}
-      {data.activeSession && (
-        <div style={{ marginBottom: 16, padding: '10px 16px', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#14b8a6', animation: 'pulse 2s infinite' }} />
-          <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e' }}>Active session: {modelShort(data.activeSession.model)}</span>
-          <span style={{ fontSize: 12, color: '#64748b' }}>· {fmt(data.activeSession?.totalTokens||0)} tokens</span>
-        </div>
-      )}
-
-      {/* Time range filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        {([['today','Today'],['week','7 Days'],['month','30 Days'],['all','All Time'],['custom','Custom']] as const).map(([r, label]) => (
-          <button key={r} onClick={() => setRange(r)}
-            style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: range === r ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: range === r ? 'rgba(15,118,110,0.08)' : 'white', color: range === r ? '#0f766e' : '#64748b' }}>
-            {label}
-          </button>
-        ))}
-        {range === 'custom' && (
-          <>
-            <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none' }} />
-            <span style={{ fontSize: 12, color: '#94a3b8' }}>to</span>
-            <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none' }} />
-          </>
-        )}
-      </div>
-
-      {/* Range summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10, marginBottom: 20 }}>
-        {[
-          { label: 'Spend', value: `$${rangeTotal.toFixed(2)}` },
-          { label: 'Sessions', value: filteredSessions.length.toString() },
-          { label: 'Tokens', value: fmt(rangeTokens) },
-          { label: 'Avg/Session', value: filteredSessions.length ? `$${(rangeTotal/filteredSessions.length).toFixed(3)}` : '—' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>{s.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.03em', color: '#0f172a' }}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* View tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'rgba(0,0,0,0.04)', borderRadius: 10, padding: 3, alignSelf: 'flex-start', width: 'fit-content' }}>
-        {(['overview','daily','sessions','models'] as const).map(v => (
-          <button key={v} onClick={() => setView(v)}
-            style={{ padding: '6px 16px', borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: 'none', background: view === v ? 'white' : 'transparent', color: view === v ? '#0f172a' : '#64748b', boxShadow: view === v ? '0 1px 4px rgba(15,23,42,0.08)' : 'none', textTransform: 'capitalize' }}>
-            {v}
-          </button>
-        ))}
-      </div>
-
-      {/* ── OVERVIEW ── */}
-      {view === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {/* Model breakdown */}
-          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 14 }}>By Model</div>
-            {Object.entries(data.byModel || {}).sort((a,b) => b[1].cost - a[1].cost).map(([model, d]) => {
-              const apiCost = data.totalApiCost || data.totalCost || 1;
-              const pct = apiCost > 0 ? (d.cost / apiCost) * 100 : 0;
-              return (
-                <div key={model} style={{ marginBottom: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: modelColor(model) }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{modelShort(model)}</span>
-                      <span style={{ fontSize: 10, color: '#94a3b8' }}>{d.sessions} sessions</span>
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>${d.cost.toFixed(2)}</span>
-                  </div>
-                  <div style={{ height: 5, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: modelColor(model), borderRadius: 999 }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {/* Token breakdown */}
-          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 14 }}>Token Breakdown</div>
+      {/* ── OVERVIEW TAB ─────────────────────────────────── */}
+      {tab==='overview' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          {/* Provider bars */}
+          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>Provider Breakdown</div>
             {[
-              { label: 'Input',       value: data.totalInput||0,  color: '#0369a1', desc: 'Messages sent to AI' },
-              { label: 'Output',      value: data.totalOutput||0, color: '#0f766e', desc: 'AI responses generated' },
-              { label: 'Cache Read',  value: data.totalCache||0,  color: '#6d28d9', desc: 'Reused from cache (cheap)' },
-            ].map(({ label, value, color, desc }) => {
-              const total = (data.totalInput||0) + (data.totalOutput||0) + (data.totalCache||0);
-              const pct = total > 0 ? (value / total) * 100 : 0;
+              { label:'Anthropic Invoices', value:ant?.invoicesPaid||0, color:'#4f46e5', total: allIn },
+              { label:'OpenAI API',         value:oai?.apiCostToDate||0, color:'#059669', total: allIn },
+              { label:'Subscriptions',      value:subs?.totalToDate||0, color:'#d97706', total: allIn },
+              { label:'Vercel',             value:verc?.totalToDate||0, color:'#64748b', total: allIn },
+            ].map(({label,value,color,total})=>{
+              const pct = total>0 ? (value/total)*100 : 0;
               return (
-                <div key={label} style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{label}</span>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>{fmt(value)}</span>
+                <div key={label} style={{ marginBottom:12 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:'#0f172a' }}>{label}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:'#334155' }}>{fmtUsd(value)} <span style={{ fontSize:10, color:'#94a3b8' }}>({pct.toFixed(0)}%)</span></span>
                   </div>
-                  <div style={{ height: 5, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden', marginBottom: 3 }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 999 }} />
+                  <div style={{ height:6, background:'#f1f5f9', borderRadius:999, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:`${pct}%`, background:color, borderRadius:999 }}/>
                   </div>
-                  <div style={{ fontSize: 10, color: '#94a3b8' }}>{desc}</div>
                 </div>
               );
             })}
-            <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(109,40,217,0.04)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 10 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#6d28d9', marginBottom: 2 }}>Cache savings</div>
-              <div style={{ fontSize: 12, color: '#475569' }}>
-                {fmt(data.totalCache||0)} cached tokens saved ~${(((data.totalCache||0) / 1e6) * (3.00 - 0.30)).toFixed(2)} vs uncached
-              </div>
+            {ant?.creditsReceived && <div style={{ marginTop:8, padding:'8px 12px', background:'rgba(5,150,105,0.06)', border:'1px solid rgba(5,150,105,0.2)', borderRadius:10, fontSize:12, color:'#059669', fontWeight:600 }}>
+              🎁 Anthropic free credits received: {fmtUsd(ant.creditsReceived)} (not counted in total)
+            </div>}
+          </div>
+
+          {/* Daily chart */}
+          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>Daily API Costs</div>
+            {filteredDays.length === 0 ? <div style={{ color:'#94a3b8', fontSize:13 }}>No data for this range.</div> : (() => {
+              const maxCost = Math.max(...filteredDays.map(([,d])=>d.cost||0), 1);
+              return (
+                <div style={{ display:'flex', gap:4, alignItems:'flex-end', height:120, overflowX:'auto' }}>
+                  {filteredDays.map(([date, d]) => {
+                    const h = Math.max(4, ((d.cost||0)/maxCost)*100);
+                    const antH = Math.max(0, ((d.anthropic||d.cost||0)/maxCost)*100);
+                    const oaiH = Math.max(0, ((d.openai||0)/maxCost)*100);
+                    return (
+                      <div key={date} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, minWidth:28, flex:'0 0 28px' }} title={`${date}: ${fmtUsd(d.cost||0)}`}>
+                        <div style={{ width:'100%', height:100, display:'flex', flexDirection:'column', justifyContent:'flex-end', gap:0 }}>
+                          {oaiH > 0 && <div style={{ height:`${oaiH}%`, background:'#059669', borderRadius:'3px 3px 0 0', minHeight:2 }}/>}
+                          {antH > 0 && <div style={{ height:`${antH}%`, background:'#4f46e5', borderRadius: oaiH>0?0:'3px 3px 0 0', minHeight:2 }}/>}
+                        </div>
+                        <div style={{ fontSize:8, color:'#94a3b8', transform:'rotate(-45deg)', marginTop:4, whiteSpace:'nowrap' }}>{date.slice(5)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            <div style={{ display:'flex', gap:12, marginTop:8 }}>
+              <span style={{ fontSize:10, color:'#94a3b8', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'#4f46e5', display:'inline-block' }}/> Anthropic</span>
+              <span style={{ fontSize:10, color:'#94a3b8', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'#059669', display:'inline-block' }}/> OpenAI</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── DAILY ── */}
-      {view === 'daily' && (
-        <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8' }}>Daily Breakdown</div>
-            <div style={{ fontSize: 11, color: '#94a3b8' }}>{filteredDays.length} days</div>
-          </div>
-          {filteredDays.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No data for this range</div>}
-          {filteredDays.map(([date, d]) => {
-            const isToday = date === today;
-            const pct = Math.min((d.cost / budget) * 100, 100);
-            return (
-              <div key={date} style={{ padding: '14px 20px', borderBottom: '1px solid #f8fafc', background: isToday ? 'rgba(15,118,110,0.02)' : 'white' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ minWidth: 90 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
-                      {isToday ? 'Today' : fmtDate(date + 'T12:00:00')}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 1 }}>{d.sessions} sessions · {fmt(d.tokens)} tokens</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: d.cost > budget ? '#ef4444' : d.cost > budget * 0.7 ? '#f59e0b' : '#14b8a6', borderRadius: 999 }} />
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', minWidth: 70 }}>
-                    <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: d.cost > budget ? '#b91c1c' : '#0f172a' }}>
-                      ${d.cost.toFixed(2)}
-                    </div>
-                    {d.cost > budget && <div style={{ fontSize: 9, color: '#ef4444', fontWeight: 700 }}>OVER BUDGET</div>}
-                  </div>
-                </div>
+      {/* ── ANTHROPIC TAB ─────────────────────────────────── */}
+      {tab==='anthropic' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+              <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8' }}>Invoices & Credits</div>
+              <AddInvoiceForm onAdded={load} />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
+              <div style={{ padding:'10px 14px', background:'#fef2f2', borderRadius:10, border:'1px solid rgba(185,28,28,0.15)' }}>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#b91c1c', marginBottom:2 }}>Invoices Paid</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(ant?.invoicesPaid)}</div>
               </div>
-            );
-          })}
+              <div style={{ padding:'10px 14px', background:'#f0fdf4', borderRadius:10, border:'1px solid rgba(5,150,105,0.2)' }}>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#059669', marginBottom:2 }}>Credits Received</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(ant?.creditsReceived)}</div>
+              </div>
+            </div>
+            {(data?.anthropicInvoices||[]).length > 0 ? (
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+                <thead><tr style={{ borderBottom:'1px solid #f1f5f9' }}>
+                  {['Date','Type','Amount','Status'].map(h=><th key={h} style={{ padding:'6px 8px', textAlign:'left', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#94a3b8' }}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {[...(data?.anthropicInvoices||[])].sort((a,b)=>b.date.localeCompare(a.date)).map((inv,i)=>(
+                    <tr key={i} style={{ borderBottom:'1px solid #f8fafc' }}>
+                      <td style={{ padding:'7px 8px', color:'#334155' }}>{inv.date}</td>
+                      <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'#fef2f2':'#f0fdf4', color:inv.type==='invoice'?'#b91c1c':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
+                      <td style={{ padding:'7px 8px', fontWeight:700, color:'#0f172a' }}>{fmtUsd(inv.amount)}</td>
+                      <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>{inv.status||'paid'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <div style={{ color:'#94a3b8', fontSize:13 }}>No invoices yet.</div>}
+          </div>
+
+          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>Daily API Costs (Live from Admin API)</div>
+            {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).slice(0,20).map(([date,d])=>(
+              <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid #f8fafc' }}>
+                <span style={{ fontSize:13, color:'#334155' }}>{date}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{fmtUsd(d.anthropic||d.cost||0,4)}</span>
+              </div>
+            ))}
+            {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).length===0 && <div style={{ color:'#94a3b8', fontSize:13 }}>No API data for this range.</div>}
+          </div>
         </div>
       )}
 
-      {/* ── SESSIONS ── */}
-      {view === 'sessions' && (
-        <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8' }}>Session Log</div>
+      {/* ── OPENAI TAB ─────────────────────────────────── */}
+      {tab==='openai' && (
+        <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+          <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>OpenAI Daily Costs</div>
+          <div style={{ padding:'10px 14px', background:'#f0fdf4', borderRadius:10, border:'1px solid rgba(5,150,105,0.2)', marginBottom:14 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#059669' }}>Total from CSV imports: {fmtUsd(oai?.apiCostToDate)}</div>
           </div>
-          {filteredSessions.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No sessions in this range</div>}
-          {filteredSessions.map(s => (
-            <div key={s.key} style={{ padding: '12px 20px', borderBottom: '1px solid #f8fafc', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.status === 'ended' ? '#cbd5e1' : '#14b8a6', marginTop: 5, flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 2 }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: modelColor(s.model), background: `${modelColor(s.model)}12`, padding: '1px 7px', borderRadius: 999 }}>
-                    {modelShort(s.model)}
-                  </span>
-                  {s.isSubagent && <span style={{ fontSize: 9, fontWeight: 700, color: '#f59e0b', background: 'rgba(245,158,11,0.08)', padding: '1px 6px', borderRadius: 999 }}>subagent</span>}
-                  <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(s.startedAt)}</span>
-                </div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>
-                  {fmt(s.inputTokens)} in · {fmt(s.outputTokens)} out
-                  {s.cacheRead > 0 && ` · ${fmt(s.cacheRead)} cached`}
-                </div>
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', flexShrink: 0 }}>
-                ${((s as unknown as {cost?: number; estimatedCost?: number}).cost || (s as unknown as {cost?: number; estimatedCost?: number}).estimatedCost || 0).toFixed(4)}
-              </div>
+          {[...(data?.openaiDaily||[])].filter(e=>inRange(e.date)).sort((a,b)=>b.date.localeCompare(a.date)).map((e,i)=>(
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid #f8fafc', fontSize:13 }}>
+              <span style={{ color:'#334155' }}>{e.date}</span>
+              <span style={{ fontWeight:700, color:'#0f172a' }}>{fmtUsd(e.costUsd,2)}</span>
             </div>
           ))}
+          {(data?.openaiDaily||[]).filter(e=>inRange(e.date)).length===0 && <div style={{ color:'#94a3b8', fontSize:13 }}>No OpenAI data for this range.</div>}
+          <div style={{ marginTop:16, padding:'10px 14px', background:'#fffbeb', border:'1px solid rgba(217,119,6,0.2)', borderRadius:10, fontSize:12, color:'#92400e' }}>
+            💡 Export updated CSVs from <strong>platform.openai.com</strong> for latest data. API billing endpoint requires a different org — working on it.
+          </div>
         </div>
       )}
 
-      {/* ── MODELS ── */}
-      {view === 'models' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {Object.entries(data.byModel).sort((a,b) => b[1].cost - a[1].cost).map(([model, d]) => (
-            <div key={model} style={{ background: 'white', borderRadius: 16, border: `1px solid ${modelColor(model)}22`, padding: '18px 20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+      {/* ── SUBSCRIPTIONS TAB ─────────────────────────────────── */}
+      {tab==='subscriptions' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+              <div style={{ padding:'10px 14px', background:'#eff6ff', borderRadius:10, border:'1px solid rgba(37,99,235,0.2)' }}>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#2563eb', marginBottom:2 }}>Monthly Burn</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(subs?.monthly)}/mo</div>
+              </div>
+              <div style={{ padding:'10px 14px', background:'#f5f3ff', borderRadius:10, border:'1px solid rgba(124,58,237,0.2)' }}>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#7c3aed', marginBottom:2 }}>Cumulative</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(subs?.totalToDate)}</div>
+              </div>
+            </div>
+            {(subs?.items||data?.subscriptions||[]).map((sub,i)=>(
+              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 0', borderBottom:'1px solid #f1f5f9' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: modelColor(model) }} />
-                    <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{model}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8' }}>{d.sessions} sessions</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{sub.provider} — {sub.plan}</div>
+                  <div style={{ fontSize:11, color:'#94a3b8' }}>Since {sub.startDate}</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em', color: '#0f172a' }}>${d.cost.toFixed(2)}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}>{(data.totalCost ? (d.cost / data.totalCost) * 100 : 0).toFixed(0)}% of total</div>
+                <div style={{ textAlign:'right' }}>
+                  <div style={{ fontSize:14, fontWeight:800, color:'#0f172a' }}>{fmtUsd(sub.monthlyCost)}/mo</div>
+                  <span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>Active</span>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                {[
-                  { label: 'Input', value: fmt(d.input) },
-                  { label: 'Output', value: fmt(d.output) },
-                  { label: 'Avg/session', value: `$${(d.cost / d.sessions).toFixed(3)}` },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>{label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+            ))}
+            {(subs?.items||data?.subscriptions||[]).length===0 && <div style={{ color:'#94a3b8', fontSize:13 }}>No subscriptions configured.</div>}
+          </div>
         </div>
       )}
-
     </div>
   );
 }
