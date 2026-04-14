@@ -18,7 +18,7 @@ export const ROLE_MAP: Record<string, string> = {
   'nate@kulaglass.com':       'super',
   'tia@kulaglass.com':        'pm_track',
   'jenna@kulaglass.com':      'admin',
-  'sherilynn@kulaglass.com':  'admin',
+  'sherilynn@kulaglass.com':  'service_pm',  // TEMP: elevated for WO catch-up — revert to admin after
   'karl@kulaglass.com':       'super',
 };
 

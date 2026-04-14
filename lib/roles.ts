@@ -25,7 +25,7 @@ export const ALL_USERS: { name: string; role: string; group: string; email?: str
   { name: 'Mark Olson',               role: 'sales',      group: 'Management',      email: 'markolson@kulaglass.com' },
   { name: 'Tia Omura',                role: 'pm_track',   group: 'Admin',           email: 'tia@kulaglass.com' },
   { name: 'Jenna Nakama',             role: 'admin',      group: 'Admin',           email: 'jenna@kulaglass.com' },
-  { name: 'Sherilynn Takuchi',        role: 'admin',      group: 'Admin',           email: 'sherilynn@kulaglass.com' },
+  { name: 'Sherilynn Takuchi',        role: 'service_pm', group: 'Management',      email: 'sherilynn@kulaglass.com' },  // TEMP — revert to admin/Admin after WO catch-up
   { name: 'Karl Nakamura Sr.',        role: 'super',      group: 'Superintendent',  email: 'karl@kulaglass.com' },
   { name: 'Nate Nakamura',            role: 'super',      group: 'Superintendent',  email: 'nate@kulaglass.com' },
   { name: 'Karl Nakamura Jr.',        role: 'glazier',    group: 'Field — Oahu' },
