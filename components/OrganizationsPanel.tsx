@@ -1,346 +1,741 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type OrgRecord = {
-  org_id: string; name: string; types: string[]; entity_type: string;
-  default_island: string; notes?: string; primary_contact?: { name:string; email:string; phone:string; title?:string };
-  primary_site?: { address_line_1:string; city:string; island:string };
-  company: string; contactPerson: string; contactPhone: string; email: string; address: string; island: string;
-};
-type Contact = { contact_id:string; name:string; title:string; role:string; email:string; phone:string; is_primary:boolean; notes:string };
-type Site = { site_id:string; name:string; address_line_1:string; city:string; state:string; zip:string; island:string; site_type:string };
-type LinkedWO = { id:string; woNumber:string; name:string; status:string; island:string };
-type LinkedProject = { kID:string; type:string; name:string; status:string; role:string };
-
-// ── Type badge colors ─────────────────────────────────────────────────────
-const TYPE_COLORS: Record<string,{color:string;bg:string}> = {
-  GC:           { color:'#1d4ed8', bg:'#eff6ff' },
-  RESIDENTIAL:  { color:'#15803d', bg:'#f0fdf4' },
-  COMMERCIAL:   { color:'#0f766e', bg:'#f0fdfa' },
-  VENDOR:       { color:'#c2410c', bg:'#fff7ed' },
-  ARCHITECT:    { color:'#7c3aed', bg:'#f5f3ff' },
-  BUILDER:      { color:'#d97706', bg:'#fffbeb' },
-  OWNER:        { color:'#b91c1c', bg:'#fef2f2' },
-  GOVERNMENT:   { color:'#0369a1', bg:'#f0f9ff' },
-  PROPERTY_MGMT:{ color:'#64748b', bg:'#f8fafc' },
-  CONSULTANT:   { color:'#4b5563', bg:'#f9fafb' },
+  org_id: string;
+  name: string;
+  types: string[];
+  entity_type: string;
+  default_island: string;
+  notes?: string;
+  primary_contact?: { contact_id?: string; name: string; email?: string; phone?: string; title?: string; role?: string };
+  primary_site?: { site_id?: string; address_line_1?: string; city?: string; island?: string; site_type?: string };
+  company: string;
+  contactPerson: string;
+  contactPhone: string;
+  email: string;
+  address: string;
+  island: string;
+  woCount: number;
 };
 
-const ALL_TYPES = ['GC','RESIDENTIAL','COMMERCIAL','VENDOR','ARCHITECT','OWNER','BUILDER','GOVERNMENT','PROPERTY_MGMT','CONSULTANT'];
+type Contact = {
+  contact_id: string;
+  org_id: string;
+  name: string;
+  title: string;
+  role: string;
+  email: string;
+  phone: string;
+  is_primary: boolean;
+  notes: string;
+};
 
+type Site = {
+  site_id: string;
+  org_id: string;
+  name: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  island: string;
+  site_type: string;
+  notes?: string;
+};
+
+type LinkedWO = {
+  id: string;
+  woNumber: string;
+  name: string;
+  status: string;
+  island: string;
+};
+
+type LinkedProject = {
+  kID: string;
+  type: string;
+  name: string;
+  status: string;
+  role: string;
+};
+
+type OrgDetail = {
+  org: OrgRecord & { tax_id?: string; payment_terms?: string };
+  contacts: Contact[];
+  sites: Site[];
+  linkedWOs: LinkedWO[];
+  linkedProjects: LinkedProject[];
+};
+
+// ── Constants ─────────────────────────────────────────────────────────────
+const TYPE_COLORS: Record<string, { color: string; bg: string }> = {
+  GC:            { color: '#1d4ed8', bg: '#eff6ff' },
+  COMMERCIAL:    { color: '#0f766e', bg: '#f0fdfa' },
+  RESIDENTIAL:   { color: '#15803d', bg: '#f0fdf4' },
+  VENDOR:        { color: '#c2410c', bg: '#fff7ed' },
+  ARCHITECT:     { color: '#7c3aed', bg: '#f5f3ff' },
+  OWNER:         { color: '#b91c1c', bg: '#fef2f2' },
+  BUILDER:       { color: '#d97706', bg: '#fffbeb' },
+  GOVERNMENT:    { color: '#0369a1', bg: '#f0f9ff' },
+  PROPERTY_MGMT: { color: '#64748b', bg: '#f8fafc' },
+  CONSULTANT:    { color: '#4b5563', bg: '#f9fafb' },
+};
+
+const ALL_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
+
+const FILTER_LABELS: Record<string, string> = {
+  GC: 'GC',
+  COMMERCIAL: 'Commercial',
+  RESIDENTIAL: 'Residential',
+  VENDOR: 'Vendor',
+  ARCHITECT: 'Architect',
+  OWNER: 'Owner',
+  GOVERNMENT: 'Government',
+  PROPERTY_MGMT: 'Property Mgmt',
+  CONSULTANT: 'Consultant',
+};
+
+const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  OPEN:          { bg: '#fef2f2', color: '#dc2626' },
+  SCHEDULED:     { bg: '#eff6ff', color: '#1d4ed8' },
+  IN_PROGRESS:   { bg: '#fffbeb', color: '#d97706' },
+  ON_HOLD:       { bg: '#f8fafc', color: '#64748b' },
+  COMPLETED:     { bg: '#f0fdf4', color: '#15803d' },
+  CANCELLED:     { bg: '#f8fafc', color: '#94a3b8' },
+  INVOICED:      { bg: '#f0fdfa', color: '#0f766e' },
+  PAID:          { bg: '#f0fdf4', color: '#15803d' },
+};
+
+const ISLANDS = ['Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai'];
+
+// ── Helper Components ────────────────────────────────────────────────────
 function TypeBadge({ type }: { type: string }) {
-  const c = TYPE_COLORS[type] || { color:'#64748b', bg:'#f8fafc' };
-  return <span style={{ fontSize:10, fontWeight:800, padding:'2px 7px', borderRadius:999, background:c.bg, color:c.color, letterSpacing:'0.04em', textTransform:'uppercase', whiteSpace:'nowrap' }}>{type.replace('_',' ')}</span>;
+  const c = TYPE_COLORS[type] || { color: '#64748b', bg: '#f8fafc' };
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
+      background: c.bg, color: c.color, letterSpacing: '0.04em',
+      textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const,
+    }}>
+      {FILTER_LABELS[type] || type.replace(/_/g, ' ')}
+    </span>
+  );
 }
 
-// ── Detail Panel ──────────────────────────────────────────────────────────
-function OrgDetailPanel({ orgId, onClose }: { orgId: string; onClose: () => void }) {
-  const [detail, setDetail] = useState<{org:OrgRecord&{tax_id?:string;payment_terms?:string};contacts:Contact[];sites:Site[];linkedWOs:LinkedWO[];linkedProjects:LinkedProject[]} | null>(null);
+function WOStatusBadge({ status }: { status: string }) {
+  const c = WO_STATUS_COLORS[status] || { bg: '#f8fafc', color: '#64748b' };
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+      background: c.bg, color: c.color, textTransform: 'uppercase' as const,
+      letterSpacing: '0.04em', whiteSpace: 'nowrap' as const,
+    }}>
+      {status?.replace(/_/g, ' ') || '—'}
+    </span>
+  );
+}
+
+// ── Detail Panel ────────────────────────────────────────────────────────
+function OrgDetailPanel({
+  orgId,
+  onClose,
+  onNavigate,
+}: {
+  orgId: string;
+  onClose: () => void;
+  onNavigate?: (view: string, params?: Record<string, string>) => void;
+}) {
+  const [detail, setDetail] = useState<OrgDetail | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [addingContact, setAddingContact] = useState(false);
   const [addingSite, setAddingSite] = useState(false);
-  const [newContact, setNewContact] = useState({ name:'', title:'', role:'PRIMARY', email:'', phone:'' });
-  const [newSite, setNewSite] = useState({ address_line_1:'', city:'', island:'', site_type:'OFFICE' });
+  const [newContact, setNewContact] = useState({ name: '', title: '', role: 'PRIMARY', email: '', phone: '' });
+  const [newSite, setNewSite] = useState({ address_line_1: '', city: '', island: '', site_type: 'OFFICE' });
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/organizations/${orgId}`).then(r=>r.json()).then(setDetail).catch(console.error);
+  const loadDetail = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/organizations/${orgId}`);
+      const data = await res.json();
+      setDetail(data);
+    } catch (err) {
+      console.error('[OrgDetailPanel] load', err);
+    } finally {
+      setLoading(false);
+    }
   }, [orgId]);
 
-  async function patchOrg(fields: Record<string,unknown>) {
-    setSaving(true);
-    await fetch(`/api/organizations/${orgId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(fields) }).catch(console.error);
-    setSaving(false);
-  }
+  useEffect(() => {
+    loadDetail();
+  }, [loadDetail]);
 
-  async function patchContact(contactId: string, fields: Record<string,unknown>) {
-    await fetch(`/api/organizations/${orgId}/contacts`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ contactId, ...fields }) }).catch(console.error);
+  function scheduleSave(fields: Record<string, unknown>) {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      setSaving(true);
+      try {
+        await fetch(`/api/organizations/${orgId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fields),
+        });
+      } catch (err) {
+        console.error('[OrgDetailPanel] save', err);
+      } finally {
+        setSaving(false);
+      }
+    }, 800);
   }
 
   async function addContact() {
-    if (!newContact.name) return;
-    await fetch(`/api/organizations/${orgId}/contacts`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(newContact) }).catch(console.error);
-    const res = await fetch(`/api/organizations/${orgId}`).then(r=>r.json()).catch(()=>null);
-    if (res) setDetail(res);
-    setNewContact({ name:'', title:'', role:'PRIMARY', email:'', phone:'' });
-    setAddingContact(false);
+    if (!newContact.name.trim()) return;
+    try {
+      await fetch(`/api/organizations/${orgId}/contacts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newContact),
+      });
+      await loadDetail();
+      setNewContact({ name: '', title: '', role: 'PRIMARY', email: '', phone: '' });
+      setAddingContact(false);
+    } catch (err) {
+      console.error('[OrgDetailPanel] addContact', err);
+    }
   }
 
   async function addSite() {
-    await fetch(`/api/organizations/${orgId}/sites`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(newSite) }).catch(console.error);
-    const res = await fetch(`/api/organizations/${orgId}`).then(r=>r.json()).catch(()=>null);
-    if (res) setDetail(res);
-    setNewSite({ address_line_1:'', city:'', island:'', site_type:'OFFICE' });
-    setAddingSite(false);
+    try {
+      await fetch(`/api/organizations/${orgId}/sites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSite),
+      });
+      await loadDetail();
+      setNewSite({ address_line_1: '', city: '', island: '', site_type: 'OFFICE' });
+      setAddingSite(false);
+    } catch (err) {
+      console.error('[OrgDetailPanel] addSite', err);
+    }
   }
 
-  const INP: React.CSSProperties = { fontSize:13, padding:'5px 8px', borderRadius:7, border:'1px solid #e2e8f0', outline:'none', background:'white', width:'100%', boxSizing:'border-box' };
-  const LBL: React.CSSProperties = { fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#94a3b8', marginBottom:2, display:'block' };
-  const SEC: React.CSSProperties = { fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#64748b', marginBottom:8, marginTop:16 };
-
-  if (!detail) return (
-    <div style={{ position:'fixed',inset:0,zIndex:600,background:'rgba(15,23,42,0.3)',display:'flex',alignItems:'flex-end' }} onClick={onClose}>
-      <div style={{ background:'white',borderRadius:'20px 20px 0 0',width:'100%',maxWidth:680,margin:'0 auto',padding:40,textAlign:'center',color:'#94a3b8',fontSize:13 }}>Loading…</div>
-    </div>
-  );
-
-  const { org, contacts, sites, linkedWOs, linkedProjects } = detail;
+  const INP: React.CSSProperties = {
+    fontSize: 13, padding: '6px 10px', borderRadius: 8,
+    border: '1px solid #e2e8f0', outline: 'none', background: 'white',
+    width: '100%', boxSizing: 'border-box' as const,
+  };
+  const LBL: React.CSSProperties = {
+    fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const,
+    letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 3, display: 'block',
+  };
+  const SEC: React.CSSProperties = {
+    fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const,
+    letterSpacing: '0.1em', color: '#64748b', marginBottom: 10, marginTop: 20,
+    paddingBottom: 6, borderBottom: '1px solid #f1f5f9',
+  };
 
   return (
     <>
-      <div onClick={onClose} style={{ position:'fixed',inset:0,zIndex:500,background:'rgba(15,23,42,0.3)' }}/>
-      <div style={{ position:'fixed',top:0,right:0,bottom:0,zIndex:501,width:'min(680px,100vw)',background:'white',boxShadow:'-4px 0 24px rgba(15,23,42,0.12)',display:'flex',flexDirection:'column',overflow:'hidden' }}>
+      <div
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(15,23,42,0.25)' }}
+      />
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 501,
+        width: 'min(700px,100vw)', background: 'white',
+        boxShadow: '-4px 0 32px rgba(15,23,42,0.14)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        animation: 'slideIn 0.2s ease-out',
+      }}>
         {/* Header */}
-        <div style={{ padding:'16px 20px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',gap:10 }}>
-          <button onClick={onClose} style={{ background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:20,padding:0 }}>←</button>
-          <div style={{ flex:1 }}>
-            <input defaultValue={org.name} onBlur={e=>e.target.value!==org.name&&patchOrg({name:e.target.value})}
-              style={{ fontSize:17,fontWeight:800,color:'#0f172a',border:'none',outline:'none',background:'transparent',width:'100%' }} />
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }}>←</button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {loading || !detail ? (
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#94a3b8' }}>Loading…</div>
+            ) : (
+              <input
+                defaultValue={detail.org.name}
+                onBlur={e => { if (e.target.value !== detail.org.name) scheduleSave({ name: e.target.value }); }}
+                style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', border: 'none', outline: 'none', background: 'transparent', width: '100%' }}
+              />
+            )}
           </div>
-          <button onClick={onClose} style={{ background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:18,padding:0 }}>×</button>
+          {saving && <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600 }}>Saving…</span>}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20, padding: 0, lineHeight: 1 }}>×</button>
         </div>
 
         {/* Body */}
-        <div style={{ flex:1,overflowY:'auto',padding:'16px 20px' }}>
-
-          {/* Types + meta */}
-          <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginBottom:12 }}>
-            {org.types.map(t=><TypeBadge key={t} type={t}/>)}
-            <span style={{ fontSize:11,color:'#94a3b8',alignSelf:'center' }}>{org.entity_type} · {org.default_island||'—'}</span>
+        {loading || !detail ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 13 }}>
+            Loading organization…
           </div>
+        ) : (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+            {/* Types + meta */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
+              {detail.org.types.map(t => <TypeBadge key={t} type={t} />)}
+              <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                {detail.org.entity_type} · {detail.org.default_island || '—'}
+              </span>
+            </div>
 
-          {/* Notes */}
-          <div style={{ marginBottom:16 }}>
-            <label style={LBL}>Notes</label>
-            <textarea defaultValue={org.notes||''} onBlur={e=>patchOrg({notes:e.target.value})} rows={2}
-              style={{ ...INP,resize:'none',minHeight:50 }} placeholder="Internal notes…"/>
+            {/* Notes */}
+            <div style={{ marginBottom: 8 }}>
+              <label style={LBL}>Notes</label>
+              <textarea
+                defaultValue={detail.org.notes || ''}
+                onBlur={e => scheduleSave({ notes: e.target.value })}
+                rows={2}
+                placeholder="Internal notes…"
+                style={{ ...INP, resize: 'vertical', minHeight: 52 }}
+              />
+            </div>
+
+            {/* Contacts */}
+            <div style={SEC}>Contacts ({detail.contacts.length})</div>
+            {detail.contacts.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No contacts yet.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
+              {detail.contacts.map(c => (
+                <div key={c.contact_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', background: c.is_primary ? '#f0fdf4' : 'white' }}>
+                  {c.is_primary && <span style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>★ Primary</span>}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: c.is_primary ? 6 : 0 }}>
+                    <div><label style={LBL}>Name</label>
+                      <input defaultValue={c.name} onBlur={e => {
+                        if (e.target.value !== c.name) {
+                          fetch(`/api/organizations/${orgId}/contacts`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contactId: c.contact_id, name: e.target.value }) }).catch(err => console.error('[OrgDetailPanel] patchContact', err));
+                        }
+                      }} style={INP} /></div>
+                    <div><label style={LBL}>Title</label>
+                      <input defaultValue={c.title} onBlur={e => {
+                        fetch(`/api/organizations/${orgId}/contacts`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contactId: c.contact_id, title: e.target.value }) }).catch(err => console.error('[OrgDetailPanel] patchContact', err));
+                      }} style={INP} /></div>
+                    <div><label style={LBL}>Email</label>
+                      <input defaultValue={c.email} type="email" onBlur={e => {
+                        fetch(`/api/organizations/${orgId}/contacts`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contactId: c.contact_id, email: e.target.value }) }).catch(err => console.error('[OrgDetailPanel] patchContact', err));
+                      }} style={INP} /></div>
+                    <div><label style={LBL}>Phone</label>
+                      <input defaultValue={c.phone} type="tel" onBlur={e => {
+                        fetch(`/api/organizations/${orgId}/contacts`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contactId: c.contact_id, phone: e.target.value }) }).catch(err => console.error('[OrgDetailPanel] patchContact', err));
+                      }} style={INP} /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {addingContact ? (
+              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div><label style={LBL}>Name *</label><input style={INP} value={newContact.name} onChange={e => setNewContact(p => ({ ...p, name: e.target.value }))} autoFocus /></div>
+                  <div><label style={LBL}>Title</label><input style={INP} value={newContact.title} onChange={e => setNewContact(p => ({ ...p, title: e.target.value }))} /></div>
+                  <div><label style={LBL}>Email</label><input style={INP} type="email" value={newContact.email} onChange={e => setNewContact(p => ({ ...p, email: e.target.value }))} /></div>
+                  <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={newContact.phone} onChange={e => setNewContact(p => ({ ...p, phone: e.target.value }))} /></div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingContact(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Contact</button>
+            )}
+
+            {/* Sites */}
+            <div style={SEC}>Sites ({detail.sites.length})</div>
+            {detail.sites.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No sites yet.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
+              {detail.sites.map(s => (
+                <div key={s.site_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: 13, color: '#334155' }}>
+                  <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                    {[s.island, s.site_type, s.zip].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {addingSite ? (
+              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div><label style={LBL}>Address</label><input style={INP} value={newSite.address_line_1} onChange={e => setNewSite(p => ({ ...p, address_line_1: e.target.value }))} autoFocus /></div>
+                  <div><label style={LBL}>City</label><input style={INP} value={newSite.city} onChange={e => setNewSite(p => ({ ...p, city: e.target.value }))} /></div>
+                  <div><label style={LBL}>Island</label>
+                    <select style={{ ...INP, cursor: 'pointer' }} value={newSite.island} onChange={e => setNewSite(p => ({ ...p, island: e.target.value }))}>
+                      <option value="">Select island</option>
+                      {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                  </div>
+                  <div><label style={LBL}>Type</label>
+                    <select style={{ ...INP, cursor: 'pointer' }} value={newSite.site_type} onChange={e => setNewSite(p => ({ ...p, site_type: e.target.value }))}>
+                      {['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE'].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Site</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Site</button>
+            )}
+
+            {/* Linked Work Orders */}
+            {detail.linkedWOs.length > 0 && (
+              <>
+                <div style={SEC}>Linked Work Orders ({detail.linkedWOs.length})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {detail.linkedWOs.map(wo => (
+                    <div
+                      key={wo.id}
+                      onClick={() => onNavigate && onNavigate('workorders', { woId: wo.id })}
+                      style={{
+                        padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        fontSize: 12, cursor: onNavigate ? 'pointer' : 'default',
+                        background: 'white',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { if (onNavigate) e.currentTarget.style.background = '#f0fdfa'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
+                    >
+                      <div>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{wo.name || wo.woNumber}</span>
+                        <span style={{ color: '#94a3b8', marginLeft: 8 }}>{wo.woNumber}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {wo.island && <span style={{ fontSize: 10, color: '#94a3b8' }}>{wo.island}</span>}
+                        <WOStatusBadge status={wo.status} />
+                        {onNavigate && <span style={{ color: '#94a3b8', fontSize: 12 }}>→</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Linked Projects */}
+            {detail.linkedProjects.length > 0 && (
+              <>
+                <div style={SEC}>Linked Projects ({detail.linkedProjects.length})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {detail.linkedProjects.map(p => (
+                    <div key={p.kID} style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                      <div>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
+                        <span style={{ fontSize: 10, color: '#0891b2', marginLeft: 6 }}>{p.role}</span>
+                      </div>
+                      <span style={{ color: '#94a3b8' }}>{p.kID}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Empty state */}
+            {detail.linkedWOs.length === 0 && detail.linkedProjects.length === 0 && (
+              <div style={{ marginTop: 20, padding: '16px', borderRadius: 10, background: '#f8fafc', textAlign: 'center', fontSize: 12, color: '#94a3b8' }}>
+                No linked work orders or projects yet.
+              </div>
+            )}
           </div>
-
-          {/* Contacts */}
-          <div style={SEC}>Contacts</div>
-          {contacts.map((c,i)=>(
-            <div key={c.contact_id} style={{ padding:'10px 12px',borderRadius:10,border:'1px solid #f1f5f9',background:i%2===0?'white':'#fafafa',marginBottom:6 }}>
-              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
-                <div><label style={LBL}>Name {c.is_primary&&<span style={{ color:'#0f766e' }}>★</span>}</label>
-                  <input defaultValue={c.name} onBlur={e=>patchContact(c.contact_id,{name:e.target.value})} style={INP}/></div>
-                <div><label style={LBL}>Title</label>
-                  <input defaultValue={c.title} onBlur={e=>patchContact(c.contact_id,{title:e.target.value})} style={INP}/></div>
-                <div><label style={LBL}>Email</label>
-                  <input defaultValue={c.email} onBlur={e=>patchContact(c.contact_id,{email:e.target.value})} style={INP} type="email"/></div>
-                <div><label style={LBL}>Phone</label>
-                  <input defaultValue={c.phone} onBlur={e=>patchContact(c.contact_id,{phone:e.target.value})} style={INP} type="tel"/></div>
-              </div>
-            </div>
-          ))}
-          {addingContact ? (
-            <div style={{ padding:'10px 12px',borderRadius:10,border:'1.5px dashed #0f766e',marginBottom:8 }}>
-              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8 }}>
-                <div><label style={LBL}>Name *</label><input style={INP} value={newContact.name} onChange={e=>setNewContact(p=>({...p,name:e.target.value}))}/></div>
-                <div><label style={LBL}>Title</label><input style={INP} value={newContact.title} onChange={e=>setNewContact(p=>({...p,title:e.target.value}))}/></div>
-                <div><label style={LBL}>Email</label><input style={INP} type="email" value={newContact.email} onChange={e=>setNewContact(p=>({...p,email:e.target.value}))}/></div>
-                <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={newContact.phone} onChange={e=>setNewContact(p=>({...p,phone:e.target.value}))}/></div>
-              </div>
-              <div style={{ display:'flex',gap:8 }}>
-                <button onClick={()=>setAddingContact(false)} style={{ flex:1,padding:'7px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:12,fontWeight:700,cursor:'pointer' }}>Cancel</button>
-                <button onClick={addContact} disabled={!newContact.name} style={{ flex:2,padding:'7px',borderRadius:8,border:'none',background:'#0f766e',color:'white',fontSize:12,fontWeight:700,cursor:'pointer' }}>Add Contact</button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={()=>setAddingContact(true)} style={{ fontSize:12,fontWeight:700,color:'#0f766e',background:'none',border:'none',cursor:'pointer',padding:'4px 0' }}>+ Add Contact</button>
-          )}
-
-          {/* Sites */}
-          <div style={SEC}>Sites</div>
-          {sites.map((s,i)=>(
-            <div key={s.site_id} style={{ padding:'10px 12px',borderRadius:10,border:'1px solid #f1f5f9',background:i%2===0?'white':'#fafafa',marginBottom:6,fontSize:13,color:'#334155' }}>
-              <div style={{ fontWeight:700 }}>{s.address_line_1}{s.city?`, ${s.city}`:''}{s.island?` · ${s.island}`:''}</div>
-              <div style={{ fontSize:11,color:'#94a3b8',marginTop:2 }}>{s.site_type}{s.zip?` · ${s.zip}`:''}</div>
-            </div>
-          ))}
-          {addingSite ? (
-            <div style={{ padding:'10px 12px',borderRadius:10,border:'1.5px dashed #0f766e',marginBottom:8 }}>
-              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8 }}>
-                <div><label style={LBL}>Address</label><input style={INP} value={newSite.address_line_1} onChange={e=>setNewSite(p=>({...p,address_line_1:e.target.value}))}/></div>
-                <div><label style={LBL}>City</label><input style={INP} value={newSite.city} onChange={e=>setNewSite(p=>({...p,city:e.target.value}))}/></div>
-                <div><label style={LBL}>Island</label><input style={INP} value={newSite.island} onChange={e=>setNewSite(p=>({...p,island:e.target.value}))}/></div>
-                <div><label style={LBL}>Type</label>
-                  <select style={{...INP,cursor:'pointer'}} value={newSite.site_type} onChange={e=>setNewSite(p=>({...p,site_type:e.target.value}))}>
-                    {['OFFICE','JOBSITE','RESIDENCE','WAREHOUSE'].map(t=><option key={t}>{t}</option>)}
-                  </select></div>
-              </div>
-              <div style={{ display:'flex',gap:8 }}>
-                <button onClick={()=>setAddingSite(false)} style={{ flex:1,padding:'7px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:12,fontWeight:700,cursor:'pointer' }}>Cancel</button>
-                <button onClick={addSite} style={{ flex:2,padding:'7px',borderRadius:8,border:'none',background:'#0f766e',color:'white',fontSize:12,fontWeight:700,cursor:'pointer' }}>Add Site</button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={()=>setAddingSite(true)} style={{ fontSize:12,fontWeight:700,color:'#0f766e',background:'none',border:'none',cursor:'pointer',padding:'4px 0' }}>+ Add Site</button>
-          )}
-
-          {/* Linked WOs */}
-          {linkedWOs.length > 0 && <>
-            <div style={SEC}>Linked Work Orders ({linkedWOs.length})</div>
-            {linkedWOs.map(wo=>(
-              <div key={wo.id} style={{ padding:'8px 10px',borderRadius:8,border:'1px solid #f1f5f9',marginBottom:4,display:'flex',justifyContent:'space-between',fontSize:12 }}>
-                <span style={{ fontWeight:700,color:'#0f172a' }}>{wo.name||wo.woNumber}</span>
-                <span style={{ color:'#94a3b8' }}>{wo.id} · {wo.status}</span>
-              </div>
-            ))}
-          </>}
-
-          {/* Linked Projects */}
-          {linkedProjects.length > 0 && <>
-            <div style={SEC}>Linked Projects ({linkedProjects.length})</div>
-            {linkedProjects.map(p=>(
-              <div key={p.kID} style={{ padding:'8px 10px',borderRadius:8,border:'1px solid #f1f5f9',marginBottom:4,display:'flex',justifyContent:'space-between',fontSize:12 }}>
-                <span style={{ fontWeight:700,color:'#0f172a' }}>{p.name} <span style={{ color:'#0891b2',fontSize:10 }}>{p.role}</span></span>
-                <span style={{ color:'#94a3b8' }}>{p.kID}</span>
-              </div>
-            ))}
-          </>}
-
-        </div>
-        {saving && <div style={{ padding:'6px',textAlign:'center',fontSize:11,color:'#0f766e',borderTop:'1px solid #f1f5f9' }}>Saving…</div>}
+        )}
       </div>
     </>
   );
 }
 
-// ── Main Panel ────────────────────────────────────────────────────────────
-export default function OrganizationsPanel() {
-  const [orgs, setOrgs] = useState<OrgRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  const [selectedOrgId, setSelectedOrgId] = useState<string|null>(null);
-  const [showAddOrg, setShowAddOrg] = useState(false);
-  const [newOrgName, setNewOrgName] = useState('');
-  const [newOrgTypes, setNewOrgTypes] = useState(['RESIDENTIAL']);
+// ── New Org Modal ────────────────────────────────────────────────────────
+function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [name, setName] = useState('');
+  const [types, setTypes] = useState<string[]>(['RESIDENTIAL']);
+  const [island, setIsland] = useState('');
+  const [notes, setNotes] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const load = useCallback(async () => {
+  async function create() {
+    if (!name.trim()) return;
+    setCreating(true);
     try {
-      const res = await fetch('/api/organizations?limit=500');
-      const d = await res.json();
-      setOrgs(d.organizations || []);
-    } catch(e) { console.error('[OrganizationsPanel]', e); }
-    finally { setLoading(false); }
+      const res = await fetch('/api/organizations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), types, island, notes }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      onCreated();
+    } catch (err) {
+      console.error('[NewOrgModal] create', err);
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  const INP: React.CSSProperties = {
+    fontSize: 13, padding: '8px 12px', borderRadius: 9,
+    border: '1px solid #e2e8f0', outline: 'none', background: 'white',
+    width: '100%', boxSizing: 'border-box' as const,
+  };
+  const LBL: React.CSSProperties = {
+    fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const,
+    letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 4, display: 'block',
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(15,23,42,0.35)' }} />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+        zIndex: 601, background: 'white', borderRadius: 20, padding: '24px',
+        width: 'min(480px, calc(100vw - 32px))', boxShadow: '0 20px 60px rgba(15,23,42,0.2)',
+      }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>New Organization</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>Add a new company or individual to your org database.</div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={LBL}>Name *</label>
+            <input style={INP} value={name} onChange={e => setName(e.target.value)} placeholder="Organization name" autoFocus />
+          </div>
+
+          <div>
+            <label style={LBL}>Type(s)</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {ALL_TYPES.map(t => {
+                const active = types.includes(t);
+                const c = TYPE_COLORS[t] || { color: '#64748b', bg: '#f8fafc' };
+                return (
+                  <button key={t}
+                    onClick={() => setTypes(p => active ? p.filter(x => x !== t) : [...p, t])}
+                    style={{
+                      fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
+                      textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+                      border: active ? `1.5px solid ${c.color}` : '1px solid #e2e8f0',
+                      background: active ? c.bg : 'white', color: active ? c.color : '#94a3b8',
+                    }}>
+                    {FILTER_LABELS[t] || t.replace(/_/g, ' ')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label style={LBL}>Island</label>
+            <select style={{ ...INP, cursor: 'pointer' }} value={island} onChange={e => setIsland(e.target.value)}>
+              <option value="">Select island</option>
+              {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={LBL}>Notes</label>
+            <textarea style={{ ...INP, resize: 'none', minHeight: 60 }} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Internal notes (optional)" />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={create} disabled={!name.trim() || creating}
+            style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: !name.trim() ? 'not-allowed' : 'pointer', opacity: !name.trim() ? 0.6 : 1 }}>
+            {creating ? 'Creating…' : 'Create Organization'}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Main Panel ─────────────────────────────────────────────────────────
+interface Props {
+  onNavigate?: (view: string, params?: Record<string, string>) => void;
+}
+
+export default function OrganizationsPanel({ onNavigate }: Props) {
+  const [orgs, setOrgs] = useState<OrgRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [showNewOrg, setShowNewOrg] = useState(false);
+
+  const load = useCallback(async (opts?: { nocache?: boolean }) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '500' });
+      if (opts?.nocache) params.set('nocache', '1');
+      const res = await fetch(`/api/organizations?${params}`);
+      const data = await res.json();
+      setOrgs(data.organizations || []);
+      setTotal(data.total || (data.organizations || []).length);
+    } catch (err) {
+      console.error('[OrganizationsPanel] load', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
+  // Client-side filter (search + type chip)
   const filtered = orgs.filter(o => {
-    if (search.length >= 2 && !o.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (typeFilter.length > 0 && !typeFilter.some(t => o.types.includes(t))) return false;
-    return true;
+    const q = search.toLowerCase();
+    const matchSearch = !q || q.length < 2 ||
+      o.name.toLowerCase().includes(q) ||
+      (o.primary_contact?.name || o.contactPerson || '').toLowerCase().includes(q);
+    const matchType = typeFilter === 'ALL' || o.types.includes(typeFilter);
+    return matchSearch && matchType;
   });
 
-  async function createOrg() {
-    if (!newOrgName.trim()) return;
-    setCreating(true);
-    await fetch('/api/organizations', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: newOrgName.trim(), types: newOrgTypes }) });
-    await load();
-    setNewOrgName(''); setNewOrgTypes(['RESIDENTIAL']); setShowAddOrg(false); setCreating(false);
-  }
-
-  const INP: React.CSSProperties = { fontSize:13, padding:'8px 12px', borderRadius:10, border:'1px solid #e2e8f0', outline:'none', background:'white', boxSizing:'border-box' };
+  // Sort: orgs with woCount > 0 first (desc), then alpha
+  const sorted = [...filtered].sort((a, b) => {
+    if (b.woCount !== a.woCount) return b.woCount - a.woCount;
+    return a.name.localeCompare(b.name);
+  });
 
   return (
-    <div style={{ padding:24, maxWidth:1100, margin:'0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom:20 }}>
-        <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.14em', textTransform:'uppercase', color:'#94a3b8', marginBottom:4 }}>People</div>
-        <div style={{ fontSize:24, fontWeight:900, color:'#0f172a', letterSpacing:'-0.03em', marginBottom:6 }}>Organizations</div>
-        <div style={{ fontSize:13, color:'#64748b' }}>
-          {loading ? 'Loading…' : `${filtered.length} of ${orgs.length} organizations`}
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search organizations…"
-          style={{ ...INP, flex:'0 0 240px' }} />
-        <div style={{ display:'flex', gap:6, flexWrap:'wrap', flex:1 }}>
-          {ALL_TYPES.map(t => {
-            const active = typeFilter.includes(t);
-            const c = TYPE_COLORS[t] || { color:'#64748b', bg:'#f8fafc' };
-            return <button key={t} onClick={() => setTypeFilter(p => active ? p.filter(x=>x!==t) : [...p,t])}
-              style={{ fontSize:10, fontWeight:800, padding:'4px 10px', borderRadius:999, cursor:'pointer', textTransform:'uppercase', letterSpacing:'0.04em',
-                border: active ? `1.5px solid ${c.color}` : '1px solid #e2e8f0',
-                background: active ? c.bg : 'white', color: active ? c.color : '#94a3b8' }}>
-              {t.replace('_',' ')}
-            </button>;
-          })}
-          {typeFilter.length > 0 && <button onClick={()=>setTypeFilter([])} style={{ fontSize:11, color:'#94a3b8', background:'none', border:'none', cursor:'pointer' }}>Clear</button>}
-        </div>
-        <button onClick={()=>setShowAddOrg(p=>!p)} style={{ padding:'8px 16px', borderRadius:10, background:'linear-gradient(135deg,#0f766e,#14b8a6)', color:'white', border:'none', fontSize:13, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
-          + New Org
-        </button>
-      </div>
-
-      {/* Add org form */}
-      {showAddOrg && (
-        <div style={{ background:'white', borderRadius:12, border:'1px solid #e2e8f0', padding:16, marginBottom:16 }}>
-          <div style={{ display:'flex', gap:10, marginBottom:10 }}>
-            <input style={{ ...INP, flex:1 }} placeholder="Organization name *" value={newOrgName} onChange={e=>setNewOrgName(e.target.value)} autoFocus />
+    <div style={{ display: 'flex', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+      {/* Left — list */}
+      <div style={{
+        width: selectedOrgId ? '38%' : '100%',
+        maxWidth: selectedOrgId ? 420 : undefined,
+        display: 'flex', flexDirection: 'column', borderRight: selectedOrgId ? '1px solid #f1f5f9' : 'none',
+        overflow: 'hidden', flexShrink: 0,
+        transition: 'width 0.2s ease',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>People</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>Organizations</div>
+            <button
+              onClick={() => setShowNewOrg(true)}
+              style={{ padding: '7px 14px', borderRadius: 9, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              + New Org
+            </button>
           </div>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>
+            {loading ? 'Loading…' : `${sorted.length} of ${total} organizations`}
+          </div>
+
+          {/* Search */}
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or contact…"
+            style={{
+              fontSize: 13, padding: '8px 12px', borderRadius: 10,
+              border: '1px solid #e2e8f0', outline: 'none', background: 'white',
+              width: '100%', boxSizing: 'border-box', marginBottom: 10,
+            }}
+          />
+
+          {/* Type chips */}
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
+            <button
+              onClick={() => setTypeFilter('ALL')}
+              style={{
+                fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
+                textTransform: 'uppercase', letterSpacing: '0.04em',
+                border: typeFilter === 'ALL' ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
+                background: typeFilter === 'ALL' ? '#f0fdfa' : 'white',
+                color: typeFilter === 'ALL' ? '#0f766e' : '#94a3b8',
+              }}>All</button>
             {ALL_TYPES.map(t => {
-              const active = newOrgTypes.includes(t);
-              const c = TYPE_COLORS[t] || { color:'#64748b', bg:'#f8fafc' };
-              return <button key={t} onClick={()=>setNewOrgTypes(p=>active?p.filter(x=>x!==t):[...p,t])}
-                style={{ fontSize:10, fontWeight:800, padding:'4px 10px', borderRadius:999, cursor:'pointer', textTransform:'uppercase', letterSpacing:'0.04em', border: active?`1.5px solid ${c.color}`:'1px solid #e2e8f0', background:active?c.bg:'white', color:active?c.color:'#94a3b8' }}>
-                {t.replace('_',' ')}
-              </button>;
+              const active = typeFilter === t;
+              const c = TYPE_COLORS[t] || { color: '#64748b', bg: '#f8fafc' };
+              return (
+                <button key={t}
+                  onClick={() => setTypeFilter(active ? 'ALL' : t)}
+                  style={{
+                    fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
+                    textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+                    border: active ? `1.5px solid ${c.color}` : '1px solid #e2e8f0',
+                    background: active ? c.bg : 'white', color: active ? c.color : '#94a3b8',
+                  }}>
+                  {FILTER_LABELS[t]}
+                </button>
+              );
             })}
           </div>
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={()=>setShowAddOrg(false)} style={{ flex:1, padding:'9px', borderRadius:10, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, fontWeight:700, cursor:'pointer' }}>Cancel</button>
-            <button onClick={createOrg} disabled={!newOrgName.trim()||creating} style={{ flex:2, padding:'9px', borderRadius:10, border:'none', background:'#0f766e', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>{creating?'Creating…':'Create Organization'}</button>
-          </div>
         </div>
-      )}
 
-      {/* Table */}
-      {loading ? (
-        <div style={{ textAlign:'center', color:'#94a3b8', padding:40 }}>Loading organizations…</div>
-      ) : (
-        <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', overflow:'hidden' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse' }}>
-            <thead>
-              <tr style={{ background:'#f8fafc', borderBottom:'1px solid #e2e8f0' }}>
-                {['Name','Types','Island','Primary Contact','Phone','Email'].map(h=>(
-                  <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:9, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:'#94a3b8' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:13 }}>No organizations match this filter.</td></tr>
-              ) : filtered.map((o, i) => (
-                <tr key={o.org_id} onClick={()=>setSelectedOrgId(o.org_id)}
-                  style={{ borderBottom:'1px solid #f1f5f9', cursor:'pointer', background: i%2===0?'white':'#fafafa' }}
-                  onMouseEnter={e=>(e.currentTarget.style.background='#f0fdfa')}
-                  onMouseLeave={e=>(e.currentTarget.style.background=i%2===0?'white':'#fafafa')}>
-                  <td style={{ padding:'10px 14px', fontWeight:700, fontSize:13, color:'#0f172a' }}>{o.name}</td>
-                  <td style={{ padding:'10px 14px' }}>
-                    <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
-                      {o.types.map(t=><TypeBadge key={t} type={t}/>)}
+        {/* Org rows */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 20px' }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading organizations…</div>
+          ) : sorted.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No organizations match this filter.</div>
+          ) : (
+            sorted.map(o => {
+              const isSelected = o.org_id === selectedOrgId;
+              const displayIsland = o.island || o.default_island || o.primary_site?.island || '';
+              return (
+                <div
+                  key={o.org_id}
+                  onClick={() => setSelectedOrgId(isSelected ? null : o.org_id)}
+                  style={{
+                    padding: '10px 12px', borderRadius: 10, marginBottom: 3, cursor: 'pointer',
+                    border: isSelected ? '1.5px solid #0f766e' : '1px solid transparent',
+                    background: isSelected ? '#f0fdfa' : 'white',
+                    transition: 'background 0.1s, border 0.1s',
+                  }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'white'; }}
+                >
+                  {/* Row top: name + WO count */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 5 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', lineHeight: 1.3, flex: 1, minWidth: 0, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {o.name}
                     </div>
-                  </td>
-                  <td style={{ padding:'10px 14px', fontSize:12, color:'#64748b' }}>{o.island||o.default_island||'—'}</td>
-                  <td style={{ padding:'10px 14px', fontSize:12, color:'#334155' }}>{o.primary_contact?.name||o.contactPerson||'—'}</td>
-                  <td style={{ padding:'10px 14px', fontSize:12, color:'#334155' }}>{o.primary_contact?.phone||o.contactPhone||'—'}</td>
-                  <td style={{ padding:'10px 14px', fontSize:12, color:'#64748b' }}>{o.primary_contact?.email||o.email||'—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {o.woCount > 0 && (
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: '#eff6ff', color: '#1d4ed8', flexShrink: 0 }}>
+                        {o.woCount} WO{o.woCount !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  {/* Row bottom: badges + island */}
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {o.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
+                    {displayIsland && (
+                      <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }}>{displayIsland}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
+      </div>
+
+      {/* Right — detail */}
+      {selectedOrgId && (
+        <OrgDetailPanel
+          orgId={selectedOrgId}
+          onClose={() => setSelectedOrgId(null)}
+          onNavigate={onNavigate}
+        />
       )}
 
-      {/* Detail panel */}
-      {selectedOrgId && <OrgDetailPanel orgId={selectedOrgId} onClose={()=>setSelectedOrgId(null)} />}
+      {/* New Org Modal */}
+      {showNewOrg && (
+        <NewOrgModal
+          onClose={() => setShowNewOrg(false)}
+          onCreated={() => {
+            setShowNewOrg(false);
+            load({ nocache: true });
+          }}
+        />
+      )}
     </div>
   );
 }
