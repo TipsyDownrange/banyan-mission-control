@@ -452,12 +452,41 @@ function OrgDetailPanel({
 }
 
 // ── New Org Modal ────────────────────────────────────────────────────────
+type OrgCategory = 'business' | 'person' | 'gc' | 'vendor';
+
+const ORG_CATEGORIES: { id: OrgCategory; emoji: string; label: string; sublabel: string; types: string[]; entity_type: string }[] = [
+  { id: 'business', emoji: '🏢', label: 'Business', sublabel: 'Hotel, retail, property, office', types: ['COMMERCIAL'], entity_type: 'COMPANY' },
+  { id: 'person',   emoji: '🏠', label: 'Person / Homeowner', sublabel: 'Individual residential customer', types: ['RESIDENTIAL'], entity_type: 'INDIVIDUAL' },
+  { id: 'gc',       emoji: '🔨', label: 'GC / Builder', sublabel: 'General contractor or builder', types: ['GC', 'COMMERCIAL'], entity_type: 'COMPANY' },
+  { id: 'vendor',   emoji: '📦', label: 'Vendor / Supplier', sublabel: 'Materials, equipment, subcontractor', types: ['VENDOR'], entity_type: 'COMPANY' },
+];
+
 function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [step, setStep] = useState<'category' | 'form'>('category');
+  const [category, setCategory] = useState<OrgCategory | null>(null);
+
+  // Form fields
   const [name, setName] = useState('');
-  const [types, setTypes] = useState<string[]>(['RESIDENTIAL']);
+  const [contactName, setContactName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
   const [island, setIsland] = useState('');
+  const [isPropMgmt, setIsPropMgmt] = useState(false);
+  const [isGovt, setIsGovt] = useState(false);
   const [notes, setNotes] = useState('');
   const [creating, setCreating] = useState(false);
+
+  const cat = ORG_CATEGORIES.find(c => c.id === category);
+  const isPersonal = category === 'person';
+
+  function buildTypes(): string[] {
+    const base = cat?.types || ['COMMERCIAL'];
+    const extras: string[] = [];
+    if (isPropMgmt) extras.push('PROPERTY_MGMT');
+    if (isGovt) extras.push('GOVERNMENT');
+    return [...new Set([...base, ...extras])];
+  }
 
   async function create() {
     if (!name.trim()) return;
@@ -466,7 +495,17 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
       const res = await fetch('/api/organizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), types, island, notes }),
+        body: JSON.stringify({
+          name: name.trim(),
+          types: buildTypes(),
+          entity_type: cat?.entity_type || 'COMPANY',
+          island,
+          notes,
+          contact_name: contactName.trim() || undefined,
+          contact_phone: phone.trim() || undefined,
+          contact_email: email.trim() || undefined,
+          address: address.trim() || undefined,
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       onCreated();
@@ -486,6 +525,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const,
     letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 4, display: 'block',
   };
+  const ROW2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
 
   return (
     <>
@@ -494,61 +534,141 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
         zIndex: 601, background: 'white', borderRadius: 20, padding: '24px',
         width: 'min(480px, calc(100vw - 32px))', boxShadow: '0 20px 60px rgba(15,23,42,0.2)',
+        maxHeight: '90vh', overflowY: 'auto',
       }}>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>New Organization</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Add a new company or individual to your org database.</div>
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={LBL}>Name *</label>
-            <input style={INP} value={name} onChange={e => setName(e.target.value)} placeholder="Organization name" autoFocus />
-          </div>
-
-          <div>
-            <label style={LBL}>Type(s)</label>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {ALL_TYPES.map(t => {
-                const active = types.includes(t);
-                const c = TYPE_COLORS[t] || { color: '#64748b', bg: '#f8fafc' };
-                return (
-                  <button key={t}
-                    onClick={() => setTypes(p => active ? p.filter(x => x !== t) : [...p, t])}
-                    style={{
-                      fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                      textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-                      border: active ? `1.5px solid ${c.color}` : '1px solid #e2e8f0',
-                      background: active ? c.bg : 'white', color: active ? c.color : '#94a3b8',
-                    }}>
-                    {FILTER_LABELS[t] || t.replace(/_/g, ' ')}
-                  </button>
-                );
-              })}
+        {/* ── Step 1: Category picker ── */}
+        {step === 'category' && (
+          <>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>New Customer</div>
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>What type of customer is this?</div>
             </div>
-          </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {ORG_CATEGORIES.map(c => (
+                <button key={c.id} onClick={() => { setCategory(c.id); setStep('form'); }}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: 6, padding: '20px 12px', borderRadius: 14, cursor: 'pointer',
+                    border: '1.5px solid #e2e8f0', background: '#fafafa',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#0f766e'; (e.currentTarget as HTMLButtonElement).style.background = '#f0fdfa'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLButtonElement).style.background = '#fafafa'; }}
+                >
+                  <span style={{ fontSize: 28 }}>{c.emoji}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>{c.label}</span>
+                  <span style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>{c.sublabel}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          </>
+        )}
 
-          <div>
-            <label style={LBL}>Island</label>
-            <select style={{ ...INP, cursor: 'pointer' }} value={island} onChange={e => setIsland(e.target.value)}>
-              <option value="">Select island</option>
-              {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
-          </div>
+        {/* ── Step 2: Type-specific form ── */}
+        {step === 'form' && cat && (
+          <>
+            <div style={{ marginBottom: 18 }}>
+              <button onClick={() => setStep('category')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0f766e', fontSize: 12, fontWeight: 700, padding: 0, marginBottom: 8 }}>← Back</button>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+                {cat.emoji} New {cat.label}
+              </div>
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>{cat.sublabel}</div>
+            </div>
 
-          <div>
-            <label style={LBL}>Notes</label>
-            <textarea style={{ ...INP, resize: 'none', minHeight: 60 }} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Internal notes (optional)" />
-          </div>
-        </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={create} disabled={!name.trim() || creating}
-            style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: !name.trim() ? 'not-allowed' : 'pointer', opacity: !name.trim() ? 0.6 : 1 }}>
-            {creating ? 'Creating…' : 'Create Organization'}
-          </button>
-        </div>
+              {/* Name field — context-aware label */}
+              <div>
+                <label style={LBL}>{isPersonal ? 'Full Name *' : 'Company Name *'}</label>
+                <input style={INP}
+                  value={name} onChange={e => setName(e.target.value)}
+                  placeholder={isPersonal ? 'e.g. Bob & Linda Smith' : cat.id === 'gc' ? 'e.g. Nordic PCL Construction' : 'e.g. Westin Maui Resort'}
+                  autoFocus />
+              </div>
+
+              {/* Contact person — businesses only */}
+              {!isPersonal && (
+                <div style={ROW2}>
+                  <div>
+                    <label style={LBL}>Contact Person</label>
+                    <input style={INP} value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Name" />
+                  </div>
+                  <div>
+                    <label style={LBL}>Phone</label>
+                    <input style={INP} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(808) 555-0000" />
+                  </div>
+                </div>
+              )}
+
+              {/* Phone for personal */}
+              {isPersonal && (
+                <div style={ROW2}>
+                  <div>
+                    <label style={LBL}>Phone</label>
+                    <input style={INP} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(808) 555-0000" autoFocus={false} />
+                  </div>
+                  <div>
+                    <label style={LBL}>Email</label>
+                    <input style={INP} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" />
+                  </div>
+                </div>
+              )}
+
+              {/* Email for businesses */}
+              {!isPersonal && (
+                <div>
+                  <label style={LBL}>Email</label>
+                  <input style={INP} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@company.com" />
+                </div>
+              )}
+
+              {/* Address */}
+              <div>
+                <label style={LBL}>Address</label>
+                <input style={INP} value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address (optional)" />
+              </div>
+
+              {/* Island + optional subcategories */}
+              <div style={ROW2}>
+                <div>
+                  <label style={LBL}>Island</label>
+                  <select style={{ ...INP, cursor: 'pointer' }} value={island} onChange={e => setIsland(e.target.value)}>
+                    <option value="">Select island</option>
+                    {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+                {category === 'business' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6, paddingBottom: 2 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
+                      <input type="checkbox" checked={isPropMgmt} onChange={e => setIsPropMgmt(e.target.checked)} />
+                      Property Mgmt
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
+                      <input type="checkbox" checked={isGovt} onChange={e => setIsGovt(e.target.checked)} />
+                      Government
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label style={LBL}>Notes</label>
+                <textarea style={{ ...INP, resize: 'none', minHeight: 56 }} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Internal notes (optional)" />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={create} disabled={!name.trim() || creating}
+                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: !name.trim() ? 'not-allowed' : 'pointer', opacity: !name.trim() ? 0.6 : 1 }}>
+                {creating ? 'Creating…' : `Create ${cat.label}`}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
