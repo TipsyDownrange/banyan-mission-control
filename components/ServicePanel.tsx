@@ -473,7 +473,7 @@ const READ_ONLY_BANNER = (
   </div>
 );
 
-export default function ServicePanel({ readOnly = false }: { readOnly?: boolean }) {
+export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly?: boolean; focusWoId?: string | null }) {
   const { data: session } = useSession();
   const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
   // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
@@ -488,7 +488,7 @@ export default function ServicePanel({ readOnly = false }: { readOnly?: boolean 
   const [quoteWO, setQuoteWO] = useState<string | null>(null);
   const [quoteEstimateData, setQuoteEstimateData] = useState<EstimateTotals | undefined>(undefined);
   const [estimateWO, setEstimateWO] = useState<WorkOrder | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(focusWoId || null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
   const [filter, setFilter] = useState(defaultFilter);
   const [search, setSearch] = useState('');

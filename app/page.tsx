@@ -48,6 +48,7 @@ export type AppView =
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
+  const [focusWoId, setFocusWoId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -179,8 +180,13 @@ export default function Home() {
         {activeView === 'Estimating Workspace' && <EstimatingWorkspace />}
         {activeView === 'Bid Intake'    && <BidIntakePanel />}
         {activeView === 'My Bids'       && <EstimatorWorkspace currentUser={demoUser} />}
-        {activeView === 'Work Orders'   && <ServicePanel readOnly={isReadOnly('Work Orders')} />}
-        {activeView === 'Customers'     && <OrganizationsPanel />}
+        {activeView === 'Work Orders'   && <ServicePanel readOnly={isReadOnly('Work Orders')} focusWoId={focusWoId} />}
+        {activeView === 'Customers'     && <OrganizationsPanel onNavigate={(section, params) => {
+          if (section === 'workorders' && params?.woId) {
+            setFocusWoId(params.woId);
+            setActiveView('Work Orders');
+          }
+        }} />}
         {activeView === 'Assets'        && <AssetsPanel />}
         {activeView === 'Org Chart'     && <OrgChartPanel />}
         {activeView === 'Forecasting'   && <SuperSchedulingPanel />}
