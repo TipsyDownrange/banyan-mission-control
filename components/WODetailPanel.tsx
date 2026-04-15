@@ -688,7 +688,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             setShowVendorDropdown(true);
                             if (vendorResults.length === 0) {
                               try {
-                                const vRes = await fetch('/api/organizations?type=VENDOR&limit=100');
+                                const vRes = await fetch('/api/organizations?types=VENDOR&limit=100');
                                 const vData = await vRes.json();
                                 setVendorResults(vData.organizations || vData || []);
                               } catch(err) { console.error('[WODetailPanel] loadVendors', err); }
