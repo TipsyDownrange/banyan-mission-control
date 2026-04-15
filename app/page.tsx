@@ -185,6 +185,8 @@ export default function Home() {
           if (section === 'workorders' && params?.woId) {
             setFocusWoId(params.woId);
             setActiveView('Work Orders');
+            // Clear after 1s so re-clicking same WO works
+            setTimeout(() => setFocusWoId(null), 1000);
           }
         }} />}
         {activeView === 'Assets'        && <AssetsPanel />}

@@ -207,7 +207,7 @@ function WOCard({
   const canDispatch = dispatchDraft.scheduledDate && dispatchDraft.selectedCrew.length > 0;
 
   return (
-    <article style={{ borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
+    <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 5, background: stage.color, opacity: 0.8 }} />
 
       {/* Card header — compact, single-row */}
@@ -494,6 +494,17 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const [estimateWO, setEstimateWO] = useState<WorkOrder | null>(null);
   const [expanded, setExpanded] = useState<string | null>(focusWoId || null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
+
+  // Scroll to focused WO when navigating from Org panel
+  useEffect(() => {
+    if (!focusWoId) return;
+    setExpanded(focusWoId);
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-wo-id="${focusWoId}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [focusWoId]);
   const [filter, setFilter] = useState(defaultFilter);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('date_desc');

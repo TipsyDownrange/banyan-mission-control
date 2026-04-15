@@ -101,6 +101,9 @@ interface WODetailPanelProps {
 export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onEstimate, onFolderLinked }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [procurementItems, setProcurementItems] = useState<any[]>([]);
+  const [showAddMaterial, setShowAddMaterial] = useState(false);
+  const [newMaterial, setNewMaterial] = useState({ description:'', supplier:'', order_method:'ONLINE', quantity:'1', unit_cost:'', ordered_date:new Date().toISOString().slice(0,10), eta_date:'', tracking_number:'' });
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
   const [showCloseModal, setShowCloseModal] = useState(false);
@@ -129,6 +132,15 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       .then(data => setCustomers(data.customers || data || []))
       .catch(err => console.error('[WODetailPanel] Failed to load customers:', err));
   }, []);
+
+  // Load procurement items when WO changes
+  useEffect(() => {
+    if (!wo?.id) return;
+    fetch(`/api/procurement?wo_id=${wo.id}`)
+      .then(r => r.json())
+      .then(d => setProcurementItems(d.items || []))
+      .catch(err => console.error('[WODetailPanel] loadProcurement', err));
+  }, [wo?.id]);
 
   async function handleLinkFolder() {
     if (!linkFolderInput || !wo) return;
@@ -390,6 +402,15 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               $ Quote
             </button>
             <button
+              onClick={() => {
+                const el = document.getElementById('procurement-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              title="Jump to Materials & Procurement"
+              style={{ padding: '7px 14px', borderRadius: 10, background: '#fff7ed', border: '1px solid rgba(249,115,22,0.2)', color: '#c2410c', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              📦 Materials
+            </button>
+            <button
               onClick={async () => {
                 try {
                   const res = await fetch(`/api/service/dispatch-pdf?wo=${encodeURIComponent(wo.id)}`);
@@ -599,6 +620,114 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       style={INP}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Procurement & Billing */}
+              <div id="procurement-section" style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <div style={SECTION_TITLE}>Procurement &amp; Billing</div>
+
+                {/* Quote & Deposit sub-card */}
+                <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid #e2e8f0', padding: '12px 14px', marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Quote &amp; Deposit</div>
+                  {(safeWo as any).quote_total ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, color: '#475569' }}>Quote Total</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>${Number((safeWo as any).quote_total).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 12, color: '#475569' }}>Deposit (50%)</span>
+                        <span style={{ fontSize: 12, color: '#475569' }}>${(Number((safeWo as any).quote_total) * 0.5).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                      </div>
+                      {safeWo.status === 'deposit_received' || safeWo.status === 'materials_ordered' || safeWo.status === 'materials_received' || safeWo.status === 'ready_to_schedule' ? (
+                        <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700 }}>✅ Deposit Received</div>
+                      ) : (
+                        <button onClick={async () => {
+                          if (!confirm('Mark deposit as received?')) return;
+                          await onStageChange(safeWo.id, 'deposit_received');
+                        }} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 7, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: '#475569', fontWeight: 700 }}>
+                          Mark Deposit Received
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>No quote total set. Generate a quote first.</div>
+                  )}
+                </div>
+
+                {/* Materials sub-card */}
+                <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid #e2e8f0', padding: '12px 14px', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Materials</div>
+                    <button onClick={() => setShowAddMaterial(p => !p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid #0f766e', background: showAddMaterial ? '#0f766e' : 'white', color: showAddMaterial ? 'white' : '#0f766e', cursor: 'pointer', fontWeight: 700 }}>
+                      {showAddMaterial ? '✕ Cancel' : '+ Add Material'}
+                    </button>
+                  </div>
+
+                  {/* Inline add form */}
+                  {showAddMaterial && (
+                    <div style={{ background: 'white', borderRadius: 9, border: '1px solid #e2e8f0', padding: '12px', marginBottom: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                        <div><label style={LBL}>Description *</label><input style={INP} value={newMaterial.description} onChange={e => setNewMaterial(p=>({...p,description:e.target.value}))} placeholder='1" IGU grey tinted' /></div>
+                        <div><label style={LBL}>Supplier</label><input style={INP} value={newMaterial.supplier} onChange={e => setNewMaterial(p=>({...p,supplier:e.target.value}))} placeholder="GPH, CRL, Lockwood..." /></div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+                        <div><label style={LBL}>Method</label>
+                          <select style={{...INP,cursor:'pointer'}} value={newMaterial.order_method} onChange={e=>setNewMaterial(p=>({...p,order_method:e.target.value}))}>
+                            <option value="ONLINE">Online</option><option value="PHONE">Phone</option><option value="WALK_IN">Walk-in</option><option value="PO">PO</option>
+                          </select>
+                        </div>
+                        <div><label style={LBL}>Qty</label><input style={INP} type="number" value={newMaterial.quantity} onChange={e=>setNewMaterial(p=>({...p,quantity:e.target.value}))} placeholder="1" /></div>
+                        <div><label style={LBL}>Unit Cost</label><input style={INP} type="number" value={newMaterial.unit_cost} onChange={e=>setNewMaterial(p=>({...p,unit_cost:e.target.value}))} placeholder="0.00" /></div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                        <div><label style={LBL}>Order Date</label><input style={INP} type="date" value={newMaterial.ordered_date} onChange={e=>setNewMaterial(p=>({...p,ordered_date:e.target.value}))} /></div>
+                        <div><label style={LBL}>ETA</label><input style={INP} type="date" value={newMaterial.eta_date} onChange={e=>setNewMaterial(p=>({...p,eta_date:e.target.value}))} /></div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={async () => {
+                          if (!newMaterial.description.trim()) return;
+                          const procId = 'proc_' + Math.random().toString(36).slice(2,14);
+                          try {
+                            await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, ...newMaterial, procurement_id:procId }) });
+                            setProcurementItems(p => [...p, { procurement_id:procId, wo_id:safeWo.id, status:'ORDERED', ...newMaterial }]);
+                            setNewMaterial({ description:'', supplier:'', order_method:'ONLINE', quantity:'1', unit_cost:'', ordered_date:new Date().toISOString().slice(0,10), eta_date:'', tracking_number:'' });
+                            setShowAddMaterial(false);
+                            if (['accepted','deposit_received'].includes(safeWo.status)) await onStageChange(safeWo.id, 'materials_ordered');
+                          } catch(err) { console.error('[WODetailPanel] addMaterial', err); }
+                        }} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#0f766e,#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>
+                          Save Material
+                        </button>
+                        <button onClick={() => setShowAddMaterial(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, cursor:'pointer' }}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Material items list */}
+                  {procurementItems.length === 0 && !showAddMaterial && (
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>No materials tracked yet.</div>
+                  )}
+                  {procurementItems.map(item => (
+                    <div key={item.procurement_id} style={{ background:'white', borderRadius:9, border:'1px solid #e2e8f0', padding:'10px 12px', marginBottom:6 }}>
+                      <div style={{ fontWeight:700, fontSize:13, color:'#0f172a', marginBottom:2 }}>{item.description}</div>
+                      {item.supplier && <div style={{ fontSize:11, color:'#94a3b8' }}>{item.supplier} · {item.order_method}</div>}
+                      <div style={{ display:'flex', gap:8, marginTop:4, alignItems:'center' }}>
+                        {item.eta_date && <span style={{ fontSize:11, color:'#64748b' }}>ETA: {item.eta_date}</span>}
+                        <span style={{ fontSize:10, fontWeight:800, padding:'2px 7px', borderRadius:999, background: item.status==='DELIVERED'?'#f0fdf4':item.status==='ORDERED'?'#fffbeb':'#f0f9ff', color: item.status==='DELIVERED'?'#15803d':item.status==='ORDERED'?'#92400e':'#0369a1' }}>{item.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Invoice placeholder */}
+                <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid #e2e8f0', padding: '12px 14px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Invoice</div>
+                  {['completed','work_complete','invoiced','paid','closed'].includes(safeWo.status) ? (
+                    <div style={{ fontSize: 12, color: '#475569' }}>Ready to invoice. Generate in QuickBooks.</div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>Available after field work is complete.</div>
+                  )}
                 </div>
               </div>
 
