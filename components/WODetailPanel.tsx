@@ -1279,7 +1279,17 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Crew Assignment - {woIsland || 'All Islands'}</div>
                 {islandCrew.length === 0 ? (
-                  <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>No field crew found for {wo.island || 'this island'}.</div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually:</div>
+                    <input style={{ fontSize: 13, padding: '7px 11px', borderRadius: 9, border: '1px solid #e2e8f0', outline: 'none', width: '100%', boxSizing: 'border-box' as const }}
+                      defaultValue={safeWo.assignedTo || ''}
+                      placeholder="e.g. Karl Nakamura, Joey Ritthaler"
+                      onBlur={e => {
+                        const val = e.target.value.trim();
+                        setSelectedCrew(val ? val.split(',').map(s=>s.trim()).filter(Boolean) : []);
+                        onSave(safeWo.id, { assignedTo: val }).catch(err => console.error('[WODetailPanel] saveAssigned', err));
+                      }} />
+                  </div>
                 ) : (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                     {islandCrew.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i).map(c => {
