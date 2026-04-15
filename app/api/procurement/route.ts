@@ -9,6 +9,7 @@ const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 // A: proc_id | B: kID | C: item_description | D: vendor | E: activity_ref
 // F: order_deadline | G: lead_time_weeks | H: ordered_date | I: po_number
 // J: eta_date | K: delivered_date | L: status | M: notes
+// N: qty | O: unit_cost | P: total_cost  (added 2026-04-15)
 const H = {
   procurement_id: 0,    // A — proc_id
   wo_id: 1,             // B — kID
@@ -23,6 +24,9 @@ const H = {
   received_date: 10,    // K — delivered_date
   status: 11,           // L — status
   notes: 12,            // M — notes (stores inspection result as "[RESULT] notes")
+  qty: 13,              // N — qty
+  unit_cost: 14,        // O — unit_cost
+  total_cost: 15,       // P — total_cost
 };
 
 function colLetter(idx: number): string {
@@ -51,6 +55,9 @@ function rowToItem(r: string[]) {
     status: r[H.status] || 'ORDERED',
     inspection_status,
     inspection_notes,
+    qty: r[H.qty] || '',
+    unit_cost: r[H.unit_cost] || '',
+    total_cost: r[H.total_cost] || '',
   };
 }
 
@@ -65,7 +72,7 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:M2000',
+      range: 'Procurement!A2:P2000',
     });
     const rows = (res.data.values || []) as string[][];
     const items = rows
@@ -84,7 +91,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const body = await req.json();
-  const { procurement_id, wo_id, description, supplier, supplier_order_ref, ordered_date, eta_date, tracking_number } = body;
+  const { procurement_id, wo_id, description, supplier, supplier_order_ref, ordered_date, eta_date, tracking_number, qty, unit_cost } = body;
   if (!wo_id || !description?.trim()) {
     return NextResponse.json({ error: 'wo_id and description required' }, { status: 400 });
   }
@@ -93,7 +100,8 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const now = new Date().toISOString();
     const procId = procurement_id || ('proc_' + Math.random().toString(36).slice(2, 14));
-    const row = new Array(13).fill('');
+    const totalCost = qty && unit_cost ? String(Number(qty) * Number(unit_cost)) : '';
+    const row = new Array(16).fill('');
     row[H.procurement_id] = procId;
     row[H.wo_id] = wo_id;
     row[H.description] = description.trim();
@@ -103,9 +111,12 @@ export async function POST(req: Request) {
     row[H.tracking_number] = tracking_number || '';
     row[H.eta_date] = eta_date || '';
     row[H.status] = 'ORDERED';
+    row[H.qty] = qty ? String(qty) : '';
+    row[H.unit_cost] = unit_cost ? String(unit_cost) : '';
+    row[H.total_cost] = totalCost;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A:M',
+      range: 'Procurement!A:P',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
     });
@@ -129,7 +140,7 @@ export async function PATCH(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:M5000',
+      range: 'Procurement!A2:P5000',
     });
     const rows = (res.data.values || []) as string[][];
     const idx = rows.findIndex(r => r[H.procurement_id] === procurement_id);
@@ -146,6 +157,9 @@ export async function PATCH(req: Request) {
       eta_date: H.eta_date,
       received_date: H.received_date,
       status: H.status,
+      qty: H.qty,
+      unit_cost: H.unit_cost,
+      total_cost: H.total_cost,
     };
 
     const patchData: { range: string; values: string[][] }[] = [];
@@ -199,7 +213,7 @@ export async function DELETE(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:M5000',
+      range: 'Procurement!A2:P5000',
     });
     const rows = (res.data.values || []) as string[][];
     const idx = rows.findIndex(r => r[H.procurement_id] === procurement_id);

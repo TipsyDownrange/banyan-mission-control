@@ -695,8 +695,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           if (!newMaterial.description.trim()) return;
                           const procId = 'proc_' + Math.random().toString(36).slice(2,14);
                           try {
-                            await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, ...newMaterial, procurement_id:procId }) });
-                            setProcurementItems(p => [...p, { procurement_id:procId, wo_id:safeWo.id, status:'ORDERED', ...newMaterial }]);
+                            const totalCost = newMaterial.quantity && newMaterial.unit_cost ? String(Number(newMaterial.quantity)*Number(newMaterial.unit_cost)) : '';
+                            await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, ...newMaterial, qty:newMaterial.quantity, total_cost:totalCost, procurement_id:procId }) });
+                            setProcurementItems(p => [...p, { procurement_id:procId, wo_id:safeWo.id, status:'ORDERED', ...newMaterial, qty:newMaterial.quantity, total_cost:totalCost }]);
                             setNewMaterial({ description:'', supplier:'', order_method:'ONLINE', quantity:'1', unit_cost:'', ordered_date:new Date().toISOString().slice(0,10), eta_date:'', tracking_number:'' });
                             setShowAddMaterial(false);
                             if (['accepted','deposit_received'].includes(safeWo.status)) await onStageChange(safeWo.id, 'materials_ordered');
@@ -731,7 +732,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
                           <div>
                             <div style={{ fontWeight:700, fontSize:13, color:'#0f172a' }}>{item.description}</div>
-                            {item.supplier && <div style={{ fontSize:11, color:'#94a3b8', marginTop:1 }}>{item.supplier}{item.order_method ? ` · ${item.order_method}` : ''}</div>}
+                            {item.supplier && <div style={{ fontSize:11, color:'#94a3b8', marginTop:1 }}>{item.supplier}{item.order_method ? ` · ${item.order_method}` : ''}{(item.qty || item.unit_cost) ? ` · ${item.qty || '1'} × $${Number(item.unit_cost||0).toFixed(2)} = $${Number(item.total_cost || (Number(item.qty||1)*Number(item.unit_cost||0))).toFixed(2)}` : ''}</div>}
                           </div>
                           <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                             <span style={{ fontSize:10, fontWeight:800, padding:'2px 8px', borderRadius:999, background:sc.bg, color:sc.color }}>{item.status}</span>
