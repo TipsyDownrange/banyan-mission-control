@@ -22,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgId: 
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:L5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Contacts!A2:J2000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Sites!A2:M5000' }),
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:M2000' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:AQ2000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Core_Entities!A2:L200' }),
     ]);
     const orgRow = (orgsRes.data.values || []).find(r => r[0] === orgId);
@@ -33,7 +33,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgId: 
     const sites = (siteRes.data.values || []).filter(r => r[1] === orgId).map(r => ({
       site_id: r[0], org_id: r[1], name: r[2], address_line_1: r[3], address_line_2: r[4], city: r[5], state: r[6], zip: r[7], island: r[8], google_place_id: r[9], site_type: r[10], notes: r[11],
     }));
-    const linkedWOs = (woRes.data.values || []).filter(r => r[12] === orgId || (orgRow[1] && r[12]?.toLowerCase()===orgRow[1]?.toLowerCase())).map(r => ({
+    // col 42 = org_id (AQ); col 12 = customer_name (M) fallback for old records
+    const linkedWOs = (woRes.data.values || []).filter(r => r[42] === orgId || r[12] === orgId).map(r => ({
       id: r[0], woNumber: r[1], name: r[2], status: r[4], island: r[5],
     })).slice(0, 20);
     const linkedProjects = (ceRes.data.values || []).filter(r => r[9]===orgId || r[10]===orgId || r[11]===orgId).map(r => ({
