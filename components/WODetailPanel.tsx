@@ -21,7 +21,7 @@ type WorkOrder = {
   customer_name?: string;
   folderUrl?: string;
   systemType?: string;
-  // QBO invoice fields (columns AA–AE)
+  // QBO invoice fields (columns AA-AE)
   qbo_invoice_id?: string;
   invoice_number?: string;
   invoice_total?: string;
@@ -103,7 +103,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [procurementOrders, setProcurementOrders] = useState<any[]>([]);
   const [showAddQuote, setShowAddQuote] = useState(false);
-  const [newQuote, setNewQuote] = useState({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', line_items:[{ description:'', quantity:'1', unit:'EA', unit_cost:'' }] });
+  const [newQuote, setNewQuote] = useState({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', quote_document_url:'', quote_document_name:'', line_items:[{ description:'', quantity:'1', unit:'EA', unit_cost:'' }] });
   const [vendorSearch, setVendorSearch] = useState('');
   const [vendorResults, setVendorResults] = useState<any[]>([]);
   const [showVendorDropdown, setShowVendorDropdown] = useState(false);
@@ -164,7 +164,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setLinkingFolder(false);
       setLinkFolderInput('');
     } catch {
-      // swallow — not critical
+      // swallow - not critical
     } finally {
       setLinkFolderSaving(false);
     }
@@ -173,7 +173,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const initializedRef = useRef(false);
   useEffect(() => {
     if (!wo) return;
-    // Only initialize draft on first mount — don't wipe user edits on re-render
+    // Only initialize draft on first mount - don't wipe user edits on re-render
     if (initializedRef.current) return;
     initializedRef.current = true;
     setDraft({
@@ -229,7 +229,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   function update(field: string, value: string) {
     setDraft(prev => ({ ...prev, [field]: value }));
     setDirty(true);
-    // Auto-save after 2s of inactivity — reads latest draft via ref
+    // Auto-save after 2s of inactivity - reads latest draft via ref
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
       const latest = { ...draftRef.current, [field]: value };
@@ -272,7 +272,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   async function handleStageChange(stageKey: string) {
-    // 'closed' requires confirmation modal — intercept here
+    // 'closed' requires confirmation modal - intercept here
     if (stageKey === 'closed') {
       setShowCloseModal(true);
       return;
@@ -438,7 +438,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 onClick={handleSave}
                 disabled={saving}
                 style={{ padding: '7px 16px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
-                {saving ? 'Saving…' : 'Save Changes'}
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             )}
             {readOnly && <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, padding: '4px 10px', background: 'rgba(245,158,11,0.08)', borderRadius: 8 }}>👁 View only</div>}
@@ -487,14 +487,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           </div>
         )}
 
-        {/* Scrollable body — two-column layout */}
+        {/* Scrollable body - two-column layout */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 1100, margin: '0 auto' }}>
 
             {/* ── LEFT COLUMN ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              {/* Pipeline Stage — first thing Joey sees */}
+              {/* Pipeline Stage - first thing Joey sees */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Pipeline Stage</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
@@ -515,7 +515,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           opacity: stageSaving && !isActive ? 0.5 : 1,
                           transition: 'all 0.1s',
                         }}>
-                        {isSaving ? '…' : s.label}
+                        {isSaving ? '...' : s.label}
                       </button>
                     );
                   })}
@@ -537,19 +537,19 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       style={{ ...INP, resize: 'none' }}
                       value={draft.description || ''}
                       onChange={e => update('description', e.target.value)}
-                      placeholder="What needs to be done…"
+                      placeholder="What needs to be done..."
                     />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label style={LBL}>Island</label>
                       <select style={INP} value={draft.island || ''} onChange={e => update('island', e.target.value)}>
-                        <option value="">Select…</option>
+                        <option value="">Select...</option>
                         {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(isl => <option key={isl}>{isl}</option>)}
                       </select>
                     </div>
                     <div>
-                      {/* Lane field removed — was a derived status, not real data */}
+                      {/* Lane field removed - was a derived status, not real data */}
                     </div>
                   </div>
                 </div>
@@ -624,7 +624,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         update('address', place.formatted_address);
                         if (place.island) update('island', place.island);
                       }}
-                      placeholder="Start typing an address…"
+                      placeholder="Start typing an address..."
                       style={INP}
                     />
                   </div>
@@ -724,41 +724,86 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <div><label style={LBL}>Valid Until</label><input style={INP} type="date" value={newQuote.quote_valid_until} onChange={e => setNewQuote(p => ({...p, quote_valid_until: e.target.value}))} /></div>
                       </div>
 
-                      {/* Line items */}
+                      {/* Line items with headers + live totals */}
                       <div style={{ marginBottom: 8 }}>
                         <label style={LBL}>Line Items</label>
-                        {newQuote.line_items.map((li, i) => (
-                          <div key={i} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr auto', gap: 6, marginBottom: 6, alignItems: 'center' }}>
-                            <input style={INP} value={li.description} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, description: e.target.value} : x)}))} placeholder="Description" />
-                            <input style={INP} type="number" value={li.quantity} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, quantity: e.target.value} : x)}))} placeholder="Qty" />
-                            <select style={{...INP, cursor:'pointer'}} value={li.unit} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit: e.target.value} : x)}))}>
+                        {/* Column headers */}
+                        <div style={{ display:'grid', gridTemplateColumns:'3fr 1fr 1fr 1fr 80px 20px', gap:6, marginBottom:3, padding:'0 2px' }}>
+                          {['DESCRIPTION','QTY','UOM','UNIT COST','LINE TOTAL',''].map(h=><span key={h} style={{fontSize:9,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</span>)}
+                        </div>
+                        {newQuote.line_items.map((li, i) => {
+                          const lineTotal = (Number(li.quantity)||0) * (Number(li.unit_cost)||0);
+                          return (
+                          <div key={i} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 80px 20px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                            <input style={INP} value={li.description} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, description: e.target.value} : x)}))} placeholder="e.g. 1&quot; IGU, grey tinted" />
+                            <input style={INP} type="number" min="0" value={li.quantity} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, quantity: e.target.value} : x)}))} placeholder="1" />
+                            <select style={{...INP, cursor:'pointer'}} value={li.unit} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit: e.target.value} : x)}))}>  
                               <option value="EA">EA</option><option value="LF">LF</option><option value="SF">SF</option><option value="LOT">LOT</option>
                             </select>
-                            <input style={INP} type="number" value={li.unit_cost} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit_cost: e.target.value} : x)}))} placeholder="Unit $" />
-                            {newQuote.line_items.length > 1 && (
-                              <button onClick={() => setNewQuote(p => ({...p, line_items: p.line_items.filter((_, j) => j !== i)}))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: 14, padding: '0 4px' }}>✕</button>
-                            )}
+                            <input style={INP} type="number" min="0" step="0.01" value={li.unit_cost} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit_cost: e.target.value} : x)}))} placeholder="$0.00" />
+                            <span style={{fontSize:12,fontWeight:700,color:'#0f172a',textAlign:'right',paddingRight:4}}>${lineTotal.toFixed(2)}</span>
+                            {newQuote.line_items.length > 1 ? (
+                              <button onClick={() => setNewQuote(p => ({...p, line_items: p.line_items.filter((_, j) => j !== i)}))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 14, padding: 0, lineHeight:1 }}>×</button>
+                            ) : <span />}
                           </div>
-                        ))}
-                        <button onClick={() => setNewQuote(p => ({...p, line_items: [...p.line_items, {description:'', quantity:'1', unit:'EA', unit_cost:''}]}))} style={{ fontSize: 11, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 0' }}>+ Add Line Item</button>
+                        );})}
+                        {/* Quote total + add button */}
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:4, padding:'6px 0 2px' }}>
+                          <button onClick={() => setNewQuote(p => ({...p, line_items: [...p.line_items, {description:'', quantity:'1', unit:'EA', unit_cost:''}]}))} style={{ fontSize: 11, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}>+ Add Line Item</button>
+                          <div style={{fontSize:13,fontWeight:800,color:'#0f172a'}}>
+                            Quote Total: ${newQuote.line_items.reduce((s,li)=>s+(Number(li.quantity)||0)*(Number(li.unit_cost)||0),0).toFixed(2)}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Notes */}
-                      <div style={{ marginBottom: 10 }}>
+                      <div style={{ marginBottom: 8 }}>
                         <label style={LBL}>Notes</label>
                         <input style={INP} value={newQuote.notes} onChange={e => setNewQuote(p => ({...p, notes: e.target.value}))} placeholder="Optional notes" />
+                      </div>
+
+                      {/* Document attachment */}
+                      <div style={{ marginBottom: 10 }}>
+                        <label style={LBL}>Attach Vendor Quote (PDF)</label>
+                        {newQuote.quote_document_url ? (
+                          <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12,padding:'6px 0'}}>
+                            <span>📎</span>
+                            <a href={newQuote.quote_document_url} target="_blank" rel="noopener noreferrer" style={{color:'#0f766e',fontWeight:600}}>{newQuote.quote_document_name||'Document'}</a>
+                            <button onClick={()=>setNewQuote(p=>({...p,quote_document_url:'',quote_document_name:''}))} style={{fontSize:10,color:'#94a3b8',background:'none',border:'none',cursor:'pointer'}}>Remove</button>
+                          </div>
+                        ) : (
+                          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                            <label style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'#475569',fontWeight:600,cursor:'pointer',padding:'6px 10px',borderRadius:7,border:'1px dashed #cbd5e1',background:'#fafafa',whiteSpace:'nowrap'}}>
+                              📎 Upload File
+                              <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{display:'none'}} onChange={async e=>{
+                                const f=e.target.files?.[0]; if(!f) return;
+                                const fd=new FormData(); fd.append('file',f); fd.append('wo_id',safeWo.id); fd.append('procurement_id','pending');
+                                try{
+                                  const r=await fetch('/api/procurement/upload',{method:'POST',body:fd});
+                                  const d=await r.json();
+                                  if(d.success) setNewQuote(p=>({...p,quote_document_url:d.file_url,quote_document_name:d.file_name}));
+                                }catch(err){console.error('[WODetailPanel] uploadQuoteDoc',err);}
+                              }} />
+                            </label>
+                            <span style={{fontSize:11,color:'#94a3b8'}}>or paste URL</span>
+                            <input style={{...INP,flex:1,fontSize:11,padding:'5px 9px'}} placeholder="https://drive.google.com/..." onBlur={async e=>{
+                              const url=e.target.value.trim(); if(!url) return;
+                              setNewQuote(p=>({...p,quote_document_url:url,quote_document_name:url.split('/').pop()?.split('?')[0]||'Document'}));
+                            }} />
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={async () => {
                           if (!newQuote.vendor_name.trim() || newQuote.line_items.every(li => !li.description.trim())) return;
                           try {
-                            const qRes = await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, vendor_org_id:newQuote.vendor_org_id, vendor_name:newQuote.vendor_name, quote_date:newQuote.quote_date, quote_valid_until:newQuote.quote_valid_until, notes:newQuote.notes, line_items:newQuote.line_items }) });
+                            const qRes = await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, vendor_org_id:newQuote.vendor_org_id, vendor_name:newQuote.vendor_name, quote_date:newQuote.quote_date, quote_valid_until:newQuote.quote_valid_until, notes:newQuote.notes, quote_document_url:newQuote.quote_document_url, quote_document_name:newQuote.quote_document_name, line_items:newQuote.line_items }) });
                             const qData = await qRes.json();
                             if (qData.success) {
                               const total = newQuote.line_items.reduce((s, li) => s + ((Number(li.quantity)||0) * (Number(li.unit_cost)||0)), 0);
-                              setProcurementOrders(p => [...p, { procurement_id:qData.procurement_id, wo_id:safeWo.id, vendor_org_id:newQuote.vendor_org_id, vendor_name:newQuote.vendor_name, status:'VENDOR_QUOTED', quote_date:newQuote.quote_date, quote_valid_until:newQuote.quote_valid_until, notes:newQuote.notes, line_items:newQuote.line_items.map(li => ({...li, line_total:(Number(li.quantity)||0)*(Number(li.unit_cost)||0)})), total_cost:total }]);
-                              setNewQuote({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', line_items:[{description:'', quantity:'1', unit:'EA', unit_cost:''}] });
+                              setProcurementOrders(p => [...p, { procurement_id:qData.procurement_id, wo_id:safeWo.id, vendor_org_id:newQuote.vendor_org_id, vendor_name:newQuote.vendor_name, status:'VENDOR_QUOTED', quote_date:newQuote.quote_date, quote_valid_until:newQuote.quote_valid_until, notes:newQuote.notes, quote_document_url:newQuote.quote_document_url, quote_document_name:newQuote.quote_document_name, line_items:newQuote.line_items.map(li => ({...li, line_total:(Number(li.quantity)||0)*(Number(li.unit_cost)||0)})), total_cost:total }]);
+                              setNewQuote({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', quote_document_url:'', quote_document_name:'', line_items:[{description:'', quantity:'1', unit:'EA', unit_cost:''}] });
                               setVendorSearch('');
                               setShowAddQuote(false);
                             }
@@ -915,7 +960,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         {/* Inspection prompt */}
                         {isInspecting && (
                           <div style={{ marginTop:10, background:'#f0fdf4', borderRadius:8, border:'1px solid #bbf7d0', padding:'12px' }}>
-                            <div style={{ fontSize:11, fontWeight:800, color:'#15803d', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.07em' }}>Mark as Received — Inspection</div>
+                            <div style={{ fontSize:11, fontWeight:800, color:'#15803d', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.07em' }}>Mark as Received - Inspection</div>
                             <div style={{ display:'flex', gap:6, marginBottom:8, flexWrap:'wrap' }}>
                               {(['PASS','DAMAGED','WRONG_ITEM','SHORT_COUNT'] as const).map(result => (
                                 <button key={result} onClick={async () => {
@@ -961,7 +1006,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </div>
               </div>
 
-              {/* Invoicing — Dynamic invoice list */}
+              {/* Invoicing - Dynamic invoice list */}
               {(() => {
                 type InvoiceRow = { id: string; type: string; status: string; amount: string; invoice_num: string; date_sent: string; date_paid: string; };
                 // Parse invoices_json, fallback to old cols for legacy data
@@ -1055,7 +1100,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   style={{ ...INP, resize: 'none' }}
                   value={draft.comments || ''}
                   onChange={e => update('comments', e.target.value)}
-                  placeholder="Internal notes, follow-ups, customer requests…"
+                  placeholder="Internal notes, follow-ups, customer requests..."
                 />
               </div>
 
@@ -1095,13 +1140,13 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                     <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
                       <div style={{ ...LBL, marginBottom: 2 }}>Invoice Date</div>
-                      <div style={{ fontSize: 12, color: '#475569' }}>{wo.invoice_date || '—'}</div>
+                      <div style={{ fontSize: 12, color: '#475569' }}>{wo.invoice_date || '-'}</div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Job Files — Work Breakdown moved to top of layout */}
+              {/* Job Files - Work Breakdown moved to top of layout */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <input
                   ref={fileInputRef}
@@ -1174,7 +1219,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             {/* ── RIGHT COLUMN ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              {/* Work Breakdown — first thing in right column */}
+              {/* Work Breakdown - first thing in right column */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Work Breakdown</div>
                 <WorkBreakdown
@@ -1186,7 +1231,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 />
               </div>
 
-              {/* Activity Timeline — below Work Breakdown */}
+              {/* Activity Timeline - below Work Breakdown */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Activity Timeline</div>
                 <ActivityTimeline kID={wo.id} />
@@ -1194,7 +1239,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
               {/* Crew Assignment */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Crew Assignment — {woIsland || 'All Islands'}</div>
+                <div style={SECTION_TITLE}>Crew Assignment - {woIsland || 'All Islands'}</div>
                 {islandCrew.length === 0 ? (
                   <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>No field crew found for {wo.island || 'this island'}.</div>
                 ) : (
@@ -1229,7 +1274,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           </div>
         </div>
 
-        {/* Bottom save bar — always visible */}
+        {/* Bottom save bar - always visible */}
         {dirty && !readOnly && (
           <div style={{
             flexShrink: 0, padding: '12px 20px',
@@ -1242,7 +1287,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             </button>
             <button onClick={handleSave} disabled={saving}
               style={{ padding: '10px 24px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
-              {saving ? 'Saving…' : '✓ Save All Changes'}
+              {saving ? 'Saving...' : '✓ Save All Changes'}
             </button>
           </div>
         )}
@@ -1284,7 +1329,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <textarea
               value={closeNotes}
               onChange={e => setCloseNotes(e.target.value)}
-              placeholder="Any final notes for the record…"
+              placeholder="Any final notes for the record..."
               rows={3}
               style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:13, outline:'none', resize:'none', boxSizing:'border-box', marginBottom:20 }}
             />
@@ -1300,7 +1345,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   color: closeSubmitting ? '#94a3b8' : 'white', fontSize:13, fontWeight:800,
                   cursor: closeSubmitting ? 'default' : 'pointer',
                   boxShadow: closeSubmitting ? 'none' : '0 3px 12px rgba(21,128,61,0.3)' }}>
-                {closeSubmitting ? 'Closing…' : '✓ Close Work Order'}
+                {closeSubmitting ? 'Closing...' : '✓ Close Work Order'}
               </button>
             </div>
           </div>

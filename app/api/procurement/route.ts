@@ -119,7 +119,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const body = await req.json();
-  const { wo_id, vendor_org_id, vendor_name, line_items, quote_date, quote_valid_until, notes } = body;
+  const { wo_id, vendor_org_id, vendor_name, line_items, quote_date, quote_valid_until, notes, quote_document_url, quote_document_name } = body;
   if (!wo_id || !Array.isArray(line_items) || line_items.length === 0) {
     return NextResponse.json({ error: 'wo_id and line_items required' }, { status: 400 });
   }
@@ -144,6 +144,8 @@ export async function POST(req: Request) {
       row[H.quote_date] = quote_date || now.slice(0, 10);
       row[H.quote_valid_until] = quote_valid_until || '';
       row[H.notes] = notes || '';
+      row[H.quote_document_url] = quote_document_url || '';
+      row[H.quote_document_name] = quote_document_name || '';
       row[H.created_at] = now;
       row[H.updated_at] = now;
       return row;
