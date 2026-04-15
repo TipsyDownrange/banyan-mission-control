@@ -37,6 +37,8 @@ const H = {
   notes: 22,
   created_at: 23,
   updated_at: 24,
+  quote_document_url: 25,  // Z
+  quote_document_name: 26, // AA
 };
 
 function colLetter(idx: number): string {
@@ -54,7 +56,7 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:Y5000',
+      range: 'Procurement!A2:AA5000',
     });
     const rows = (res.data.values || []) as string[][];
     const orders: Record<string, {
@@ -63,6 +65,7 @@ export async function GET(req: Request) {
       quote_valid_until: string; order_date: string; eta_date: string;
       tracking_number: string; tracking_url: string; received_date: string;
       received_by: string; inspection_status: string; inspection_notes: string;
+      quote_document_url: string; quote_document_name: string;
       notes: string; line_items: any[]; total_cost: number;
     }> = {};
     for (const r of rows.filter(r => r[H.procurement_id] && (!woId || r[H.wo_id] === woId))) {
@@ -86,6 +89,8 @@ export async function GET(req: Request) {
           received_by: r[H.received_by] || '',
           inspection_status: r[H.inspection_status] || '',
           inspection_notes: r[H.inspection_notes] || '',
+          quote_document_url: r[H.quote_document_url] || '',
+          quote_document_name: r[H.quote_document_name] || '',
           notes: r[H.notes] || '',
           line_items: [],
           total_cost: 0,
@@ -145,7 +150,7 @@ export async function POST(req: Request) {
     });
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A:Y',
+      range: 'Procurement!A:AA',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: rows },
     });
@@ -169,7 +174,7 @@ export async function PATCH(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:Y5000',
+      range: 'Procurement!A2:AA5000',
     });
     const rows = (res.data.values || []) as string[][];
     const now = new Date().toISOString();
@@ -197,6 +202,8 @@ export async function PATCH(req: Request) {
       received_by: H.received_by,
       inspection_status: H.inspection_status,
       inspection_notes: H.inspection_notes,
+      quote_document_url: H.quote_document_url,
+      quote_document_name: H.quote_document_name,
       notes: H.notes,
     };
 
@@ -247,7 +254,7 @@ export async function DELETE(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:Y5000',
+      range: 'Procurement!A2:AA5000',
     });
     const rows = (res.data.values || []) as string[][];
     const now = new Date().toISOString();

@@ -827,6 +827,56 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           </div>
                         </div>
 
+                        {/* Document attachment */}
+                        <div style={{marginBottom:8}}>
+                          {order.quote_document_url ? (
+                            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+                              <span>📎</span>
+                              <a href={order.quote_document_url} target="_blank" rel="noopener noreferrer" style={{color:'#0f766e',fontWeight:600,textDecoration:'none'}}>
+                                {order.quote_document_name||'View Document'}
+                              </a>
+                              <span style={{color:'#94a3b8',fontSize:10}}>[View]</span>
+                              <label style={{marginLeft:4,fontSize:10,color:'#94a3b8',cursor:'pointer',fontWeight:600}}>
+                                Replace
+                                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.heic" style={{display:'none'}} onChange={async e=>{
+                                  const f=e.target.files?.[0]; if(!f) return;
+                                  const fd=new FormData(); fd.append('file',f); fd.append('procurement_id',order.procurement_id); fd.append('wo_id',safeWo.id);
+                                  try{
+                                    const r=await fetch('/api/procurement/upload',{method:'POST',body:fd});
+                                    const d=await r.json();
+                                    if(d.success) setProcurementOrders(p=>p.map(o=>o.procurement_id===order.procurement_id?{...o,quote_document_url:d.file_url,quote_document_name:d.file_name}:o));
+                                  }catch(err){console.error('[WODetailPanel] uploadDoc',err);}
+                                }} />
+                              </label>
+                            </div>
+                          ) : (
+                            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                              <label style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'#0f766e',fontWeight:700,cursor:'pointer',padding:'4px 10px',borderRadius:7,border:'1px dashed #0f766e',background:'white'}}>
+                                📎 Attach PDF/Image
+                                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.heic" style={{display:'none'}} onChange={async e=>{
+                                  const f=e.target.files?.[0]; if(!f) return;
+                                  const fd=new FormData(); fd.append('file',f); fd.append('procurement_id',order.procurement_id); fd.append('wo_id',safeWo.id);
+                                  try{
+                                    const r=await fetch('/api/procurement/upload',{method:'POST',body:fd});
+                                    const d=await r.json();
+                                    if(d.success) setProcurementOrders(p=>p.map(o=>o.procurement_id===order.procurement_id?{...o,quote_document_url:d.file_url,quote_document_name:d.file_name}:o));
+                                  }catch(err){console.error('[WODetailPanel] uploadDoc',err);}
+                                }} />
+                              </label>
+                              <span style={{fontSize:11,color:'#94a3b8'}}>or</span>
+                              <input placeholder="Paste Drive/URL link..." style={{flex:1,fontSize:11,padding:'4px 8px',borderRadius:7,border:'1px solid #e2e8f0',outline:'none'}}
+                                onBlur={async e=>{
+                                  const url=e.target.value.trim(); if(!url) return;
+                                  const name=url.split('/').pop()?.split('?')[0]||'Document';
+                                  try{
+                                    await fetch('/api/procurement',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({procurement_id:order.procurement_id,quote_document_url:url,quote_document_name:name})});
+                                    setProcurementOrders(p=>p.map(o=>o.procurement_id===order.procurement_id?{...o,quote_document_url:url,quote_document_name:name}:o));
+                                  }catch(err){console.error('[WODetailPanel] linkDoc',err);}
+                                }} />
+                            </div>
+                          )}
+                        </div>
+
                         {/* Actions */}
                         <div style={{display:'flex',gap:8}}>
                           {order.status==='VENDOR_QUOTED' && (
