@@ -63,10 +63,18 @@ interface WorkOrder {
   address?: string;
 }
 
+interface ProcurementOrder {
+  procurement_id: string;
+  vendor_name?: string;
+  total_cost?: number;
+  status?: string;
+}
+
 interface WOEstimatePanelProps {
   wo: WorkOrder;
   onClose: () => void;
   onGenerateQuote: (woId: string, estimateTotals: EstimateTotals) => void;
+  procurementOrders?: ProcurementOrder[];
 }
 
 export interface EstimateTotals {
@@ -297,7 +305,7 @@ function SubtotalBar({ label, value }: { label: string; value: number }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEstimatePanelProps) {
+export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurementOrders = [] }: WOEstimatePanelProps) {
   const [data, setData] = useState<WOEstimateData>(() => defaultData(wo));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -593,6 +601,18 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote }: WOEsti
 
             {/* ── LEFT COLUMN: Materials ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Vendor quote banner */}
+              {procurementOrders.filter(o => o.status !== 'CANCELLED').length > 0 && (
+                <div style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:9, padding:'8px 12px', fontSize:12 }}>
+                  <span style={{ fontWeight:700, color:'#15803d' }}>Vendor quotes on file: </span>
+                  {procurementOrders.filter(o => o.status !== 'CANCELLED').map(o => (
+                    <span key={o.procurement_id} style={{ color:'#15803d', marginRight:8 }}>
+                      ${Number(o.total_cost || 0).toFixed(2)}{o.vendor_name ? ` (${o.vendor_name})` : ''}
+                    </span>
+                  ))}
+                  <span style={{ color:'#94a3b8', fontSize:11 }}>— reference for materials estimate</span>
+                </div>
+              )}
 
               {/* Aluminum */}
               <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>

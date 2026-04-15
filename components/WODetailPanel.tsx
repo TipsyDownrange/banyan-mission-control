@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ActivityTimeline from '@/components/ActivityTimeline';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
@@ -37,17 +37,19 @@ type WorkOrder = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES = [
-  { key: 'lead',          label: 'New Lead',          color: '#64748b' },
-  { key: 'quoted',        label: 'Quoted',             color: '#7c3aed' },
-  { key: 'approved',         label: 'Needs to Schedule', color: '#92400e' },
-  { key: 'deposit_received',   label: 'Deposit Received',   color: '#b45309' },
-  { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#9a3412' },
-  { key: 'materials_received', label: 'Materials In',       color: '#166534' },
-  { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#0369a1' },
-  { key: 'scheduled',          label: 'Scheduled',          color: '#4338ca' },
-  { key: 'in_progress',   label: 'In Progress',        color: '#0f766e' },
-  { key: 'work_complete', label: '✅ Work Complete',    color: '#059669' },
-  { key: 'closed',        label: 'Close WO',           color: '#15803d' },
+  { key: 'lead',               label: 'Lead',         color: '#64748b' },
+  { key: 'quoted',             label: 'Quoted',       color: '#7c3aed' },
+  { key: 'accepted',           label: 'Accepted',     color: '#92400e' },
+  { key: 'deposit_received',   label: 'Deposit',      color: '#b45309' },
+  { key: 'materials_ordered',  label: 'Mat Ordered',  color: '#9a3412' },
+  { key: 'materials_received', label: 'Mat In',       color: '#166534' },
+  { key: 'ready_to_schedule',  label: 'Ready',        color: '#0369a1' },
+  { key: 'scheduled',          label: 'Scheduled',    color: '#4338ca' },
+  { key: 'in_progress',        label: 'In Progress',  color: '#0f766e' },
+  { key: 'work_complete',      label: 'Complete',     color: '#059669' },
+  { key: 'invoiced',           label: 'Invoiced',     color: '#0369a1' },
+  { key: 'paid',               label: 'Paid',         color: '#15803d' },
+  { key: 'closed',             label: 'Closed',       color: '#15803d' },
 ];
 
 const STAGE_BG: Record<string, string> = {
@@ -494,32 +496,65 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             {/* ── LEFT COLUMN ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              {/* Pipeline Stage - first thing Joey sees */}
+              {/* Pipeline Stage - horizontal progress stepper */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Pipeline Stage</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
-                  {STAGES.map(s => {
-                    const isActive = wo.status === s.key;
-                    const isSaving = stageSaving === s.key;
-                    return (
-                      <button key={s.key}
-                        onClick={() => !isActive && !stageSaving && handleStageChange(s.key)}
-                        disabled={isActive || !!stageSaving}
-                        style={{
-                          padding: '9px 6px', borderRadius: 10, fontSize: 10, fontWeight: 800,
-                          textTransform: 'uppercase', letterSpacing: '0.05em',
-                          cursor: isActive || stageSaving ? 'default' : 'pointer',
-                          border: isActive ? `1.5px solid ${s.color}` : '1px solid #e2e8f0',
-                          background: isSaving ? '#f1f5f9' : isActive ? STAGE_BG[s.key] || '#f8fafc' : 'white',
-                          color: isActive ? s.color : '#94a3b8',
-                          opacity: stageSaving && !isActive ? 0.5 : 1,
-                          transition: 'all 0.1s',
-                        }}>
-                        {isSaving ? '...' : s.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                {safeWo.status === 'lost' ? (
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Lost</div>
+                ) : (
+                  <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
+                      {STAGES.map((s, idx) => {
+                        const currentIdx = STAGES.findIndex(x => x.key === safeWo.status);
+                        const isPast = idx < currentIdx;
+                        const isCurrent = idx === currentIdx;
+                        const isFuture = idx > currentIdx;
+                        const isSaving = stageSaving === s.key;
+                        return (
+                          <React.Fragment key={s.key}>
+                            {idx > 0 && (
+                              <div style={{ width: 20, height: 2, background: (isPast || isCurrent) ? '#0f766e' : '#e2e8f0', flexShrink: 0 }} />
+                            )}
+                            <div
+                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: readOnly ? 'default' : isCurrent ? 'default' : 'pointer', flexShrink: 0 }}
+                              onClick={async () => {
+                                if (readOnly || isCurrent || !!stageSaving) return;
+                                if (isPast) {
+                                  const reason = prompt(`Roll back to "${s.label}"? Enter reason (required):`);
+                                  if (!reason?.trim()) return;
+                                }
+                                if (isFuture && idx > currentIdx + 1) {
+                                  if (!confirm(`Skip to "${s.label}"? This skips ${idx - currentIdx - 1} stages.`)) return;
+                                }
+                                await handleStageChange(s.key);
+                              }}
+                            >
+                              <div style={{
+                                width: isCurrent ? 14 : 10,
+                                height: isCurrent ? 14 : 10,
+                                borderRadius: '50%',
+                                background: (isPast || isCurrent) ? '#0f766e' : '#e2e8f0',
+                                border: isCurrent ? '2px solid #0f766e' : isPast ? 'none' : '1.5px solid #cbd5e1',
+                                boxShadow: isCurrent ? '0 0 0 3px rgba(15,118,110,0.15)' : 'none',
+                                transition: 'all 0.2s',
+                                flexShrink: 0,
+                                opacity: isSaving ? 0.5 : 1,
+                              }} />
+                              {(isCurrent || idx === currentIdx - 1 || idx === currentIdx + 1) && (
+                                <span style={{
+                                  fontSize: 9, fontWeight: isCurrent ? 800 : 600,
+                                  color: isCurrent ? '#0f766e' : isPast ? '#64748b' : '#94a3b8',
+                                  whiteSpace: 'nowrap', letterSpacing: '0.02em',
+                                  textTransform: 'uppercase',
+                                }}>{isSaving ? '...' : s.label}</span>
+                              )}
+                            </div>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Job Details */}
@@ -728,19 +763,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       <div style={{ marginBottom: 8 }}>
                         <label style={LBL}>Line Items</label>
                         {/* Column headers */}
-                        <div style={{ display:'grid', gridTemplateColumns:'3fr 1fr 1fr 1fr 80px 20px', gap:6, marginBottom:3, padding:'0 2px' }}>
+                        <div style={{ display:'grid', gridTemplateColumns:'3fr 1fr 1fr 1.2fr 80px 20px', gap:6, marginBottom:3, padding:'0 2px' }}>
                           {['DESCRIPTION','QTY','UOM','UNIT COST','LINE TOTAL',''].map(h=><span key={h} style={{fontSize:9,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</span>)}
                         </div>
                         {newQuote.line_items.map((li, i) => {
                           const lineTotal = (Number(li.quantity)||0) * (Number(li.unit_cost)||0);
                           return (
-                          <div key={i} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 80px 20px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                          <div key={i} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1.2fr 80px 20px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
                             <input style={INP} value={li.description} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, description: e.target.value} : x)}))} placeholder="e.g. 1&quot; IGU, grey tinted" />
                             <input style={INP} type="number" min="0" value={li.quantity} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, quantity: e.target.value} : x)}))} placeholder="1" />
                             <select style={{...INP, cursor:'pointer'}} value={li.unit} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit: e.target.value} : x)}))}>  
                               <option value="EA">EA</option><option value="LF">LF</option><option value="SF">SF</option><option value="LOT">LOT</option>
                             </select>
-                            <input style={INP} type="number" min="0" step="0.01" value={li.unit_cost} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit_cost: e.target.value} : x)}))} placeholder="$0.00" />
+                            <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
+                              <span style={{ position:'absolute', left:8, fontSize:12, color:'#64748b', pointerEvents:'none', fontWeight:600 }}>$</span>
+                              <input style={{...INP, paddingLeft:18}} type="number" min="0" step="0.01" value={li.unit_cost} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit_cost: e.target.value} : x)}))} placeholder="0.00" />
+                            </div>
                             <span style={{fontSize:12,fontWeight:700,color:'#0f172a',textAlign:'right',paddingRight:4}}>${lineTotal.toFixed(2)}</span>
                             {newQuote.line_items.length > 1 ? (
                               <button onClick={() => setNewQuote(p => ({...p, line_items: p.line_items.filter((_, j) => j !== i)}))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 14, padding: 0, lineHeight:1 }}>×</button>

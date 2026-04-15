@@ -42,7 +42,7 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#0369a1', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(3,105,161,0.2)' },
   { key: 'scheduled',          label: 'Scheduled',          color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
   { key: 'in_progress', label: 'In Progress',        color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },
-  { key: 'work_complete', label: '✅ Work Complete',  color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(5,150,105,0.22)' },
+  { key: 'work_complete', label: 'Work Complete',  color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(5,150,105,0.22)' },
   { key: 'closed',        label: 'Closed',             color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
 ];
 
@@ -86,387 +86,43 @@ function toTitleCase(str: string): string {
 }
 
 function WOCard({
-  wo, expanded, onToggle, onStageChange, onSave, allCrew, onQuote, onDetail, onLinkFolder,
+  wo, onDetail,
 }: {
   wo: WorkOrder;
-  expanded: boolean;
-  onToggle: () => void;
-  onStageChange: (woId: string, stage: string) => Promise<void>;
-  onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
-  allCrew: CrewMember[];
-  onQuote: (woId: string) => void;
   onDetail: (wo: WorkOrder) => void;
-  onLinkFolder: (woId: string, woName: string, folderUrl: string) => Promise<void>;
 }) {
-  const [mode, setMode] = useState<'view' | 'dispatch' | 'edit' | 'close'>('view');
-  const [saving, setSaving] = useState(false);
-  const [stageSaving, setStageSaving] = useState('');
-
-  const [editDraft, setEditDraft] = useState({
-    description: wo.description,
-    notes: wo.comments || '',
-  });
-
-  const [dispatchDraft, setDispatchDraft] = useState({
-    scheduledDate: wo.scheduledDate || '',
-    hoursEstimated: wo.hoursEstimated || '',
-    selectedCrew: wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : [] as string[],
-  });
-
-  const [closeDraft, setCloseDraft] = useState({
-    hoursActual: wo.hoursActual || '',
-    closeNotes: '',
-  });
-
-  const stage = STAGES.find(s => s.key === wo.status) || STAGES[0];
-
-  const INP: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', borderRadius: 8,
-    border: '1px solid rgba(15,118,110,0.25)', background: 'rgba(240,253,250,0.5)',
-    fontSize: 12, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
-  };
-
-  // Field crew for this WO's island — supers + journeymen + apprentices
-  // Map city/area names from Smartsheet WO to island names in crew DB
-  function areaToIsland(area: string): string {
-    const a = (area || '').toLowerCase();
-    if (['oahu','honolulu','kapolei','kailua','kaneohe','pearl city','aiea','ewa','hawaii kai'].some(c => a.includes(c))) return 'Oahu';
-    if (['kauai','lihue','kapaa','poipu','princeville','koloa'].some(c => a.includes(c))) return 'Kauai';
-    if (['hilo','kona','waimea','kohala','puna'].some(c => a.includes(c))) return 'Hawaii';
-    // Everything else defaults to Maui (kahului, wailuku, lahaina, kihei, wailea, etc.)
-    if (a) return 'Maui';
-    return '';
-  }
-  const woIsland = ['Oahu','Maui','Kauai','Hawaii'].includes(wo.island) ? wo.island : areaToIsland(wo.island);
-
-  const islandCrew = allCrew.filter(c => {
-    const isFieldRole = ['Superintendent','Journeyman','Apprentice'].some(r => c.role.includes(r));
-    const matchesIsland = !woIsland || c.island === woIsland;
-    return isFieldRole && matchesIsland;
-  });
-
-  function toggleCrewMember(name: string) {
-    setDispatchDraft(prev => ({
-      ...prev,
-      selectedCrew: prev.selectedCrew.includes(name)
-        ? prev.selectedCrew.filter(n => n !== name)
-        : [...prev.selectedCrew, name],
-    }));
-  }
-
-  async function handleDispatch() {
-    if (!dispatchDraft.scheduledDate || dispatchDraft.selectedCrew.length === 0) return;
-    setSaving(true);
-    await onSave(wo.id, {
-      assignedTo: dispatchDraft.selectedCrew.join(', '),
-      scheduledDate: dispatchDraft.scheduledDate,
-      hoursEstimated: dispatchDraft.hoursEstimated,
-      _woName: wo.name,
-      _island: woIsland || wo.island,
-    });
-    // Also move to scheduled stage if still in approved/lead
-    if (['lead','quoted','approved','deposit_received','materials_ordered','materials_received','ready_to_schedule'].includes(wo.status)) {
-      await onStageChange(wo.id, 'scheduled');
-    }
-    setSaving(false);
-    setMode('view');
-  }
-
-  async function handleEditSave() {
-    setSaving(true);
-    await onSave(wo.id, {
-      description: editDraft.description,
-      comments: editDraft.notes,
-    });
-    setSaving(false);
-    setMode('view');
-  }
-
-  async function handleClose() {
-    setSaving(true);
-    const notes = [
-      closeDraft.closeNotes ? `CLOSED: ${closeDraft.closeNotes}` : 'CLOSED',
-      closeDraft.hoursActual ? `Actual hours: ${closeDraft.hoursActual}` : '',
-      wo.comments || '',
-    ].filter(Boolean).join(' | ');
-    await onSave(wo.id, {
-      hoursActual: closeDraft.hoursActual,
-      comments: notes,
-    });
-    await onStageChange(wo.id, 'closed');
-    setSaving(false);
-    setMode('view');
-  }
-
-  async function handleStageChange(stageKey: string) {
-    setStageSaving(stageKey);
-    await onStageChange(wo.id, stageKey);
-    setStageSaving('');
-  }
-
-  const canDispatch = dispatchDraft.scheduledDate && dispatchDraft.selectedCrew.length > 0;
+  // Simplified card — all editing happens in the full detail panel via onDetail
 
   return (
-    <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 20, background: stage.bg, border: stage.border, boxShadow: '0 8px 24px rgba(15,23,42,0.05)', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: '0 auto 0 0', width: 5, background: stage.color, opacity: 0.8 }} />
+    <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 10, background: 'white', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', position: 'relative', overflow: 'hidden', marginBottom: 0 }}>
 
-      {/* Card header — compact, single-row */}
-      <div onClick={onToggle} style={{ padding: '10px 10px 10px 16px', cursor: 'pointer' }}>
-        {/* Row 1: WO# + area tag + action buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-          {wo.id && (
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#94a3b8', flexShrink: 0 }}>{wo.id}</span>
-          )}
+      {/* Simplified card — click anywhere to open detail panel */}
+      <div onClick={() => onDetail(wo)} style={{ padding: '10px 12px', cursor: 'pointer' }}>
+        {/* Row 1: WO# + island badge */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{wo.id || ''}</span>
           {wo.island && (
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '1px 6px', borderRadius: 999, color: areaColor(wo.island), background: 'rgba(255,255,255,0.8)', border: '1px solid currentColor', flexShrink: 0 }}>
-              {wo.island}
-            </span>
+            <span style={{ fontSize: 10, color: '#0369a1', background: '#eff6ff', padding: '1px 6px', borderRadius: 999, fontWeight: 700 }}>{wo.island}</span>
           )}
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
-          {/* Card actions — minimal: dispatch, edit, close only. Quote/Files/Print live in the detail view */}
-          <div style={{ display: 'flex', gap: 3, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-            {/* Dispatch */}
-            <button title="Schedule & dispatch crew"
-              onClick={() => { setMode(mode === 'dispatch' ? 'view' : 'dispatch'); if (!expanded) onToggle(); }}
-              style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'dispatch' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'dispatch' ? 'rgba(238,242,255,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'dispatch' ? '#4338ca' : '#94a3b8', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              ⬡
-            </button>
-            {/* Edit */}
-            <button title="Edit details"
-              onClick={() => { setMode(mode === 'edit' ? 'view' : 'edit'); if (!expanded) onToggle(); }}
-              style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'edit' ? '1px solid rgba(15,118,110,0.4)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'edit' ? 'rgba(240,253,250,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'edit' ? '#0f766e' : '#94a3b8', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              ✎
-            </button>
-            {/* Close WO — only show if not already closed */}
-            {wo.status !== 'closed' && (
-              <button title="Close work order"
-                onClick={() => { setMode(mode === 'close' ? 'view' : 'close'); if (!expanded) onToggle(); }}
-                style={{ width: 28, height: 28, borderRadius: 8, border: mode === 'close' ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(203,213,225,0.7)', background: mode === 'close' ? 'rgba(254,242,242,0.96)' : 'rgba(255,255,255,0.7)', color: mode === 'close' ? '#b91c1c' : '#94a3b8', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                ✓
-              </button>
-            )}
-          </div>
         </div>
 
-        {/* Row 2: Name — clickable to open full detail panel */}
-        <div
-          onClick={e => { e.stopPropagation(); onDetail(wo); }}
-          title="Open full detail"
-          style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3, cursor: 'pointer', textDecoration: 'none' }}
-          onMouseEnter={e => { (e.target as HTMLDivElement).style.color = '#0f766e'; (e.target as HTMLDivElement).style.textDecoration = 'underline'; }}
-          onMouseLeave={e => { (e.target as HTMLDivElement).style.color = '#0f172a'; (e.target as HTMLDivElement).style.textDecoration = 'none'; }}>
-          {toTitleCase(wo.name)}
+        {/* Row 2: WO name — bold, 2 lines max */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {toTitleCase(wo.name) || wo.id}
         </div>
 
-        {/* Row 3: Description — max 2 lines */}
-        <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {toTitleCase(wo.description)}
-        </div>
+        {/* Row 3: Assigned to */}
+        {wo.assignedTo && (
+          <div style={{ fontSize: 11, color: '#64748b' }}>→ {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}</div>
+        )}
 
-        {/* Invoice status badge */}
-        {(() => {
-          const wox = wo as unknown as Record<string,string>;
-          let invoices: {status:string; type:string}[] = [];
-          try { if (wox.invoices_json) invoices = JSON.parse(wox.invoices_json); } catch {}
-          // Fallback to old columns if no JSON
-          if (invoices.length === 0) {
-            if (wox.deposit_status) invoices.push({ type:'Deposit', status: wox.deposit_status });
-            if (wox.final_status) invoices.push({ type:'Final', status: wox.final_status });
-          }
-          if (invoices.length === 0) return null;
-          const allPaid = invoices.every(i => i.status === 'Paid' || i.status === 'Not Required');
-          const anySent = invoices.some(i => i.status === 'Sent');
-          const anyPending = invoices.some(i => i.status === 'Pending');
-          if (allPaid) return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#ecfdf5', color: '#059669', border: '1px solid rgba(5,150,105,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>✅ Paid in full</div>;
-          if (anySent) return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#d97706', border: '1px solid rgba(217,119,6,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Awaiting payment</div>;
-          if (anyPending) return <div style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>💰 Invoice pending</div>;
-          return null;
-        })()}
-
-        {/* Row 4: Meta — assignee + date, only if set */}
-        {(wo.assignedTo || wo.scheduledDate) && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-            {wo.assignedTo && (
-              <span style={{ fontSize: 10, fontWeight: 600, color: '#4338ca' }}>
-                → {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}
-              </span>
-            )}
-            {wo.scheduledDate && (
-              <span style={{ fontSize: 10, fontWeight: 600, color: '#6d28d9' }}>{wo.scheduledDate}</span>
-            )}
+        {/* Folder link — small icon if present */}
+        {wo.folderUrl && (
+          <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
+            <a href={wo.folderUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: '#0369a1', textDecoration: 'none' }} title="Open Drive folder">📁</a>
           </div>
         )}
       </div>
-
-      {/* Expanded body */}
-      {expanded && (
-        <div style={{ paddingLeft: 20, paddingRight: 16, paddingBottom: 16, borderTop: '1px solid rgba(226,232,240,0.6)', paddingTop: 14, display: 'grid', gap: 12 }}>
-
-          {/* DISPATCH MODE */}
-          {mode === 'dispatch' && (
-            <div style={{ display: 'grid', gap: 12, padding: '12px 14px', borderRadius: 14, background: 'rgba(238,242,255,0.5)', border: '1px solid rgba(99,102,241,0.15)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#4338ca' }}>Schedule Dispatch</div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Date</div>
-                  <input type="date" value={dispatchDraft.scheduledDate}
-                    onChange={e => setDispatchDraft(p => ({ ...p, scheduledDate: e.target.value }))}
-                    style={{ ...INP, border: '1px solid rgba(99,102,241,0.25)', background: 'white' }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Est. Hours</div>
-                  <input type="number" value={dispatchDraft.hoursEstimated} placeholder="e.g. 4"
-                    onChange={e => setDispatchDraft(p => ({ ...p, hoursEstimated: e.target.value }))}
-                    style={{ ...INP, border: '1px solid rgba(99,102,241,0.25)', background: 'white' }} />
-                </div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 8 }}>
-                  Crew — {woIsland || wo.island || 'All Islands'}
-                  {dispatchDraft.selectedCrew.length > 0 && (
-                    <span style={{ marginLeft: 8, color: '#4338ca' }}>{dispatchDraft.selectedCrew.length} selected</span>
-                  )}
-                </div>
-                {islandCrew.length === 0 ? (
-                  <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>No field crew found for {wo.island || 'this island'}</div>
-                ) : (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {islandCrew.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i).map(c => {
-                      const selected = dispatchDraft.selectedCrew.includes(c.name);
-                      return (
-                        <button key={c.user_id} onClick={() => toggleCrewMember(c.name)}
-                          style={{ padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.1s', border: selected ? '1px solid rgba(99,102,241,0.5)' : '1px solid #e2e8f0', background: selected ? 'rgba(99,102,241,0.1)' : 'white', color: selected ? '#4338ca' : '#64748b' }}>
-                          {selected ? '✓ ' : ''}{c.name}
-                          <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 4 }}>{c.role.split('/')[0].trim()}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {dispatchDraft.selectedCrew.length > 0 && dispatchDraft.scheduledDate && (
-                <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 12, color: '#4338ca' }}>
-                  <strong>{dispatchDraft.selectedCrew.join(', ')}</strong> → {dispatchDraft.scheduledDate}
-                  {dispatchDraft.hoursEstimated && ` · ${dispatchDraft.hoursEstimated}h`}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setMode('view')}
-                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  Cancel
-                </button>
-                <button onClick={handleDispatch} disabled={!canDispatch || saving}
-                  style={{ padding: '8px 20px', borderRadius: 10, background: canDispatch && !saving ? 'linear-gradient(135deg,#4338ca,#6366f1)' : '#e2e8f0', color: canDispatch && !saving ? 'white' : '#94a3b8', border: 'none', fontSize: 12, fontWeight: 800, cursor: canDispatch && !saving ? 'pointer' : 'default', boxShadow: canDispatch && !saving ? '0 2px 8px rgba(99,102,241,0.3)' : 'none' }}>
-                  {saving ? 'Dispatching...' : 'Confirm Dispatch'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* EDIT MODE */}
-          {mode === 'edit' && (
-            <div style={{ display: 'grid', gap: 10 }}>
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Description</div>
-                <textarea value={editDraft.description} onChange={e => setEditDraft(p => ({ ...p, description: e.target.value }))} rows={2} style={{ ...INP, resize: 'none' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Note</div>
-                <textarea value={editDraft.notes} onChange={e => setEditDraft(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...INP, resize: 'none' }} />
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setMode('view')}
-                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  Cancel
-                </button>
-                <button onClick={handleEditSave} disabled={saving}
-                  style={{ padding: '8px 20px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* CLOSE MODE */}
-          {mode === 'close' && (
-            <div style={{ display: 'grid', gap: 12, padding: '12px 14px', borderRadius: 14, background: 'rgba(254,242,242,0.5)', border: '1px solid rgba(239,68,68,0.15)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#b91c1c' }}>Close Work Order</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Actual Hours</div>
-                  <input type="number" value={closeDraft.hoursActual} placeholder="e.g. 3.5"
-                    onChange={e => setCloseDraft(p => ({ ...p, hoursActual: e.target.value }))}
-                    style={{ ...INP, border: '1px solid rgba(239,68,68,0.2)', background: 'white' }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Est. Hours</div>
-                  <input type="text" value={wo.hoursEstimated || '—'} disabled
-                    style={{ ...INP, background: '#f8fafc', color: '#94a3b8', cursor: 'not-allowed' }} />
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Closing Notes (optional)</div>
-                <textarea value={closeDraft.closeNotes} rows={2}
-                  onChange={e => setCloseDraft(p => ({ ...p, closeNotes: e.target.value }))}
-                  placeholder="What was done, any issues, materials used..."
-                  style={{ ...INP, resize: 'none', border: '1px solid rgba(239,68,68,0.2)', background: 'white' }} />
-              </div>
-              <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.1)', fontSize: 11, color: '#b91c1c' }}>
-                This will mark the WO as <strong>Completed</strong> in Smartsheet.
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setMode('view')}
-                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  Cancel
-                </button>
-                <button onClick={handleClose} disabled={saving}
-                  style={{ padding: '8px 20px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#b91c1c,#ef4444)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(185,28,28,0.3)' }}>
-                  {saving ? 'Closing...' : 'Close WO'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* VIEW MODE */}
-          {mode === 'view' && (
-            <div style={{ display: 'grid', gap: 8 }}>
-              {wo.address && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Address</div><div style={{ fontSize: 12, color: '#334155' }}>{toTitleCase(wo.address)}</div></div>}
-              {wo.contact && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Contact</div><div style={{ fontSize: 12, color: '#334155' }}>{toTitleCase(wo.contact)}</div></div>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-                {wo.systemType && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>System</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.systemType}</div></div>}
-                {wo.scheduledDate && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Scheduled</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.scheduledDate}</div></div>}
-                {wo.dateReceived && <div><div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Received</div><div style={{ fontSize: 12, color: '#334155' }}>{wo.dateReceived}</div></div>}
-              </div>
-              {wo.comments && (
-                <div style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.1)' }}>
-                  <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', marginBottom: 3 }}>Latest Note</div>
-                  <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>{wo.comments}</div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Stage pipeline — always visible at bottom */}
-          <div style={{ borderTop: '1px solid rgba(226,232,240,0.5)', paddingTop: 10 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Pipeline stage</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {STAGES.filter(s => s.key !== 'lost').map(s => (
-                <button key={s.key}
-                  onClick={e => { e.stopPropagation(); handleStageChange(s.key); }}
-                  disabled={wo.status === s.key || !!stageSaving}
-                  style={{ padding: '5px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', cursor: wo.status === s.key || stageSaving ? 'default' : 'pointer', border: wo.status === s.key ? `1px solid ${s.color}` : '1px solid #e2e8f0', background: stageSaving === s.key ? '#f1f5f9' : wo.status === s.key ? s.bg : 'white', color: wo.status === s.key ? s.color : '#94a3b8', opacity: stageSaving && stageSaving !== s.key ? 0.5 : 1 }}>
-                  {stageSaving === s.key ? '...' : s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </article>
   );
 }
@@ -492,6 +148,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const [quoteWO, setQuoteWO] = useState<string | null>(null);
   const [quoteEstimateData, setQuoteEstimateData] = useState<EstimateTotals | undefined>(undefined);
   const [estimateWO, setEstimateWO] = useState<WorkOrder | null>(null);
+  const [estimateProcurementOrders, setEstimateProcurementOrders] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(focusWoId || null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
 
@@ -821,14 +478,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
                     </div>
                   ) : wos.map(wo => (
                     <WOCard key={wo.id || wo.name} wo={wo}
-                      expanded={expanded === (wo.id || wo.name)}
-                      onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
-                      onStageChange={handleStageChange}
-                      onSave={handleSave}
-                      onQuote={(id) => setQuoteWO(id)}
                       onDetail={(w) => setDetailWO(w)}
-                      onLinkFolder={handleLinkFolder}
-                      allCrew={allCrew}
                     />
                   ))}
                 </div>
@@ -849,14 +499,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
               {completedWOs.map(wo => (
                 <div key={wo.id} style={{ width: 240, opacity: 0.75 }}>
                   <WOCard wo={wo}
-                    expanded={expanded === (wo.id || wo.name)}
-                    onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
-                    onStageChange={handleStageChange}
-                    onSave={handleSave}
-                    onQuote={(id) => setQuoteWO(id)}
                     onDetail={(w) => setDetailWO(w)}
-                    onLinkFolder={handleLinkFolder}
-                    allCrew={allCrew}
                   />
                 </div>
               ))}
@@ -871,14 +514,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filtered.map(wo => (
               <WOCard key={wo.id || wo.name} wo={wo}
-                expanded={expanded === (wo.id || wo.name)}
-                onToggle={() => setExpanded(expanded === (wo.id || wo.name) ? null : (wo.id || wo.name))}
-                onStageChange={handleStageChange}
-                onSave={handleSave}
-                onQuote={(id) => setQuoteWO(id)}
                 onDetail={(w) => setDetailWO(w)}
-                onLinkFolder={handleLinkFolder}
-                allCrew={allCrew}
               />
             ))}
             {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>{search ? `No results for "${search}"` : 'No work orders in this view'}</div>}
@@ -905,9 +541,11 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
       {estimateWO && (
         <WOEstimatePanel
           wo={estimateWO}
-          onClose={() => setEstimateWO(null)}
+          procurementOrders={estimateProcurementOrders}
+          onClose={() => { setEstimateWO(null); setEstimateProcurementOrders([]); }}
           onGenerateQuote={(woId: string, totals: EstimateTotals) => {
             setEstimateWO(null);
+            setEstimateProcurementOrders([]);
             setQuoteEstimateData(totals);
             setQuoteWO(woId);
           }}
@@ -924,7 +562,15 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
           onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
           onStageChange={async (id, stage) => { await handleStageChange(id, stage); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
           onQuote={(id) => { setQuoteWO(id); setDetailWO(null); }}
-          onEstimate={(wo) => { setEstimateWO(wo); setDetailWO(null); }}
+          onEstimate={(wo) => {
+            setEstimateWO(wo);
+            setDetailWO(null);
+            // Fetch procurement orders for the vendor quote banner in estimate
+            fetch(`/api/procurement?wo_id=${encodeURIComponent(wo.id)}`)
+              .then(r => r.json())
+              .then(d => setEstimateProcurementOrders(Array.isArray(d) ? d : (d.orders || [])))
+              .catch(() => setEstimateProcurementOrders([]));
+          }}
         />
       )}
 
