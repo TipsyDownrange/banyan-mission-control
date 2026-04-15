@@ -124,13 +124,17 @@ function rowToWO(row: string[]) {
 
 function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
   const byStatus = {
-    lead:        wos.filter(w => w.status === 'lead'),
-    quote:       wos.filter(w => w.status === 'quote'),
-    approved:    wos.filter(w => w.status === 'approved'),
-    scheduled:   wos.filter(w => w.status === 'scheduled'),
-    in_progress: wos.filter(w => w.status === 'in_progress'),
-    closed:      wos.filter(w => ['closed', 'completed'].includes(w.status)).slice(0, 10),
-    lost:        wos.filter(w => w.status === 'lost').slice(0, 5),
+    lead:               wos.filter(w => w.status === 'lead'),
+    quote:              wos.filter(w => w.status === 'quote'),
+    approved:           wos.filter(w => w.status === 'approved'),
+    deposit_received:   wos.filter(w => w.status === 'deposit_received'),
+    materials_ordered:  wos.filter(w => w.status === 'materials_ordered'),
+    materials_received: wos.filter(w => w.status === 'materials_received'),
+    ready_to_schedule:  wos.filter(w => w.status === 'ready_to_schedule'),
+    scheduled:          wos.filter(w => w.status === 'scheduled'),
+    in_progress:        wos.filter(w => w.status === 'in_progress'),
+    closed:             wos.filter(w => ['closed', 'completed'].includes(w.status)).slice(0, 10),
+    lost:               wos.filter(w => w.status === 'lost').slice(0, 5),
   };
 
   const active = wos.filter(w => !['closed', 'completed', 'lost'].includes(w.status));
@@ -142,7 +146,7 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
     stats: {
       active:          active.length,
       completed:       closed.length,
-      needsScheduling: byStatus.approved.length,
+      needsScheduling: (byStatus.ready_to_schedule?.length || 0),
       inProgress:      byStatus.in_progress.length,
       total:           wos.length,
     },

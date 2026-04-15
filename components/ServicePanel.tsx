@@ -35,8 +35,12 @@ type CrewMember = { user_id: string; name: string; role: string; island: string 
 const STAGES: { key: string; label: string; color: string; bg: string; border: string }[] = [
   { key: 'lead',        label: 'New Lead',          color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
   { key: 'quoted',      label: 'Quoted',             color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(139,92,246,0.22)' },
-  { key: 'approved',    label: 'Needs to Schedule', color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
-  { key: 'scheduled',   label: 'Scheduled',          color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
+  { key: 'approved',         label: 'Needs to Schedule',  color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
+  { key: 'deposit_received',   label: 'Deposit Received',   color: '#b45309', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(180,83,9,0.2)' },
+  { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#9a3412', bg: 'rgba(255,247,237,0.96)', border: '1px solid rgba(154,52,18,0.2)' },
+  { key: 'materials_received', label: 'Materials In',       color: '#166534', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,101,52,0.2)' },
+  { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#0369a1', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(3,105,161,0.2)' },
+  { key: 'scheduled',          label: 'Scheduled',          color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
   { key: 'in_progress', label: 'In Progress',        color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },
   { key: 'work_complete', label: '✅ Work Complete',  color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(5,150,105,0.22)' },
   { key: 'closed',        label: 'Closed',             color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
@@ -161,7 +165,7 @@ function WOCard({
       _island: woIsland || wo.island,
     });
     // Also move to scheduled stage if still in approved/lead
-    if (['lead','quoted','approved'].includes(wo.status)) {
+    if (['lead','quoted','approved','deposit_received','materials_ordered','materials_received','ready_to_schedule'].includes(wo.status)) {
       await onStageChange(wo.id, 'scheduled');
     }
     setSaving(false);
@@ -757,8 +761,12 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
             { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && w.status !== 'closed').length, color: '#64748b' },
             { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: '#64748b' },
             { id: 'quoted',      label: 'Quoted',         count: mergedByStatus['quoted']?.length || 0,      color: '#7c3aed' },
-            { id: 'approved',    label: 'Need Schedule',  count: mergedByStatus['approved']?.length || 0,    color: '#92400e' },
-            { id: 'scheduled',   label: 'Scheduled',      count: mergedByStatus['scheduled']?.length || 0,   color: '#4338ca' },
+            { id: 'approved',          label: 'Need Schedule',    count: mergedByStatus['approved']?.length || 0,          color: '#92400e' },
+            { id: 'deposit_received',   label: 'Deposit Received', count: mergedByStatus['deposit_received']?.length || 0,   color: '#b45309' },
+            { id: 'materials_ordered',  label: 'Materials Ordered', count: mergedByStatus['materials_ordered']?.length || 0,  color: '#9a3412' },
+            { id: 'materials_received', label: 'Materials In',      count: mergedByStatus['materials_received']?.length || 0, color: '#166534' },
+            { id: 'ready_to_schedule',  label: 'Ready to Schedule', count: mergedByStatus['ready_to_schedule']?.length || 0,  color: '#0369a1' },
+            { id: 'scheduled',          label: 'Scheduled',         count: mergedByStatus['scheduled']?.length || 0,          color: '#4338ca' },
             { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: '#0f766e' },
             { id: 'closed',      label: 'Completed',      count: mergedByStatus['closed']?.length || 0,      color: '#15803d' },
           ] as FilterChip[]}

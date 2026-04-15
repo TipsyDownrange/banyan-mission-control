@@ -39,8 +39,12 @@ type CrewMember = { user_id: string; name: string; role: string; island: string 
 const STAGES = [
   { key: 'lead',          label: 'New Lead',          color: '#64748b' },
   { key: 'quoted',        label: 'Quoted',             color: '#7c3aed' },
-  { key: 'approved',      label: 'Needs to Schedule', color: '#92400e' },
-  { key: 'scheduled',     label: 'Scheduled',          color: '#4338ca' },
+  { key: 'approved',         label: 'Needs to Schedule', color: '#92400e' },
+  { key: 'deposit_received',   label: 'Deposit Received',   color: '#b45309' },
+  { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#9a3412' },
+  { key: 'materials_received', label: 'Materials In',       color: '#166534' },
+  { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#0369a1' },
+  { key: 'scheduled',          label: 'Scheduled',          color: '#4338ca' },
   { key: 'in_progress',   label: 'In Progress',        color: '#0f766e' },
   { key: 'work_complete', label: '✅ Work Complete',    color: '#059669' },
   { key: 'closed',        label: 'Close WO',           color: '#15803d' },
@@ -50,6 +54,7 @@ const STAGE_BG: Record<string, string> = {
   lead: '#f8fafc', quoted: '#f5f3ff',
   approved: '#fffbeb', scheduled: '#eef2ff', in_progress: '#f0fdfa',
   work_complete: '#ecfdf5', closed: '#f0fdf4',
+  deposit_received: '#fffbeb', materials_ordered: '#fff7ed', materials_received: '#f0fdf4', ready_to_schedule: '#eff6ff',
 };
 
 function toTitleCase(str: string): string {

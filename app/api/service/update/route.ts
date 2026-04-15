@@ -225,21 +225,25 @@ export async function PATCH(req: Request) {
 
     // Handle stage → status mapping (legacy frontend compat)
     const stageToStatus: Record<string, string> = {
-      lead:        'lead',
-      quote:       'quote',
-      quoted:      'quoted',
-      accepted:    'accepted',
-      approved:    'approved',
-      scheduled:   'scheduled',
-      in_progress: 'in_progress',
-      closed:      'closed',
-      lost:        'lost',
+      lead:               'lead',
+      quote:              'quote',
+      quoted:             'quoted',
+      accepted:           'accepted',
+      approved:           'approved',
+      deposit_received:   'deposit_received',
+      materials_ordered:  'materials_ordered',
+      materials_received: 'materials_received',
+      ready_to_schedule:  'ready_to_schedule',
+      scheduled:          'scheduled',
+      in_progress:        'in_progress',
+      closed:             'closed',
+      lost:               'lost',
     };
 
     const requestedStatus = status || (stage ? stageToStatus[stage] : undefined);
     let resolvedStatus = requestedStatus;
     // 'closed', 'lost', and 'work_complete' are explicit PM decisions — never override with derived status
-    const EXPLICIT_STATUSES = new Set(['closed', 'lost', 'work_complete']);
+    const EXPLICIT_STATUSES = new Set(['closed', 'lost', 'work_complete', 'deposit_received', 'materials_ordered', 'materials_received', 'ready_to_schedule']);
     if (requestedStatus && !EXPLICIT_STATUSES.has(requestedStatus) && resolvedWoId) {
       const derivedStatus = await deriveWOStatus(sheets, resolvedWoId);
       const normalizedRequestedStatus = requestedStatus === 'completed' ? 'closed' : requestedStatus;
