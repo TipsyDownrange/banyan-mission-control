@@ -169,6 +169,8 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   // Multi-select system types
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [allSystemTypes, setAllSystemTypes] = useState<string[]>(SYSTEM_TYPES);
+  // Org contact picker
+  const [orgContacts, setOrgContacts] = useState<Array<{contact_id: string; name: string; phone: string; email: string; title: string; is_primary: boolean}>>([]);
 
   // Load PMs + customers + step templates on mount
   useEffect(() => {
@@ -235,6 +237,15 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       .then(d => setFieldCrew(d.crew || []))
       .catch(() => {});
   }, [draft.island]);
+
+  // When org changes, fetch contacts for the contact picker
+  useEffect(() => {
+    if (!draft.org_id) { setOrgContacts([]); return; }
+    fetch(`/api/contacts?org_id=${draft.org_id}`)
+      .then(r => r.json())
+      .then(d => setOrgContacts(d.contacts || []))
+      .catch(err => { console.error('[ServiceIntake] fetchOrgContacts', err); setOrgContacts([]); });
+  }, [draft.org_id]);
 
   function update(key: keyof WODraft, val: string) {
     setDraft(prev => ({ ...prev, [key]: val }));
@@ -421,6 +432,31 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                 matchField="contactPerson"
                 subField="company"
               />
+              {orgContacts.length > 0 && (
+                <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+                  <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>Contacts:</span>
+                  {orgContacts.map(oc => (
+                    <button
+                      key={oc.contact_id}
+                      type="button"
+                      onClick={() => setDraft(prev => ({
+                        ...prev,
+                        contactPerson: oc.name,
+                        contactPhone: oc.phone || prev.contactPhone,
+                        contactEmail: oc.email || prev.contactEmail,
+                      }))}
+                      style={{
+                        fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
+                        border: '1px solid #e2e8f0', background: oc.is_primary ? '#f0fdf4' : 'white',
+                        color: oc.is_primary ? '#0f766e' : '#475569',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+                      }}
+                    >
+                      {oc.is_primary && <span>⭐</span>}{oc.name}{oc.title ? ` · ${oc.title}` : ''}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               {FL('Contact Phone')}
