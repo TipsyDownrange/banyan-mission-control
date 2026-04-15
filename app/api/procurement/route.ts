@@ -5,60 +5,42 @@ import { getGoogleAuth } from '@/lib/gauth';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
-// Actual Procurement tab columns (verified 2026-04-15 from sheet header row):
-// A: proc_id | B: kID | C: item_description | D: vendor | E: activity_ref
-// F: order_deadline | G: lead_time_weeks | H: ordered_date | I: po_number
-// J: eta_date | K: delivered_date | L: status | M: notes
-// N: qty | O: unit_cost | P: total_cost  (added 2026-04-15)
+// Procurement_Items tab — 25-column schema (A-Y)
+// A:procurement_id | B:wo_id | C:vendor_org_id | D:vendor_name | E:item_description
+// F:quantity | G:unit | H:unit_cost | I:line_total | J:status | K:order_method
+// L:order_ref | M:quote_date | N:quote_valid_until | O:order_date | P:eta_date
+// Q:tracking_number | R:tracking_url | S:received_date | T:received_by
+// U:inspection_status | V:inspection_notes | W:notes | X:created_at | Y:updated_at
 const H = {
-  procurement_id: 0,    // A — proc_id
-  wo_id: 1,             // B — kID
-  description: 2,       // C — item_description
-  supplier: 3,          // D — vendor
-  supplier_order_ref: 4, // E — activity_ref
-  order_deadline: 5,    // F — order_deadline
-  lead_time_weeks: 6,   // G — lead_time_weeks
-  ordered_date: 7,      // H — ordered_date
-  tracking_number: 8,   // I — po_number
-  eta_date: 9,          // J — eta_date
-  received_date: 10,    // K — delivered_date
-  status: 11,           // L — status
-  notes: 12,            // M — notes (stores inspection result as "[RESULT] notes")
-  qty: 13,              // N — qty
-  unit_cost: 14,        // O — unit_cost
-  total_cost: 15,       // P — total_cost
+  procurement_id: 0,
+  wo_id: 1,
+  vendor_org_id: 2,
+  vendor_name: 3,
+  item_description: 4,
+  quantity: 5,
+  unit: 6,
+  unit_cost: 7,
+  line_total: 8,
+  status: 9,
+  order_method: 10,
+  order_ref: 11,
+  quote_date: 12,
+  quote_valid_until: 13,
+  order_date: 14,
+  eta_date: 15,
+  tracking_number: 16,
+  tracking_url: 17,
+  received_date: 18,
+  received_by: 19,
+  inspection_status: 20,
+  inspection_notes: 21,
+  notes: 22,
+  created_at: 23,
+  updated_at: 24,
 };
 
 function colLetter(idx: number): string {
   return String.fromCharCode(65 + idx);
-}
-
-function rowToItem(r: string[]) {
-  const rawNotes = r[H.notes] || '';
-  // Parse "[INSPECTION_STATUS] notes text" format written by PATCH
-  const inspMatch = rawNotes.match(/^\[([A-Z_]+)\] ?([\s\S]*)/);
-  const inspection_status = inspMatch ? inspMatch[1] : '';
-  const inspection_notes = inspMatch ? inspMatch[2] : rawNotes;
-  return {
-    procurement_id: r[H.procurement_id] || '',
-    wo_id: r[H.wo_id] || '',
-    description: r[H.description] || '',
-    supplier: r[H.supplier] || '',
-    supplier_order_ref: r[H.supplier_order_ref] || '',
-    order_method: r[H.order_deadline] || '',  // order_deadline col reused for display
-    ordered_date: r[H.ordered_date] || '',
-    tracking_number: r[H.tracking_number] || '',
-    tracking_url: '',  // not in sheet; keep field for UI compat
-    eta_date: r[H.eta_date] || '',
-    received_date: r[H.received_date] || '',
-    received_by: '',   // not in sheet; kept for UI compat
-    status: r[H.status] || 'ORDERED',
-    inspection_status,
-    inspection_notes,
-    qty: r[H.qty] || '',
-    unit_cost: r[H.unit_cost] || '',
-    total_cost: r[H.total_cost] || '',
-  };
 }
 
 export async function GET(req: Request) {
@@ -72,13 +54,54 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:P2000',
+      range: 'Procurement!A2:Y5000',
     });
     const rows = (res.data.values || []) as string[][];
-    const items = rows
-      .filter(r => r[H.procurement_id] && (!woId || r[H.wo_id] === woId))
-      .map(rowToItem);
-    return NextResponse.json({ items });
+    const orders: Record<string, {
+      procurement_id: string; wo_id: string; vendor_org_id: string; vendor_name: string;
+      status: string; order_method: string; order_ref: string; quote_date: string;
+      quote_valid_until: string; order_date: string; eta_date: string;
+      tracking_number: string; tracking_url: string; received_date: string;
+      received_by: string; inspection_status: string; inspection_notes: string;
+      notes: string; line_items: any[]; total_cost: number;
+    }> = {};
+    for (const r of rows.filter(r => r[H.procurement_id] && (!woId || r[H.wo_id] === woId))) {
+      const procId = r[H.procurement_id];
+      if (!orders[procId]) {
+        orders[procId] = {
+          procurement_id: procId,
+          wo_id: r[H.wo_id],
+          vendor_org_id: r[H.vendor_org_id] || '',
+          vendor_name: r[H.vendor_name] || '',
+          status: r[H.status] || 'VENDOR_QUOTED',
+          order_method: r[H.order_method] || '',
+          order_ref: r[H.order_ref] || '',
+          quote_date: r[H.quote_date] || '',
+          quote_valid_until: r[H.quote_valid_until] || '',
+          order_date: r[H.order_date] || '',
+          eta_date: r[H.eta_date] || '',
+          tracking_number: r[H.tracking_number] || '',
+          tracking_url: r[H.tracking_url] || '',
+          received_date: r[H.received_date] || '',
+          received_by: r[H.received_by] || '',
+          inspection_status: r[H.inspection_status] || '',
+          inspection_notes: r[H.inspection_notes] || '',
+          notes: r[H.notes] || '',
+          line_items: [],
+          total_cost: 0,
+        };
+      }
+      const lineTotal = Number(r[H.line_total]) || ((Number(r[H.quantity]) || 0) * (Number(r[H.unit_cost]) || 0));
+      orders[procId].line_items.push({
+        description: r[H.item_description] || '',
+        quantity: r[H.quantity] || '',
+        unit: r[H.unit] || 'EA',
+        unit_cost: r[H.unit_cost] || '',
+        line_total: lineTotal,
+      });
+      orders[procId].total_cost += lineTotal;
+    }
+    return NextResponse.json({ orders: Object.values(orders) });
   } catch (err) {
     console.error('[/api/procurement GET]', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -91,36 +114,42 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const body = await req.json();
-  const { procurement_id, wo_id, description, supplier, supplier_order_ref, ordered_date, eta_date, tracking_number, qty, unit_cost } = body;
-  if (!wo_id || !description?.trim()) {
-    return NextResponse.json({ error: 'wo_id and description required' }, { status: 400 });
+  const { wo_id, vendor_org_id, vendor_name, line_items, quote_date, quote_valid_until, notes } = body;
+  if (!wo_id || !Array.isArray(line_items) || line_items.length === 0) {
+    return NextResponse.json({ error: 'wo_id and line_items required' }, { status: 400 });
   }
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
     const now = new Date().toISOString();
-    const procId = procurement_id || ('proc_' + Math.random().toString(36).slice(2, 14));
-    const totalCost = qty && unit_cost ? String(Number(qty) * Number(unit_cost)) : '';
-    const row = new Array(16).fill('');
-    row[H.procurement_id] = procId;
-    row[H.wo_id] = wo_id;
-    row[H.description] = description.trim();
-    row[H.supplier] = supplier || '';
-    row[H.supplier_order_ref] = supplier_order_ref || '';
-    row[H.ordered_date] = ordered_date || now.slice(0, 10);
-    row[H.tracking_number] = tracking_number || '';
-    row[H.eta_date] = eta_date || '';
-    row[H.status] = 'ORDERED';
-    row[H.qty] = qty ? String(qty) : '';
-    row[H.unit_cost] = unit_cost ? String(unit_cost) : '';
-    row[H.total_cost] = totalCost;
+    const procId = 'proc_' + Math.random().toString(36).slice(2, 14);
+    const rows = line_items.map((item: any) => {
+      const lineTotal = (Number(item.quantity) || 0) * (Number(item.unit_cost) || 0);
+      const row = new Array(25).fill('');
+      row[H.procurement_id] = procId;
+      row[H.wo_id] = wo_id;
+      row[H.vendor_org_id] = vendor_org_id || '';
+      row[H.vendor_name] = vendor_name || '';
+      row[H.item_description] = item.description || '';
+      row[H.quantity] = String(item.quantity || 1);
+      row[H.unit] = item.unit || 'EA';
+      row[H.unit_cost] = String(item.unit_cost || 0);
+      row[H.line_total] = String(lineTotal);
+      row[H.status] = 'VENDOR_QUOTED';
+      row[H.quote_date] = quote_date || now.slice(0, 10);
+      row[H.quote_valid_until] = quote_valid_until || '';
+      row[H.notes] = notes || '';
+      row[H.created_at] = now;
+      row[H.updated_at] = now;
+      return row;
+    });
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A:P',
+      range: 'Procurement!A:Y',
       valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [row] },
+      requestBody: { values: rows },
     });
-    return NextResponse.json({ procurement_id: procId, success: true });
+    return NextResponse.json({ procurement_id: procId, success: true, line_count: rows.length });
   } catch (err) {
     console.error('[/api/procurement POST]', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -140,59 +169,65 @@ export async function PATCH(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:P5000',
+      range: 'Procurement!A2:Y5000',
     });
     const rows = (res.data.values || []) as string[][];
-    const idx = rows.findIndex(r => r[H.procurement_id] === procurement_id);
-    if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const sheetRow = idx + 2;
+    const now = new Date().toISOString();
 
-    // Fields that map directly to sheet columns
+    // Find ALL rows matching procurement_id (multi-line-item orders)
+    const matchingIndices = rows
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) => r[H.procurement_id] === procurement_id)
+      .map(({ i }) => i);
+
+    if (matchingIndices.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    // Fields that apply to all rows with matching procurement_id
     const fieldMap: Record<string, number> = {
-      description: H.description,
-      supplier: H.supplier,
-      supplier_order_ref: H.supplier_order_ref,
-      ordered_date: H.ordered_date,
-      tracking_number: H.tracking_number,
-      eta_date: H.eta_date,
-      received_date: H.received_date,
       status: H.status,
-      qty: H.qty,
-      unit_cost: H.unit_cost,
-      total_cost: H.total_cost,
+      order_method: H.order_method,
+      order_ref: H.order_ref,
+      order_date: H.order_date,
+      eta_date: H.eta_date,
+      tracking_number: H.tracking_number,
+      tracking_url: H.tracking_url,
+      received_date: H.received_date,
+      received_by: H.received_by,
+      inspection_status: H.inspection_status,
+      inspection_notes: H.inspection_notes,
+      notes: H.notes,
     };
 
     const patchData: { range: string; values: string[][] }[] = [];
 
-    for (const [field, colIdx] of Object.entries(fieldMap)) {
-      if (updates[field] !== undefined) {
-        patchData.push({
-          range: `Procurement!${colLetter(colIdx)}${sheetRow}`,
-          values: [[String(updates[field])]],
-        });
+    for (const rowIdx of matchingIndices) {
+      const sheetRow = rowIdx + 2; // 1-indexed + 1 for header
+      for (const [field, colIdx] of Object.entries(fieldMap)) {
+        if (updates[field] !== undefined) {
+          patchData.push({
+            range: `Procurement!${colLetter(colIdx)}${sheetRow}`,
+            values: [[String(updates[field])]],
+          });
+        }
       }
-    }
-
-    // inspection_status + inspection_notes → combined into notes col as "[STATUS] notes"
-    if (updates.inspection_status !== undefined || updates.inspection_notes !== undefined) {
-      const iStatus = updates.inspection_status ?? '';
-      const iNotes = updates.inspection_notes ?? '';
-      const combined = iStatus ? `[${iStatus}] ${iNotes}` : iNotes;
+      // Always stamp updated_at
       patchData.push({
-        range: `Procurement!${colLetter(H.notes)}${sheetRow}`,
-        values: [[combined]],
+        range: `Procurement!${colLetter(H.updated_at)}${sheetRow}`,
+        values: [[now]],
       });
     }
 
-    // received_by: no dedicated column — skip (status + received_date convey delivery)
-
-    if (patchData.length === 0) return NextResponse.json({ success: true, note: 'nothing to update' });
+    if (patchData.length === 0) {
+      return NextResponse.json({ success: true, note: 'nothing to update' });
+    }
 
     await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: SHEET_ID,
       requestBody: { valueInputOption: 'RAW', data: patchData },
     });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, rows_updated: matchingIndices.length });
   } catch (err) {
     console.error('[/api/procurement PATCH]', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -206,31 +241,40 @@ export async function DELETE(req: Request) {
   }
   const { searchParams } = new URL(req.url);
   const procurement_id = searchParams.get('procurement_id');
-  const cancel_reason = searchParams.get('reason') || '';
   if (!procurement_id) return NextResponse.json({ error: 'procurement_id required' }, { status: 400 });
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Procurement!A2:P5000',
+      range: 'Procurement!A2:Y5000',
     });
     const rows = (res.data.values || []) as string[][];
-    const idx = rows.findIndex(r => r[H.procurement_id] === procurement_id);
-    if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const sheetRow = idx + 2;
-    // Soft delete: set status to CANCELLED, store reason in notes
+    const now = new Date().toISOString();
+
+    // Soft delete: set status=CANCELLED on all rows with matching procurement_id
+    const matchingIndices = rows
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) => r[H.procurement_id] === procurement_id)
+      .map(({ i }) => i);
+
+    if (matchingIndices.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const patchData = matchingIndices.flatMap(rowIdx => {
+      const sheetRow = rowIdx + 2;
+      return [
+        { range: `Procurement!${colLetter(H.status)}${sheetRow}`, values: [['CANCELLED']] },
+        { range: `Procurement!${colLetter(H.updated_at)}${sheetRow}`, values: [[now]] },
+      ];
+    });
+
     await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: SHEET_ID,
-      requestBody: {
-        valueInputOption: 'RAW',
-        data: [
-          { range: `Procurement!${colLetter(H.status)}${sheetRow}`, values: [['CANCELLED']] },
-          { range: `Procurement!${colLetter(H.notes)}${sheetRow}`, values: [[cancel_reason ? `[CANCELLED] ${cancel_reason}` : '[CANCELLED]']] },
-        ],
-      },
+      requestBody: { valueInputOption: 'RAW', data: patchData },
     });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, rows_cancelled: matchingIndices.length });
   } catch (err) {
     console.error('[/api/procurement DELETE]', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

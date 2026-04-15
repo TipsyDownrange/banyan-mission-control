@@ -101,9 +101,12 @@ interface WODetailPanelProps {
 export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onEstimate, onFolderLinked }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
-  const [procurementItems, setProcurementItems] = useState<any[]>([]);
-  const [showAddMaterial, setShowAddMaterial] = useState(false);
-  const [newMaterial, setNewMaterial] = useState({ description:'', supplier:'', order_method:'ONLINE', quantity:'1', unit_cost:'', ordered_date:new Date().toISOString().slice(0,10), eta_date:'', tracking_number:'' });
+  const [procurementOrders, setProcurementOrders] = useState<any[]>([]);
+  const [showAddQuote, setShowAddQuote] = useState(false);
+  const [newQuote, setNewQuote] = useState({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', line_items:[{ description:'', quantity:'1', unit:'EA', unit_cost:'' }] });
+  const [vendorSearch, setVendorSearch] = useState('');
+  const [vendorResults, setVendorResults] = useState<any[]>([]);
+  const [showVendorDropdown, setShowVendorDropdown] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [inspectionMode, setInspectionMode] = useState<string | null>(null);
   const [inspectionNotes, setInspectionNotes] = useState('');
@@ -138,12 +141,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       .catch(err => console.error('[WODetailPanel] Failed to load customers:', err));
   }, []);
 
-  // Load procurement items when WO changes
+  // Load procurement orders when WO changes
   useEffect(() => {
     if (!wo?.id) return;
     fetch(`/api/procurement?wo_id=${wo.id}`)
       .then(r => r.json())
-      .then(d => setProcurementItems(d.items || []))
+      .then(d => setProcurementOrders(d.orders || []))
       .catch(err => console.error('[WODetailPanel] loadProcurement', err));
   }, [wo?.id]);
 
@@ -661,122 +664,202 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   )}
                 </div>
 
-                {/* Materials sub-card */}
+                {/* Vendor Quotes sub-card */}
                 <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid #e2e8f0', padding: '12px 14px', marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Materials</div>
-                    <button onClick={() => setShowAddMaterial(p => !p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid #0f766e', background: showAddMaterial ? '#0f766e' : 'white', color: showAddMaterial ? 'white' : '#0f766e', cursor: 'pointer', fontWeight: 700 }}>
-                      {showAddMaterial ? '✕ Cancel' : '+ Add Material'}
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Vendor Quotes</div>
+                    <button onClick={() => setShowAddQuote(p => !p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid #0f766e', background: showAddQuote ? '#0f766e' : 'white', color: showAddQuote ? 'white' : '#0f766e', cursor: 'pointer', fontWeight: 700 }}>
+                      {showAddQuote ? '✕ Cancel' : '+ Add Vendor Quote'}
                     </button>
                   </div>
 
-                  {/* Inline add form */}
-                  {showAddMaterial && (
+                  {/* Add vendor quote form */}
+                  {showAddQuote && (
                     <div style={{ background: 'white', borderRadius: 9, border: '1px solid #e2e8f0', padding: '12px', marginBottom: 10 }}>
+                      {/* Vendor search */}
+                      <div style={{ marginBottom: 8, position: 'relative' }}>
+                        <label style={LBL}>Vendor *</label>
+                        <input
+                          style={INP}
+                          value={vendorSearch}
+                          placeholder="Search vendors..."
+                          onChange={e => { setVendorSearch(e.target.value); setNewQuote(p => ({...p, vendor_name: e.target.value, vendor_org_id: ''})); }}
+                          onFocus={async () => {
+                            setShowVendorDropdown(true);
+                            if (vendorResults.length === 0) {
+                              try {
+                                const vRes = await fetch('/api/organizations?type=VENDOR&limit=100');
+                                const vData = await vRes.json();
+                                setVendorResults(vData.organizations || vData || []);
+                              } catch(err) { console.error('[WODetailPanel] loadVendors', err); }
+                            }
+                          }}
+                          onBlur={() => setTimeout(() => setShowVendorDropdown(false), 150)}
+                        />
+                        {showVendorDropdown && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 16px rgba(15,23,42,0.1)', zIndex: 500, maxHeight: 180, overflowY: 'auto' }}>
+                            {vendorResults
+                              .filter(v => !vendorSearch || (v.name || v.org_name || '').toLowerCase().includes(vendorSearch.toLowerCase()))
+                              .map(v => (
+                                <div key={v.id || v.org_id} onMouseDown={() => {
+                                  const vName = v.name || v.org_name || '';
+                                  setVendorSearch(vName);
+                                  setNewQuote(p => ({...p, vendor_org_id: v.id || v.org_id || '', vendor_name: vName}));
+                                  setShowVendorDropdown(false);
+                                }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 12, color: '#0f172a', background: 'white' }}
+                                  onMouseOver={e => (e.currentTarget.style.background = '#f8fafc')}
+                                  onMouseOut={e => (e.currentTarget.style.background = 'white')}>
+                                  {v.name || v.org_name}
+                                </div>
+                              ))
+                            }
+                            <div onMouseDown={() => setShowVendorDropdown(false)} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 12, color: '#0f766e', fontWeight: 700, borderTop: '1px solid #f1f5f9' }}>+ Add New Vendor</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Dates */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                        <div><label style={LBL}>Description *</label><input style={INP} value={newMaterial.description} onChange={e => setNewMaterial(p=>({...p,description:e.target.value}))} placeholder='1" IGU grey tinted' /></div>
-                        <div><label style={LBL}>Supplier</label><input style={INP} value={newMaterial.supplier} onChange={e => setNewMaterial(p=>({...p,supplier:e.target.value}))} placeholder="GPH, CRL, Lockwood..." /></div>
+                        <div><label style={LBL}>Quote Date</label><input style={INP} type="date" value={newQuote.quote_date} onChange={e => setNewQuote(p => ({...p, quote_date: e.target.value}))} /></div>
+                        <div><label style={LBL}>Valid Until</label><input style={INP} type="date" value={newQuote.quote_valid_until} onChange={e => setNewQuote(p => ({...p, quote_valid_until: e.target.value}))} /></div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-                        <div><label style={LBL}>Method</label>
-                          <select style={{...INP,cursor:'pointer'}} value={newMaterial.order_method} onChange={e=>setNewMaterial(p=>({...p,order_method:e.target.value}))}>
-                            <option value="ONLINE">Online</option><option value="PHONE">Phone</option><option value="WALK_IN">Walk-in</option><option value="PO">PO</option>
-                          </select>
-                        </div>
-                        <div><label style={LBL}>Qty</label><input style={INP} type="number" value={newMaterial.quantity} onChange={e=>setNewMaterial(p=>({...p,quantity:e.target.value}))} placeholder="1" /></div>
-                        <div><label style={LBL}>Unit Cost</label><input style={INP} type="number" value={newMaterial.unit_cost} onChange={e=>setNewMaterial(p=>({...p,unit_cost:e.target.value}))} placeholder="0.00" /></div>
+
+                      {/* Line items */}
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={LBL}>Line Items</label>
+                        {newQuote.line_items.map((li, i) => (
+                          <div key={i} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr auto', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                            <input style={INP} value={li.description} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, description: e.target.value} : x)}))} placeholder="Description" />
+                            <input style={INP} type="number" value={li.quantity} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, quantity: e.target.value} : x)}))} placeholder="Qty" />
+                            <select style={{...INP, cursor:'pointer'}} value={li.unit} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit: e.target.value} : x)}))}>
+                              <option value="EA">EA</option><option value="LF">LF</option><option value="SF">SF</option><option value="LOT">LOT</option>
+                            </select>
+                            <input style={INP} type="number" value={li.unit_cost} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit_cost: e.target.value} : x)}))} placeholder="Unit $" />
+                            {newQuote.line_items.length > 1 && (
+                              <button onClick={() => setNewQuote(p => ({...p, line_items: p.line_items.filter((_, j) => j !== i)}))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: 14, padding: '0 4px' }}>✕</button>
+                            )}
+                          </div>
+                        ))}
+                        <button onClick={() => setNewQuote(p => ({...p, line_items: [...p.line_items, {description:'', quantity:'1', unit:'EA', unit_cost:''}]}))} style={{ fontSize: 11, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 0' }}>+ Add Line Item</button>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                        <div><label style={LBL}>Order Date</label><input style={INP} type="date" value={newMaterial.ordered_date} onChange={e=>setNewMaterial(p=>({...p,ordered_date:e.target.value}))} /></div>
-                        <div><label style={LBL}>ETA</label><input style={INP} type="date" value={newMaterial.eta_date} onChange={e=>setNewMaterial(p=>({...p,eta_date:e.target.value}))} /></div>
+
+                      {/* Notes */}
+                      <div style={{ marginBottom: 10 }}>
+                        <label style={LBL}>Notes</label>
+                        <input style={INP} value={newQuote.notes} onChange={e => setNewQuote(p => ({...p, notes: e.target.value}))} placeholder="Optional notes" />
                       </div>
+
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={async () => {
-                          if (!newMaterial.description.trim()) return;
-                          const procId = 'proc_' + Math.random().toString(36).slice(2,14);
+                          if (!newQuote.vendor_name.trim() || newQuote.line_items.every(li => !li.description.trim())) return;
                           try {
-                            const totalCost = newMaterial.quantity && newMaterial.unit_cost ? String(Number(newMaterial.quantity)*Number(newMaterial.unit_cost)) : '';
-                            await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, ...newMaterial, qty:newMaterial.quantity, total_cost:totalCost, procurement_id:procId }) });
-                            setProcurementItems(p => [...p, { procurement_id:procId, wo_id:safeWo.id, status:'ORDERED', ...newMaterial, qty:newMaterial.quantity, total_cost:totalCost }]);
-                            setNewMaterial({ description:'', supplier:'', order_method:'ONLINE', quantity:'1', unit_cost:'', ordered_date:new Date().toISOString().slice(0,10), eta_date:'', tracking_number:'' });
-                            setShowAddMaterial(false);
-                            if (['accepted','deposit_received'].includes(safeWo.status)) await onStageChange(safeWo.id, 'materials_ordered');
-                          } catch(err) { console.error('[WODetailPanel] addMaterial', err); }
+                            const qRes = await fetch('/api/procurement', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ wo_id:safeWo.id, vendor_org_id:newQuote.vendor_org_id, vendor_name:newQuote.vendor_name, quote_date:newQuote.quote_date, quote_valid_until:newQuote.quote_valid_until, notes:newQuote.notes, line_items:newQuote.line_items }) });
+                            const qData = await qRes.json();
+                            if (qData.success) {
+                              const total = newQuote.line_items.reduce((s, li) => s + ((Number(li.quantity)||0) * (Number(li.unit_cost)||0)), 0);
+                              setProcurementOrders(p => [...p, { procurement_id:qData.procurement_id, wo_id:safeWo.id, vendor_org_id:newQuote.vendor_org_id, vendor_name:newQuote.vendor_name, status:'VENDOR_QUOTED', quote_date:newQuote.quote_date, quote_valid_until:newQuote.quote_valid_until, notes:newQuote.notes, line_items:newQuote.line_items.map(li => ({...li, line_total:(Number(li.quantity)||0)*(Number(li.unit_cost)||0)})), total_cost:total }]);
+                              setNewQuote({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', line_items:[{description:'', quantity:'1', unit:'EA', unit_cost:''}] });
+                              setVendorSearch('');
+                              setShowAddQuote(false);
+                            }
+                          } catch(err) { console.error('[WODetailPanel] addVendorQuote', err); }
                         }} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#0f766e,#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>
-                          Save Material
+                          Save Vendor Quote
                         </button>
-                        <button onClick={() => setShowAddMaterial(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, cursor:'pointer' }}>Cancel</button>
+                        <button onClick={() => { setShowAddQuote(false); setVendorSearch(''); }} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, cursor:'pointer' }}>Cancel</button>
                       </div>
                     </div>
                   )}
 
-                  {/* Material items list */}
-                  {procurementItems.length === 0 && !showAddMaterial && (
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>No materials tracked yet.</div>
+                  {/* Vendor order cards */}
+                  {procurementOrders.length === 0 && !showAddQuote && (
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>No vendor quotes tracked yet.</div>
                   )}
-                  {procurementItems.map(item => {
+                  {procurementOrders.map(order => {
                     const statusColors: Record<string,{bg:string;color:string}> = {
-                      NOT_ORDERED: {bg:'#f8fafc',color:'#64748b'},
-                      ORDERED: {bg:'#fffbeb',color:'#92400e'},
-                      IN_TRANSIT: {bg:'#eff6ff',color:'#0369a1'},
+                      VENDOR_QUOTED: {bg:'#fffbeb',color:'#92400e'},
+                      RELEASED: {bg:'#eff6ff',color:'#1d4ed8'},
+                      IN_TRANSIT: {bg:'#f0f9ff',color:'#0369a1'},
                       DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
-                      DAMAGED: {bg:'#fef2f2',color:'#dc2626'},
+                      INSPECTED_PASS: {bg:'#f0fdf4',color:'#15803d'},
+                      INSPECTED_FAIL: {bg:'#fef2f2',color:'#dc2626'},
                       CANCELLED: {bg:'#f8fafc',color:'#94a3b8'},
                     };
-                    const sc = statusColors[item.status] || statusColors.ORDERED;
-                    const isMenuOpen = menuOpenId === item.procurement_id;
-                    const isInspecting = inspectionMode === item.procurement_id;
+                    const sc = statusColors[order.status] || statusColors.VENDOR_QUOTED;
+                    const isInspecting = inspectionMode === order.procurement_id;
                     return (
-                      <div key={item.procurement_id} style={{ background:'white', borderRadius:10, border:'1px solid #e2e8f0', padding:'11px 13px', marginBottom:7, position:'relative' }}>
-                        {/* Status badge + actions row */}
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+                      <div key={order.procurement_id} style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:'11px 13px',marginBottom:8}}>
+                        {/* Header */}
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
                           <div>
-                            <div style={{ fontWeight:700, fontSize:13, color:'#0f172a' }}>{item.description}</div>
-                            {item.supplier && <div style={{ fontSize:11, color:'#94a3b8', marginTop:1 }}>{item.supplier}{item.order_method ? ` · ${item.order_method}` : ''}{(item.qty || item.unit_cost) ? ` · ${item.qty || '1'} × $${Number(item.unit_cost||0).toFixed(2)} = $${Number(item.total_cost || (Number(item.qty||1)*Number(item.unit_cost||0))).toFixed(2)}` : ''}</div>}
-                          </div>
-                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                            <span style={{ fontSize:10, fontWeight:800, padding:'2px 8px', borderRadius:999, background:sc.bg, color:sc.color }}>{item.status}</span>
-                            <div style={{ position:'relative' }}>
-                              <button onClick={() => setMenuOpenId(isMenuOpen ? null : item.procurement_id)}
-                                style={{ background:'none', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 7px', cursor:'pointer', fontSize:13, color:'#64748b' }}>···</button>
-                              {isMenuOpen && (
-                                <>
-                                  <div onClick={() => setMenuOpenId(null)} style={{ position:'fixed', inset:0, zIndex:900 }} />
-                                  <div style={{ position:'absolute', right:0, top:'100%', marginTop:4, background:'white', border:'1px solid #e2e8f0', borderRadius:10, boxShadow:'0 8px 24px rgba(15,23,42,0.12)', zIndex:901, minWidth:160, overflow:'hidden' }}>
-                                    {['ORDERED','IN_TRANSIT'].includes(item.status) && (
-                                      <button onClick={() => { setInspectionMode(item.procurement_id); setMenuOpenId(null); setInspectionNotes(''); }}
-                                        style={{ width:'100%', padding:'9px 14px', textAlign:'left', background:'none', border:'none', cursor:'pointer', fontSize:12, color:'#0f172a', fontWeight:600 }}>✅ Mark Received</button>
-                                    )}
-                                    <button onClick={() => { setEditingItemId(item.procurement_id); setEditDraft({...item}); setMenuOpenId(null); }}
-                                      style={{ width:'100%', padding:'9px 14px', textAlign:'left', background:'none', border:'none', cursor:'pointer', fontSize:12, color:'#0f172a', fontWeight:600 }}>✏️ Edit</button>
-                                    {item.status !== 'CANCELLED' && (
-                                      <button onClick={async () => {
-                                        const reason = prompt('Reason for cancellation (optional):') ?? '';
-                                        setMenuOpenId(null);
-                                        try {
-                                          await fetch(`/api/procurement?procurement_id=${item.procurement_id}&reason=${encodeURIComponent(reason)}`, { method:'DELETE' });
-                                          setProcurementItems(p => p.map(x => x.procurement_id===item.procurement_id ? {...x,status:'CANCELLED'} : x));
-                                        } catch(err) { console.error('[WODetailPanel] cancelOrder', err); }
-                                      }} style={{ width:'100%', padding:'9px 14px', textAlign:'left', background:'none', border:'none', cursor:'pointer', fontSize:12, color:'#dc2626', fontWeight:600 }}>🗑 Cancel Order</button>
-                                    )}
-                                  </div>
-                                </>
-                              )}
+                            <div style={{fontWeight:800,fontSize:13,color:'#0f172a'}}>{order.vendor_name||'Unknown Vendor'}</div>
+                            <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>
+                              {order.quote_date && `Quoted: ${order.quote_date}`}
+                              {order.quote_valid_until && ` · Valid until: ${order.quote_valid_until}`}
+                              {order.order_ref && ` · Ref: ${order.order_ref}`}
                             </div>
+                          </div>
+                          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                            <span style={{fontSize:10,fontWeight:800,padding:'2px 8px',borderRadius:999,background:sc.bg,color:sc.color}}>{order.status.replace(/_/g,' ')}</span>
+                            {order.status !== 'CANCELLED' && (
+                              <button onClick={async () => {
+                                if (!confirm('Cancel this order?')) return;
+                                try {
+                                  await fetch(`/api/procurement?procurement_id=${order.procurement_id}`, { method:'DELETE' });
+                                  setProcurementOrders(p => p.map(o => o.procurement_id===order.procurement_id ? {...o, status:'CANCELLED'} : o));
+                                } catch(err) { console.error('[WODetailPanel] cancelOrder', err); }
+                              }} style={{background:'none',border:'1px solid #e2e8f0',borderRadius:6,padding:'2px 7px',cursor:'pointer',fontSize:11,color:'#64748b'}}>✕</button>
+                            )}
                           </div>
                         </div>
 
-                        {/* Dates + tracking */}
-                        <div style={{ display:'flex', gap:12, flexWrap:'wrap', fontSize:11, color:'#64748b', marginTop:4 }}>
-                          {item.ordered_date && <span>Ordered: {item.ordered_date}</span>}
-                          {item.eta_date && <span>ETA: {item.eta_date}</span>}
-                          {item.status==='DELIVERED' && item.received_date && <span style={{color:'#15803d'}}>✅ Delivered {item.received_date}</span>}
-                          {item.tracking_number && (
-                            <span>
-                              {item.tracking_url ? <a href={item.tracking_url} target="_blank" rel="noopener noreferrer" style={{color:'#0f766e'}}>#{item.tracking_number}</a> : `#${item.tracking_number}`}
-                            </span>
+                        {/* Line items table */}
+                        <div style={{background:'#fafafa',borderRadius:8,border:'1px solid #f1f5f9',overflow:'hidden',marginBottom:8}}>
+                          {order.line_items.map((item: any, i: number) => (
+                            <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 10px',borderBottom:i<order.line_items.length-1?'1px solid #f1f5f9':'none',fontSize:12}}>
+                              <span style={{color:'#0f172a'}}>{item.quantity}{item.unit && item.unit!=='EA' ? ' '+item.unit : ''} × {item.description}</span>
+                              <span style={{fontWeight:700,color:'#0f172a'}}>${Number(item.line_total||0).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <div style={{display:'flex',justifyContent:'space-between',padding:'6px 10px',background:'#f1f5f9',fontWeight:800,fontSize:12}}>
+                            <span>Total</span>
+                            <span>${order.total_cost.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div style={{display:'flex',gap:8}}>
+                          {order.status==='VENDOR_QUOTED' && (
+                            <button onClick={async () => {
+                              const method = prompt('Order method?\n1=Online  2=Phone  3=Email  4=On Hand', '1');
+                              const methods: Record<string,string> = {'1':'ONLINE','2':'PHONE','3':'EMAIL','4':'ON_HAND'};
+                              const orderMethod = methods[method||'1'] || 'ONLINE';
+                              const orderRef = prompt('Order confirmation # or reference (optional):') || '';
+                              const isOnHand = orderMethod === 'ON_HAND';
+                              try {
+                                await fetch('/api/procurement', { method:'PATCH', headers:{'Content-Type':'application/json'},
+                                  body:JSON.stringify({
+                                    procurement_id: order.procurement_id,
+                                    status: isOnHand ? 'DELIVERED' : 'RELEASED',
+                                    order_method: orderMethod,
+                                    order_ref: orderRef,
+                                    order_date: new Date().toISOString().slice(0,10),
+                                    ...(isOnHand ? {received_date: new Date().toISOString().slice(0,10)} : {}),
+                                  })
+                                });
+                                setProcurementOrders(p => p.map(o => o.procurement_id===order.procurement_id ? {...o, status:isOnHand?'DELIVERED':'RELEASED', order_method:orderMethod, order_ref:orderRef} : o));
+                                if (!isOnHand) { try { await onStageChange(safeWo.id, 'materials_ordered'); } catch(e) { console.error('[WODetailPanel] stageChange', e); } }
+                              } catch(err) { console.error('[WODetailPanel] releaseOrder', err); }
+                            }} style={{padding:'6px 12px',borderRadius:8,border:'1px solid #0f766e',background:'white',color:'#0f766e',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                              ▶ Release Order
+                            </button>
                           )}
-                          {item.inspection_status && item.status==='DELIVERED' && <span style={{color:'#15803d'}}>Inspect: {item.inspection_status}</span>}
+                          {order.status==='RELEASED' && order.eta_date && new Date(order.eta_date) <= new Date() && (
+                            <button onClick={() => { setInspectionMode(order.procurement_id); setInspectionNotes(''); }}
+                              style={{padding:'6px 12px',borderRadius:8,border:'1px solid #15803d',background:'white',color:'#15803d',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                              ✅ Mark Received
+                            </button>
+                          )}
                         </div>
 
                         {/* Inspection prompt */}
@@ -786,18 +869,17 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             <div style={{ display:'flex', gap:6, marginBottom:8, flexWrap:'wrap' }}>
                               {(['PASS','DAMAGED','WRONG_ITEM','SHORT_COUNT'] as const).map(result => (
                                 <button key={result} onClick={async () => {
-                                  const isPassed = result === 'PASS';
-                                  const newStatus = isPassed ? 'DELIVERED' : 'DAMAGED';
-                                  const now = new Date().toISOString().slice(0,10);
+                                  const newStatus = result === 'PASS' ? 'INSPECTED_PASS' : 'INSPECTED_FAIL';
+                                  const nowDate = new Date().toISOString().slice(0,10);
                                   try {
                                     await fetch('/api/procurement', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
-                                      procurement_id: item.procurement_id,
+                                      procurement_id: order.procurement_id,
                                       status: newStatus,
                                       inspection_status: result,
                                       inspection_notes: inspectionNotes,
-                                      received_date: now,
+                                      received_date: nowDate,
                                     })});
-                                    setProcurementItems(p => p.map(x => x.procurement_id===item.procurement_id ? {...x, status:newStatus, inspection_status:result, received_date:now, inspection_notes:inspectionNotes} : x));
+                                    setProcurementOrders(p => p.map(x => x.procurement_id===order.procurement_id ? {...x, status:newStatus, inspection_status:result, received_date:nowDate, inspection_notes:inspectionNotes} : x));
                                     setInspectionMode(null);
                                   } catch(err) { console.error('[WODetailPanel] markReceived', err); }
                                 }} style={{ padding:'6px 12px', borderRadius:7, border:'1.5px solid', cursor:'pointer', fontSize:11, fontWeight:700,
@@ -808,7 +890,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 </button>
                               ))}
                             </div>
-                            <textarea placeholder="Notes (optional)..." value={inspectionNotes} onChange={e=>setInspectionNotes(e.target.value)}
+                            <textarea placeholder="Notes (optional)..." value={inspectionNotes} onChange={e => setInspectionNotes(e.target.value)}
                               style={{ width:'100%', borderRadius:7, border:'1px solid #e2e8f0', padding:'7px 10px', fontSize:12, resize:'none', minHeight:50, boxSizing:'border-box', marginBottom:6 }} />
                             <button onClick={() => setInspectionMode(null)} style={{ fontSize:11, color:'#64748b', background:'none', border:'none', cursor:'pointer' }}>Cancel</button>
                           </div>
