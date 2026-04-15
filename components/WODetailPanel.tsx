@@ -104,6 +104,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [procurementItems, setProcurementItems] = useState<any[]>([]);
   const [showAddMaterial, setShowAddMaterial] = useState(false);
   const [newMaterial, setNewMaterial] = useState({ description:'', supplier:'', order_method:'ONLINE', quantity:'1', unit_cost:'', ordered_date:new Date().toISOString().slice(0,10), eta_date:'', tracking_number:'' });
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [inspectionMode, setInspectionMode] = useState<string | null>(null);
+  const [inspectionNotes, setInspectionNotes] = useState('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<Record<string,string>>({});
   const [saving, setSaving] = useState(false);
   const [stageSaving, setStageSaving] = useState('');
   const [showCloseModal, setShowCloseModal] = useState(false);
@@ -708,16 +713,108 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   {procurementItems.length === 0 && !showAddMaterial && (
                     <div style={{ fontSize: 12, color: '#94a3b8' }}>No materials tracked yet.</div>
                   )}
-                  {procurementItems.map(item => (
-                    <div key={item.procurement_id} style={{ background:'white', borderRadius:9, border:'1px solid #e2e8f0', padding:'10px 12px', marginBottom:6 }}>
-                      <div style={{ fontWeight:700, fontSize:13, color:'#0f172a', marginBottom:2 }}>{item.description}</div>
-                      {item.supplier && <div style={{ fontSize:11, color:'#94a3b8' }}>{item.supplier} · {item.order_method}</div>}
-                      <div style={{ display:'flex', gap:8, marginTop:4, alignItems:'center' }}>
-                        {item.eta_date && <span style={{ fontSize:11, color:'#64748b' }}>ETA: {item.eta_date}</span>}
-                        <span style={{ fontSize:10, fontWeight:800, padding:'2px 7px', borderRadius:999, background: item.status==='DELIVERED'?'#f0fdf4':item.status==='ORDERED'?'#fffbeb':'#f0f9ff', color: item.status==='DELIVERED'?'#15803d':item.status==='ORDERED'?'#92400e':'#0369a1' }}>{item.status}</span>
+                  {procurementItems.map(item => {
+                    const statusColors: Record<string,{bg:string;color:string}> = {
+                      NOT_ORDERED: {bg:'#f8fafc',color:'#64748b'},
+                      ORDERED: {bg:'#fffbeb',color:'#92400e'},
+                      IN_TRANSIT: {bg:'#eff6ff',color:'#0369a1'},
+                      DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
+                      DAMAGED: {bg:'#fef2f2',color:'#dc2626'},
+                      CANCELLED: {bg:'#f8fafc',color:'#94a3b8'},
+                    };
+                    const sc = statusColors[item.status] || statusColors.ORDERED;
+                    const isMenuOpen = menuOpenId === item.procurement_id;
+                    const isInspecting = inspectionMode === item.procurement_id;
+                    return (
+                      <div key={item.procurement_id} style={{ background:'white', borderRadius:10, border:'1px solid #e2e8f0', padding:'11px 13px', marginBottom:7, position:'relative' }}>
+                        {/* Status badge + actions row */}
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+                          <div>
+                            <div style={{ fontWeight:700, fontSize:13, color:'#0f172a' }}>{item.description}</div>
+                            {item.supplier && <div style={{ fontSize:11, color:'#94a3b8', marginTop:1 }}>{item.supplier}{item.order_method ? ` · ${item.order_method}` : ''}</div>}
+                          </div>
+                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                            <span style={{ fontSize:10, fontWeight:800, padding:'2px 8px', borderRadius:999, background:sc.bg, color:sc.color }}>{item.status}</span>
+                            <div style={{ position:'relative' }}>
+                              <button onClick={() => setMenuOpenId(isMenuOpen ? null : item.procurement_id)}
+                                style={{ background:'none', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 7px', cursor:'pointer', fontSize:13, color:'#64748b' }}>···</button>
+                              {isMenuOpen && (
+                                <>
+                                  <div onClick={() => setMenuOpenId(null)} style={{ position:'fixed', inset:0, zIndex:900 }} />
+                                  <div style={{ position:'absolute', right:0, top:'100%', marginTop:4, background:'white', border:'1px solid #e2e8f0', borderRadius:10, boxShadow:'0 8px 24px rgba(15,23,42,0.12)', zIndex:901, minWidth:160, overflow:'hidden' }}>
+                                    {['ORDERED','IN_TRANSIT'].includes(item.status) && (
+                                      <button onClick={() => { setInspectionMode(item.procurement_id); setMenuOpenId(null); setInspectionNotes(''); }}
+                                        style={{ width:'100%', padding:'9px 14px', textAlign:'left', background:'none', border:'none', cursor:'pointer', fontSize:12, color:'#0f172a', fontWeight:600 }}>✅ Mark Received</button>
+                                    )}
+                                    <button onClick={() => { setEditingItemId(item.procurement_id); setEditDraft({...item}); setMenuOpenId(null); }}
+                                      style={{ width:'100%', padding:'9px 14px', textAlign:'left', background:'none', border:'none', cursor:'pointer', fontSize:12, color:'#0f172a', fontWeight:600 }}>✏️ Edit</button>
+                                    {item.status !== 'CANCELLED' && (
+                                      <button onClick={async () => {
+                                        const reason = prompt('Reason for cancellation (optional):') ?? '';
+                                        setMenuOpenId(null);
+                                        try {
+                                          await fetch(`/api/procurement?procurement_id=${item.procurement_id}&reason=${encodeURIComponent(reason)}`, { method:'DELETE' });
+                                          setProcurementItems(p => p.map(x => x.procurement_id===item.procurement_id ? {...x,status:'CANCELLED'} : x));
+                                        } catch(err) { console.error('[WODetailPanel] cancelOrder', err); }
+                                      }} style={{ width:'100%', padding:'9px 14px', textAlign:'left', background:'none', border:'none', cursor:'pointer', fontSize:12, color:'#dc2626', fontWeight:600 }}>🗑 Cancel Order</button>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dates + tracking */}
+                        <div style={{ display:'flex', gap:12, flexWrap:'wrap', fontSize:11, color:'#64748b', marginTop:4 }}>
+                          {item.ordered_date && <span>Ordered: {item.ordered_date}</span>}
+                          {item.eta_date && <span>ETA: {item.eta_date}</span>}
+                          {item.status==='DELIVERED' && item.received_date && <span style={{color:'#15803d'}}>✅ Delivered {item.received_date}</span>}
+                          {item.tracking_number && (
+                            <span>
+                              {item.tracking_url ? <a href={item.tracking_url} target="_blank" rel="noopener noreferrer" style={{color:'#0f766e'}}>#{item.tracking_number}</a> : `#${item.tracking_number}`}
+                            </span>
+                          )}
+                          {item.inspection_status && item.status==='DELIVERED' && <span style={{color:'#15803d'}}>Inspect: {item.inspection_status}</span>}
+                        </div>
+
+                        {/* Inspection prompt */}
+                        {isInspecting && (
+                          <div style={{ marginTop:10, background:'#f0fdf4', borderRadius:8, border:'1px solid #bbf7d0', padding:'12px' }}>
+                            <div style={{ fontSize:11, fontWeight:800, color:'#15803d', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.07em' }}>Mark as Received — Inspection</div>
+                            <div style={{ display:'flex', gap:6, marginBottom:8, flexWrap:'wrap' }}>
+                              {(['PASS','DAMAGED','WRONG_ITEM','SHORT_COUNT'] as const).map(result => (
+                                <button key={result} onClick={async () => {
+                                  const isPassed = result === 'PASS';
+                                  const newStatus = isPassed ? 'DELIVERED' : 'DAMAGED';
+                                  const now = new Date().toISOString().slice(0,10);
+                                  try {
+                                    await fetch('/api/procurement', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+                                      procurement_id: item.procurement_id,
+                                      status: newStatus,
+                                      inspection_status: result,
+                                      inspection_notes: inspectionNotes,
+                                      received_date: now,
+                                    })});
+                                    setProcurementItems(p => p.map(x => x.procurement_id===item.procurement_id ? {...x, status:newStatus, inspection_status:result, received_date:now, inspection_notes:inspectionNotes} : x));
+                                    setInspectionMode(null);
+                                  } catch(err) { console.error('[WODetailPanel] markReceived', err); }
+                                }} style={{ padding:'6px 12px', borderRadius:7, border:'1.5px solid', cursor:'pointer', fontSize:11, fontWeight:700,
+                                  borderColor: result==='PASS'?'#15803d':result==='DAMAGED'?'#dc2626':'#92400e',
+                                  color: result==='PASS'?'#15803d':result==='DAMAGED'?'#dc2626':'#92400e',
+                                  background: 'white' }}>
+                                  {result==='PASS'?'✅ Pass':result==='DAMAGED'?'⛔ Damaged':result==='WRONG_ITEM'?'❌ Wrong Item':'⚠️ Short Count'}
+                                </button>
+                              ))}
+                            </div>
+                            <textarea placeholder="Notes (optional)..." value={inspectionNotes} onChange={e=>setInspectionNotes(e.target.value)}
+                              style={{ width:'100%', borderRadius:7, border:'1px solid #e2e8f0', padding:'7px 10px', fontSize:12, resize:'none', minHeight:50, boxSizing:'border-box', marginBottom:6 }} />
+                            <button onClick={() => setInspectionMode(null)} style={{ fontSize:11, color:'#64748b', background:'none', border:'none', cursor:'pointer' }}>Cancel</button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Invoice placeholder */}
