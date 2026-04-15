@@ -84,18 +84,15 @@ const TYPE_COLORS: Record<string, { color: string; bg: string }> = {
   CONSULTANT:    { color: '#4b5563', bg: '#f9fafb' },
 };
 
-const ALL_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
+const ALL_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'GOVERNMENT', 'PROPERTY_MGMT'];
 
 const FILTER_LABELS: Record<string, string> = {
   GC: 'GC',
   COMMERCIAL: 'Commercial',
   RESIDENTIAL: 'Residential',
   VENDOR: 'Vendor',
-  ARCHITECT: 'Architect',
-  OWNER: 'Owner',
   GOVERNMENT: 'Government',
   PROPERTY_MGMT: 'Property Mgmt',
-  CONSULTANT: 'Consultant',
 };
 
 const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -451,6 +448,14 @@ function OrgDetailPanel({
   );
 }
 
+// ── Phone formatter ─────────────────────────────────────────────────────
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+  if (digits.length === 11 && digits[0] === '1') return `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+  return raw;
+}
+
 // ── New Org Modal ────────────────────────────────────────────────────────
 type OrgCategory = 'business' | 'person' | 'gc' | 'vendor';
 
@@ -466,7 +471,9 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [category, setCategory] = useState<OrgCategory | null>(null);
 
   // Form fields
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');  // person only
+  const [lastName, setLastName] = useState('');    // person only
+  const [companyName, setCompanyName] = useState(''); // business/gc/vendor
   const [contactName, setContactName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -476,9 +483,15 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [isGovt, setIsGovt] = useState(false);
   const [notes, setNotes] = useState('');
   const [creating, setCreating] = useState(false);
+  const [dupWarning, setDupWarning] = useState('');
 
   const cat = ORG_CATEGORIES.find(c => c.id === category);
   const isPersonal = category === 'person';
+
+  // Derived org name
+  const orgName = isPersonal
+    ? [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
+    : companyName.trim();
 
   function buildTypes(): string[] {
     const base = cat?.types || ['COMMERCIAL'];
@@ -488,20 +501,35 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     return [...new Set([...base, ...extras])];
   }
 
+  // Duplicate check — fires on name blur
+  async function checkDuplicate(checkName: string) {
+    if (!checkName.trim()) return;
+    try {
+      const res = await fetch(`/api/organizations?q=${encodeURIComponent(checkName)}&limit=3`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const orgs: OrgRecord[] = data.orgs || [];
+      const match = orgs.find(o => o.name.toLowerCase() === checkName.toLowerCase());
+      if (match) setDupWarning(`A record named "${match.name}" already exists.`);
+      else setDupWarning('');
+    } catch { /* non-blocking */ }
+  }
+
   async function create() {
-    if (!name.trim()) return;
+    if (!orgName) return;
     setCreating(true);
     try {
       const res = await fetch('/api/organizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
+          name: orgName,
           types: buildTypes(),
           entity_type: cat?.entity_type || 'COMPANY',
           island,
           notes,
-          contact_name: contactName.trim() || undefined,
+          source: 'MANUAL_ENTRY',
+          contact_name: (isPersonal ? orgName : contactName.trim()) || undefined,
           contact_phone: phone.trim() || undefined,
           contact_email: email.trim() || undefined,
           address: address.trim() || undefined,
@@ -579,49 +607,77 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              {/* Name field — context-aware label */}
-              <div>
-                <label style={LBL}>{isPersonal ? 'Full Name *' : 'Company Name *'}</label>
-                <input style={INP}
-                  value={name} onChange={e => setName(e.target.value)}
-                  placeholder={isPersonal ? 'e.g. Bob & Linda Smith' : cat.id === 'gc' ? 'e.g. Nordic PCL Construction' : 'e.g. Westin Maui Resort'}
-                  autoFocus />
-              </div>
-
-              {/* Contact person — businesses only */}
-              {!isPersonal && (
-                <div style={ROW2}>
-                  <div>
-                    <label style={LBL}>Contact Person</label>
-                    <input style={INP} value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Name" />
-                  </div>
-                  <div>
-                    <label style={LBL}>Phone</label>
-                    <input style={INP} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(808) 555-0000" />
-                  </div>
-                </div>
-              )}
-
-              {/* Phone for personal */}
+              {/* Person: First + Last name fields */}
               {isPersonal && (
                 <div style={ROW2}>
                   <div>
-                    <label style={LBL}>Phone</label>
-                    <input style={INP} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(808) 555-0000" autoFocus={false} />
+                    <label style={LBL}>First Name *</label>
+                    <input style={INP} value={firstName} onChange={e => setFirstName(e.target.value)}
+                      onBlur={() => checkDuplicate([firstName.trim(), lastName.trim()].filter(Boolean).join(' '))}
+                      placeholder="Bob" autoFocus />
                   </div>
                   <div>
-                    <label style={LBL}>Email</label>
-                    <input style={INP} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" />
+                    <label style={LBL}>Last Name *</label>
+                    <input style={INP} value={lastName} onChange={e => setLastName(e.target.value)}
+                      onBlur={() => checkDuplicate([firstName.trim(), lastName.trim()].filter(Boolean).join(' '))}
+                      placeholder="Campbell" />
                   </div>
                 </div>
               )}
 
-              {/* Email for businesses */}
+              {/* Business/GC/Vendor: Company name */}
               {!isPersonal && (
                 <div>
-                  <label style={LBL}>Email</label>
-                  <input style={INP} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@company.com" />
+                  <label style={LBL}>Company Name *</label>
+                  <input style={INP} value={companyName} onChange={e => setCompanyName(e.target.value)}
+                    onBlur={() => checkDuplicate(companyName)}
+                    placeholder={cat.id === 'gc' ? 'e.g. Nordic PCL Construction' : cat.id === 'vendor' ? 'e.g. Kawneer Hawaii' : 'e.g. Westin Maui Resort'}
+                    autoFocus />
                 </div>
+              )}
+
+              {/* Duplicate warning */}
+              {dupWarning && (
+                <div style={{ fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px' }}>
+                  ⚠️ {dupWarning}
+                </div>
+              )}
+
+              {/* Phone + Email — side by side for person, stacked for business */}
+              {isPersonal ? (
+                <div style={ROW2}>
+                  <div>
+                    <label style={LBL}>Phone *</label>
+                    <input style={INP} type="tel" value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      onBlur={e => setPhone(formatPhone(e.target.value))}
+                      placeholder="(808) 555-0199" />
+                  </div>
+                  <div>
+                    <label style={LBL}>Email</label>
+                    <input style={INP} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="bob@email.com" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={ROW2}>
+                    <div>
+                      <label style={LBL}>Contact Person</label>
+                      <input style={INP} value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Name" />
+                    </div>
+                    <div>
+                      <label style={LBL}>Phone</label>
+                      <input style={INP} type="tel" value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        onBlur={e => setPhone(formatPhone(e.target.value))}
+                        placeholder="(808) 555-0000" />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={LBL}>Email</label>
+                    <input style={INP} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@company.com" />
+                  </div>
+                </>
               )}
 
               {/* Address */}
@@ -662,9 +718,9 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={create} disabled={!name.trim() || creating}
-                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: !name.trim() ? 'not-allowed' : 'pointer', opacity: !name.trim() ? 0.6 : 1 }}>
-                {creating ? 'Creating…' : `Create ${cat.label}`}
+              <button onClick={create} disabled={!orgName || creating}
+                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: !orgName ? 'not-allowed' : 'pointer', opacity: !orgName ? 0.6 : 1 }}>
+                {creating ? 'Creating…' : isPersonal ? 'Create Customer' : `Create ${cat.label}`}
               </button>
             </div>
           </>
