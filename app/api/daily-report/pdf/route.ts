@@ -136,6 +136,7 @@ export async function POST(req: Request) {
   // Auth: valid MC session (same-origin) OR shared internal key (FA server-to-server)
   const internalKey = process.env.INTERNAL_API_KEY;
   const reqKey = req.headers.get('X-Internal-Key');
+  console.log('[daily-report/pdf] auth: internalKey present:', !!internalKey, 'internalKey length:', (internalKey||'').length, 'reqKey present:', !!reqKey, 'reqKey length:', (reqKey||'').length, 'match:', internalKey && reqKey === internalKey);
   const keyMatch = internalKey && reqKey === internalKey;
   if (!keyMatch) {
     const session = await getServerSession();
@@ -228,8 +229,10 @@ export async function POST(req: Request) {
       const filename = `DR-${dateStr.slice(2)}-${kid}.pdf`;
       const folderUrl = swoRow?.[SWO.folder_url] || '';
       const woFolderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
+      console.log('[daily-report/pdf] Drive write: kid=', kid, 'swoRow found:', !!swoRow, 'folderUrl=', folderUrl.slice(0,60), 'woFolderId=', woFolderId);
       if (woFolderId) {
         driveUrl = await uploadToDrive(pdfBuffer, filename, woFolderId);
+        console.log('[daily-report/pdf] uploadToDrive result:', driveUrl);
       } else {
         console.error('[daily-report/pdf] No folder_url for', kid, '— skipping Drive write');
       }

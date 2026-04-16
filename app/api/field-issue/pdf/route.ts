@@ -67,6 +67,7 @@ export async function POST(req: Request) {
   // Auth: valid MC session (same-origin) OR shared internal key (FA server-to-server)
   const internalKey = process.env.INTERNAL_API_KEY;
   const reqKey = req.headers.get('X-Internal-Key');
+  console.log('[field-issue/pdf] auth: internalKey present:', !!internalKey, 'internalKey length:', (internalKey||'').length, 'reqKey present:', !!reqKey, 'reqKey length:', (reqKey||'').length, 'match:', internalKey && reqKey === internalKey);
   const keyMatch = internalKey && reqKey === internalKey;
   if (!keyMatch) {
     const session = await getServerSession();
