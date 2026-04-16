@@ -1040,11 +1040,6 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   Plan: {step.planned_hours}h
                 </span>
               ) : null}
-              {step.required_photo_yn === 'Y' && (
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#eff6ff', color: '#0369a1', border: '1px solid #bfdbfe' }}>
-                  PHOTO
-                </span>
-              )}
               {!readOnly && !isLocked ? (
                 <select
                   value={step.category || ''}
@@ -1070,10 +1065,6 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 </span>
               ) : null}
             </div>
-            {step.acceptance_criteria && (
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{step.acceptance_criteria}</div>
-            )}
-
             {/* ─── Scheduling fields ──────────────────────────────────────── */}
             {!readOnly && !isLocked && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6, alignItems: 'center' }}>
@@ -1158,15 +1149,6 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           />
         )}
 
-        {/* View Measurement link — shown when completion notes reference a measurement event */}
-        {completion && (() => {
-          const notesStr = completion.notes || '';
-          const isMeasure = notesStr.includes('Measurement captured via Field App');
-          if (!isMeasure) return null;
-          const evtIdMatch = notesStr.match(/event_id:\s*([\w-]+)/);
-          const evtId = evtIdMatch?.[1];
-          return <MeasurementViewButton eventId={evtId} kID={jobId} />
-        })()}
       </div>
     );
   }
@@ -1844,7 +1826,8 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
 // ─── Note Field (inline) ──────────────────────────────────────────────────────
 
-function MeasurementViewButton({ eventId, kID }: { eventId?: string; kID: string }) {
+// MeasurementViewButton removed — measurement data surfaces in Activity Timeline (evidence_ref)
+function _MeasurementViewButton_REMOVED({ eventId, kID }: { eventId?: string; kID: string }) {
   const [data, setData] = React.useState<{ notes: string; performed_by: string; occurred_at: string } | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
