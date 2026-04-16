@@ -70,6 +70,9 @@ async function createWOFolderStructure(
       findOrCreateFolder(drive, 'Photos', woFolderId),
       findOrCreateFolder(drive, 'Quotes', woFolderId),
       findOrCreateFolder(drive, 'Correspondence', woFolderId),
+      findOrCreateFolder(drive, 'Field Issues', woFolderId),
+      findOrCreateFolder(drive, 'Daily Reports', woFolderId),
+      findOrCreateFolder(drive, 'Measurements', woFolderId),
     ]);
 
     // Layer 4b: Kai shadow folder + subfolders (immutable backup, invisible to users)

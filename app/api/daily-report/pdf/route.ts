@@ -125,6 +125,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { searchParams } = new URL(req.url);
+  const jsonMode = searchParams.get('json') === 'true';
+
   let body: Partial<DailyReportPDFData> & { store_to_drive?: boolean };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: 'Invalid body' }, { status: 400 }); }
@@ -171,7 +174,12 @@ export async function POST(req: Request) {
       driveUrl = await uploadToDrive(pdfBuffer, filename, kid);
     }
 
-    // Return PDF
+    // Return JSON if requested (for FA auto-trigger), otherwise return PDF binary
+    if (jsonMode && store_to_drive) {
+      return NextResponse.json({ ok: true, driveUrl, primaryFileId: driveUrl?.match(/\/d\/([^/]+)\//)?.[1] || null });
+    }
+
+    // Return PDF binary (default — MC manual download path)
     return new NextResponse(pdfBuffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',

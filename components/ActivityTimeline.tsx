@@ -104,6 +104,7 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
   };
   const [expanded, setExpanded] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [pdfState, setPdfState] = useState<'idle'|'generating'|'done'|'error'>('idle');
 
   const cfg = EVENT_CONFIG[event.event_type] || EVENT_CONFIG.NOTE;
 
@@ -223,6 +224,44 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
             )}
           </div>
         </div>
+
+        {/* Regenerate PDF button — FIELD_ISSUE and DAILY_LOG */}
+        {(event.event_type === 'FIELD_ISSUE' || event.event_type === 'DAILY_LOG') && (
+          <button
+            title="Regenerate PDF"
+            onClick={async e => {
+              e.stopPropagation();
+              if (pdfState === 'generating') return;
+              setPdfState('generating');
+              try {
+                const isIssue = event.event_type === 'FIELD_ISSUE';
+                const url = isIssue
+                  ? '/api/field-issue/pdf'
+                  : '/api/daily-report/pdf?json=true';
+                const body = isIssue
+                  ? { event_id: event.event_id }
+                  : { kid: event.target_kID, event_id: event.event_id, store_to_drive: true };
+                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                if (res.ok) {
+                  setPdfState('done');
+                  setTimeout(() => setPdfState('idle'), 2000);
+                } else {
+                  setPdfState('error');
+                  setTimeout(() => setPdfState('idle'), 3000);
+                }
+              } catch { setPdfState('error'); setTimeout(() => setPdfState('idle'), 3000); }
+            }}
+            style={{
+              width: 28, height: 28, borderRadius: 7, border: '1px solid #e2e8f0', background: 'white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: pdfState==='generating'?'default':'pointer',
+              fontSize: 13, flexShrink: 0, color: pdfState==='done' ? '#15803d' : pdfState==='error' ? '#dc2626' : '#64748b',
+            }}>
+            {pdfState === 'generating' ? <span style={{ fontSize:10, animation:'spin 0.8s linear infinite', display:'inline-block' }}>⟳</span>
+              : pdfState === 'done' ? '✓'
+              : pdfState === 'error' ? '✗'
+              : '📄'}
+          </button>
+        )}
 
         {/* Resolve button for open issues */}
         {event.event_type === 'FIELD_ISSUE' && event.issue_status === 'OPEN' && (
