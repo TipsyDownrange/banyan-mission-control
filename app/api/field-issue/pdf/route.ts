@@ -67,8 +67,10 @@ export async function POST(req: Request) {
   // Auth: valid MC session (same-origin) OR shared internal key (FA server-to-server)
   const internalKey = process.env.INTERNAL_API_KEY;
   const reqKey = req.headers.get('X-Internal-Key');
-  console.log('[field-issue/pdf] auth: internalKey present:', !!internalKey, 'internalKey length:', (internalKey||'').length, 'reqKey present:', !!reqKey, 'reqKey length:', (reqKey||'').length, 'match:', internalKey && reqKey === internalKey);
-  const keyMatch = internalKey && reqKey === internalKey;
+  const incomingKey = req.headers.get('X-Internal-Key') || '';
+  const envKey = process.env.INTERNAL_API_KEY || '';
+  console.log('[field-issue/pdf] KEY CHECK incoming_prefix=' + incomingKey.slice(0,4) + ' incoming_len=' + incomingKey.length + ' env_prefix=' + envKey.slice(0,4) + ' env_len=' + envKey.length + ' match=' + (incomingKey === envKey));
+  const keyMatch = incomingKey.length > 0 && incomingKey === envKey;
   if (!keyMatch) {
     const session = await getServerSession();
     if (!session?.user?.email?.endsWith('@kulaglass.com')) {
