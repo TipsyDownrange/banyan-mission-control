@@ -105,6 +105,7 @@ export async function POST(req: Request) {
     const projectName = swoRow?.[SWO.name] || kID;
     const folderUrl = swoRow?.[SWO.folder_url] || '';
     const woFolderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
+    console.log('[field-issue/pdf] DRIVE_TRACE swoRow_found=' + !!swoRow + ' folderUrl=' + folderUrl.slice(0,60) + ' woFolderId=' + woFolderId + ' kID=' + kID);
 
     // Build photo references from evidence_ref (comma-separated Drive fileIds)
     const evidenceRef = evRow[EV.evidence_ref] || '';
@@ -159,12 +160,14 @@ export async function POST(req: Request) {
       // Primary: [WO]/Field Issues/
       try {
         const fieldIssuesFolderId = await findOrCreate(drive, 'Field Issues', woFolderId);
+        console.log('[field-issue/pdf] DRIVE_TRACE fieldIssuesFolderId=' + fieldIssuesFolderId);
         const primaryFile = await drive.files.create({
           requestBody: { name: filename, parents: [fieldIssuesFolderId], mimeType: 'application/pdf' },
           media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
           supportsAllDrives: true, fields: 'id,webViewLink',
         });
         primaryFileId = primaryFile.data.id || null;
+        console.log('[field-issue/pdf] DRIVE_TRACE primaryFileId=' + primaryFileId);
       } catch (e) { console.error('[field-issue/pdf] primary write failed:', e); }
 
       // Shadow: [WO]/10 - AI Project Documents [Kai]/Field Issues/ (non-fatal)
