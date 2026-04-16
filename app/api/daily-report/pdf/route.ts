@@ -139,7 +139,7 @@ export async function POST(req: Request) {
   const incomingKey = req.headers.get('X-Internal-Key') || '';
   const envKey = process.env.INTERNAL_API_KEY || '';
   console.log('[daily-report/pdf] KEY CHECK incoming_prefix=' + incomingKey.slice(0,4) + ' incoming_len=' + incomingKey.length + ' env_prefix=' + envKey.slice(0,4) + ' env_len=' + envKey.length + ' match=' + (incomingKey === envKey));
-  const keyMatch = incomingKey.length > 0 && incomingKey === envKey;
+  const keyMatch = incomingKey.length > 0 && incomingKey.trim() === envKey.trim();
   if (!keyMatch) {
     const session = await getServerSession();
     if (!session?.user?.email?.endsWith('@kulaglass.com')) {
