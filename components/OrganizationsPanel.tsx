@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { normalizePhone } from '@/lib/normalize';
 import ContactAutocomplete from '@/components/shared/ContactAutocomplete';
 import type { ContactResult } from '@/components/shared/ContactAutocomplete';
+import PlacesAutocomplete from '@/components/PlacesAutocomplete';
+import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type OrgRecord = {
@@ -477,7 +479,7 @@ function OrgDetailPanel({
             {addingSite ? (
               <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  <div><label style={LBL}>Address</label><input style={INP} value={newSite.address_line_1} onChange={e => setNewSite(p => ({ ...p, address_line_1: e.target.value }))} autoFocus /></div>
+                  <div><label style={LBL}>Address</label><PlacesAutocomplete value={newSite.address_line_1} onChange={v => setNewSite(p => ({...p, address_line_1: v}))} onSelect={(place: ParsedPlace) => setNewSite(p => ({ ...p, address_line_1: place.formatted_address || '', city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
                   <div><label style={LBL}>City</label><input style={INP} value={newSite.city} onChange={e => setNewSite(p => ({ ...p, city: e.target.value }))} /></div>
                   <div><label style={LBL}>Island</label>
                     <select style={{ ...INP, cursor: 'pointer' }} value={newSite.island} onChange={e => setNewSite(p => ({ ...p, island: e.target.value }))}>
@@ -795,7 +797,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               {/* Address */}
               <div>
                 <label style={LBL}>Address</label>
-                <input style={INP} value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address (optional)" />
+                <PlacesAutocomplete value={address} onChange={setAddress} onSelect={(place: ParsedPlace) => { setAddress(place.formatted_address || ''); if (place.island && !island) setIsland(place.island); }} style={INP} placeholder="Street address (optional)" />
               </div>
 
               {/* Island + optional subcategories */}
@@ -830,8 +832,8 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={create} disabled={!orgName || creating}
-                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: !orgName ? 'not-allowed' : 'pointer', opacity: !orgName ? 0.6 : 1 }}>
+              <button onClick={create} disabled={!orgName || (isPersonal && !phone.trim()) || creating}
+                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
                 {creating ? 'Creating…' : isPersonal ? 'Create Customer' : `Create ${cat.label}`}
               </button>
             </div>

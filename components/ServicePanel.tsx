@@ -33,18 +33,33 @@ type ServiceData = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES: { key: string; label: string; color: string; bg: string; border: string }[] = [
-  { key: 'lead',        label: 'New Lead',          color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
-  { key: 'quoted',      label: 'Quoted',             color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(139,92,246,0.22)' },
-  { key: 'approved',         label: 'Needs to Schedule',  color: '#92400e', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(245,158,11,0.25)' },
-  { key: 'deposit_received',   label: 'Deposit Received',   color: '#b45309', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(180,83,9,0.2)' },
-  { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#9a3412', bg: 'rgba(255,247,237,0.96)', border: '1px solid rgba(154,52,18,0.2)' },
-  { key: 'materials_received', label: 'Materials In',       color: '#166534', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,101,52,0.2)' },
-  { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#0369a1', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(3,105,161,0.2)' },
-  { key: 'scheduled',          label: 'Scheduled',          color: '#4338ca', bg: 'rgba(238,242,255,0.96)', border: '1px solid rgba(99,102,241,0.22)' },
-  { key: 'in_progress', label: 'In Progress',        color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.25)' },
-  { key: 'work_complete', label: 'Work Complete',  color: '#059669', bg: 'rgba(236,253,245,0.96)', border: '1px solid rgba(5,150,105,0.22)' },
-  { key: 'closed',        label: 'Closed',             color: '#15803d', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(34,197,94,0.22)' },
+  { key: 'lead',               label: 'New Lead',           color: '#3b82f6', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.2)' },
+  { key: 'quoted',             label: 'Quoted',             color: '#3b82f6', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.2)' },
+  { key: 'accepted',           label: 'Accepted',           color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
+  { key: 'approved',           label: 'Accepted',           color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
+  { key: 'deposit_received',   label: 'Deposit Received',   color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
+  { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#d97706', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
+  { key: 'materials_received', label: 'Materials In',       color: '#d97706', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
+  { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
+  { key: 'scheduled',          label: 'Scheduled',          color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
+  { key: 'in_progress',        label: 'In Progress',        color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
+  { key: 'work_complete',      label: 'Work Complete',      color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
+  { key: 'completed',          label: 'Completed',          color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
+  { key: 'invoiced',           label: 'Invoiced',           color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
+  { key: 'paid',               label: 'Paid',               color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
+  { key: 'closed',             label: 'Closed',             color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
+  { key: 'lost',               label: 'Lost',               color: '#dc2626', bg: 'rgba(254,242,242,0.96)', border: '1px solid rgba(220,38,38,0.2)' },
 ];
+
+const ISLAND_COLORS: Record<string, string> = {
+  'Maui': '#3b82f6',
+  'Oahu': '#0f766e',
+  'Kauai': '#7c3aed',
+  'Hawaii': '#16a34a',
+  'Molokai': '#ea580c',
+  'Lanai': '#dc2626',
+  'Hana': '#d97706',
+};
 
 // Normalize raw Smartsheet statuses to display stages
 function normalizeStatus(raw: string): string {
@@ -91,10 +106,11 @@ function WOCard({
   wo: WorkOrder;
   onDetail: (wo: WorkOrder) => void;
 }) {
-  // Simplified card — all editing happens in the full detail panel via onDetail
+  const statusStage = STAGES.find(s => s.key === wo.status) || STAGES.find(s => s.key === 'lead')!;
+  const islandColor = ISLAND_COLORS[wo.island || ''] || '#64748b';
 
   return (
-    <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 10, background: 'white', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', position: 'relative', overflow: 'hidden', marginBottom: 0 }}>
+    <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 10, background: 'white', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', position: 'relative', overflow: 'hidden', marginBottom: 0, borderLeft: `4px solid ${statusStage.color}` }}>
 
       {/* Simplified card — click anywhere to open detail panel */}
       <div onClick={() => onDetail(wo)} style={{ padding: '10px 12px', cursor: 'pointer' }}>
@@ -102,7 +118,7 @@ function WOCard({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
           <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{wo.id || ''}</span>
           {wo.island && (
-            <span style={{ fontSize: 10, color: '#0369a1', background: '#eff6ff', padding: '1px 6px', borderRadius: 999, fontWeight: 700 }}>{wo.island}</span>
+            <span style={{ fontSize: 10, color: islandColor, background: `${islandColor}15`, padding: '1px 6px', borderRadius: 999, fontWeight: 700 }}>{wo.island}</span>
           )}
         </div>
 

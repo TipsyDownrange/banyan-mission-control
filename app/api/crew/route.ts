@@ -4,6 +4,11 @@ import { getGoogleAuth } from '@/lib/gauth';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
+function getSheets() {
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+  return google.sheets({ version: 'v4', auth });
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -61,5 +66,54 @@ export async function GET(req: Request) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg, crew: [], pms: [], all: [] }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { first_name, last_name, role, email, phone, island, department, classification, address } = body;
+
+    if (!first_name?.trim() || !last_name?.trim()) {
+      return NextResponse.json({ error: 'First and last name required' }, { status: 400 });
+    }
+
+    const sheets = getSheets();
+    const userId = `crew_${Date.now()}`;
+    const name = `${first_name.trim()} ${last_name.trim()}`;
+    const roleStr = [role, classification].filter(Boolean).join('/');
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: 'Users_Roles!A:R',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[
+          userId,                                      // A: user_id
+          name,                                        // B: name
+          roleStr,                                     // C: role
+          email || '',                                 // D: email
+          phone || '',                                 // E: phone
+          island || '',                                // F: island
+          '',                                          // G: personal_email
+          classification || role || '',                // H: title
+          department || '',                            // I: department
+          '',                                          // J: office
+          address || '',                               // K: home_address
+          '',                                          // L: emergency_contact
+          new Date().toISOString().slice(0, 10),       // M: start_date
+          '',                                          // N: notes
+          '',                                          // O: authority_level
+          '',                                          // P: career_track
+          department || '',                            // Q: departments_multi
+          roleStr,                                     // R: roles_multi
+        ]],
+      },
+    });
+
+    return NextResponse.json({ success: true, user_id: userId, name });
+  } catch (err) {
+    console.error('[/api/crew POST]', err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

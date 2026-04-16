@@ -38,19 +38,19 @@ type WorkOrder = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES = [
-  { key: 'lead',               label: 'Lead',         color: '#64748b' },
-  { key: 'quoted',             label: 'Quoted',       color: '#7c3aed' },
-  { key: 'accepted',           label: 'Accepted',     color: '#92400e' },
-  { key: 'deposit_received',   label: 'Deposit',      color: '#b45309' },
-  { key: 'materials_ordered',  label: 'Mat Ordered',  color: '#9a3412' },
-  { key: 'materials_received', label: 'Mat In',       color: '#166534' },
-  { key: 'ready_to_schedule',  label: 'Ready',        color: '#0369a1' },
-  { key: 'scheduled',          label: 'Scheduled',    color: '#4338ca' },
-  { key: 'in_progress',        label: 'In Progress',  color: '#0f766e' },
-  { key: 'work_complete',      label: 'Complete',     color: '#059669' },
-  { key: 'invoiced',           label: 'Invoiced',     color: '#0369a1' },
-  { key: 'paid',               label: 'Paid',         color: '#15803d' },
-  { key: 'closed',             label: 'Closed',       color: '#15803d' },
+  { key: 'lead',               label: 'Lead',         color: '#3b82f6' },
+  { key: 'quoted',             label: 'Quoted',       color: '#3b82f6' },
+  { key: 'accepted',           label: 'Accepted',     color: '#0f766e' },
+  { key: 'deposit_received',   label: 'Deposit',      color: '#0f766e' },
+  { key: 'materials_ordered',  label: 'Mat Ordered',  color: '#d97706' },
+  { key: 'materials_received', label: 'Mat In',       color: '#d97706' },
+  { key: 'ready_to_schedule',  label: 'Ready',        color: '#7c3aed' },
+  { key: 'scheduled',          label: 'Scheduled',    color: '#7c3aed' },
+  { key: 'in_progress',        label: 'In Progress',  color: '#7c3aed' },
+  { key: 'work_complete',      label: 'Complete',     color: '#16a34a' },
+  { key: 'invoiced',           label: 'Invoiced',     color: '#16a34a' },
+  { key: 'paid',               label: 'Paid',         color: '#16a34a' },
+  { key: 'closed',             label: 'Closed',       color: '#64748b' },
 ];
 
 const STAGE_BG: Record<string, string> = {
@@ -514,7 +514,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         return (
                           <React.Fragment key={s.key}>
                             {idx > 0 && (
-                              <div style={{ width: 20, height: 2, background: (isPast || isCurrent) ? '#0f766e' : '#e2e8f0', flexShrink: 0 }} />
+                              <div style={{ width: 20, height: 2, background: isPast ? STAGES[idx-1].color : '#e2e8f0', flexShrink: 0 }} />
                             )}
                             <div
                               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: readOnly ? 'default' : isCurrent ? 'default' : 'pointer', flexShrink: 0 }}
@@ -530,13 +530,15 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 await handleStageChange(s.key);
                               }}
                             >
+                              <style>{`@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 ${s.color}40}50%{box-shadow:0 0 0 5px ${s.color}00}}`}</style>
                               <div style={{
                                 width: isCurrent ? 14 : 10,
                                 height: isCurrent ? 14 : 10,
                                 borderRadius: '50%',
-                                background: (isPast || isCurrent) ? '#0f766e' : '#e2e8f0',
-                                border: isCurrent ? '2px solid #0f766e' : isPast ? 'none' : '1.5px solid #cbd5e1',
-                                boxShadow: isCurrent ? '0 0 0 3px rgba(15,118,110,0.15)' : 'none',
+                                background: isPast ? s.color : isCurrent ? s.color : '#e2e8f0',
+                                border: isCurrent ? `2px solid ${s.color}` : isPast ? 'none' : '1.5px solid #cbd5e1',
+                                boxShadow: isCurrent ? `0 0 0 3px ${s.color}25` : 'none',
+                                animation: isCurrent ? 'pulse-dot 2s ease-in-out infinite' : 'none',
                                 transition: 'all 0.2s',
                                 flexShrink: 0,
                                 opacity: isSaving ? 0.5 : 1,
@@ -544,7 +546,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                               {(isCurrent || idx === currentIdx - 1 || idx === currentIdx + 1) && (
                                 <span style={{
                                   fontSize: 9, fontWeight: isCurrent ? 800 : 600,
-                                  color: isCurrent ? '#0f766e' : isPast ? '#64748b' : '#94a3b8',
+                                  color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
                                   whiteSpace: 'nowrap', letterSpacing: '0.02em',
                                   textTransform: 'uppercase',
                                 }}>{isSaving ? '...' : s.label}</span>

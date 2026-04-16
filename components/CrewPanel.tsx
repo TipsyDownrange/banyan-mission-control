@@ -1,5 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { normalizePhone } from '@/lib/normalize';
+import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 
 type CrewMember = {
   user_id: string; name: string; role: string;
@@ -359,10 +361,71 @@ function CrewCard({ member, onClick, travel }: {
   );
 }
 
+// ── Add Crew Modal ───────────────────────────────────────────────────────────
+function AddCrewModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: CrewMember) => void }) {
+  const [form, setForm] = useState({ first_name:'', last_name:'', role:'Journeyman/Glazier', email:'', phone:'', island:'Maui', department:'Field', classification:'Journeyman', address:'' });
+  const [saving, setSaving] = useState(false);
+  const u = (k: string, v: string) => setForm(p => ({...p, [k]: v}));
+  const canSave = form.first_name.trim() && form.last_name.trim();
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:600, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }} onClick={onClose}>
+      <div style={{ background:'white', borderRadius:18, padding:28, width:'100%', maxWidth:520, boxShadow:'0 24px 64px rgba(0,0,0,0.18)', maxHeight:'90vh', overflowY:'auto' }} onClick={e=>e.stopPropagation()}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <h2 style={{ fontSize:18, fontWeight:800, color:'#0f172a', margin:0 }}>Add Crew Member</h2>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:18, cursor:'pointer' }}>×</button>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>First Name *</label>
+            <input style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.first_name} onChange={e=>u('first_name',e.target.value)} autoFocus /></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Last Name *</label>
+            <input style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.last_name} onChange={e=>u('last_name',e.target.value)} /></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Role</label>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.role} onChange={e=>u('role',e.target.value)}>
+              {['Superintendent','Journeyman/Glazier','Apprentice','Laborer','PM','Senior PM','Estimator','Admin','Owner'].map(r=><option key={r} value={r}>{r}</option>)}
+            </select></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Department</label>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.department} onChange={e=>u('department',e.target.value)}>
+              {['Field','PM','Estimating','Service','Admin','Executive'].map(d=><option key={d} value={d}>{d}</option>)}
+            </select></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Email</label>
+            <input type="email" style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.email} onChange={e=>u('email',e.target.value)} /></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Phone</label>
+            <input type="tel" style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.phone} onChange={e=>u('phone',e.target.value)} onBlur={e=>u('phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" /></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Island</label>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.island} onChange={e=>u('island',e.target.value)}>
+              {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(i=><option key={i} value={i}>{i}</option>)}
+            </select></div>
+          <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Classification</label>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.classification} onChange={e=>u('classification',e.target.value)}>
+              {['Journeyman','Apprentice','Superintendent','Foreman','Laborer','PM','Estimator','Admin'].map(c=><option key={c} value={c}>{c}</option>)}
+            </select></div>
+        </div>
+        <div style={{ marginTop:12 }}><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'#94a3b8', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Home Address</label>
+          <PlacesAutocomplete value={form.address} onChange={v=>u('address',v)} onSelect={place=>u('address', place.formatted_address||'')} style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} placeholder="Street address" /></div>
+        <button disabled={!canSave || saving} onClick={async () => {
+          setSaving(true);
+          try {
+            const r = await fetch('/api/crew', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) });
+            const d = await r.json();
+            if (d.success) {
+              const newMember: CrewMember = { user_id:d.user_id, name:`${form.first_name.trim()} ${form.last_name.trim()}`, role:form.role, email:form.email, phone:form.phone, island:form.island, personal_email:'', title:form.classification, department:form.department, departments_multi:form.department, roles_multi:form.role, departments:[form.department], roles:[form.role], office:'', home_address:form.address, emergency_contact:'', start_date:new Date().toISOString().slice(0,10), notes:'', authority_level:'', career_track:'' };
+              onAdded(newMember);
+            }
+          } catch(err) { console.error('[AddCrewModal] save', err); }
+          setSaving(false);
+        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: canSave ? 'white' : '#94a3b8', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
+          {saving ? 'Saving…' : 'Add Crew Member'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Panel ───────────────────────────────────────────────────────────────
 export default function CrewPanel() {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [selected, setSelected] = useState<CrewMember | null>(null);
   const [travelByName, setTravelByName] = useState<Record<string, { type: string; from_code: string; to_code: string; travel_date: string; depart_time: string }[]>>({});
   const [search, setSearch] = useState('');
@@ -459,6 +522,7 @@ export default function CrewPanel() {
 
   return (
     <div style={{ padding: '32px', paddingBottom: '120px', maxWidth: 1100, margin: '0 auto' }}>
+      {showAddModal && <AddCrewModal onClose={() => setShowAddModal(false)} onAdded={m => { setCrew(p => [m, ...p]); setShowAddModal(false); }} />}
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>People & Assets</div>
@@ -466,6 +530,7 @@ export default function CrewPanel() {
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
             Crew <span style={{ fontSize: 16, fontWeight: 600, color: '#94a3b8', letterSpacing: 0 }}>{crew.length} people</span>
           </h1>
+          <button onClick={() => setShowAddModal(true)} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#0f766e,#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,118,110,0.25)', whiteSpace:'nowrap' as const }}>+ Add Crew Member</button>
         </div>
       </div>
 

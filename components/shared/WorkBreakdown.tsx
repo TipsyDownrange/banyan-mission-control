@@ -1117,35 +1117,13 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   />
                 </label>
 
-                {/* Assigned Crew */}
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Crew</span>
-                  <input
-                    type="text"
-                    value={step.assigned_crew || ''}
-                    placeholder="Names, comma-sep"
-                    onChange={async (e) => {
-                      try {
-                        await fetch(`/api/work-breakdown/${jobId}`, {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ type: 'step', id: step.install_step_id, assigned_crew: e.target.value }),
-                        });
-                      } catch {}
-                    }}
-                    onBlur={() => loadData()}
-                    onClick={ev => ev.stopPropagation()}
-                    style={{ fontSize: 11, padding: '2px 6px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', width: 120, background: step.assigned_crew ? '#f0fdfa' : 'white', color: '#0f172a' }}
-                  />
-                </label>
+
               </div>
             )}
 
-            {/* Show assigned crew if read-only */}
-            {readOnly && (step.planned_start_date || step.assigned_crew) && (
+            {readOnly && step.planned_start_date && (
               <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 10, color: '#94a3b8', flexWrap: 'wrap' }}>
-                {step.planned_start_date && <span>📅 {step.planned_start_date}{step.planned_end_date ? ` → ${step.planned_end_date}` : ''}</span>}
-                {step.assigned_crew && <span>👷 {step.assigned_crew}</span>}
+                <span>📅 {step.planned_start_date}{step.planned_end_date ? ` → ${step.planned_end_date}` : ''}</span>
               </div>
             )}
           </div>
