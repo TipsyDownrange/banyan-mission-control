@@ -21,7 +21,7 @@ function getAuth() {
   return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
 }
 
-function rowToContact(row: string[]) {
+function rowToContact(row: string[], orgName?: string) {
   return {
     contact_id: row[COL.contact_id] || '',
     org_id: row[COL.org_id] || '',
@@ -33,6 +33,7 @@ function rowToContact(row: string[]) {
     is_primary: row[COL.is_primary] === 'TRUE' || row[COL.is_primary] === 'true',
     notes: row[COL.notes] || '',
     created_at: row[COL.created_at] || '',
+    org_name: orgName || '',
   };
 }
 
@@ -48,11 +49,21 @@ export async function GET(req: Request) {
   try {
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID, range: 'Contacts!A2:J2000',
+    const batchRes = await sheets.spreadsheets.values.batchGet({
+      spreadsheetId: SHEET_ID,
+      ranges: ['Contacts!A2:J2000', 'Organizations!A2:B2000'],
     });
-    const rows = (res.data.values || []) as string[][];
-    let contacts = rows.filter(r => r[COL.contact_id]).map(rowToContact);
+    const [contactValues, orgValues] = batchRes.data.valueRanges || [];
+    const rows = (contactValues?.values || []) as string[][];
+    const orgRows = (orgValues?.values || []) as string[][];
+
+    // Build orgId → orgName map
+    const orgMap: Record<string, string> = {};
+    for (const row of orgRows) {
+      if (row[0]) orgMap[row[0]] = row[1] || '';
+    }
+
+    let contacts = rows.filter(r => r[COL.contact_id]).map(r => rowToContact(r, orgMap[r[COL.org_id]]));
 
     if (orgId) contacts = contacts.filter(c => c.org_id === orgId);
     if (q) contacts = contacts.filter(c =>
@@ -60,6 +71,9 @@ export async function GET(req: Request) {
       c.email.toLowerCase().includes(q) ||
       c.phone.toLowerCase().includes(q)
     );
+
+    // Limit results when query is provided
+    if (q) contacts = contacts.slice(0, 20);
 
     // Sort: primary first, then by name
     contacts.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || a.name.localeCompare(b.name));

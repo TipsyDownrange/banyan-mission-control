@@ -1,5 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { normalizePhone } from '@/lib/normalize';
+import ContactAutocomplete from '@/components/shared/ContactAutocomplete';
+import type { ContactResult } from '@/components/shared/ContactAutocomplete';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type OrgRecord = {
@@ -406,7 +409,7 @@ function OrgDetailPanel({
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                         <div><label style={LBL}>Name</label><input style={INP} value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} /></div>
                         <div><label style={LBL}>Title</label><input style={INP} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} /></div>
-                        <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} onBlur={e => setEditForm(p => ({ ...p, phone: formatPhone(e.target.value) }))} /></div>
+                        <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} onBlur={e => setEditForm(p => ({ ...p, phone: normalizePhone(e.target.value) }))} /></div>
                         <div><label style={LBL}>Email</label><input style={INP} type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} /></div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
@@ -421,9 +424,24 @@ function OrgDetailPanel({
             {addingContact ? (
               <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  <div><label style={LBL}>Name *</label><input style={INP} value={newContact.name} onChange={e => setNewContact(p => ({ ...p, name: e.target.value }))} autoFocus /></div>
+                  <div><label style={LBL}>Name *</label><ContactAutocomplete
+                    value={newContact.name}
+                    onChange={val => setNewContact(p => ({ ...p, name: val }))}
+                    onSelect={(c: ContactResult) => {
+                      setNewContact(p => ({
+                        ...p,
+                        name: c.name,
+                        phone: c.phone || p.phone,
+                        email: c.email || p.email,
+                        title: c.title || p.title,
+                      }));
+                    }}
+                    style={INP}
+                    placeholder="Full name"
+                    orgId={orgId}
+                  /></div>
                   <div><label style={LBL}>Title</label><input style={INP} value={newContact.title} onChange={e => setNewContact(p => ({ ...p, title: e.target.value }))} /></div>
-                  <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={newContact.phone} onChange={e => setNewContact(p => ({ ...p, phone: e.target.value }))} onBlur={e => setNewContact(p => ({ ...p, phone: formatPhone(e.target.value) }))} /></div>
+                  <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={newContact.phone} onChange={e => setNewContact(p => ({ ...p, phone: e.target.value }))} onBlur={e => setNewContact(p => ({ ...p, phone: normalizePhone(e.target.value) }))} /></div>
                   <div><label style={LBL}>Email</label><input style={INP} type="email" value={newContact.email} onChange={e => setNewContact(p => ({ ...p, email: e.target.value }))} /></div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -547,13 +565,8 @@ function OrgDetailPanel({
   );
 }
 
-// ── Phone formatter ─────────────────────────────────────────────────────
-function formatPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-  if (digits.length === 11 && digits[0] === '1') return `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
-  return raw;
-}
+// ── Phone formatter delegated to lib/normalize ──────────────────────────
+// (formatPhone removed — use normalizePhone from @/lib/normalize)
 
 // ── New Org Modal ────────────────────────────────────────────────────────
 type OrgCategory = 'business' | 'person' | 'gc' | 'vendor';
@@ -749,7 +762,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                     <label style={LBL}>Phone *</label>
                     <input style={INP} type="tel" value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      onBlur={e => setPhone(formatPhone(e.target.value))}
+                      onBlur={e => setPhone(normalizePhone(e.target.value))}
                       placeholder="(808) 555-0199" />
                   </div>
                   <div>
@@ -768,7 +781,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                       <label style={LBL}>Phone</label>
                       <input style={INP} type="tel" value={phone}
                         onChange={e => setPhone(e.target.value)}
-                        onBlur={e => setPhone(formatPhone(e.target.value))}
+                        onBlur={e => setPhone(normalizePhone(e.target.value))}
                         placeholder="(808) 555-0000" />
                     </div>
                   </div>

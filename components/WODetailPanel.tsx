@@ -6,6 +6,7 @@ import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
+import ContactAutocomplete from '@/components/shared/ContactAutocomplete';
 import type { CustomerRecord } from '@/app/api/service/customers/route';
 
 type WorkOrder = {
@@ -622,20 +623,16 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <label style={{ ...LBL, marginBottom: 0 }}>Contact Person</label>
                         <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
                       </div>
-                      <AutocompleteInput
+                      <ContactAutocomplete
                         value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? ''}
                         onChange={v => update('contact_person', v)}
                         onSelect={c => {
-                          update('contact_person', c.contactPerson || '');
-                          if (c.company) update('customer_name', c.company);
-                          if (c.phone || c.contactPhone) update('contact_phone', c.phone || c.contactPhone || '');
+                          update('contact_person', c.name);
+                          if (c.phone) update('contact_phone', c.phone);
                           if (c.email) update('contact_email', c.email);
                         }}
-                        placeholder="Person on site"
+                        placeholder="Search contacts..."
                         style={INP}
-                        customers={customers}
-                        matchField="contactPerson"
-                        subField="company"
                       />
                     </div>
                     <div>
