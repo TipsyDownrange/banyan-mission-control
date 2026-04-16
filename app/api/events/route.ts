@@ -44,21 +44,21 @@ const COL = {
   issue_category:       14,
   severity:             15,
   blocking_flag:        16,
-  assigned_to:          17,
-  assigned_role:        18,
-  responsible_party:    19,
-  auto_flag:            20,
-  manpower_count:       21,
-  work_performed:       22,
-  delays_blockers:      23,
-  materials_received:   24,
-  inspections_visitors: 25,
-  weather_context:      26,
-  notes:                27,
-  environment:          28,
-  source_version:       29,
-  is_valid:             30,
-  issue_status:         31,
+  issue_status:         17, // R
+  assigned_to:          18, // S
+  assigned_role:        19, // T
+  responsible_party:    20, // U
+  auto_flag:            21, // V (assignment_source)
+  manpower_count:       22, // W
+  work_performed:       23, // X
+  delays_blockers:      24, // Y
+  materials_received:   25, // Z
+  inspections_visitors: 26, // [
+  weather_context:      27, // \
+  notes:                28, // ] — confirmed from sheet headers
+  project_id:           29, // ^
+  evidence_photo:       30, // _
+  evidence_timestamp:   31, // `
 };
 
 function rowToEvent(row: string[]): Record<string, string> {
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
     // Apply filters
     const filtered = rows.filter(row => {
       // Skip soft-deleted
-      if (row[COL.is_valid] === 'FALSE') return false;
+      // Note: is_valid column removed from schema (was incorrect index); no soft-delete filter needed
 
       if (kID && !kidsMatch(row[COL.target_kID], kID)) return false;
 
