@@ -65,12 +65,26 @@ async function createWOFolderStructure(
     const woFolderName = `${woId} — ${customerName}`;
     const woFolderId = await findOrCreateFolder(drive, woFolderName, islandFolderId);
 
-    // Layer 4: Subfolders
+    // Layer 4: Standard subfolders
     await Promise.all([
       findOrCreateFolder(drive, 'Photos', woFolderId),
       findOrCreateFolder(drive, 'Quotes', woFolderId),
       findOrCreateFolder(drive, 'Correspondence', woFolderId),
     ]);
+
+    // Layer 4b: Kai shadow folder + subfolders (immutable backup, invisible to users)
+    try {
+      const shadowFolderId = await findOrCreateFolder(drive, '10 - AI Project Documents [Kai]', woFolderId);
+      await Promise.all([
+        findOrCreateFolder(drive, 'Photos', shadowFolderId),
+        findOrCreateFolder(drive, 'Daily Reports', shadowFolderId),
+        findOrCreateFolder(drive, 'Measurements', shadowFolderId),
+        findOrCreateFolder(drive, 'Field Issues', shadowFolderId),
+        findOrCreateFolder(drive, 'System Generated', shadowFolderId),
+      ]);
+    } catch (shadowErr) {
+      console.error('[createWOFolderStructure] shadow folder creation failed (non-fatal):', shadowErr);
+    }
 
     // Share with @kulaglass.com domain
     try {

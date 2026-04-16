@@ -45,33 +45,74 @@ async function getSuperintendent(island: string) {
   return super_?.[1] || '';
 }
 
-/** Upload PDF to Drive under project's 07 - Daily Reports folder */
+const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
+
+async function getDriveClient() {
+  const authKey = process.env.GOOGLE_SA_KEY_BASE64;
+  if (!authKey) throw new Error('GOOGLE_SA_KEY_BASE64 not set');
+  const keyJson = JSON.parse(Buffer.from(authKey, 'base64').toString('utf-8'));
+  const auth = new google.auth.GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/drive'] });
+  return google.drive({ version: 'v3', auth });
+}
+
+async function findOrCreateDriveFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
+  const safe = name.replace(/'/g, "\\'");
+  const res = await drive.files.list({
+    q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    supportsAllDrives: true, includeItemsFromAllDrives: true, corpora: 'drive', driveId: BANYAN_DRIVE_ID, fields: 'files(id)',
+  });
+  if (res.data.files?.length) return res.data.files[0].id!;
+  const created = await drive.files.create({
+    requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
+    supportsAllDrives: true, fields: 'id',
+  });
+  return created.data.id!;
+}
+
+async function findWOFolder(drive: ReturnType<typeof google.drive>, kID: string): Promise<string | null> {
+  const safe = kID.replace(/'/g, "\\'");
+  const res = await drive.files.list({
+    q: `name contains '${safe}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    supportsAllDrives: true, includeItemsFromAllDrives: true, corpora: 'drive', driveId: BANYAN_DRIVE_ID, fields: 'files(id,name)',
+  });
+  return res.data.files?.[0]?.id ?? null;
+}
+
+/** Upload PDF to Drive — primary to 07 - Daily Reports/, shadow to 10 - AI Project Documents [Kai]/Daily Reports/ */
 async function uploadToDrive(pdfBuffer: Buffer, filename: string, kID: string): Promise<string | null> {
   try {
-    const authKey = process.env.GOOGLE_SA_KEY_BASE64;
-    if (!authKey) return null;
-    const keyJson = JSON.parse(Buffer.from(authKey, 'base64').toString('utf-8'));
-    const auth = new google.auth.GoogleAuth({
-      credentials: keyJson,
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
-    const drive = google.drive({ version: 'v3', auth });
-
-    // Search for the project's daily reports folder
-    const q = `name contains '07' and mimeType = 'application/vnd.google-apps.folder' and fullText contains '${kID}'`;
-    const folderRes = await drive.files.list({ q, supportsAllDrives: true, includeItemsFromAllDrives: true, fields: 'files(id,name)' });
-    const folder = folderRes.data.files?.[0];
-
-    const parents = folder?.id ? [folder.id] : undefined;
     const { Readable } = await import('stream');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const file = await (drive.files.create as any)({
-      supportsAllDrives: true,
-      requestBody: { name: filename, ...(parents ? { parents } : {}) },
+    const drive = await getDriveClient();
+    const woFolderId = await findWOFolder(drive, kID);
+    if (!woFolderId) {
+      console.error('[daily-report/pdf] WO folder not found for', kID, '— skipping Drive write');
+      return null;
+    }
+
+    // Primary write: 07 - Daily Reports/ (findOrCreate — fixes brittle search)
+    const dailyReportsFolderId = await findOrCreateDriveFolder(drive, '07 - Daily Reports', woFolderId);
+    const file = await drive.files.create({
+      requestBody: { name: filename, parents: [dailyReportsFolderId], mimeType: 'application/pdf' },
       media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
-      fields: 'id,webViewLink',
+      supportsAllDrives: true, fields: 'id,webViewLink',
     });
-    return file?.data?.webViewLink || null;
+    const driveUrl = file.data.webViewLink || null;
+
+    // Shadow write: 10 - AI Project Documents [Kai]/Daily Reports/ (non-fatal)
+    try {
+      const shadowFolderId = await findOrCreateDriveFolder(drive, '10 - AI Project Documents [Kai]', woFolderId);
+      const shadowDailyId = await findOrCreateDriveFolder(drive, 'Daily Reports', shadowFolderId);
+      const shadowStream = Readable.from(pdfBuffer);
+      await drive.files.create({
+        requestBody: { name: filename, parents: [shadowDailyId], mimeType: 'application/pdf' },
+        media: { mimeType: 'application/pdf', body: shadowStream },
+        supportsAllDrives: true, fields: 'id',
+      });
+    } catch (shadowErr) {
+      console.error('[daily-report/pdf] shadow write failed (non-fatal):', shadowErr);
+    }
+
+    return driveUrl;
   } catch (e) {
     console.error('[daily-report/pdf] Drive upload error:', e);
     return null;

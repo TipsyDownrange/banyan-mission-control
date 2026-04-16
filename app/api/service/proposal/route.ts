@@ -97,6 +97,33 @@ async function uploadPDFToDrive(
       fields: 'id,webViewLink',
     });
 
+    // Shadow dual-write to 10 - AI Project Documents [Kai]/System Generated/ (non-fatal)
+    try {
+      if (woId) {
+        const woSearch2 = await drive.files.list({
+          q: `name contains '${woId}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+          driveId: BANYAN_DRIVE_ID, includeItemsFromAllDrives:true, supportsAllDrives:true, corpora:'drive', fields:'files(id)',
+        });
+        const wfId = woSearch2.data.files?.[0]?.id;
+        if (wfId) {
+          async function foc2(name: string, pid: string) {
+            const safe = name.replace(/'/g, "\\'");
+            const r = await drive.files.list({ q:`name='${safe}' and '${pid}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`, supportsAllDrives:true, includeItemsFromAllDrives:true, fields:'files(id)' });
+            if (r.data.files?.length) return r.data.files[0].id!;
+            const c = await drive.files.create({ requestBody:{name, mimeType:'application/vnd.google-apps.folder', parents:[pid]}, supportsAllDrives:true, fields:'id' });
+            return c.data.id!;
+          }
+          const shadowId = await foc2('10 - AI Project Documents [Kai]', wfId);
+          const sysGenId = await foc2('System Generated', shadowId);
+          await drive.files.create({
+            requestBody: { name: filename, parents: [sysGenId], mimeType: 'application/pdf' },
+            media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
+            supportsAllDrives: true, fields: 'id',
+          });
+        }
+      }
+    } catch (shadowErr) { console.error('[proposal] shadow write failed (non-fatal):', shadowErr); }
+
     return result.data.webViewLink || null;
   } catch (e) {
     console.error('Drive upload failed:', e);

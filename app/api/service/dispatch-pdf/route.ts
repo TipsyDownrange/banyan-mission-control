@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     const pdfBuffer = await generateDispatchWOPDF(dispatchData);
     const filename = `Dispatch-WO-${woNumber}-${dispatchData.scheduled_date || dispatchData.date}.pdf`;
 
-    // Auto-save copy to WO folder in Drive (non-blocking)
+    // Auto-save copy to WO folder in Drive (non-blocking) + shadow dual-write
     try {
       const saKeyB64 = process.env.GOOGLE_SA_KEY_B64 || process.env.GOOGLE_SA_KEY_BASE64;
       if (saKeyB64) {
@@ -81,16 +81,34 @@ export async function GET(req: Request) {
           scopes: ['https://www.googleapis.com/auth/drive'],
         });
         const drive = (await import('googleapis')).google.drive({ version: 'v3', auth: driveAuth });
+        const { Readable } = await import('stream');
         const folderUrl = g(COL.folder_url);
         if (folderUrl) {
           const folderId = folderUrl.match(/folders\/([^/?]+)/)?.[1];
           if (folderId) {
-            const { Readable } = await import('stream');
+            // Primary write to WO folder root
             await drive.files.create({
               requestBody: { name: filename, parents: [folderId], mimeType: 'application/pdf' },
               media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
               supportsAllDrives: true,
-            }).catch(() => {});
+            }).catch((e: unknown) => console.error('[dispatch-pdf] primary write failed:', e));
+            // Shadow write to 10 - AI Project Documents [Kai]/System Generated/ (non-fatal)
+            try {
+              async function foc(name: string, parentId: string) {
+                const safe = name.replace(/'/g, "\\'");
+                const res = await drive.files.list({ q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`, supportsAllDrives:true, includeItemsFromAllDrives:true, fields:'files(id)' });
+                if (res.data.files?.length) return res.data.files[0].id!;
+                const c = await drive.files.create({ requestBody:{ name, mimeType:'application/vnd.google-apps.folder', parents:[parentId] }, supportsAllDrives:true, fields:'id' });
+                return c.data.id!;
+              }
+              const shadowId = await foc('10 - AI Project Documents [Kai]', folderId);
+              const sysGenId = await foc('System Generated', shadowId);
+              await drive.files.create({
+                requestBody: { name: filename, parents: [sysGenId], mimeType: 'application/pdf' },
+                media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
+                supportsAllDrives: true,
+              });
+            } catch (shadowErr) { console.error('[dispatch-pdf] shadow write failed (non-fatal):', shadowErr); }
           }
         }
       }
