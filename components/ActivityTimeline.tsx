@@ -112,9 +112,22 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
   const iconColor = isIssueResolved ? '#d97706' : cfg.color;
   const iconBg = isIssueResolved ? 'rgba(217,119,6,0.1)' : cfg.bg;
 
+  // For FIELD_MEASUREMENT: show a one-line summary from parsed JSON; hide raw JSON
+  let measureSummary: string | null = null;
+  if (event.event_type === 'FIELD_MEASUREMENT') {
+    try {
+      const p = JSON.parse(event.notes);
+      const f = (p.fields || {}) as Record<string, string>;
+      const dim = [f.width && `${f.width}"W`, f.height && `${f.height}"H`, f.depth && `${f.depth}"D`].filter(Boolean).join(' × ');
+      const parts = [p.system_type, dim, p.capture_tool].filter(Boolean);
+      measureSummary = parts.join(' · ');
+    } catch { measureSummary = null; }
+  }
   const description = event.event_type === 'DAILY_LOG'
     ? (event.work_performed || event.notes)
-    : event.notes;
+    : event.event_type === 'FIELD_MEASUREMENT'
+      ? (measureSummary ?? event.notes) // summary line; hidden when expanded below
+      : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
 
@@ -231,7 +244,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       </div>
 
       {/* Description */}
-      {description && (
+      {/* Hide description for FIELD_MEASUREMENT when expanded and JSON parsed — structured sections take over */}
+      {description && !(expanded && event.event_type === 'FIELD_MEASUREMENT' && measureSummary !== null) && (
         <div>
           <div
             onClick={() => setExpanded(e => !e)}
