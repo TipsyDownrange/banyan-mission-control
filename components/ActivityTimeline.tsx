@@ -280,17 +280,82 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
 
         if (event.event_type === 'FIELD_MEASUREMENT') {
           let parsed: Record<string, unknown> = {};
-          try { parsed = JSON.parse(event.notes); } catch {}
+          let isJson = false;
+          try { parsed = JSON.parse(event.notes); isJson = true; } catch {}
           const fields = (parsed.fields || {}) as Record<string, string | boolean>;
-          return Object.keys(fields).length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 12px', background: 'rgba(8,145,178,0.05)', borderRadius: 10, border: '1px solid rgba(8,145,178,0.15)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0891b2', marginBottom: 4 }}>{String(parsed.system_type || 'Measurement')}</div>
-              {Object.entries(fields).map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
-                  <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>{k.replace(/_/g,' ')}</span>
-                  <span style={{ color: '#0f172a', fontWeight: 600 }}>{typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}</span>
-                </div>
-              ))}
+          const KNOWN_FIELDS = new Set(['unit_reference','capture_tool','width','height','depth','qty','glass_type','glass_thickness','condition','accessibility']);
+          const extra = Object.entries(fields).filter(([k]) => !KNOWN_FIELDS.has(k));
+          const dim = [fields.width && `${fields.width}"W`, fields.height && `${fields.height}"H`, fields.depth && `${fields.depth}"D`].filter(Boolean).join(' × ');
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(8,145,178,0.05)', borderRadius: 10, border: '1px solid rgba(8,145,178,0.15)' }}>
+              {isJson ? (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0891b2' }}>{String(parsed.system_type || 'Measurement')} · {parsed.captured_at ? new Date(String(parsed.captured_at)).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</div>
+                  {/* Location */}
+                  {(fields.unit_reference) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Location</div>
+                      {kv('Unit / Opening', fields.unit_reference ? String(fields.unit_reference) : undefined)}
+                    </div>
+                  )}
+                  {/* Dimensions */}
+                  {dim && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Dimensions</div>
+                      {kv('Size', dim)}
+                      {fields.qty && kv('Qty', String(fields.qty))}
+                    </div>
+                  )}
+                  {/* Details */}
+                  {(fields.capture_tool || fields.glass_type || fields.glass_thickness || fields.condition || fields.accessibility) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Details</div>
+                      {fields.capture_tool && kv('Tool', String(fields.capture_tool))}
+                      {fields.glass_type && kv('Glass Type', String(fields.glass_type))}
+                      {fields.glass_thickness && kv('Thickness', String(fields.glass_thickness))}
+                      {fields.condition && kv('Condition', String(fields.condition))}
+                      {fields.accessibility && kv('Access', String(fields.accessibility))}
+                    </div>
+                  )}
+                  {/* Additional fields */}
+                  {extra.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Additional Details</div>
+                      {extra.map(([k,v]) => kv(k.replace(/_/g,' '), typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)))}
+                    </div>
+                  )}
+                  {/* Full-size photo */}
+                  {event.evidence_ref && (
+                    <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 4 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w600`} alt="Measurement photo"
+                        style={{ width: '100%', maxWidth: 400, borderRadius: 10, border: '1px solid #e2e8f0', display: 'block' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </a>
+                  )}
+                </>
+              ) : (
+                // Plain text fallback
+                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+              )}
+            </div>
+          );
+        }
+
+        if (event.event_type === 'INSTALL_STEP') {
+          return (event.notes || event.evidence_ref) ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', background: 'rgba(29,78,216,0.04)', borderRadius: 10, border: '1px solid rgba(29,78,216,0.12)' }}>
+              {event.notes && (
+                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+              )}
+              {event.evidence_ref && (
+                <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w400`} alt="Step photo"
+                    style={{ width: '100%', maxWidth: 300, borderRadius: 9, border: '1px solid #e2e8f0', display: 'block' }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </a>
+              )}
             </div>
           ) : null;
         }
