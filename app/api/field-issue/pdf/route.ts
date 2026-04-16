@@ -17,6 +17,21 @@ const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const BANYAN_DRIVE = '0AKSVpf3AnH7CUk9PVA';
 const TAB_EVENTS = 'Field_Events_V1';
 
+/** Resolve performer: user_id → email → name match in Users_Roles; fall back to raw value */
+async function resolvePerformer(raw: string, sheets: ReturnType<typeof google.sheets>): Promise<{name:string;role:string}> {
+  if (!raw) return { name: '', role: '' };
+  try {
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:F100' });
+    const rows = (res.data.values || []) as string[][];
+    const match = rows.find(r =>
+      r[0]?.toLowerCase() === raw.toLowerCase() || // user_id
+      r[3]?.toLowerCase() === raw.toLowerCase() || // email
+      r[1]?.toLowerCase() === raw.toLowerCase()    // full name
+    );
+    return match ? { name: match[1] || raw, role: match[2] || 'Field Crew' } : { name: raw, role: 'Field Crew' };
+  } catch { return { name: raw, role: 'Field Crew' }; }
+}
+
 // Column indices for Field_Events_V1 (confirmed from sheet headers)
 const EV = {
   event_id: 0, target_kID: 1, event_type: 2,
@@ -92,10 +107,14 @@ export async function POST(req: Request) {
     const evidenceRef = evRow[EV.evidence_ref] || '';
     const photoIds = evidenceRef.split(',').map(s => s.trim()).filter(Boolean);
     const photos = photoIds.map(id => ({
+      file_id: id,
       file_name: `photo_${id.slice(0, 8)}.jpg`,
       drive_link: `https://drive.google.com/file/d/${id}/view`,
       timestamp: evRow[EV.event_occurred_at] || new Date().toISOString(),
     }));
+
+    // Issue A: resolve performer name + role from Users_Roles
+    const performer = await resolvePerformer(evRow[EV.performed_by] || '', sheets);
 
     // Parse notes field for structured data (notes may be plain text for legacy events)
     let notesJson: Record<string, unknown> = {};
@@ -109,8 +128,8 @@ export async function POST(req: Request) {
       kID,
       location_group: evRow[EV.location_group] || '',
       unit_reference: evRow[EV.unit_reference] || undefined,
-      reported_by: evRow[EV.performed_by] || 'Unknown',
-      role: 'Field Crew',
+      reported_by: performer.name || evRow[EV.performed_by] || '',
+      role: performer.role || 'Field Crew',
       issue_description: String(notesJson.issue_description || evRow[EV.notes] || ''),
       issue_category: evRow[EV.issue_category] || 'Unknown',
       caused_by: String(notesJson.caused_by || ''),
@@ -121,7 +140,7 @@ export async function POST(req: Request) {
         ? evRow[EV.severity].toUpperCase() : 'MEDIUM') as FieldIssueData['severity'],
       photos,
       recorded_at: evRow[EV.event_occurred_at] || new Date().toISOString(),
-      recorded_by: evRow[EV.performed_by] || 'Unknown',
+      recorded_by: evRow[EV.performed_by] || '',
       source_system: 'field_app',
     };
 

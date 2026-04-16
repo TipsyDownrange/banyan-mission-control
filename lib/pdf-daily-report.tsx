@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { S, C, Letterhead, SectionHead, InfoGrid, DocFooter, renderToPDF } from './pdf-templates';
 
 // ── Data Interface ────────────────────────────────────────────────────────────
@@ -59,9 +59,10 @@ export type DailyReportPDFData = {
 
   // Photos (optional)
   photos?: {
-    filename: string;
+    file_name: string;
     timestamp: string;
-    drive_url: string;
+    drive_link: string;
+    file_id?: string; // Drive fileId for thumbnail embedding
     caption?: string;
   }[];
 };
@@ -160,7 +161,8 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
           )}
         </View>
 
-        {/* ── Manpower table ── */}
+        {/* ── Manpower table — omit if no crew/count data ── */}
+        {((data.crew || []).length > 0 || (data.total_crew || 0) > 0) && <>
         <SectionHead title="Manpower" />
         <View style={{ marginBottom: 4 }}>
           <View style={tableHeaderStyle}>
@@ -178,24 +180,20 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
             </View>
           )) : (
             <View style={tableRowStyle}>
-              <Text style={{ ...S.bodyMuted, flex: 1 }}>Manpower count: {data.total_crew || 0}</Text>
+              <Text style={{ ...S.bodyMuted, flex: 1 }}>{data.total_crew} worker{data.total_crew !== 1 ? 's' : ''} on site</Text>
             </View>
           )}
-          {/* Summary row */}
-          <View style={{ ...tableHeaderStyle, borderTop: `1 solid ${C.border}`, borderBottom: 'none', marginTop: 0 }}>
-            <Text style={{ ...tableHeaderCellStyle, flex: 3 }}> </Text>
-            <Text style={{ ...tableHeaderCellStyle, flex: 3 }}>Total Crew: {data.total_crew}</Text>
-            <Text style={{ ...tableHeaderCellStyle, flex: 1 }}> </Text>
-            <Text style={{ ...tableHeaderCellStyle, flex: 3 }}>Total Hours: {data.total_hours}</Text>
-          </View>
         </View>
         {data.manpower_prefilled && (
           <Text style={{ ...S.bodyMuted, marginBottom: 12, marginTop: 2 }}>Pre-filled from dispatch schedule</Text>
         )}
+        </>}
 
-        {/* ── Work Performed — same descBox style as Field Issue "Issue Description" ── */}
+        {/* ── Work Performed — omit if empty ── */}
+        {data.work_performed ? <>
         <SectionHead title="Work Performed" />
-        <Text style={{ ...S.body, marginBottom: 14 }}>{data.work_performed || 'No work description provided.'}</Text>
+        <Text style={{ ...S.body, marginBottom: 14 }}>{data.work_performed}</Text>
+        </> : null}
 
         {/* ── Delays (conditional) ── */}
         {hasDelays && <>
@@ -239,19 +237,20 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
           </View>
         </>}
 
-        {/* ── Photos (conditional) — same layout as Field Issue photo list ── */}
+        {/* ── Photos (conditional) — with embedded thumbnails ── */}
         {hasPhotos && <>
           <SectionHead title={`Photo Evidence — ${data.photos!.length} photo${data.photos!.length !== 1 ? 's' : ''}`} />
           {(data.photos || []).map((p, i) => (
-            <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 5, paddingLeft: 8 }}>
-              <Text style={{ fontSize: 8.5, color: C.slateLight, width: 16 }}>{i + 1}.</Text>
-              <View>
-                <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.text }}>{p.filename}</Text>
-                <Text style={{ fontSize: 8, color: C.slateLight }}>
-                  Captured: {fmtHST(p.timestamp)}  ·  {p.drive_url}
-                </Text>
-                {p.caption && <Text style={{ fontSize: 8.5, color: C.subtext, marginTop: 2 }}>{p.caption}</Text>}
-              </View>
+            <View key={i} style={{ marginBottom: 12 }}>
+              {p.file_id && (
+                <Image
+                  src={`https://drive.google.com/thumbnail?id=${p.file_id}&sz=w400`}
+                  style={{ maxWidth: 300, marginBottom: 4, borderRadius: 4 }}
+                />
+              )}
+              <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.text }}>{p.file_name}</Text>
+              <Text style={{ fontSize: 8, color: C.slateLight }}>Captured: {fmtHST(p.timestamp)}  ·  {p.drive_link}</Text>
+              {p.caption && <Text style={{ fontSize: 8.5, color: C.subtext, marginTop: 2 }}>{p.caption}</Text>}
             </View>
           ))}
         </>}

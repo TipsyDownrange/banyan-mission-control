@@ -47,6 +47,8 @@ async function getSuperintendent(island: string) {
 
 // Field_Events_V1 column indices (confirmed from sheet headers)
 const EV = { event_id:0, target_kID:1, event_type:2, event_occurred_at:3, performed_by:5, evidence_ref:8, manpower_count:22, work_performed:23, delays_blockers:24, materials_received:25, inspections_visitors:26, weather_context:27, notes:28 };
+// Service_Work_Orders column indices
+const SWO = { wo_id:0, wo_number:1, name:2, island:5, folder_url:23 };
 
 /** GC-D021: Read event fresh from Field_Events_V1 by event_id */
 async function getEventFresh(eventId: string) {
@@ -94,28 +96,14 @@ async function findOrCreateDriveFolder(drive: ReturnType<typeof google.drive>, n
   return created.data.id!;
 }
 
-async function findWOFolder(drive: ReturnType<typeof google.drive>, kID: string): Promise<string | null> {
-  const safe = kID.replace(/'/g, "\\'");
-  const res = await drive.files.list({
-    q: `name contains '${safe}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-    supportsAllDrives: true, includeItemsFromAllDrives: true, corpora: 'drive', driveId: BANYAN_DRIVE_ID, fields: 'files(id,name)',
-  });
-  return res.data.files?.[0]?.id ?? null;
-}
-
-/** Upload PDF to Drive — primary to 07 - Daily Reports/, shadow to 10 - AI Project Documents [Kai]/Daily Reports/ */
-async function uploadToDrive(pdfBuffer: Buffer, filename: string, kID: string): Promise<string | null> {
+/** Upload PDF using exact WO folder ID from sheet — no name-contains search */
+async function uploadToDrive(pdfBuffer: Buffer, filename: string, woFolderId: string): Promise<string | null> {
   try {
     const { Readable } = await import('stream');
     const drive = await getDriveClient();
-    const woFolderId = await findWOFolder(drive, kID);
-    if (!woFolderId) {
-      console.error('[daily-report/pdf] WO folder not found for', kID, '— skipping Drive write');
-      return null;
-    }
 
-    // Primary write: 07 - Daily Reports/ (findOrCreate — fixes brittle search)
-    const dailyReportsFolderId = await findOrCreateDriveFolder(drive, '07 - Daily Reports', woFolderId);
+    // Primary write: Daily Reports/ (matches Task 4 naming, no '07 - ' prefix)
+    const dailyReportsFolderId = await findOrCreateDriveFolder(drive, 'Daily Reports', woFolderId);
     const file = await drive.files.create({
       requestBody: { name: filename, parents: [dailyReportsFolderId], mimeType: 'application/pdf' },
       media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
@@ -172,6 +160,12 @@ export async function POST(req: Request) {
     if (!evRow) return NextResponse.json({ error: `Event ${event_id} not found` }, { status: 404 });
 
     const kid = bodyKid || evRow[EV.target_kID] || '';
+
+    // GC-D021: Read WO data fresh for folder_url (exact Drive folder ID, no name-contains search)
+    const sheets = await getSheetsClient();
+    const swoRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:X2000' });
+    const swoRows = (swoRes.data.values || []) as string[][];
+    const swoRow = swoRows.find((r: string[]) => r[SWO.wo_id] === kid || r[SWO.wo_number] === kid || r[SWO.wo_id]?.includes(kid.replace('WO-', '')));
     if (!kid) return NextResponse.json({ error: 'kid required (or must be in event target_kID)' }, { status: 400 });
 
     // Read fresh from sheet
@@ -210,17 +204,35 @@ export async function POST(req: Request) {
       work_performed: workPerformed,
       delays: delaysRaw ? [{ delay_type: 'Delay', description: delaysRaw }] as DailyReportPDFData['delays'] : body.delays,
       materials_received: materialsRaw || body.materials_received,
-      photos: body.photos,
+      photos: body.photos, // overridden below with event evidence_ref
     };
+
+    // Bug 5: Map evidence_ref from event → photos array with thumbnails
+    const evidenceRef = evRow[EV.evidence_ref] || '';
+    const photoIds = evidenceRef.split(',').map((s: string) => s.trim()).filter(Boolean);
+    if (photoIds.length > 0) {
+      data.photos = photoIds.map((id: string) => ({
+        file_id: id,
+        file_name: `photo_${id.slice(0, 8)}.jpg`,
+        drive_link: `https://drive.google.com/file/d/${id}/view`,
+        timestamp: evRow[EV.event_occurred_at] || new Date().toISOString(),
+      }));
+    }
 
     const pdfBuffer = await generateDailyReportPDF(data);
 
-    // Optionally store to Drive
+    // Bug 4: Store to Drive using exact folder_url from sheet (no name-contains search)
     let driveUrl: string | null = null;
     if (store_to_drive) {
       const dateStr = data.report_date.replace(/-/g, '');
       const filename = `DR-${dateStr.slice(2)}-${kid}.pdf`;
-      driveUrl = await uploadToDrive(pdfBuffer, filename, kid);
+      const folderUrl = swoRow?.[SWO.folder_url] || '';
+      const woFolderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
+      if (woFolderId) {
+        driveUrl = await uploadToDrive(pdfBuffer, filename, woFolderId);
+      } else {
+        console.error('[daily-report/pdf] No folder_url for', kid, '— skipping Drive write');
+      }
     }
 
     // Return JSON if requested (for FA auto-trigger), otherwise return PDF binary

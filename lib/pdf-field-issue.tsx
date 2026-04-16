@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { S, C, Letterhead, SectionHead, InfoGrid, DocFooter, renderToPDF } from './pdf-templates';
 
 export type FieldIssueData = {
@@ -10,7 +10,7 @@ export type FieldIssueData = {
   issue_description: string; issue_category: string; caused_by: string;
   affected_count: number; hours_lost: number; blocking: boolean;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  photos: { file_name: string; drive_link: string; timestamp: string }[];
+  photos: { file_name: string; drive_link: string; timestamp: string; file_id?: string }[];
   gps?: { lat: number; lng: number };
   device_id?: string; recorded_at: string; recorded_by: string; source_system: string;
 };
@@ -90,12 +90,15 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
           <Text style={{ ...S.body, color: C.red, fontFamily: 'Helvetica-Bold' }}>⚠ No photos attached — documentation incomplete</Text>
         ) : (
           data.photos.map((p, i) => (
-            <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 5, paddingLeft: 8 }}>
-              <Text style={{ fontSize: 8.5, color: C.slateLight, width: 16 }}>{i + 1}.</Text>
-              <View>
-                <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.text }}>{p.file_name}</Text>
-                <Text style={{ fontSize: 8, color: C.slateLight }}>Captured: {p.timestamp}  ·  {p.drive_link}</Text>
-              </View>
+            <View key={i} style={{ marginBottom: 12 }}>
+              {p.file_id && (
+                <Image
+                  src={`https://drive.google.com/thumbnail?id=${p.file_id}&sz=w400`}
+                  style={{ maxWidth: 300, marginBottom: 4, borderRadius: 4 }}
+                />
+              )}
+              <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: C.text }}>{p.file_name}</Text>
+              <Text style={{ fontSize: 8, color: C.slateLight }}>Captured: {p.timestamp}  ·  {p.drive_link}</Text>
             </View>
           ))
         )}
