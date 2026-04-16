@@ -259,7 +259,7 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
             {pdfState === 'generating' ? <span style={{ fontSize:10, animation:'spin 0.8s linear infinite', display:'inline-block' }}>⟳</span>
               : pdfState === 'done' ? '✓'
               : pdfState === 'error' ? '✗'
-              : '📄'}
+              : <span style={{ fontSize:9, fontWeight:700 }}>📄 PDF</span>}
           </button>
         )}
 

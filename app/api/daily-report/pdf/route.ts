@@ -45,6 +45,31 @@ async function getSuperintendent(island: string) {
   return super_?.[1] || '';
 }
 
+// Field_Events_V1 column indices (confirmed from sheet headers)
+const EV = { event_id:0, target_kID:1, event_type:2, event_occurred_at:3, performed_by:5, evidence_ref:8, manpower_count:22, work_performed:23, delays_blockers:24, materials_received:25, inspections_visitors:26, weather_context:27, notes:28 };
+
+/** GC-D021: Read event fresh from Field_Events_V1 by event_id */
+async function getEventFresh(eventId: string) {
+  const sheets = await getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Field_Events_V1!A2:AF5000' });
+  const row = (res.data.values || []).find((r: string[]) => r[EV.event_id] === eventId);
+  return row || null;
+}
+
+/** Resolve performer name: try user_id, email, or name match in Users_Roles; fall back to raw value */
+async function resolvePerformer(raw: string) {
+  if (!raw) return null;
+  const sheets = await getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Users_Roles!A2:F100' });
+  const rows = res.data.values || [];
+  const match = rows.find((r: string[]) =>
+    r[0]?.toLowerCase() === raw.toLowerCase() || // user_id
+    r[3]?.toLowerCase() === raw.toLowerCase() || // email
+    r[1]?.toLowerCase() === raw.toLowerCase()    // full name
+  );
+  return match ? { name: match[1], role: match[2], island: match[5] } : { name: raw, role: '', island: '' };
+}
+
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
 async function getDriveClient() {
@@ -120,9 +145,15 @@ async function uploadToDrive(pdfBuffer: Buffer, filename: string, kID: string): 
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Auth: valid MC session (same-origin) OR shared internal key (FA server-to-server)
+  const internalKey = process.env.INTERNAL_API_KEY;
+  const reqKey = req.headers.get('X-Internal-Key');
+  const keyMatch = internalKey && reqKey === internalKey;
+  if (!keyMatch) {
+    const session = await getServerSession();
+    if (!session?.user?.email?.endsWith('@kulaglass.com')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   const { searchParams } = new URL(req.url);
@@ -132,35 +163,53 @@ export async function POST(req: Request) {
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: 'Invalid body' }, { status: 400 }); }
 
-  const { kid, event_id, submitted_by, submitted_at, report_date, store_to_drive } = body;
-  if (!kid || !event_id) return NextResponse.json({ error: 'kid and event_id required' }, { status: 400 });
+  const { kid: bodyKid, event_id, submitted_by: bodySubmittedBy, submitted_at, report_date, store_to_drive } = body;
+  if (!event_id) return NextResponse.json({ error: 'event_id required' }, { status: 400 });
 
   try {
-    // GC-D021: Read all reference data fresh
-    const [project, user, superintendent] = await Promise.all([
+    // GC-D021: Read event fresh from Field_Events_V1
+    const evRow = await getEventFresh(event_id);
+    if (!evRow) return NextResponse.json({ error: `Event ${event_id} not found` }, { status: 404 });
+
+    const kid = bodyKid || evRow[EV.target_kID] || '';
+    if (!kid) return NextResponse.json({ error: 'kid required (or must be in event target_kID)' }, { status: 400 });
+
+    // Read fresh from sheet
+    const performedByRaw = evRow[EV.performed_by] || bodySubmittedBy || '';
+    const workPerformed = evRow[EV.work_performed] || (body.work_performed) || '';
+    const weatherRaw = evRow[EV.weather_context] || '';
+    const manpowerCount = parseInt(evRow[EV.manpower_count] || '0') || 0;
+    const delaysRaw = evRow[EV.delays_blockers] || '';
+    const materialsRaw = evRow[EV.materials_received] || '';
+    const eventOccurredAt = evRow[EV.event_occurred_at] || new Date().toISOString();
+
+    // GC-D021: Resolve all reference data fresh
+    const [project, performer, superintendent] = await Promise.all([
       getProjectFresh(kid),
-      submitted_by ? getCrewFresh(submitted_by) : Promise.resolve(null),
-      body.island ? getSuperintendent(body.island) : Promise.resolve(''),
+      resolvePerformer(performedByRaw),
+      Promise.resolve(''), // resolved below after island known
     ]);
+    const island = body.island || project.island || performer?.island || '';
+    const superName = island ? await getSuperintendent(island) : '';
 
     const data: DailyReportPDFData = {
       event_id: event_id!,
       kid: kid!,
       project_name: project.name,
-      report_date: report_date || (submitted_at || new Date().toISOString()).slice(0, 10),
-      submitted_at: submitted_at || new Date().toISOString(),
-      submitted_by: user?.name || submitted_by || 'Unknown',
-      submitted_by_role: user?.role || body.submitted_by_role || 'Field Crew',
-      island: body.island || project.island || user?.island || '',
-      superintendent: superintendent || body.superintendent || '',
-      weather: body.weather || { raw: 'Not reported', auto_filled: false },
+      report_date: report_date || eventOccurredAt.slice(0, 10),
+      submitted_at: submitted_at || eventOccurredAt,
+      submitted_by: performer?.name || performedByRaw || '',
+      submitted_by_role: performer?.role || body.submitted_by_role || 'Field Crew',
+      island,
+      superintendent: superName || body.superintendent || '',
+      weather: weatherRaw ? { raw: weatherRaw, auto_filled: false } : (body.weather || { raw: '', auto_filled: false }),
       crew: body.crew || [],
-      total_crew: body.total_crew || body.crew?.length || 0,
+      total_crew: manpowerCount || body.total_crew || body.crew?.length || 0,
       total_hours: body.total_hours || (body.crew || []).reduce((s, c) => s + (c.hours || 0), 0),
       manpower_prefilled: body.manpower_prefilled || false,
-      work_performed: body.work_performed || '',
-      delays: body.delays,
-      materials_received: body.materials_received,
+      work_performed: workPerformed,
+      delays: delaysRaw ? [{ delay_type: 'Delay', description: delaysRaw }] as DailyReportPDFData['delays'] : body.delays,
+      materials_received: materialsRaw || body.materials_received,
       photos: body.photos,
     };
 

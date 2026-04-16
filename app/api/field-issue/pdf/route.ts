@@ -49,9 +49,15 @@ async function findOrCreate(drive: ReturnType<typeof google.drive>, name: string
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Auth: valid MC session (same-origin) OR shared internal key (FA server-to-server)
+  const internalKey = process.env.INTERNAL_API_KEY;
+  const reqKey = req.headers.get('X-Internal-Key');
+  const keyMatch = internalKey && reqKey === internalKey;
+  if (!keyMatch) {
+    const session = await getServerSession();
+    if (!session?.user?.email?.endsWith('@kulaglass.com')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   let body: { event_id?: string };
