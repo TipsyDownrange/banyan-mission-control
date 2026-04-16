@@ -32,7 +32,7 @@ interface InstallStep {
 }
 
 const STEP_CATEGORIES = [
-  'Mobilization', 'Delivery', 'Material Handling', 'Spotting',
+  'Measurement', 'Mobilization', 'Delivery', 'Material Handling', 'Spotting',
   'Installation', 'Demobilization', 'QA/Punch', 'Admin/Paperwork',
 ] as const;
 
@@ -177,7 +177,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
   // Form state
   const [scopeForm, setScopeForm] = useState({ system_type: '', location: '', estimated_total_hours: '', estimated_qty: '1' });
-  const [stepForm, setStepForm] = useState({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N' });
+  const [stepForm, setStepForm] = useState({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N', category: '' });
 
   // Template recommendation banner
   const [creatingFromTemplates, setCreatingFromTemplates] = useState(false);
@@ -368,10 +368,11 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           allotted_hours: parseFloat(stepForm.allotted_hours) || 0,
           acceptance_criteria: stepForm.acceptance_criteria,
           required_photo_yn: stepForm.required_photo_yn,
+          category: stepForm.category,
         }),
       });
       if (!res.ok) throw new Error();
-      setStepForm({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N' });
+      setStepForm({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N', category: '' });
       setAddingStepToPlan(null);
       await loadData();
     } catch {
@@ -398,6 +399,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             allotted_hours: template[i].hours,
             acceptance_criteria: '',
             required_photo_yn: 'N',
+            category: template[i].category || '',
           }),
         });
       }
@@ -1475,6 +1477,17 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       step="0.25"
                     />
                   </div>
+                </div>
+                <div>
+                  <label style={LBL}>Category</label>
+                  <select
+                    style={{ ...INP, cursor: 'pointer', background: 'white' }}
+                    value={stepForm.category || (stepForm.step_name.toLowerCase().includes('measure') ? 'Measurement' : '')}
+                    onChange={e => setStepForm(f => ({ ...f, category: e.target.value }))}
+                  >
+                    <option value="">— Category —</option>
+                    {STEP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label style={LBL}>Acceptance Criteria (optional)</label>
