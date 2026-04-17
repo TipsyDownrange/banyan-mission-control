@@ -105,12 +105,10 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
           ))
         )}
 
-        {/* Immutability notice */}
-        <View style={{ marginTop: 16, padding: '8 12', backgroundColor: C.blueBg, borderRadius: 8, border: `0.5 solid ${C.blue}44` }}>
-          <Text style={{ fontSize: 7.5, color: C.blue, lineHeight: 1.5 }}>
-            Immutable record — BanyanOS  ·  Event ID: {data.event_id}  ·  Recorded: {fmtTime(data.recorded_at)}  ·  Source: {data.source_system}
-          </Text>
-        </View>
+        {/* Provenance stamp — minimal, light gray, invisible to casual readers */}
+        <Text style={{ fontSize: 6, color: '#b0b0b0', marginTop: 16, textAlign: 'center' as const }}>
+          BanyanOS · {data.event_id.slice(0, 8)} · {fmtTime(data.recorded_at).split(',').slice(0,3).join(',')} · {data.source_system}
+        </Text>
 
         <DocFooter docNumber={data.report_id} kID={data.kID} />
       </Page>

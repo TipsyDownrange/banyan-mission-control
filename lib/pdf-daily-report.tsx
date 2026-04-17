@@ -255,12 +255,10 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
           ))}
         </>}
 
-        {/* ── Immutability notice — same blueBg block as Field Issue ── */}
-        <View style={{ marginTop: 16, padding: '8 12', backgroundColor: C.blueBg, borderRadius: 8, border: `0.5 solid ${C.blue}44` }}>
-          <Text style={{ fontSize: 7.5, color: C.blue, lineHeight: 1.5 }}>
-            Immutable record — BanyanOS  ·  Event ID: {data.event_id}  ·  Recorded: {fmtHST(data.submitted_at)}  ·  Source: BANYAN_FIELD_V1
-          </Text>
-        </View>
+        {/* Provenance stamp — minimal, light gray, invisible to casual readers */}
+        <Text style={{ fontSize: 6, color: '#b0b0b0', marginTop: 16, textAlign: 'center' as const }}>
+          BanyanOS · {data.event_id.slice(0, 8)} · {fmtHST(data.submitted_at).split(',').slice(0,3).join(',')} · BANYAN_FIELD_V1
+        </Text>
 
         {/* ── Footer — same as Field Issue ── */}
         <DocFooter docNumber={docNum} kID={data.kid} />
