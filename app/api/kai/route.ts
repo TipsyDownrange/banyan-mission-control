@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getGoogleAuth } from '@/lib/gauth';
 import { getServerSession } from 'next-auth';
 
 // Allow up to 120 seconds for GPT-5.4 complex prompts
@@ -31,12 +32,10 @@ export async function POST(req: NextRequest) {
   let bidContext = '';
   let projectContext = '';
   try {
-    const saKeyBase64 = process.env.GOOGLE_SA_KEY_BASE64;
     const backendSheetId = process.env.GOOGLE_SHEET_ID || process.env.BACKEND_SHEET_ID;
-    if (saKeyBase64) {
+    if (true) {
       const { google } = await import('googleapis');
-      const keyJson = JSON.parse(Buffer.from(saKeyBase64, 'base64').toString('utf-8'));
-      const auth = new google.auth.JWT({ email: keyJson.client_email, key: keyJson.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+      const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
       const sheets = google.sheets({ version: 'v4', auth });
 
       const [bidResult, projResult] = await Promise.allSettled([

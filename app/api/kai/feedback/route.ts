@@ -5,6 +5,7 @@
  */
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { getGoogleAuth } from '@/lib/gauth';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { v4: uuidv4 } = require('uuid') as { v4: () => string };
 
@@ -13,11 +14,7 @@ const TAB = 'Kai_Feedback';
 const HEADERS = ['feedback_id','timestamp','user_name','user_email','app','page_url','feedback_type','description','screenshot_ref','status','response'];
 
 function getAuth() {
-  const saKey = process.env.GOOGLE_SA_KEY_BASE64
-    ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString())
-    : null;
-  if (!saKey) throw new Error('GOOGLE_SA_KEY_BASE64 not set');
-  return new google.auth.GoogleAuth({ credentials: saKey, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
+  return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
 }
 
 async function ensureTab(sheets: ReturnType<typeof google.sheets>) {

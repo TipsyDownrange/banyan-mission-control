@@ -74,11 +74,8 @@ async function resolvePerformer(raw: string) {
 
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
-async function getDriveClient() {
-  const authKey = process.env.GOOGLE_SA_KEY_BASE64;
-  if (!authKey) throw new Error('GOOGLE_SA_KEY_BASE64 not set');
-  const keyJson = JSON.parse(Buffer.from(authKey, 'base64').toString('utf-8'));
-  const auth = new google.auth.GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/drive'] });
+function getDriveClient() {
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
   return google.drive({ version: 'v3', auth });
 }
 

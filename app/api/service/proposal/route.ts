@@ -51,15 +51,7 @@ async function uploadPDFToDrive(
   woId?: string,
 ): Promise<string | null> {
   try {
-    const keyJson = process.env.GOOGLE_SA_KEY_BASE64
-      ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString('utf-8'))
-      : null;
-    if (!keyJson) return null;
-
-    const auth = new google.auth.GoogleAuth({
-      credentials: keyJson,
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
     const drive = google.drive({ version: 'v3', auth });
 
     let parentId = BANYAN_DRIVE_ID;
@@ -148,23 +140,10 @@ async function emailCustomer(params: {
   senderName?: string;
 }): Promise<boolean> {
   try {
-    // Fix: correct env var name (was GOOGLE_SA_KEY_B64 — missing ASE64)
-    const keyJson = process.env.GOOGLE_SA_KEY_BASE64
-      ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString('utf-8'))
-      : null;
-    if (!keyJson) return false;
-
-    // Sender: use the prepared_by email if it's a kulaglass.com address, otherwise joey@
     const senderEmail = (params.senderEmail && params.senderEmail.endsWith('@kulaglass.com'))
       ? params.senderEmail
       : 'joey@kulaglass.com';
-
-    const auth = new google.auth.JWT({
-      email: keyJson.client_email,
-      key: keyJson.private_key,
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
-      subject: senderEmail,
-    });
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/gmail.send'], senderEmail);
     const gmail = google.gmail({ version: 'v1', auth });
 
     const boundary = 'boundary_proposal_' + Date.now();

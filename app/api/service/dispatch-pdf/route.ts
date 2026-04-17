@@ -73,14 +73,10 @@ export async function GET(req: Request) {
 
     // Auto-save copy to WO folder in Drive (non-blocking) + shadow dual-write
     try {
-      const saKeyB64 = process.env.GOOGLE_SA_KEY_B64 || process.env.GOOGLE_SA_KEY_BASE64;
-      if (saKeyB64) {
-        const keyJson = JSON.parse(Buffer.from(saKeyB64, 'base64').toString('utf-8'));
-        const driveAuth = new (await import('googleapis')).google.auth.JWT({
-          email: keyJson.client_email, key: keyJson.private_key,
-          scopes: ['https://www.googleapis.com/auth/drive'],
-        });
-        const drive = (await import('googleapis')).google.drive({ version: 'v3', auth: driveAuth });
+      {
+        const { google: _g } = await import('googleapis');
+        const driveAuth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
+        const drive = _g.drive({ version: 'v3', auth: driveAuth });
         const { Readable } = await import('stream');
         const folderUrl = g(COL.folder_url);
         if (folderUrl) {

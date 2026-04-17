@@ -34,11 +34,7 @@ function getAuth(readonly = false) {
   const scopes = readonly
     ? ['https://www.googleapis.com/auth/spreadsheets.readonly']
     : ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'];
-  const saKey = process.env.GOOGLE_SA_KEY_BASE64
-    ? JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_BASE64, 'base64').toString())
-    : null;
-  if (!saKey) throw new Error('GOOGLE_SA_KEY_BASE64 not set');
-  return new google.auth.GoogleAuth({ credentials: saKey, scopes });
+  return getGoogleAuth(scopes);
 }
 
 async function ensureTab(sheets: ReturnType<typeof google.sheets>) {

@@ -9,8 +9,8 @@
 
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { getGoogleAuth } from '@/lib/gauth';
 
-const SA_KEY = process.env.GOOGLE_SA_KEY_BASE64 || '';
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const SENDER = 'joey@kulaglass.com';
 
@@ -40,18 +40,11 @@ function rfc2047Encode(text: string): string {
 }
 
 function getSheetsAuth() {
-  const keyJson = JSON.parse(Buffer.from(SA_KEY, 'base64').toString('utf-8'));
-  return new google.auth.GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+  return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
 }
 
 function getGmailAuth(subject: string) {
-  const keyJson = JSON.parse(Buffer.from(SA_KEY, 'base64').toString('utf-8'));
-  return new google.auth.JWT({
-    email: keyJson.client_email,
-    key: keyJson.private_key,
-    scopes: ['https://www.googleapis.com/auth/gmail.send'],
-    subject, // impersonate this address
-  });
+  return getGoogleAuth(['https://www.googleapis.com/auth/gmail.send'], subject);
 }
 
 async function lookupWO(kID: string) {
@@ -72,11 +65,6 @@ async function lookupUsers() {
 }
 
 export async function POST(req: Request) {
-  if (!SA_KEY) {
-    console.error('[notify/field-issue] GOOGLE_SA_KEY_BASE64 not set');
-    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
-  }
-
   let body: {
     event_id: string; kID: string; project_name: string;
     severity: string; blocking: boolean;
