@@ -28,7 +28,7 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
   return (
     <Document>
       <Page size="LETTER" style={S.page}>
-        <Letterhead docNumber={data.report_id} date={fmtTime(data.timestamp).split(',')[0]} />
+        <Letterhead docNumber={data.report_id} date={fmtTime(data.timestamp).split(',').slice(0,3).join(',')} />
 
         <View style={S.docTitleRow}>
           <Text style={S.docTitle}>Field Issue Report</Text>
@@ -47,10 +47,10 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
           ['kID',        data.kID, true],
           ['Reported By',data.reported_by],
           ['Role',       data.role],
-          ['Location',   data.location_group],
-          ['Elevation',  data.elevation || '—'],
-          ['Unit Ref',   data.unit_reference || '—'],
-          ['GPS',        data.gps ? `${data.gps.lat.toFixed(5)}, ${data.gps.lng.toFixed(5)}` : '—'],
+          ...(data.location_group ? [['Location', data.location_group] as [string,string]] : []),
+          ...((data.elevation && data.elevation !== '—') ? [['Elevation', data.elevation] as [string,string]] : []),
+          ...((data.unit_reference && data.unit_reference !== '—') ? [['Unit Ref', data.unit_reference] as [string,string]] : []),
+          ...(data.gps ? [['GPS', `${data.gps.lat.toFixed(5)}, ${data.gps.lng.toFixed(5)}`] as [string,string]] : []),
         ]} />
 
         <SectionHead title="Issue Description" />
@@ -61,10 +61,12 @@ function FieldIssuePDF({ data }: { data: FieldIssueData }) {
             <SectionHead title="Category" />
             <Text style={S.body}>{data.issue_category}</Text>
           </View>
+          {data.caused_by ? (
           <View style={{ flex: 1 }}>
             <SectionHead title="Caused By" />
             <Text style={{ ...S.body, fontFamily: 'Helvetica-Bold', color: sevColor }}>{data.caused_by}</Text>
           </View>
+          ) : null}
         </View>
 
         {/* Impact card */}

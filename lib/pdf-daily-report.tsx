@@ -134,7 +134,7 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
       <Page size="LETTER" style={S.page}>
 
         {/* ── Letterhead — banyan tree icon, company name/address/phone/fax/lic, doc number, teal rule ── */}
-        <Letterhead docNumber={docNum} date={fmtHST(data.submitted_at).split(',')[0]} />
+        <Letterhead docNumber={docNum} date={fmtHST(data.submitted_at).split(',').slice(0,3).join(',')} />
 
         {/* ── Title ── */}
         <View style={S.docTitleRow}>
