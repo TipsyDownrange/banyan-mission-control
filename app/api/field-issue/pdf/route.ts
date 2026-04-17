@@ -155,6 +155,8 @@ export async function POST(req: Request) {
     const drive = getDrive();
     let primaryFileId: string | null = null;
     let shadowFileId: string | null = null;
+    let primaryDriveError: Record<string,unknown> | null = null;
+    let shadowDriveError: Record<string,unknown> | null = null;
 
     if (woFolderId) {
       // Primary: [WO]/Field Issues/
@@ -168,7 +170,10 @@ export async function POST(req: Request) {
         });
         primaryFileId = primaryFile.data.id || null;
         console.log('[field-issue/pdf] DRIVE_TRACE primaryFileId=' + primaryFileId);
-      } catch (e) { console.error('[field-issue/pdf] primary write failed:', e); }
+      } catch (e: unknown) {
+        const err = e as { message?: string; code?: string; response?: { status?: number; data?: { error?: unknown } } };
+        primaryDriveError = { message: err.message, code: err.code, status: err.response?.status, errors: err.response?.data?.error };
+      }
 
       // Shadow: [WO]/10 - AI Project Documents [Kai]/Field Issues/ (non-fatal)
       try {
@@ -181,7 +186,10 @@ export async function POST(req: Request) {
           supportsAllDrives: true, fields: 'id',
         });
         shadowFileId = shadowFile.data.id || null;
-      } catch (shadowErr) { console.error('[field-issue/pdf] shadow write failed (non-fatal):', shadowErr); }
+      } catch (e: unknown) {
+        const err = e as { message?: string; code?: string; response?: { status?: number; data?: { error?: unknown } } };
+        shadowDriveError = { message: err.message, code: err.code, status: err.response?.status, errors: err.response?.data?.error };
+      }
     } else {
       console.error('[field-issue/pdf] No folder_url for', kID, '— skipping Drive write');
     }
@@ -193,6 +201,8 @@ export async function POST(req: Request) {
       primaryFileId,
       shadowFileId,
       driveUrl: primaryFileId ? `https://drive.google.com/file/d/${primaryFileId}/view` : null,
+      primaryDriveError,
+      shadowDriveError,
     });
 
   } catch (err) {
