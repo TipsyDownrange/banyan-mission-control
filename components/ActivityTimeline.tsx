@@ -50,6 +50,8 @@ const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; la
   TM_CAPTURE:        { icon: '⏱️', color: '#92400e', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
   PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
   SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
+  TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
+  WARRANTY_CALLBACK: { icon: '🔁', color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
 };
 
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -58,7 +60,7 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
   CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
-type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST';
+type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK';
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -127,7 +129,7 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
   const description = event.event_type === 'DAILY_LOG'
     ? (event.work_performed || event.notes)
     : event.event_type === 'FIELD_MEASUREMENT'
-      ? (measureSummary ?? event.notes) // summary line; hidden when expanded below
+      ? (measureSummary ?? 'Measurement data — tap to expand') // summary line; hidden when expanded below
       : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
@@ -388,8 +390,14 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
                   )}
                 </>
               ) : (
-                // Plain text fallback
-                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+                // Safe fallback — do not render raw JSON blob
+                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
+                  Measurement data unavailable.{' '}
+                  <button
+                    onClick={e => { e.stopPropagation(); console.log('[FIELD_MEASUREMENT raw]', event.notes); }}
+                    style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontSize: 12, textDecoration: 'underline', padding: 0 }}
+                  >View raw in console</button>
+                </div>
               )}
             </div>
           );
@@ -456,6 +464,101 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
               {kv('Priority', String(parsed.priority || ''))}
               {kv('Fix Required', parsed.resolution_required ? String(parsed.resolution_required) : undefined)}
               {kv('Status', event.issue_status || 'OPEN')}
+            </div>
+          );
+        }
+
+        if (event.event_type === 'SITE_VISIT') {
+          let parsed: Record<string, unknown> = {};
+          let isJson = false;
+          try { parsed = JSON.parse(event.notes); isJson = true; } catch {}
+          const fields = (parsed.fields || {}) as Record<string, string | boolean>;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(3,105,161,0.05)', borderRadius: 10, border: '1px solid rgba(3,105,161,0.15)' }}>
+              {isJson && parsed.system_type ? (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0369a1' }}>
+                    {String(parsed.system_type)} · {parsed.captured_at ? new Date(String(parsed.captured_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                  </div>
+                  {Object.entries(fields).length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {Object.entries(fields).map(([k, v]) => kv(k.replace(/_/g, ' '), typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)))}
+                    </div>
+                  )}
+                  {event.evidence_ref && (
+                    <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 4 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w600`} alt="Site visit photo"
+                        style={{ width: '100%', maxWidth: 400, borderRadius: 10, border: '1px solid #e2e8f0', display: 'block' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </a>
+                  )}
+                </>
+              ) : event.notes && !isJson ? (
+                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+              ) : (
+                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>Site visit notes unavailable.</div>
+              )}
+            </div>
+          );
+        }
+
+        if (event.event_type === 'TESTING') {
+          let parsed: Record<string, unknown> = {};
+          let isJson = false;
+          try { parsed = JSON.parse(event.notes); isJson = true; } catch {}
+          const hasFields = isJson && (parsed.test_type || parsed.result || parsed.test_result);
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(124,58,237,0.05)', borderRadius: 10, border: '1px solid rgba(124,58,237,0.15)' }}>
+              {hasFields ? (
+                <>
+                  {kv('Test Type', parsed.test_type ? String(parsed.test_type) : undefined)}
+                  {kv('Standard', parsed.test_standard ? String(parsed.test_standard) : undefined)}
+                  {kv('Result', parsed.test_result ? String(parsed.test_result) : (parsed.result ? String(parsed.result) : undefined))}
+                  {kv('Conditions', parsed.conditions ? String(parsed.conditions) : undefined)}
+                  {kv('Witnesses', parsed.witnesses ? String(parsed.witnesses) : undefined)}
+                  {event.evidence_ref && (
+                    <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer"
+                      style={{ fontSize: 11, color: '#0369a1', marginTop: 4 }} onClick={e => e.stopPropagation()}>
+                      View evidence →
+                    </a>
+                  )}
+                </>
+              ) : event.notes && !isJson ? (
+                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+              ) : (
+                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>Test details unavailable.</div>
+              )}
+            </div>
+          );
+        }
+
+        if (event.event_type === 'WARRANTY_CALLBACK') {
+          let parsed: Record<string, unknown> = {};
+          let isJson = false;
+          try { parsed = JSON.parse(event.notes); isJson = true; } catch {}
+          const hasFields = isJson && (parsed.reported_by || parsed.issue_description || parsed.description);
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(15,118,110,0.05)', borderRadius: 10, border: '1px solid rgba(15,118,110,0.15)' }}>
+              {hasFields ? (
+                <>
+                  {kv('Reported By', parsed.reported_by ? String(parsed.reported_by) : undefined)}
+                  {kv('Issue', parsed.issue_description ? String(parsed.issue_description) : (parsed.description ? String(parsed.description) : undefined))}
+                  {kv('Responsible', parsed.responsible_party ? String(parsed.responsible_party) : (event.responsible_party || undefined))}
+                  {kv('Fix Required', parsed.resolution_required ? String(parsed.resolution_required) : undefined)}
+                  {kv('Status', event.issue_status || undefined)}
+                  {event.evidence_ref && (
+                    <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer"
+                      style={{ fontSize: 11, color: '#0369a1', marginTop: 4 }} onClick={e => e.stopPropagation()}>
+                      View evidence →
+                    </a>
+                  )}
+                </>
+              ) : event.notes && !isJson ? (
+                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+              ) : (
+                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>Warranty callback details unavailable.</div>
+              )}
             </div>
           );
         }
@@ -567,6 +670,9 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     { key: 'PHOTO_ONLY',       label: 'Photo / Note' },
     { key: 'TM_CAPTURE',        label: 'T&M' },
     { key: 'PUNCH_LIST',        label: 'Punch List' },
+    { key: 'SITE_VISIT',        label: 'Site Visit' },
+    { key: 'TESTING',           label: 'Test' },
+    { key: 'WARRANTY_CALLBACK', label: 'Warranty' },
   ];
 
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
