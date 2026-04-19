@@ -10,10 +10,17 @@ type COSummary = { total: number; pending: number; approved: number; totalExposu
 const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e' };
 
 const EVENT_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  DAILY_LOG:    { label: 'Daily Log',   color: '#0369a1', bg: 'rgba(239,246,255,0.9)' },
-  FIELD_ISSUE:  { label: 'Field Issue', color: '#b91c1c', bg: 'rgba(254,242,242,0.9)' },
-  INSTALL_STEP: { label: 'Install',     color: '#0f766e', bg: 'rgba(240,253,250,0.9)' },
-  NOTE:         { label: 'Note',        color: '#475569', bg: 'rgba(248,250,252,0.9)' },
+  DAILY_LOG:         { label: 'Daily Log',   color: '#0369a1', bg: 'rgba(239,246,255,0.9)' },
+  FIELD_ISSUE:       { label: 'Field Issue', color: '#b91c1c', bg: 'rgba(254,242,242,0.9)' },
+  INSTALL_STEP:      { label: 'Install',     color: '#0f766e', bg: 'rgba(240,253,250,0.9)' },
+  NOTE:              { label: 'Note',        color: '#475569', bg: 'rgba(248,250,252,0.9)' },
+  FIELD_MEASUREMENT: { label: 'Measurement', color: '#0891b2', bg: 'rgba(236,254,255,0.9)' },
+  PUNCH_LIST:        { label: 'Punch List',  color: '#d97706', bg: 'rgba(255,251,235,0.9)' },
+  TM_CAPTURE:        { label: 'T&M',         color: '#92400e', bg: 'rgba(255,247,237,0.9)' },
+  SITE_VISIT:        { label: 'Site Visit',  color: '#0369a1', bg: 'rgba(240,249,255,0.9)' },
+  TESTING:           { label: 'Test',        color: '#7c3aed', bg: 'rgba(245,243,255,0.9)' },
+  WARRANTY_CALLBACK: { label: 'Warranty',    color: '#0f766e', bg: 'rgba(240,253,250,0.9)' },
+  PHOTO_ONLY:        { label: 'Photo',       color: '#92400e', bg: 'rgba(255,251,235,0.9)' },
 };
 
 function displayName(email: string): string {

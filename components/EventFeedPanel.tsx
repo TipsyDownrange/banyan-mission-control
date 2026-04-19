@@ -8,12 +8,18 @@ type Event = {
 };
 
 const TYPE_STYLE: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  DAILY_LOG:    { label: 'Daily Log',    color: '#0369a1', bg: 'rgba(239,246,255,0.9)',  border: 'rgba(59,130,246,0.2)' },
-  FIELD_ISSUE:  { label: 'Field Issue',  color: '#b91c1c', bg: 'rgba(254,242,242,0.9)',  border: 'rgba(239,68,68,0.2)' },
-  INSTALL_STEP: { label: 'Install',      color: '#0f766e', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(13,148,136,0.2)' },
-  QA_CHECK:     { label: 'QA Check',     color: '#6d28d9', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(139,92,246,0.2)' },
-  PHOTO_ONLY:   { label: 'Photo',        color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(245,158,11,0.2)' },
-  NOTE:         { label: 'Note',         color: '#475569', bg: 'rgba(248,250,252,0.9)',  border: 'rgba(148,163,184,0.2)' },
+  DAILY_LOG:         { label: 'Daily Log',    color: '#0369a1', bg: 'rgba(239,246,255,0.9)',  border: 'rgba(59,130,246,0.2)' },
+  FIELD_ISSUE:       { label: 'Field Issue',  color: '#b91c1c', bg: 'rgba(254,242,242,0.9)',  border: 'rgba(239,68,68,0.2)' },
+  INSTALL_STEP:      { label: 'Install',      color: '#0f766e', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(13,148,136,0.2)' },
+  QA_CHECK:          { label: 'QA Check',     color: '#6d28d9', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(139,92,246,0.2)' },
+  PHOTO_ONLY:        { label: 'Photo',        color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(245,158,11,0.2)' },
+  NOTE:              { label: 'Note',         color: '#475569', bg: 'rgba(248,250,252,0.9)',  border: 'rgba(148,163,184,0.2)' },
+  FIELD_MEASUREMENT: { label: 'Measurement',  color: '#0891b2', bg: 'rgba(236,254,255,0.9)',  border: 'rgba(8,145,178,0.2)' },
+  PUNCH_LIST:        { label: 'Punch List',   color: '#d97706', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(217,119,6,0.2)' },
+  TM_CAPTURE:        { label: 'T&M',          color: '#92400e', bg: 'rgba(255,247,237,0.9)',  border: 'rgba(146,64,14,0.2)' },
+  SITE_VISIT:        { label: 'Site Visit',   color: '#0369a1', bg: 'rgba(240,249,255,0.9)',  border: 'rgba(3,105,161,0.2)' },
+  TESTING:           { label: 'Test',         color: '#7c3aed', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(124,58,237,0.2)' },
+  WARRANTY_CALLBACK: { label: 'Warranty',     color: '#0f766e', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(15,118,110,0.2)' },
 };
 
 function formatTime(raw: string): string {

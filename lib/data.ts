@@ -87,9 +87,15 @@ export const STATUS_COLOR: Record<string, string> = {
 };
 
 export const EVENT_TYPE_COLOR: Record<string, string> = {
-  DAILY_LOG: 'bg-blue-50 text-blue-700',
-  INSTALL_STEP: 'bg-teal-50 text-teal-700',
-  FIELD_ISSUE: 'bg-orange-50 text-orange-600',
-  NOTE: 'bg-surface text-ink-label',
-  PHOTO_ONLY: 'bg-amber-50 text-amber-600',
+  DAILY_LOG:         'bg-blue-50 text-blue-700',
+  INSTALL_STEP:      'bg-teal-50 text-teal-700',
+  FIELD_ISSUE:       'bg-orange-50 text-orange-600',
+  NOTE:              'bg-surface text-ink-label',
+  PHOTO_ONLY:        'bg-amber-50 text-amber-600',
+  FIELD_MEASUREMENT: 'bg-cyan-50 text-cyan-700',
+  PUNCH_LIST:        'bg-yellow-50 text-yellow-700',
+  TM_CAPTURE:        'bg-orange-50 text-orange-800',
+  SITE_VISIT:        'bg-sky-50 text-sky-700',
+  TESTING:           'bg-violet-50 text-violet-700',
+  WARRANTY_CALLBACK: 'bg-teal-50 text-teal-800',
 };
