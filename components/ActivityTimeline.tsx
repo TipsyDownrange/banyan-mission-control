@@ -126,10 +126,32 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       measureSummary = parts.join(' · ');
     } catch { measureSummary = null; }
   }
+  let punchPreview: string | null = null;
+  if (event.event_type === 'PUNCH_LIST') {
+    try {
+      const p = JSON.parse(event.notes);
+      if (p.description) {
+        const d = String(p.description);
+        punchPreview = `Punch: ${d.length > 60 ? d.slice(0, 60) + '…' : d}`;
+      }
+    } catch {}
+  }
+  let tmPreview: string | null = null;
+  if (event.event_type === 'TM_CAPTURE') {
+    try {
+      const p = JSON.parse(event.notes);
+      const parts = [p.crew != null ? `${p.crew} crew` : null, p.hours_estimated ? `${p.hours_estimated}h` : null].filter(Boolean);
+      if (parts.length) tmPreview = `T&M: ${parts.join(', ')}`;
+    } catch {}
+  }
   const description = event.event_type === 'DAILY_LOG'
     ? (event.work_performed || event.notes)
     : event.event_type === 'FIELD_MEASUREMENT'
       ? (measureSummary ?? 'Measurement data — tap to expand') // summary line; hidden when expanded below
+    : event.event_type === 'PUNCH_LIST'
+      ? (punchPreview ?? event.notes)
+    : event.event_type === 'TM_CAPTURE'
+      ? (tmPreview ?? event.notes)
       : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
