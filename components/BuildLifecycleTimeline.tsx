@@ -28,6 +28,45 @@ interface BuildTimelineData {
   current_phase_number: number;
 }
 
+type TaskStatus = 'queued' | 'in_progress' | 'waiting' | 'done' | 'blocked';
+type TaskPriority = 'critical' | 'high' | 'medium' | 'low';
+
+interface SheetTask {
+  id: string;
+  title: string;
+  detail: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  category: string;
+  assignedTo: string;
+  phase?: string;
+  dueDate?: string;
+  blockedBy?: string;
+  updatedAt?: string;
+}
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
+  queued:      { color: '#64748b', bg: '#f1f5f9', label: 'Queued' },
+  in_progress: { color: '#0f766e', bg: '#f0fdfa', label: 'In Progress' },
+  waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
+  blocked:     { color: '#b91c1c', bg: '#fef2f2', label: 'Blocked' },
+  done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
+};
+
+const PRIORITY_DOT: Record<string, string> = {
+  critical: '#b91c1c', high: '#d97706', medium: '#2563eb', low: '#94a3b8',
+};
+
+const STATUS_ORDER: TaskStatus[] = ['queued', 'in_progress', 'waiting', 'blocked', 'done'];
+
+function phaseNumFromString(phase?: string): number {
+  if (!phase) return -1;
+  const m = phase.match(/(\d+)/);
+  return m ? parseInt(m[1]) : -1;
+}
+
 // ── Color helpers ──────────────────────────────────────────────────────────────
 
 function phaseColors(status: BuildPhaseStatus, isCurrent: boolean) {
@@ -37,7 +76,7 @@ function phaseColors(status: BuildPhaseStatus, isCurrent: boolean) {
   return { bg: '#f1f5f9', text: '#64748b', border: '#e2e8f0' };
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ── PhaseChip ──────────────────────────────────────────────────────────────────
 
 function PhaseChip({
   phase, isCurrent, isExpanded, onClick,
@@ -59,17 +98,17 @@ function PhaseChip({
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
         background: isExpanded ? bg : bg === '#f1f5f9' ? '#fff' : bg,
-        border: `1.5px solid ${isExpanded ? border : border}`,
+        border: `1.5px solid ${border}`,
         boxShadow: isCurrent ? '0 0 0 3px rgba(20,184,166,0.2)' : 'none',
         minWidth: 72, flex: '1 1 72px', maxWidth: 90,
         transition: 'all 0.15s',
         animation: isCurrent ? 'pulseBorder 2s ease-in-out infinite' : 'none',
       }}
     >
-      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: isExpanded ? text : phase.status === 'not_started' ? '#94a3b8' : text, lineHeight: 1 }}>
+      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: isExpanded ? text : phase.status === 'not_started' ? '#94a3b8' : text, lineHeight: 1 }}>
         Ph {phase.phase_number}
       </span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: isExpanded ? text : phase.status === 'not_started' ? '#64748b' : text, lineHeight: 1.2, textAlign: 'center' }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: isExpanded ? text : phase.status === 'not_started' ? '#64748b' : text, lineHeight: 1.2, textAlign: 'center' as const }}>
         {phase.short_label}
       </span>
       {phase.status === 'complete' && (
@@ -85,65 +124,184 @@ function PhaseChip({
   );
 }
 
-function PhaseDetailPanel({ phase }: { phase: BuildPhase }) {
-  const done = phase.tasks.filter((t) => t.done).length;
-  const total = phase.tasks.length;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+// ── TaskRow ────────────────────────────────────────────────────────────────────
+
+function TaskRow({ task, onStatusChange, saving }: {
+  task: SheetTask;
+  onStatusChange: (id: string, status: TaskStatus) => void;
+  saving: string | null;
+}) {
+  const pill = STATUS_PILL[task.status] || STATUS_PILL.queued;
+  const dot = PRIORITY_DOT[task.priority] || '#94a3b8';
+  const isSaving = saving === task.id;
+  const nextStatuses = STATUS_ORDER.filter(s => s !== task.status);
 
   return (
     <div style={{
-      marginTop: 12, padding: '16px 18px', borderRadius: 12,
-      background: 'white', border: '1px solid #e2e8f0',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px',
+      borderRadius: 9, background: task.status === 'done' ? '#fafafa' : 'white',
+      border: '1px solid #f1f5f9',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      {/* Priority dot */}
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0, marginTop: 5 }} />
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: task.status === 'done' ? '#94a3b8' : '#0f172a', lineHeight: 1.3, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
+          {task.title}
+        </div>
+        {task.detail && (
+          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: 1.4 }}>{task.detail}</div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5, flexWrap: 'wrap' as const }}>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: pill.color, background: pill.bg }}>
+            {isSaving ? '…' : pill.label}
+          </span>
+          {task.id && <span style={{ fontSize: 9, color: '#94a3b8', fontFamily: 'monospace' }}>{task.id}</span>}
+        </div>
+      </div>
+
+      {/* Status change controls */}
+      {task.status !== 'done' && (
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 3, flexShrink: 0 }}>
+          {nextStatuses.slice(0, 3).map(s => (
+            <button key={s} disabled={isSaving}
+              onClick={() => onStatusChange(task.id, s)}
+              style={{
+                padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700,
+                border: `1px solid ${STATUS_PILL[s].color}22`,
+                background: STATUS_PILL[s].bg, color: STATUS_PILL[s].color,
+                cursor: isSaving ? 'default' : 'pointer', opacity: isSaving ? 0.5 : 1,
+              }}>
+              → {STATUS_PILL[s].label}
+            </button>
+          ))}
+        </div>
+      )}
+      {task.status === 'done' && (
+        <button disabled={isSaving}
+          onClick={() => onStatusChange(task.id, 'queued')}
+          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#94a3b8', cursor: 'pointer' }}>
+          ↩ Reopen
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── PhaseCommandPanel ──────────────────────────────────────────────────────────
+
+function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId }: {
+  phase: BuildPhase;
+  tasks: SheetTask[];
+  onStatusChange: (id: string, status: TaskStatus) => void;
+  savingId: string | null;
+}) {
+  const checkDone = phase.tasks.filter((t) => t.done).length;
+  const checkTotal = phase.tasks.length;
+  const pct = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0;
+  const [showDone, setShowDone] = useState(false);
+
+  const activeTasks = tasks.filter(t => t.status !== 'done');
+  const doneTasks = tasks.filter(t => t.status === 'done');
+
+  return (
+    <div style={{
+      marginTop: 10, borderRadius: 12,
+      background: 'white', border: '1px solid #e2e8f0',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.04)', overflow: 'hidden',
+    }}>
+      {/* Panel header */}
+      <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
             Phase {phase.phase_number}: {phase.phase_name}
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{phase.estimated_weeks}</div>
+          <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{phase.estimated_weeks}</div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8' }}>
+        <div style={{ textAlign: 'right' as const }}>
+          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8', lineHeight: 1 }}>
             {pct}%
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8' }}>{done}/{total} tasks</div>
+          <div style={{ fontSize: 10, color: '#94a3b8' }}>{checkDone}/{checkTotal} checklist</div>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 4, borderRadius: 2, background: '#f1f5f9', marginBottom: 14 }}>
-        <div style={{
-          height: '100%', borderRadius: 2,
-          background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8',
-          width: `${pct}%`, transition: 'width 0.4s',
-        }} />
+      <div style={{ height: 3, background: '#f1f5f9' }}>
+        <div style={{ height: '100%', background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#14b8a6', width: `${pct}%`, transition: 'width 0.4s' }} />
       </div>
 
-      {/* Task list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {phase.tasks.map((task, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{
-              flexShrink: 0, width: 16, height: 16, borderRadius: '50%', marginTop: 1,
-              background: task.done ? '#059669' : 'transparent',
-              border: task.done ? 'none' : '1.5px solid #cbd5e1',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {task.done && <span style={{ fontSize: 9, color: '#fff', fontWeight: 900 }}>✓</span>}
-            </div>
-            <span style={{ fontSize: 12, color: task.done ? '#64748b' : '#0f172a', lineHeight: 1.4, textDecoration: task.done ? 'line-through' : 'none' }}>
-              {task.label}
-            </span>
+      <div style={{ padding: '12px 18px' }}>
+        {/* Section A: Phase Checklist */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8 }}>
+            Phase Checklist (read-only)
           </div>
-        ))}
-      </div>
-
-      {phase.notes && (
-        <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, background: '#fffbeb', border: '1px solid #fde68a', fontSize: 11, color: '#92400e' }}>
-          {phase.notes}
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+            {phase.tasks.map((task, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{
+                  flexShrink: 0, width: 15, height: 15, borderRadius: '50%', marginTop: 1,
+                  background: task.done ? '#059669' : 'transparent',
+                  border: task.done ? 'none' : '1.5px solid #cbd5e1',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {task.done && <span style={{ fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</span>}
+                </div>
+                <span style={{ fontSize: 12, color: task.done ? '#94a3b8' : '#334155', lineHeight: 1.4, textDecoration: task.done ? 'line-through' : 'none' }}>
+                  {task.label}
+                </span>
+              </div>
+            ))}
+            {phase.tasks.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>No checklist items for this phase.</div>
+            )}
+          </div>
+          {phase.notes && (
+            <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 7, background: '#fffbeb', border: '1px solid #fde68a', fontSize: 11, color: '#92400e' }}>
+              {phase.notes}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Section B: Active Tasks */}
+        <div style={{ marginBottom: activeTasks.length > 0 || doneTasks.length > 0 ? 12 : 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Active Tasks</span>
+            {activeTasks.length > 0 && <span style={{ fontWeight: 600 }}>{activeTasks.length} open</span>}
+          </div>
+          {activeTasks.length === 0 ? (
+            <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>No active tasks for this phase.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
+              {activeTasks.map(t => (
+                <TaskRow key={t.id} task={t} onStatusChange={onStatusChange} saving={savingId} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Done tasks (collapsible) */}
+        {doneTasks.length > 0 && (
+          <div>
+            <button onClick={() => setShowDone(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#94a3b8', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+              {showDone ? '▾' : '▸'} {doneTasks.length} completed task{doneTasks.length !== 1 ? 's' : ''}
+            </button>
+            {showDone && (
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6, marginTop: 6 }}>
+                {doneTasks.map(t => (
+                  <TaskRow key={t.id} task={t} onStatusChange={onStatusChange} saving={savingId} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Section D placeholder: Captain's Orders (S3 — pending build) */}
+        {/* Future surface: DecisionQueueItems linked to this phase will mount here */}
+        {/* Fetch from banyanos_decision_queue.json when S3 ships */}
+      </div>
     </div>
   );
 }
@@ -155,22 +313,47 @@ export default function BuildLifecycleTimeline() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null);
+  const [tasks, setTasks] = useState<SheetTask[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/build-state');
-      const json = await res.json();
-      if (json.ok) {
-        setData(json.data);
+      const [stateRes, tasksRes] = await Promise.all([
+        fetch('/api/build-state'),
+        fetch('/api/tasks'),
+      ]);
+      const stateJson = await stateRes.json();
+      if (stateJson.ok) {
+        setData(stateJson.data);
         setError(null);
       } else {
-        setError(json.error || 'Failed to load build state');
+        setError(stateJson.error || 'Failed to load build state');
+      }
+      if (tasksRes.ok) {
+        const tasksJson = await tasksRes.json();
+        setTasks((tasksJson.tasks || []) as SheetTask[]);
       }
     } catch (e) {
       console.error('[BuildLifecycleTimeline] fetch error:', e);
       setError('Network error loading build state');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const handleStatusChange = useCallback(async (taskId: string, newStatus: TaskStatus) => {
+    setSavingId(taskId);
+    try {
+      await fetch('/api/tasks', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_id: taskId, status: newStatus }),
+      });
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    } catch (e) {
+      console.error('[BuildLifecycleTimeline] status change error:', e);
+    } finally {
+      setSavingId(null);
     }
   }, []);
 
@@ -184,7 +367,7 @@ export default function BuildLifecycleTimeline() {
   if (loading) {
     return (
       <div style={{ padding: '20px 24px', borderRadius: 12, background: 'white', border: '1px solid #e2e8f0', marginBottom: 20 }}>
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>Loading build state…</div>
+        <div style={{ fontSize: 12, color: '#94a3b8' }}>Loading War Room…</div>
       </div>
     );
   }
@@ -199,6 +382,15 @@ export default function BuildLifecycleTimeline() {
 
   const currentPhase = data.phases.find((p) => p.phase_number === data.current_phase_number);
   const pct = data.overall_pct_complete;
+
+  // Group tasks by phase number (0-12) + cross-phase bucket (-1)
+  function tasksForPhase(phaseNum: number): SheetTask[] {
+    return tasks.filter(t => {
+      const n = phaseNumFromString(t.phase);
+      if (phaseNum === -1) return n < 0 || n > 12; // cross-phase bucket
+      return n === phaseNum;
+    });
+  }
 
   return (
     <div style={{ padding: '0 0 20px' }}>
@@ -216,7 +408,7 @@ export default function BuildLifecycleTimeline() {
         display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
       }}>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#94a3b8', marginBottom: 2 }}>
             The Chart — BanyanOS Build Progress
           </div>
           {currentPhase && (
@@ -230,11 +422,11 @@ export default function BuildLifecycleTimeline() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center' as const }}>
             <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8', lineHeight: 1 }}>
               {pct}%
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>complete</div>
+            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>complete</div>
           </div>
           <div style={{ width: 120 }}>
             <div style={{ height: 6, borderRadius: 3, background: '#f1f5f9' }}>
@@ -268,10 +460,18 @@ export default function BuildLifecycleTimeline() {
         ))}
       </div>
 
-      {/* Expanded detail panel */}
+      {/* Expanded command panel */}
       {expandedPhase !== null && (() => {
         const phase = data.phases.find((p) => p.phase_number === expandedPhase);
-        return phase ? <PhaseDetailPanel phase={phase} /> : null;
+        if (!phase) return null;
+        return (
+          <PhaseCommandPanel
+            phase={phase}
+            tasks={tasksForPhase(expandedPhase)}
+            onStatusChange={handleStatusChange}
+            savingId={savingId}
+          />
+        );
       })()}
     </div>
   );
