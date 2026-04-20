@@ -19,9 +19,7 @@ const CONTEXT_LABEL: Partial<Record<AppView, string>> = {
   'Bid Intake': 'bid intake and estimating',
   'Crew': 'crew and personnel',
   'Today': 'your daily priorities',
-  'Task Board': 'task management',
-  'Approvals': 'approvals',
-  'Workflows': 'scheduled workflows',
+  'War Room': 'task management',
   'Cost & Usage': 'AI usage and cost',
 };
 

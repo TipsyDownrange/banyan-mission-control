@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import BuildLifecycleTimeline from '@/components/BuildLifecycleTimeline';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
@@ -355,11 +354,6 @@ export default function ProjectsPanel({ onNavigate }: Props) {
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: 1200, margin: '0 auto' }}>
-      {/* First surface of AI Command Center war room trunk per GC-D035.
-          Additional surfaces (Drift Register, Decision Queue, Active Work Grid,
-          Three-Step Lens) will mount below this component. */}
-      <BuildLifecycleTimeline />
-
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Projects</div>

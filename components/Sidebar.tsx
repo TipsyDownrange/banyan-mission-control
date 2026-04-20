@@ -36,9 +36,7 @@ const ICONS: Record<string, string> = {
   // Service
   'Work Orders': 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
   // AI Command
-  'Task Board': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-  Approvals:   'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-  Workflows:   'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+  'War Room':   'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
   'Cost & Usage': 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
 };
 
@@ -107,17 +105,15 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
     ],
   },
   {
-    section: 'AI Command', sectionIcon: '⬥',
+    section: 'AI Command Center', sectionIcon: '⬥',
     items: [
-      { label: 'Task Board' },
-      { label: 'Approvals', dot: '#f97316' },
-      { label: 'Workflows' },
+      { label: 'War Room' },
       { label: 'Cost & Usage' },
     ],
   },
 ];
 
-const DEFAULT_COLLAPSED_SECTIONS = new Set(['AI Command', 'Operations']);
+const DEFAULT_COLLAPSED_SECTIONS = new Set(['AI Command Center', 'Operations']);
 
 function NavIcon({ path, size = 15, color }: { path: string; size?: number; color: string }) {
   return (

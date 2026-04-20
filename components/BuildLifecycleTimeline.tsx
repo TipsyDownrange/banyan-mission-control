@@ -217,7 +217,7 @@ export default function BuildLifecycleTimeline() {
       }}>
         <div style={{ flex: 1, minWidth: 160 }}>
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>
-            BanyanOS Build Progress
+            The Chart — BanyanOS Build Progress
           </div>
           {currentPhase && (
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0f766e' }}>

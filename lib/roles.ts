@@ -87,7 +87,7 @@ export function highestRole(roles: string[]): string {
 export function navSectionsForAuthorityLevel(authorityLevel: string, role?: string): string[] {
   switch (authorityLevel) {
     case 'Executive':
-      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'Admin & Finance', 'AI Command'];
+      return ['Assistant', 'Operations', 'Projects', 'People & Assets', 'Estimating', 'Service', 'Admin & Finance', 'AI Command Center'];
 
     case 'Management':
       // Sub-filter by role for Management level

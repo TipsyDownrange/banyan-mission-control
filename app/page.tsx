@@ -8,15 +8,13 @@ import CalendarPanel from '@/components/CalendarPanel';
 import OverviewPanel from '@/components/OverviewPanel';
 import EventFeedPanel from '@/components/EventFeedPanel';
 import ProjectsPanel from '@/components/ProjectsPanel';
+import WarRoomPanel from '@/components/WarRoomPanel';
 import IssuesPanel from '@/components/IssuesPanel';
 import CrewPanel from '@/components/CrewPanel';
 import PMPanel from '@/components/PMPanel';
 import SchedulingPanel from '@/components/SchedulingPanel';
 import DispatchBoard from '@/components/DispatchBoard';
-import TaskBoardPanel from '@/components/TaskBoardPanel';
-import ApprovalsPanel from '@/components/ApprovalsPanel';
 import CostPanel from '@/components/CostPanel';
-import CronPanel from '@/components/CronPanel';
 import AssetsPanel from '@/components/AssetsPanel';
 import BidIntakePanel from '@/components/BidIntakePanel';
 import BidQueuePanel from '@/components/BidQueuePanel';
@@ -42,7 +40,7 @@ export type AppView =
   | 'Crew' | 'Customers' | 'Assets' | 'Org Chart'
   | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
   | 'Work Orders'
-  | 'Task Board' | 'Approvals' | 'Workflows' | 'Cost & Usage'
+  | 'War Room' | 'Cost & Usage'
   | 'WIP Report' | 'Financials' | 'Vendors' | 'Compliance' | 'HR' | 'Safety' | 'Fleet'
   | 'Step Library';
 // ── App ──────────────────────────────────────────────────────────────────────
@@ -195,10 +193,8 @@ export default function Home() {
         {activeView === 'Scheduling'     && <SuperSchedulingPanel />}
         {activeView === 'Dispatch Board'&& <DispatchBoard />}
         {activeView === 'Schedule'        && <DispatchBoard />}
-        {activeView === 'Approvals'     && <ApprovalsPanel />}
         {activeView === 'Cost & Usage'  && <CostPanel />}
-        {activeView === 'Workflows'     && <CronPanel />}
-        {activeView === 'Task Board'    && <TaskBoardPanel />}
+        {activeView === 'War Room'      && <WarRoomPanel />}
         {activeView === 'WIP Report'    && <AdminPanel section="wip" />}
         {activeView === 'Financials'    && <AdminPanel section="financials" />}
         {activeView === 'Vendors'       && <AdminPanel section="vendors" />}
