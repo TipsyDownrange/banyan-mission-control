@@ -38,20 +38,23 @@ type WorkOrder = {
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
 const STAGES = [
-  { key: 'lead',               label: 'Lead',         color: '#3b82f6' },
-  { key: 'quoted',             label: 'Quoted',       color: '#3b82f6' },
-  { key: 'accepted',           label: 'Accepted',     color: '#0f766e' },
-  { key: 'deposit_received',   label: 'Deposit',      color: '#0f766e' },
-  { key: 'materials_ordered',  label: 'Mat Ordered',  color: '#d97706' },
-  { key: 'materials_received', label: 'Mat In',       color: '#d97706' },
-  { key: 'ready_to_schedule',  label: 'Ready',        color: '#7c3aed' },
-  { key: 'scheduled',          label: 'Scheduled',    color: '#7c3aed' },
-  { key: 'in_progress',        label: 'In Progress',  color: '#7c3aed' },
-  { key: 'work_complete',      label: 'Complete',     color: '#16a34a' },
-  { key: 'invoiced',           label: 'Invoiced',     color: '#16a34a' },
-  { key: 'paid',               label: 'Paid',         color: '#16a34a' },
-  { key: 'closed',             label: 'Closed',       color: '#64748b' },
+  { key: 'lead',               label: 'Lead',                color: '#3b82f6' },
+  { key: 'quoted',             label: 'Quoted',              color: '#3b82f6' },
+  { key: 'accepted',           label: 'Accepted',            color: '#0f766e' },
+  { key: 'deposit_received',   label: 'Deposit Received',    color: '#0f766e' },
+  { key: 'materials_ordered',  label: 'Materials Ordered',   color: '#d97706' },
+  { key: 'materials_received', label: 'Materials Received',  color: '#d97706' },
+  { key: 'ready_to_schedule',  label: 'Ready to Schedule',   color: '#7c3aed' },
+  { key: 'scheduled',          label: 'Scheduled',           color: '#7c3aed' },
+  { key: 'in_progress',        label: 'In Progress',         color: '#7c3aed' },
+  { key: 'work_complete',      label: 'Work Complete',       color: '#16a34a' },
+  { key: 'invoiced',           label: 'Invoiced',            color: '#16a34a' },
+  { key: 'paid',               label: 'Paid',                color: '#16a34a' },
+  { key: 'closed',             label: 'Closed',              color: '#64748b' },
 ];
+// NOTE: stored as 'lost' for historical reasons; displayed to user as 'Declined' per UX.
+// Do not rename the literal — it's wired across 6+ files including API routes.
+const DECLINED_STAGE = { key: 'lost', label: 'Declined', color: '#dc2626' } as const;
 
 const STAGE_BG: Record<string, string> = {
   lead: '#f8fafc', quoted: '#f5f3ff',
@@ -121,10 +124,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [closeActualHours, setCloseActualHours] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
   const [closeSubmitting, setCloseSubmitting] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
+  const [declineSubmitting, setDeclineSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [saveError, setSaveError] = useState('');
   const [stageError, setStageError] = useState('');
+  const [stageSuccess, setStageSuccess] = useState('');
   const [linkingFolder, setLinkingFolder] = useState(false);
   const [linkFolderInput, setLinkFolderInput] = useState('');
   const [linkFolderSaving, setLinkFolderSaving] = useState(false);
@@ -152,6 +159,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       .then(d => setProcurementOrders(d.orders || []))
       .catch(err => console.error('[WODetailPanel] loadProcurement', err));
   }, [wo?.id]);
+
+  useEffect(() => {
+    if (!stageSuccess) return;
+    const timer = setTimeout(() => setStageSuccess(''), 3000);
+    return () => clearTimeout(timer);
+  }, [stageSuccess]);
 
   async function handleLinkFolder() {
     if (!linkFolderInput || !wo) return;
@@ -223,7 +236,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
   const safeWo = wo;
 
-  const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
+  const stage = safeWo.status === DECLINED_STAGE.key
+    ? DECLINED_STAGE
+    : STAGES.find(s => s.key === safeWo.status) || STAGES[0];
+  const isDeclined = safeWo.status === DECLINED_STAGE.key;
+  const canDecline = !readOnly && !isDeclined && !['invoiced', 'paid', 'closed'].includes(safeWo.status);
+  const statusSelectValue = isDeclined ? DECLINED_STAGE.key : safeWo.status;
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftRef = useRef(draft);
@@ -319,6 +337,29 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setStageError(err instanceof Error ? err.message : 'Failed to close WO.');
     } finally {
       setCloseSubmitting(false);
+    }
+  }
+
+  async function handleConfirmDecline() {
+    setDeclineSubmitting(true);
+    setStageError('');
+    setStageSuccess('');
+    try {
+      if (declineReason.trim()) {
+        const notePrefix = '[Declined] ';
+        const note = `${notePrefix}${declineReason.trim()}`;
+        const existingComments = (draft.comments ?? safeWo.comments ?? '').trim();
+        const nextComments = existingComments ? `${existingComments}\n${note}` : note;
+        await onSave(safeWo.id, { comments: nextComments } as Parameters<typeof onSave>[1]);
+      }
+      await onStageChange(safeWo.id, DECLINED_STAGE.key);
+      setShowDeclineModal(false);
+      setDeclineReason('');
+      setStageSuccess('WO marked Declined');
+    } catch (err) {
+      setStageError(err instanceof Error ? err.message : 'Failed to mark WO as declined.');
+    } finally {
+      setDeclineSubmitting(false);
     }
   }
 
@@ -462,6 +503,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <button onClick={() => setStageError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
         )}
+        {stageSuccess && (
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#ecfdf5', border: '1px solid rgba(22,163,74,0.2)', fontSize: 12, color: '#15803d', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>✓ {stageSuccess}</span>
+            <button onClick={() => setStageSuccess('')} style={{ background: 'none', border: 'none', color: '#15803d', cursor: 'pointer', fontSize: 16 }}>×</button>
+          </div>
+        )}
 
         {/* Link Folder input bar */}
         {linkingFolder && (
@@ -500,8 +547,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               {/* Pipeline Stage - horizontal progress stepper */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Pipeline Stage</div>
-                {safeWo.status === 'lost' ? (
-                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Lost</div>
+                {isDeclined ? (
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Declined</div>
                 ) : (
                   <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
@@ -543,19 +590,72 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 flexShrink: 0,
                                 opacity: isSaving ? 0.5 : 1,
                               }} />
-                              {(isCurrent || idx === currentIdx - 1 || idx === currentIdx + 1) && (
-                                <span style={{
-                                  fontSize: 9, fontWeight: isCurrent ? 800 : 600,
-                                  color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
-                                  whiteSpace: 'nowrap', letterSpacing: '0.02em',
-                                  textTransform: 'uppercase',
-                                }}>{isSaving ? '...' : s.label}</span>
-                              )}
+                              <span style={{
+                                width: 64,
+                                minHeight: 24,
+                                fontSize: 9.5,
+                                fontWeight: isCurrent ? 800 : 600,
+                                color: isCurrent ? s.color : '#64748b',
+                                letterSpacing: '0.01em',
+                                lineHeight: 1.15,
+                                textAlign: 'center',
+                                whiteSpace: 'normal',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textTransform: 'uppercase',
+                                opacity: isFuture && !isCurrent ? 0.9 : 1,
+                              }}>{isSaving ? '...' : s.label}</span>
                             </div>
                           </React.Fragment>
                         );
                       })}
                     </div>
+                  </div>
+                )}
+                {!readOnly && (
+                  <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+                    <div>
+                      <label style={LBL}>Status</label>
+                      <select
+                        style={INP}
+                        value={statusSelectValue}
+                        onChange={async e => {
+                          const nextStatus = e.target.value;
+                          if (!nextStatus || nextStatus === statusSelectValue || stageSaving || declineSubmitting) return;
+                          if (nextStatus === DECLINED_STAGE.key) {
+                            setShowDeclineModal(true);
+                            return;
+                          }
+                          await handleStageChange(nextStatus);
+                        }}
+                      >
+                        {STAGES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                        <option value={DECLINED_STAGE.key}>{DECLINED_STAGE.label}</option>
+                      </select>
+                    </div>
+                    {canDecline && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                        <button
+                          onClick={() => setShowDeclineModal(true)}
+                          style={{
+                            padding: '9px 14px',
+                            borderRadius: 10,
+                            border: '1px solid rgba(148,163,184,0.35)',
+                            background: 'white',
+                            color: '#ef4444',
+                            fontSize: 12,
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Mark Declined
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1393,6 +1493,59 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   cursor: closeSubmitting ? 'default' : 'pointer',
                   boxShadow: closeSubmitting ? 'none' : '0 3px 12px rgba(21,128,61,0.3)' }}>
                 {closeSubmitting ? 'Closing...' : '✓ Close Work Order'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Decline WO Modal */}
+      {showDeclineModal && (
+        <>
+          <div onClick={() => { if (!declineSubmitting) setShowDeclineModal(false); }} style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:600, backdropFilter:'blur(2px)' }} />
+          <div style={{
+            position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+            zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
+            boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
+          }}>
+            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Mark WO as Declined?</div>
+            <div style={{ fontSize:13, color:'#64748b', marginBottom:20 }}>This removes the work order from the active board while keeping it in the record.</div>
+
+            <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>
+              Reason (optional)
+            </label>
+            <textarea
+              value={declineReason}
+              onChange={e => setDeclineReason(e.target.value)}
+              placeholder="Why declined? — optional"
+              rows={3}
+              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:13, outline:'none', resize:'none', boxSizing:'border-box', marginBottom:20 }}
+            />
+
+            <div style={{ display:'flex', gap:10 }}>
+              <button
+                onClick={() => setShowDeclineModal(false)}
+                disabled={declineSubmitting}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, fontWeight:700, cursor: declineSubmitting ? 'default' : 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDecline}
+                disabled={declineSubmitting}
+                style={{
+                  flex:2,
+                  padding:'12px',
+                  borderRadius:12,
+                  border:'1px solid rgba(239,68,68,0.25)',
+                  background:'white',
+                  color: declineSubmitting ? '#94a3b8' : '#ef4444',
+                  fontSize:13,
+                  fontWeight:800,
+                  cursor: declineSubmitting ? 'default' : 'pointer',
+                }}
+              >
+                {declineSubmitting ? 'Saving...' : 'Confirm Declined'}
               </button>
             </div>
           </div>
