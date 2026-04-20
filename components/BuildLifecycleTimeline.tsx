@@ -31,6 +31,8 @@ interface BuildTimelineData {
 type TaskStatus = 'queued' | 'in_progress' | 'waiting' | 'done' | 'blocked';
 type TaskPriority = 'critical' | 'high' | 'medium' | 'low';
 
+type ActionLogEntry = { ts: string; action: string; by: string };
+
 interface SheetTask {
   id: string;
   title: string;
@@ -43,6 +45,7 @@ interface SheetTask {
   dueDate?: string;
   blockedBy?: string;
   updatedAt?: string;
+  actionLog?: ActionLogEntry[];
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -124,12 +127,133 @@ function PhaseChip({
   );
 }
 
+// ── TaskDirectiveInput ────────────────────────────────────────────────────────
+
+function TaskDirectiveInput({ task, onLogUpdated }: {
+  task: SheetTask;
+  onLogUpdated: (taskId: string, log: ActionLogEntry[]) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [text, setText] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [flash, setFlash] = React.useState<'success' | 'error' | null>(null);
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const existingLog = (task.actionLog || [])
+    .filter(e => e.action.startsWith('directive:'))
+    .slice().reverse();
+
+  const handleOpen = () => {
+    setOpen(true);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
+
+  const handleSubmit = async () => {
+    const trimmed = text.trim();
+    if (!trimmed || submitting) return;
+    setSubmitting(true);
+    setFlash(null);
+    const now = new Date().toISOString();
+    const newEntry: ActionLogEntry = { ts: now, action: 'directive: ' + trimmed, by: 'Sean Daniels' };
+    const updatedLog = [...(task.actionLog || []), newEntry];
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_id: task.id, actionLog: JSON.stringify(updatedLog) }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      onLogUpdated(task.id, updatedLog);
+      setText('');
+      setFlash('success');
+      setOpen(false);
+      setTimeout(() => setFlash(null), 2000);
+    } catch (e) {
+      console.error('[TaskDirectiveInput] submit error:', e);
+      setFlash('error');
+      setErrorMsg(e instanceof Error ? e.message : 'Submit failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const hasText = text.trim().length > 0;
+
+  if (!open) {
+    return (
+      <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={handleOpen} style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 11, fontWeight: 600, color: '#94a3b8', padding: 0,
+          textDecoration: 'underline dotted', textUnderlineOffset: 2,
+        }}>
+          + Add directive / context
+        </button>
+        {flash === 'success' && (
+          <span style={{ fontSize: 11, color: '#15803d', fontWeight: 600 }}>✓ Directive added</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {existingLog.length > 0 && (
+        <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {existingLog.map((entry, i) => (
+            <div key={i} style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: '#f8fafc', borderLeft: '2px solid #e2e8f0' }}>
+              <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', marginRight: 6 }}>
+                {new Date(entry.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+              {entry.action.replace(/^directive:\s*/, '')}
+            </div>
+          ))}
+        </div>
+      )}
+      <textarea ref={textareaRef} value={text}
+        onChange={e => { setText(e.target.value); if (flash === 'error') setFlash(null); }}
+        onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit(); }}
+        placeholder="Add directive or context for this task..."
+        rows={2}
+        style={{
+          width: '100%', boxSizing: 'border-box' as const,
+          fontSize: 13, padding: '8px 10px', borderRadius: 7,
+          border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
+          outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
+          color: '#0f172a', background: 'white', lineHeight: 1.5,
+        }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+        <div style={{ fontSize: 10, color: flash === 'error' ? '#dc2626' : '#94a3b8' }}>
+          {flash === 'error' ? errorMsg || 'Submit failed' : 'Cmd+Enter · Esc to cancel'}
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => { setOpen(false); setText(''); setFlash(null); }}
+            style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={!hasText || submitting}
+            style={{
+              padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, border: 'none',
+              background: hasText && !submitting ? '#14b8a6' : '#e2e8f0',
+              color: hasText && !submitting ? 'white' : '#94a3b8',
+              cursor: hasText && !submitting ? 'pointer' : 'default',
+            }}>
+            {submitting ? 'Adding…' : 'Add'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── TaskRow ────────────────────────────────────────────────────────────────────
 
-function TaskRow({ task, onStatusChange, saving }: {
+function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
   task: SheetTask;
   onStatusChange: (id: string, status: TaskStatus) => void;
   saving: string | null;
+  onLogUpdated: (taskId: string, log: ActionLogEntry[]) => void;
 }) {
   const pill = STATUS_PILL[task.status] || STATUS_PILL.queued;
   const dot = PRIORITY_DOT[task.priority] || '#94a3b8';
@@ -159,6 +283,8 @@ function TaskRow({ task, onStatusChange, saving }: {
           </span>
           {task.id && <span style={{ fontSize: 9, color: '#94a3b8', fontFamily: 'monospace' }}>{task.id}</span>}
         </div>
+        {/* Task-level directive input */}
+        <TaskDirectiveInput task={task} onLogUpdated={onLogUpdated} />
       </div>
 
       {/* Status change controls */}
@@ -305,12 +431,13 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
 
 // ── PhaseCommandPanel ──────────────────────────────────────────────────────────
 
-function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded }: {
+function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded, onLogUpdated }: {
   phase: BuildPhase;
   tasks: SheetTask[];
   onStatusChange: (id: string, status: TaskStatus) => void;
   savingId: string | null;
   onTaskAdded: (task: SheetTask) => void;
+  onLogUpdated: (taskId: string, log: ActionLogEntry[]) => void;
 }) {
   const checkDone = phase.tasks.filter((t) => t.done).length;
   const checkTotal = phase.tasks.length;
@@ -386,6 +513,12 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
           onAdded={onTaskAdded}
         />
 
+        {/* Direct Order input — Command surface per GC-D035 v2 amendments */}
+        <DirectOrderInput
+          phaseNumber={phase.phase_number}
+          onAdded={onTaskAdded}
+        />
+
         {/* Section B: Active Tasks */}
         <div style={{ marginBottom: activeTasks.length > 0 || doneTasks.length > 0 ? 12 : 0 }}>
           <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -397,7 +530,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
               {activeTasks.map(t => (
-                <TaskRow key={t.id} task={t} onStatusChange={onStatusChange} saving={savingId} />
+                <TaskRow key={t.id} task={t} onStatusChange={onStatusChange} saving={savingId} onLogUpdated={onLogUpdated} />
               ))}
             </div>
           )}
@@ -412,7 +545,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
             {showDone && (
               <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6, marginTop: 6 }}>
                 {doneTasks.map(t => (
-                  <TaskRow key={t.id} task={t} onStatusChange={onStatusChange} saving={savingId} />
+                  <TaskRow key={t.id} task={t} onStatusChange={onStatusChange} saving={savingId} onLogUpdated={onLogUpdated} />
                 ))}
               </div>
             )}
@@ -592,6 +725,7 @@ export default function BuildLifecycleTimeline() {
             onStatusChange={handleStatusChange}
             savingId={savingId}
             onTaskAdded={(task) => setTasks(prev => [task, ...prev])}
+            onLogUpdated={(taskId, log) => setTasks(prev => prev.map(t => t.id === taskId ? { ...t, actionLog: log } : t))}
           />
         );
       })()}
