@@ -48,9 +48,7 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'invoiced',           label: 'Invoiced',           color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
   { key: 'paid',               label: 'Paid',               color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
   { key: 'closed',             label: 'Closed',             color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
-  // NOTE: stored as 'lost' for historical reasons; displayed to user as 'Declined' per UX.
-  // Do not rename the literal — it's wired across 6+ files including API routes.
-  { key: 'lost',               label: 'Declined',           color: '#dc2626', bg: 'rgba(254,242,242,0.96)', border: '1px solid rgba(220,38,38,0.2)' },
+  { key: 'lost',               label: 'Lost',               color: '#dc2626', bg: 'rgba(254,242,242,0.96)', border: '1px solid rgba(220,38,38,0.2)' },
 ];
 
 const ISLAND_COLORS: Record<string, string> = {
@@ -184,7 +182,6 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('date_desc');
   const [showCompleted, setShowCompleted] = useState(false); // off by default — keeps board clean
-  const [showDeclined, setShowDeclined] = useState(false); // off by default — keeps dead quotes out of the main board
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
   // Local optimistic state overrides: woId → partial WO
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<WorkOrder>>>({});
@@ -294,7 +291,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const searchLower = search.toLowerCase();
   const completedStatuses = new Set(['closed', 'completed', 'work_complete']);
   const filteredWOs = mergedWorkOrders.filter(wo => {
-    if (wo.status === 'lost' && !showDeclined && !search && filter === 'all') return false;
+    if (wo.status === 'lost') return false;
     // Hide completed unless showCompleted is on OR we're actively filtering/searching for them
     if (completedStatuses.has(wo.status) && !showCompleted && !search && filter === 'all') return false;
     if (filter !== 'all' && wo.status !== filter) return false;
@@ -438,19 +435,6 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
               {(mergedByStatus['closed']?.length || 0) + (mergedByStatus['work_complete']?.length || 0)}
             </span>
           </button>
-          <button onClick={() => setShowDeclined(v => !v)} style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            border: showDeclined ? '1px solid rgba(220,38,38,0.3)' : '1px solid #e2e8f0',
-            background: showDeclined ? 'rgba(254,242,242,0.9)' : 'white',
-            color: showDeclined ? '#dc2626' : '#64748b',
-          }}>
-            <span style={{ fontSize: 14 }}>{showDeclined ? '☑' : '☐'}</span>
-            Show Declined
-            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
-              {mergedByStatus['lost']?.length || 0}
-            </span>
-          </button>
         </div>
       )}
 
@@ -531,27 +515,6 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
               {completedWOs.map(wo => (
                 <div key={wo.id} style={{ width: 240, opacity: 0.75 }}>
                   <WOCard wo={wo}
-                    onDetail={(w) => setDetailWO(w)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Declined WOs — separate row below active board when showDeclined is on */}
-      {!loading && data && view === 'kanban' && (showDeclined || (search && filteredByStatus['lost']?.length > 0)) && (() => {
-        const declinedWOs = filteredByStatus['lost'] || [];
-        if (declinedWOs.length === 0) return null;
-        return (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid #f1f5f9' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Declined Work Orders ({declinedWOs.length})</div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              {declinedWOs.map(wo => (
-                <div key={wo.id} style={{ width: 240, opacity: 0.78 }}>
-                  <WOCard
-                    wo={wo}
                     onDetail={(w) => setDetailWO(w)}
                   />
                 </div>
