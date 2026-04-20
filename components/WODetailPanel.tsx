@@ -1166,7 +1166,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
                       <div style={{ ...LBL, marginBottom: 2 }}>Invoice Total</div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
-                        ${parseFloat(wo.invoice_total || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        {(() => { const t = parseFloat(wo.invoice_total || ''); return isNaN(t) ? '—' : `$${t.toLocaleString('en-US', { minimumFractionDigits: 2 })}`; })()}
                       </div>
                     </div>
                     <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
