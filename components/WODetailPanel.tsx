@@ -132,7 +132,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [linkFolderInput, setLinkFolderInput] = useState('');
   const [linkFolderSaving, setLinkFolderSaving] = useState(false);
   const [linkedFolderUrl, setLinkedFolderUrl] = useState<string | undefined>(undefined);
-  const [jobFiles, setJobFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; driveUrl: string; folder: string; sizeKb: number }>>([]);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [uploadError, setUploadError] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -341,6 +343,25 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setStageError(err instanceof Error ? err.message : 'Failed to mark as declined.');
     } finally {
       setDeclineSubmitting(false);
+    }
+  }
+
+  async function uploadFiles(files: File[]) {
+    setUploadError('');
+    setUploadingCount(c => c + files.length);
+    for (const file of files) {
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch(`/api/jobs/${safeWo.id}/upload`, { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || 'Upload failed');
+        setUploadedFiles(prev => [...prev, { name: json.file_name, driveUrl: json.drive_url, folder: json.destination_folder, sizeKb: Math.round(file.size / 1024) }]);
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : 'Upload failed');
+      } finally {
+        setUploadingCount(c => c - 1);
+      }
     }
   }
 
@@ -1233,28 +1254,34 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </div>
               )}
 
-              {/* Job Files - Work Breakdown moved to top of layout */}
+              {/* Job Files */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <input
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept="image/*,.pdf,.doc,.docx"
+                  accept="image/*,.pdf,.doc,.docx,.xlsx,.xls,.txt"
                   style={{ display: 'none' }}
                   onChange={e => {
                     const files = Array.from(e.target.files || []);
-                    setJobFiles(prev => [...prev, ...files]);
                     e.target.value = '';
+                    if (files.length) uploadFiles(files);
                   }}
                 />
                 <div style={{ ...SECTION_TITLE, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span>Job Files</span>
-                  {jobFiles.length > 0 && (
+                  {uploadedFiles.length > 0 && (
                     <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)' }}>
-                      {jobFiles.length}
+                      {uploadedFiles.length}
                     </span>
                   )}
                 </div>
+                {uploadError && (
+                  <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>⚠️ {uploadError}</span>
+                    <button onClick={() => setUploadError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}>×</button>
+                  </div>
+                )}
                 <div
                   onDragOver={e => { e.preventDefault(); setIsDraggingOver(true); }}
                   onDragLeave={() => setIsDraggingOver(false)}
@@ -1262,7 +1289,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     e.preventDefault();
                     setIsDraggingOver(false);
                     const files = Array.from(e.dataTransfer.files);
-                    setJobFiles(prev => [...prev, ...files]);
+                    if (files.length) uploadFiles(files);
                   }}
                   onClick={() => fileInputRef.current?.click()}
                   style={{
@@ -1279,22 +1306,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <div style={{ fontSize: 12, fontWeight: 700, color: isDraggingOver ? '#0f766e' : '#64748b' }}>
                     Drop files here or click to browse
                   </div>
-                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>Images, PDFs, documents</div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>Images, PDFs, documents — max 25 MB</div>
                 </div>
-                {jobFiles.length > 0 && (
+                {uploadingCount > 0 && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.15)' }}>
+                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: '#0f766e', fontWeight: 600 }}>Uploading {uploadingCount} file{uploadingCount > 1 ? 's' : ''}...</span>
+                  </div>
+                )}
+                {uploadedFiles.length > 0 && (
                   <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {jobFiles.map((file, i) => {
-                      const isPDF = file.type === 'application/pdf';
-                      const isImage = file.type.startsWith('image/');
+                    {uploadedFiles.map((f, i) => {
+                      const isPDF = /\.pdf$/i.test(f.name);
+                      const isImage = /\.(jpe?g|png|gif|webp|heic|bmp|svg)$/i.test(f.name);
                       return (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                           <span style={{ fontSize: 14 }}>{isPDF ? '📄' : isImage ? '🖼' : '📎'}</span>
-                          <span style={{ flex: 1, fontSize: 12, color: '#0f172a', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
-                          <span style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}>{(file.size / 1024).toFixed(0)} KB</span>
-                          <button
-                            onClick={e => { e.stopPropagation(); setJobFiles(prev => prev.filter((_, j) => j !== i)); }}
-                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 16, padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
-                          >×</button>
+                          <a href={f.driveUrl} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                            style={{ flex: 1, fontSize: 12, color: '#0369a1', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
+                            {f.name}
+                          </a>
+                          <span style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}>{f.sizeKb} KB</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, flexShrink: 0, padding: '2px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.04em',
+                            color: f.folder === 'Photos' ? '#0891b2' : '#7c3aed',
+                            background: f.folder === 'Photos' ? 'rgba(8,145,178,0.08)' : 'rgba(124,58,237,0.08)',
+                          }}>
+                            {f.folder}
+                          </span>
                         </div>
                       );
                     })}
