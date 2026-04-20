@@ -189,13 +189,128 @@ function TaskRow({ task, onStatusChange, saving }: {
   );
 }
 
+// ── DirectOrderInput ──────────────────────────────────────────────────────────
+
+function DirectOrderInput({ phaseNumber, onAdded }: {
+  phaseNumber: number;
+  onAdded: (task: SheetTask) => void;
+}) {
+  const [text, setText] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [flash, setFlash] = React.useState<'success' | 'error' | null>(null);
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus on mount (fires when drill-down expands)
+  React.useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const handleSubmit = async () => {
+    const trimmed = text.trim();
+    if (!trimmed || submitting) return;
+    setSubmitting(true);
+    setFlash(null);
+    setErrorMsg('');
+    const now = new Date().toISOString();
+    const taskId = 'TSK-' + Date.now();
+    const newTask: SheetTask = {
+      id: taskId,
+      title: trimmed.slice(0, 80),
+      detail: trimmed,
+      status: 'queued',
+      priority: 'high',
+      category: 'Directive',
+      assignedTo: 'Sean',
+      phase: `Phase ${phaseNumber}`,
+      updatedAt: now,
+    };
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tasks: [{
+            id: taskId,
+            title: newTask.title,
+            detail: newTask.detail,
+            status: 'queued',
+            priority: 'high',
+            category: 'Directive',
+            assignedTo: 'Sean',
+            createdAt: now,
+            updatedAt: now,
+            phase: `Phase ${phaseNumber}`,
+            source: 'direct_order',
+            sortOrder: '999',
+          }],
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setText('');
+      setFlash('success');
+      onAdded(newTask);
+      setTimeout(() => setFlash(null), 2000);
+    } catch (e) {
+      console.error('[DirectOrderInput] submit error:', e);
+      setFlash('error');
+      setErrorMsg(e instanceof Error ? e.message : 'Submit failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const hasText = text.trim().length > 0;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8 }}>
+        Direct Order
+      </div>
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={e => { setText(e.target.value); if (flash === 'error') setFlash(null); }}
+        onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit(); }}
+        placeholder="Direct Order: type a directive for this phase..."
+        rows={2}
+        style={{
+          width: '100%', boxSizing: 'border-box' as const,
+          fontSize: 14, padding: '10px 12px', borderRadius: 9,
+          border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
+          outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
+          color: '#0f172a', background: 'white', lineHeight: 1.5,
+        }}
+      />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+        <div style={{ fontSize: 11, color: flash === 'success' ? '#15803d' : flash === 'error' ? '#dc2626' : '#94a3b8' }}>
+          {flash === 'success' ? '✓ Directive added' : flash === 'error' ? errorMsg || 'Submit failed' : 'Cmd+Enter to submit'}
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={!hasText || submitting}
+          style={{
+            padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+            border: 'none', cursor: hasText && !submitting ? 'pointer' : 'default',
+            background: hasText && !submitting ? '#14b8a6' : '#e2e8f0',
+            color: hasText && !submitting ? 'white' : '#94a3b8',
+            transition: 'background 0.15s',
+          }}>
+          {submitting ? 'Adding…' : 'Add Directive'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── PhaseCommandPanel ──────────────────────────────────────────────────────────
 
-function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId }: {
+function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded }: {
   phase: BuildPhase;
   tasks: SheetTask[];
   onStatusChange: (id: string, status: TaskStatus) => void;
   savingId: string | null;
+  onTaskAdded: (task: SheetTask) => void;
 }) {
   const checkDone = phase.tasks.filter((t) => t.done).length;
   const checkTotal = phase.tasks.length;
@@ -264,6 +379,12 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId }: {
             </div>
           )}
         </div>
+
+        {/* Direct Order input — Command surface per GC-D035 v2 amendments */}
+        <DirectOrderInput
+          phaseNumber={phase.phase_number}
+          onAdded={onTaskAdded}
+        />
 
         {/* Section B: Active Tasks */}
         <div style={{ marginBottom: activeTasks.length > 0 || doneTasks.length > 0 ? 12 : 0 }}>
@@ -470,6 +591,7 @@ export default function BuildLifecycleTimeline() {
             tasks={tasksForPhase(expandedPhase)}
             onStatusChange={handleStatusChange}
             savingId={savingId}
+            onTaskAdded={(task) => setTasks(prev => [task, ...prev])}
           />
         );
       })()}
