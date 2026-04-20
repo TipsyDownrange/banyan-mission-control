@@ -917,11 +917,11 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
         )}
       </div>
       {/* Compact table layout */}
-      <div style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10 }}>
+      <div style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>WO #</th>
+              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap', minWidth: 80 }}>WO #</th>
               <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Name</th>
               <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Island</th>
               <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Steps</th>
