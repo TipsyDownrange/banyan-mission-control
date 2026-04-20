@@ -1146,7 +1146,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                   <div style={SECTION_TITLE}>Invoice</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>#{wo.invoice_number || wo.qbo_invoice_id}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{(() => { const raw = wo.invoice_number || wo.qbo_invoice_id || ''; return /^\d{4}-\d{2}-\d{2}T/.test(raw) ? `(Draft - ${new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})` : raw ? `#${raw}` : ''; })()}</div>
                     {(() => {
                       const balance = parseFloat(wo.invoice_balance || '0');
                       const isPaid = balance === 0;
