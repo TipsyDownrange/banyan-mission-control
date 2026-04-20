@@ -1254,7 +1254,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             </div>
 
             {/* ── RIGHT COLUMN ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', maxHeight: 'calc(92vh - 80px)' }}>
 
               {/* Work Breakdown - first thing in right column */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
