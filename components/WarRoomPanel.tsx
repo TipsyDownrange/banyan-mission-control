@@ -1,5 +1,6 @@
 'use client';
 import BuildLifecycleTimeline from '@/components/BuildLifecycleTimeline';
+import CaptainsOrders from '@/components/CaptainsOrders';
 
 export default function WarRoomPanel() {
   return (
@@ -12,8 +13,10 @@ export default function WarRoomPanel() {
 
       <BuildLifecycleTimeline />
 
+      {/* S3 "Captain's Orders" (Decision Queue) — shipped */}
+      <CaptainsOrders />
+
       {/* Future surfaces (per GC-D035 build order, file 1SWO1CXn5sbHGeZQchZDpy7U3AzWeD8QX): */}
-      {/* S3 "Captain's Orders" (Decision Queue) — next build */}
       {/* S5 "Damage Control" (Drift Register) */}
       {/* S4 "Watch Bill" (Active Work Grid) */}
       {/* S2 "Sitrep" (Three-Step Lens) */}
