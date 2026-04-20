@@ -95,7 +95,7 @@ interface WODetailPanelProps {
   readOnly?: boolean;
   onClose: () => void;
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
-  onStageChange: (woId: string, stage: string) => Promise<void>;
+  onStageChange: (woId: string, stage: string, reason?: string) => Promise<void>;
   onQuote: (woId: string) => void;
   onEstimate: (wo: WorkOrder) => void;
   onFolderLinked?: (woId: string, folderUrl: string) => void;
@@ -121,6 +121,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [closeActualHours, setCloseActualHours] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
   const [closeSubmitting, setCloseSubmitting] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
+  const [declineSubmitting, setDeclineSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [saveError, setSaveError] = useState('');
@@ -224,6 +227,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const safeWo = wo;
 
   const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
+  const isDeclined = safeWo.status === 'lost';
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftRef = useRef(draft);
@@ -280,6 +284,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setShowCloseModal(true);
       return;
     }
+    // 'lost' requires decline confirmation modal
+    if (stageKey === 'lost') {
+      setShowDeclineModal(true);
+      return;
+    }
     setStageSaving(stageKey);
     setStageError('');
     try {
@@ -319,6 +328,19 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setStageError(err instanceof Error ? err.message : 'Failed to close WO.');
     } finally {
       setCloseSubmitting(false);
+    }
+  }
+
+  async function handleConfirmDecline() {
+    setDeclineSubmitting(true);
+    try {
+      await onStageChange(safeWo.id, 'lost', declineReason);
+      setShowDeclineModal(false);
+      setDeclineReason('');
+    } catch (err) {
+      setStageError(err instanceof Error ? err.message : 'Failed to mark as declined.');
+    } finally {
+      setDeclineSubmitting(false);
     }
   }
 
@@ -501,7 +523,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <div style={SECTION_TITLE}>Pipeline Stage</div>
                 {safeWo.status === 'lost' ? (
-                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Lost</div>
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Declined</div>
                 ) : (
                   <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
@@ -543,19 +565,47 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 flexShrink: 0,
                                 opacity: isSaving ? 0.5 : 1,
                               }} />
-                              {(isCurrent || idx === currentIdx - 1 || idx === currentIdx + 1) && (
-                                <span style={{
-                                  fontSize: 9, fontWeight: isCurrent ? 800 : 600,
-                                  color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
-                                  whiteSpace: 'nowrap', letterSpacing: '0.02em',
-                                  textTransform: 'uppercase',
-                                }}>{isSaving ? '...' : s.label}</span>
-                              )}
+                              <span style={{
+                                fontSize: 9, fontWeight: isCurrent ? 800 : 600,
+                                color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
+                                whiteSpace: 'nowrap', letterSpacing: '0.02em',
+                                textTransform: 'uppercase',
+                              }}>{isSaving ? '...' : s.label}</span>
                             </div>
                           </React.Fragment>
                         );
                       })}
                     </div>
+                  </div>
+                )}
+                {!readOnly && !isDeclined && (
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <select
+                      value={safeWo.status}
+                      disabled={!!stageSaving}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === safeWo.status) return;
+                        handleStageChange(val);
+                      }}
+                      style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', background: 'white', cursor: stageSaving ? 'default' : 'pointer', width: '100%', outline: 'none' }}
+                    >
+                      {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                    </select>
+                    <button
+                      onClick={() => setShowDeclineModal(true)}
+                      disabled={!!stageSaving}
+                      style={{
+                        padding: '6px 12px', borderRadius: 8,
+                        border: '1px solid rgba(148,163,184,0.4)', background: 'white',
+                        color: '#ef4444', fontSize: 11, fontWeight: 700,
+                        cursor: stageSaving ? 'default' : 'pointer',
+                        letterSpacing: '0.05em', textTransform: 'uppercase',
+                        opacity: stageSaving ? 0.5 : 1,
+                      }}
+                    >
+                      Mark Declined
+                    </button>
                   </div>
                 )}
               </div>
@@ -1393,6 +1443,43 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   cursor: closeSubmitting ? 'default' : 'pointer',
                   boxShadow: closeSubmitting ? 'none' : '0 3px 12px rgba(21,128,61,0.3)' }}>
                 {closeSubmitting ? 'Closing...' : '✓ Close Work Order'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Decline WO Modal */}
+      {showDeclineModal && (
+        <>
+          <div onClick={() => setShowDeclineModal(false)} style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:600, backdropFilter:'blur(2px)' }} />
+          <div style={{
+            position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+            zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
+            boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
+          }}>
+            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Mark as Declined</div>
+            <div style={{ fontSize:13, color:'#64748b', marginBottom:20 }}>This work order will be removed from the active board. You can view it using "Show Declined."</div>
+            <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>Reason (optional)</label>
+            <textarea
+              value={declineReason}
+              onChange={e => setDeclineReason(e.target.value)}
+              placeholder="e.g. Customer went with another contractor..."
+              rows={3}
+              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:13, outline:'none', resize:'none', boxSizing:'border-box', marginBottom:20 }}
+            />
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={() => setShowDeclineModal(false)}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleConfirmDecline} disabled={declineSubmitting}
+                style={{ flex:2, padding:'12px', borderRadius:12, border:'none',
+                  background: declineSubmitting ? '#e2e8f0' : '#dc2626',
+                  color: declineSubmitting ? '#94a3b8' : 'white', fontSize:13, fontWeight:800,
+                  cursor: declineSubmitting ? 'default' : 'pointer',
+                  boxShadow: declineSubmitting ? 'none' : '0 3px 12px rgba(220,38,38,0.3)' }}>
+                {declineSubmitting ? 'Declining...' : '✕ Mark Declined'}
               </button>
             </div>
           </div>

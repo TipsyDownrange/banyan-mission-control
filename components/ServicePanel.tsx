@@ -48,7 +48,7 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'invoiced',           label: 'Invoiced',           color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
   { key: 'paid',               label: 'Paid',               color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
   { key: 'closed',             label: 'Closed',             color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
-  { key: 'lost',               label: 'Lost',               color: '#dc2626', bg: 'rgba(254,242,242,0.96)', border: '1px solid rgba(220,38,38,0.2)' },
+  { key: 'lost',               label: 'Declined',           color: '#dc2626', bg: 'rgba(254,242,242,0.96)', border: '1px solid rgba(220,38,38,0.2)' }, // stored literal 'lost' preserved
 ];
 
 const ISLAND_COLORS: Record<string, string> = {
@@ -182,6 +182,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('date_desc');
   const [showCompleted, setShowCompleted] = useState(false); // off by default — keeps board clean
+  const [showDeclined, setShowDeclined] = useState(false);
   const [allCrew, setAllCrew] = useState<CrewMember[]>([]);
   // Local optimistic state overrides: woId → partial WO
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<WorkOrder>>>({});
@@ -221,14 +222,14 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
     mergedByStatus[stage.key] = mergedWorkOrders.filter(w => w.status === stage.key);
   }
 
-  async function handleStageChange(woId: string, stage: string) {
+  async function handleStageChange(woId: string, stage: string, reason?: string) {
     // Optimistic update
     setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], status: stage } }));
     try {
       await fetch('/api/service/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ woNumber: woId, stage }),
+        body: JSON.stringify({ woNumber: woId, stage, reason }),
       });
     } catch {
       // Revert on failure
@@ -291,7 +292,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const searchLower = search.toLowerCase();
   const completedStatuses = new Set(['closed', 'completed', 'work_complete']);
   const filteredWOs = mergedWorkOrders.filter(wo => {
-    if (wo.status === 'lost') return false;
+    if (wo.status === 'lost' && !showDeclined && !search && filter === 'all') return false;
     // Hide completed unless showCompleted is on OR we're actively filtering/searching for them
     if (completedStatuses.has(wo.status) && !showCompleted && !search && filter === 'all') return false;
     if (filter !== 'all' && wo.status !== filter) return false;
@@ -419,7 +420,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
       )}
 
       {/* KANBAN */}
-      {/* Show Completed toggle */}
+      {/* Show Completed / Show Declined toggles */}
       {!loading && data && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={() => setShowCompleted(v => !v)} style={{
@@ -433,6 +434,19 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
             Show Completed
             <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
               {(mergedByStatus['closed']?.length || 0) + (mergedByStatus['work_complete']?.length || 0)}
+            </span>
+          </button>
+          <button onClick={() => setShowDeclined(v => !v)} style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: showDeclined ? '1px solid rgba(220,38,38,0.3)' : '1px solid #e2e8f0',
+            background: showDeclined ? 'rgba(254,242,242,0.9)' : 'white',
+            color: showDeclined ? '#dc2626' : '#64748b',
+          }}>
+            <span style={{ fontSize: 14 }}>{showDeclined ? '☑' : '☐'}</span>
+            Show Declined
+            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
+              {mergedByStatus['lost']?.length || 0}
             </span>
           </button>
         </div>
@@ -524,6 +538,26 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
         );
       })()}
 
+      {/* Declined WOs — separate row below board when showDeclined is on */}
+      {!loading && data && view === 'kanban' && (showDeclined || filter === 'lost' || (search && filteredByStatus['lost']?.length > 0)) && (() => {
+        const declinedWOs = filteredByStatus['lost'] || [];
+        if (declinedWOs.length === 0) return null;
+        return (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid #fef2f2' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f87171', marginBottom: 10 }}>Declined Work Orders ({declinedWOs.length})</div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {declinedWOs.map(wo => (
+                <div key={wo.id} style={{ width: 240, opacity: 0.7 }}>
+                  <WOCard wo={wo}
+                    onDetail={(w) => setDetailWO(w)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* LIST */}
       {!loading && data && view === 'list' && (
         <>
@@ -576,7 +610,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
           readOnly={readOnly}
           onClose={() => setDetailWO(null)}
           onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
-          onStageChange={async (id, stage) => { await handleStageChange(id, stage); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
+          onStageChange={async (id, stage, reason) => { await handleStageChange(id, stage, reason); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
           onQuote={(id) => { setQuoteWO(id); setDetailWO(null); }}
           onEstimate={(wo) => {
             setEstimateWO(wo);

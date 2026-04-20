@@ -5,6 +5,7 @@ import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -133,12 +134,13 @@ async function deriveWOStatus(
 //         men?, contactPhone?, contactEmail?, contactPerson?, folderUrl?, island? }
 export async function PATCH(req: Request) {
   // Permission check — wo:edit required (Joey, Nate, Sean, Jody)
-  const { allowed } = await checkPermission(req, 'wo:edit');
+  const { allowed, email: userEmail } = await checkPermission(req, 'wo:edit');
   if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
 
   try {
     const body = await req.json();
     const { woId, woNumber, stage, status } = body;
+    const reason: string = body.reason || '';
 
     if (!woId && !woNumber) {
       return NextResponse.json({ error: 'woId or woNumber required' }, { status: 400 });
@@ -180,6 +182,10 @@ export async function PATCH(req: Request) {
     const sheetRow = targetRowIdx + 2;
     const now = hawaiiNow();
     const resolvedWoId = (woId || rows[targetRowIdx]?.[COL_IDX.wo_id] || '').trim();
+
+    // Snapshot pre-write values for GC-D037 either-both-or-neither rollback
+    const oldStatus    = ((rows[targetRowIdx] as string[])?.[COL_IDX.status]     || '').trim();
+    const oldUpdatedAt = ((rows[targetRowIdx] as string[])?.[COL_IDX.updated_at] || '').trim();
 
     // Build field updates
     const updates: { col: string; value: string }[] = [];
@@ -306,6 +312,37 @@ export async function PATCH(req: Request) {
         data: requests,
       },
     });
+
+    // ─── GC-D037: emit MC event for status transitions (either-both-or-neither) ─
+    if (resolvedStatus && resolvedStatus !== oldStatus) {
+      const eventType =
+        resolvedStatus === 'lost'   ? 'WO_DECLINED'    :
+        resolvedStatus === 'closed' ? 'WO_CLOSED'      : 'STATUS_CHANGED';
+      try {
+        await emitMCEvent({
+          wo_id:        resolvedWoId,
+          event_type:   eventType,
+          old_status:   oldStatus,
+          new_status:   resolvedStatus,
+          notes:        reason,
+          submitted_by: userEmail || '',
+          origin:       'office',
+        });
+      } catch {
+        // Compensating write — roll back status + updated_at (GC-D037 §5)
+        await sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: BACKEND_SHEET_ID,
+          requestBody: {
+            valueInputOption: 'RAW',
+            data: [
+              { range: `${TAB}!${colLetter(COL_IDX.status)}${sheetRow}`,     values: [[oldStatus]] },
+              { range: `${TAB}!${colLetter(COL_IDX.updated_at)}${sheetRow}`, values: [[oldUpdatedAt]] },
+            ],
+          },
+        });
+        return NextResponse.json({ error: 'Event emit failed; status write rolled back.' }, { status: 500 });
+      }
+    }
 
     // ─── Acceptance trigger: write bid_hours to Install_Steps ────────────────
     if (resolvedStatus === 'approved') {
