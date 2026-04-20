@@ -79,7 +79,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
     ...(data?.bids_due || []).map(b => ({
       id: b.kID, type: 'bid',
       title: `Bid due — ${b.name}`,
-      detail: `Assigned to ${b.assigned || 'Unassigned'} · Due ${b.due}`,
+      detail: `Assigned to ${b.assigned || 'Unassigned'} · Due ${b.due ? new Date(b.due + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}`,
       tag: 'Bid Deadline', tagColor: '#92400e', tagBg: '#fffbeb',
     })),
   ];
