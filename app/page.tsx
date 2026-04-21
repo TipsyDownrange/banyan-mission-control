@@ -72,6 +72,12 @@ export default function Home() {
     const onboarded = localStorage.getItem('banyan_onboarded');
     if (!onboarded) setShowOnboarding(true);
   }, []);
+
+  // MC-017: deep-link restore — if ?wo= is in the URL on mount, switch to Work Orders
+  useEffect(() => {
+    const woParam = new URLSearchParams(window.location.search).get('wo');
+    if (woParam) setActiveView('Work Orders');
+  }, []);
   const [projectsList, setProjectsList] = useState<{kID:string;name:string}[]>([]);
 
   useEffect(() => {
