@@ -129,6 +129,41 @@ const SEC: React.CSSProperties = {
   display: 'block',
 };
 
+const PRINT_STYLES = `
+@media print {
+  [data-estimate-print-backdrop],
+  [data-estimate-print-header],
+  [data-estimate-print-footer] {
+    display: none !important;
+  }
+
+  [data-estimate-print-shell] {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  [data-estimate-print-scroll],
+  [data-estimate-print-scroll] * {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  [data-estimate-print-content] {
+    max-width: none !important;
+    margin: 0 !important;
+  }
+}
+`;
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function parseDollar(s: string): number {
@@ -545,11 +580,16 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
 
   return (
     <>
+      <style>{PRINT_STYLES}</style>
       {/* Backdrop */}
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 500, backdropFilter: 'blur(2px)' }} />
+      <div
+        data-estimate-print-backdrop
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 500, backdropFilter: 'blur(2px)' }}
+      />
 
       {/* Modal */}
-      <div style={{
+      <div data-estimate-print-shell style={{
         position: 'fixed',
         inset: '3vh 3vw',
         zIndex: 501,
@@ -562,7 +602,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
       }}>
 
         {/* Header */}
-        <div style={{
+        <div data-estimate-print-header style={{
           padding: '14px 20px 12px',
           background: '#0f172a',
           display: 'flex',
@@ -596,8 +636,8 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
         </div>
 
         {/* Body — two columns */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
+        <div data-estimate-print-scroll style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 24px' }}>
+          <div data-estimate-print-content style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
 
             {/* ── LEFT COLUMN: Materials ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -926,7 +966,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
         </div>
 
         {/* Footer: Generate Quote button */}
-        <div style={{
+        <div data-estimate-print-footer style={{
           flexShrink: 0,
           padding: '12px 20px',
           background: 'white',
