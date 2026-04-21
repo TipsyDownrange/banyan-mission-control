@@ -151,7 +151,15 @@ export function calcTotals(est: EstimateData): EstimateTotals {
 
 function TableHeader({ cols }: { cols: { label: string; width?: number | string; align?: string }[] }) {
   return (
-    <View style={{ flexDirection: 'row', backgroundColor: C.navy, padding: '5 10', borderRadius: 0 }}>
+    <View style={{
+      flexDirection: 'row',
+      backgroundColor: C.navy,
+      padding: '5 10',
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0,
+      borderBottomLeftRadius: 0,
+    }}>
       {cols.map(c => (
         <Text key={c.label} style={{
           fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.white,
