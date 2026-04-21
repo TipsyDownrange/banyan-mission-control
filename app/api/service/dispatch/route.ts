@@ -121,7 +121,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      businessName, customerName, address, city, island, areaOfIsland,
+      businessName, customerName, address, city, state, zip, island, areaOfIsland,
       contactPerson, contactPhone, contactEmail, contactTitle,
       description, systemType, urgency,
       assignedTo, notes, woNumber, dateReceived,
@@ -172,7 +172,7 @@ export async function POST(req: Request) {
       'lead',         // status — new WOs start as New Lead
       island || city || '',                           // island (F)
       areaOfIsland || island || city || '',            // area_of_island (G)
-      [address, city].filter(Boolean).join(', '),      // address (H)
+      (() => { const parts = [address, city]; if (state || zip) parts.push([state, zip].filter(Boolean).join(' ')); return parts.filter(Boolean).join(', '); })(),  // address (H)
       contactPerson || '',                             // contact_person (I)
       contactTitle || '',                              // contact_title (J)
       contactPhone || '',                              // contact_phone (K)

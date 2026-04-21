@@ -9,7 +9,7 @@ import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 type WODraft = {
   businessName: string;  // Maps to name column (C)
   customerName: string;  // Maps to customer_name column (M)
-  address: string; city: string; island: string; areaOfIsland: string;
+  address: string; city: string; state: string; zip: string; island: string; areaOfIsland: string;
   contactPerson: string; contactPhone: string; contactEmail: string;
   description: string; systemType: string; urgency: string;
   assignedTo: string; notes: string;
@@ -149,8 +149,10 @@ function applyAddressRecord(prev: WODraft, c: CustomerRecord): WODraft {
   };
 }
 
+const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
+
 const BLANK: WODraft = {
-  businessName: '', customerName: '', address: '', city: '', island: '', areaOfIsland: '',
+  businessName: '', customerName: '', address: '', city: '', state: 'HI', zip: '', island: '', areaOfIsland: '',
   contactPerson: '', contactPhone: '', contactEmail: '',
   description: '', systemType: '', urgency: 'normal',
   assignedTo: '', notes: '',
@@ -481,10 +483,12 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               onChange={v => update('address', v)}
               onSelect={(place: ParsedPlace) => setDraft(prev => ({
                 ...prev,
-                address: place.formatted_address,
+                address: place.street || place.formatted_address,
                 city: place.city || prev.city,
+                state: place.state || prev.state,
+                zip: place.zip || prev.zip,
                 island: place.island || prev.island,
-                areaOfIsland: detectIslandAndArea(place.formatted_address).area || prev.areaOfIsland,
+                areaOfIsland: detectIslandAndArea(place.city || place.formatted_address).area || prev.areaOfIsland,
               }))}
               placeholder="Start typing an address…"
               style={INP}
@@ -513,6 +517,25 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>{FL('City')}<input value={draft.city} onChange={e => update('city', e.target.value)} placeholder="City" style={INP} /></div>
+            <div>
+              {FL('State')}
+              <select value={draft.state} onChange={e => update('state', e.target.value)} style={SEL}>
+                {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              {FL('ZIP')}
+              <input
+                value={draft.zip}
+                onChange={e => update('zip', e.target.value)}
+                placeholder="96793"
+                maxLength={10}
+                style={INP}
+              />
+            </div>
             <div>
               {FL('Urgency')}
               <select value={draft.urgency} onChange={e => update('urgency', e.target.value)} style={SEL}>
