@@ -68,6 +68,7 @@ const SYSTEM_TYPES = [
   'Other',
 ];
 const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
+const KAI_SCOPE_FILL_ENABLED = false;
 
 // ── Autocomplete helpers ────────────────────────────────────────────────────
 
@@ -377,12 +378,16 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
             <textarea value={draft.description} onChange={e => update('description', e.target.value)}
               placeholder="Describe what they need — Kai will extract customer, contact, island, and system type automatically..."
               rows={3} style={{ ...INP, flex: 1, resize: 'none', lineHeight: 1.5 }} />
-            <button onClick={enrichWithKai} disabled={!draft.description || loading}
-              style={{ padding: '8px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: draft.description && !loading ? 'pointer' : 'default', background: draft.description ? 'rgba(240,253,250,0.96)' : '#f8fafc', color: draft.description ? '#0f766e' : '#94a3b8', border: draft.description ? '1px solid rgba(15,118,110,0.2)' : '1px solid #e2e8f0', alignSelf: 'flex-start', whiteSpace: 'nowrap' as const }}>
-              {loading ? '...' : 'Fill →'}
-            </button>
+            {KAI_SCOPE_FILL_ENABLED && (
+              <button onClick={enrichWithKai} disabled={!draft.description || loading}
+                style={{ padding: '8px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: draft.description && !loading ? 'pointer' : 'default', background: draft.description ? 'rgba(240,253,250,0.96)' : '#f8fafc', color: draft.description ? '#0f766e' : '#94a3b8', border: draft.description ? '1px solid rgba(15,118,110,0.2)' : '1px solid #e2e8f0', alignSelf: 'flex-start', whiteSpace: 'nowrap' as const }}>
+                {loading ? '...' : 'Fill →'}
+              </button>
+            )}
           </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Paste a description and hit Fill → to auto-populate fields</div>
+          {KAI_SCOPE_FILL_ENABLED && (
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Paste a description and hit Fill → to auto-populate fields</div>
+          )}
         </div>
 
         {/* Customer & Site Information */}
