@@ -152,8 +152,34 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       if (p.subject) emailSentPreview = String(p.subject);
     } catch {}
   }
+  let dailyLogPreview: string | null = null;
+  if (event.event_type === 'DAILY_LOG') {
+    const directWork = event.work_performed.trim();
+    if (directWork) {
+      dailyLogPreview = directWork;
+    } else {
+      try {
+        const p = JSON.parse(event.notes);
+        const parsedWork = typeof p.work_performed === 'string' ? p.work_performed.trim() : '';
+        if (parsedWork) {
+          dailyLogPreview = parsedWork.length > 120 ? parsedWork.slice(0, 119) + '…' : parsedWork;
+        } else if (typeof p.crew_on_site === 'string' && p.crew_on_site.trim()) {
+          const firstLine = typeof p.user_notes === 'string'
+            ? p.user_notes.split(/\r?\n/).map((line: string) => line.trim()).find(Boolean) || ''
+            : '';
+          dailyLogPreview = firstLine
+            ? `${p.crew_on_site.trim()} crew — ${firstLine}`
+            : `${p.crew_on_site.trim()} crew`;
+        } else {
+          dailyLogPreview = 'Daily Report';
+        }
+      } catch {
+        dailyLogPreview = 'Daily Report';
+      }
+    }
+  }
   const description = event.event_type === 'DAILY_LOG'
-    ? (event.work_performed || event.notes)
+    ? dailyLogPreview
     : event.event_type === 'FIELD_MEASUREMENT'
       ? (measureSummary ?? 'Measurement data — tap to expand') // summary line; hidden when expanded below
     : event.event_type === 'PUNCH_LIST'
