@@ -52,6 +52,7 @@ const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; la
   SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
   WARRANTY_CALLBACK: { icon: '🔁', color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
+  EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
 };
 
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -60,7 +61,7 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
   CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
-type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK';
+type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT';
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -144,6 +145,13 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       if (parts.length) tmPreview = `T&M: ${parts.join(', ')}`;
     } catch {}
   }
+  let emailSentPreview: string | null = null;
+  if (event.event_type === 'EMAIL_SENT') {
+    try {
+      const p = JSON.parse(event.notes);
+      if (p.subject) emailSentPreview = String(p.subject);
+    } catch {}
+  }
   const description = event.event_type === 'DAILY_LOG'
     ? (event.work_performed || event.notes)
     : event.event_type === 'FIELD_MEASUREMENT'
@@ -152,6 +160,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       ? (punchPreview ?? event.notes)
     : event.event_type === 'TM_CAPTURE'
       ? (tmPreview ?? event.notes)
+  : event.event_type === 'EMAIL_SENT'
+      ? (emailSentPreview ?? event.notes)
       : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
@@ -585,6 +595,19 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           );
         }
 
+        if (event.event_type === 'EMAIL_SENT') {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(event.notes); } catch {}
+          const recipients = Array.isArray(parsed.recipients) ? (parsed.recipients as string[]).join(', ') : undefined;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(5,150,105,0.05)', borderRadius: 10, border: '1px solid rgba(5,150,105,0.15)' }}>
+              {!!parsed.subject && kv('Subject', String(parsed.subject))}
+              {recipients && kv('To', recipients)}
+              <div style={{ fontSize: 11, color: '#059669', fontStyle: 'italic', marginTop: 2 }}>(sent via Gmail)</div>
+            </div>
+          );
+        }
+
         return null;
       })()}
 
@@ -695,6 +718,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     { key: 'SITE_VISIT',        label: 'Site Visit' },
     { key: 'TESTING',           label: 'Test' },
     { key: 'WARRANTY_CALLBACK', label: 'Warranty' },
+    { key: 'EMAIL_SENT',        label: 'Emails' },
   ];
 
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
