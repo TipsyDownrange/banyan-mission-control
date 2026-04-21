@@ -40,6 +40,12 @@ export type DailyReportPDFData = {
 
   // Work narrative
   work_performed: string;
+  work_performed_events?: {
+    event_id?: string;
+    event_type?: string;
+    description?: string;
+  }[];
+  user_notes?: string;
 
   // Delays (optional — omit section when empty)
   delays?: {
@@ -48,6 +54,7 @@ export type DailyReportPDFData = {
     description: string;
     caused_by?: string;
   }[];
+  delay_description?: string;
 
   // Materials received (optional)
   materials_received?: {
@@ -56,6 +63,12 @@ export type DailyReportPDFData = {
     condition?: string;
     notes?: string;
   }[];
+
+  // Additional notes captured in FA daily report JSON
+  crew_on_site?: string;
+  system_crew?: string;
+  visitors?: string;
+  safety_issues?: string;
 
   // Photos (optional)
   photos?: {
@@ -84,6 +97,26 @@ function docNumber(data: DailyReportPDFData): string {
   const mm = data.report_date.slice(5, 7);
   const dd = data.report_date.slice(8, 10);
   return `DR-${yy}${mm}${dd}-${data.kid}`;
+}
+
+function splitFreeTextList(value?: string): string[] {
+  if (!value) return [];
+  return value
+    .split(/\r?\n|,|;/)
+    .map(item => item.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean);
+}
+
+function dedupeStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of values) {
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
 }
 
 // Table header style — matches light treatment in Field Issue tables
@@ -115,9 +148,14 @@ const tableRowAltStyle = {
 
 function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
   const docNum = docNumber(data);
-  const hasDelays    = (data.delays || []).length > 0;
+  const hasDelays    = (data.delays || []).length > 0 || !!data.delay_description;
   const hasMaterials = (data.materials_received || []).length > 0;
   const hasPhotos    = (data.photos || []).length > 0;
+  const crewSummary = dedupeStrings([
+    ...splitFreeTextList(data.crew_on_site),
+    ...splitFreeTextList(data.system_crew),
+  ]);
+  const hasWorkSection = !!data.work_performed || (data.work_performed_events || []).length > 0;
 
   // Compose weather string from structured fields or raw
   const weatherStr = data.weather.raw ||
@@ -189,10 +227,42 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
         )}
         </>}
 
+        {/* ── Crew summary from FA notes JSON ── */}
+        {crewSummary.length > 0 && <>
+        <SectionHead title="Crew" />
+        <View style={{ marginBottom: 14 }}>
+          {crewSummary.map((item, index) => (
+            <Text key={index} style={{ ...S.body, marginBottom: 4 }}>{`- ${item}`}</Text>
+          ))}
+        </View>
+        </>}
+
         {/* ── Work Performed — omit if empty ── */}
-        {data.work_performed ? <>
+        {hasWorkSection ? <>
         <SectionHead title="Work Performed" />
-        <Text style={{ ...S.body, marginBottom: 14 }}>{data.work_performed}</Text>
+        {data.work_performed ? (
+          <Text style={{ ...S.body, marginBottom: (data.work_performed_events || []).length > 0 ? 8 : 14 }}>{data.work_performed}</Text>
+        ) : null}
+        {(data.work_performed_events || []).length > 0 && (
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ ...S.bodyMuted, marginBottom: 6, fontFamily: 'Helvetica-Bold' }}>System-logged work</Text>
+            {(data.work_performed_events || []).map((item, index) => {
+              const parts = [
+                item.event_type ? `[${item.event_type}]` : null,
+                item.description || null,
+              ].filter(Boolean);
+              return (
+                <Text key={index} style={{ ...S.body, marginBottom: 4 }}>{`- ${parts.join(' ')}`}</Text>
+              );
+            })}
+          </View>
+        )}
+        </> : null}
+
+        {/* ── Additional field notes (optional) ── */}
+        {data.user_notes ? <>
+        <SectionHead title="Additional Field Notes" />
+        <Text style={{ ...S.body, marginBottom: 14 }}>{data.user_notes}</Text>
         </> : null}
 
         {/* ── Delays (conditional) ── */}
@@ -214,6 +284,9 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
               </View>
             ))}
           </View>
+          {data.delay_description && (
+            <Text style={{ ...S.body, marginBottom: 12 }}>{data.delay_description}</Text>
+          )}
         </>}
 
         {/* ── Materials (conditional) ── */}
@@ -236,6 +309,18 @@ function DailyReportPDF({ data }: { data: DailyReportPDFData }) {
             ))}
           </View>
         </>}
+
+        {/* ── Visitors (optional) ── */}
+        {data.visitors ? <>
+          <SectionHead title="Visitors" />
+          <Text style={{ ...S.body, marginBottom: 14 }}>{data.visitors}</Text>
+        </> : null}
+
+        {/* ── Safety issues (optional) ── */}
+        {data.safety_issues ? <>
+          <SectionHead title="Safety Issues" />
+          <Text style={{ ...S.body, marginBottom: 14 }}>{data.safety_issues}</Text>
+        </> : null}
 
         {/* ── Photos (conditional) — with embedded thumbnails ── */}
         {hasPhotos && <>
