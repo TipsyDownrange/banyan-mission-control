@@ -176,6 +176,28 @@ export async function POST(req: Request) {
     const delaysRaw = evRow[EV.delays_blockers] || '';
     const materialsRaw = evRow[EV.materials_received] || '';
     const eventOccurredAt = evRow[EV.event_occurred_at] || new Date().toISOString();
+    let parsedNotes: Record<string, unknown> = {};
+    try {
+      const rawNotes = evRow[EV.notes] || '';
+      const parsed = rawNotes ? JSON.parse(rawNotes) : {};
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        parsedNotes = parsed as Record<string, unknown>;
+      }
+    } catch {}
+    const noteString = (key: string): string | undefined => {
+      const value = parsedNotes[key];
+      return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+    };
+    const workPerformedEvents = Array.isArray(parsedNotes.work_performed_events)
+      ? parsedNotes.work_performed_events
+          .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item))
+          .map(item => ({
+            event_id: typeof item.event_id === 'string' ? item.event_id : '',
+            event_type: typeof item.event_type === 'string' ? item.event_type : '',
+            description: typeof item.description === 'string' ? item.description : '',
+          }))
+          .filter(item => item.event_id || item.event_type || item.description)
+      : body.work_performed_events;
 
     // GC-D021: Resolve all reference data fresh
     const [project, performer, superintendent] = await Promise.all([
@@ -203,7 +225,14 @@ export async function POST(req: Request) {
       manpower_prefilled: body.manpower_prefilled || false,
       work_performed: workPerformed,
       delays: delaysRaw ? [{ delay_type: 'Delay', description: delaysRaw }] as DailyReportPDFData['delays'] : body.delays,
+      delay_description: noteString('delay_description') || body.delay_description,
       materials_received: materialsRaw || body.materials_received,
+      crew_on_site: noteString('crew_on_site') || body.crew_on_site,
+      system_crew: noteString('system_crew') || body.system_crew,
+      work_performed_events: workPerformedEvents,
+      user_notes: noteString('user_notes') || body.user_notes,
+      visitors: noteString('visitors') || body.visitors,
+      safety_issues: noteString('safety_issues') || body.safety_issues,
       photos: body.photos, // overridden below with event evidence_ref
     };
 
