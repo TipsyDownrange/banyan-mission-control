@@ -71,6 +71,13 @@ const ROLE_RANK: Record<string, number> = {
   glazier: 10,
 };
 
+export const ROLE_LABELS: Record<string, string> = {
+  gm: 'GM', owner: 'Owner', service_pm: 'Service PM', super: 'Superintendent',
+  pm: 'PM', estimator: 'Estimator', admin_mgr: 'Admin Manager',
+  admin: 'Admin', field: 'Field', pm_track: 'PM Track', sales: 'Sales',
+  glazier: 'Field', none: 'No Access',
+};
+
 /** When a user has multiple roles, return the highest-authority one. */
 export function highestRole(roles: string[]): string {
   if (!roles.length) return 'glazier';

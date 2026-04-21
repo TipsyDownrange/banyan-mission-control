@@ -1,6 +1,9 @@
 'use client';
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { signOut, useSession } from 'next-auth/react';
 import type { AppView } from '@/app/page';
+import { getRoleFromEmail } from '@/lib/auth';
+import { ROLE_LABELS } from '@/lib/roles';
 
 // Icon mapping — SVG paths for each nav item
 const ICONS: Record<string, string> = {
@@ -115,6 +118,31 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
 
 const DEFAULT_COLLAPSED_SECTIONS = new Set(['AI Command Center', 'Operations']);
 
+function AvatarCircle({ initials, size = 28 }: { initials: string; size?: number }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: 'linear-gradient(135deg, #0e7490 0%, #0c4a6e 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: Math.round(size * 0.36), fontWeight: 800, color: 'white',
+      flexShrink: 0, letterSpacing: '-0.02em', userSelect: 'none',
+    }}>
+      {initials}
+    </div>
+  );
+}
+
+function deriveInitials(name: string, email: string): string {
+  const n = name.trim();
+  if (n) {
+    const parts = n.split(/\s+/);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0][0].toUpperCase();
+  }
+  return (email[0] || '?').toUpperCase();
+}
+
 function NavIcon({ path, size = 15, color }: { path: string; size?: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -143,6 +171,18 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
   const [hovered, setHovered] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(DEFAULT_COLLAPSED_SECTIONS);
   const [qboStatus, setQboStatus] = useState<'healthy' | 'token_expired' | 'refresh_expired' | 'unreachable' | 'unconfigured' | 'loading' | 'unknown'>('unknown');
+
+  const { data: session } = useSession();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const avatarBtnRef = useRef<HTMLButtonElement>(null);
+  const menuDropRef = useRef<HTMLDivElement>(null);
+  const [menuAnchor, setMenuAnchor] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
+
+  const sessionUserName  = session?.user?.name  || '';
+  const sessionUserEmail = session?.user?.email || '';
+  const sessionUserRole  = getRoleFromEmail(sessionUserEmail);
+  const sessionUserRoleLabel = ROLE_LABELS[sessionUserRole] || sessionUserRole;
+  const sessionUserInitials  = deriveInitials(sessionUserName, sessionUserEmail);
 
   // Poll QBO health every 5 minutes
   useEffect(() => {
@@ -179,6 +219,38 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
       setTimeout(() => setLogoGold(false), 3000);
     }
   }, []);
+
+  useEffect(() => {
+    if (!showUserMenu) return;
+    function onInteraction(e: MouseEvent | KeyboardEvent) {
+      if (e instanceof KeyboardEvent) {
+        if (e.key === 'Escape') setShowUserMenu(false);
+        return;
+      }
+      if (
+        menuDropRef.current?.contains(e.target as Node) ||
+        avatarBtnRef.current?.contains(e.target as Node)
+      ) return;
+      setShowUserMenu(false);
+    }
+    document.addEventListener('mousedown', onInteraction);
+    document.addEventListener('keydown', onInteraction);
+    return () => {
+      document.removeEventListener('mousedown', onInteraction);
+      document.removeEventListener('keydown', onInteraction);
+    };
+  }, [showUserMenu]);
+
+  function openUserMenu() {
+    if (!avatarBtnRef.current) return;
+    const rect = avatarBtnRef.current.getBoundingClientRect();
+    if (collapsed) {
+      setMenuAnchor({ top: rect.top, left: rect.right + 8, bottom: undefined });
+    } else {
+      setMenuAnchor({ top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left });
+    }
+    setShowUserMenu(m => !m);
+  }
 
   const activeSection = NAV.find(n => n.items.some(i => i.label === activeView))?.section;
 
@@ -319,9 +391,56 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — collapsed: initials avatar only */}
+      {collapsed && (
+        <div style={{ padding: '8px 0 14px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+          <button
+            ref={avatarBtnRef}
+            onClick={openUserMenu}
+            title={sessionUserName || sessionUserEmail}
+            style={{
+              background: showUserMenu ? 'rgba(255,255,255,0.1)' : 'transparent',
+              border: '1px solid ' + (showUserMenu ? 'rgba(255,255,255,0.15)' : 'transparent'),
+              borderRadius: 8, padding: 3, cursor: 'pointer', transition: 'all 0.1s',
+            }}
+          >
+            <AvatarCircle initials={sessionUserInitials} size={28} />
+          </button>
+        </div>
+      )}
+
+      {/* Footer — expanded: identity row + existing blocks */}
       {!collapsed && (
         <div style={{ padding: '10px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+
+          {/* User identity row */}
+          <button
+            ref={avatarBtnRef}
+            onClick={openUserMenu}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 9,
+              padding: '7px 8px', marginBottom: 10, borderRadius: 9,
+              background: showUserMenu ? 'rgba(255,255,255,0.07)' : 'transparent',
+              border: '1px solid ' + (showUserMenu ? 'rgba(255,255,255,0.1)' : 'transparent'),
+              cursor: 'pointer', transition: 'all 0.1s ease', textAlign: 'left',
+            }}
+            onMouseEnter={e => { if (!showUserMenu) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+            onMouseLeave={e => { if (!showUserMenu) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+          >
+            <AvatarCircle initials={sessionUserInitials} size={28} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(248,250,252,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {sessionUserName || sessionUserEmail}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 500, marginTop: 1 }}>
+                {sessionUserRoleLabel}
+              </div>
+            </div>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
           {onUserChange && PREVIEW_ALLOWED_EMAILS.includes((sessionEmail || '').toLowerCase()) && (
             <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.4)', marginBottom: 4 }}>🧪 Preview as</div>
@@ -408,6 +527,68 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
             );
           })()}
           <div style={{ fontSize: 9, color: 'rgba(94,234,212,0.2)', fontWeight: 600 }}>BanyanOS · Field Phase</div>
+        </div>
+      )}
+
+      {/* User menu dropdown — fixed position, renders outside sidebar overflow */}
+      {showUserMenu && menuAnchor && (
+        <div
+          ref={menuDropRef}
+          style={{
+            position: 'fixed',
+            ...(menuAnchor.top !== undefined ? { top: menuAnchor.top } : { bottom: menuAnchor.bottom }),
+            left: menuAnchor.left,
+            zIndex: 9999,
+            background: '#0d1f2d',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: 12,
+            minWidth: 210,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.25)',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <AvatarCircle initials={sessionUserInitials} size={34} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+                  {sessionUserName}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+                  {sessionUserEmail}
+                </div>
+              </div>
+            </div>
+            <span style={{
+              fontSize: 10, fontWeight: 700,
+              color: '#14b8a6', background: 'rgba(20,184,166,0.1)',
+              border: '1px solid rgba(20,184,166,0.2)',
+              borderRadius: 5, padding: '2px 8px', letterSpacing: '0.05em',
+            }}>
+              {sessionUserRoleLabel}
+            </span>
+          </div>
+          <div style={{ padding: '8px' }}>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 10px', borderRadius: 8,
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                color: '#f87171', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.15)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'; }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign out
+            </button>
+          </div>
         </div>
       )}
     </aside>
