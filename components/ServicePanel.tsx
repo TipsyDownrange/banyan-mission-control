@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar';
@@ -167,6 +167,14 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const [estimateProcurementOrders, setEstimateProcurementOrders] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(focusWoId || null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
+  const deepLinkRef = useRef<string | null>(null);
+  const urlSetRef = useRef(false);
+
+  // MC-017: capture ?wo= deep-link on mount
+  useEffect(() => {
+    const woParam = new URLSearchParams(window.location.search).get('wo');
+    if (woParam) deepLinkRef.current = woParam;
+  }, []);
 
   // Scroll to focused WO when navigating from Org panel
   useEffect(() => {
@@ -199,6 +207,29 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // MC-017: when data loads, open WO from deep-link
+  useEffect(() => {
+    if (!data) return;
+    const targetId = deepLinkRef.current;
+    if (!targetId) return;
+    const wo = data.workOrders.find(w => w.id === targetId || w.id === `WO-${targetId}` || `WO-${w.id}` === targetId);
+    if (wo) {
+      deepLinkRef.current = null;
+      setDetailWO(wo);
+      urlSetRef.current = true;
+    }
+  }, [data]);
+
+  // MC-017: sync URL when detailWO changes
+  useEffect(() => {
+    if (detailWO) {
+      urlSetRef.current = true;
+      window.history.replaceState(null, '', `?wo=${encodeURIComponent(detailWO.id)}`);
+    } else if (urlSetRef.current) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [detailWO]);
 
   useEffect(() => {
     fetch('/api/crew')
