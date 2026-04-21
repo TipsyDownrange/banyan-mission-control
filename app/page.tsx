@@ -1,6 +1,6 @@
 'use client';
-import { useSession } from 'next-auth/react';
-import { ALL_USERS, navSectionsForRole, hiddenItemsForRole, readOnlyViewsForRole, defaultViewForRole } from '@/lib/roles';
+import { useSession, signOut } from 'next-auth/react';
+import { ALL_USERS, navSectionsForRole, hiddenItemsForRole, readOnlyViewsForRole, defaultViewForRole, ROLE_LABELS } from '@/lib/roles';
 import Sidebar from '@/components/Sidebar';
 import TodayPanel from '@/components/TodayPanel';
 import InboxPanel from '@/components/InboxPanel';
@@ -53,6 +53,7 @@ export default function Home() {
   const { data: authSession } = useSession();
   const [demoUser, setDemoUser] = useState('Sean Daniels');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Auto-detect logged-in user from Google auth session
   useEffect(() => {
@@ -159,9 +160,60 @@ export default function Home() {
             <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc' }}>
               Banyan<span style={{ color: '#14b8a6' }}>OS</span>
             </div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(20,184,166,0.7)' }}>
-              {demoUser.split(' ')[0]}
-            </div>
+            <button
+              onClick={() => setShowMobileMenu(m => !m)}
+              style={{ fontSize: 10, fontWeight: 700, color: showMobileMenu ? '#14b8a6' : 'rgba(20,184,166,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, lineHeight: 1 }}
+            >
+              {(authSession?.user?.name || demoUser).split(' ')[0]} ▾
+            </button>
+            {showMobileMenu && (() => {
+              const realUser = ALL_USERS.find(u => u.email === authSession?.user?.email?.toLowerCase());
+              const role = realUser?.role || 'field';
+              const roleLabel = ROLE_LABELS[role] || role;
+              return (
+                <div style={{
+                  position: 'absolute', top: '100%', right: 0, left: 0,
+                  background: '#071722',
+                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                  padding: '16px',
+                  zIndex: 31,
+                }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                      {authSession?.user?.name || demoUser}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', marginTop: 2 }}>
+                      {authSession?.user?.email || ''}
+                    </div>
+                    <span style={{
+                      display: 'inline-block', marginTop: 6,
+                      fontSize: 10, fontWeight: 700,
+                      color: '#14b8a6', background: 'rgba(20,184,166,0.1)',
+                      border: '1px solid rgba(20,184,166,0.2)',
+                      borderRadius: 5, padding: '2px 8px',
+                    }}>
+                      {roleLabel}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '10px', borderRadius: 8,
+                      background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                      color: '#f87171', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Sign out
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         )}
 
