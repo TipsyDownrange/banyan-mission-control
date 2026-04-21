@@ -479,6 +479,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               style={{ padding: '7px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid rgba(21,128,61,0.2)', color: '#15803d', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               Print WO
             </button>
+            {!readOnly && !isDeclined && (
+              <button
+                onClick={() => setShowDeclineModal(true)}
+                disabled={!!stageSaving}
+                style={{
+                  padding: '7px 14px', borderRadius: 10,
+                  border: '1px solid rgba(148,163,184,0.4)', background: 'white',
+                  color: '#ef4444', fontSize: 12, fontWeight: 800,
+                  cursor: stageSaving ? 'default' : 'pointer',
+                  letterSpacing: '0.05em', textTransform: 'uppercase',
+                  opacity: stageSaving ? 0.5 : 1,
+                }}
+              >
+                Mark Declined
+              </button>
+            )}
             {dirty && !readOnly && (
               <button
                 onClick={handleSave}
@@ -535,101 +551,86 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
         {/* Scrollable body - two-column layout */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
+          {/* Pipeline Stage — full-width band above two-column grid */}
+          <div style={{ maxWidth: 1100, margin: '0 auto 16px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', flexShrink: 0 }}>Pipeline Stage</span>
+              {safeWo.status === 'lost' ? (
+                <div style={{ padding: '6px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Declined</div>
+              ) : (
+                <div style={{ flex: 1, overflowX: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
+                    {STAGES.map((s, idx) => {
+                      const currentIdx = STAGES.findIndex(x => x.key === safeWo.status);
+                      const isPast = idx < currentIdx;
+                      const isCurrent = idx === currentIdx;
+                      const isFuture = idx > currentIdx;
+                      const isSaving = stageSaving === s.key;
+                      return (
+                        <React.Fragment key={s.key}>
+                          {idx > 0 && (
+                            <div style={{ width: 20, height: 2, background: isPast ? STAGES[idx-1].color : '#e2e8f0', flexShrink: 0 }} />
+                          )}
+                          <div
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: readOnly ? 'default' : isCurrent ? 'default' : 'pointer', flexShrink: 0 }}
+                            onClick={async () => {
+                              if (readOnly || isCurrent || !!stageSaving) return;
+                              if (isPast) {
+                                const reason = prompt(`Roll back to "${s.label}"? Enter reason (required):`);
+                                if (!reason?.trim()) return;
+                              }
+                              if (isFuture && idx > currentIdx + 1) {
+                                if (!confirm(`Skip to "${s.label}"? This skips ${idx - currentIdx - 1} stages.`)) return;
+                              }
+                              await handleStageChange(s.key);
+                            }}
+                          >
+                            <style>{`@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 ${s.color}40}50%{box-shadow:0 0 0 5px ${s.color}00}}`}</style>
+                            <div style={{
+                              width: isCurrent ? 14 : 10,
+                              height: isCurrent ? 14 : 10,
+                              borderRadius: '50%',
+                              background: isPast ? s.color : isCurrent ? s.color : '#e2e8f0',
+                              border: isCurrent ? `2px solid ${s.color}` : isPast ? 'none' : '1.5px solid #cbd5e1',
+                              boxShadow: isCurrent ? `0 0 0 3px ${s.color}25` : 'none',
+                              animation: isCurrent ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+                              transition: 'all 0.2s',
+                              flexShrink: 0,
+                              opacity: isSaving ? 0.5 : 1,
+                            }} />
+                            <span style={{
+                              fontSize: 9, fontWeight: isCurrent ? 800 : 600,
+                              color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
+                              whiteSpace: 'nowrap', letterSpacing: '0.02em',
+                              textTransform: 'uppercase',
+                            }}>{isSaving ? '...' : s.label}</span>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {!readOnly && !isDeclined && (
+                <select
+                  value={safeWo.status}
+                  disabled={!!stageSaving}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === safeWo.status) return;
+                    handleStageChange(val);
+                  }}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', background: 'white', cursor: stageSaving ? 'default' : 'pointer', outline: 'none', flexShrink: 0 }}
+                >
+                  {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                </select>
+              )}
+            </div>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 1100, margin: '0 auto' }}>
 
             {/* ── LEFT COLUMN ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-              {/* Pipeline Stage - horizontal progress stepper */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Pipeline Stage</div>
-                {safeWo.status === 'lost' ? (
-                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Declined</div>
-                ) : (
-                  <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
-                      {STAGES.map((s, idx) => {
-                        const currentIdx = STAGES.findIndex(x => x.key === safeWo.status);
-                        const isPast = idx < currentIdx;
-                        const isCurrent = idx === currentIdx;
-                        const isFuture = idx > currentIdx;
-                        const isSaving = stageSaving === s.key;
-                        return (
-                          <React.Fragment key={s.key}>
-                            {idx > 0 && (
-                              <div style={{ width: 20, height: 2, background: isPast ? STAGES[idx-1].color : '#e2e8f0', flexShrink: 0 }} />
-                            )}
-                            <div
-                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: readOnly ? 'default' : isCurrent ? 'default' : 'pointer', flexShrink: 0 }}
-                              onClick={async () => {
-                                if (readOnly || isCurrent || !!stageSaving) return;
-                                if (isPast) {
-                                  const reason = prompt(`Roll back to "${s.label}"? Enter reason (required):`);
-                                  if (!reason?.trim()) return;
-                                }
-                                if (isFuture && idx > currentIdx + 1) {
-                                  if (!confirm(`Skip to "${s.label}"? This skips ${idx - currentIdx - 1} stages.`)) return;
-                                }
-                                await handleStageChange(s.key);
-                              }}
-                            >
-                              <style>{`@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 ${s.color}40}50%{box-shadow:0 0 0 5px ${s.color}00}}`}</style>
-                              <div style={{
-                                width: isCurrent ? 14 : 10,
-                                height: isCurrent ? 14 : 10,
-                                borderRadius: '50%',
-                                background: isPast ? s.color : isCurrent ? s.color : '#e2e8f0',
-                                border: isCurrent ? `2px solid ${s.color}` : isPast ? 'none' : '1.5px solid #cbd5e1',
-                                boxShadow: isCurrent ? `0 0 0 3px ${s.color}25` : 'none',
-                                animation: isCurrent ? 'pulse-dot 2s ease-in-out infinite' : 'none',
-                                transition: 'all 0.2s',
-                                flexShrink: 0,
-                                opacity: isSaving ? 0.5 : 1,
-                              }} />
-                              <span style={{
-                                fontSize: 9, fontWeight: isCurrent ? 800 : 600,
-                                color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
-                                whiteSpace: 'nowrap', letterSpacing: '0.02em',
-                                textTransform: 'uppercase',
-                              }}>{isSaving ? '...' : s.label}</span>
-                            </div>
-                          </React.Fragment>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {!readOnly && !isDeclined && (
-                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <select
-                      value={safeWo.status}
-                      disabled={!!stageSaving}
-                      onChange={e => {
-                        const val = e.target.value;
-                        if (val === safeWo.status) return;
-                        handleStageChange(val);
-                      }}
-                      style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', background: 'white', cursor: stageSaving ? 'default' : 'pointer', width: '100%', outline: 'none' }}
-                    >
-                      {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                    </select>
-                    <button
-                      onClick={() => setShowDeclineModal(true)}
-                      disabled={!!stageSaving}
-                      style={{
-                        padding: '6px 12px', borderRadius: 8,
-                        border: '1px solid rgba(148,163,184,0.4)', background: 'white',
-                        color: '#ef4444', fontSize: 11, fontWeight: 700,
-                        cursor: stageSaving ? 'default' : 'pointer',
-                        letterSpacing: '0.05em', textTransform: 'uppercase',
-                        opacity: stageSaving ? 0.5 : 1,
-                      }}
-                    >
-                      Mark Declined
-                    </button>
-                  </div>
-                )}
-              </div>
 
               {/* Job Details */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
