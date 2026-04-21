@@ -188,7 +188,7 @@ async function emailCustomer(params: {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { quote, sendEmail = false } = body;
+    const { quote, sendEmail = false, emailTo, emailSubject, emailBody } = body;
 
     if (!quote) return NextResponse.json({ error: 'quote object required' }, { status: 400 });
 
@@ -265,12 +265,12 @@ export async function POST(req: Request) {
     );
 
     let emailSent = false;
-    if (sendEmail && pdfData.customer_email) {
-      const emailSubject = `Kula Glass Proposal — ${pdfData.project_description} — WO ${pdfData.wo_number}`;
-      const { sent, messageId, threadId } = await emailCustomer({
-        to: pdfData.customer_email,
-        subject: emailSubject,
-        body: [
+    const recipientEmail = (emailTo as string | undefined) || pdfData.customer_email;
+    if (sendEmail && recipientEmail) {
+      const finalSubject = (emailSubject as string | undefined)
+        || `Kula Glass Proposal — ${pdfData.project_description} — WO ${pdfData.wo_number}`;
+      const finalBody = (emailBody as string | undefined)
+        || [
           `Hello ${pdfData.customer_name},`,
           ``,
           `Please see the attached proposal for ${pdfData.project_description}.`,
@@ -287,7 +287,11 @@ export async function POST(req: Request) {
           `${pdfData.prepared_by?.phone || '808-242-8999'}`,
           `Kula Glass Company Inc.`,
           `289 Pakana St. Wailuku HI 96793`,
-        ].join('\n'),
+        ].join('\n');
+      const { sent, messageId, threadId } = await emailCustomer({
+        to: recipientEmail,
+        subject: finalSubject,
+        body: finalBody,
         pdfBuffer,
         filename,
         senderEmail: pdfData.prepared_by?.email,
@@ -300,8 +304,8 @@ export async function POST(req: Request) {
             wo_id:        woNumber,
             event_type:   'EMAIL_SENT',
             notes:        JSON.stringify({
-              subject:          emailSubject,
-              recipients:       [pdfData.customer_email],
+              subject:          finalSubject,
+              recipients:       [recipientEmail],
               gmail_message_id: messageId,
               gmail_thread_id:  threadId,
               template_type:    'proposal',
