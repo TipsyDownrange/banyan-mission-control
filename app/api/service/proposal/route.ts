@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { generateServiceWOPDF, type ServiceWOData } from '@/lib/pdf-service-wo';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const WO_COL = { wo_id: 0, wo_number: 1, name: 2, description: 3, status: 4, island: 5, area: 6, address: 7, contact_person: 8, assigned_to: 9, contact_phone: 10, contact_email: 11, customer_name: 12 };
@@ -138,7 +139,7 @@ async function emailCustomer(params: {
   filename: string;
   senderEmail?: string;
   senderName?: string;
-}): Promise<boolean> {
+}): Promise<{ sent: boolean; messageId: string; threadId: string }> {
   try {
     const senderEmail = (params.senderEmail && params.senderEmail.endsWith('@kulaglass.com'))
       ? params.senderEmail
@@ -171,7 +172,7 @@ async function emailCustomer(params: {
 
     const result = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
     console.log('[Email] Gmail API success, message ID:', result.data?.id, 'thread:', result.data?.threadId);
-    return true;
+    return { sent: true, messageId: result.data?.id || '', threadId: result.data?.threadId || '' };
   } catch (e: unknown) {
     const err = e as { code?: number; message?: string; errors?: unknown[] };
     console.error('[Email] Gmail API FAILED:', JSON.stringify({
@@ -180,7 +181,7 @@ async function emailCustomer(params: {
       errors: err?.errors,
       to: params.to,
     }));
-    return false;
+    return { sent: false, messageId: '', threadId: '' };
   }
 }
 
@@ -265,9 +266,10 @@ export async function POST(req: Request) {
 
     let emailSent = false;
     if (sendEmail && pdfData.customer_email) {
-      emailSent = await emailCustomer({
+      const emailSubject = `Kula Glass Proposal — ${pdfData.project_description} — WO ${pdfData.wo_number}`;
+      const { sent, messageId, threadId } = await emailCustomer({
         to: pdfData.customer_email,
-        subject: `Kula Glass Proposal — ${pdfData.project_description} — WO ${pdfData.wo_number}`,
+        subject: emailSubject,
         body: [
           `Hello ${pdfData.customer_name},`,
           ``,
@@ -291,6 +293,26 @@ export async function POST(req: Request) {
         senderEmail: pdfData.prepared_by?.email,
         senderName: pdfData.prepared_by?.name,
       });
+      emailSent = sent;
+      if (sent) {
+        try {
+          await emitMCEvent({
+            wo_id:        woNumber,
+            event_type:   'EMAIL_SENT',
+            notes:        JSON.stringify({
+              subject:          emailSubject,
+              recipients:       [pdfData.customer_email],
+              gmail_message_id: messageId,
+              gmail_thread_id:  threadId,
+              template_type:    'proposal',
+            }),
+            submitted_by: pdfData.prepared_by?.email || '',
+            origin:       'office',
+          });
+        } catch (emitErr) {
+          console.warn('[proposal] EMAIL_SENT emit failed (non-fatal):', emitErr);
+        }
+      }
     }
 
     if (!sendEmail) {
