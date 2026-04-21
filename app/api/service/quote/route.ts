@@ -162,8 +162,12 @@ export async function POST(req: Request) {
       validityDays,     // default 30
     } = body;
 
-    if (!island || !siteAddress) {
-      return NextResponse.json({ error: 'island and siteAddress required' }, { status: 400 });
+    if (!island && !siteAddress) {
+      throw new Error('island and siteAddress required');
+    } else if (!island) {
+      throw new Error('island required');
+    } else if (!siteAddress) {
+      throw new Error('siteAddress required (WO row is missing address in Service_Work_Orders sheet)');
     }
 
     // Fire-and-forget customer DB backfeed — never blocks quote generation
