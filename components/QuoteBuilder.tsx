@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { GET_PASS_ON_RATE } from '@/lib/tax-rates';
 import { LABOR_RATES } from '@/lib/labor';
+import DraftPreviewModal from '@/components/DraftPreviewModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -463,6 +464,7 @@ export default function QuoteBuilder({
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [emailing, setEmailing] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
   const [wo, setWo] = useState<WORecord | null>(null);
   const [est, setEst] = useState<EstimateData | null>(null);
   const [quote, setQuote] = useState<Record<string, unknown> | null>(null);
@@ -743,29 +745,12 @@ export default function QuoteBuilder({
 
   // ─── Email ────────────────────────────────────────────────────────────────
 
-  async function handleEmail() {
+  function handleEmail() {
     if (!customerEmail) { setError('No customer email on file'); return; }
-    if (!quote) {
-      await generateQuote();
-      return;
-    }
-    setEmailing(true);
-    try {
-      const res = await fetch('/api/service/proposal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quote: { ...quote, materialsTotal: t?.customerMaterials, laborSubtotal: t?.customerLabor, getRate: t?.getRate, preparedBy }, sendEmail: true }),
-      });
-      const data = await res.json();
-      if (data.success && data.email_sent) {
-        setToast(`Sent to ${customerEmail}`);
-      } else if (data.success && !data.email_sent) {
-        setError('Proposal generated but email failed to send. Check Gmail delegation settings in Google Admin Console.');
-      } else {
-        setError('Email failed: ' + (data.error || 'Unknown error'));
-      }
-    } catch (e) { setError('Email failed: ' + e); }
-    setEmailing(false);
+    if (!totals) { setError('Build an estimate first'); return; }
+    // Auto-generate quote in background (provides richer PDF line items when done)
+    if (!quote) generateQuote().catch(() => {});
+    setShowDraftModal(true);
   }
 
   // ─── Loading ──────────────────────────────────────────────────────────────
@@ -801,6 +786,19 @@ export default function QuoteBuilder({
         <CompareModal configs={configs} onClose={() => setShowCompare(false)} />
       )}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {showDraftModal && (
+        <DraftPreviewModal
+          woNumber={woNumber}
+          wo={wo as Parameters<typeof DraftPreviewModal>[0]['wo']}
+          customerEmail={customerEmail}
+          customerName={customerName}
+          preparedBy={preparedBy}
+          totals={t}
+          quote={quote}
+          onClose={() => setShowDraftModal(false)}
+          onSent={(toAddr) => { setShowDraftModal(false); setToast(`Sent to ${toAddr}`); }}
+        />
+      )}
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
@@ -1072,18 +1070,18 @@ export default function QuoteBuilder({
         {/* Email to Customer */}
         <button
           onClick={handleEmail}
-          disabled={emailing || generating || !customerEmail || !t}
+          disabled={generating || !customerEmail || !t}
           title={!customerEmail ? 'No customer email on file' : undefined}
           style={{
             flex: 2, minWidth: 140, padding: '11px', borderRadius: 12, border: 'none',
-            background: !t || !customerEmail || emailing || generating ? '#e2e8f0' : '#4338ca',
-            color: !t || !customerEmail || emailing || generating ? '#94a3b8' : 'white',
+            background: !t || !customerEmail || generating ? '#e2e8f0' : '#4338ca',
+            color: !t || !customerEmail || generating ? '#94a3b8' : 'white',
             fontSize: 13, fontWeight: 700,
-            cursor: !t || !customerEmail || emailing || generating ? 'default' : 'pointer',
+            cursor: !t || !customerEmail || generating ? 'default' : 'pointer',
             fontFamily: FONT,
           }}
         >
-          {emailing ? 'Sending…' : generating ? 'Building…' : '📧 Email to Customer'}
+          {generating ? 'Building…' : '📧 Email to Customer'}
         </button>
 
         {/* Save Configuration */}
