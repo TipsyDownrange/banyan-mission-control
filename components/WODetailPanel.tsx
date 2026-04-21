@@ -136,10 +136,47 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [uploadingCount, setUploadingCount] = useState(0);
   const [uploadError, setUploadError] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [viewport, setViewport] = useState<'desktop' | 'compact' | 'stacked'>('desktop');
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync linkedFolderUrl from wo prop
   useEffect(() => { setLinkedFolderUrl(wo?.folderUrl); }, [wo?.folderUrl]);
+
+  // Viewport breakpoint — matches app/page.tsx pattern
+  useEffect(() => {
+    const check = () => {
+      const w = window.innerWidth;
+      setViewport(w >= 1400 ? 'desktop' : w >= 1024 ? 'compact' : 'stacked');
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Collapse state — load from localStorage, merge with defaults
+  useEffect(() => {
+    if (!wo?.id) return;
+    let stored: Record<string, boolean> = {};
+    try {
+      const raw = localStorage.getItem(`wo-detail-sections:${wo.id}`);
+      stored = raw ? JSON.parse(raw) : {};
+    } catch { stored = {}; }
+    const activePOs = procurementOrders.filter((o: any) => o.status !== 'CANCELLED').length;
+    const defaults: Record<string, boolean> = {
+      'job-details':       false,
+      'customer-site':     false,
+      'work-breakdown':    false,
+      'activity-timeline': false,
+      'crew':              false,
+      'procurement':       activePOs === 0,
+      'invoicing':         !wo.qbo_invoice_id,
+      'notes':             true,
+      'job-files':         uploadedFiles.length === 0,
+      'qbo-invoice':       true,
+    };
+    setCollapsed({ ...defaults, ...stored });
+  }, [wo?.id, wo?.qbo_invoice_id, procurementOrders.length, uploadedFiles.length]);
 
   // Load customers for autocomplete (once on mount)
   useEffect(() => {
@@ -227,6 +264,30 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     );
   }
   const safeWo = wo;
+
+  function toggleSection(key: string) {
+    setCollapsed(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      try { localStorage.setItem(`wo-detail-sections:${safeWo.id}`, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
+
+  function secBtn(key: string): React.CSSProperties {
+    return {
+      ...SECTION_TITLE,
+      border: 'none',
+      borderBottom: collapsed[key] ? 'none' : '1px solid #f1f5f9',
+      marginBottom: collapsed[key] ? 0 : 14,
+      width: '100%', background: 'none', padding: '4px 0 8px',
+      cursor: 'pointer', textAlign: 'left' as const,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    };
+  }
+
+  const chevron = (key: string) => (
+    <span style={{ fontSize: 10, display: 'inline-block', transform: collapsed[key] ? 'rotate(-90deg)' : 'rotate(0deg)', flexShrink: 0, lineHeight: 1 }}>▾</span>
+  );
 
   const stage = STAGES.find(s => s.key === safeWo.status) || STAGES[0];
   const isDeclined = safeWo.status === 'lost';
@@ -552,7 +613,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
         {/* Scrollable body - two-column layout */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
           {/* Pipeline Stage — full-width band above two-column grid */}
-          <div style={{ maxWidth: 1100, margin: '0 auto 16px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
+          <div style={{ margin: '0 0 16px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', flexShrink: 0 }}>Pipeline Stage</span>
               {safeWo.status === 'lost' ? (
@@ -627,14 +688,19 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               )}
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: viewport === 'desktop' ? '1fr 1fr' : viewport === 'compact' ? '4fr 8fr' : '1fr',
+            gap: 16,
+          }}>
 
-            {/* ── LEFT COLUMN ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* ── LEFT-TOP: Job Details + Customer & Site ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, gridColumn: viewport === 'stacked' ? undefined : '1', order: viewport === 'stacked' ? 1 : undefined }}>
 
               {/* Job Details */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Job Details</div>
+                <button onClick={() => toggleSection('job-details')} style={secBtn('job-details')}>Job Details {chevron('job-details')}</button>
+                <div style={{ display: collapsed['job-details'] ? 'none' : 'block' }}>
                 <div style={{ display: 'grid', gap: 12 }}>
                   <div>
                     <label style={LBL}>Job Name</label>
@@ -663,11 +729,13 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                   </div>
                 </div>
+                </div>{/* ── end job-details collapse wrapper ── */}
               </div>
 
               {/* Customer & Site */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Customer &amp; Site</div>
+                <button onClick={() => toggleSection('customer-site')} style={secBtn('customer-site')}>Customer &amp; Site {chevron('customer-site')}</button>
+                <div style={{ display: collapsed['customer-site'] ? 'none' : 'block' }}>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -735,11 +803,89 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     />
                   </div>
                 </div>
+                </div>{/* ── end customer-site collapse wrapper ── */}
               </div>
+
+            </div>{/* ── end left-top ── */}
+
+            {/* ── RIGHT: Work Breakdown + Activity Timeline + Crew ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, gridColumn: viewport === 'stacked' ? undefined : '2', gridRow: viewport === 'stacked' ? undefined : '1', order: viewport === 'stacked' ? 2 : undefined, overflowY: viewport === 'stacked' ? 'visible' : 'auto', maxHeight: viewport === 'stacked' ? 'none' : 'calc(92vh - 80px)' }}>
+
+              {/* Work Breakdown */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <button onClick={() => toggleSection('work-breakdown')} style={secBtn('work-breakdown')}>Work Breakdown {chevron('work-breakdown')}</button>
+                <div style={{ display: collapsed['work-breakdown'] ? 'none' : 'block' }}>
+                  <WorkBreakdown
+                    jobId={wo.id}
+                    jobType="wo"
+                    quotedHours={parseFloat(wo.hoursEstimated) || undefined}
+                    readOnly={readOnly}
+                    systemTypes={wo.systemType}
+                  />
+                </div>
+              </div>
+
+              {/* Activity Timeline */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <button onClick={() => toggleSection('activity-timeline')} style={secBtn('activity-timeline')}>Activity Timeline {chevron('activity-timeline')}</button>
+                <div style={{ display: collapsed['activity-timeline'] ? 'none' : 'block' }}>
+                  <ActivityTimeline kID={wo.id} />
+                </div>
+              </div>
+
+              {/* Crew Assignment */}
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+                <button onClick={() => toggleSection('crew')} style={secBtn('crew')}>Crew Assignment - {woIsland || 'All Islands'} {chevron('crew')}</button>
+                <div style={{ display: collapsed['crew'] ? 'none' : 'block' }}>
+                  {islandCrew.length === 0 ? (
+                    <div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually:</div>
+                      <input style={{ fontSize: 13, padding: '7px 11px', borderRadius: 9, border: '1px solid #e2e8f0', outline: 'none', width: '100%', boxSizing: 'border-box' as const }}
+                        defaultValue={safeWo.assignedTo || ''}
+                        placeholder="e.g. Karl Nakamura, Joey Ritthaler"
+                        onBlur={e => {
+                          const val = e.target.value.trim();
+                          setSelectedCrew(val ? val.split(',').map(s=>s.trim()).filter(Boolean) : []);
+                          onSave(safeWo.id, { assignedTo: val }).catch(err => console.error('[WODetailPanel] saveAssigned', err));
+                        }} />
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                      {islandCrew.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i).map(c => {
+                        const sel = selectedCrew.includes(c.name);
+                        return (
+                          <button key={c.user_id} onClick={() => toggleCrew(c.name)} style={{
+                            padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            border: sel ? '1px solid rgba(99,102,241,0.5)' : '1px solid #e2e8f0',
+                            background: sel ? 'rgba(99,102,241,0.1)' : 'white',
+                            color: sel ? '#4338ca' : '#64748b',
+                            transition: 'all 0.1s',
+                          }}>
+                            {sel ? '✓ ' : ''}{c.name}
+                            <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 4 }}>{c.role.split('/')[0].trim()}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {selectedCrew.length > 0 && (
+                    <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 12, color: '#4338ca', fontWeight: 600 }}>
+                      {selectedCrew.join(', ')}
+                      {draft.scheduledDate ? ` → ${draft.scheduledDate}` : ''}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>{/* ── end right ── */}
+
+            {/* ── LEFT-BOTTOM: Procurement + Invoicing + Notes + QBO Invoice + Job Files ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, gridColumn: viewport === 'stacked' ? undefined : '1', order: viewport === 'stacked' ? 3 : undefined }}>
 
               {/* Procurement & Billing */}
               <div id="procurement-section" style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Procurement &amp; Billing</div>
+                <button onClick={() => toggleSection('procurement')} style={secBtn('procurement')}>Procurement &amp; Billing {chevron('procurement')}</button>
+                <div style={{ display: collapsed['procurement'] ? 'none' : 'block' }}>
 
                 {/* Quote & Deposit sub-card */}
                 <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid #e2e8f0', padding: '12px 14px', marginBottom: 10 }}>
@@ -1113,6 +1259,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <div style={{ fontSize: 12, color: '#94a3b8' }}>Available after field work is complete.</div>
                   )}
                 </div>
+                </div>{/* ── end procurement collapse wrapper ── */}
               </div>
 
               {/* Invoicing - Dynamic invoice list */}
@@ -1147,14 +1294,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
                 return (
                   <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                    <div style={{ ...SECTION_TITLE, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span>Invoicing</span>
-                      {invoices.length > 0 && (
-                        <span style={{ fontSize:11, color:'#64748b', fontWeight:600 }}>
-                          Total: ${invoices.reduce((s,i) => s + (parseFloat(i.amount)||0), 0).toLocaleString('en-US',{minimumFractionDigits:2})}
-                        </span>
-                      )}
-                    </div>
+                    <button onClick={() => toggleSection('invoicing')} style={secBtn('invoicing')}>
+                      <span>Invoicing{invoices.length > 0 && <span style={{ fontSize:11, color:'#64748b', fontWeight:600, marginLeft:8 }}>Total: ${invoices.reduce((s,i) => s + (parseFloat(i.amount)||0), 0).toLocaleString('en-US',{minimumFractionDigits:2})}</span>}</span>
+                      {chevron('invoicing')}
+                    </button>
+                    <div style={{ display: collapsed['invoicing'] ? 'none' : 'block' }}>
                     {invoices.length === 0 && <div style={{ fontSize:13, color:'#94a3b8', marginBottom:12 }}>No invoices added yet.</div>}
                     {invoices.map((inv, idx) => (
                       <div key={inv.id} style={{ marginBottom:12, padding:'12px', borderRadius:12, background:'#f8fafc', border:'1px solid #f1f5f9' }}>
@@ -1197,26 +1341,30 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <button onClick={addRow} style={{ width:'100%', padding:'10px', borderRadius:10, border:'1.5px dashed #0f766e', background:'transparent', color:'#0f766e', fontSize:13, fontWeight:700, cursor:'pointer' }}>
                       + Add Invoice
                     </button>
+                    </div>{/* ── end invoicing collapse wrapper ── */}
                   </div>
                 );
               })()}
 
               {/* Notes */}
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Notes & Comments</div>
-                <textarea
-                  rows={4}
-                  style={{ ...INP, resize: 'none' }}
-                  value={draft.comments || ''}
-                  onChange={e => update('comments', e.target.value)}
-                  placeholder="Internal notes, follow-ups, customer requests..."
-                />
+                <button onClick={() => toggleSection('notes')} style={secBtn('notes')}>Notes &amp; Comments {chevron('notes')}</button>
+                <div style={{ display: collapsed['notes'] ? 'none' : 'block' }}>
+                  <textarea
+                    rows={4}
+                    style={{ ...INP, resize: 'none' }}
+                    value={draft.comments || ''}
+                    onChange={e => update('comments', e.target.value)}
+                    placeholder="Internal notes, follow-ups, customer requests..."
+                  />
+                </div>
               </div>
 
               {/* QBO Invoice */}
               {wo.qbo_invoice_id && (
                 <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                  <div style={SECTION_TITLE}>Invoice</div>
+                  <button onClick={() => toggleSection('qbo-invoice')} style={secBtn('qbo-invoice')}>Invoice {chevron('qbo-invoice')}</button>
+                  <div style={{ display: collapsed['qbo-invoice'] ? 'none' : 'block' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{(() => { const raw = wo.invoice_number || wo.qbo_invoice_id || ''; return /^\d{4}-\d{2}-\d{2}T/.test(raw) ? `(Draft - ${new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})` : raw ? `#${raw}` : ''; })()}</div>
                     {(() => {
@@ -1252,6 +1400,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       <div style={{ fontSize: 12, color: '#475569' }}>{wo.invoice_date || '-'}</div>
                     </div>
                   </div>
+                  </div>{/* ── end qbo-invoice collapse wrapper ── */}
                 </div>
               )}
 
@@ -1269,14 +1418,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     if (files.length) uploadFiles(files);
                   }}
                 />
-                <div style={{ ...SECTION_TITLE, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span>Job Files</span>
-                  {uploadedFiles.length > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)' }}>
-                      {uploadedFiles.length}
-                    </span>
-                  )}
-                </div>
+                <button onClick={() => toggleSection('job-files')} style={secBtn('job-files')}>
+                  <span>Job Files{uploadedFiles.length > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)', marginLeft: 8 }}>{uploadedFiles.length}</span>}</span>
+                  {chevron('job-files')}
+                </button>
+                <div style={{ display: collapsed['job-files'] ? 'none' : 'block' }}>
                 {uploadError && (
                   <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>⚠️ {uploadError}</span>
@@ -1339,74 +1485,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     })}
                   </div>
                 )}
+                </div>{/* ── end job-files collapse wrapper ── */}
               </div>
-            </div>
+            </div>{/* ── end left-bottom ── */}
 
-            {/* ── RIGHT COLUMN ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', maxHeight: 'calc(92vh - 80px)' }}>
+            {/* ── OLD RIGHT COLUMN removed — content moved to right div above ── */}
 
-              {/* Work Breakdown - first thing in right column */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Work Breakdown</div>
-                <WorkBreakdown
-                  jobId={wo.id}
-                  jobType="wo"
-                  quotedHours={parseFloat(wo.hoursEstimated) || undefined}
-                  readOnly={readOnly}
-                  systemTypes={wo.systemType}
-                />
-              </div>
-
-              {/* Activity Timeline - below Work Breakdown */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Activity Timeline</div>
-                <ActivityTimeline kID={wo.id} />
-              </div>
-
-              {/* Crew Assignment */}
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
-                <div style={SECTION_TITLE}>Crew Assignment - {woIsland || 'All Islands'}</div>
-                {islandCrew.length === 0 ? (
-                  <div>
-                    <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually:</div>
-                    <input style={{ fontSize: 13, padding: '7px 11px', borderRadius: 9, border: '1px solid #e2e8f0', outline: 'none', width: '100%', boxSizing: 'border-box' as const }}
-                      defaultValue={safeWo.assignedTo || ''}
-                      placeholder="e.g. Karl Nakamura, Joey Ritthaler"
-                      onBlur={e => {
-                        const val = e.target.value.trim();
-                        setSelectedCrew(val ? val.split(',').map(s=>s.trim()).filter(Boolean) : []);
-                        onSave(safeWo.id, { assignedTo: val }).catch(err => console.error('[WODetailPanel] saveAssigned', err));
-                      }} />
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                    {islandCrew.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i).map(c => {
-                      const sel = selectedCrew.includes(c.name);
-                      return (
-                        <button key={c.user_id} onClick={() => toggleCrew(c.name)} style={{
-                          padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                          border: sel ? '1px solid rgba(99,102,241,0.5)' : '1px solid #e2e8f0',
-                          background: sel ? 'rgba(99,102,241,0.1)' : 'white',
-                          color: sel ? '#4338ca' : '#64748b',
-                          transition: 'all 0.1s',
-                        }}>
-                          {sel ? '✓ ' : ''}{c.name}
-                          <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 4 }}>{c.role.split('/')[0].trim()}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {selectedCrew.length > 0 && (
-                  <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 12, color: '#4338ca', fontWeight: 600 }}>
-                    {selectedCrew.join(', ')}
-                    {draft.scheduledDate ? ` → ${draft.scheduledDate}` : ''}
-                  </div>
-                )}
-              </div>
-
-
-            </div>
           </div>
         </div>
 
