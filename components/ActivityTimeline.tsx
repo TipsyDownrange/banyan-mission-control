@@ -444,19 +444,51 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           let isJson = false;
           try { parsed = JSON.parse(event.notes); isJson = true; } catch {}
           const fields = (parsed.fields || {}) as Record<string, string | boolean>;
-          const KNOWN_FIELDS = new Set(['unit_reference','capture_tool','width','height','depth','qty','glass_type','glass_thickness','condition','accessibility']);
+          const CRITICAL_MEASUREMENT_FIELDS = ['panel_config','hinge_side','glass_thickness','mounting_type','accessibility','substrate','obstruction'];
+          const KNOWN_FIELDS = new Set(['unit_reference','capture_tool','width','height','depth','qty','glass_type','glass_thickness','condition','accessibility','panel_config','hinge_side','mounting_type','substrate','obstruction','location_detail','measured_by']);
           const extra = Object.entries(fields).filter(([k]) => !KNOWN_FIELDS.has(k));
           const dim = [fields.width && `${fields.width}"W`, fields.height && `${fields.height}"H`, fields.depth && `${fields.depth}"D`].filter(Boolean).join(' × ');
+          const measuredBy = String(parsed.measured_by || fields.measured_by || event.performed_by || '').trim();
+          const captureToolStr = String(fields.capture_tool || parsed.capture_tool || '').trim();
+          const captureBadge = (() => {
+            if (/flexijet|total station/i.test(captureToolStr)) return { label: 'High accuracy', bg: '#f0fdf4', color: '#15803d' };
+            if (/leica|disto/i.test(captureToolStr)) return { label: 'Pro', bg: '#eff6ff', color: '#1d4ed8' };
+            if (/tape measure/i.test(captureToolStr)) return { label: 'Manual', bg: '#fffbeb', color: '#92400e' };
+            return null;
+          })();
+          const calloutMeta: Record<string, { icon: string; label: string; implication: string }> = {
+            panel_config:   { icon: '⬜', label: 'Panel Config',    implication: '→ framing layout' },
+            hinge_side:     { icon: '🔄', label: 'Hinge Side',      implication: '→ swing direction' },
+            glass_thickness:{ icon: '🔷', label: 'Glass Thickness', implication: '→ glass spec' },
+            mounting_type:  { icon: '🔩', label: 'Mounting Type',   implication: '→ attachment method' },
+            accessibility:  { icon: '♿', label: 'Accessibility',   implication: '→ equipment reservation' },
+            substrate:      { icon: '🧱', label: 'Substrate',       implication: '→ anchor spec required' },
+            obstruction:    { icon: '⚠️', label: 'Obstruction',     implication: '→ may trigger RFI/CO' },
+          };
+          const obstructionVal = String(fields.obstruction || '').trim();
+          const hasObstruction = obstructionVal && obstructionVal.toLowerCase() !== 'none';
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(8,145,178,0.05)', borderRadius: 10, border: '1px solid rgba(8,145,178,0.15)' }}>
               {isJson ? (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0891b2' }}>{String(parsed.system_type || 'Measurement')} · {parsed.captured_at ? new Date(String(parsed.captured_at)).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</div>
+                  {/* Header row: system type + date + measured by */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0891b2' }}>{String(parsed.system_type || 'Measurement')} · {parsed.captured_at ? new Date(String(parsed.captured_at)).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</div>
+                    {measuredBy && <div style={{ fontSize: 11, color: '#475569', fontWeight: 600 }}>Measured by: {measuredBy}</div>}
+                  </div>
+                  {/* Obstruction pricing gap alert */}
+                  {hasObstruction && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8 }}>
+                      <span style={{ fontSize: 14 }}>⚠️</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>Obstruction flagged: {obstructionVal} — may trigger RFI/CO</span>
+                    </div>
+                  )}
                   {/* Location */}
-                  {(fields.unit_reference) && (
+                  {(fields.unit_reference || fields.location_detail) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                       <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Location</div>
                       {kv('Unit / Opening', fields.unit_reference ? String(fields.unit_reference) : undefined)}
+                      {kv('Location Detail', fields.location_detail ? String(fields.location_detail) : undefined)}
                     </div>
                   )}
                   {/* Dimensions */}
@@ -467,15 +499,41 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
                       {fields.qty && kv('Qty', String(fields.qty))}
                     </div>
                   )}
-                  {/* Details */}
-                  {(fields.capture_tool || fields.glass_type || fields.glass_thickness || fields.condition || fields.accessibility) && (
+                  {/* Critical enum callout cards */}
+                  {CRITICAL_MEASUREMENT_FIELDS.some(k => fields[k]) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Field Specs</div>
+                      {CRITICAL_MEASUREMENT_FIELDS.map(k => {
+                        const val = fields[k];
+                        if (!val) return null;
+                        const meta = calloutMeta[k];
+                        const valStr = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val);
+                        return (
+                          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(8,145,178,0.2)', borderLeft: '3px solid #0891b2', background: 'rgba(8,145,178,0.04)' }}>
+                            <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>{meta.label}</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{valStr}</div>
+                            </div>
+                            <div style={{ fontSize: 11, color: '#0891b2', fontWeight: 600, whiteSpace: 'nowrap' }}>{meta.implication}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* Capture tool + other details */}
+                  {(captureToolStr || fields.glass_type || fields.condition) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                       <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Details</div>
-                      {fields.capture_tool && kv('Tool', String(fields.capture_tool))}
+                      {captureToolStr && (
+                        <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
+                          <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>Capture Tool</span>
+                          <span style={{ color: '#0f172a', fontWeight: 600 }}>{captureToolStr}</span>
+                          {captureBadge && <span style={{ padding: '1px 7px', borderRadius: 999, background: captureBadge.bg, color: captureBadge.color, fontSize: 11, fontWeight: 800 }}>{captureBadge.label}</span>}
+                        </div>
+                      )}
                       {fields.glass_type && kv('Glass Type', String(fields.glass_type))}
-                      {fields.glass_thickness && kv('Thickness', String(fields.glass_thickness))}
                       {fields.condition && kv('Condition', String(fields.condition))}
-                      {fields.accessibility && kv('Access', String(fields.accessibility))}
                     </div>
                   )}
                   {/* Additional fields */}
