@@ -691,6 +691,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           <div style={{
             display: 'grid',
             gridTemplateColumns: viewport === 'desktop' ? '1fr 1fr' : viewport === 'compact' ? '4fr 8fr' : '1fr',
+            alignItems: viewport === 'stacked' ? undefined : 'start',
             gap: 16,
           }}>
 
