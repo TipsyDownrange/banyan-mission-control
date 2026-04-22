@@ -613,6 +613,11 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
               setQuoteWO(null);
               setQuoteEstimateData(undefined);
               if (woObj) setEstimateWO(woObj);
+            }} onReturnToWO={() => {
+              const woObj = mergedWorkOrders.find(w => w.id === quoteWO);
+              setQuoteWO(null);
+              setQuoteEstimateData(undefined);
+              if (woObj) setDetailWO(woObj);
             }} estimatePreFill={quoteEstimateData} />
           </div>
         </div>
@@ -623,7 +628,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
         <WOEstimatePanel
           wo={estimateWO}
           procurementOrders={estimateProcurementOrders}
-          onClose={() => { setEstimateWO(null); setEstimateProcurementOrders([]); }}
+          onClose={() => { const wo = estimateWO; setEstimateWO(null); setEstimateProcurementOrders([]); if (wo) setDetailWO(wo); }}
           onGenerateQuote={(woId: string, totals: EstimateTotals) => {
             setEstimateWO(null);
             setEstimateProcurementOrders([]);
