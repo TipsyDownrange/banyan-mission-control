@@ -748,6 +748,36 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           );
         }
 
+        if (event.event_type === 'PHOTO_ONLY' || event.event_type === 'NOTE') {
+          const evidenceTypeBadge = (() => {
+            const t = (event.evidence_type || '').trim().toLowerCase();
+            if (!t) return null;
+            const map: Record<string, { label: string; bg: string; color: string }> = {
+              before:   { label: 'Before',   bg: '#eff6ff', color: '#1d4ed8' },
+              during:   { label: 'During',   bg: '#f0fdfa', color: '#0f766e' },
+              after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
+              progress: { label: 'Progress', bg: '#fffbeb', color: '#92400e' },
+              damage:   { label: 'Damage',   bg: '#fef2f2', color: '#b91c1c' },
+              qa:       { label: 'QA',       bg: '#faf5ff', color: '#7e22ce' },
+            };
+            return map[t] ?? { label: event.evidence_type.trim(), bg: '#f1f5f9', color: '#475569' };
+          })();
+          const locGroup = (event.location_group || '').trim();
+          if (!evidenceTypeBadge && !locGroup) return null;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', background: 'rgba(100,116,139,0.04)', borderRadius: 8, border: '1px solid rgba(100,116,139,0.12)' }}>
+              {evidenceTypeBadge && (
+                <span style={{ alignSelf: 'flex-start', padding: '2px 9px', borderRadius: 999, background: evidenceTypeBadge.bg, color: evidenceTypeBadge.color, fontSize: 11, fontWeight: 800 }}>
+                  {evidenceTypeBadge.label}
+                </span>
+              )}
+              {locGroup && (
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>📍 {locGroup}</span>
+              )}
+            </div>
+          );
+        }
+
         return null;
       })()}
 
