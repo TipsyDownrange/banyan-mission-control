@@ -980,6 +980,17 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
   );
 }
 
+// ─── Shift note parser ────────────────────────────────────────────────────────
+
+function extractLatestShiftNote(notesColM: string): { note: string; completedBy: string; completedAt: string } | null {
+  if (!notesColM) return null;
+  const regex = /\[COMPLETED\s+([^\]]+?)\s+by\s+([^\]:]+?):\s+([^\]]+)\]/g;
+  const matches = [...notesColM.matchAll(regex)];
+  if (matches.length === 0) return null;
+  const last = matches[matches.length - 1];
+  return { completedAt: last[1].trim(), completedBy: last[2].trim(), note: last[3].trim() };
+}
+
 // ─── Section: Today's Crews ───────────────────────────────────────────────────
 
 function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
@@ -996,6 +1007,7 @@ function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
       {slots.map(slot => {
         const crew = slot.assigned_crew.split(',').map(n => n.trim()).filter(Boolean);
         const pct = progressPct(slot.progress);
+        const shiftNote = extractLatestShiftNote(slot.notes || '');
         return (
           <div key={slot.slot_id} style={{
             padding: '14px 16px',
@@ -1022,6 +1034,17 @@ function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
                 {slot.status || 'open'}
               </span>
             </div>
+
+            {shiftNote && (
+              <div style={{ marginBottom: 10, padding: '8px 10px', borderRadius: 8, background: 'rgba(234,179,8,0.07)', border: '1px solid rgba(234,179,8,0.18)' }}>
+                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#f59e0b', marginBottom: 4 }}>
+                  📝 Last shift note · {shiftNote.completedBy} · {shiftNote.completedAt}
+                </div>
+                <div style={{ fontSize: 12, color: '#fde68a', fontStyle: 'italic', lineHeight: 1.5 }}>
+                  &ldquo;{shiftNote.note}&rdquo;
+                </div>
+              </div>
+            )}
 
             {slot.progress && slot.progress.total > 0 ? (
               <div>
