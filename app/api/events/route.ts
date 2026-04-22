@@ -59,6 +59,8 @@ const COL = {
   project_id:           29, // ^
   evidence_photo:       30, // _
   evidence_timestamp:   31, // `
+  affected_count:       32, // AG — Phase 3 FA (WIRE-FA-019)
+  hours_lost:           33, // AH — Phase 3 FA (WIRE-FA-020)
 };
 
 function rowToEvent(row: string[]): Record<string, string> {
@@ -92,7 +94,7 @@ export async function GET(req: Request) {
     const [res, usersRes] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `${TAB}!A2:AF5000`,
+        range: `${TAB}!A2:AH5000`,
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,

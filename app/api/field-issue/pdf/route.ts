@@ -39,6 +39,8 @@ const EV = {
   evidence_ref: 8, location_group: 10, unit_reference: 11,
   qa_step_code: 12, issue_category: 14, severity: 15,
   blocking_flag: 16, notes: 28,
+  affected_count: 32, // AG — Phase 3 FA (WIRE-FA-019)
+  hours_lost: 33,     // AH — Phase 3 FA (WIRE-FA-020)
 };
 
 // SWO columns
@@ -88,7 +90,7 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     // GC-D021: Read event fresh
-    const evRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_EVENTS}!A2:AF5000` });
+    const evRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_EVENTS}!A2:AH5000` });
     const evRows = (evRes.data.values || []) as string[][];
     const evRow = evRows.find(r => r[EV.event_id] === event_id);
     if (!evRow) return NextResponse.json({ error: `Event ${event_id} not found` }, { status: 404 });
@@ -137,8 +139,8 @@ export async function POST(req: Request) {
       issue_description: String(notesJson.issue_description || evRow[EV.notes] || ''),
       issue_category: evRow[EV.issue_category] || 'Unknown',
       caused_by: String(notesJson.caused_by || ''),
-      affected_count: parseInt(String(notesJson.affected_count || '0')) || 0,
-      hours_lost: parseFloat(String(notesJson.hours_lost || '0')) || 0,
+      affected_count: parseInt(evRow[EV.affected_count] || String(notesJson.affected_count || '0')) || 0,
+      hours_lost: parseFloat(evRow[EV.hours_lost] || String(notesJson.hours_lost || '0')) || 0,
       blocking: evRow[EV.blocking_flag] === 'TRUE',
       severity: (['LOW','MEDIUM','HIGH','CRITICAL'].includes((evRow[EV.severity] || '').toUpperCase())
         ? evRow[EV.severity].toUpperCase() : 'MEDIUM') as FieldIssueData['severity'],

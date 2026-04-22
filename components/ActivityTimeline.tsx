@@ -43,6 +43,8 @@ type FieldEvent = {
   source_version: string;
   is_valid: string;
   issue_status: string;
+  affected_count: string;
+  hours_lost: string;
 };
 
 // ─── Config ───────────────────────────────────────────────────
@@ -410,16 +412,32 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           </div>
         ) : null;
 
-        if (event.event_type === 'FIELD_ISSUE') return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(220,38,38,0.15)' }}>
-            {kv('Severity', event.severity, event.severity)}
-            {kv('Blocking', event.blocking_flag === 'TRUE' ? 'Yes — work stopped' : 'No')}
-            {kv('Category', event.issue_category)}
-            {kv('Responsible', event.responsible_party)}
-            {kv('Status', event.issue_status)}
-            {event.delays_blockers && kv('Impact', event.delays_blockers)}
-          </div>
-        );
+        if (event.event_type === 'FIELD_ISSUE') {
+          const affectedCount = Number(event.affected_count);
+          const hoursLost = Number(event.hours_lost);
+          const hasDelayClaim = affectedCount > 0 || hoursLost > 0;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(220,38,38,0.15)' }}>
+              {kv('Severity', event.severity, event.severity)}
+              {kv('Blocking', event.blocking_flag === 'TRUE' ? 'Yes — work stopped' : 'No')}
+              {kv('Category', event.issue_category)}
+              {kv('Responsible', event.responsible_party)}
+              {kv('Status', event.issue_status)}
+              {event.delays_blockers && kv('Impact', event.delays_blockers)}
+              {hasDelayClaim ? (
+                <div style={{ marginTop: 4, padding: '6px 8px', background: 'rgba(220,38,38,0.06)', borderRadius: 6, border: '1px solid rgba(220,38,38,0.12)' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#dc2626', marginBottom: 3 }}>Delay Claim</div>
+                  <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 700 }}>
+                    {[
+                      affectedCount > 0 ? `${affectedCount} opening${affectedCount !== 1 ? 's' : ''} affected` : null,
+                      hoursLost > 0 ? `${hoursLost}h lost` : null,
+                    ].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          );
+        }
 
         if (event.event_type === 'FIELD_MEASUREMENT') {
           let parsed: Record<string, unknown> = {};
