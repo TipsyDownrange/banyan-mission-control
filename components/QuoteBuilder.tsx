@@ -453,9 +453,11 @@ export interface EstimatePreFill {
 export default function QuoteBuilder({
   woNumber,
   onClose,
+  onReturnToWO,
 }: {
   woNumber: string;
   onClose: () => void;
+  onReturnToWO?: () => void;
   estimatePreFill?: EstimatePreFill; // kept for API compatibility, unused in preview mode
 }) {
   const { data: session } = useSession();
@@ -814,12 +816,22 @@ export default function QuoteBuilder({
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
         </div>
-        <button
-          onClick={onClose}
-          style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 18, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          ×
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onReturnToWO && (
+            <button
+              onClick={onReturnToWO}
+              style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              ← Return to WO
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 18, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       {/* ── Scrollable body ──────────────────────────────────────────────────── */}

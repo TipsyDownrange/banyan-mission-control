@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateDailyReportPDF, type DailyReportPDFData } from '@/lib/pdf-daily-report';
+import { formatAttributionCaption, type PhotoEntry } from '@/lib/photo-attribution';
 
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 
@@ -236,16 +237,35 @@ export async function POST(req: Request) {
       photos: body.photos, // overridden below with event evidence_ref
     };
 
-    // Bug 5: Map evidence_ref from event → photos array with thumbnails
-    const evidenceRef = evRow[EV.evidence_ref] || '';
-    const photoIds = evidenceRef.split(',').map((s: string) => s.trim()).filter(Boolean);
-    if (photoIds.length > 0) {
-      data.photos = photoIds.map((id: string) => ({
-        file_id: id,
-        file_name: `photo_${id.slice(0, 8)}.jpg`,
-        drive_link: `https://drive.google.com/file/d/${id}/view`,
-        timestamp: evRow[EV.event_occurred_at] || new Date().toISOString(),
-      }));
+    // WT-018: Prefer Lane A structured photos from notes JSON; fall back to legacy evidence_ref
+    let usedNotesPhotos = false;
+    try {
+      const notesJson = JSON.parse(evRow[EV.notes] || '{}');
+      const notesPhotos = notesJson.photos as PhotoEntry[] | undefined;
+      if (Array.isArray(notesPhotos) && notesPhotos.length > 0 && notesPhotos[0]?.drive_file_id) {
+        data.photos = notesPhotos.map(p => ({
+          file_id:    p.drive_file_id,
+          file_name:  p.filename,
+          drive_link: `https://drive.google.com/file/d/${p.drive_file_id}/view`,
+          timestamp:  p.attribution?.submitted_at || evRow[EV.event_occurred_at] || new Date().toISOString(),
+          caption:    formatAttributionCaption(p.attribution),
+        }));
+        usedNotesPhotos = true;
+      }
+    } catch { /* notes column not JSON — fall through to evidence_ref */ }
+
+    if (!usedNotesPhotos) {
+      const evidenceRef = evRow[EV.evidence_ref] || '';
+      const photoIds = evidenceRef.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (photoIds.length > 0) {
+        data.photos = photoIds.map((id: string) => ({
+          file_id:    id,
+          file_name:  `photo_${id.slice(0, 8)}.jpg`,
+          drive_link: `https://drive.google.com/file/d/${id}/view`,
+          timestamp:  evRow[EV.event_occurred_at] || new Date().toISOString(),
+          caption:    'Attribution unavailable (pre-WT-018 upload)',
+        }));
+      }
     }
 
     const pdfBuffer = await generateDailyReportPDF(data);
