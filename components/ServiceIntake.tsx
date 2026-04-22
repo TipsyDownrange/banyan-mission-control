@@ -424,6 +424,14 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               subField="address"
             />
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>The billing account — selecting auto-fills address &amp; contacts below</div>
+            {draft.customerName.length >= 2 && !customers.some(c =>
+              (c.company || '').toLowerCase().includes(draft.customerName.toLowerCase()) ||
+              (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
+            ) && (
+              <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
+                ⚠️ No existing customer matches &quot;{draft.customerName}&quot;. A new customer record will be created on submit. Double-check spelling.
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

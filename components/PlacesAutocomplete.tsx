@@ -104,6 +104,7 @@ export default function PlacesAutocomplete({
         else if (types.includes('route'))                 street += (c.longText ?? '');
         else if (types.includes('locality'))              city   = c.longText ?? '';
         else if (types.includes('sublocality_level_1') && !city) city = c.longText ?? '';
+        else if (types.includes('postal_town') && !city)         city = c.longText ?? '';
         else if (types.includes('administrative_area_level_1')) state = c.shortText ?? '';
         else if (types.includes('postal_code'))           zip    = c.longText ?? '';
       }
