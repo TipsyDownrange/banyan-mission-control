@@ -512,12 +512,78 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
         if (event.event_type === 'TM_CAPTURE') {
           let parsed: Record<string, unknown> = {};
           try { parsed = JSON.parse(event.notes); } catch {}
+
+          const authType = parsed.authorization_type ? String(parsed.authorization_type) : '';
+          const authorizedBy = parsed.authorized_by ? String(parsed.authorized_by) : '';
+          const authorizedByTitle = parsed.authorized_by_title ? String(parsed.authorized_by_title) : '';
+          const signedAt = parsed.signed_at ? formatTimestamp(String(parsed.signed_at)) : '';
+          const crewEst = parsed.crew != null ? Number(parsed.crew) : null;
+          const crewActual = parsed.crew_actual != null ? Number(parsed.crew_actual) : null;
+          const hoursEst = parsed.hours_estimated != null ? Number(parsed.hours_estimated) : null;
+          const hoursActual = parsed.hours_actual != null ? Number(parsed.hours_actual) : null;
+          const materialsUsed = parsed.materials_used === true || parsed.materials_used === 'true';
+          const materialList = Array.isArray(parsed.material_list) ? (parsed.material_list as unknown[]).map(String) : [];
+
+          const crewDisplay = crewEst != null
+            ? (crewActual != null ? `${crewEst} est. / ${crewActual} actual` : `${crewEst} est.`)
+            : undefined;
+          const hoursDisplay = hoursEst != null
+            ? (hoursActual != null ? `${hoursEst}h est. / ${hoursActual}h actual` : `${hoursEst}h est.`)
+            : undefined;
+
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(146,64,14,0.05)', borderRadius: 10, border: '1px solid rgba(146,64,14,0.15)' }}>
-              {kv('Auth Type', String(parsed.authorization_type || ''))}
-              {kv('Authorized By', String(parsed.authorized_by || ''))}
-              {kv('Crew', parsed.crew ? String(parsed.crew) + ' workers' : undefined)}
-              {kv('Hours Est.', parsed.hours_estimated ? String(parsed.hours_estimated) + 'h' : undefined)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(146,64,14,0.05)', borderRadius: 10, border: '1px solid rgba(146,64,14,0.15)' }}>
+              {/* Authorization Block */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Authorization</div>
+                {event.evidence_ref && (
+                  <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-block' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w300`}
+                      alt="GC Signature"
+                      style={{ maxWidth: 200, maxHeight: 80, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', display: 'block', objectFit: 'contain' }}
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </a>
+                )}
+                {authorizedBy && (
+                  <div style={{ display: 'flex', gap: 8, fontSize: 12 }}>
+                    <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>Authorized By</span>
+                    <span style={{ color: '#0f172a', fontWeight: 700 }}>
+                      {authorizedBy}{authorizedByTitle ? ` · ${authorizedByTitle}` : ''}
+                    </span>
+                  </div>
+                )}
+                {authType && (
+                  <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
+                    <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>Auth Type</span>
+                    <span style={{ padding: '1px 7px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.2)', fontSize: 11, fontWeight: 800 }}>{authType}</span>
+                  </div>
+                )}
+                {signedAt && kv('Signed', signedAt)}
+              </div>
+              {/* Labor: estimated vs actual delta */}
+              {(crewDisplay != null || hoursDisplay != null) ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Labor</div>
+                  {crewDisplay ? kv('Crew', crewDisplay) : null}
+                  {hoursDisplay ? kv('Hours', hoursDisplay) : null}
+                </div>
+              ) : null}
+              {/* Materials chip list */}
+              {materialsUsed && materialList.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Materials</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {materialList.map((m, i) => (
+                      <span key={i} style={{ padding: '2px 8px', borderRadius: 999, background: 'rgba(146,64,14,0.08)', color: '#92400e', fontSize: 11, fontWeight: 700, border: '1px solid rgba(146,64,14,0.15)' }}>
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {kv('Linked Issue', parsed.triggering_event_id ? String(parsed.triggering_event_id).slice(0, 12) + '…' : undefined)}
             </div>
           );
@@ -667,8 +733,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
         return null;
       })()}
 
-      {/* Photo thumbnail — opens lightbox on click */}
-      {lightboxPhotos.length > 0 && (
+      {/* Photo thumbnail — opens lightbox on click; suppressed for TM_CAPTURE (evidence_ref is GC signature, rendered in Authorization Block) */}
+      {lightboxPhotos.length > 0 && event.event_type !== 'TM_CAPTURE' && (
         <button
           onClick={e => { e.stopPropagation(); setLightboxIndex(0); setLightboxOpen(true); }}
           style={{ display: 'inline-block', marginTop: 2, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
