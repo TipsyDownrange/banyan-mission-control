@@ -1,7 +1,14 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { formatAttributionCaption, type PhotoEntry } from '@/lib/photo-attribution';
 
 // ─── Types ────────────────────────────────────────────────────
+
+type LightboxPhoto = {
+  fileId:   string;
+  filename: string;
+  caption:  string;
+};
 
 type FieldEvent = {
   event_id: string;
@@ -108,6 +115,29 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
   const [expanded, setExpanded] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [pdfState, setPdfState] = useState<'idle'|'generating'|'done'|'error'>('idle');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Build lightbox photo array: prefer Lane A notes JSON shape, fall back to evidence_ref
+  const lightboxPhotos: LightboxPhoto[] = (() => {
+    try {
+      const parsed = JSON.parse(event.notes || '{}');
+      const photos = parsed.photos as PhotoEntry[] | undefined;
+      if (Array.isArray(photos) && photos.length > 0 && photos[0]?.drive_file_id) {
+        return photos.map(p => ({
+          fileId:   p.drive_file_id,
+          filename: p.filename,
+          caption:  formatAttributionCaption(p.attribution),
+        }));
+      }
+    } catch { /* not JSON — fall through */ }
+    if (!event.evidence_ref) return [];
+    return event.evidence_ref.split(',').map(s => s.trim()).filter(Boolean).map(id => ({
+      fileId:   id,
+      filename: `photo_${id.slice(0, 8)}.jpg`,
+      caption:  'Attribution unavailable (pre-WT-018 upload)',
+    }));
+  })();
 
   const cfg = EVENT_CONFIG[event.event_type] || EVENT_CONFIG.NOTE;
 
@@ -637,17 +667,15 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
         return null;
       })()}
 
-      {/* Photo thumbnail */}
-      {event.evidence_ref && (
-        <a
-          href={`https://drive.google.com/file/d/${event.evidence_ref}/view`}
-          target="_blank"
-          rel="noreferrer"
-          style={{ display: 'inline-block', marginTop: 2 }}
+      {/* Photo thumbnail — opens lightbox on click */}
+      {lightboxPhotos.length > 0 && (
+        <button
+          onClick={e => { e.stopPropagation(); setLightboxIndex(0); setLightboxOpen(true); }}
+          style={{ display: 'inline-block', marginTop: 2, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w200`}
+            src={`https://drive.google.com/thumbnail?id=${lightboxPhotos[0].fileId}&sz=w200`}
             alt="Field photo"
             style={{
               width: 140, height: 90, objectFit: 'cover',
@@ -656,7 +684,76 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
             }}
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-        </a>
+        </button>
+      )}
+
+      {/* Lightbox modal */}
+      {lightboxOpen && lightboxPhotos.length > 0 && (
+        <div
+          onClick={e => { e.stopPropagation(); setLightboxOpen(false); }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.82)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'white', borderRadius: 14, padding: 24,
+              maxWidth: 560, width: '90%',
+              display: 'flex', flexDirection: 'column', gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {lightboxPhotos.length > 1 ? `Photo ${lightboxIndex + 1} of ${lightboxPhotos.length}` : 'Photo'}
+              </span>
+              <button
+                onClick={() => setLightboxOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b', lineHeight: 1 }}
+              >×</button>
+            </div>
+
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://drive.google.com/thumbnail?id=${lightboxPhotos[lightboxIndex].fileId}&sz=w800`}
+              alt={lightboxPhotos[lightboxIndex].filename}
+              style={{ width: '100%', maxHeight: 420, objectFit: 'contain', borderRadius: 8, display: 'block', border: '1px solid #e2e8f0' }}
+              onError={e => { (e.target as HTMLImageElement).alt = 'Image unavailable'; }}
+            />
+
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+              {lightboxPhotos[lightboxIndex].filename}
+            </div>
+
+            <div style={{ fontSize: 11, color: '#475569', fontStyle: 'italic', lineHeight: 1.6 }}>
+              {lightboxPhotos[lightboxIndex].caption}
+            </div>
+
+            {lightboxPhotos.length > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                <button
+                  onClick={() => setLightboxIndex(i => Math.max(0, i - 1))}
+                  disabled={lightboxIndex === 0}
+                  style={{
+                    padding: '6px 16px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer',
+                    opacity: lightboxIndex === 0 ? 0.35 : 1, fontWeight: 600,
+                  }}
+                >← Prev</button>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>{lightboxIndex + 1} / {lightboxPhotos.length}</span>
+                <button
+                  onClick={() => setLightboxIndex(i => Math.min(lightboxPhotos.length - 1, i + 1))}
+                  disabled={lightboxIndex === lightboxPhotos.length - 1}
+                  style={{
+                    padding: '6px 16px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer',
+                    opacity: lightboxIndex === lightboxPhotos.length - 1 ? 0.35 : 1, fontWeight: 600,
+                  }}
+                >Next →</button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
