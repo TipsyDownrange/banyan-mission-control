@@ -62,6 +62,7 @@ const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; la
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
   WARRANTY_CALLBACK: { icon: '🔁', color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
+  QA_COMPLETE:       { icon: '🔍', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)', label: 'QA Check' },
 };
 
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -70,7 +71,7 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
   CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
-type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT';
+type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT' | 'QA_COMPLETE';
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -210,6 +211,14 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       }
     }
   }
+  let qaPreview: string | null = null;
+  if (event.event_type === 'QA_COMPLETE') {
+    try {
+      const p = JSON.parse(event.notes);
+      const s = typeof p.qa_status === 'string' ? p.qa_status.toUpperCase() : (event.qa_status?.toUpperCase() || 'PASS');
+      qaPreview = `QA ${s} — tap to expand`;
+    } catch { qaPreview = event.qa_status ? `QA ${event.qa_status.toUpperCase()}` : 'QA Check — tap to expand'; }
+  }
   const description = event.event_type === 'DAILY_LOG'
     ? dailyLogPreview
     : event.event_type === 'FIELD_MEASUREMENT'
@@ -220,6 +229,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       ? (tmPreview ?? event.notes)
   : event.event_type === 'EMAIL_SENT'
       ? (emailSentPreview ?? event.notes)
+  : event.event_type === 'QA_COMPLETE'
+      ? (qaPreview ?? 'QA Check — tap to expand') // hidden when expanded; structured block takes over
       : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
@@ -375,8 +386,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       </div>
 
       {/* Description */}
-      {/* Hide description for FIELD_MEASUREMENT when expanded and JSON parsed — structured sections take over */}
-      {description && !(expanded && event.event_type === 'FIELD_MEASUREMENT' && measureSummary !== null) && (
+      {/* Hide description for FIELD_MEASUREMENT and QA_COMPLETE when expanded — structured blocks take over */}
+      {description && !(expanded && event.event_type === 'FIELD_MEASUREMENT' && measureSummary !== null) && !(expanded && event.event_type === 'QA_COMPLETE') && (
         <div>
           <div
             onClick={() => setExpanded(e => !e)}
@@ -806,6 +817,75 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           );
         }
 
+        if (event.event_type === 'QA_COMPLETE') {
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(event.notes); } catch {}
+          const qaStatus = (typeof parsed.qa_status === 'string' ? parsed.qa_status : (event.qa_status || 'PASS')).toUpperCase();
+          const qaChecks = (parsed.qa_checks || {}) as Record<string, boolean>;
+          const checkEntries = Object.entries(qaChecks);
+          const qaStatusStyle = qaStatus === 'PASS'
+            ? { label: 'PASS',    bg: '#ecfdf5', color: '#059669', border: 'rgba(5,150,105,0.2)' }
+            : qaStatus === 'PARTIAL'
+            ? { label: 'PARTIAL', bg: '#fffbeb', color: '#d97706', border: 'rgba(217,119,6,0.2)' }
+            : qaStatus === 'FAIL'
+            ? { label: 'FAIL',    bg: '#fef2f2', color: '#dc2626', border: 'rgba(220,38,38,0.2)' }
+            : { label: qaStatus,  bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
+          const isDefenseMode = qaStatus === 'FAIL' || qaStatus === 'PARTIAL';
+          const checkLabels: Record<string, string> = {
+            glass_seated:         'Glass seated correctly',
+            frame_plumb:          'Frame plumb',
+            hardware_operation:   'Hardware operation',
+            sealant_applied:      'Sealant applied',
+            site_clean:           'Site clean',
+            customer_walkthrough: 'Customer walkthrough',
+          };
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: isDefenseMode ? 'rgba(220,38,38,0.04)' : 'rgba(126,34,206,0.04)', borderRadius: 10, border: `1px solid ${isDefenseMode ? 'rgba(220,38,38,0.18)' : 'rgba(126,34,206,0.12)'}` }}>
+              {/* Status badge + inspector + date */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ padding: '3px 10px', borderRadius: 999, background: qaStatusStyle.bg, color: qaStatusStyle.color, border: `1px solid ${qaStatusStyle.border}`, fontSize: 11, fontWeight: 800 }}>{qaStatusStyle.label}</span>
+                {event.performed_by && <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Inspected by: {event.performed_by}</span>}
+                {!!parsed.completed_at && <span style={{ fontSize: 10, color: '#94a3b8' }}>{new Date(String(parsed.completed_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+              </div>
+              {/* Legal defense label for FAIL/PARTIAL */}
+              {isDefenseMode && lightboxPhotos.length > 0 && (
+                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#b91c1c' }}>⚖️ Legal defense evidence</div>
+              )}
+              {/* Photo thumbnail — hooks into shared lightbox */}
+              {lightboxPhotos.length > 0 && (
+                <button
+                  onClick={e => { e.stopPropagation(); setLightboxIndex(0); setLightboxOpen(true); }}
+                  style={{ display: 'inline-block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', alignSelf: 'flex-start' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://drive.google.com/thumbnail?id=${lightboxPhotos[0].fileId}&sz=w300`}
+                    alt="QA photo"
+                    style={{ width: isDefenseMode ? 200 : 140, height: isDefenseMode ? 130 : 90, objectFit: 'cover', borderRadius: 8, border: isDefenseMode ? '2px solid #dc2626' : '1px solid #e2e8f0', display: 'block' }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </button>
+              )}
+              {/* Checklist summary */}
+              {checkEntries.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>QA Checks</div>
+                  {checkEntries.map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                      <span style={{ color: v ? '#059669' : '#dc2626', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>{v ? '✓' : '✗'}</span>
+                      <span style={{ color: v ? '#334155' : '#b91c1c', fontWeight: v ? 500 : 700 }}>{checkLabels[k] || k.replace(/_/g, ' ')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Free-text notes */}
+              {typeof parsed.notes === 'string' && parsed.notes.length > 0 && (
+                <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5, fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>{parsed.notes}</div>
+              )}
+            </div>
+          );
+        }
+
         if (event.event_type === 'PHOTO_ONLY' || event.event_type === 'NOTE') {
           const evidenceTypeBadge = (() => {
             const t = (event.evidence_type || '').trim().toLowerCase();
@@ -839,8 +919,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
         return null;
       })()}
 
-      {/* Photo thumbnail — opens lightbox on click; suppressed for TM_CAPTURE (evidence_ref is GC signature, rendered in Authorization Block) */}
-      {lightboxPhotos.length > 0 && event.event_type !== 'TM_CAPTURE' && (
+      {/* Photo thumbnail — opens lightbox on click; suppressed for TM_CAPTURE (GC signature in Authorization Block) and QA_COMPLETE (photo in expanded block) */}
+      {lightboxPhotos.length > 0 && event.event_type !== 'TM_CAPTURE' && event.event_type !== 'QA_COMPLETE' && (
         <button
           onClick={e => { e.stopPropagation(); setLightboxIndex(0); setLightboxOpen(true); }}
           style={{ display: 'inline-block', marginTop: 2, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -1014,6 +1094,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     { key: 'TESTING',           label: 'Test' },
     { key: 'WARRANTY_CALLBACK', label: 'Warranty' },
     { key: 'EMAIL_SENT',        label: 'Emails' },
+    { key: 'QA_COMPLETE',       label: 'QA' },
   ];
 
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
