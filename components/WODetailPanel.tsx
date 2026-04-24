@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ActivityTimeline from '@/components/ActivityTimeline';
-import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
+import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, parseDelimitedList, resolveWorkOrderIsland } from '@/lib/normalize';
 import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
@@ -143,6 +143,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [viewport, setViewport] = useState<'desktop' | 'compact' | 'stacked'>('desktop');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [stageExpanded, setStageExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync linkedFolderUrl from wo prop
@@ -231,7 +232,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       description: wo.description,
       contact: wo.contact,
       address: wo.address,
-      island: wo.island,
+      island: resolveWorkOrderIsland(wo.island, wo.area_of_island, wo.address),
       scheduledDate: wo.scheduledDate,
       dueDate: wo.dueDate,
       hoursEstimated: wo.hoursEstimated,
@@ -240,7 +241,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       comments: wo.comments,
       lane: wo.lane,
       // Separate contact + customer fields
-      contact_person: wo.contact_person,
+      contact_person: normalizeContactList(wo.contact_person || ''),
       contact_phone:  wo.contact_phone,
       contact_email:  wo.contact_email,
       customer_name:  wo.customer_name,
@@ -431,20 +432,18 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     }
   }
 
-  // Island-filtered field crew
-  function areaToIsland(area: string): string {
-    const a = (area || '').toLowerCase();
-    if (['oahu','honolulu','kapolei','kailua','kaneohe','pearl city','aiea','ewa','hawaii kai'].some(c => a.includes(c))) return 'Oahu';
-    if (['kauai','lihue','kapaa','poipu','princeville','koloa'].some(c => a.includes(c))) return 'Kauai';
-    if (['hilo','kona','waimea','kohala','puna'].some(c => a.includes(c))) return 'Hawaii';
-    if (a) return 'Maui';
-    return '';
-  }
-  const woIsland = ['Oahu','Maui','Kauai','Hawaii'].includes(wo.island) ? wo.island : areaToIsland(wo.island);
+  const woIsland = resolveWorkOrderIsland(
+    draft.island || '',
+    wo.island,
+    wo.area_of_island,
+    draft.address || '',
+    wo.address,
+  );
   const islandCrew = allCrew.filter(c => {
     const isField = ['Superintendent','Journeyman','Apprentice'].some(r => c.role.includes(r));
     return isField && (!woIsland || c.island === woIsland);
   });
+  const contactPeople = parseDelimitedList((draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? '');
 
   return (
     <>
@@ -617,81 +616,95 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
         {/* Scrollable body - two-column layout */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
-          {/* Pipeline Stage — full-width band above two-column grid */}
-          <div style={{ margin: '0 0 16px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          {/* Pipeline Stage — compact by default, expandable when needed */}
+          <div style={{ margin: '0 0 16px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: stageExpanded ? '14px 18px' : '10px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', flexShrink: 0 }}>Pipeline Stage</span>
-              {safeWo.status === 'lost' ? (
-                <div style={{ padding: '6px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>❌ Declined</div>
-              ) : (
-                <div style={{ flex: 1, overflowX: 'auto' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
-                    {STAGES.map((s, idx) => {
-                      const currentIdx = STAGES.findIndex(x => x.key === safeWo.status);
-                      const isPast = idx < currentIdx;
-                      const isCurrent = idx === currentIdx;
-                      const isFuture = idx > currentIdx;
-                      const isSaving = stageSaving === s.key;
-                      return (
-                        <React.Fragment key={s.key}>
-                          {idx > 0 && (
-                            <div style={{ width: 20, height: 2, background: isPast ? STAGES[idx-1].color : '#e2e8f0', flexShrink: 0 }} />
-                          )}
-                          <div
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: readOnly ? 'default' : isCurrent ? 'default' : 'pointer', flexShrink: 0 }}
-                            onClick={async () => {
-                              if (readOnly || isCurrent || !!stageSaving) return;
-                              if (isPast) {
-                                const reason = prompt(`Roll back to "${s.label}"? Enter reason (required):`);
-                                if (!reason?.trim()) return;
-                              }
-                              if (isFuture && idx > currentIdx + 1) {
-                                if (!confirm(`Skip to "${s.label}"? This skips ${idx - currentIdx - 1} stages.`)) return;
-                              }
-                              await handleStageChange(s.key);
-                            }}
-                          >
-                            <style>{`@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 ${s.color}40}50%{box-shadow:0 0 0 5px ${s.color}00}}`}</style>
-                            <div style={{
-                              width: isCurrent ? 14 : 10,
-                              height: isCurrent ? 14 : 10,
-                              borderRadius: '50%',
-                              background: isPast ? s.color : isCurrent ? s.color : '#e2e8f0',
-                              border: isCurrent ? `2px solid ${s.color}` : isPast ? 'none' : '1.5px solid #cbd5e1',
-                              boxShadow: isCurrent ? `0 0 0 3px ${s.color}25` : 'none',
-                              animation: isCurrent ? 'pulse-dot 2s ease-in-out infinite' : 'none',
-                              transition: 'all 0.2s',
-                              flexShrink: 0,
-                              opacity: isSaving ? 0.5 : 1,
-                            }} />
-                            <span style={{
-                              fontSize: 9, fontWeight: isCurrent ? 800 : 600,
-                              color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
-                              whiteSpace: 'nowrap', letterSpacing: '0.02em',
-                              textTransform: 'uppercase',
-                            }}>{isSaving ? '...' : s.label}</span>
-                          </div>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {!readOnly && !isDeclined && (
-                <select
-                  value={safeWo.status}
-                  disabled={!!stageSaving}
-                  onChange={e => {
-                    const val = e.target.value;
-                    if (val === safeWo.status) return;
-                    handleStageChange(val);
-                  }}
-                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', background: 'white', cursor: stageSaving ? 'default' : 'pointer', outline: 'none', flexShrink: 0 }}
-                >
-                  {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                </select>
-              )}
+              <div style={{ padding: '5px 10px', borderRadius: 999, background: STAGE_BG[safeWo.status] || '#f8fafc', border: `1px solid ${stage.color}33`, fontSize: 11, fontWeight: 800, color: stage.color }}>
+                {safeWo.status === 'lost' ? 'Declined' : stage.label}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStageExpanded(prev => !prev)}
+                style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+              >
+                {stageExpanded ? 'Hide stages' : 'Edit stages'}
+              </button>
             </div>
+            {stageExpanded && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginTop: 12 }}>
+                {safeWo.status === 'lost' ? (
+                  <div style={{ padding: '6px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>Declined</div>
+                ) : (
+                  <div style={{ flex: 1, overflowX: 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
+                      {STAGES.map((s, idx) => {
+                        const currentIdx = STAGES.findIndex(x => x.key === safeWo.status);
+                        const isPast = idx < currentIdx;
+                        const isCurrent = idx === currentIdx;
+                        const isFuture = idx > currentIdx;
+                        const isSaving = stageSaving === s.key;
+                        return (
+                          <React.Fragment key={s.key}>
+                            {idx > 0 && (
+                              <div style={{ width: 20, height: 2, background: isPast ? STAGES[idx-1].color : '#e2e8f0', flexShrink: 0 }} />
+                            )}
+                            <div
+                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: readOnly ? 'default' : isCurrent ? 'default' : 'pointer', flexShrink: 0 }}
+                              onClick={async () => {
+                                if (readOnly || isCurrent || !!stageSaving) return;
+                                if (isPast) {
+                                  const reason = prompt(`Roll back to "${s.label}"? Enter reason (required):`);
+                                  if (!reason?.trim()) return;
+                                }
+                                if (isFuture && idx > currentIdx + 1) {
+                                  if (!confirm(`Skip to "${s.label}"? This skips ${idx - currentIdx - 1} stages.`)) return;
+                                }
+                                await handleStageChange(s.key);
+                              }}
+                            >
+                              <style>{`@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 ${s.color}40}50%{box-shadow:0 0 0 5px ${s.color}00}}`}</style>
+                              <div style={{
+                                width: isCurrent ? 14 : 10,
+                                height: isCurrent ? 14 : 10,
+                                borderRadius: '50%',
+                                background: isPast ? s.color : isCurrent ? s.color : '#e2e8f0',
+                                border: isCurrent ? `2px solid ${s.color}` : isPast ? 'none' : '1.5px solid #cbd5e1',
+                                boxShadow: isCurrent ? `0 0 0 3px ${s.color}25` : 'none',
+                                animation: isCurrent ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+                                transition: 'all 0.2s',
+                                flexShrink: 0,
+                                opacity: isSaving ? 0.5 : 1,
+                              }} />
+                              <span style={{
+                                fontSize: 9, fontWeight: isCurrent ? 800 : 600,
+                                color: isCurrent ? s.color : isPast ? '#64748b' : '#94a3b8',
+                                whiteSpace: 'nowrap', letterSpacing: '0.02em',
+                                textTransform: 'uppercase',
+                              }}>{isSaving ? '...' : s.label}</span>
+                            </div>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {!readOnly && !isDeclined && (
+                  <select
+                    value={safeWo.status}
+                    disabled={!!stageSaving}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === safeWo.status) return;
+                      handleStageChange(val);
+                    }}
+                    style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', background: 'white', cursor: stageSaving ? 'default' : 'pointer', outline: 'none', flexShrink: 0 }}
+                  >
+                    {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
           </div>
           <div style={{
             display: 'grid',
@@ -725,7 +738,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label style={LBL}>Island</label>
-                      <select style={INP} value={draft.island || ''} onChange={e => update('island', e.target.value)}>
+                      <select style={INP} value={resolveWorkOrderIsland(draft.island || '', wo.island, wo.area_of_island, draft.address || '', wo.address)} onChange={e => update('island', e.target.value)}>
                         <option value="">Select...</option>
                         {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(isl => <option key={isl}>{isl}</option>)}
                       </select>
@@ -792,16 +805,26 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
                       </div>
                       <ContactAutocomplete
-                        value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? ''}
-                        onChange={v => update('contact_person', v)}
+                        value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? normalizeContactList(wo.contact_person || '')}
+                        onChange={v => update('contact_person', normalizeContactList(v))}
                         onSelect={c => {
-                          update('contact_person', c.name);
+                          const nextContacts = [...contactPeople, c.name].filter((name, index, all) => all.findIndex(entry => entry.toLowerCase() === name.toLowerCase()) === index);
+                          update('contact_person', nextContacts.join(', '));
                           if (c.phone) update('contact_phone', c.phone);
                           if (c.email) update('contact_email', c.email);
                         }}
                         placeholder="Search contacts..."
                         style={INP}
                       />
+                      {contactPeople.length > 1 && (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                          {contactPeople.map(name => (
+                            <span key={name} style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.18)', borderRadius: 999, padding: '4px 8px' }}>
+                              {normalizeName(name)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label style={LBL}>Contact Phone</label>

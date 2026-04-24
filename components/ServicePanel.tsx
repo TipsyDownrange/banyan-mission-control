@@ -1,12 +1,14 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { usePathname, useRouter } from 'next/navigation';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar';
 import ServiceIntake from '@/components/ServiceIntake';
 import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
 import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
+import { resolveWorkOrderIsland } from '@/lib/normalize';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -165,8 +167,11 @@ const READ_ONLY_BANNER = (
   </div>
 );
 
-export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly?: boolean; focusWoId?: string | null }) {
+export default function ServicePanel({ readOnly = false, focusWoId, initialWoId = null }: { readOnly?: boolean; focusWoId?: string | null; initialWoId?: string | null }) {
   const { data: session } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isStandaloneWorkOrdersRoute = pathname.startsWith('/work-orders');
   const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
   // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
   const defaultFilter = userRole === 'super' ? 'approved' : 'all';
@@ -183,14 +188,14 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const [estimateProcurementOrders, setEstimateProcurementOrders] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(focusWoId || null);
   const [detailWO, setDetailWO] = useState<WorkOrder | null>(null);
-  const deepLinkRef = useRef<string | null>(null);
-  const urlSetRef = useRef(false);
+  const deepLinkRef = useRef<string | null>(initialWoId);
 
-  // MC-017: capture ?wo= deep-link on mount
+  // Legacy deep-link support for older ?wo= URLs
   useEffect(() => {
+    if (deepLinkRef.current) return;
     const woParam = new URLSearchParams(window.location.search).get('wo');
     if (woParam) deepLinkRef.current = woParam;
-  }, []);
+  }, [initialWoId]);
 
   // Scroll to focused WO when navigating from Org panel
   useEffect(() => {
@@ -233,19 +238,8 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
     if (wo) {
       deepLinkRef.current = null;
       setDetailWO(wo);
-      urlSetRef.current = true;
     }
   }, [data]);
-
-  // MC-017: sync URL when detailWO changes
-  useEffect(() => {
-    if (detailWO) {
-      urlSetRef.current = true;
-      window.history.replaceState(null, '', `?wo=${encodeURIComponent(detailWO.id)}`);
-    } else if (urlSetRef.current) {
-      window.history.replaceState(null, '', window.location.pathname);
-    }
-  }, [detailWO]);
 
   useEffect(() => {
     fetch('/api/crew')
@@ -259,9 +253,11 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   const mergedWorkOrders = (data?.workOrders || []).map(wo => {
     const key = wo.id || wo.name;
     const base = localOverrides[key] ? { ...wo, ...localOverrides[key] } : wo;
+    const resolvedIsland = resolveWorkOrderIsland(base.island, base.area_of_island, base.address);
     // Normalize status unless a local override already set it to a valid stage
     const normalizedStatus = normalizeStatus(base.status);
-    return normalizedStatus !== base.status ? { ...base, rawStatus: base.status, status: normalizedStatus } : base;
+    const next = normalizedStatus !== base.status ? { ...base, rawStatus: base.status, status: normalizedStatus } : base;
+    return resolvedIsland && resolvedIsland !== next.island ? { ...next, island: resolvedIsland } : next;
   });
 
   const mergedByStatus: Record<string, WorkOrder[]> = {};
@@ -376,6 +372,25 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
   for (const stage of STAGES) {
     filteredByStatus[stage.key] = sortedWOs.filter(w => w.status === stage.key);
   }
+
+  const openDetail = useCallback((wo: WorkOrder) => {
+    setDetailWO(wo);
+    const nextPath = `/work-orders/${encodeURIComponent(wo.id)}`;
+    if (isStandaloneWorkOrdersRoute) {
+      router.replace(nextPath);
+      return;
+    }
+    window.history.replaceState(null, '', nextPath);
+  }, [isStandaloneWorkOrdersRoute, router]);
+
+  const closeDetail = useCallback(() => {
+    setDetailWO(null);
+    if (isStandaloneWorkOrdersRoute) {
+      router.replace('/work-orders');
+      return;
+    }
+    window.history.replaceState(null, '', '/');
+  }, [isStandaloneWorkOrdersRoute, router]);
 
   // Keep 'filtered' alias for list view
   const filtered = sortedWOs;
@@ -555,7 +570,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
                     </div>
                   ) : wos.map(wo => (
                     <WOCard key={wo.id || wo.name} wo={wo}
-                      onDetail={(w) => setDetailWO(w)}
+                      onDetail={openDetail}
                     />
                   ))}
                 </div>
@@ -576,7 +591,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
               {completedWOs.map(wo => (
                 <div key={wo.id} style={{ width: 240, opacity: 0.75 }}>
                   <WOCard wo={wo}
-                    onDetail={(w) => setDetailWO(w)}
+                    onDetail={openDetail}
                   />
                 </div>
               ))}
@@ -596,7 +611,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
               {declinedWOs.map(wo => (
                 <div key={wo.id} style={{ width: 240, opacity: 0.7 }}>
                   <WOCard wo={wo}
-                    onDetail={(w) => setDetailWO(w)}
+                    onDetail={openDetail}
                   />
                 </div>
               ))}
@@ -611,7 +626,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filtered.map(wo => (
               <WOCard key={wo.id || wo.name} wo={wo}
-                onDetail={(w) => setDetailWO(w)}
+                onDetail={openDetail}
               />
             ))}
             {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>{search ? `No results for "${search}"` : 'No work orders in this view'}</div>}
@@ -660,7 +675,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
           wo={detailWO}
           allCrew={allCrew}
           readOnly={readOnly}
-          onClose={() => setDetailWO(null)}
+          onClose={closeDetail}
           onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
           onStageChange={async (id, stage, reason) => { await handleStageChange(id, stage, reason); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
           onQuote={(id) => { setQuoteWO(id); setDetailWO(null); }}

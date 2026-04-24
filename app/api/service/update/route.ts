@@ -4,7 +4,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
-import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
+import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
 
@@ -284,7 +284,9 @@ export async function PATCH(req: Request) {
         // Normalize on write
         if (PHONE_FIELDS.has(bodyKey)) val = normalizePhone(val);
         else if (EMAIL_FIELDS.has(bodyKey)) val = normalizeEmail(val);
+        else if (bodyKey === 'contactPerson' || bodyKey === 'contact_person') val = normalizeContactList(val);
         else if (NAME_FIELDS.has(bodyKey)) val = normalizeName(val);
+        if (bodyKey === 'island') val = resolveWorkOrderIsland(val);
         updates.push({
           col: colLetter(COL_IDX[colKey]),
           value: val,

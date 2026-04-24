@@ -69,7 +69,6 @@ const SYSTEM_TYPES = [
   'Other',
 ];
 const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
-const KAI_SCOPE_FILL_ENABLED = false;
 
 // ── Autocomplete helpers ────────────────────────────────────────────────────
 
@@ -163,7 +162,6 @@ const BLANK: WODraft = {
 
 export default function ServiceIntake({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void }) {
   const [step, setStep] = useState<'form' | 'done'>('form');
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [createdWO, setCreatedWO] = useState('');
@@ -265,42 +263,6 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     });
   }
 
-  async function enrichWithKai() {
-    if (!draft.description) return;
-    setLoading(true);
-    try {
-      const res = await fetch('/api/service/intake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: draft.description }),
-      });
-      const data = await res.json();
-      if (data.workOrder) {
-        const wo = data.workOrder;
-        const det = detectIslandAndArea(wo.address || '');
-        setDraft(prev => ({
-          ...prev,
-          customerName:  wo.customerName  || prev.customerName,
-          address:       wo.address       || prev.address,
-          city:          wo.city          || prev.city,
-          island:        wo.island        || prev.island || det.island,
-          areaOfIsland:  prev.areaOfIsland || det.area,
-          contactPerson: wo.contactPerson || prev.contactPerson,
-          contactPhone:  wo.contactPhone  || prev.contactPhone,
-          description:   wo.description   || prev.description,
-          systemType:    wo.systemType    || prev.systemType,
-          urgency:       wo.urgency       || prev.urgency,
-        }));
-        // Sync multi-select chips from Kai-filled systemType
-        if (wo.systemType) {
-          const types = wo.systemType.split(',').map((t: string) => t.trim()).filter(Boolean);
-          setSelectedTypes(types);
-        }
-      }
-    } catch {}
-    setLoading(false);
-  }
-
   async function submit() {
     if (!draft.customerName || !draft.description || !draft.island) return;
     setSaving(true);
@@ -376,23 +338,12 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px', display: 'grid', gap: 14 }}>
 
-        {/* Description + Kai fill */}
+        {/* Description / scope */}
         <div>
           {FL('Job description / scope')}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <textarea value={draft.description} onChange={e => update('description', e.target.value)}
-              placeholder="Describe what they need — Kai will extract customer, contact, island, and system type automatically..."
-              rows={3} style={{ ...INP, flex: 1, resize: 'none', lineHeight: 1.5 }} />
-            {KAI_SCOPE_FILL_ENABLED && (
-              <button onClick={enrichWithKai} disabled={!draft.description || loading}
-                style={{ padding: '8px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: draft.description && !loading ? 'pointer' : 'default', background: draft.description ? 'rgba(240,253,250,0.96)' : '#f8fafc', color: draft.description ? '#0f766e' : '#94a3b8', border: draft.description ? '1px solid rgba(15,118,110,0.2)' : '1px solid #e2e8f0', alignSelf: 'flex-start', whiteSpace: 'nowrap' as const }}>
-                {loading ? '...' : 'Fill →'}
-              </button>
-            )}
-          </div>
-          {KAI_SCOPE_FILL_ENABLED && (
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Paste a description and hit Fill → to auto-populate fields</div>
-          )}
+          <textarea value={draft.description} onChange={e => update('description', e.target.value)}
+            placeholder="Describe what needs to be done, where it is, and any constraints..."
+            rows={3} style={{ ...INP, resize: 'none', lineHeight: 1.5 }} />
         </div>
 
         {/* Customer & Site Information */}
