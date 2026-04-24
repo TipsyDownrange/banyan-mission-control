@@ -74,6 +74,29 @@ function toTitleCase(str: string): string {
   return str;
 }
 
+function toDateTimeLocalValue(value: string): string {
+  if (!value) return '';
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T07:00`;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+}
+
+function formatScheduledDate(value: string): string {
+  if (!value) return '';
+  const normalized = value.includes('T') ? value : `${value}T09:00`;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    ...(value.includes('T') ? { hour: 'numeric', minute: '2-digit' } : {}),
+  });
+}
+
 const INP: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
   border: '1px solid #e2e8f0', background: 'white',
@@ -100,7 +123,7 @@ interface WODetailPanelProps {
   readOnly?: boolean;
   onClose: () => void;
   onSave: (woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string }) => Promise<void>;
-  onStageChange: (woId: string, stage: string, reason?: string) => Promise<void>;
+  onStageChange: (woId: string, stage: string, reason?: string, options?: { scheduledDate?: string }) => Promise<void>;
   onQuote: (woId: string) => void;
   onEstimate: (wo: WorkOrder) => void;
   onFolderLinked?: (woId: string, folderUrl: string) => void;
@@ -129,6 +152,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [declineSubmitting, setDeclineSubmitting] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDateInput, setScheduleDateInput] = useState('');
+  const [scheduleSubmitting, setScheduleSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
   const [saveError, setSaveError] = useState('');
@@ -358,6 +384,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       setShowDeclineModal(true);
       return;
     }
+    if (stageKey === 'scheduled' && safeWo.status !== 'scheduled') {
+      setScheduleDateInput(toDateTimeLocalValue(draft.scheduledDate || safeWo.scheduledDate || ''));
+      setShowScheduleModal(true);
+      return;
+    }
     setStageSaving(stageKey);
     setStageError('');
     try {
@@ -365,6 +396,26 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     } catch (err) {
       setStageError(err instanceof Error ? err.message : 'Failed to update stage.');
     } finally {
+      setStageSaving('');
+    }
+  }
+
+  async function handleConfirmScheduledStage() {
+    if (!scheduleDateInput) {
+      setStageError('Scheduled date is required before moving this work order to Scheduled.');
+      return;
+    }
+    setScheduleSubmitting(true);
+    setStageSaving('scheduled');
+    setStageError('');
+    try {
+      await onStageChange(safeWo.id, 'scheduled', undefined, { scheduledDate: scheduleDateInput });
+      setDraft(prev => ({ ...prev, scheduledDate: scheduleDateInput }));
+      setShowScheduleModal(false);
+    } catch (err) {
+      setStageError(err instanceof Error ? err.message : 'Failed to schedule work order.');
+    } finally {
+      setScheduleSubmitting(false);
       setStageSaving('');
     }
   }
@@ -705,6 +756,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 )}
               </div>
             )}
+            {safeWo.status === 'scheduled' && (draft.scheduledDate || safeWo.scheduledDate) && (
+              <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#6d28d9' }}>
+                Scheduled for {formatScheduledDate(draft.scheduledDate || safeWo.scheduledDate)}
+              </div>
+            )}
           </div>
           <div style={{
             display: 'grid',
@@ -747,6 +803,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       {/* Lane field removed - was a derived status, not real data */}
                     </div>
                   </div>
+                  {safeWo.status === 'scheduled' && (draft.scheduledDate || safeWo.scheduledDate) && (
+                    <div>
+                      <label style={LBL}>Scheduled Date</label>
+                      <div style={{ ...INP, background: '#f8fafc', color: '#6d28d9', fontWeight: 700 }}>
+                        {formatScheduledDate(draft.scheduledDate || safeWo.scheduledDate)}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 </div>{/* ── end job-details collapse wrapper ── */}
               </div>
@@ -1652,6 +1716,53 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   cursor: declineSubmitting ? 'default' : 'pointer',
                   boxShadow: declineSubmitting ? 'none' : '0 3px 12px rgba(220,38,38,0.3)' }}>
                 {declineSubmitting ? 'Declining...' : '✕ Mark Declined'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Scheduled stage gate modal */}
+      {showScheduleModal && (
+        <>
+          <div onClick={() => setShowScheduleModal(false)} style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:600, backdropFilter:'blur(2px)' }} />
+          <div style={{
+            position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+            zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
+            boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
+          }}>
+            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Schedule Work Order</div>
+            <div style={{ fontSize:13, color:'#64748b', marginBottom:20 }}>
+              Scheduled date is mandatory before this work order can move into the Scheduled stage.
+            </div>
+
+            <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#64748b', display:'block', marginBottom:6 }}>
+              Scheduled Date &amp; Time
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduleDateInput}
+              onChange={e => setScheduleDateInput(e.target.value)}
+              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:14, outline:'none', boxSizing:'border-box', marginBottom:20 }}
+            />
+
+            <div style={{ display:'flex', gap:10 }}>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:13, fontWeight:700, cursor:'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmScheduledStage}
+                disabled={scheduleSubmitting}
+                style={{ flex:2, padding:'12px', borderRadius:12, border:'none',
+                  background: scheduleSubmitting ? '#e2e8f0' : 'linear-gradient(135deg,#6d28d9,#7c3aed)',
+                  color: scheduleSubmitting ? '#94a3b8' : 'white', fontSize:13, fontWeight:800,
+                  cursor: scheduleSubmitting ? 'default' : 'pointer',
+                  boxShadow: scheduleSubmitting ? 'none' : '0 3px 12px rgba(124,58,237,0.3)' }}
+              >
+                {scheduleSubmitting ? 'Scheduling...' : '✓ Move to Scheduled'}
               </button>
             </div>
           </div>
