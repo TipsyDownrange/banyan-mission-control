@@ -63,6 +63,7 @@ const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; la
   WARRANTY_CALLBACK: { icon: '🔁', color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
   QA_COMPLETE:       { icon: '🔍', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)', label: 'QA Check' },
+  CREW_DEMOBILIZED:  { icon: '🚛', color: '#b91c1c', bg: 'rgba(185,28,28,0.08)', label: 'Crew Demobilized' },
 };
 
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -71,7 +72,7 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
   CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
-type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT' | 'QA_COMPLETE';
+type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT' | 'QA_COMPLETE' | 'CREW_DEMOBILIZED';
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -142,7 +143,12 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
     }));
   })();
 
-  const cfg = EVENT_CONFIG[event.event_type] || EVENT_CONFIG.NOTE;
+  // DRIFT-MC-024: NOTE events with [CREW_DEMOBILIZED] prefix are legacy demob events
+  // emitted before the field app sent the correct event_type.
+  const effectiveEventType = (event.event_type === 'NOTE' && event.notes?.startsWith('[CREW_DEMOBILIZED]'))
+    ? 'CREW_DEMOBILIZED'
+    : event.event_type;
+  const cfg = EVENT_CONFIG[effectiveEventType] || EVENT_CONFIG.NOTE;
 
   // For FIELD_ISSUE resolved state — use orange badge
   const isIssueResolved = event.event_type === 'FIELD_ISSUE' && event.issue_status === 'RESOLVED';
@@ -219,6 +225,13 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       qaPreview = `QA ${s} — tap to expand`;
     } catch { qaPreview = event.qa_status ? `QA ${event.qa_status.toUpperCase()}` : 'QA Check — tap to expand'; }
   }
+  let demobPreview: string | null = null;
+  if (effectiveEventType === 'CREW_DEMOBILIZED') {
+    const raw = event.notes || '';
+    const stripped = raw.startsWith('[CREW_DEMOBILIZED]') ? raw.slice(18).trimStart() : raw;
+    const firstLine = stripped.split('\n')[0].trim();
+    demobPreview = firstLine || 'Crew demobilized from site';
+  }
   const description = event.event_type === 'DAILY_LOG'
     ? dailyLogPreview
     : event.event_type === 'FIELD_MEASUREMENT'
@@ -231,6 +244,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       ? (emailSentPreview ?? event.notes)
   : event.event_type === 'QA_COMPLETE'
       ? (qaPreview ?? 'QA Check — tap to expand') // hidden when expanded; structured block takes over
+  : effectiveEventType === 'CREW_DEMOBILIZED'
+      ? (demobPreview ?? 'Crew demobilized from site')
       : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
@@ -744,6 +759,27 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           );
         }
 
+        if (effectiveEventType === 'CREW_DEMOBILIZED') {
+          const raw = event.notes || '';
+          const stripped = raw.startsWith('[CREW_DEMOBILIZED]') ? raw.slice(18).trimStart() : raw;
+          const parts = stripped.split('\n\nOriginal issue:');
+          const demobLine = parts[0]?.trim() ?? '';
+          const issueContext = parts[1]?.trim() ?? '';
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(185,28,28,0.05)', borderRadius: 10, border: '1px solid rgba(185,28,28,0.15)' }}>
+              {demobLine && <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{demobLine}</div>}
+              {issueContext && (
+                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.4, borderTop: '1px solid rgba(185,28,28,0.1)', paddingTop: 6, marginTop: 2 }}>
+                  <span style={{ fontWeight: 700 }}>Original issue: </span>{issueContext}
+                </div>
+              )}
+              {event.location_group && (
+                <span style={{ fontSize: 11, color: '#b91c1c', fontWeight: 600 }}>📍 {event.location_group}</span>
+              )}
+            </div>
+          );
+        }
+
         if (event.event_type === 'TESTING') {
           let parsed: Record<string, unknown> = {};
           let isJson = false;
@@ -1078,6 +1114,10 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
   const filtered = events.filter(e => {
     if (typeFilter === 'ALL') return true;
     if (typeFilter === 'PHOTO_ONLY') return e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE';
+    if (typeFilter === 'CREW_DEMOBILIZED') {
+      return e.event_type === 'CREW_DEMOBILIZED' ||
+        (e.event_type === 'NOTE' && e.notes?.startsWith('[CREW_DEMOBILIZED]'));
+    }
     return e.event_type === typeFilter;
   });
 
@@ -1095,6 +1135,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     { key: 'WARRANTY_CALLBACK', label: 'Warranty' },
     { key: 'EMAIL_SENT',        label: 'Emails' },
     { key: 'QA_COMPLETE',       label: 'QA' },
+    { key: 'CREW_DEMOBILIZED',  label: 'Crew Demob' },
   ];
 
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
