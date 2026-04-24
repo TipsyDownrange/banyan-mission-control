@@ -189,6 +189,7 @@ export async function PATCH(req: Request) {
     // Snapshot pre-write values for GC-D037 either-both-or-neither rollback
     const oldStatus    = ((rows[targetRowIdx] as string[])?.[COL_IDX.status]     || '').trim();
     const oldUpdatedAt = ((rows[targetRowIdx] as string[])?.[COL_IDX.updated_at] || '').trim();
+    const oldScheduledDate = ((rows[targetRowIdx] as string[])?.[COL_IDX.scheduled_date] || '').trim();
 
     // Build field updates
     const updates: { col: string; value: string }[] = [];
@@ -197,7 +198,7 @@ export async function PATCH(req: Request) {
       status:          'status',
       assignedTo:      'assigned_to',
       description:     'description',
-      // ORPHAN cols 16,17,19,20,21 — frozen do not write
+      scheduledDate:    'scheduled_date',
       startDate:       'start_date',
       notes:           'comments',
       // camelCase (legacy frontend compat)
@@ -271,6 +272,15 @@ export async function PATCH(req: Request) {
       });
     }
 
+    const requestedScheduledDate = typeof body.scheduledDate === 'string' ? body.scheduledDate.trim() : '';
+    const effectiveScheduledDate = requestedScheduledDate || oldScheduledDate;
+    if (requestedStatus === 'scheduled' && !effectiveScheduledDate) {
+      return NextResponse.json(
+        { error: 'scheduled_date is required before moving a work order to Scheduled.' },
+        { status: 400 }
+      );
+    }
+
     // Normalize fields that need canonical formatting
     const PHONE_FIELDS = new Set(['contactPhone', 'contact_phone']);
     const EMAIL_FIELDS = new Set(['contactEmail', 'contact_email']);
@@ -287,6 +297,7 @@ export async function PATCH(req: Request) {
         else if (bodyKey === 'contactPerson' || bodyKey === 'contact_person') val = normalizeContactList(val);
         else if (NAME_FIELDS.has(bodyKey)) val = normalizeName(val);
         if (bodyKey === 'island') val = resolveWorkOrderIsland(val);
+        if (bodyKey === 'scheduledDate' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) val = val.slice(0, 16);
         updates.push({
           col: colLetter(COL_IDX[colKey]),
           value: val,
@@ -503,12 +514,15 @@ export async function PATCH(req: Request) {
     const resolvedWoNumber = woNumber || rows[targetRowIdx]?.[COL_IDX.wo_number] || woId;
     const woName = rows[targetRowIdx]?.[COL_IDX.name] || '';
     const woIsland = body.island || rows[targetRowIdx]?.[COL_IDX.island] || '';
+    const dispatchDate = typeof scheduledDate === 'string' && scheduledDate.includes('T')
+      ? scheduledDate.slice(0, 10)
+      : scheduledDate;
 
-    if (scheduledDate && assignedTo) {
+    if (dispatchDate && assignedTo) {
       try {
         const fieldSheetId = process.env.FIELD_BACKEND_SHEET_ID;
         if (fieldSheetId) {
-          const slotId = `SVC-${resolvedWoNumber}-${scheduledDate}`;
+          const slotId = `SVC-${resolvedWoNumber}-${dispatchDate}`;
           const menRequired = body.men || '1';
           const displayName = woName || `Service WO ${resolvedWoNumber}`;
 
@@ -526,7 +540,7 @@ export async function PATCH(req: Request) {
               valueInputOption: 'RAW',
               requestBody: {
                 values: [[
-                  slotId, scheduledDate, `SVC-${resolvedWoNumber}`,
+                  slotId, dispatchDate, `SVC-${resolvedWoNumber}`,
                   displayName, woIsland, menRequired,
                   body.hoursEstimated || '', assignedTo,
                   'Joey Ritthaler', 'filled',

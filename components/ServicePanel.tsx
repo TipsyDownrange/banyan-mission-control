@@ -39,6 +39,10 @@ type ServiceData = {
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
 
+type StageChangeOptions = {
+  scheduledDate?: string;
+};
+
 const STAGES: { key: string; label: string; color: string; bg: string; border: string }[] = [
   { key: 'lead',               label: 'New Lead',           color: '#3b82f6', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.2)' },
   { key: 'quoted',             label: 'Quoted',             color: '#3b82f6', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.2)' },
@@ -107,6 +111,20 @@ function toTitleCase(str: string): string {
   return str;
 }
 
+function formatScheduledDate(value: string): string {
+  if (!value) return '';
+  const normalized = value.includes('T') ? value : `${value}T09:00`;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return value;
+  const includeTime = value.includes('T');
+  return parsed.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    ...(includeTime ? { hour: 'numeric', minute: '2-digit' } : {}),
+  });
+}
+
 function WOCard({
   wo, onDetail,
 }: {
@@ -148,6 +166,11 @@ function WOCard({
         {/* Row 3: Assigned to */}
         {wo.assignedTo && (
           <div style={{ fontSize: 11, color: '#64748b' }}>→ {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}</div>
+        )}
+        {wo.status === 'scheduled' && wo.scheduledDate && (
+          <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 700, marginTop: 3 }}>
+            Scheduled: {formatScheduledDate(wo.scheduledDate)}
+          </div>
         )}
 
         {/* Folder link — small icon if present */}
@@ -265,22 +288,34 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
     mergedByStatus[stage.key] = mergedWorkOrders.filter(w => w.status === stage.key);
   }
 
-  async function handleStageChange(woId: string, stage: string, reason?: string) {
+  async function handleStageChange(woId: string, stage: string, reason?: string, options?: StageChangeOptions) {
+    const previousOverride = localOverrides[woId];
     // Optimistic update
-    setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], status: stage } }));
+    setLocalOverrides(prev => ({
+      ...prev,
+      [woId]: {
+        ...prev[woId],
+        status: stage,
+        ...(options?.scheduledDate ? { scheduledDate: options.scheduledDate } : {}),
+      },
+    }));
     try {
-      await fetch('/api/service/update', {
+      const res = await fetch('/api/service/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ woNumber: woId, stage, reason }),
+        body: JSON.stringify({ woNumber: woId, stage, reason, scheduledDate: options?.scheduledDate }),
       });
-    } catch {
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Failed to update stage.');
+    } catch (err) {
       // Revert on failure
       setLocalOverrides(prev => {
         const next = { ...prev };
-        delete next[woId];
+        if (previousOverride) next[woId] = previousOverride;
+        else delete next[woId];
         return next;
       });
+      throw err instanceof Error ? err : new Error('Failed to update stage.');
     }
   }
 
@@ -688,7 +723,14 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           readOnly={readOnly}
           onClose={closeDetail}
           onSave={async (id, fields) => { await handleSave(id, fields); setDetailWO(prev => prev ? { ...prev, ...fields, assignedTo: fields.assignedTo ?? prev.assignedTo } : null); }}
-          onStageChange={async (id, stage, reason) => { await handleStageChange(id, stage, reason); setDetailWO(prev => prev ? { ...prev, status: stage } : null); }}
+          onStageChange={async (id, stage, reason, options) => {
+            await handleStageChange(id, stage, reason, options);
+            setDetailWO(prev => prev ? {
+              ...prev,
+              status: stage,
+              ...(options?.scheduledDate ? { scheduledDate: options.scheduledDate } : {}),
+            } : null);
+          }}
           onQuote={(id) => { setQuoteWO(id); setDetailWO(null); }}
           onEstimate={(wo) => {
             setEstimateWO(wo);

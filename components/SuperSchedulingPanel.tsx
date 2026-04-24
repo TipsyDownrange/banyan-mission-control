@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import { resolveWorkOrderIsland } from '@/lib/normalize';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -203,17 +204,6 @@ interface QuickScheduleModalProps {
   onScheduled: () => void;
 }
 
-// Map area_of_island / city names to canonical island
-function areaToIsland(area: string): string {
-  const a = (area || '').toLowerCase();
-  if (['oahu','honolulu','kapolei','kailua','kaneohe','pearl city','aiea','ewa','hawaii kai','waipahu','mililani'].some(c => a.includes(c))) return 'Oahu';
-  if (['maui','kahului','kihei','lahaina','wailuku','wailea','kapalua','paia','makawao','haiku','maalaea','pukalani','kaanapali'].some(c => a.includes(c))) return 'Maui';
-  if (['kauai','lihue','kapaa','poipu','princeville','koloa','waimea'].some(c => a.includes(c))) return 'Kauai';
-  if (['big island','hawaii','hilo','kona','waimea','kohala','kailua-kona','volcano'].some(c => a.includes(c))) return 'Hawaii';
-  if (['lanai','molokai'].some(c => a.includes(c))) return 'Outer Islands';
-  return area; // fallback
-}
-
 function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickScheduleModalProps) {
   const [date, setDate] = useState(tomorrow());
   const [startTime, setStartTime] = useState('07:00');
@@ -228,7 +218,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
   useEffect(() => {
     if (!job) return;
-    const resolvedIsland = areaToIsland((job as any).area_of_island || job.island || '');
+    const resolvedIsland = resolveWorkOrderIsland(job.island, (job as any).area_of_island);
     setIsland(resolvedIsland);
     setNotes('');
     setDate(tomorrow());
@@ -304,10 +294,21 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
   const crewByIsland: Record<string, CrewListItem[]> = {};
   crewList.forEach(c => {
-    const key = c.island || 'Other';
+    const key = resolveWorkOrderIsland(c.island) || c.island || 'Other';
     if (!crewByIsland[key]) crewByIsland[key] = [];
     crewByIsland[key].push(c);
   });
+  const orderedCrewGroups = Object.entries(crewByIsland)
+    .sort(([left], [right]) => {
+      const leftRank = left === island ? -1 : 0;
+      const rightRank = right === island ? -1 : 0;
+      if (leftRank !== rightRank) return leftRank - rightRank;
+      return left.localeCompare(right);
+    })
+    .map(([islandName, members]) => [
+      islandName,
+      [...members].sort((left, right) => left.name.localeCompare(right.name)),
+    ] as const);
 
   const inputStyle = {
     width: '100%', padding: '10px 12px',
@@ -451,7 +452,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
             Assign Crew ({selectedCrew.length} selected)
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 200, overflowY: 'auto' }}>
-            {Object.entries(crewByIsland).map(([islandName, members]) => (
+            {orderedCrewGroups.map(([islandName, members]) => (
               <div key={islandName}>
                 <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 0 3px' }}>
                   {islandName}

@@ -442,6 +442,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { kID, project_name, date, assigned_crew, island, men_required, hours_estimated, notes, work_type, step_ids, start_time } = body;
+    const scheduledDateTime = start_time ? `${date}T${start_time}` : date;
 
     if (!project_name || !date) {
       return NextResponse.json({ error: 'project_name and date are required' }, { status: 400 });
@@ -540,6 +541,12 @@ export async function POST(req: Request) {
                 range: `Service_Work_Orders!E${i + 2}`,
                 valueInputOption: 'RAW',
                 requestBody: { values: [[derivedStatus]] },
+              });
+              await sheets.spreadsheets.values.update({
+                spreadsheetId: SHEET_ID,
+                range: `Service_Work_Orders!R${i + 2}`,
+                valueInputOption: 'RAW',
+                requestBody: { values: [[scheduledDateTime]] },
               });
               break;
             }
