@@ -75,6 +75,13 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
 type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT' | 'QA_COMPLETE' | 'CREW_DEMOBILIZED';
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
+type NoteFilePayload = {
+  fileName: string;
+  mimeType: string;
+  destinationSubfolder?: string;
+  driveUrl?: string;
+};
+
 // ─── Helpers ──────────────────────────────────────────────────
 
 function formatTimestamp(iso: string): string {
@@ -106,6 +113,97 @@ function getDateBoundary(filter: DateFilter): string | null {
   const days = filter === '7d' ? 7 : 30;
   now.setDate(now.getDate() - days);
   return now.toISOString();
+}
+
+function parseNoteFilePayload(notes: string): NoteFilePayload | null {
+  try {
+    const parsed = JSON.parse(notes || '');
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const payload = parsed as Record<string, unknown>;
+    if (typeof payload.file_name !== 'string' || typeof payload.mime_type !== 'string' || !('drive_url' in payload)) {
+      return null;
+    }
+    const fileName = payload.file_name.trim();
+    const mimeType = payload.mime_type.trim();
+    if (!fileName || !mimeType) return null;
+    return {
+      fileName,
+      mimeType,
+      destinationSubfolder: typeof payload.destination_subfolder === 'string'
+        ? payload.destination_subfolder.trim()
+        : undefined,
+      driveUrl: typeof payload.drive_url === 'string' ? payload.drive_url.trim() : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function safeExternalHref(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function iconForMimeType(mimeType: string): string {
+  if (mimeType === 'application/pdf') return '📄';
+  if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet') || mimeType.includes('sheet')) return '📊';
+  return '📎';
+}
+
+function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
+  const href = safeExternalHref(payload.driveUrl);
+  const content = (
+    <>
+      <span style={{ fontSize: 14, flexShrink: 0 }}>{iconForMimeType(payload.mimeType)}</span>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {payload.fileName}
+        </span>
+        {payload.destinationSubfolder && (
+          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>
+            → {payload.destinationSubfolder}
+          </span>
+        )}
+      </span>
+    </>
+  );
+  const sharedStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    maxWidth: 460,
+    padding: '7px 10px',
+    borderRadius: 8,
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    color: href ? '#0369a1' : '#334155',
+    fontSize: 12,
+    fontWeight: 700,
+    textDecoration: 'none',
+  };
+
+  if (!href) {
+    return <div style={sharedStyle}>{content}</div>;
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => e.stopPropagation()}
+      style={sharedStyle}
+    >
+      {content}
+    </a>
+  );
 }
 
 // ─── Event Card ───────────────────────────────────────────────
@@ -232,6 +330,9 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
     const firstLine = stripped.split('\n')[0].trim();
     demobPreview = firstLine || 'Crew demobilized from site';
   }
+  const noteFilePayload = event.event_type === 'NOTE' && effectiveEventType === 'NOTE'
+    ? parseNoteFilePayload(event.notes)
+    : null;
   const description = event.event_type === 'DAILY_LOG'
     ? dailyLogPreview
     : event.event_type === 'FIELD_MEASUREMENT'
@@ -246,6 +347,8 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
       ? (qaPreview ?? 'QA Check — tap to expand') // hidden when expanded; structured block takes over
   : effectiveEventType === 'CREW_DEMOBILIZED'
       ? (demobPreview ?? 'Crew demobilized from site')
+  : noteFilePayload
+      ? null
       : event.notes;
 
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
@@ -267,6 +370,11 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
     } finally {
       setResolving(false);
     }
+  }
+
+  function handleNestedToggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    setExpanded(value => !value);
   }
 
   return (
@@ -402,10 +510,13 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
 
       {/* Description */}
       {/* Hide description for FIELD_MEASUREMENT and QA_COMPLETE when expanded — structured blocks take over */}
+      {noteFilePayload && (
+        <NoteFileChip payload={noteFilePayload} />
+      )}
       {description && !(expanded && event.event_type === 'FIELD_MEASUREMENT' && measureSummary !== null) && !(expanded && event.event_type === 'QA_COMPLETE') && (
         <div>
           <div
-            onClick={() => setExpanded(e => !e)}
+            onClick={handleNestedToggle}
             style={{
               fontSize: 13, color: '#334155', lineHeight: 1.5,
               cursor: description.length > 120 ? 'pointer' : 'default',
@@ -419,7 +530,7 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
           </div>
           {description.length > 120 && (
             <button
-              onClick={() => setExpanded(e => !e)}
+              onClick={handleNestedToggle}
               style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, fontWeight: 700, color: '#0369a1', cursor: 'pointer', marginTop: 2 }}>
               {expanded ? 'Show less' : 'Show more'}
             </button>

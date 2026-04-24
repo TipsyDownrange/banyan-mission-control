@@ -49,6 +49,15 @@ export default function Home() {
   const [focusWoId, setFocusWoId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Persist sidebar collapse state across sessions
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' && localStorage.getItem('banyan_sidebar_collapsed');
+    if (saved === 'true') setCollapsed(true);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== 'undefined') localStorage.setItem('banyan_sidebar_collapsed', String(collapsed));
+  }, [collapsed]);
   const [isMobile, setIsMobile] = useState(false);
   const { data: authSession } = useSession();
   const [demoUser, setDemoUser] = useState('Sean Daniels');
