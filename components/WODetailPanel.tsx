@@ -20,6 +20,11 @@ type WorkOrder = {
   // Separate contact + customer fields
   contact_person?: string; contact_phone?: string; contact_email?: string;
   customer_name?: string;
+  // GC-D053 FK resolution flags
+  customer_id?: string;
+  customer_resolved?: boolean | null;
+  data_integrity_error?: boolean;
+  resolved_customer_name?: string;
   folderUrl?: string;
   systemType?: string;
   // QBO invoice fields (columns AA-AE)
@@ -737,6 +742,26 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
                 <button onClick={() => toggleSection('customer-site')} style={secBtn('customer-site')}>Customer &amp; Site {chevron('customer-site')}</button>
                 <div style={{ display: collapsed['customer-site'] ? 'none' : 'block' }}>
+                {/* GC-D053 banners */}
+                {wo.data_integrity_error && (
+                  <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.25)', fontSize: 12, color: '#991b1b', fontWeight: 700 }}>
+                    ⚠ Data integrity error — customer_id missing. Contact admin.
+                  </div>
+                )}
+                {wo.customer_resolved === false && !wo.data_integrity_error && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', fontSize: 12, color: '#92400e', fontWeight: 700 }}>
+                    <span>⚠ Customer link broken — please re-link</span>
+                    <button
+                      onClick={() => {
+                        const id = prompt('Enter Customer_ID to re-link:');
+                        if (id) onSave(safeWo.id, { customer_id: id } as Partial<WorkOrder>);
+                      }}
+                      style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: '#92400e', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      Re-link
+                    </button>
+                  </div>
+                )}
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>

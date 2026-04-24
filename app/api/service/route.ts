@@ -55,6 +55,8 @@ const COL = {
   final_paid_date:     40, // AO
   invoices_json:       41, // AP
   org_id:              42, // AQ — Phase 2: FK to Organizations
+  customer_id:         43, // AR — GC-D053: FK to Customers table
+  legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -116,6 +118,8 @@ function rowToWO(row: string[]) {
     final_paid_date:     g(COL.final_paid_date),
     invoices_json:       g(COL.invoices_json),
     org_id:              g(COL.org_id),
+    customer_id:         g(COL.customer_id),
+    legacy_flag:         g(COL.legacy_flag),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',
@@ -164,15 +168,51 @@ export async function GET() {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A2:AH5000`,
-    });
+    const [res, custRes] = await Promise.all([
+      sheets.spreadsheets.values.get({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: `${TAB}!A2:AS5000`,
+      }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: 'Customers!A:N',
+      }),
+    ]);
+
+    // Build customer lookup map for GC-D053 FK resolution (GC-D021 fresh-read)
+    const custRows = custRes.data.values || [];
+    const custHeaders = (custRows[0] || []) as string[];
+    const cidColIdx = custHeaders.indexOf('Customer_ID');
+    const cNameColIdx = custHeaders.indexOf('Company_Name');
+    const custMap = new Map<string, { name: string }>();
+    if (cidColIdx >= 0) {
+      for (const r of custRows.slice(1)) {
+        const cid = (r[cidColIdx] || '').trim();
+        if (cid) custMap.set(cid, { name: (r[cNameColIdx] || '').trim() });
+      }
+    }
 
     const rows = res.data.values || [];
     const wos = rows
       .filter(row => row.length > 2 && (row[0] || row[2])) // wo_id or name present
-      .map(row => rowToWO(row as string[]));
+      .map(row => {
+        const wo = rowToWO(row as string[]);
+        // GC-D053: resolve customer_id FK
+        if (wo.customer_id) {
+          const cust = custMap.get(wo.customer_id);
+          if (cust) {
+            return { ...wo, customer_resolved: true, resolved_customer_name: cust.name };
+          }
+          console.error(`[GC-D053] customer_id ${wo.customer_id} on WO ${wo.wo_id} not found in Customers table`);
+          return { ...wo, customer_resolved: false, resolved_customer_name: '' };
+        }
+        if (wo.legacy_flag === 'true') {
+          return { ...wo, customer_resolved: null, resolved_customer_name: '' };
+        }
+        // customer_id null, legacy_flag not set — data integrity violation
+        console.error(`[GC-D053] WO ${wo.wo_id} has no customer_id and legacy_flag is not set`);
+        return { ...wo, data_integrity_error: true, customer_resolved: null, resolved_customer_name: '' };
+      });
 
     const response = buildResponse(wos);
     cache = { data: response, ts: now };

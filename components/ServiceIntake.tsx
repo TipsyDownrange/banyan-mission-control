@@ -13,7 +13,8 @@ type WODraft = {
   contactPerson: string; contactPhone: string; contactEmail: string;
   description: string; systemType: string; urgency: string;
   assignedTo: string; notes: string;
-  org_id?: string;       // Phase 2: FK to Organizations table
+  org_id?: string;       // Phase 2: FK to Organizations table (AQ)
+  customer_id?: string;  // GC-D053: FK to Customers table (AR)
 };
 
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
@@ -135,6 +136,8 @@ function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
     contactEmail:  prev.contactEmail || c.email,
     // Phase 2: link org_id for relational write-back
     org_id:        c.org_id || prev.org_id,
+    // GC-D053: customer_id FK to Customers table
+    customer_id:   c.customerId || prev.customer_id,
   };
 }
 

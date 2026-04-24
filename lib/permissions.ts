@@ -20,6 +20,7 @@ export type Permission =
   | 'dispatch:assign'
   | 'dispatch:create'
   | 'admin:all'
+  | 'admin:backfill'
   // Future modules
   | 'project:view'
   | 'project:edit'
