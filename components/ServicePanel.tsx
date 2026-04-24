@@ -337,12 +337,22 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
 
   // Search + filter + sort applied to all views
   const searchLower = search.toLowerCase();
-  const completedStatuses = new Set(['closed', 'completed', 'work_complete']);
+  const completedStageKeys = ['closed', 'completed', 'work_complete'] as const;
+  const completedStatuses = new Set<string>(completedStageKeys);
+  const acceptedStatuses = new Set(['accepted', 'approved']);
   const filteredWOs = mergedWorkOrders.filter(wo => {
     if (wo.status === 'lost' && !showDeclined && !search && filter === 'all') return false;
     // Hide completed unless showCompleted is on OR we're actively filtering/searching for them
     if (completedStatuses.has(wo.status) && !showCompleted && !search && filter === 'all') return false;
-    if (filter !== 'all' && wo.status !== filter) return false;
+    if (filter !== 'all') {
+      if (filter === 'accepted') {
+        if (!acceptedStatuses.has(wo.status)) return false;
+      } else if (filter === 'closed') {
+        if (!completedStatuses.has(wo.status)) return false;
+      } else if (wo.status !== filter) {
+        return false;
+      }
+    }
     if (search) {
       const q = searchLower;
       if (!(
@@ -480,7 +490,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
             <span style={{ fontSize: 14 }}>{showCompleted ? '☑' : '☐'}</span>
             Show Completed
             <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
-              {(mergedByStatus['closed']?.length || 0) + (mergedByStatus['work_complete']?.length || 0)}
+              {completedStageKeys.reduce((sum, key) => sum + (mergedByStatus[key]?.length || 0), 0)}
             </span>
           </button>
           <button onClick={() => setShowDeclined(v => !v)} style={{
@@ -501,11 +511,12 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
 
       {/* Shared FilterBar — above both kanban and list */}
       {!loading && data && (
-        <FilterBar
+          <FilterBar
           chips={[
-            { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && w.status !== 'closed').length, color: '#64748b' },
+            { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && !completedStatuses.has(w.status)).length, color: '#64748b' },
             { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: '#64748b' },
             { id: 'quoted',      label: 'Quoted',         count: mergedByStatus['quoted']?.length || 0,      color: '#7c3aed' },
+            { id: 'accepted',    label: 'Accepted',       count: (mergedByStatus['accepted']?.length || 0) + (mergedByStatus['approved']?.length || 0), color: '#0f766e' },
             { id: 'approved',          label: 'Need Schedule',    count: mergedByStatus['approved']?.length || 0,          color: '#92400e' },
             { id: 'deposit_received',   label: 'Deposit Received', count: mergedByStatus['deposit_received']?.length || 0,   color: '#b45309' },
             { id: 'materials_ordered',  label: 'Materials Ordered', count: mergedByStatus['materials_ordered']?.length || 0,  color: '#9a3412' },
@@ -513,7 +524,7 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
             { id: 'ready_to_schedule',  label: 'Ready to Schedule', count: mergedByStatus['ready_to_schedule']?.length || 0,  color: '#0369a1' },
             { id: 'scheduled',          label: 'Scheduled',         count: mergedByStatus['scheduled']?.length || 0,          color: '#4338ca' },
             { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: '#0f766e' },
-            { id: 'closed',      label: 'Completed',      count: mergedByStatus['closed']?.length || 0,      color: '#15803d' },
+            { id: 'closed',      label: 'Completed',      count: completedStageKeys.reduce((sum, key) => sum + (mergedByStatus[key]?.length || 0), 0), color: '#15803d' },
           ] as FilterChip[]}
           activeChip={filter}
           onChipChange={setFilter}
@@ -566,8 +577,8 @@ export default function ServicePanel({ readOnly = false, focusWoId }: { readOnly
       )}
 
       {/* Completed WOs — separate row below active board when showCompleted is on */}
-      {!loading && data && view === 'kanban' && (showCompleted || completedStatuses.has(filter) || (search && filteredByStatus['closed']?.length > 0)) && (() => {
-        const completedWOs = [...(filteredByStatus['work_complete'] || []), ...(filteredByStatus['closed'] || [])];
+      {!loading && data && view === 'kanban' && (showCompleted || completedStatuses.has(filter) || (search && completedStageKeys.some(key => (filteredByStatus[key] || []).length > 0))) && (() => {
+        const completedWOs = completedStageKeys.flatMap(key => filteredByStatus[key] || []);
         if (completedWOs.length === 0) return null;
         return (
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid #f1f5f9' }}>
