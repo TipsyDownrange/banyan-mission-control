@@ -4,6 +4,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { checkPermission } from '@/lib/permissions';
+import { invalidateCache } from '@/app/api/service/route';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -125,6 +126,7 @@ export async function POST(req: Request) {
       contactPerson, contactPhone, contactEmail, contactTitle,
       description, systemType, urgency,
       assignedTo, notes, woNumber, dateReceived,
+      customer_id, org_id,
     } = body;
 
     if ((!businessName && !customerName) || !description) {
@@ -134,8 +136,40 @@ export async function POST(req: Request) {
       );
     }
 
+    // GC-D053: customer_id is MANDATORY on WO create
+    if (!customer_id) {
+      return NextResponse.json(
+        { error: 'customer_id required — GC-D053 MANDATORY' },
+        { status: 400 }
+      );
+    }
+
     const auth0 = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth: auth0 });
+
+    // Validate customer_id resolves against Customers table (GC-D053)
+    const custValidRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: BACKEND_SHEET_ID,
+      range: 'Customers!A:N',
+    });
+    const custRows = custValidRes.data.values || [];
+    const custHeaders = (custRows[0] || []) as string[];
+    const cidIdx = custHeaders.indexOf('Customer_ID');
+    if (cidIdx < 0) {
+      return NextResponse.json(
+        { error: 'Customers table missing Customer_ID column — GC-D053' },
+        { status: 500 }
+      );
+    }
+    const customerExists = custRows.slice(1).some(
+      r => (r[cidIdx] || '').trim() === String(customer_id).trim()
+    );
+    if (!customerExists) {
+      return NextResponse.json(
+        { error: `customer_id "${customer_id}" not found in Customers table — GC-D053 MANDATORY` },
+        { status: 400 }
+      );
+    }
 
     const now = hawaiiNow();
     const today = dateReceived || hawaiiToday();
@@ -212,7 +246,16 @@ export async function POST(req: Request) {
         valueInputOption: 'RAW',
         requestBody: { values: [rowSuffix] },
       });
+      // Write org_id (AQ), customer_id (AR), legacy_flag (AS) — GC-D053
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: `${TAB}!AQ${sheetRow}:AS${sheetRow}`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [[org_id || '', customer_id, 'false']] },
+      });
     }
+
+    invalidateCache();
 
     // Fire-and-forget customer DB backfeed — never blocks WO creation
     fireAndForgetCustomerUpdate({

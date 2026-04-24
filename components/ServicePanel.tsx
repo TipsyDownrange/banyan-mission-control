@@ -19,6 +19,11 @@ type WorkOrder = {
   // Separate contact + customer fields
   contact_person?: string; contact_phone?: string; contact_email?: string;
   customer_name?: string;
+  // GC-D053 FK resolution flags
+  customer_id?: string;
+  customer_resolved?: boolean | null;
+  data_integrity_error?: boolean;
+  resolved_customer_name?: string;
   folderUrl?: string;
   systemType?: string;
 };
@@ -126,6 +131,17 @@ function WOCard({
         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {toTitleCase(wo.name) || wo.id}
         </div>
+
+        {/* Customer resolution badge — GC-D053 */}
+        {wo.customer_resolved === true && wo.resolved_customer_name && (
+          <div style={{ fontSize: 11, color: '#0f766e', marginBottom: 3 }}>{wo.resolved_customer_name}</div>
+        )}
+        {wo.customer_resolved === false && (
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#b45309', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ No customer</div>
+        )}
+        {wo.data_integrity_error && (
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#991b1b', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ Customer ID missing</div>
+        )}
 
         {/* Row 3: Assigned to */}
         {wo.assignedTo && (

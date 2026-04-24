@@ -6,6 +6,7 @@ import { checkPermission } from '@/lib/permissions';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
+import { invalidateCache } from '@/app/api/service/route';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -60,6 +61,8 @@ const COL_IDX: Record<string, number> = {
   final_paid_date:     40, // AO
   invoices_json:       41, // AP
   org_id:              42, // AQ — Phase 2: FK to Organizations
+  customer_id:         43, // AR — GC-D053: FK to Customers table
+  legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
 };
 
 function colLetter(idx: number): string {
@@ -227,6 +230,7 @@ export async function PATCH(req: Request) {
       final_paid_date:     'final_paid_date',
       invoices_json:        'invoices_json',
       org_id:              'org_id',
+      customer_id:         'customer_id',
     };
 
     // Handle stage → status mapping (legacy frontend compat)
@@ -299,6 +303,32 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
+    // GC-D053: validate customer_id if present in PATCH body
+    if (body.customer_id !== undefined) {
+      const custValidRes = await sheets.spreadsheets.values.get({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: 'Customers!A:N',
+      });
+      const custRows = custValidRes.data.values || [];
+      const custHeaders = (custRows[0] || []) as string[];
+      const cidIdx = custHeaders.indexOf('Customer_ID');
+      if (cidIdx < 0) {
+        return NextResponse.json(
+          { error: 'Customers table missing Customer_ID column — GC-D053' },
+          { status: 500 }
+        );
+      }
+      const customerExists = custRows.slice(1).some(
+        r => (r[cidIdx] || '').trim() === String(body.customer_id).trim()
+      );
+      if (!customerExists) {
+        return NextResponse.json(
+          { error: `customer_id "${body.customer_id}" not found in Customers table — GC-D053 MANDATORY` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Write each updated cell individually (avoids range conflicts)
     const requests = updates.map(({ col, value }) => ({
       range: `${TAB}!${col}${sheetRow}`,
@@ -312,6 +342,8 @@ export async function PATCH(req: Request) {
         data: requests,
       },
     });
+
+    invalidateCache();
 
     // ─── GC-D037: emit MC event for status transitions (either-both-or-neither) ─
     if (resolvedStatus && resolvedStatus !== oldStatus) {

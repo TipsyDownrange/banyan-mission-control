@@ -24,6 +24,7 @@ const COL = {
   men_required:   21,
   comments:       22,
   folder_url:     23,
+  customer_id:    43, // AR — GC-D053
 };
 
 export async function GET(req: Request) {
@@ -35,10 +36,16 @@ export async function GET(req: Request) {
     // Fetch from Service_Work_Orders tab
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: 'Service_Work_Orders!A2:AB2000',
-    });
+    const [res, custRes] = await Promise.all([
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Service_Work_Orders!A2:AS2000',
+      }),
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Customers!A:N',
+      }),
+    ]);
     const rows = res.data.values || [];
     const row = rows.find(r =>
       (r[COL.wo_number] || '') === woNumber || (r[COL.wo_id] || '') === woNumber
@@ -46,6 +53,36 @@ export async function GET(req: Request) {
     if (!row) return NextResponse.json({ error: `WO ${woNumber} not found` }, { status: 404 });
 
     const g = (i: number) => (row[i] || '') as string;
+
+    // GC-D053: resolve customer_id for fresh address/contact data (GC-D021)
+    const customerId = g(COL.customer_id);
+    if (!customerId) {
+      return NextResponse.json(
+        { error: `Cannot generate dispatch PDF: customer_id not resolved on WO ${woNumber} — GC-D053` },
+        { status: 400 }
+      );
+    }
+    const custRows = custRes.data.values || [];
+    const custHeaders = (custRows[0] || []) as string[];
+    const cidIdx = custHeaders.indexOf('Customer_ID');
+    const addrIdx = custHeaders.indexOf('Address');
+    const contactIdx = custHeaders.indexOf('Contact_Person');
+    const phoneIdx = custHeaders.indexOf('Phone');
+    let resolvedAddress = g(COL.address);
+    let resolvedContact = g(COL.contact_person);
+    let resolvedPhone = g(COL.contact_phone);
+    if (cidIdx >= 0) {
+      const custRow = custRows.slice(1).find(r => (r[cidIdx] || '').trim() === customerId.trim());
+      if (!custRow) {
+        return NextResponse.json(
+          { error: `Cannot generate dispatch PDF: customer_id "${customerId}" not found in Customers table — GC-D053` },
+          { status: 400 }
+        );
+      }
+      if (addrIdx >= 0 && custRow[addrIdx]) resolvedAddress = custRow[addrIdx];
+      if (contactIdx >= 0 && custRow[contactIdx]) resolvedContact = custRow[contactIdx];
+      if (phoneIdx >= 0 && custRow[phoneIdx]) resolvedPhone = custRow[phoneIdx];
+    }
 
     // Parse assigned crew from assigned_to field
     const crewNames = g(COL.assigned_to).split(',').map(s => s.trim()).filter(Boolean);
@@ -56,10 +93,10 @@ export async function GET(req: Request) {
       date:               hawaiiToday(),
       scheduled_date:     g(COL.scheduled_date),
       project_name:       g(COL.name),
-      address:            g(COL.address),
+      address:            resolvedAddress,
       island:             g(COL.island),
-      contact_name:       g(COL.contact_person),
-      contact_phone:      g(COL.contact_phone),
+      contact_name:       resolvedContact,
+      contact_phone:      resolvedPhone,
       scope_description:  g(COL.description),
       crew,
       foreman:            crewNames[0] || '',
