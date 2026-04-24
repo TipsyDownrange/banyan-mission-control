@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -65,6 +66,8 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 
 function rowToWO(row: string[]) {
   const g = (idx: number) => (row[idx] || '').trim();
+  const contactPerson = normalizeContactList(g(COL.contact_person));
+  const resolvedIsland = resolveWorkOrderIsland(g(COL.island), g(COL.area_of_island), g(COL.address));
   return {
     id:             g(COL.wo_id),
     wo_id:          g(COL.wo_id),
@@ -72,17 +75,17 @@ function rowToWO(row: string[]) {
     name:           g(COL.name),
     description:    g(COL.description),
     status:         g(COL.status) || 'lead',
-    island:         g(COL.island),
+    island:         resolvedIsland,
     area_of_island: g(COL.area_of_island),
     address:        g(COL.address),
     // Parsed contact fields — separate columns now
-    contact_person: g(COL.contact_person),
+    contact_person: contactPerson,
     contact_title:  g(COL.contact_title),
     contact_phone:  g(COL.contact_phone),
     contact_email:  g(COL.contact_email),
     customer_name:  g(COL.customer_name),
     // Legacy 'contact' field for any frontend that still uses it
-    contact:        [g(COL.contact_person), g(COL.contact_phone)].filter(Boolean).join(' · ').substring(0, 60),
+    contact:        [contactPerson, g(COL.contact_phone)].filter(Boolean).join(' · ').substring(0, 60),
     systemType:     g(COL.system_type),
     assignedTo:     g(COL.assigned_to),
     dateReceived:   g(COL.date_received),

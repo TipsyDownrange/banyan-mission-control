@@ -103,6 +103,51 @@ export function areaToIsland(area: string): string {
   return area;
 }
 
+/** Resolve mixed island/city/area strings into a canonical island */
+export function resolveWorkOrderIsland(...values: Array<string | null | undefined>): string {
+  for (const value of values) {
+    const raw = (value || '').trim();
+    if (!raw) continue;
+    const normalized = normalizeIsland(raw);
+    if (['Oahu', 'Maui', 'Kauai', 'Hawaii', 'Lanai', 'Molokai'].includes(normalized)) {
+      return normalized;
+    }
+    const byArea = areaToIsland(raw);
+    if (['Oahu', 'Maui', 'Kauai', 'Hawaii', 'Lanai', 'Molokai'].includes(byArea)) {
+      return byArea;
+    }
+  }
+  return '';
+}
+
+/**
+ * Split smartsheet-style multi-value strings like:
+ *   Name1','Name2','Name3
+ *   Name1; Name2
+ *   Name1, Name2
+ */
+export function parseDelimitedList(raw: string): string[] {
+  const text = (raw || '').trim();
+  if (!text) return [];
+
+  const normalized = text
+    .replace(/^\[|\]$/g, '')
+    .replace(/^"+|"+$/g, '')
+    .replace(/^'+|'+$/g, '');
+
+  const parts = normalized
+    .split(/'\s*,\s*'|"\s*,\s*"|,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)|;\s*|\r?\n|\|/g)
+    .map(part => part.trim().replace(/^'+|'+$/g, '').replace(/^"+|"+$/g, ''))
+    .filter(Boolean);
+
+  return Array.from(new Set(parts));
+}
+
+/** Normalize multi-contact strings into a clean display/save value */
+export function normalizeContactList(raw: string): string {
+  return parseDelimitedList(raw).join(', ');
+}
+
 /** Status → canonical lowercase */
 export function normalizeStatus(raw: string): string {
   const s = (raw || '').toLowerCase().trim();
