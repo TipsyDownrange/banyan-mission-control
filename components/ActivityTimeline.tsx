@@ -77,7 +77,7 @@ type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 type NoteFilePayload = {
   fileName: string;
-  mimeType: string;
+  mimeType?: string;
   destinationSubfolder?: string;
   driveUrl?: string;
 };
@@ -120,15 +120,15 @@ function parseNoteFilePayload(notes: string): NoteFilePayload | null {
     const parsed = JSON.parse(notes || '');
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const payload = parsed as Record<string, unknown>;
-    if (typeof payload.file_name !== 'string' || typeof payload.mime_type !== 'string' || !('drive_url' in payload)) {
+    if (typeof payload.file_name !== 'string') {
       return null;
     }
     const fileName = payload.file_name.trim();
-    const mimeType = payload.mime_type.trim();
-    if (!fileName || !mimeType) return null;
+    if (!fileName) return null;
+    if ('drive_url' in payload && typeof payload.drive_url !== 'string') return null;
     return {
       fileName,
-      mimeType,
+      mimeType: typeof payload.mime_type === 'string' ? payload.mime_type.trim() : undefined,
       destinationSubfolder: typeof payload.destination_subfolder === 'string'
         ? payload.destination_subfolder.trim()
         : undefined,
@@ -149,7 +149,8 @@ function safeExternalHref(url: string | undefined): string | null {
   }
 }
 
-function iconForMimeType(mimeType: string): string {
+function iconForMimeType(mimeType: string | undefined): string {
+  if (!mimeType) return '📎';
   if (mimeType === 'application/pdf') return '📄';
   if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
   if (mimeType.includes('excel') || mimeType.includes('spreadsheet') || mimeType.includes('sheet')) return '📊';
@@ -208,7 +209,7 @@ function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
 
 // ─── Event Card ───────────────────────────────────────────────
 
-function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolved: (id: string) => void; userMap: UserMap }) {
+export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolved: (id: string) => void; userMap: UserMap }) {
   // Resolve user ID to display name
   const resolveUser = (raw: string) => {
     if (!raw) return '';
@@ -330,7 +331,7 @@ function EventCard({ event, onResolved, userMap }: { event: FieldEvent; onResolv
     const firstLine = stripped.split('\n')[0].trim();
     demobPreview = firstLine || 'Crew demobilized from site';
   }
-  const noteFilePayload = event.event_type === 'NOTE' && effectiveEventType === 'NOTE'
+  const noteFilePayload = effectiveEventType !== 'CREW_DEMOBILIZED'
     ? parseNoteFilePayload(event.notes)
     : null;
   const description = event.event_type === 'DAILY_LOG'
