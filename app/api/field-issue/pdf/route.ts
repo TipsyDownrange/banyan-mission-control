@@ -41,6 +41,7 @@ const EV = {
   blocking_flag: 16, notes: 28,
   affected_count: 32, // AG — Phase 3 FA (WIRE-FA-019)
   hours_lost: 33,     // AH — Phase 3 FA (WIRE-FA-020)
+  field_issue_pdf_ref: 36, // AK — DRIFT-FA-076
 };
 
 // SWO columns
@@ -86,13 +87,14 @@ export async function POST(req: Request) {
   if (!event_id) return NextResponse.json({ error: 'event_id required' }, { status: 400 });
 
   try {
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
 
     // GC-D021: Read event fresh
-    const evRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_EVENTS}!A2:AH5000` });
+    const evRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_EVENTS}!A2:AK5000` });
     const evRows = (evRes.data.values || []) as string[][];
-    const evRow = evRows.find(r => r[EV.event_id] === event_id);
+    const evRowIndex = evRows.findIndex(r => r[EV.event_id] === event_id);
+    const evRow = evRowIndex >= 0 ? evRows[evRowIndex] : undefined;
     if (!evRow) return NextResponse.json({ error: `Event ${event_id} not found` }, { status: 404 });
     if ((evRow[EV.event_type] || '').toUpperCase() !== 'FIELD_ISSUE') {
       return NextResponse.json({ error: 'Event is not a FIELD_ISSUE' }, { status: 400 });
@@ -194,6 +196,43 @@ export async function POST(req: Request) {
       }
     } else {
       console.error('[field-issue/pdf] No folder_url for', kID, '— skipping Drive write');
+    }
+
+    if (!primaryFileId) {
+      return NextResponse.json({
+        ok: false,
+        event_id,
+        kID,
+        error: woFolderId
+          ? 'PDF upload failed before a Drive file ID was returned'
+          : 'No Drive folder linked to this work order',
+        primaryFileId,
+        shadowFileId,
+        driveUrl: null,
+        primaryDriveError,
+        shadowDriveError,
+      }, { status: 500 });
+    }
+
+    if (primaryFileId) {
+      try {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `${TAB_EVENTS}!AK${evRowIndex + 2}`,
+          valueInputOption: 'RAW',
+          requestBody: { values: [[primaryFileId]] },
+        });
+      } catch (e: unknown) {
+        const err = e as { message?: string; code?: string; response?: { status?: number; data?: unknown } };
+        console.error('[field-issue/pdf] PDF_REF_PATCH_FAILED', {
+          event_id,
+          primaryFileId,
+          message: err.message,
+          code: err.code,
+          status: err.response?.status,
+          data: err.response?.data,
+        });
+      }
     }
 
     return NextResponse.json({

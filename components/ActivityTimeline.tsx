@@ -45,6 +45,7 @@ type FieldEvent = {
   issue_status: string;
   affected_count: string;
   hours_lost: string;
+  field_issue_pdf_ref?: string;
 };
 
 // ─── Config ───────────────────────────────────────────────────
@@ -147,6 +148,12 @@ function safeExternalHref(url: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+function driveFileHref(fileId: string | undefined): string | null {
+  const trimmed = fileId?.trim();
+  if (!trimmed || !/^[A-Za-z0-9_-]+$/.test(trimmed)) return null;
+  return `https://drive.google.com/file/d/${trimmed}/view`;
 }
 
 function iconForMimeType(mimeType: string | undefined): string {
@@ -355,6 +362,9 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
 
   const issueStatus = ISSUE_STATUS_CONFIG[event.issue_status] || null;
+  const fieldIssuePdfHref = event.event_type === 'FIELD_ISSUE'
+    ? driveFileHref(event.field_issue_pdf_ref)
+    : null;
 
   async function handleResolve() {
     if (resolving) return;
@@ -451,6 +461,29 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             )}
           </div>
         </div>
+
+        {fieldIssuePdfHref && (
+          <a
+            href={fieldIssuePdfHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            style={{
+              padding: '6px 10px',
+              borderRadius: 8,
+              border: '1px solid rgba(3,105,161,0.22)',
+              background: '#f0f9ff',
+              color: '#0369a1',
+              fontSize: 11,
+              fontWeight: 800,
+              textDecoration: 'none',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            View PDF
+          </a>
+        )}
 
         {/* Regenerate PDF button — FIELD_ISSUE and DAILY_LOG */}
         {(event.event_type === 'FIELD_ISSUE' || event.event_type === 'DAILY_LOG') && (
