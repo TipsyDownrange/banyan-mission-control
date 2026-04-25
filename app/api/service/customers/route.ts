@@ -64,6 +64,9 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
   const iFirstDate     = idx('First_WO_Date');
   const iLastDate      = idx('Last_WO_Date');
   const iSource        = idx('Source');
+  const iOrgId         = ['org_id', 'Org_ID', 'ORG_ID', 'Organization_ID', 'organization_id']
+    .map(name => idx(name))
+    .find(i => i >= 0) ?? -1;
 
   return rows.slice(1).map(row => {
     const get = (i: number) => (i >= 0 ? (row[i] || '') : '');
@@ -86,6 +89,7 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
       // Legacy compat fields
       contact:       phone,
       contactPhone:  phone,
+      org_id:        get(iOrgId),
     };
   }).filter(r => r.contactPerson || r.company);
 }

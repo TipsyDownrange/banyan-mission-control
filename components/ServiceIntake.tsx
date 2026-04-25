@@ -20,6 +20,18 @@ type WODraft = {
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
+type OrgAutocompleteRecord = {
+  org_id: string;
+  name: string;
+  company: string;
+  contactPerson: string;
+  contactPhone: string;
+  email: string;
+  address: string;
+  island: string;
+  primary_contact?: { name: string; phone: string; email: string; title: string };
+  primary_site?: { address_line_1: string; city: string; island: string };
+};
 
 const FL = (label: string, auto?: boolean, places?: boolean) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
@@ -121,6 +133,15 @@ function detectIslandAndArea(text: string): { island: string; area: string } {
   return { island: '', area: '' };
 }
 
+function normalizeCompanyName(value: string): string {
+  return (value || '')
+    .toLowerCase()
+    .replace(/[,\.]/g, '')
+    .replace(/\b(inc|llc|corp|ltd|co)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Apply a full customer record (from Customer/Account Name or Contact Person autocomplete)
 function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
   const det = detectIslandAndArea(c.address);
@@ -185,29 +206,47 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         setFieldCrew(d.crew || []);
       })
       .catch(() => {});
-    // Phase 2: Use Organizations endpoint (includes org_id, primary contact, primary site)
-    fetch('/api/organizations?limit=500')
-      .then(r => r.json())
-      .then(d => {
-        const orgs = d.organizations || [];
-        // Map OrgRecord to CustomerRecord shape for backward compat
-        const mapped = orgs.map((o: {org_id:string;name:string;company:string;contactPerson:string;contactPhone:string;email:string;address:string;island:string;primary_contact?:{name:string;phone:string;email:string;title:string};primary_site?:{address_line_1:string;city:string;island:string}}) => ({
-          customerId:    o.org_id,
-          name:          o.name,
-          company:       o.company || o.name,
-          contactPerson: o.primary_contact?.name || o.contactPerson || '',
-          title:         o.primary_contact?.title || '',
-          phone:         o.primary_contact?.phone || o.contactPhone || '',
-          phone2:        '',
-          email:         o.primary_contact?.email || o.email || '',
-          address:       o.primary_site?.address_line_1 || o.address || '',
-          island:        o.primary_site?.island || o.island || '',
-          woCount:       0,
-          firstWODate:   '', lastWODate: '', source: '',
-          contact:       o.primary_contact?.name || '',
-          contactPhone:  o.primary_contact?.phone || '',
-          org_id:        o.org_id,
-        }));
+    // Phase 2: merge Organizations with Customers so intake submits both org_id and real customer_id.
+    Promise.all([
+      fetch('/api/organizations?limit=500').then(r => r.json()),
+      fetch('/api/service/customers').then(r => r.json()),
+    ])
+      .then(([orgData, customerData]) => {
+        const orgs = (orgData.organizations || []) as OrgAutocompleteRecord[];
+        const customerRows = (customerData.customers || []) as CustomerRecord[];
+
+        const customersByOrgId = new Map<string, CustomerRecord>();
+        const customersByCompany = new Map<string, CustomerRecord>();
+        for (const row of customerRows) {
+          if (row.org_id && !customersByOrgId.has(row.org_id)) customersByOrgId.set(row.org_id, row);
+          const normalizedCompany = normalizeCompanyName(row.company || row.name);
+          if (normalizedCompany && !customersByCompany.has(normalizedCompany)) customersByCompany.set(normalizedCompany, row);
+        }
+
+        const mapped = orgs.map(o => {
+          const matchedCustomer =
+            customersByOrgId.get(o.org_id) ||
+            customersByCompany.get(normalizeCompanyName(o.company || o.name));
+          return {
+            customerId:    matchedCustomer?.customerId || '',
+            name:          o.name,
+            company:       o.company || o.name,
+            contactPerson: o.primary_contact?.name || o.contactPerson || matchedCustomer?.contactPerson || '',
+            title:         o.primary_contact?.title || matchedCustomer?.title || '',
+            phone:         o.primary_contact?.phone || o.contactPhone || matchedCustomer?.phone || '',
+            phone2:        matchedCustomer?.phone2 || '',
+            email:         o.primary_contact?.email || o.email || matchedCustomer?.email || '',
+            address:       o.primary_site?.address_line_1 || o.address || matchedCustomer?.address || '',
+            island:        o.primary_site?.island || o.island || matchedCustomer?.island || '',
+            woCount:       matchedCustomer?.woCount || 0,
+            firstWODate:   matchedCustomer?.firstWODate || '',
+            lastWODate:    matchedCustomer?.lastWODate || '',
+            source:        matchedCustomer?.source || '',
+            contact:       o.primary_contact?.name || matchedCustomer?.contact || '',
+            contactPhone:  o.primary_contact?.phone || matchedCustomer?.contactPhone || '',
+            org_id:        o.org_id,
+          } satisfies CustomerRecord;
+        });
         setCustomers(mapped);
       })
       .catch(() => {
@@ -271,11 +310,20 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       const res = await fetch('/api/service/dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...draft,
-          businessName: draft.businessName,
-          areaOfIsland: draft.areaOfIsland,
-        }),
+        body: JSON.stringify((() => {
+          const payload = {
+            ...draft,
+            businessName: draft.businessName,
+            areaOfIsland: draft.areaOfIsland,
+            org_id: draft.org_id || '',
+            customer_id: draft.customer_id || '',
+          };
+          console.log('[ServiceIntake] dispatch payload entity links', {
+            org_id: payload.org_id,
+            customer_id: payload.customer_id,
+          });
+          return payload;
+        })()),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
