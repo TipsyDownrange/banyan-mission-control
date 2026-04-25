@@ -103,6 +103,16 @@ function formatTimestamp(iso: string): string {
   }
 }
 
+function isTmSubmittedMetaEvent(event: FieldEvent): boolean {
+  if (event.event_type !== 'TM_CAPTURE') return false;
+  try {
+    const parsed = JSON.parse(event.notes || '{}') as { meta_event?: unknown };
+    return parsed.meta_event === 'TM_SUBMITTED';
+  } catch {
+    return false;
+  }
+}
+
 function getDateBoundary(filter: DateFilter): string | null {
   if (filter === 'all') return null;
   const now = new Date();
@@ -1377,8 +1387,10 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     );
   }
 
+  const displayEvents = events.filter(e => !isTmSubmittedMetaEvent(e));
+
   // Apply client-side type filter
-  const filtered = events.filter(e => {
+  const filtered = displayEvents.filter(e => {
     if (typeFilter === 'ALL') return true;
     if (typeFilter === 'PHOTO_ONLY') return e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE';
     if (typeFilter === 'CREW_DEMOBILIZED') {
@@ -1432,7 +1444,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                 {cfg ? `${cfg.icon} ` : ''}{p.label}
                 {p.key !== 'ALL' && (
                   <span style={{ marginLeft: 4, fontWeight: 800, opacity: 0.7 }}>
-                    ({events.filter(e =>
+                    ({displayEvents.filter(e =>
                       p.key === 'PHOTO_ONLY'
                         ? (e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE')
                         : e.event_type === p.key
@@ -1485,11 +1497,11 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
         <div style={{ padding: 48, textAlign: 'center' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>📋</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#64748b' }}>
-            {events.length === 0
+            {displayEvents.length === 0
               ? 'No field activity logged for this project yet.'
               : 'No events match the selected filters.'}
           </div>
-          {events.length > 0 && (
+          {displayEvents.length > 0 && (
             <button onClick={() => { setTypeFilter('ALL'); setDateFilter('all'); }}
               style={{ marginTop: 10, fontSize: 12, color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
               Clear filters
@@ -1500,7 +1512,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
         <>
           <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, marginBottom: 10 }}>
             {filtered.length} event{filtered.length !== 1 ? 's' : ''}
-            {typeFilter !== 'ALL' || dateFilter !== 'all' ? ` (filtered from ${events.length})` : ''}
+            {typeFilter !== 'ALL' || dateFilter !== 'all' ? ` (filtered from ${displayEvents.length})` : ''}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map(event => (
