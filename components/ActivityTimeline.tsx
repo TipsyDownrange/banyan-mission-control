@@ -731,12 +731,55 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const authorizedBy = parsed.authorized_by ? String(parsed.authorized_by) : '';
           const authorizedByTitle = parsed.authorized_by_title ? String(parsed.authorized_by_title) : '';
           const signedAt = parsed.signed_at ? formatTimestamp(String(parsed.signed_at)) : '';
+          const signatureRef = typeof parsed.auth_signature_ref === 'string' && parsed.auth_signature_ref.trim()
+            ? parsed.auth_signature_ref.trim()
+            : event.evidence_ref;
           const crewEst = parsed.crew != null ? Number(parsed.crew) : null;
           const crewActual = parsed.crew_actual != null ? Number(parsed.crew_actual) : null;
           const hoursEst = parsed.hours_estimated != null ? Number(parsed.hours_estimated) : null;
           const hoursActual = parsed.hours_actual != null ? Number(parsed.hours_actual) : null;
-          const materialsUsed = parsed.materials_used === true || parsed.materials_used === 'true';
-          const materialList = Array.isArray(parsed.material_list) ? (parsed.material_list as unknown[]).map(String) : [];
+          const materials = Array.isArray(parsed.materials)
+            ? (parsed.materials as unknown[])
+                .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item))
+                .map(item => ({
+                  desc: typeof item.desc === 'string' ? item.desc.trim() : '',
+                  qty: item.qty,
+                  unit: typeof item.unit === 'string' ? item.unit.trim() : '',
+                }))
+                .filter(item => item.desc)
+            : [];
+          const laborRows = Array.isArray(parsed.labor_rows)
+            ? (parsed.labor_rows as unknown[])
+                .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item))
+                .map(item => ({
+                  name: typeof item.name === 'string' ? item.name.trim() : '',
+                  rateType: typeof item.rate_type === 'string' ? item.rate_type.trim() : '',
+                  hours: item.hours,
+                }))
+                .filter(item => item.name || item.rateType || item.hours != null)
+            : [];
+          const equipmentRows = Array.isArray(parsed.equipment)
+            ? (parsed.equipment as unknown[])
+                .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item))
+                .map(item => ({
+                  desc: typeof item.desc === 'string' ? item.desc.trim() : '',
+                  rateType: typeof item.rate_type === 'string' ? item.rate_type.trim() : '',
+                  hours: item.hours,
+                }))
+                .filter(item => item.desc || item.rateType || item.hours != null)
+            : [];
+          const subcontractorRows = Array.isArray(parsed.subcontractors)
+            ? (parsed.subcontractors as unknown[])
+                .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item))
+                .map(item => ({
+                  vendor: typeof item.vendor === 'string' ? item.vendor.trim() : '',
+                  desc: typeof item.desc === 'string' ? item.desc.trim() : '',
+                }))
+                .filter(item => item.vendor || item.desc)
+            : [];
+          const linkedIssue = parsed.triggering_event_id
+            ? String(parsed.triggering_event_id)
+            : (parsed.linked_field_issue_id ? String(parsed.linked_field_issue_id) : '');
 
           const crewDisplay = crewEst != null
             ? (crewActual != null ? `${crewEst} est. / ${crewActual} actual` : `${crewEst} est.`)
@@ -744,22 +787,67 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const hoursDisplay = hoursEst != null
             ? (hoursActual != null ? `${hoursEst}h est. / ${hoursActual}h actual` : `${hoursEst}h est.`)
             : undefined;
+          const formatLineHours = (value: unknown): string => {
+            if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+            if (typeof value === 'string' && value.trim()) return value.trim();
+            return '—';
+          };
+          const formatMaterialChip = (item: { desc: string; qty: unknown; unit: string }): string => {
+            const qty = typeof item.qty === 'number'
+              ? (Number.isFinite(item.qty) ? String(item.qty) : '')
+              : (typeof item.qty === 'string' ? item.qty.trim() : '');
+            const suffix = [qty, item.unit].filter(Boolean).join(' ');
+            return suffix ? `${item.desc} (${suffix})` : item.desc;
+          };
+          const tmTableWrapStyle: React.CSSProperties = {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          };
+          const tmTableStyle: React.CSSProperties = {
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: 11,
+            background: 'rgba(255,255,255,0.7)',
+            border: '1px solid rgba(146,64,14,0.12)',
+            borderRadius: 8,
+            overflow: 'hidden',
+          };
+          const tmHeadCellStyle: React.CSSProperties = {
+            textAlign: 'left',
+            padding: '6px 8px',
+            fontSize: 10,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            color: '#92400e',
+            background: 'rgba(146,64,14,0.08)',
+            borderBottom: '1px solid rgba(146,64,14,0.12)',
+          };
+          const tmCellStyle: React.CSSProperties = {
+            padding: '6px 8px',
+            color: '#334155',
+            borderBottom: '1px solid rgba(146,64,14,0.08)',
+            verticalAlign: 'top',
+          };
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(146,64,14,0.05)', borderRadius: 10, border: '1px solid rgba(146,64,14,0.15)' }}>
               {/* Authorization Block */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Authorization</div>
-                {event.evidence_ref && (
-                  <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-block' }}>
+                {signatureRef ? (
+                  <a href={`https://drive.google.com/file/d/${signatureRef}/view`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-block' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w300`}
+                      src={`https://drive.google.com/thumbnail?id=${signatureRef}&sz=w300`}
                       alt="GC Signature"
                       style={{ maxWidth: 200, maxHeight: 80, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', display: 'block', objectFit: 'contain' }}
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   </a>
+                ) : (
+                  <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>(no signature on file)</div>
                 )}
                 {authorizedBy && (
                   <div style={{ display: 'flex', gap: 8, fontSize: 12 }}>
@@ -785,20 +873,87 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {hoursDisplay ? kv('Hours', hoursDisplay) : null}
                 </div>
               ) : null}
+              {laborRows.length > 0 && (
+                <div style={tmTableWrapStyle}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Labor Details</div>
+                  <table style={tmTableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={tmHeadCellStyle}>Name</th>
+                        <th style={tmHeadCellStyle}>Rate</th>
+                        <th style={tmHeadCellStyle}>Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {laborRows.map((row, index) => (
+                        <tr key={`${row.name}-${row.rateType}-${index}`}>
+                          <td style={tmCellStyle}>{row.name || '—'}</td>
+                          <td style={tmCellStyle}>{row.rateType || '—'}</td>
+                          <td style={tmCellStyle}>{formatLineHours(row.hours)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               {/* Materials chip list */}
-              {materialsUsed && materialList.length > 0 && (
+              {materials.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Materials</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {materialList.map((m, i) => (
+                    {materials.map((material, i) => (
                       <span key={i} style={{ padding: '2px 8px', borderRadius: 999, background: 'rgba(146,64,14,0.08)', color: '#92400e', fontSize: 11, fontWeight: 700, border: '1px solid rgba(146,64,14,0.15)' }}>
-                        {m}
+                        {formatMaterialChip(material)}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-              {kv('Linked Issue', parsed.triggering_event_id ? String(parsed.triggering_event_id).slice(0, 12) + '…' : undefined)}
+              {equipmentRows.length > 0 && (
+                <div style={tmTableWrapStyle}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Equipment</div>
+                  <table style={tmTableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={tmHeadCellStyle}>Description</th>
+                        <th style={tmHeadCellStyle}>Rate</th>
+                        <th style={tmHeadCellStyle}>Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {equipmentRows.map((row, index) => (
+                        <tr key={`${row.desc}-${row.rateType}-${index}`}>
+                          <td style={tmCellStyle}>{row.desc || '—'}</td>
+                          <td style={tmCellStyle}>{row.rateType || '—'}</td>
+                          <td style={tmCellStyle}>{formatLineHours(row.hours)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {subcontractorRows.length > 0 && (
+                <div style={tmTableWrapStyle}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Subcontractors</div>
+                  <table style={tmTableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={tmHeadCellStyle}>Vendor</th>
+                        <th style={tmHeadCellStyle}>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subcontractorRows.map((row, index) => (
+                        <tr key={`${row.vendor}-${row.desc}-${index}`}>
+                          <td style={tmCellStyle}>{row.vendor || '—'}</td>
+                          <td style={tmCellStyle}>{row.desc || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {kv('Linked Issue', linkedIssue ? linkedIssue.slice(0, 12) + '…' : undefined)}
             </div>
           );
         }
