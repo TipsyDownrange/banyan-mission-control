@@ -7,7 +7,7 @@
  */
 
 // ─── Dispatch_Schedule ────────────────────────────────────────────────────────
-// Updated 2026-04-09: added hours_actual (col 16) and last_modified (col 17)
+// Updated 2026-04-26: added focus_step_ids (col 18) as optional GC-D063 focus metadata.
 export const DISPATCH_SCHEDULE_SCHEMA = [
   'slot_id',        // 0  A
   'date',           // 1  B
@@ -25,15 +25,16 @@ export const DISPATCH_SCHEDULE_SCHEMA = [
   'start_time',     // 13 N
   'end_time',       // 14 O
   'step_ids',       // 15 P
-  'hours_actual',   // 16 Q  ← new
-  'last_modified',  // 17 R  ← new
+  'hours_actual',   // 16 Q
+  'last_modified',  // 17 R
+  'focus_step_ids', // 18 S
 ] as const;
 
 export type DispatchScheduleCol = typeof DISPATCH_SCHEDULE_SCHEMA[number];
 export const DISPATCH_COL_IDX = Object.fromEntries(
   DISPATCH_SCHEDULE_SCHEMA.map((name, i) => [name, i])
 ) as Record<DispatchScheduleCol, number>;
-export const DISPATCH_COL_COUNT = DISPATCH_SCHEDULE_SCHEMA.length; // 18
+export const DISPATCH_COL_COUNT = DISPATCH_SCHEDULE_SCHEMA.length; // 19
 
 // ─── Install_Plans ────────────────────────────────────────────────────────────
 export const INSTALL_PLANS_SCHEMA = [

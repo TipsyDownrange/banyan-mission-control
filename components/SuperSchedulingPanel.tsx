@@ -21,6 +21,7 @@ interface DispatchSlot {
   start_time: string;
   end_time: string;
   step_ids?: string;
+  focus_step_ids?: string;
   progress?: { total: number; completed: number; in_progress: number } | null;
 }
 
@@ -195,6 +196,31 @@ function addHoursToTime(startTime: string, hours: number): string {
   return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 }
 
+function parseStepIdList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(String).map(s => s.trim()).filter(Boolean);
+  }
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map(String).map(s => s.trim()).filter(Boolean);
+    }
+  } catch {
+    // Legacy rows use comma-separated step_ids.
+  }
+  return raw.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function getSlotFocusStepIds(slot: DispatchSlot | null): string[] {
+  if (!slot) return [];
+  if (slot.focus_step_ids && slot.focus_step_ids.trim()) {
+    return parseStepIdList(slot.focus_step_ids);
+  }
+  return parseStepIdList(slot.step_ids || '');
+}
+
 // ─── Quick Schedule Modal ─────────────────────────────────────────────────────
 
 interface QuickScheduleModalProps {
@@ -236,8 +262,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
       .then(data => {
         const allSteps: InstallStep[] = (data.steps || []).filter((s: InstallStep) => s.install_step_id);
         setSteps(allSteps);
-        // Pre-select unscheduled steps
-        setSelectedStepIds(allSteps.filter(s => !s.planned_start_date).map(s => s.install_step_id));
+        setSelectedStepIds([]);
       })
       .catch(() => setSteps([]))
       .finally(() => setLoadingSteps(false));
@@ -254,15 +279,12 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
   }
 
   const selectedSteps = steps.filter(s => selectedStepIds.includes(s.install_step_id));
-  const totalHours = selectedSteps.reduce((sum, s) => sum + (s.allotted_hours || 0), 0);
-  const endTime = addHoursToTime(startTime, totalHours);
-
-  const stepNames = selectedSteps.map(s => s.step_name).join(', ');
-  const projectNameWithSteps = stepNames ? `${job.name} — ${stepNames}` : job.name;
+  const focusHours = selectedSteps.reduce((sum, s) => sum + (s.allotted_hours || 0), 0);
+  const scheduledHours = focusHours > 0 ? focusHours : (parseFloat(job.hours_est) || 0);
+  const endTime = addHoursToTime(startTime, scheduledHours);
 
   async function handleSchedule() {
     if (!job) return;
-    if (selectedStepIds.length === 0) { setError('Select at least one step to schedule'); return; }
     setSaving(true);
     setError('');
     try {
@@ -271,15 +293,15 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           kID: job.kID,
-          project_name: projectNameWithSteps,
+          project_name: job.name,
           date,
           assigned_crew: selectedCrew,
           island,
           men_required: String(selectedCrew.length),
-          hours_estimated: String(totalHours),
+          hours_estimated: String(scheduledHours),
           notes,
           start_time: startTime,
-          step_ids: selectedStepIds,
+          focus_step_ids: selectedStepIds,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -338,7 +360,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(251,191,36,0.7)', marginBottom: 4 }}>
-              Schedule Steps
+              Schedule Slot
             </div>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#f1f5f9', lineHeight: 1.3, maxWidth: 340 }}>
               {job.name}
@@ -362,8 +384,11 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         {/* Steps */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-            Install Steps ({selectedStepIds.length} selected · {totalHours.toFixed(1)}h total)
+            Focus steps for this slot (optional) ({selectedStepIds.length} selected · {focusHours.toFixed(1)}h focus)
           </label>
+          <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
+            Leave blank to show the crew all WO steps without a special focus group.
+          </div>
           {loadingSteps ? (
             <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: 12 }}>Loading steps…</div>
           ) : steps.length === 0 ? (
@@ -424,10 +449,10 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         </div>
 
         {/* Calculated end time */}
-        {totalHours > 0 && (
+        {scheduledHours > 0 && (
           <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.15)' }}>
             <div style={{ fontSize: 12, color: '#5eead4' }}>
-              ⏱ {fmtTime(startTime)} → {fmtTime(endTime)} &nbsp;·&nbsp; {totalHours.toFixed(1)} hours
+              ⏱ {fmtTime(startTime)} → {fmtTime(endTime)} &nbsp;·&nbsp; {scheduledHours.toFixed(1)} hours
             </div>
           </div>
         )}
@@ -508,17 +533,17 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
         <button
           onClick={handleSchedule}
-          disabled={saving || !date || selectedStepIds.length === 0}
+          disabled={saving || !date}
           style={{
             width: '100%', padding: '14px',
-            background: (saving || selectedStepIds.length === 0) ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)',
+            background: (saving || !date) ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)',
             border: 'none', borderRadius: 12,
             color: '#fff', fontSize: 15, fontWeight: 800,
-            cursor: (saving || selectedStepIds.length === 0) ? 'not-allowed' : 'pointer',
+            cursor: (saving || !date) ? 'not-allowed' : 'pointer',
             letterSpacing: '0.01em',
           }}
         >
-          {saving ? '⏳ Scheduling…' : `✓ Schedule ${selectedStepIds.length} Step${selectedStepIds.length !== 1 ? 's' : ''}`}
+          {saving ? '⏳ Scheduling…' : selectedStepIds.length > 0 ? `✓ Schedule Slot (${selectedStepIds.length} focus)` : '✓ Schedule Slot'}
         </button>
       </div>
     </div>
@@ -563,20 +588,14 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
         console.log('[EditSlotModal] steps received:', (data.steps || []).length);
         const steps: InstallStep[] = (data.steps || []).filter((s: InstallStep) => s.install_step_id);
         setAvailableSteps(steps);
-        // Pre-select steps already assigned to this slot
-        if (slot.step_ids) {
-          const ids = slot.step_ids.split(',').map((s: string) => s.trim()).filter(Boolean);
-          setSelectedStepIds(ids);
-        } else {
-          setSelectedStepIds([]);
-        }
+        setSelectedStepIds(getSlotFocusStepIds(slot));
       })
       .catch((err) => {
         console.warn('[EditSlotModal] step fetch failed:', err);
         setAvailableSteps([]);
       })
       .finally(() => setLoadingSteps(false));
-  }, [slot?.kID]);
+  }, [slot]);
 
   useEffect(() => {
     if (!slot) return;
@@ -623,7 +642,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           hours_estimated: hours,
           notes,
           start_time: startTime,
-          step_ids: selectedStepIds,
+          focus_step_ids: selectedStepIds,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -765,8 +784,11 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
         {(availableSteps.length > 0 || loadingSteps) && (
           <div style={{ marginBottom: 16 }}>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-              Install Steps ({selectedStepIds.length} selected)
+              Focus steps for this slot (optional) ({selectedStepIds.length} selected)
             </label>
+            <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
+              Focus highlights the day’s priority steps. It does not hide or block other WO steps in the field app.
+            </div>
             {loadingSteps ? (
               <div style={{ fontSize: 12, color: '#64748b', padding: '8px 0' }}>Loading steps…</div>
             ) : (
@@ -1244,6 +1266,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                     const crew = slot.assigned_crew.split(',').map(n => n.trim()).filter(Boolean);
                     const pct = progressPct(slot.progress);
                     const colors = islandColor(slot.island);
+                    const focusCount = getSlotFocusStepIds(slot).length;
                     return (
                       <td key={date} style={{ padding: 4 }}>
                         <button
@@ -1270,8 +1293,8 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                             <span style={{ fontSize: 9, color: '#94a3b8' }}>
                               {crew.length > 0 ? crew[0].split(' ')[0] : 'No crew'}{crew.length > 1 ? ` +${crew.length - 1}` : ''}
                             </span>
-                            <span style={{ fontSize: 9, color: '#64748b' }}>
-                              {slot.hours_estimated ? `${slot.hours_estimated}h` : ''}
+                            <span style={{ fontSize: 9, color: focusCount > 0 ? '#fbbf24' : '#64748b', fontWeight: focusCount > 0 ? 800 : 400 }}>
+                              {focusCount > 0 ? `${focusCount} focus` : slot.hours_estimated ? `${slot.hours_estimated}h` : ''}
                             </span>
                           </div>
                           {pct > 0 && (
