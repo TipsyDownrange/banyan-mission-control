@@ -45,7 +45,68 @@ const FIELD_ROLES = new Set(['glazier', 'super', 'superintendent', 'journeyman',
 // ─── Row parsers ─────────────────────────────────────────────────────────────
 
 // DISPATCH_COLS mirrors lib/schemas.ts DISPATCH_SCHEDULE_SCHEMA — keep in sync
-const DISPATCH_COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time','step_ids','hours_actual','last_modified'];
+const DISPATCH_COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time','step_ids','hours_actual','last_modified','focus_step_ids'];
+const LEGACY_STEP_IDS_COL = 15;
+const LAST_MODIFIED_COL = 17;
+const FOCUS_STEP_IDS_COL = 18;
+
+function parseStepIdList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(String).map(s => s.trim()).filter(Boolean);
+  }
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map(String).map(s => s.trim()).filter(Boolean);
+    }
+  } catch {
+    // Fall through to legacy comma-separated support.
+  }
+  return raw.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function serializeFocusStepIds(value: unknown): string {
+  return JSON.stringify(parseStepIdList(value));
+}
+
+function getEffectiveFocusStepIds(row: string[]): string[] {
+  const focusCell = row[FOCUS_STEP_IDS_COL] || '';
+  if (String(focusCell).trim()) return parseStepIdList(focusCell);
+  return parseStepIdList(row[LEGACY_STEP_IDS_COL] || '');
+}
+
+async function validateFocusStepIds(
+  sheets: ReturnType<typeof google.sheets>,
+  kID: string,
+  focusStepIds: string[]
+): Promise<string[]> {
+  if (!kID || focusStepIds.length === 0) return [];
+
+  const [stepsRes, plansRes] = await Promise.all([
+    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:M5000' }),
+    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
+  ]);
+
+  const allSteps = (stepsRes.data.values || []).filter(r => r[0]).map(r => rowToStep(r.map(String)));
+  const allPlans = (plansRes.data.values || []).filter(r => r[0]).map(r => rowToPlan(r.map(String)));
+  const planIds = new Set(
+    allPlans
+      .filter(plan => kidsMatch(plan.job_id, kID))
+      .map(plan => plan.install_plan_id)
+      .filter(Boolean)
+  );
+  const validStepIds = new Set(
+    allSteps
+      .filter(step => planIds.has(step.install_plan_id))
+      .map(step => step.install_step_id)
+      .filter(Boolean)
+  );
+
+  return focusStepIds.filter(stepId => !validStepIds.has(stepId));
+}
+
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
   DISPATCH_COLS.forEach((c, i) => { s[c] = row[i] || ''; });
@@ -203,7 +264,7 @@ export async function GET(req: Request) {
 
     // Single batch request for all tabs
     const [dispatchRes, stepsRes, plansRes, completionsRes, usersRes, woRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:R5000' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:S5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:M5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:J5000' }),
@@ -441,7 +502,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { kID, project_name, date, assigned_crew, island, men_required, hours_estimated, notes, work_type, step_ids, start_time } = body;
+    const { kID, project_name, date, assigned_crew, island, men_required, hours_estimated, notes, work_type, step_ids, focus_step_ids, start_time } = body;
     const scheduledDateTime = start_time ? `${date}T${start_time}` : date;
 
     if (!project_name || !date) {
@@ -456,6 +517,14 @@ export async function POST(req: Request) {
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
+    const focusStepIds = parseStepIdList(focus_step_ids !== undefined ? focus_step_ids : step_ids);
+    const invalidFocusStepIds = await validateFocusStepIds(sheets, kID || '', focusStepIds);
+    if (invalidFocusStepIds.length > 0) {
+      return NextResponse.json({
+        error: 'focus_step_ids contains steps outside this work order',
+        invalid_focus_step_ids: invalidFocusStepIds,
+      }, { status: 400 });
+    }
 
     // Fetch existing slots to generate unique slot_id
     const existingRes = await sheets.spreadsheets.values.get({
@@ -465,9 +534,9 @@ export async function POST(req: Request) {
     const existingIds = (existingRes.data.values || []).map(r => ({ slot_id: r[0] || '' }));
     const slot_id = genSlotId(date, existingIds);
 
-    const stepIdsStr = Array.isArray(step_ids) ? step_ids.join(',') : (step_ids || '');
+    const focusStepIdsStr = serializeFocusStepIds(focusStepIds);
 
-    // DISPATCH_COLS: slot_id(0)..step_ids(15) hours_actual(16) last_modified(17)
+    // DISPATCH_COLS: slot_id(0)..legacy step_ids(15) hours_actual(16) last_modified(17) focus_step_ids(18)
     const now = new Date().toISOString();
     const newRow = [
       slot_id,
@@ -485,75 +554,48 @@ export async function POST(req: Request) {
       notes || '',
       start_time,
       end_time,
-      stepIdsStr,
+      '',               // legacy step_ids (col 15 P) retained for compatibility only
       '',               // hours_actual (col 16 Q) — empty on create
       now,              // last_modified (col 17 R)
+      focusStepIdsStr,  // focus_step_ids (col 18 S)
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: 'Dispatch_Schedule!A:R',
+      range: 'Dispatch_Schedule!A:S',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [newRow] },
     });
 
-    // Update Install_Steps planned dates for selected steps only
-    if (Array.isArray(step_ids) && step_ids.length > 0) {
-      const stepsRes2 = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: 'Install_Steps!A2:P5000',
-      });
-      const stepRows = stepsRes2.data.values || [];
-      const stepUpdates: Promise<unknown>[] = [];
-      for (const stepId of step_ids as string[]) {
-        const rowIdx = stepRows.findIndex(r => (r[0] || '') === stepId);
-        if (rowIdx === -1) continue;
-        const ex = [...stepRows[rowIdx]];
-        while (ex.length < 16) ex.push('');
-        ex[9] = date;  // planned_start_date (col J)
-        ex[10] = date; // planned_end_date (col K)
-        const stepSheetRow = rowIdx + 2;
-        stepUpdates.push(
-          sheets.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `Install_Steps!A${stepSheetRow}:P${stepSheetRow}`,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: { values: [ex] },
-          })
-        );
-      }
-      await Promise.all(stepUpdates);
-
-      if (kID) {
-        try {
-          const derivedStatus = await deriveWorkOrderStatus({ woId: kID, woNumber: kID, sheets });
-          const woRes2 = await sheets.spreadsheets.values.get({
-            spreadsheetId: SHEET_ID,
-            range: 'Service_Work_Orders!A2:E2000',
-          });
-          const woRows2 = woRes2.data.values || [];
-          for (let i = 0; i < woRows2.length; i++) {
-            const rowWoId = (woRows2[i][0] || '').trim();
-            const rowWoNum = (woRows2[i][1] || '').trim();
-            if (kidsMatch(rowWoId, kID) || kidsMatch(rowWoNum, kID)) {
-              await sheets.spreadsheets.values.update({
-                spreadsheetId: SHEET_ID,
-                range: `Service_Work_Orders!E${i + 2}`,
-                valueInputOption: 'RAW',
-                requestBody: { values: [[derivedStatus]] },
-              });
-              await sheets.spreadsheets.values.update({
-                spreadsheetId: SHEET_ID,
-                range: `Service_Work_Orders!R${i + 2}`,
-                valueInputOption: 'RAW',
-                requestBody: { values: [[scheduledDateTime]] },
-              });
-              break;
-            }
+    if (kID) {
+      try {
+        const derivedStatus = await deriveWorkOrderStatus({ woId: kID, woNumber: kID, sheets });
+        const woRes2 = await sheets.spreadsheets.values.get({
+          spreadsheetId: SHEET_ID,
+          range: 'Service_Work_Orders!A2:E2000',
+        });
+        const woRows2 = woRes2.data.values || [];
+        for (let i = 0; i < woRows2.length; i++) {
+          const rowWoId = (woRows2[i][0] || '').trim();
+          const rowWoNum = (woRows2[i][1] || '').trim();
+          if (kidsMatch(rowWoId, kID) || kidsMatch(rowWoNum, kID)) {
+            await sheets.spreadsheets.values.update({
+              spreadsheetId: SHEET_ID,
+              range: `Service_Work_Orders!E${i + 2}`,
+              valueInputOption: 'RAW',
+              requestBody: { values: [[derivedStatus]] },
+            });
+            await sheets.spreadsheets.values.update({
+              spreadsheetId: SHEET_ID,
+              range: `Service_Work_Orders!R${i + 2}`,
+              valueInputOption: 'RAW',
+              requestBody: { values: [[scheduledDateTime]] },
+            });
+            break;
           }
-        } catch (e) {
-          console.error('Failed to derive WO status after scheduling:', e);
         }
+      } catch (e) {
+        console.error('Failed to derive WO status after scheduling:', e);
       }
     }
 
@@ -588,7 +630,7 @@ export async function PATCH(req: Request) {
     // Find the row with this slot_id
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Dispatch_Schedule!A2:R5000',
+      range: 'Dispatch_Schedule!A2:S5000',
     });
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => (r[0] || '') === slot_id);
@@ -603,7 +645,7 @@ export async function PATCH(req: Request) {
 
     // Optimistic concurrency: reject if last_modified has changed since client loaded
     const clientLastModified = updates.last_modified as string | undefined;
-    const serverLastModified = existing[17]; // last_modified col R
+    const serverLastModified = existing[LAST_MODIFIED_COL]; // last_modified col R
     if (clientLastModified && serverLastModified && clientLastModified !== serverLastModified) {
       return NextResponse.json({
         error: 'Conflict: slot was modified by another user since you loaded it. Reload and try again.',
@@ -611,11 +653,26 @@ export async function PATCH(req: Request) {
       }, { status: 409 });
     }
 
+    if ('focus_step_ids' in updates) {
+      const focusStepIds = parseStepIdList(updates.focus_step_ids);
+      const invalidFocusStepIds = await validateFocusStepIds(sheets, existing[2] || '', focusStepIds);
+      if (invalidFocusStepIds.length > 0) {
+        return NextResponse.json({
+          error: 'focus_step_ids contains steps outside this work order',
+          invalid_focus_step_ids: invalidFocusStepIds,
+        }, { status: 400 });
+      }
+      updates.focus_step_ids = serializeFocusStepIds(focusStepIds);
+      updates.step_ids = '';
+    }
+
     DISPATCH_COLS.forEach((col, i) => {
       if (col === 'last_modified') return; // handled below
       if (col in updates) {
         const v = updates[col];
-        existing[i] = Array.isArray(v) ? v.join(', ') : (v ?? existing[i]);
+        existing[i] = col === 'focus_step_ids'
+          ? serializeFocusStepIds(v)
+          : Array.isArray(v) ? v.join(', ') : (v ?? existing[i]);
       }
     });
 
@@ -627,20 +684,19 @@ export async function PATCH(req: Request) {
     }
 
     // Always update last_modified on any write
-    existing[17] = new Date().toISOString();
+    existing[LAST_MODIFIED_COL] = new Date().toISOString();
 
     const sheetRow = rowIndex + 2; // 1-indexed + header row
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Dispatch_Schedule!A${sheetRow}:R${sheetRow}`,
+      range: `Dispatch_Schedule!A${sheetRow}:S${sheetRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [existing] },
     });
 
     // If status is being set to 'completed', handle per-step completion logic
     if (updates.status === 'completed') {
-      const stepIdsStr = existing[15] || ''; // step_ids col
-      const slotStepIds = stepIdsStr.split(',').map((s: string) => s.trim()).filter(Boolean);
+      const slotStepIds = getEffectiveFocusStepIds(existing);
       const kID = existing[2] || '';
 
       if (slotStepIds.length > 0) {
@@ -762,7 +818,7 @@ export async function DELETE(req: Request) {
     const sheetRow = rowIndex + 2;
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,
-      range: `Dispatch_Schedule!A${sheetRow}:R${sheetRow}`,
+      range: `Dispatch_Schedule!A${sheetRow}:S${sheetRow}`,
     });
 
     return NextResponse.json({ success: true, deleted_slot_id: slot_id });
