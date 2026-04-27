@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { buildWarRoomDispatchPrompt, canPrepareWarRoomDispatch } from '@/lib/war-room/dispatchPrompt';
 import type { WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey } from '@/lib/war-room/types';
 
 const NAV: Array<{ key: WarRoomQueueKey; label: string }> = [
@@ -123,7 +124,12 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
   const [selectedId, setSelectedId] = useState(initialData.upNext[0]?.id || initialData.issues[0]?.id || '');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
+  const [dispatchIssueId, setDispatchIssueId] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const selectedIssue = data.issues.find(issue => issue.id === selectedId) || data.issues[0];
+  const dispatchIssue = data.issues.find(issue => issue.id === dispatchIssueId) || null;
+  const dispatchPrompt = dispatchIssue ? buildWarRoomDispatchPrompt(dispatchIssue) : '';
+  const dispatchReady = canPrepareWarRoomDispatch(selectedIssue);
 
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -138,6 +144,21 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
   const triage = queue('captainsTriage');
   const ready = queue('readyForCodex');
   const xoReview = queue('xoReview');
+
+  function selectIssue(issue: WarRoomIssue) {
+    setSelectedId(issue.id);
+    setCopyStatus('idle');
+  }
+
+  async function copyDispatchPrompt() {
+    if (!dispatchPrompt) return;
+    try {
+      await navigator.clipboard.writeText(dispatchPrompt);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+  }
 
   return (
     <div style={{
@@ -282,7 +303,26 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               </div>
               <div style={{ display: 'grid', gap: 8, minWidth: 190 }}>
                 <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 8, padding: '10px 12px', color: '#04111f', background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)', fontWeight: 950, fontSize: 13 }}>Review / Act</a>
-                <button disabled style={{ borderRadius: 8, padding: '10px 12px', color: '#64748b', background: 'rgba(148,163,184,0.08)', border: '1px solid rgba(148,163,184,0.16)', fontWeight: 900 }}>Prepare Dispatch</button>
+                <button
+                  disabled={!dispatchReady}
+                  onClick={() => {
+                    if (!selectedIssue || !dispatchReady) return;
+                    setDispatchIssueId(selectedIssue.id);
+                    setCopyStatus('idle');
+                  }}
+                  title={dispatchReady ? 'Generate a copy-ready Codex dispatch prompt' : 'Dispatch prompts are enabled for Ready for Codex issues with complete issue metadata.'}
+                  style={{
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    color: dispatchReady ? '#06121f' : '#64748b',
+                    background: dispatchReady ? 'linear-gradient(135deg,#f8fafc,#a7f3d0)' : 'rgba(148,163,184,0.08)',
+                    border: dispatchReady ? '1px solid rgba(167,243,208,0.5)' : '1px solid rgba(148,163,184,0.16)',
+                    fontWeight: 900,
+                    cursor: dispatchReady ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Prepare Dispatch
+                </button>
                 <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 8, padding: '10px 12px', color: '#ccfbf1', background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.28)', fontWeight: 900, fontSize: 13 }}>Open Linear</a>
                 <button disabled style={{ borderRadius: 8, padding: '10px 12px', color: '#64748b', background: 'rgba(148,163,184,0.08)', border: '1px solid rgba(148,163,184,0.16)', fontWeight: 900 }}>Mark Needs Evidence</button>
               </div>
@@ -290,11 +330,99 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
           </section>
         )}
 
+        {dispatchIssue && (
+          <section style={{
+            border: '1px solid rgba(94,234,212,0.28)',
+            background: 'rgba(3,10,20,0.82)',
+            borderRadius: 8,
+            padding: 16,
+            marginBottom: 18,
+            boxShadow: '0 16px 50px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04)',
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) auto', gap: 12, alignItems: 'start', marginBottom: 12 }}>
+              <div>
+                <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 5 }}>
+                  Codex Dispatch Prompt
+                </div>
+                <h2 style={{ color: '#f8fafc', margin: 0, fontSize: 18, lineHeight: 1.25, fontWeight: 950 }}>
+                  {dispatchIssue.id}: {dispatchIssue.title}
+                </h2>
+                <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5, margin: '8px 0 0' }}>
+                  Read-only prompt generation. Copy this into Codex; BanyanOS does not execute the dispatch or write to Linear.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={copyDispatchPrompt}
+                  style={{
+                    border: '1px solid rgba(94,234,212,0.44)',
+                    background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)',
+                    color: '#04111f',
+                    borderRadius: 8,
+                    padding: '9px 12px',
+                    fontSize: 12,
+                    fontWeight: 950,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Copy Prompt
+                </button>
+                <button
+                  onClick={() => {
+                    setDispatchIssueId(null);
+                    setCopyStatus('idle');
+                  }}
+                  style={{
+                    border: '1px solid rgba(148,163,184,0.18)',
+                    background: 'rgba(15,23,42,0.66)',
+                    color: '#cbd5e1',
+                    borderRadius: 8,
+                    padding: '9px 12px',
+                    fontSize: 12,
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 20, marginBottom: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: copyStatus === 'copied' ? '#22c55e' : copyStatus === 'failed' ? '#f59e0b' : '#38bdf8' }} />
+              <span style={{ color: copyStatus === 'failed' ? '#fbbf24' : '#94a3b8', fontSize: 12, fontWeight: 800 }}>
+                {copyStatus === 'copied' && 'Prompt copied to clipboard.'}
+                {copyStatus === 'failed' && 'Clipboard blocked. Select the prompt text below and copy manually.'}
+                {copyStatus === 'idle' && 'Fallback copy block is always visible below.'}
+              </span>
+            </div>
+            <textarea
+              readOnly
+              value={dispatchPrompt}
+              aria-label={`Dispatch prompt for ${dispatchIssue.id}`}
+              style={{
+                width: '100%',
+                minHeight: 320,
+                resize: 'vertical',
+                border: '1px solid rgba(148,163,184,0.2)',
+                background: 'rgba(2,6,23,0.82)',
+                color: '#dbeafe',
+                borderRadius: 8,
+                padding: 14,
+                fontSize: 12,
+                lineHeight: 1.55,
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
+            />
+          </section>
+        )}
+
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
-          <Column title="Needs Command Decision" issues={commandDecision} selectedId={selectedId} onSelect={issue => setSelectedId(issue.id)} />
-          <Column title="Captain's Triage" issues={triage} selectedId={selectedId} onSelect={issue => setSelectedId(issue.id)} />
-          <Column title="Ready to Execute" issues={ready} selectedId={selectedId} onSelect={issue => setSelectedId(issue.id)} />
-          <Column title="XO Review" issues={xoReview} selectedId={selectedId} onSelect={issue => setSelectedId(issue.id)} />
+          <Column title="Needs Command Decision" issues={commandDecision} selectedId={selectedId} onSelect={selectIssue} />
+          <Column title="Captain's Triage" issues={triage} selectedId={selectedId} onSelect={selectIssue} />
+          <Column title="Ready to Execute" issues={ready} selectedId={selectedId} onSelect={selectIssue} />
+          <Column title="XO Review" issues={xoReview} selectedId={selectedId} onSelect={selectIssue} />
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 12 }}>
@@ -306,7 +434,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               <h2 style={{ margin: '0 0 12px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>{title as string}</h2>
               <div style={{ display: 'grid', gap: 9 }}>
                 {(issues as WarRoomIssue[]).slice(0, 5).map(issue => (
-                  <button key={issue.id} onClick={() => setSelectedId(issue.id)} style={{ textAlign: 'left', background: 'transparent', border: 'none', padding: 0, color: '#cbd5e1', cursor: 'pointer' }}>
+                  <button key={issue.id} onClick={() => selectIssue(issue)} style={{ textAlign: 'left', background: 'transparent', border: 'none', padding: 0, color: '#cbd5e1', cursor: 'pointer' }}>
                     <span style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{issue.id}</span>
                     <span style={{ display: 'block', fontSize: 12, fontWeight: 800, marginTop: 2 }}>{issue.title}</span>
                     <span style={{ display: 'block', color: '#64748b', fontSize: 11, marginTop: 2 }}>{formatDate(issue.completedAt || issue.updatedAt)}</span>
@@ -319,7 +447,10 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
             <h2 style={{ margin: '0 0 12px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Bridge Communications</h2>
             <div style={{ display: 'grid', gap: 10 }}>
               {data.bridgeCommunications.map(note => (
-                <button key={`${note.issueId}-${note.updatedAt}`} onClick={() => setSelectedId(note.issueId)} style={{ textAlign: 'left', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, padding: 10, background: 'rgba(15,23,42,0.5)', color: '#cbd5e1', cursor: 'pointer' }}>
+                <button key={`${note.issueId}-${note.updatedAt}`} onClick={() => {
+                  setSelectedId(note.issueId);
+                  setCopyStatus('idle');
+                }} style={{ textAlign: 'left', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, padding: 10, background: 'rgba(15,23,42,0.5)', color: '#cbd5e1', cursor: 'pointer' }}>
                   <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', marginBottom: 4 }}>{note.issueId}</div>
                   <div style={{ fontSize: 12, lineHeight: 1.45 }}>{note.note}</div>
                 </button>
