@@ -221,6 +221,62 @@ function getSlotFocusStepIds(slot: DispatchSlot | null): string[] {
   return parseStepIdList(slot.step_ids || '');
 }
 
+function SchedulerIdentityBand({
+  projectName,
+  woId,
+  slotId,
+  date,
+  startTime,
+  endTime,
+}: {
+  projectName: string;
+  woId: string;
+  slotId?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+}) {
+  const details = [
+    { label: 'WO ID', value: woId },
+    slotId ? { label: 'Slot ID', value: slotId } : null,
+    { label: 'Date', value: fmtDate(date) },
+    { label: 'Time', value: startTime && endTime ? `${fmtTime(startTime)} - ${fmtTime(endTime)}` : fmtTime(startTime) || 'Unscheduled' },
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  return (
+    <div style={{
+      marginBottom: 16,
+      padding: '12px',
+      borderRadius: 8,
+      background: 'rgba(15,23,42,0.5)',
+      border: '1px solid rgba(148,163,184,0.18)',
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0, marginBottom: 6 }}>
+        Verifying
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', lineHeight: 1.25, marginBottom: 10 }}>
+        {projectName}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {details.map(detail => (
+          <span key={detail.label} style={{
+            padding: '5px 8px',
+            borderRadius: 8,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: '#cbd5e1',
+            fontSize: 11,
+            fontWeight: 700,
+            wordBreak: 'break-word',
+          }}>
+            <span style={{ color: '#64748b', fontWeight: 800 }}>{detail.label}: </span>{detail.value}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Quick Schedule Modal ─────────────────────────────────────────────────────
 
 interface QuickScheduleModalProps {
@@ -374,6 +430,14 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
             borderRadius: 8, padding: '6px 10px', color: '#94a3b8', fontSize: 14, cursor: 'pointer', flexShrink: 0,
           }}>✕</button>
         </div>
+
+        <SchedulerIdentityBand
+          projectName={job.name}
+          woId={job.kID}
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+        />
 
         {error && (
           <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', color: '#fca5a5', fontSize: 12, marginBottom: 16 }}>
@@ -717,6 +781,15 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
             borderRadius: 8, padding: '6px 10px', color: '#94a3b8', fontSize: 14, cursor: 'pointer', flexShrink: 0,
           }}>✕</button>
         </div>
+
+        <SchedulerIdentityBand
+          projectName={slot.project_name}
+          woId={slot.kID}
+          slotId={slot.slot_id}
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+        />
 
         {error && (
           <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', color: '#fca5a5', fontSize: 12, marginBottom: 16 }}>
