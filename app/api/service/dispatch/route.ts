@@ -5,6 +5,14 @@ import { google } from 'googleapis';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
+import {
+  InvalidServiceWONumberError,
+  ServiceWOFolderCreationError,
+  buildServiceWOId,
+  nextServiceWONumber,
+  normalizeIncomingServiceWONumber,
+  requireServiceWOFolderUrl,
+} from '@/lib/service-wo-create';
 
 const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const TAB = 'Service_Work_Orders';
@@ -50,7 +58,7 @@ async function createWOFolderStructure(
   woId: string,
   customerName: string,
   island: string,
-): Promise<string | null> {
+): Promise<string> {
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
     const drive = google.drive({ version: 'v3', auth });
@@ -109,7 +117,7 @@ async function createWOFolderStructure(
     return meta.data.webViewLink || `https://drive.google.com/drive/folders/${woFolderId}`;
   } catch (e) {
     console.error('WO folder creation failed:', e);
-    return null;
+    throw new ServiceWOFolderCreationError(e);
   }
 }
 
@@ -125,9 +133,19 @@ export async function POST(req: Request) {
       businessName, customerName, address, city, state, zip, island, areaOfIsland,
       contactPerson, contactPhone, contactEmail, contactTitle,
       description, systemType, urgency,
-      assignedTo, notes, woNumber, dateReceived,
+      assignedTo, notes, woNumber: rawWONumber, dateReceived,
       customer_id, org_id,
     } = body;
+
+    let incomingWONumber: string | undefined;
+    try {
+      incomingWONumber = normalizeIncomingServiceWONumber(rawWONumber);
+    } catch (err) {
+      if (err instanceof InvalidServiceWONumberError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
 
     if ((!businessName && !customerName) || !description) {
       return NextResponse.json(
@@ -174,7 +192,7 @@ export async function POST(req: Request) {
     const now = hawaiiNow();
     const today = dateReceived || hawaiiToday();
     // Sequential WO numbering: WO-26-XXXX
-    let wo = woNumber;
+    let wo = incomingWONumber;
     if (!wo) {
       const yr = hawaiiYear2();
       // Find the highest existing WO number for this year
@@ -182,21 +200,27 @@ export async function POST(req: Request) {
         spreadsheetId: BACKEND_SHEET_ID,
         range: 'Service_Work_Orders!B2:B2000',
       });
-      const nums = (existingWOs.data.values || []).flat()
-        .filter((v: string) => v && v.startsWith(yr + '-'))
-        .map((v: string) => parseInt(v.split('-')[1]) || 0);
-      const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-      wo = `${yr}-${String(nextNum).padStart(4, '0')}`;
+      wo = nextServiceWONumber((existingWOs.data.values || []).flat(), yr);
     }
-    const woId = `WO-${wo.replace(/[^A-Za-z0-9\-]/g, '')}`;
+    const woId = buildServiceWOId(wo);
     // Column C (name): use businessName if provided; otherwise derive from customerName + systemType
     const name = businessName ||
       (systemType ? `${customerName} — ${systemType}` : customerName);
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
-    // Create Drive folder structure before writing the sheet row
-    // Non-fatal if it fails — WO creation still proceeds
-    const folderUrl = await createWOFolderStructure(woId, customerName, island || city || '');
+    // Create Drive folder structure before writing the sheet row. This is fatal:
+    // never create a new WO that has no Drive folder for job files.
+    let folderUrl: string;
+    try {
+      folderUrl = requireServiceWOFolderUrl(
+        await createWOFolderStructure(woId, customerName || businessName || '', island || city || '')
+      );
+    } catch (err) {
+      if (err instanceof ServiceWOFolderCreationError) {
+        return NextResponse.json({ error: err.message }, { status: 502 });
+      }
+      throw err;
+    }
 
     const rowPrefix = [
       woId,           // wo_id
