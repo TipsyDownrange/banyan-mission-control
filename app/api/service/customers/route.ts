@@ -16,6 +16,9 @@ export type CustomerRecord = {
   phone2:        string;
   email:         string;
   address:       string;
+  city?:         string;
+  state?:        string;
+  zip?:          string;
   island:        string;
   woCount:       number;
   firstWODate:   string;
@@ -59,6 +62,9 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
   const iPhone2        = idx('Phone2');
   const iEmail         = idx('Email');
   const iAddress       = idx('Address');
+  const iCity          = idx('City');
+  const iState         = idx('State');
+  const iZip           = idx('ZIP') >= 0 ? idx('ZIP') : idx('Zip');
   const iIsland        = idx('Island');
   const iWOCount       = idx('WO_Count');
   const iFirstDate     = idx('First_WO_Date');
@@ -78,6 +84,9 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
       phone2:        get(iPhone2),
       email:         get(iEmail),
       address:       get(iAddress),
+      city:          get(iCity),
+      state:         get(iState),
+      zip:           get(iZip),
       island:        get(iIsland),
       woCount:       parseInt(get(iWOCount)) || 1,
       firstWODate:   get(iFirstDate),

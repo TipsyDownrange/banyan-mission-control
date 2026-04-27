@@ -42,6 +42,13 @@ function detectIsland(city: string, formatted: string): string {
   return '';
 }
 
+function inferCityFromFormattedAddress(formatted: string): string {
+  const stateZip = formatted.match(/\b[A-Z]{2}\s+\d{5}(?:-\d{4})?\b/);
+  const beforeState = stateZip ? formatted.slice(0, stateZip.index).trim() : formatted;
+  const candidate = beforeState.split(',').map(p => p.trim()).filter(Boolean).pop();
+  return candidate && !/\d/.test(candidate) ? candidate : '';
+}
+
 export default function PlacesAutocomplete({
   value, onChange, onSelect, placeholder = 'Start typing an address…', style, disabled,
 }: PlacesAutocompleteProps) {
@@ -105,10 +112,12 @@ export default function PlacesAutocomplete({
         else if (types.includes('locality'))              city   = c.longText ?? '';
         else if (types.includes('sublocality_level_1') && !city) city = c.longText ?? '';
         else if (types.includes('postal_town') && !city)         city = c.longText ?? '';
+        else if (types.includes('administrative_area_level_3') && !city) city = c.longText ?? '';
         else if (types.includes('administrative_area_level_1')) state = c.shortText ?? '';
         else if (types.includes('postal_code'))           zip    = c.longText ?? '';
       }
 
+      if (!city) city = inferCityFromFormattedAddress(formatted);
       const island = detectIsland(city, formatted);
       onChange(formatted);
       onSelect({

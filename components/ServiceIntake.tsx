@@ -20,6 +20,7 @@ type WODraft = {
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
+type OrganizationSummary = { org_id: string; name?: string; company?: string };
 
 const FL = (label: string, auto?: boolean, places?: boolean) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
@@ -121,13 +122,45 @@ function detectIslandAndArea(text: string): { island: string; area: string } {
   return { island: '', area: '' };
 }
 
+function parseAddressParts(address: string): { city: string; state: string; zip: string } {
+  const result = { city: '', state: '', zip: '' };
+  if (!address) return result;
+
+  const zipMatch = address.match(/\b(\d{5})(?:-\d{4})?\b/);
+  if (zipMatch) result.zip = zipMatch[1];
+
+  const stateZipMatch = address.match(/\b([A-Z]{2})\s+\d{5}(?:-\d{4})?\b/);
+  if (stateZipMatch) result.state = stateZipMatch[1];
+
+  const beforeState = stateZipMatch ? address.slice(0, stateZipMatch.index).trim() : address;
+  const cityCandidate = beforeState.split(',').map(p => p.trim()).filter(Boolean).pop();
+  if (cityCandidate && !/\d/.test(cityCandidate)) result.city = cityCandidate;
+
+  return result;
+}
+
+function normalizeEntityName(value: string): string {
+  return (value || '')
+    .toLowerCase()
+    .replace(/[,\.]/g, '')
+    .replace(/\b(inc|llc|corp|corporation|ltd|co|company)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Apply a full customer record (from Customer/Account Name or Contact Person autocomplete)
 function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
   const det = detectIslandAndArea(c.address);
+  const parsedAddress = parseAddressParts(c.address);
+  const company = c.company || c.name || '';
   return {
     ...prev,
-    customerName:  c.company || prev.customerName,
-    address:       prev.address || c.address,
+    businessName:  company || prev.businessName,
+    customerName:  company || prev.customerName,
+    address:       c.address || prev.address,
+    city:          c.city || parsedAddress.city || prev.city,
+    state:         c.state || parsedAddress.state || prev.state,
+    zip:           c.zip || parsedAddress.zip || prev.zip,
     island:        prev.island || c.island || det.island,
     areaOfIsland:  prev.areaOfIsland || det.area,
     contactPerson: prev.contactPerson || c.contactPerson,
@@ -143,9 +176,13 @@ function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
 // Apply address selection only (address autocomplete)
 function applyAddressRecord(prev: WODraft, c: CustomerRecord): WODraft {
   const det = detectIslandAndArea(c.address);
+  const parsedAddress = parseAddressParts(c.address);
   return {
     ...prev,
     address:      c.address,
+    city:         c.city || parsedAddress.city || prev.city,
+    state:        c.state || parsedAddress.state || prev.state,
+    zip:          c.zip || parsedAddress.zip || prev.zip,
     island:       prev.island || c.island || det.island,
     areaOfIsland: prev.areaOfIsland || det.area,
   };
@@ -185,38 +222,33 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         setFieldCrew(d.crew || []);
       })
       .catch(() => {});
-    // Phase 2: Use Organizations endpoint (includes org_id, primary contact, primary site)
-    fetch('/api/organizations?limit=500')
+    // GC-D053: Customers table is the source of truth for customer_id.
+    fetch('/api/service/customers')
       .then(r => r.json())
       .then(d => {
-        const orgs = d.organizations || [];
-        // Map OrgRecord to CustomerRecord shape for backward compat
-        const mapped = orgs.map((o: {org_id:string;name:string;company:string;contactPerson:string;contactPhone:string;email:string;address:string;island:string;primary_contact?:{name:string;phone:string;email:string;title:string};primary_site?:{address_line_1:string;city:string;island:string}}) => ({
-          customerId:    o.org_id,
-          name:          o.name,
-          company:       o.company || o.name,
-          contactPerson: o.primary_contact?.name || o.contactPerson || '',
-          title:         o.primary_contact?.title || '',
-          phone:         o.primary_contact?.phone || o.contactPhone || '',
-          phone2:        '',
-          email:         o.primary_contact?.email || o.email || '',
-          address:       o.primary_site?.address_line_1 || o.address || '',
-          island:        o.primary_site?.island || o.island || '',
-          woCount:       0,
-          firstWODate:   '', lastWODate: '', source: '',
-          contact:       o.primary_contact?.name || '',
-          contactPhone:  o.primary_contact?.phone || '',
-          org_id:        o.org_id,
-        }));
-        setCustomers(mapped);
-      })
-      .catch(() => {
-        // Fallback to legacy endpoint
-        fetch('/api/service/customers')
-          .then(r => r.json())
-          .then(d => setCustomers(d.customers || []))
+        const customerRows = d.customers || [];
+        setCustomers(customerRows);
+
+        // Organizations are optional enrichment for org_id/contact chips only.
+        fetch('/api/organizations?limit=500')
+          .then(r => r.ok ? r.json() : { organizations: [] })
+          .then(orgData => {
+            const orgs = orgData.organizations || [];
+            if (!orgs.length) return;
+            const orgByName = new Map<string, { org_id: string }>();
+            for (const org of orgs as OrganizationSummary[]) {
+              const key = normalizeEntityName(org.company || org.name || '');
+              if (key && !orgByName.has(key)) orgByName.set(key, org);
+            }
+            setCustomers(prev => prev.map(c => {
+              if (c.org_id) return c;
+              const org = orgByName.get(normalizeEntityName(c.company || c.name || ''));
+              return org?.org_id ? { ...c, org_id: org.org_id } : c;
+            }));
+          })
           .catch(() => {});
-      });
+      })
+      .catch(() => {});
     fetch('/api/step-templates')
       .then(r => r.json())
       .then(d => {
@@ -265,6 +297,10 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
   async function submit() {
     if (!draft.customerName || !draft.description || !draft.island) return;
+    if (!draft.customer_id) {
+      setError('Select an existing customer/account before creating a work order — customer_id required by GC-D053.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -292,7 +328,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     setSaving(false);
   }
 
-  const canSubmit = !saving && (draft.businessName || draft.customerName) && draft.description && draft.island;
+  const canSubmit = !saving && !!draft.customer_id && (draft.businessName || draft.customerName) && draft.description && draft.island;
 
   // PM options — always available regardless of island
   const pmOptions = pms.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i);
@@ -383,7 +419,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
             ) && (
               <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
-                ⚠️ No existing customer matches &quot;{draft.customerName}&quot;. A new customer record will be created on submit. Double-check spelling.
+                No existing customer matches &quot;{draft.customerName}&quot;. Select an existing customer/account before creating the work order.
               </div>
             )}
           </div>
