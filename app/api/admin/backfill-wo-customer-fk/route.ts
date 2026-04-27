@@ -9,7 +9,6 @@ const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
 // Column indices in Service_Work_Orders (0-based)
 const COL_WO_ID        = 0;
-const COL_WO_NUMBER    = 1;
 const COL_CUSTOMER_NAME = 12; // M
 const COL_ORG_ID       = 42; // AQ
 const COL_CUSTOMER_ID  = 43; // AR — GC-D053
@@ -23,108 +22,6 @@ function colLetter(idx: number): string {
     n = Math.floor(n / 26) - 1;
   } while (n >= 0);
   return result;
-}
-
-function normalizeWoKid(value: string): string {
-  const raw = (value || '').trim();
-  if (!raw) return '';
-  return raw.startsWith('WO-') ? raw : `WO-${raw}`;
-}
-
-async function validateCustomerId(
-  sheets: ReturnType<typeof google.sheets>,
-  customerId: string
-): Promise<void> {
-  const custValidRes = await sheets.spreadsheets.values.get({
-    spreadsheetId: BACKEND_SHEET_ID,
-    range: 'Customers!A:N',
-  });
-  const custRows = custValidRes.data.values || [];
-  const custHeaders = (custRows[0] || []) as string[];
-  const cidIdx = custHeaders.indexOf('Customer_ID');
-  if (cidIdx < 0) {
-    throw new Error('Customers table missing Customer_ID column — GC-D053');
-  }
-  const customerExists = custRows.slice(1).some(
-    r => (r[cidIdx] || '').trim() === String(customerId).trim()
-  );
-  if (!customerExists) {
-    throw new Error(`customer_id "${customerId}" not found in Customers table — GC-D053 MANDATORY`);
-  }
-}
-
-export async function PATCH(req: Request) {
-  const { allowed, email: userEmail } = await checkPermission(req, 'admin:backfill');
-  if (!allowed) {
-    return NextResponse.json({ error: 'Forbidden: admin:backfill required (Sean / Jody only)' }, { status: 403 });
-  }
-
-  try {
-    const { wo_kid, customer_id } = await req.json();
-    if (!wo_kid || !customer_id) {
-      return NextResponse.json({ error: 'wo_kid and customer_id are required' }, { status: 400 });
-    }
-
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-    const sheets = google.sheets({ version: 'v4', auth });
-    await validateCustomerId(sheets, String(customer_id).trim());
-
-    const woRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: BACKEND_SHEET_ID,
-      range: 'Service_Work_Orders!A2:AS5000',
-    });
-    const woRows = woRes.data.values || [];
-    const normalizedWoId = normalizeWoKid(String(wo_kid));
-    const rawWoKid = String(wo_kid).trim();
-    const rowIdx = woRows.findIndex(r => {
-      const woId = (r[COL_WO_ID] || '').trim();
-      const woNumber = (r[COL_WO_NUMBER] || '').trim();
-      return woId === normalizedWoId || woId === rawWoKid || woNumber === rawWoKid;
-    });
-
-    if (rowIdx === -1) {
-      return NextResponse.json({ error: `WO ${wo_kid} not found` }, { status: 404 });
-    }
-
-    const sheetRow = rowIdx + 2;
-    const row = woRows[rowIdx] as string[];
-    const before = {
-      wo_id: (row[COL_WO_ID] || '').trim(),
-      wo_number: (row[COL_WO_NUMBER] || '').trim(),
-      org_id: (row[COL_ORG_ID] || '').trim(),
-      customer_id: (row[COL_CUSTOMER_ID] || '').trim(),
-      legacy_flag: (row[COL_LEGACY_FLAG] || '').trim(),
-    };
-
-    await sheets.spreadsheets.values.batchUpdate({
-      spreadsheetId: BACKEND_SHEET_ID,
-      requestBody: {
-        valueInputOption: 'RAW',
-        data: [{
-          range: `Service_Work_Orders!${colLetter(COL_CUSTOMER_ID)}${sheetRow}:${colLetter(COL_LEGACY_FLAG)}${sheetRow}`,
-          values: [[String(customer_id).trim(), 'false']],
-        }],
-      },
-    });
-
-    invalidateCache();
-
-    return NextResponse.json({
-      ok: true,
-      actor: userEmail,
-      sheetRow,
-      before,
-      after: {
-        ...before,
-        customer_id: String(customer_id).trim(),
-        legacy_flag: 'false',
-      },
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const status = /not found in Customers table|missing Customer_ID column/.test(msg) ? 400 : 500;
-    return NextResponse.json({ error: msg }, { status });
-  }
 }
 
 // POST — run backfill. Admin-gated: Sean + Jody only.
