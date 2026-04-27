@@ -12,6 +12,7 @@ import WarRoomPanel from '@/components/WarRoomPanel';
 import IssuesPanel from '@/components/IssuesPanel';
 import CrewPanel from '@/components/CrewPanel';
 import PMPanel from '@/components/PMPanel';
+import SchedulesPanel from '@/components/SchedulesPanel';
 import SchedulingPanel from '@/components/SchedulingPanel';
 import DispatchBoard from '@/components/DispatchBoard';
 import CostPanel from '@/components/CostPanel';
@@ -240,6 +241,7 @@ export default function Home() {
         {activeView === 'Projects'      && <ProjectsPanel onNavigate={(view) => setActiveView(view as AppView)} />}
         {activeView === 'Issues'        && <IssuesPanel />}
         {activeView === 'Crew'          && <CrewPanel />}
+        {activeView === 'Schedules'     && <SchedulesPanel />}
 
         {activeView === 'Bid Queue'           && <BidQueuePanel />}
         {activeView === 'Estimating Workspace' && <EstimatingWorkspace />}
