@@ -134,12 +134,11 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
     ? data.queues.filter(queueItem => queueItem.issues.some(issue => issue.id === selectedIssue.id)).map(queueItem => queueItem.key)
     : [];
   const dispatchReady = canPrepareWarRoomDispatch(selectedIssue, { queueKeys: selectedIssueQueueKeys });
+  const activeQueueMeta = data.queues.find(queueItem => queueItem.key === activeQueue);
 
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const activeQueueIssues = activeQueue === 'myWatch'
-      ? data.issues
-      : data.queues.find(queueItem => queueItem.key === activeQueue)?.issues || [];
+    const activeQueueIssues = data.queues.find(queueItem => queueItem.key === activeQueue)?.issues || data.issues;
 
     return activeQueueIssues.filter(issue => {
       const haystack = [issue.id, issue.title, issue.status, issue.repo, issue.lane, issue.area, issue.risk, ...issue.labels].join(' ').toLowerCase();
@@ -207,7 +206,13 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
           const count = data.queues.find(queueItem => queueItem.key === item.key)?.issues.length || 0;
           const active = item.key === activeQueue;
           return (
-            <button key={item.key} onClick={() => selectQueue(item.key)} style={{
+            <button
+              key={item.key}
+              type="button"
+              data-war-room-queue={item.key}
+              aria-pressed={active}
+              onClick={() => selectQueue(item.key)}
+              style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -221,6 +226,8 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               fontWeight: 800,
               textAlign: 'left',
               cursor: 'pointer',
+              position: 'relative',
+              zIndex: 1,
             }}>
               <span>{item.label}</span>
               <span style={{ color: active ? '#67e8f9' : '#475569', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{count}</span>
@@ -240,6 +247,9 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               BanyanOS War Room / Captain's Triage
             </div>
             <h1 style={{ margin: 0, color: '#f8fafc', fontSize: 30, fontWeight: 950, letterSpacing: '-0.02em' }}>Linear Command Dashboard</h1>
+            <div style={{ marginTop: 8, color: '#94a3b8', fontSize: 12, fontWeight: 800 }}>
+              Viewing {activeQueueMeta?.label || 'War Room'} queue ({filteredIssues.length})
+            </div>
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -267,6 +277,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               {FILTERS.map(item => (
                 <button
                   key={item}
+                  type="button"
                   onClick={() => setFilter(item)}
                   style={{
                     border: filter === item ? '1px solid rgba(94,234,212,0.55)' : '1px solid rgba(148,163,184,0.16)',
@@ -326,6 +337,8 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               <div style={{ display: 'grid', gap: 8, minWidth: 190 }}>
                 <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 8, padding: '10px 12px', color: '#04111f', background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)', fontWeight: 950, fontSize: 13 }}>Review / Act</a>
                 <button
+                  type="button"
+                  data-war-room-action="prepare-dispatch"
                   disabled={!dispatchReady}
                   onClick={() => {
                     if (!selectedIssue || !dispatchReady) return;
