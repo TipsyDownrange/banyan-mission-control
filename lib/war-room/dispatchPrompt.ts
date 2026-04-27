@@ -1,4 +1,4 @@
-import type { WarRoomIssue } from './types';
+import type { WarRoomIssue, WarRoomQueueKey } from './types';
 
 const REQUIRED_SECTIONS = [
   'TASK',
@@ -23,9 +23,13 @@ function isDone(issue: WarRoomIssue) {
   return issue.statusType === 'completed' || status === 'done' || status === 'completed';
 }
 
-export function canPrepareWarRoomDispatch(issue?: WarRoomIssue | null) {
+export function canPrepareWarRoomDispatch(
+  issue?: WarRoomIssue | null,
+  options: { queueKeys?: WarRoomQueueKey[] } = {},
+) {
   if (!issue) return false;
-  return Boolean(issue.id && issue.title && issue.url && !isDone(issue) && hasLabel(issue, 'Workflow: Ready for Codex'));
+  const isReady = hasLabel(issue, 'Workflow: Ready for Codex') || options.queueKeys?.includes('readyForCodex');
+  return Boolean(issue.id && issue.title && issue.url && !isDone(issue) && isReady);
 }
 
 function metadataLines(issue: WarRoomIssue) {
