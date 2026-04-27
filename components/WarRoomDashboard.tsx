@@ -122,6 +122,7 @@ function Column({ title, issues, selectedId, onSelect }: { title: string; issues
 export default function WarRoomDashboard({ initialData }: { initialData: WarRoomDashboardData }) {
   const [data] = useState(initialData);
   const [selectedId, setSelectedId] = useState(initialData.upNext[0]?.id || initialData.issues[0]?.id || '');
+  const [activeQueue, setActiveQueue] = useState<WarRoomQueueKey>('myWatch');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
   const [dispatchIssueId, setDispatchIssueId] = useState<string | null>(null);
@@ -129,15 +130,22 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
   const selectedIssue = data.issues.find(issue => issue.id === selectedId) || data.issues[0];
   const dispatchIssue = data.issues.find(issue => issue.id === dispatchIssueId) || null;
   const dispatchPrompt = dispatchIssue ? buildWarRoomDispatchPrompt(dispatchIssue) : '';
-  const dispatchReady = canPrepareWarRoomDispatch(selectedIssue);
+  const selectedIssueQueueKeys = selectedIssue
+    ? data.queues.filter(queueItem => queueItem.issues.some(issue => issue.id === selectedIssue.id)).map(queueItem => queueItem.key)
+    : [];
+  const dispatchReady = canPrepareWarRoomDispatch(selectedIssue, { queueKeys: selectedIssueQueueKeys });
 
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return data.issues.filter(issue => {
+    const activeQueueIssues = activeQueue === 'myWatch'
+      ? data.issues
+      : data.queues.find(queueItem => queueItem.key === activeQueue)?.issues || [];
+
+    return activeQueueIssues.filter(issue => {
       const haystack = [issue.id, issue.title, issue.status, issue.repo, issue.lane, issue.area, issue.risk, ...issue.labels].join(' ').toLowerCase();
       return (!query || haystack.includes(query)) && matchesFilter(issue, filter);
     });
-  }, [data.issues, filter, search]);
+  }, [activeQueue, data.issues, data.queues, filter, search]);
 
   const queue = (key: WarRoomQueueKey) => data.queues.find(item => item.key === key)?.issues.filter(issue => filteredIssues.some(match => match.id === issue.id)) || [];
   const commandDecision = [...queue('needsSean'), ...queue('needsEvidence')].filter((issue, index, arr) => arr.findIndex(item => item.id === issue.id) === index);
@@ -148,6 +156,19 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
   function selectIssue(issue: WarRoomIssue) {
     setSelectedId(issue.id);
     setCopyStatus('idle');
+  }
+
+  function selectQueue(key: WarRoomQueueKey) {
+    const queueIssues = data.queues.find(queueItem => queueItem.key === key)?.issues || [];
+    const nextIssues = key === 'myWatch'
+      ? queueIssues.length > 0 ? queueIssues : data.upNext.length > 0 ? data.upNext : data.issues
+      : queueIssues;
+
+    setActiveQueue(key);
+    setFilter('All');
+    setCopyStatus('idle');
+    setDispatchIssueId(null);
+    if (nextIssues[0]) setSelectedId(nextIssues[0].id);
   }
 
   async function copyDispatchPrompt() {
@@ -184,9 +205,9 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
         </div>
         {NAV.map(item => {
           const count = data.queues.find(queueItem => queueItem.key === item.key)?.issues.length || 0;
-          const active = item.key === 'myWatch';
+          const active = item.key === activeQueue;
           return (
-            <button key={item.key} style={{
+            <button key={item.key} onClick={() => selectQueue(item.key)} style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -199,6 +220,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               fontSize: 12,
               fontWeight: 800,
               textAlign: 'left',
+              cursor: 'pointer',
             }}>
               <span>{item.label}</span>
               <span style={{ color: active ? '#67e8f9' : '#475569', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{count}</span>

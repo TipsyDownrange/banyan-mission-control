@@ -41,4 +41,18 @@ describe('War Room dispatch prompt', () => {
     expect(canPrepareWarRoomDispatch({ ...readyIssue, status: 'Done', statusType: 'completed' })).toBe(false);
     expect(canPrepareWarRoomDispatch({ ...readyIssue, url: '' })).toBe(false);
   });
+
+  it('enables prompt preparation for live-normalized issues in the Ready for Codex queue', () => {
+    const liveReadyIssue = {
+      ...readyIssue,
+      labels: ['Risk: P1', 'Type: Bug', 'Repo: MC', 'Lane: Codex', 'Area: Mission Control'],
+    };
+
+    expect(canPrepareWarRoomDispatch(liveReadyIssue, { queueKeys: ['readyForCodex', 'captainsTriage'] })).toBe(true);
+  });
+
+  it('keeps non-ready queue and completed live issues ineligible', () => {
+    expect(canPrepareWarRoomDispatch({ ...readyIssue, labels: ['Risk: P1'] }, { queueKeys: ['needsSean'] })).toBe(false);
+    expect(canPrepareWarRoomDispatch({ ...readyIssue, status: 'Done', statusType: 'completed' }, { queueKeys: ['readyForCodex'] })).toBe(false);
+  });
 });
