@@ -1,25 +1,47 @@
 'use client';
-import BuildLifecycleTimeline from '@/components/BuildLifecycleTimeline';
-import CaptainsOrders from '@/components/CaptainsOrders';
+
+import { useEffect, useState } from 'react';
+import WarRoomDashboard from '@/components/WarRoomDashboard';
+import type { WarRoomDashboardData } from '@/lib/war-room/types';
 
 export default function WarRoomPanel() {
-  return (
-    <div style={{ padding: '24px 32px', maxWidth: 1200, margin: '0 auto' }}>
-      {/* War Room — Surface 1: The Chart (Build Lifecycle Timeline) */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>AI Command Center</div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>War Room</h1>
+  const [data, setData] = useState<WarRoomDashboardData | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/war-room')
+      .then(response => {
+        if (!response.ok) throw new Error('War Room API failed');
+        return response.json();
+      })
+      .then((payload: WarRoomDashboardData) => {
+        if (!cancelled) setData(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <div style={{ minHeight: '100%', background: '#071722', color: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+        War Room bridge data is unavailable.
       </div>
+    );
+  }
 
-      <BuildLifecycleTimeline />
+  if (!data) {
+    return (
+      <div style={{ minHeight: '100%', background: '#071722', color: '#67e8f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+        Loading BanyanOS War Room...
+      </div>
+    );
+  }
 
-      {/* S3 "Captain's Orders" (Decision Queue) — shipped */}
-      <CaptainsOrders />
-
-      {/* Future surfaces (per GC-D035 build order, file 1SWO1CXn5sbHGeZQchZDpy7U3AzWeD8QX): */}
-      {/* S5 "Damage Control" (Drift Register) */}
-      {/* S4 "Watch Bill" (Active Work Grid) */}
-      {/* S2 "Sitrep" (Three-Step Lens) */}
-    </div>
-  );
+  return <WarRoomDashboard initialData={data} />;
 }
