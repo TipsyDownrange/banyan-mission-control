@@ -45,26 +45,30 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: BACKEND_SHEET_ID,
-    range:         `${CUSTOMERS_TAB}!A:N`,
+    range:         `${CUSTOMERS_TAB}!A:Z`,
   });
 
   const rows = res.data.values || [];
   if (rows.length < 2) return []; // empty or header-only
 
   const headers = rows[0] as string[];
-  const idx = (name: string) => headers.indexOf(name);
+  const normalizeHeader = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const idx = (...names: string[]) => {
+    const wanted = new Set(names.map(normalizeHeader));
+    return headers.findIndex(h => wanted.has(normalizeHeader(h)));
+  };
 
-  const iCustomerId    = idx('Customer_ID');
-  const iCompany       = idx('Company_Name');
-  const iContact       = idx('Contact_Person');
+  const iCustomerId    = idx('Customer_ID', 'Customer ID', 'customerId');
+  const iCompany       = idx('Company_Name', 'Company Name', 'Name');
+  const iContact       = idx('Contact_Person', 'Contact Person', 'Primary Contact');
   const iTitle         = idx('Title');
   const iPhone         = idx('Phone');
   const iPhone2        = idx('Phone2');
   const iEmail         = idx('Email');
   const iAddress       = idx('Address');
-  const iCity          = idx('City');
+  const iCity          = idx('City', 'Town', 'Locality');
   const iState         = idx('State');
-  const iZip           = idx('ZIP') >= 0 ? idx('ZIP') : idx('Zip');
+  const iZip           = idx('ZIP', 'Zip', 'Postal_Code', 'Postal Code');
   const iIsland        = idx('Island');
   const iWOCount       = idx('WO_Count');
   const iFirstDate     = idx('First_WO_Date');

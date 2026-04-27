@@ -5,17 +5,12 @@ import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import type { CustomerRecord } from '@/app/api/service/customers/route';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
-
-type WODraft = {
-  businessName: string;  // Maps to name column (C)
-  customerName: string;  // Maps to customer_name column (M)
-  address: string; city: string; state: string; zip: string; island: string; areaOfIsland: string;
-  contactPerson: string; contactPhone: string; contactEmail: string;
-  description: string; systemType: string; urgency: string;
-  assignedTo: string; notes: string;
-  org_id?: string;       // Phase 2: FK to Organizations table (AQ)
-  customer_id?: string;  // GC-D053: FK to Customers table (AR)
-};
+import {
+  applyCustomerRecord,
+  detectIslandAndArea,
+  normalizeEntityName,
+  type ServiceIntakeDraft,
+} from '@/lib/service-intake-customer';
 
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
 
@@ -75,122 +70,9 @@ const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
 
 // AutocompleteInput is now in components/shared/AutocompleteInput.tsx — imported above
 
-// ── Hawaii city → island + area detection ──────────────────────────────────
-
-const HAWAII_CITY_MAP: Array<{ patterns: string[]; island: string; area: string }> = [
-  // Maui
-  { patterns: ['kahului', 'wailuku'], island: 'Maui', area: 'Central Maui' },
-  { patterns: ['lahaina', 'napili', 'kapalua', 'kaanapali', 'olowalu'], island: 'Maui', area: 'West Maui' },
-  { patterns: ['kihei', 'wailea', 'makena', 'maalaea'], island: 'Maui', area: 'South Maui' },
-  { patterns: ['kula', 'makawao', 'pukalani', 'upcountry', 'keokea', 'omaopio'], island: 'Maui', area: 'Upcountry Maui' },
-  { patterns: ['paia', 'haiku', 'haliimaile', 'kuau'], island: 'Maui', area: 'North Maui' },
-  { patterns: ['hana', 'kipahulu', 'keanae'], island: 'Maui', area: 'East Maui' },
-  // Oahu
-  { patterns: ['honolulu', 'waikiki', 'manoa', 'kaimuki', 'nuuanu', 'downtown', 'palolo', 'moiliili'], island: 'Oahu', area: 'Honolulu' },
-  { patterns: ['kailua', 'kaneohe', 'waimanalo', 'hauula', 'laie', 'kahuku', 'kaaawa'], island: 'Oahu', area: 'Windward Oahu' },
-  { patterns: ['pearl city', 'aiea', 'waipahu', 'mililani', 'wahiawa', 'halawa'], island: 'Oahu', area: 'Central Oahu' },
-  { patterns: ['ewa beach', 'ewa', 'kapolei', 'ko olina', 'makakilo', 'barbers point'], island: 'Oahu', area: 'Leeward Oahu' },
-  { patterns: ['hawaii kai', 'aina haina', 'portlock', 'kuliouou', 'east honolulu'], island: 'Oahu', area: 'East Oahu' },
-  { patterns: ['north shore', 'haleiwa', 'waialua', 'pupukea', 'sunset beach'], island: 'Oahu', area: 'North Shore Oahu' },
-  // Kauai
-  { patterns: ['lihue', 'kapaa', 'wailua'], island: 'Kauai', area: 'East Kauai' },
-  { patterns: ['poipu', 'koloa', 'omao', 'lawai', 'kalaheo'], island: 'Kauai', area: 'South Kauai' },
-  { patterns: ['princeville', 'hanalei', 'kilauea'], island: 'Kauai', area: 'North Kauai' },
-  { patterns: ['waimea', 'hanapepe', 'eleele', 'kekaha', 'pakala'], island: 'Kauai', area: 'West Kauai' },
-  // Big Island
-  { patterns: ['hilo', 'keaau', 'mountain view'], island: 'Hawaii', area: 'Hilo' },
-  { patterns: ['kailua-kona', 'kailua kona', 'keauhou', 'holualoa', 'honalo', 'captain cook', 'kealakekua'], island: 'Hawaii', area: 'Kona' },
-  { patterns: ['kamuela', 'kohala', 'waikoloa', 'kawaihae'], island: 'Hawaii', area: 'Kohala' },
-  { patterns: ['pahoa', 'lanipuna', 'kalapana'], island: 'Hawaii', area: 'Puna' },
-  { patterns: ['volcano', 'naalehu', 'pahala'], island: 'Hawaii', area: "Ka'u" },
-  // Molokai + Lanai
-  { patterns: ['kaunakakai', 'molokai'], island: 'Molokai', area: 'Molokai' },
-  { patterns: ['lanai city', 'lanai'], island: 'Lanai', area: 'Lanai' },
-];
-
-function detectIslandAndArea(text: string): { island: string; area: string } {
-  if (!text) return { island: '', area: '' };
-  const lower = text.toLowerCase();
-  for (const entry of HAWAII_CITY_MAP) {
-    if (entry.patterns.some(p => lower.includes(p))) {
-      return { island: entry.island, area: entry.area };
-    }
-  }
-  for (const isl of ['Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai']) {
-    if (lower.includes(isl.toLowerCase())) return { island: isl, area: '' };
-  }
-  return { island: '', area: '' };
-}
-
-function parseAddressParts(address: string): { city: string; state: string; zip: string } {
-  const result = { city: '', state: '', zip: '' };
-  if (!address) return result;
-
-  const zipMatch = address.match(/\b(\d{5})(?:-\d{4})?\b/);
-  if (zipMatch) result.zip = zipMatch[1];
-
-  const stateZipMatch = address.match(/\b([A-Z]{2})\s+\d{5}(?:-\d{4})?\b/);
-  if (stateZipMatch) result.state = stateZipMatch[1];
-
-  const beforeState = stateZipMatch ? address.slice(0, stateZipMatch.index).trim() : address;
-  const cityCandidate = beforeState.split(',').map(p => p.trim()).filter(Boolean).pop();
-  if (cityCandidate && !/\d/.test(cityCandidate)) result.city = cityCandidate;
-
-  return result;
-}
-
-function normalizeEntityName(value: string): string {
-  return (value || '')
-    .toLowerCase()
-    .replace(/[,\.]/g, '')
-    .replace(/\b(inc|llc|corp|corporation|ltd|co|company)\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-// Apply a full customer record (from Customer/Account Name or Contact Person autocomplete)
-function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
-  const det = detectIslandAndArea(c.address);
-  const parsedAddress = parseAddressParts(c.address);
-  const company = c.company || c.name || '';
-  return {
-    ...prev,
-    businessName:  company || prev.businessName,
-    customerName:  company || prev.customerName,
-    address:       c.address || prev.address,
-    city:          c.city || parsedAddress.city || prev.city,
-    state:         c.state || parsedAddress.state || prev.state,
-    zip:           c.zip || parsedAddress.zip || prev.zip,
-    island:        prev.island || c.island || det.island,
-    areaOfIsland:  prev.areaOfIsland || det.area,
-    contactPerson: prev.contactPerson || c.contactPerson,
-    contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
-    contactEmail:  prev.contactEmail || c.email,
-    // Phase 2: link org_id for relational write-back
-    org_id:        c.org_id || prev.org_id,
-    // GC-D053: customer_id FK to Customers table
-    customer_id:   c.customerId || prev.customer_id,
-  };
-}
-
-// Apply address selection only (address autocomplete)
-function applyAddressRecord(prev: WODraft, c: CustomerRecord): WODraft {
-  const det = detectIslandAndArea(c.address);
-  const parsedAddress = parseAddressParts(c.address);
-  return {
-    ...prev,
-    address:      c.address,
-    city:         c.city || parsedAddress.city || prev.city,
-    state:        c.state || parsedAddress.state || prev.state,
-    zip:          c.zip || parsedAddress.zip || prev.zip,
-    island:       prev.island || c.island || det.island,
-    areaOfIsland: prev.areaOfIsland || det.area,
-  };
-}
-
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
 
-const BLANK: WODraft = {
+const BLANK: ServiceIntakeDraft = {
   businessName: '', customerName: '', address: '', city: '', state: 'HI', zip: '', island: '', areaOfIsland: '',
   contactPerson: '', contactPhone: '', contactEmail: '',
   description: '', systemType: '', urgency: 'normal',
@@ -202,7 +84,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [createdWO, setCreatedWO] = useState('');
-  const [draft, setDraft] = useState<WODraft>({ ...BLANK });
+  const [draft, setDraft] = useState<ServiceIntakeDraft>({ ...BLANK });
   const [pms, setPms] = useState<CrewMember[]>([]);
   const [fieldCrew, setFieldCrew] = useState<CrewMember[]>([]);
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
@@ -283,7 +165,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       .catch(err => { console.error('[ServiceIntake] fetchOrgContacts', err); setOrgContacts([]); });
   }, [draft.org_id]);
 
-  function update(key: keyof WODraft, val: string) {
+  function update(key: keyof ServiceIntakeDraft, val: string) {
     setDraft(prev => ({ ...prev, [key]: val }));
   }
 
