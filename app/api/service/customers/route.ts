@@ -33,7 +33,8 @@ export type CustomerRecord = {
 
 // ── Cache ────────────────────────────────────────────────────────────────────
 let customersCache: { data: CustomerRecord[]; ts: number } | null = null;
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 min
+// BAN-70: Service Intake is operator-critical. New customer creation must be visible immediately.
+const CACHE_TTL_MS = 0;
 
 // ── Google Sheets reader ──────────────────────────────────────────────────────
 async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
