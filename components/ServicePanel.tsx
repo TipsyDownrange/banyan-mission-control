@@ -9,7 +9,11 @@ import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
 import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 import { resolveWorkOrderIsland } from '@/lib/normalize';
-import { serviceWOMatchesSearch } from '@/lib/service-panel-filtering';
+import {
+  normalizeServicePanelStatus,
+  serviceWOMatchesSearch,
+  SERVICE_COMPLETED_STAGE_KEYS,
+} from '@/lib/service-panel-filtering';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -73,16 +77,6 @@ const ISLAND_COLORS: Record<string, string> = {
   'Lanai': '#dc2626',
   'Hana': '#d97706',
 };
-
-// Normalize raw Smartsheet statuses to display stages
-function normalizeStatus(raw: string): string {
-  switch (raw) {
-    case 'quote':
-    case 'quote_requested': return 'lead';
-    case 'accepted':        return 'approved';
-    default:                return raw || 'lead';
-  }
-}
 
 const AREA_COLOR: Record<string, string> = {
   // Maui areas
@@ -274,13 +268,13 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   }, []);
 
   // Merge local overrides into work orders for optimistic UI
-  // Also normalize raw statuses (quote/quote_requested→lead, accepted→approved)
+  // Also normalize raw statuses into visible board stages.
   const mergedWorkOrders = (data?.workOrders || []).map(wo => {
     const key = wo.id || wo.name;
     const base = localOverrides[key] ? { ...wo, ...localOverrides[key] } : wo;
     const resolvedIsland = resolveWorkOrderIsland(base.island, base.area_of_island, base.address);
     // Normalize status unless a local override already set it to a valid stage
-    const normalizedStatus = normalizeStatus(base.status);
+    const normalizedStatus = normalizeServicePanelStatus(base.status);
     const next = normalizedStatus !== base.status ? { ...base, rawStatus: base.status, status: normalizedStatus } : base;
     return resolvedIsland && resolvedIsland !== next.island ? { ...next, island: resolvedIsland } : next;
   });
@@ -369,7 +363,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   }
 
   // Search + filter + sort applied to all views
-  const completedStageKeys = ['closed', 'completed', 'work_complete'] as const;
+  const completedStageKeys = SERVICE_COMPLETED_STAGE_KEYS;
   const completedStatuses = new Set<string>(completedStageKeys);
   const acceptedStatuses = new Set(['accepted', 'approved']);
   const filteredWOs = mergedWorkOrders.filter(wo => {
