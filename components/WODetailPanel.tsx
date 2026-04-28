@@ -25,6 +25,7 @@ type WorkOrder = {
   customer_resolved?: boolean | null;
   data_integrity_error?: boolean;
   resolved_customer_name?: string;
+  legacy_wo_ids?: string;
   folderUrl?: string;
   systemType?: string;
   // QBO invoice fields (columns AA-AE)
@@ -534,6 +535,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                 {wo.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>{wo.id}</span>}
+                {wo.legacy_wo_ids && <span title="Previous Work Order ID" style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>Legacy: {wo.legacy_wo_ids}</span>}
                 <span style={{ fontSize: 10, fontWeight: 800, color: stage.color, background: STAGE_BG[wo.status] || '#f8fafc', padding: '2px 8px', borderRadius: 999, border: `1px solid ${stage.color}33` }}>{stage.label}</span>
                 {wo.island && <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>{wo.island}</span>}
               </div>
