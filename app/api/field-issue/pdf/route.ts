@@ -16,6 +16,8 @@ import { generateFieldIssuePDF, type FieldIssueData } from '@/lib/pdf-field-issu
 const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const BANYAN_DRIVE = '0AKSVpf3AnH7CUk9PVA';
 const TAB_EVENTS = 'Field_Events_V1';
+const TAB_CORE = 'Core_Entities';
+const TAB_SWO = 'Service_Work_Orders';
 
 /** Resolve performer: user_id → email → name match in Users_Roles; fall back to raw value */
 async function resolvePerformer(raw: string, sheets: ReturnType<typeof google.sheets>): Promise<{name:string;role:string}> {
@@ -44,12 +46,65 @@ const EV = {
   field_issue_pdf_ref: 36, // AK — DRIFT-FA-076
 };
 
-// SWO columns
+// SWO columns (Service_Work_Orders)
 const SWO = { wo_id: 0, wo_number: 1, name: 2, island: 5, assigned_to: 14, folder_url: 23 };
 
 function getDrive() {
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
   return google.drive({ version: 'v3', auth });
+}
+
+/**
+ * Resolve the Drive folder ID and project name for a given kID.
+ * WO-prefixed kIDs use Service_Work_Orders.folder_url (col 23).
+ * PRJ-prefixed kIDs use Core_Entities.Drive_Folder_URL (resolved via headers).
+ * Returns null folderID when no folder is linked — caller must fail hard.
+ */
+async function resolveFolderForKID(
+  kID: string,
+  sheets: ReturnType<typeof google.sheets>
+): Promise<{ folderId: string | null; projectName: string; resolvedVia: string }> {
+  if (kID.startsWith('WO') || !kID.startsWith('PRJ')) {
+    // WO path: use Service_Work_Orders.folder_url (column X, index 23)
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${TAB_SWO}!A2:X2000`,
+    });
+    const rows = (res.data.values || []) as string[][];
+    const row = rows.find(r => r[SWO.wo_id] === kID || r[SWO.wo_number] === kID || r[SWO.wo_id]?.includes(kID.replace('WO-', '')));
+    const folderUrl = row?.[SWO.folder_url] || '';
+    const folderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
+    console.log('[field-issue/pdf] FOLDER_RESOLVE via=SWO kID=' + kID + ' found=' + !!row + ' folderId=' + folderId);
+    return { folderId, projectName: row?.[SWO.name] || kID, resolvedVia: 'Service_Work_Orders' };
+  }
+
+  // PRJ path: use Core_Entities.Drive_Folder_URL — find column dynamically from headers
+  const headRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${TAB_CORE}!1:1`,
+  });
+  const headers = ((headRes.data.values || [[]])[0] || []) as string[];
+  const folderColIdx = headers.findIndex(h => h.trim() === 'Drive_Folder_URL');
+  if (folderColIdx < 0) {
+    console.error('[field-issue/pdf] FOLDER_RESOLVE Core_Entities header Drive_Folder_URL not found');
+    return { folderId: null, projectName: kID, resolvedVia: 'Core_Entities(header-not-found)' };
+  }
+
+  // Read far enough right to include the Drive_Folder_URL column
+  const colNum = folderColIdx + 1; // 1-based
+  const lastCol = colNum <= 26
+    ? String.fromCharCode(64 + colNum)
+    : String.fromCharCode(64 + Math.floor((colNum - 1) / 26)) + String.fromCharCode(65 + ((colNum - 1) % 26));
+  const dataRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${TAB_CORE}!A2:${lastCol}2000`,
+  });
+  const rows = (dataRes.data.values || []) as string[][];
+  const row = rows.find(r => r[0] === kID);
+  const folderUrl = row?.[folderColIdx] || '';
+  const folderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
+  console.log('[field-issue/pdf] FOLDER_RESOLVE via=Core_Entities kID=' + kID + ' col=' + folderColIdx + ' found=' + !!row + ' folderId=' + folderId);
+  return { folderId, projectName: row?.[2] || kID, resolvedVia: 'Core_Entities' };
 }
 
 async function findOrCreate(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
@@ -102,14 +157,9 @@ export async function POST(req: Request) {
 
     const kID = evRow[EV.target_kID] || '';
 
-    // GC-D021: Read WO data fresh — use folder_url for exact Drive folder ID
-    const swoRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:X2000' });
-    const swoRows = (swoRes.data.values || []) as string[][];
-    const swoRow = swoRows.find(r => r[SWO.wo_id] === kID || r[SWO.wo_number] === kID || r[SWO.wo_id]?.includes(kID.replace('WO-', '')));
-    const projectName = swoRow?.[SWO.name] || kID;
-    const folderUrl = swoRow?.[SWO.folder_url] || '';
-    const woFolderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
-    console.log('[field-issue/pdf] DRIVE_TRACE swoRow_found=' + !!swoRow + ' folderUrl=' + folderUrl.slice(0,60) + ' woFolderId=' + woFolderId + ' kID=' + kID);
+    // GC-D021: Resolve folder — WO targets use Service_Work_Orders; PRJ targets use Core_Entities
+    const { folderId: woFolderId, projectName, resolvedVia } = await resolveFolderForKID(kID, sheets);
+    console.log('[field-issue/pdf] DRIVE_TRACE resolvedVia=' + resolvedVia + ' woFolderId=' + woFolderId + ' kID=' + kID);
 
     // Build photo references from evidence_ref (comma-separated Drive fileIds)
     const evidenceRef = evRow[EV.evidence_ref] || '';
@@ -195,7 +245,7 @@ export async function POST(req: Request) {
         shadowDriveError = { message: err.message, code: err.code, status: err.response?.status, errors: err.response?.data?.error };
       }
     } else {
-      console.error('[field-issue/pdf] No folder_url for', kID, '— skipping Drive write');
+      console.error('[field-issue/pdf] No folder resolved for', kID, 'via', resolvedVia, '— skipping Drive write');
     }
 
     if (!primaryFileId) {
@@ -205,7 +255,7 @@ export async function POST(req: Request) {
         kID,
         error: woFolderId
           ? 'PDF upload failed before a Drive file ID was returned'
-          : 'No Drive folder linked to this work order',
+          : `No Drive folder linked to ${kID} (checked ${resolvedVia})`,
         primaryFileId,
         shadowFileId,
         driveUrl: null,
