@@ -9,6 +9,7 @@ import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
 import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 import { resolveWorkOrderIsland } from '@/lib/normalize';
+import { serviceWOMatchesSearch } from '@/lib/service-panel-filtering';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -26,6 +27,7 @@ type WorkOrder = {
   customer_resolved?: boolean | null;
   data_integrity_error?: boolean;
   resolved_customer_name?: string;
+  legacy_wo_ids?: string;
   folderUrl?: string;
   systemType?: string;
 };
@@ -367,7 +369,6 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   }
 
   // Search + filter + sort applied to all views
-  const searchLower = search.toLowerCase();
   const completedStageKeys = ['closed', 'completed', 'work_complete'] as const;
   const completedStatuses = new Set<string>(completedStageKeys);
   const acceptedStatuses = new Set(['accepted', 'approved']);
@@ -385,16 +386,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
       }
     }
     if (search) {
-      const q = searchLower;
-      if (!(
-        wo.name.toLowerCase().includes(q) ||
-        wo.description.toLowerCase().includes(q) ||
-        wo.contact.toLowerCase().includes(q) ||
-        wo.island.toLowerCase().includes(q) ||
-        wo.address.toLowerCase().includes(q) ||
-        wo.id.toLowerCase().includes(q) ||
-        wo.assignedTo.toLowerCase().includes(q)
-      )) return false;
+      if (!serviceWOMatchesSearch(wo, search)) return false;
     }
     return true;
   });
