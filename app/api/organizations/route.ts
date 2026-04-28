@@ -157,7 +157,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q      = (searchParams.get('q') || '').toLowerCase().trim();
   const types  = searchParams.get('types')?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-  const limit  = parseInt(searchParams.get('limit') || '20');
+  const requestedLimit  = parseInt(searchParams.get('limit') || '5000');
+  const limit = q.length >= 2 ? requestedLimit : Math.max(requestedLimit, 5000);
   const noCache = searchParams.get('nocache') === '1';
 
   try {
