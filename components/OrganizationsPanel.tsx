@@ -580,7 +580,7 @@ const ORG_CATEGORIES: { id: OrgCategory; emoji: string; label: string; sublabel:
   { id: 'vendor',   emoji: '📦', label: 'Vendor / Supplier', sublabel: 'Materials, equipment, subcontractor', types: ['VENDOR'], entity_type: 'COMPANY' },
 ];
 
-function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (organization: OrgRecord) => void }) {
   const [step, setStep] = useState<'category' | 'form'>('category');
   const [category, setCategory] = useState<OrgCategory | null>(null);
 
@@ -598,6 +598,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [notes, setNotes] = useState('');
   const [creating, setCreating] = useState(false);
   const [dupWarning, setDupWarning] = useState('');
+  const [error, setError] = useState('');
 
   const cat = ORG_CATEGORIES.find(c => c.id === category);
   const isPersonal = category === 'person';
@@ -622,7 +623,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
       const res = await fetch(`/api/organizations?q=${encodeURIComponent(checkName)}&limit=3`);
       if (!res.ok) return;
       const data = await res.json();
-      const orgs: OrgRecord[] = data.orgs || [];
+      const orgs: OrgRecord[] = data.organizations || [];
       const match = orgs.find(o => o.name.toLowerCase() === checkName.toLowerCase());
       if (match) setDupWarning(`A record named "${match.name}" already exists.`);
       else setDupWarning('');
@@ -632,6 +633,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   async function create() {
     if (!orgName) return;
     setCreating(true);
+    setError('');
     try {
       const res = await fetch('/api/organizations', {
         method: 'POST',
@@ -649,10 +651,15 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           address: address.trim() || undefined,
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      onCreated();
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+      if (!data.customer_id || !data.organization) {
+        throw new Error('Customer was not created with a usable Customer_ID. Please try again or contact ops.');
+      }
+      onCreated(data.organization);
     } catch (err) {
       console.error('[NewOrgModal] create', err);
+      setError(err instanceof Error ? err.message : 'Failed to create customer');
     } finally {
       setCreating(false);
     }
@@ -754,6 +761,11 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               {dupWarning && (
                 <div style={{ fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px' }}>
                   ⚠️ {dupWarning}
+                </div>
+              )}
+              {error && (
+                <div style={{ fontSize: 12, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>
+                  {error}
                 </div>
               )}
 
@@ -1020,8 +1032,16 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
       {showNewOrg && (
         <NewOrgModal
           onClose={() => setShowNewOrg(false)}
-          onCreated={() => {
+          onCreated={(organization) => {
             setShowNewOrg(false);
+            setTypeFilter('ALL');
+            setSearch(organization.name);
+            setSelectedOrgId(organization.org_id);
+            setOrgs(prev => {
+              const withoutDuplicate = prev.filter(o => o.org_id !== organization.org_id);
+              return [organization, ...withoutDuplicate];
+            });
+            setTotal(prev => prev + (orgs.some(o => o.org_id === organization.org_id) ? 0 : 1));
             load({ nocache: true });
           }}
         />

@@ -21,6 +21,22 @@ const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 const ORG_COL = { org_id:0, name:1, types:2, entity_type:3, default_island:4, tax_id:5, payment_terms:6, avg_days_to_pay:7, notes:8, source:9, created_at:10, updated_at:11 };
 const CNT_COL = { contact_id:0, org_id:1, name:2, title:3, role:4, email:5, phone:6, is_primary:7, notes:8, created_at:9 };
 const SITE_COL = { site_id:0, org_id:1, name:2, address_line_1:3, address_line_2:4, city:5, state:6, zip:7, island:8, google_place_id:9, site_type:10, notes:11, created_at:12 };
+const CUSTOMER_HEADERS = [
+  'Customer_ID',
+  'Company_Name',
+  'Contact_Person',
+  'Title',
+  'Phone',
+  'Phone2',
+  'Email',
+  'Address',
+  'Island',
+  'WO_Count',
+  'First_WO_Date',
+  'Last_WO_Date',
+  'Source',
+  'Notes',
+];
 
 function getAuth() {
   return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
@@ -157,7 +173,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q      = (searchParams.get('q') || '').toLowerCase().trim();
   const types  = searchParams.get('types')?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-  const limit  = parseInt(searchParams.get('limit') || '20');
+  const requestedLimit  = parseInt(searchParams.get('limit') || '5000');
+  const limit = q.length >= 2 ? requestedLimit : Math.max(requestedLimit, 5000);
   const noCache = searchParams.get('nocache') === '1';
 
   try {
@@ -197,42 +214,141 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { name, types, entity_type, island, contact_name, contact_email, contact_phone, address, google_place_id } = body;
+  const { name, types, entity_type, island, contact_name, contact_email, contact_phone, address, google_place_id, notes, source } = body;
   if (!name?.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 });
 
   const auth = getAuth();
   const sheets = google.sheets({ version: 'v4', auth });
   const now = new Date().toISOString();
   const orgId = 'org_' + Math.random().toString(36).slice(2,18);
+  const cleanName = name.trim();
+  const cleanContactName = (contact_name || '').trim();
+  const cleanPhone = (contact_phone || '').trim();
+  const cleanEmail = (contact_email || '').trim();
+  const cleanAddress = (address || '').trim();
+  const cleanIsland = (island || '').trim();
+  const cleanNotes = (notes || '').trim();
+  const cleanSource = (source || 'MANUAL_ENTRY').trim() || session.user.email || 'MANUAL_ENTRY';
+
+  const customerHeaderRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'Customers!A1:N1',
+  });
+  const customerHeaders = (customerHeaderRes.data.values?.[0] || []) as string[];
+  const headerMismatch = CUSTOMER_HEADERS.some((header, idx) => customerHeaders[idx] !== header);
+  if (headerMismatch) {
+    return NextResponse.json(
+      { error: `Customers header mismatch. Expected A:N ${CUSTOMER_HEADERS.join(', ')}` },
+      { status: 500 }
+    );
+  }
+
+  const customerIdsRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'Customers!A2:A',
+  });
+  const existingCustomerIds = new Set((customerIdsRes.data.values || []).flat().filter(Boolean));
+  let customerId = '';
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const token = Math.floor(Math.random() * 36 ** 8).toString(36).toUpperCase().padStart(8, '0');
+    const candidate = `CUST-${token}`;
+    if (!existingCustomerIds.has(candidate)) {
+      customerId = candidate;
+      break;
+    }
+  }
+  if (!customerId) {
+    return NextResponse.json({ error: 'Could not generate unique Customer_ID' }, { status: 500 });
+  }
+
+  const isIndividual = entity_type === 'INDIVIDUAL';
+  const customerRow = [
+    customerId,
+    isIndividual ? '' : cleanName,
+    cleanContactName || cleanName,
+    '',
+    cleanPhone,
+    '',
+    cleanEmail,
+    cleanAddress,
+    cleanIsland,
+    '0',
+    '',
+    '',
+    cleanSource,
+    cleanNotes,
+  ];
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID, range: 'Customers!A:N',
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: { values: [customerRow] },
+  });
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID, range: 'Organizations!A:L',
     valueInputOption: 'USER_ENTERED',
-    requestBody: { values: [[orgId, name.trim(), (types||['RESIDENTIAL']).join(','), entity_type||'COMPANY', island||'', '', '', '', '', session.user.email, now, now]] },
+    requestBody: { values: [[orgId, cleanName, (types||['RESIDENTIAL']).join(','), entity_type||'COMPANY', cleanIsland, '', '', '', cleanNotes, session.user.email, now, now]] },
   });
 
   let contactId: string | null = null;
-  if (contact_name || contact_email || contact_phone) {
+  if (cleanContactName || cleanEmail || cleanPhone) {
     contactId = 'cnt_' + Math.random().toString(36).slice(2,18);
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID, range: 'Contacts!A:J',
       valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [[contactId, orgId, contact_name||name, '', 'PRIMARY', contact_email||'', contact_phone||'', 'TRUE', '', now]] },
+      requestBody: { values: [[contactId, orgId, cleanContactName || cleanName, '', 'PRIMARY', cleanEmail, cleanPhone, 'TRUE', '', now]] },
     });
   }
 
   let siteId: string | null = null;
-  if (address || google_place_id) {
+  if (cleanAddress || google_place_id) {
     siteId = 'sit_' + Math.random().toString(36).slice(2,18);
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID, range: 'Sites!A:M',
       valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [[siteId, orgId, '', address||'', '', '', 'HI', '', island||'', google_place_id||'', 'OFFICE', '', now]] },
+      requestBody: { values: [[siteId, orgId, '', cleanAddress, '', '', 'HI', '', cleanIsland, google_place_id||'', 'OFFICE', '', now]] },
     });
   }
 
   // Invalidate cache
   cache = null;
 
-  return NextResponse.json({ ok: true, org_id: orgId, contact_id: contactId, site_id: siteId });
+  const organization: OrgRecord = {
+    org_id: orgId,
+    name: cleanName,
+    types: (types || ['RESIDENTIAL']) as string[],
+    entity_type: (entity_type || 'COMPANY') as 'COMPANY' | 'INDIVIDUAL',
+    default_island: cleanIsland,
+    notes: cleanNotes,
+    source: session.user.email || '',
+    primary_contact: contactId ? {
+      contact_id: contactId,
+      name: cleanContactName || cleanName,
+      title: '',
+      email: cleanEmail,
+      phone: cleanPhone,
+      role: 'PRIMARY',
+    } : undefined,
+    primary_site: siteId ? {
+      site_id: siteId,
+      address_line_1: cleanAddress,
+      city: '',
+      state: 'HI',
+      zip: '',
+      island: cleanIsland,
+      site_type: 'OFFICE',
+      google_place_id: google_place_id || '',
+    } : undefined,
+    company: cleanName,
+    contactPerson: cleanContactName || (contactId ? cleanName : ''),
+    contactPhone: cleanPhone,
+    email: cleanEmail,
+    address: cleanAddress,
+    island: cleanIsland,
+    woCount: 0,
+  };
+
+  return NextResponse.json({ ok: true, org_id: orgId, customer_id: customerId, contact_id: contactId, site_id: siteId, organization });
 }
