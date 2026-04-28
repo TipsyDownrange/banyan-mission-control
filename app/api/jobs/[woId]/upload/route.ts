@@ -15,8 +15,9 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { emitMCEvent } from '@/lib/events';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 const FOLDER_URL_COL = 23; // column X (0-based), matches COL_IDX.folder_url in update route
 

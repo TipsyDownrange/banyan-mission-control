@@ -3,8 +3,9 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BACKEND_SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
 // Column indices in Service_Work_Orders (0-based)

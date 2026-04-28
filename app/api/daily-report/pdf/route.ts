@@ -9,8 +9,9 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateDailyReportPDF, type DailyReportPDFData } from '@/lib/pdf-daily-report';
 import { formatAttributionCaption, type PhotoEntry } from '@/lib/photo-attribution';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 async function getSheetsClient() {
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const COLS = ['sub_id','sub_number','kID','status','spec_section','description','submitted_to_gc_date','gc_to_arch_date','arch_reviewed_date','gc_returned_date','we_received_date','revision_number','ball_in_court','notes','drive_file_id'];
 
 function rowToObj(row: string[]) {

@@ -1,8 +1,9 @@
 import { google } from 'googleapis';
 import { normalizeKID } from './normalize-kid';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from './backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Using shared normalizeKID from normalize-kid.ts
 const normalizeJobId = (value: string) => normalizeKID(value);

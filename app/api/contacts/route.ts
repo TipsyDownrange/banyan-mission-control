@@ -9,8 +9,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Contacts tab headers (0-based):
 // 0:contact_id 1:org_id 2:name 3:title 4:role 5:email 6:phone 7:is_primary 8:notes 9:created_at

@@ -3,8 +3,9 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateEstimatePDF, EstimateData } from '@/lib/pdf-estimate';
 import { hawaiiToday } from '@/lib/hawaii-time';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Column indices in Service_Work_Orders tab (0-based)
 const COL = {

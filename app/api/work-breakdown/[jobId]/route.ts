@@ -4,8 +4,9 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { validateHeaders, INSTALL_PLANS_SCHEMA, INSTALL_STEPS_SCHEMA } from '@/lib/schemas';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 // ─── Column mappings ─────────────────────────────────────────────────────────

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BACKEND_SHEET_ID = getBackendSheetId();
 const CUSTOMERS_TAB     = 'Customers';
 
 // ── Types ────────────────────────────────────────────────────────────────────

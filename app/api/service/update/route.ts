@@ -7,8 +7,9 @@ import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 
 // Column index map (0-based, must match migration HEADERS)

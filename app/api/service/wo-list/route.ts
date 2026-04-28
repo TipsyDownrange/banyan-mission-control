@@ -6,10 +6,11 @@
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
 type WorkOrder = { id: string; name: string; island: string; status: string; contact: string };
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Column indices in Service_Work_Orders tab (0-based)
 const COL = {

@@ -1,8 +1,9 @@
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { hawaiiNow } from '@/lib/hawaii-time';
+import { getBackendSheetId } from './backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const TAB = 'Field_Events_V1';
 
 // Field_Events_V1 column indices (0-based, A=0)

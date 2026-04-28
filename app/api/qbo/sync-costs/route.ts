@@ -10,8 +10,9 @@ import { checkPermissionServer } from '@/lib/permissions';
 import { qboFetch } from '@/lib/qbo';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BACKEND_SHEET_ID = getBackendSheetId();
 const COSTS_TAB = 'Project_Costs';
 
 // Project_Costs columns A–L (0-based)

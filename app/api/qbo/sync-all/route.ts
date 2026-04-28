@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { qboFetch } from '@/lib/qbo';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 export async function GET(req: Request) {
   const url = new URL(req.url);

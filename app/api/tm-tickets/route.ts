@@ -18,8 +18,9 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateTMTicketPDF } from '@/lib/pdf-tm-ticket';
 import type { TMTicketData } from '@/lib/pdf-tm-ticket';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const TAB = 'TM_Tickets';
 const DRIVE_ROOT = '0AKSVpf3AnH7CUk9PVA';
 const TM_HEADERS = [

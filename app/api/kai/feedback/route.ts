@@ -6,10 +6,11 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { v4: uuidv4 } = require('uuid') as { v4: () => string };
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const TAB = 'Kai_Feedback';
 const HEADERS = ['feedback_id','timestamp','user_name','user_email','app','page_url','feedback_type','description','screenshot_ref','status','response'];
 
