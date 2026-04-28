@@ -5,21 +5,17 @@ import type { ParsedPlace } from '@/components/PlacesAutocomplete';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import type { CustomerRecord } from '@/app/api/service/customers/route';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
-
-type WODraft = {
-  businessName: string;  // Maps to name column (C)
-  customerName: string;  // Maps to customer_name column (M)
-  address: string; city: string; state: string; zip: string; island: string; areaOfIsland: string;
-  contactPerson: string; contactPhone: string; contactEmail: string;
-  description: string; systemType: string; urgency: string;
-  assignedTo: string; notes: string;
-  org_id?: string;       // Phase 2: FK to Organizations table (AQ)
-  customer_id?: string;  // GC-D053: FK to Customers table (AR)
-};
+import {
+  applyCustomerRecord,
+  detectIslandAndArea,
+  normalizeEntityName,
+  type ServiceIntakeDraft,
+} from '@/lib/service-intake-customer';
 
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
+type OrganizationSummary = { org_id: string; name?: string; company?: string };
 
 const FL = (label: string, auto?: boolean, places?: boolean) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
@@ -74,86 +70,9 @@ const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
 
 // AutocompleteInput is now in components/shared/AutocompleteInput.tsx — imported above
 
-// ── Hawaii city → island + area detection ──────────────────────────────────
-
-const HAWAII_CITY_MAP: Array<{ patterns: string[]; island: string; area: string }> = [
-  // Maui
-  { patterns: ['kahului', 'wailuku'], island: 'Maui', area: 'Central Maui' },
-  { patterns: ['lahaina', 'napili', 'kapalua', 'kaanapali', 'olowalu'], island: 'Maui', area: 'West Maui' },
-  { patterns: ['kihei', 'wailea', 'makena', 'maalaea'], island: 'Maui', area: 'South Maui' },
-  { patterns: ['kula', 'makawao', 'pukalani', 'upcountry', 'keokea', 'omaopio'], island: 'Maui', area: 'Upcountry Maui' },
-  { patterns: ['paia', 'haiku', 'haliimaile', 'kuau'], island: 'Maui', area: 'North Maui' },
-  { patterns: ['hana', 'kipahulu', 'keanae'], island: 'Maui', area: 'East Maui' },
-  // Oahu
-  { patterns: ['honolulu', 'waikiki', 'manoa', 'kaimuki', 'nuuanu', 'downtown', 'palolo', 'moiliili'], island: 'Oahu', area: 'Honolulu' },
-  { patterns: ['kailua', 'kaneohe', 'waimanalo', 'hauula', 'laie', 'kahuku', 'kaaawa'], island: 'Oahu', area: 'Windward Oahu' },
-  { patterns: ['pearl city', 'aiea', 'waipahu', 'mililani', 'wahiawa', 'halawa'], island: 'Oahu', area: 'Central Oahu' },
-  { patterns: ['ewa beach', 'ewa', 'kapolei', 'ko olina', 'makakilo', 'barbers point'], island: 'Oahu', area: 'Leeward Oahu' },
-  { patterns: ['hawaii kai', 'aina haina', 'portlock', 'kuliouou', 'east honolulu'], island: 'Oahu', area: 'East Oahu' },
-  { patterns: ['north shore', 'haleiwa', 'waialua', 'pupukea', 'sunset beach'], island: 'Oahu', area: 'North Shore Oahu' },
-  // Kauai
-  { patterns: ['lihue', 'kapaa', 'wailua'], island: 'Kauai', area: 'East Kauai' },
-  { patterns: ['poipu', 'koloa', 'omao', 'lawai', 'kalaheo'], island: 'Kauai', area: 'South Kauai' },
-  { patterns: ['princeville', 'hanalei', 'kilauea'], island: 'Kauai', area: 'North Kauai' },
-  { patterns: ['waimea', 'hanapepe', 'eleele', 'kekaha', 'pakala'], island: 'Kauai', area: 'West Kauai' },
-  // Big Island
-  { patterns: ['hilo', 'keaau', 'mountain view'], island: 'Hawaii', area: 'Hilo' },
-  { patterns: ['kailua-kona', 'kailua kona', 'keauhou', 'holualoa', 'honalo', 'captain cook', 'kealakekua'], island: 'Hawaii', area: 'Kona' },
-  { patterns: ['kamuela', 'kohala', 'waikoloa', 'kawaihae'], island: 'Hawaii', area: 'Kohala' },
-  { patterns: ['pahoa', 'lanipuna', 'kalapana'], island: 'Hawaii', area: 'Puna' },
-  { patterns: ['volcano', 'naalehu', 'pahala'], island: 'Hawaii', area: "Ka'u" },
-  // Molokai + Lanai
-  { patterns: ['kaunakakai', 'molokai'], island: 'Molokai', area: 'Molokai' },
-  { patterns: ['lanai city', 'lanai'], island: 'Lanai', area: 'Lanai' },
-];
-
-function detectIslandAndArea(text: string): { island: string; area: string } {
-  if (!text) return { island: '', area: '' };
-  const lower = text.toLowerCase();
-  for (const entry of HAWAII_CITY_MAP) {
-    if (entry.patterns.some(p => lower.includes(p))) {
-      return { island: entry.island, area: entry.area };
-    }
-  }
-  for (const isl of ['Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai']) {
-    if (lower.includes(isl.toLowerCase())) return { island: isl, area: '' };
-  }
-  return { island: '', area: '' };
-}
-
-// Apply a full customer record (from Customer/Account Name or Contact Person autocomplete)
-function applyCustomerRecord(prev: WODraft, c: CustomerRecord): WODraft {
-  const det = detectIslandAndArea(c.address);
-  return {
-    ...prev,
-    customerName:  c.company || prev.customerName,
-    address:       prev.address || c.address,
-    island:        prev.island || c.island || det.island,
-    areaOfIsland:  prev.areaOfIsland || det.area,
-    contactPerson: prev.contactPerson || c.contactPerson,
-    contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
-    contactEmail:  prev.contactEmail || c.email,
-    // Phase 2: link org_id for relational write-back
-    org_id:        c.org_id || prev.org_id,
-    // GC-D053: customer_id FK to Customers table
-    customer_id:   c.customerId || prev.customer_id,
-  };
-}
-
-// Apply address selection only (address autocomplete)
-function applyAddressRecord(prev: WODraft, c: CustomerRecord): WODraft {
-  const det = detectIslandAndArea(c.address);
-  return {
-    ...prev,
-    address:      c.address,
-    island:       prev.island || c.island || det.island,
-    areaOfIsland: prev.areaOfIsland || det.area,
-  };
-}
-
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
 
-const BLANK: WODraft = {
+const BLANK: ServiceIntakeDraft = {
   businessName: '', customerName: '', address: '', city: '', state: 'HI', zip: '', island: '', areaOfIsland: '',
   contactPerson: '', contactPhone: '', contactEmail: '',
   description: '', systemType: '', urgency: 'normal',
@@ -165,7 +84,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [createdWO, setCreatedWO] = useState('');
-  const [draft, setDraft] = useState<WODraft>({ ...BLANK });
+  const [draft, setDraft] = useState<ServiceIntakeDraft>({ ...BLANK });
   const [pms, setPms] = useState<CrewMember[]>([]);
   const [fieldCrew, setFieldCrew] = useState<CrewMember[]>([]);
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
@@ -185,38 +104,33 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         setFieldCrew(d.crew || []);
       })
       .catch(() => {});
-    // Phase 2: Use Organizations endpoint (includes org_id, primary contact, primary site)
-    fetch('/api/organizations?limit=500')
+    // GC-D053: Customers table is the source of truth for customer_id.
+    fetch('/api/service/customers')
       .then(r => r.json())
       .then(d => {
-        const orgs = d.organizations || [];
-        // Map OrgRecord to CustomerRecord shape for backward compat
-        const mapped = orgs.map((o: {org_id:string;name:string;company:string;contactPerson:string;contactPhone:string;email:string;address:string;island:string;primary_contact?:{name:string;phone:string;email:string;title:string};primary_site?:{address_line_1:string;city:string;island:string}}) => ({
-          customerId:    o.org_id,
-          name:          o.name,
-          company:       o.company || o.name,
-          contactPerson: o.primary_contact?.name || o.contactPerson || '',
-          title:         o.primary_contact?.title || '',
-          phone:         o.primary_contact?.phone || o.contactPhone || '',
-          phone2:        '',
-          email:         o.primary_contact?.email || o.email || '',
-          address:       o.primary_site?.address_line_1 || o.address || '',
-          island:        o.primary_site?.island || o.island || '',
-          woCount:       0,
-          firstWODate:   '', lastWODate: '', source: '',
-          contact:       o.primary_contact?.name || '',
-          contactPhone:  o.primary_contact?.phone || '',
-          org_id:        o.org_id,
-        }));
-        setCustomers(mapped);
-      })
-      .catch(() => {
-        // Fallback to legacy endpoint
-        fetch('/api/service/customers')
-          .then(r => r.json())
-          .then(d => setCustomers(d.customers || []))
+        const customerRows = d.customers || [];
+        setCustomers(customerRows);
+
+        // Organizations are optional enrichment for org_id/contact chips only.
+        fetch('/api/organizations?limit=500')
+          .then(r => r.ok ? r.json() : { organizations: [] })
+          .then(orgData => {
+            const orgs = orgData.organizations || [];
+            if (!orgs.length) return;
+            const orgByName = new Map<string, { org_id: string }>();
+            for (const org of orgs as OrganizationSummary[]) {
+              const key = normalizeEntityName(org.company || org.name || '');
+              if (key && !orgByName.has(key)) orgByName.set(key, org);
+            }
+            setCustomers(prev => prev.map(c => {
+              if (c.org_id) return c;
+              const org = orgByName.get(normalizeEntityName(c.company || c.name || ''));
+              return org?.org_id ? { ...c, org_id: org.org_id } : c;
+            }));
+          })
           .catch(() => {});
-      });
+      })
+      .catch(() => {});
     fetch('/api/step-templates')
       .then(r => r.json())
       .then(d => {
@@ -251,7 +165,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       .catch(err => { console.error('[ServiceIntake] fetchOrgContacts', err); setOrgContacts([]); });
   }, [draft.org_id]);
 
-  function update(key: keyof WODraft, val: string) {
+  function update(key: keyof ServiceIntakeDraft, val: string) {
     setDraft(prev => ({ ...prev, [key]: val }));
   }
 
@@ -265,6 +179,10 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
   async function submit() {
     if (!draft.customerName || !draft.description || !draft.island) return;
+    if (!draft.customer_id) {
+      setError('Select an existing customer/account before creating a work order — customer_id required by GC-D053.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -292,7 +210,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     setSaving(false);
   }
 
-  const canSubmit = !saving && (draft.businessName || draft.customerName) && draft.description && draft.island;
+  const canSubmit = !saving && !!draft.customer_id && (draft.businessName || draft.customerName) && draft.description && draft.island;
 
   // PM options — always available regardless of island
   const pmOptions = pms.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i);
@@ -383,7 +301,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
             ) && (
               <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
-                ⚠️ No existing customer matches &quot;{draft.customerName}&quot;. A new customer record will be created on submit. Double-check spelling.
+                No existing customer matches &quot;{draft.customerName}&quot;. Select an existing customer/account before creating the work order.
               </div>
             )}
           </div>
