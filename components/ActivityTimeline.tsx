@@ -372,9 +372,15 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
   const locationPill = [event.location_group, event.unit_reference].filter(Boolean).join(' · ');
 
   const issueStatus = ISSUE_STATUS_CONFIG[event.issue_status] || null;
+  const hasFieldIssuePdfRef = event.event_type === 'FIELD_ISSUE'
+    ? Boolean(event.field_issue_pdf_ref?.trim())
+    : false;
   const fieldIssuePdfHref = event.event_type === 'FIELD_ISSUE'
     ? driveFileHref(event.field_issue_pdf_ref)
     : null;
+  const showFieldIssueGeneratePdf = event.event_type === 'FIELD_ISSUE' && !hasFieldIssuePdfRef;
+  const showDailyLogPdf = event.event_type === 'DAILY_LOG';
+  const showPdfGenerationAction = showFieldIssueGeneratePdf || showDailyLogPdf;
 
   async function handleResolve() {
     if (resolving) return;
@@ -495,10 +501,10 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           </a>
         )}
 
-        {/* Regenerate PDF button — FIELD_ISSUE and DAILY_LOG */}
-        {(event.event_type === 'FIELD_ISSUE' || event.event_type === 'DAILY_LOG') && (
+        {/* PDF generation button — FIELD_ISSUE only when no stored PDF exists; DAILY_LOG unchanged */}
+        {showPdfGenerationAction && (
           <button
-            title="Regenerate PDF"
+            title={showFieldIssueGeneratePdf ? 'Generate PDF' : 'Regenerate PDF'}
             onClick={async e => {
               e.stopPropagation();
               if (pdfState === 'generating') return;
@@ -522,14 +528,24 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               } catch { setPdfState('error'); setTimeout(() => setPdfState('idle'), 3000); }
             }}
             style={{
-              width: 28, height: 28, borderRadius: 7, border: '1px solid #e2e8f0', background: 'white',
+              height: 28,
+              width: showFieldIssueGeneratePdf ? 'auto' : 28,
+              padding: showFieldIssueGeneratePdf ? '0 10px' : 0,
+              borderRadius: 7, border: '1px solid #e2e8f0', background: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: pdfState==='generating'?'default':'pointer',
               fontSize: 13, flexShrink: 0, color: pdfState==='done' ? '#15803d' : pdfState==='error' ? '#dc2626' : '#64748b',
+              fontWeight: showFieldIssueGeneratePdf ? 800 : undefined,
+              whiteSpace: 'nowrap',
             }}>
-            {pdfState === 'generating' ? <span style={{ fontSize:10, animation:'spin 0.8s linear infinite', display:'inline-block' }}>⟳</span>
-              : pdfState === 'done' ? '✓'
-              : pdfState === 'error' ? '✗'
-              : <span style={{ fontSize:9, fontWeight:700 }}>📄 PDF</span>}
+            {showFieldIssueGeneratePdf
+              ? pdfState === 'generating' ? 'Generating...'
+                : pdfState === 'done' ? 'PDF generated'
+                : pdfState === 'error' ? 'PDF failed'
+                : 'Generate PDF'
+              : pdfState === 'generating' ? <span style={{ fontSize:10, animation:'spin 0.8s linear infinite', display:'inline-block' }}>⟳</span>
+                : pdfState === 'done' ? '✓'
+                : pdfState === 'error' ? '✗'
+                : <span style={{ fontSize:9, fontWeight:700 }}>📄 PDF</span>}
           </button>
         )}
 
