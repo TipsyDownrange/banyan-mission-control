@@ -18,7 +18,7 @@ const TAB = 'Field_Events_V1';
 
 const COL_INDEX = {
   event_id: 0,
-  issue_status: 31,
+  issue_status: 17, // R / index 17
 };
 
 export async function PATCH(
@@ -58,8 +58,8 @@ export async function PATCH(
     // Sheets row = rowIdx + 2 (1-indexed, skip header)
     const sheetRow = rowIdx + 2;
 
-    // Update issue_status column (col AF = index 31 → col letters: A=1, so col 32 = AF)
-    const colLetter = 'AF'; // column 32 (issue_status at index 31)
+    // Update issue_status column (col R = index 17)
+    const colLetter = 'R'; // column 18 (issue_status at index 17)
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
       range: `${TAB}!${colLetter}${sheetRow}`,
