@@ -16,7 +16,7 @@ const COL = {
   recorded_by:       6,  // G
   source_system:     7,  // H
   notes:             28, // AC
-  origin:            32, // AG — added DRIFT-MC-026-v2 2026-04-20
+  origin:            34, // AI — BAN-41: moved from AG (AG is affected_count)
 };
 
 export interface MCEventPayload {
@@ -38,8 +38,8 @@ export async function emitMCEvent(payload: MCEventPayload): Promise<void> {
   const now = hawaiiNow();
   const eventId = `MC-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-  // 33-element row (A–AG) — blanks for all unused columns
-  const row = new Array(33).fill('');
+  // 35-element row (A–AI) — blanks for all unused columns
+  const row = new Array(35).fill('');
   row[COL.event_id]          = eventId;
   row[COL.target_kID]        = wo_id;
   row[COL.event_type]        = event_type;

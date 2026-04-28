@@ -61,6 +61,7 @@ const COL = {
   evidence_timestamp:   31, // `
   affected_count:       32, // AG — Phase 3 FA (WIRE-FA-019)
   hours_lost:           33, // AH — Phase 3 FA (WIRE-FA-020)
+  origin:               34, // AI — BAN-41
   field_issue_pdf_ref:  36, // AK — DRIFT-FA-076
 };
 
