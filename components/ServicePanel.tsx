@@ -9,6 +9,12 @@ import QuoteBuilder from '@/components/QuoteBuilder';
 import WODetailPanel from '@/components/WODetailPanel';
 import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 import { resolveWorkOrderIsland } from '@/lib/normalize';
+import {
+  filterAndSortServiceWOs,
+  groupServiceWOsByStage,
+  normalizeServicePanelStatus,
+  SERVICE_COMPLETED_STAGE_KEYS,
+} from '@/lib/service-panel-filtering';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -71,16 +77,6 @@ const ISLAND_COLORS: Record<string, string> = {
   'Lanai': '#dc2626',
   'Hana': '#d97706',
 };
-
-// Normalize raw Smartsheet statuses to display stages
-function normalizeStatus(raw: string): string {
-  switch (raw) {
-    case 'quote':
-    case 'quote_requested': return 'lead';
-    case 'accepted':        return 'approved';
-    default:                return raw || 'lead';
-  }
-}
 
 const AREA_COLOR: Record<string, string> = {
   // Maui areas
@@ -278,15 +274,12 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
     const base = localOverrides[key] ? { ...wo, ...localOverrides[key] } : wo;
     const resolvedIsland = resolveWorkOrderIsland(base.island, base.area_of_island, base.address);
     // Normalize status unless a local override already set it to a valid stage
-    const normalizedStatus = normalizeStatus(base.status);
+    const normalizedStatus = normalizeServicePanelStatus(base.status);
     const next = normalizedStatus !== base.status ? { ...base, rawStatus: base.status, status: normalizedStatus } : base;
     return resolvedIsland && resolvedIsland !== next.island ? { ...next, island: resolvedIsland } : next;
   });
 
-  const mergedByStatus: Record<string, WorkOrder[]> = {};
-  for (const stage of STAGES) {
-    mergedByStatus[stage.key] = mergedWorkOrders.filter(w => w.status === stage.key);
-  }
+  const mergedByStatus = groupServiceWOsByStage(mergedWorkOrders, STAGES.map(stage => stage.key));
 
   async function handleStageChange(woId: string, stage: string, reason?: string, options?: StageChangeOptions) {
     const previousOverride = localOverrides[woId];
@@ -367,56 +360,10 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   }
 
   // Search + filter + sort applied to all views
-  const searchLower = search.toLowerCase();
-  const completedStageKeys = ['closed', 'completed', 'work_complete'] as const;
+  const completedStageKeys = SERVICE_COMPLETED_STAGE_KEYS;
   const completedStatuses = new Set<string>(completedStageKeys);
-  const acceptedStatuses = new Set(['accepted', 'approved']);
-  const filteredWOs = mergedWorkOrders.filter(wo => {
-    if (wo.status === 'lost' && !showDeclined && !search && filter === 'all') return false;
-    // Hide completed unless showCompleted is on OR we're actively filtering/searching for them
-    if (completedStatuses.has(wo.status) && !showCompleted && !search && filter === 'all') return false;
-    if (filter !== 'all') {
-      if (filter === 'accepted') {
-        if (!acceptedStatuses.has(wo.status)) return false;
-      } else if (filter === 'closed') {
-        if (!completedStatuses.has(wo.status)) return false;
-      } else if (wo.status !== filter) {
-        return false;
-      }
-    }
-    if (search) {
-      const q = searchLower;
-      if (!(
-        wo.name.toLowerCase().includes(q) ||
-        wo.description.toLowerCase().includes(q) ||
-        wo.contact.toLowerCase().includes(q) ||
-        wo.island.toLowerCase().includes(q) ||
-        wo.address.toLowerCase().includes(q) ||
-        wo.id.toLowerCase().includes(q) ||
-        wo.assignedTo.toLowerCase().includes(q)
-      )) return false;
-    }
-    return true;
-  });
-
-  const sortedWOs = [...filteredWOs].sort((a, b) => {
-    switch (sort) {
-      case 'name': return a.name.localeCompare(b.name);
-      case 'status': {
-        const ai = STAGES.findIndex(s => s.key === a.status);
-        const bi = STAGES.findIndex(s => s.key === b.status);
-        return ai - bi;
-      }
-      case 'date_asc': return (a.dateReceived || '').localeCompare(b.dateReceived || '');
-      case 'date_desc': return (b.dateReceived || '').localeCompare(a.dateReceived || '');
-      default: return 0;
-    }
-  });
-
-  const filteredByStatus: Record<string, WorkOrder[]> = {};
-  for (const stage of STAGES) {
-    filteredByStatus[stage.key] = sortedWOs.filter(w => w.status === stage.key);
-  }
+  const sortedWOs = filterAndSortServiceWOs(mergedWorkOrders, { filter, search, sort, showCompleted, showDeclined });
+  const filteredByStatus = groupServiceWOsByStage(sortedWOs, STAGES.map(stage => stage.key));
 
   const openDetail = useCallback((wo: WorkOrder) => {
     setDetailWO(wo);
