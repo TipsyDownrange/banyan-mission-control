@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server';
 import { generateDispatchWOPDF } from '@/lib/pdf-work-order-dispatch';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Column indices in Service_Work_Orders tab (0-based)
 const COL = {

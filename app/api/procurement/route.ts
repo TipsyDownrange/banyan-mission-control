@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Procurement_Items tab — 25-column schema (A-Y)
 // A:procurement_id | B:wo_id | C:vendor_org_id | D:vendor_name | E:item_description

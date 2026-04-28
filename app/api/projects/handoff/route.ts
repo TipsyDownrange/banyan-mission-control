@@ -19,8 +19,9 @@ import { authOptions } from '@/lib/auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { randomUUID } from 'crypto';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE_PARENT = '0AKSVpf3AnH7CUk9PVA'; // BanyanOS shared drive
 
 const DRIVE_SUBFOLDERS = [

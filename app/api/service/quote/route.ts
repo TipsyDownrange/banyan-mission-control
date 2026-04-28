@@ -10,8 +10,9 @@ import {
   calculateSiteVisitFee, getJobTypeDefaults, listJobTypes,
   LABOR_RATES, GET_RATE, estimateDriveTime, DEFAULT_SERVICE_CREW,
 } from '@/lib/labor';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 // Column indices in Service_Work_Orders tab (0-based, row starts at A)
 const COL = {

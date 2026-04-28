@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+import { getBackendSheetId } from '@/lib/backend-config';
+const SHEET_ID = getBackendSheetId();
 export async function POST(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
   const session = await getServerSession();
   if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

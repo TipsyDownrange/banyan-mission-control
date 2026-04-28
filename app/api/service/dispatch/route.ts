@@ -5,8 +5,9 @@ import { google } from 'googleapis';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 

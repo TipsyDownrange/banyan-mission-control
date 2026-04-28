@@ -12,8 +12,9 @@ import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateFieldIssuePDF, type FieldIssueData } from '@/lib/pdf-field-issue';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE = '0AKSVpf3AnH7CUk9PVA';
 const TAB_EVENTS = 'Field_Events_V1';
 const TAB_CORE = 'Core_Entities';

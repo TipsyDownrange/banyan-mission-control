@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 
 const VEH_COLS = ['asset_id','license_plate','year','make','model','color','type','vin','island','assigned_to','registration_exp','safety_exp','insurance_exp','last_service_date','notes','status'];
 const EQ_COLS  = ['asset_id','name','category','make','model','serial_number','island','assigned_to','purchase_date','last_service_date','next_service_due','notes','status'];

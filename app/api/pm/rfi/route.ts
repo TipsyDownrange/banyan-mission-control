@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const COLS = ['rfi_id','rfi_number','kID','rfi_type','status','subject','spec_section','drawing_ref','description','created_by','created_at','submitted_at','addressed_to','response_required_by','impact_schedule','impact_cost','impact_scope','response_received_at','response_text','response_quality','responder','days_open','ball_in_court','linked_field_issue','linked_co'];
 
 function rowToObj(row: string[]) {

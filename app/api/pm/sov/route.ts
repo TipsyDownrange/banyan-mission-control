@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const COLS = ['sov_id','kID','line_number','description','scheduled_value','previous_periods','this_period','stored_materials','retainage_pct','total_pct','balance_to_finish','version','locked','created_at'];
 
 function rowToObj(row: string[]) {

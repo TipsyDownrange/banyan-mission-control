@@ -7,8 +7,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const DATA_RANGE = 'Step_Templates!A2:I2000';
 const RANGE_BASE = 'Step_Templates';
 

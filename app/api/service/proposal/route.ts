@@ -11,8 +11,9 @@ import { generateServiceWOPDF, type ServiceWOData } from '@/lib/pdf-service-wo';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { emitMCEvent } from '@/lib/events';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const WO_COL = { wo_id: 0, wo_number: 1, name: 2, description: 3, status: 4, island: 5, area: 6, address: 7, contact_person: 8, assigned_to: 9, contact_phone: 10, contact_email: 11, customer_name: 12 };
 
 /** Read WO customer data fresh from Service_Work_Orders. Returns null if not found. */

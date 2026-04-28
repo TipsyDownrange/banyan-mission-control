@@ -10,8 +10,9 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { checkPermission } from '@/lib/permissions';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const SHEET_ID = getBackendSheetId();
 const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time'];
 
 function rowToSlot(row: string[]) {

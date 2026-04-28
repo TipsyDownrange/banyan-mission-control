@@ -9,8 +9,9 @@ import { checkPermissionServer } from '@/lib/permissions';
 import { billcomLogin, getBills, getVendors } from '@/lib/billcom';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
+import { getBackendSheetId } from '@/lib/backend-config';
 
-const BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
+const BACKEND_SHEET_ID = getBackendSheetId();
 const COSTS_TAB = 'Project_Costs';
 
 const COST_HEADERS = [
