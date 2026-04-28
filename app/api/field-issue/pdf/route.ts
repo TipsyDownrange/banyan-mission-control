@@ -54,6 +54,29 @@ function getDrive() {
   return google.drive({ version: 'v3', auth });
 }
 
+async function getAccessibleDriveFile(
+  drive: ReturnType<typeof google.drive>,
+  fileId: string
+): Promise<{ id: string; name: string | null; webViewLink: string | null } | null> {
+  try {
+    const res = await drive.files.get({
+      fileId,
+      supportsAllDrives: true,
+      fields: 'id,name,webViewLink,trashed',
+    });
+    if (!res.data.id || res.data.trashed) return null;
+    return {
+      id: res.data.id,
+      name: res.data.name || null,
+      webViewLink: res.data.webViewLink || null,
+    };
+  } catch (e: unknown) {
+    const err = e as { response?: { status?: number } };
+    if (err.response?.status === 404) return null;
+    throw e;
+  }
+}
+
 /**
  * Resolve the Drive folder ID and project name for a given kID.
  * WO-prefixed kIDs use Service_Work_Orders.folder_url (col 23).
@@ -156,6 +179,52 @@ export async function POST(req: Request) {
     }
 
     const kID = evRow[EV.target_kID] || '';
+    const existingPdfRef = (evRow[EV.field_issue_pdf_ref] || '').trim();
+
+    // Idempotency gate: AK is the source of truth once populated.
+    // Validate Shared Drive refs with supportsAllDrives before generating anything new.
+    const drive = getDrive();
+    if (existingPdfRef) {
+      try {
+        const existingFile = await getAccessibleDriveFile(drive, existingPdfRef);
+        if (!existingFile) {
+          return NextResponse.json({
+            ok: false,
+            event_id,
+            kID,
+            error: 'STALE_FIELD_ISSUE_PDF_REF',
+            field_issue_pdf_ref: existingPdfRef,
+            message: 'Field_Events_V1 AK already contains a Drive file ID, but the file is not accessible. Refusing to create a duplicate PDF.',
+          }, { status: 409 });
+        }
+
+        console.log('[field-issue/pdf] IDEMPOTENT_HIT event_id=' + event_id + ' fileId=' + existingFile.id);
+        return NextResponse.json({
+          ok: true,
+          event_id,
+          kID,
+          primaryFileId: existingFile.id,
+          shadowFileId: null,
+          driveUrl: existingFile.webViewLink || `https://drive.google.com/file/d/${existingFile.id}/view`,
+          idempotent: true,
+          field_issue_pdf_ref: existingFile.id,
+          fileName: existingFile.name,
+          primaryDriveError: null,
+          shadowDriveError: null,
+        });
+      } catch (e: unknown) {
+        const err = e as { message?: string; code?: string; response?: { status?: number; data?: { error?: unknown } } };
+        return NextResponse.json({
+          ok: false,
+          event_id,
+          kID,
+          error: 'FIELD_ISSUE_PDF_REF_LOOKUP_FAILED',
+          field_issue_pdf_ref: existingPdfRef,
+          message: 'Field_Events_V1 AK already contains a Drive file ID, but Drive lookup failed. Refusing to create a duplicate PDF.',
+          driveError: { message: err.message, code: err.code, status: err.response?.status, errors: err.response?.data?.error },
+        }, { status: 502 });
+      }
+    }
 
     // GC-D021: Resolve folder — WO targets use Service_Work_Orders; PRJ targets use Core_Entities
     const { folderId: woFolderId, projectName, resolvedVia } = await resolveFolderForKID(kID, sheets);
@@ -206,7 +275,6 @@ export async function POST(req: Request) {
     const filename = `FI-${event_id.slice(0, 8).toUpperCase()}-${kID}.pdf`;
 
     // Drive writes — need write scope
-    const drive = getDrive();
     let primaryFileId: string | null = null;
     let shadowFileId: string | null = null;
     let primaryDriveError: Record<string,unknown> | null = null;
