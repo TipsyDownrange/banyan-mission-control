@@ -10,6 +10,54 @@ import { getBackendSheetId } from '@/lib/backend-config';
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
+const SERVICE_WO_NUMBER_PATTERN = /^\d{2}-\d{4}$/;
+
+export class InvalidServiceWONumberError extends Error {
+  constructor(value: string) {
+    super(`Invalid work order number "${value}". Use the standard YY-#### format, for example 26-0001.`);
+    this.name = 'InvalidServiceWONumberError';
+  }
+}
+
+export class ServiceWOFolderCreationError extends Error {
+  constructor(cause?: unknown) {
+    const detail = cause instanceof Error ? ` ${cause.message}` : '';
+    super(`Work order was not created because the Drive folder could not be created.${detail}`);
+    this.name = 'ServiceWOFolderCreationError';
+  }
+}
+
+export function normalizeIncomingServiceWONumber(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  const normalized = String(value).trim();
+  if (!normalized) return undefined;
+  if (!SERVICE_WO_NUMBER_PATTERN.test(normalized)) {
+    throw new InvalidServiceWONumberError(normalized);
+  }
+  return normalized;
+}
+
+export function buildServiceWOId(woNumber: string): string {
+  if (!SERVICE_WO_NUMBER_PATTERN.test(woNumber)) {
+    throw new InvalidServiceWONumberError(woNumber);
+  }
+  return `WO-${woNumber}`;
+}
+
+export function nextServiceWONumber(existingNumbers: string[], yearTwoDigit: string): string {
+  const nums = existingNumbers
+    .map(v => String(v || '').trim())
+    .filter(v => SERVICE_WO_NUMBER_PATTERN.test(v) && v.startsWith(`${yearTwoDigit}-`))
+    .map(v => Number.parseInt(v.split('-')[1], 10));
+  const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return `${yearTwoDigit}-${String(nextNum).padStart(4, '0')}`;
+}
+
+export function requireServiceWOFolderUrl(folderUrl: string | null | undefined): string {
+  const normalized = String(folderUrl || '').trim();
+  if (!normalized) throw new ServiceWOFolderCreationError();
+  return normalized;
+}
 
 /**
  * Find or create a folder by name inside a parent, using the Drive API.
@@ -51,7 +99,7 @@ async function createWOFolderStructure(
   woId: string,
   customerName: string,
   island: string,
-): Promise<string | null> {
+): Promise<string> {
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
     const drive = google.drive({ version: 'v3', auth });
@@ -110,7 +158,7 @@ async function createWOFolderStructure(
     return meta.data.webViewLink || `https://drive.google.com/drive/folders/${woFolderId}`;
   } catch (e) {
     console.error('WO folder creation failed:', e);
-    return null;
+    throw new ServiceWOFolderCreationError(e);
   }
 }
 
@@ -126,9 +174,19 @@ export async function POST(req: Request) {
       businessName, customerName, address, city, state, zip, island, areaOfIsland,
       contactPerson, contactPhone, contactEmail, contactTitle,
       description, systemType, urgency,
-      assignedTo, notes, woNumber, dateReceived,
+      assignedTo, notes, woNumber: rawWONumber, dateReceived,
       customer_id, org_id,
     } = body;
+
+    let incomingWONumber: string | undefined;
+    try {
+      incomingWONumber = normalizeIncomingServiceWONumber(rawWONumber);
+    } catch (err) {
+      if (err instanceof InvalidServiceWONumberError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
 
     if ((!businessName && !customerName) || !description) {
       return NextResponse.json(
@@ -175,7 +233,7 @@ export async function POST(req: Request) {
     const now = hawaiiNow();
     const today = dateReceived || hawaiiToday();
     // Sequential WO numbering: WO-26-XXXX
-    let wo = woNumber;
+    let wo = incomingWONumber;
     if (!wo) {
       const yr = hawaiiYear2();
       // Find the highest existing WO number for this year
@@ -183,21 +241,27 @@ export async function POST(req: Request) {
         spreadsheetId: BACKEND_SHEET_ID,
         range: 'Service_Work_Orders!B2:B2000',
       });
-      const nums = (existingWOs.data.values || []).flat()
-        .filter((v: string) => v && v.startsWith(yr + '-'))
-        .map((v: string) => parseInt(v.split('-')[1]) || 0);
-      const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-      wo = `${yr}-${String(nextNum).padStart(4, '0')}`;
+      wo = nextServiceWONumber((existingWOs.data.values || []).flat(), yr);
     }
-    const woId = `WO-${wo.replace(/[^A-Za-z0-9\-]/g, '')}`;
+    const woId = buildServiceWOId(wo);
     // Column C (name): use businessName if provided; otherwise derive from customerName + systemType
     const name = businessName ||
       (systemType ? `${customerName} — ${systemType}` : customerName);
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
-    // Create Drive folder structure before writing the sheet row
-    // Non-fatal if it fails — WO creation still proceeds
-    const folderUrl = await createWOFolderStructure(woId, customerName, island || city || '');
+    // Create Drive folder structure before writing the sheet row. This is fatal:
+    // never create a new WO that has no Drive folder for job files.
+    let folderUrl: string;
+    try {
+      folderUrl = requireServiceWOFolderUrl(
+        await createWOFolderStructure(woId, customerName || businessName || '', island || city || '')
+      );
+    } catch (err) {
+      if (err instanceof ServiceWOFolderCreationError) {
+        return NextResponse.json({ error: err.message }, { status: 502 });
+      }
+      throw err;
+    }
 
     const rowPrefix = [
       woId,           // wo_id
