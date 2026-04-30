@@ -585,6 +585,50 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     }
   }
 
+  async function handleCreateOrgFromWO() {
+    const orgName = ((draft as WorkOrder & { customer_name?: string }).customer_name || safeWo.customer_name || safeWo.name || '').trim();
+    if (!orgName) {
+      setOrgRepairError('Company or customer name is required before creating an organization.');
+      return;
+    }
+    if (safeWo.org_id) {
+      setOrgRepairError('This work order already has an org_id. Clear it before creating a new organization.');
+      return;
+    }
+
+    setOrgRepairSaving('create');
+    setOrgRepairError('');
+    try {
+      const res = await fetch('/api/organizations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: orgName,
+          types: ['CUSTOMER'],
+          entity_type: 'COMPANY',
+          island: draft.island || safeWo.island || '',
+          contact_name: (draft as WorkOrder & { contact_person?: string }).contact_person || safeWo.contact_person || '',
+          contact_phone: (draft as WorkOrder & { contact_phone?: string }).contact_phone || safeWo.contact_phone || '',
+          contact_email: (draft as WorkOrder & { contact_email?: string }).contact_email || safeWo.contact_email || '',
+          address: draft.address || safeWo.address || '',
+          notes: `Created from ${safeWo.id} identity repair`,
+          source: 'WO_IDENTITY_REPAIR',
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.org_id) throw new Error(json.error || 'Failed to create organization.');
+
+      await onSave(safeWo.id, {
+        org_id: json.org_id,
+        requires_org_assignment: false,
+      });
+    } catch (err) {
+      setOrgRepairError(err instanceof Error ? err.message : 'Failed to create organization.');
+    } finally {
+      setOrgRepairSaving('');
+    }
+  }
+
   return (
     <>
       {/* Backdrop */}
@@ -1014,6 +1058,13 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(245,158,11,0.35)', background: 'white', color: '#92400e', fontSize: 12, fontWeight: 800, cursor: orgRepairSaving ? 'default' : 'pointer', opacity: orgRepairSaving ? 0.5 : 1 }}
                         >
                           {orgRepairSaving === 'review' ? 'Marking...' : 'Mark needs review'}
+                        </button>
+                        <button
+                          onClick={handleCreateOrgFromWO}
+                          disabled={!!orgRepairSaving || !!wo.org_id}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(15,118,110,0.3)', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: !orgRepairSaving && !wo.org_id ? 'pointer' : 'default', opacity: !orgRepairSaving && !wo.org_id ? 1 : 0.5 }}
+                        >
+                          {orgRepairSaving === 'create' ? 'Creating...' : 'Create new org from this WO'}
                         </button>
                       </div>
                     )}
