@@ -19,7 +19,7 @@ import { getBackendSheetId } from '@/lib/backend-config';
 const SHEET_ID = getBackendSheetId();
 
 // Column indices (0-based)
-const ORG_COL = { org_id:0, name:1, types:2, entity_type:3, default_island:4, tax_id:5, payment_terms:6, avg_days_to_pay:7, notes:8, source:9, created_at:10, updated_at:11 };
+const ORG_COL = { org_id:0, name:1, types:2, entity_type:3, default_island:4, tax_id:5, payment_terms:6, avg_days_to_pay:7, notes:8, source:9, created_at:10, updated_at:11, status:12, merged_into_org_id:13, merged_at:14, merged_by:15 };
 const CNT_COL = { contact_id:0, org_id:1, name:2, title:3, role:4, email:5, phone:6, is_primary:7, notes:8, created_at:9 };
 const SITE_COL = { site_id:0, org_id:1, name:2, address_line_1:3, address_line_2:4, city:5, state:6, zip:7, island:8, google_place_id:9, site_type:10, notes:11, created_at:12 };
 const CUSTOMER_HEADERS = [
@@ -55,6 +55,10 @@ export type OrgRecord = {
   default_island: string;
   notes?: string;
   source?: string;
+  status?: string;
+  merged_into_org_id?: string;
+  merged_at?: string;
+  merged_by?: string;
   // Joined from Contacts + Sites
   primary_contact?: {
     contact_id: string;
@@ -89,7 +93,7 @@ async function fetchAll() {
   const sheets = google.sheets({ version: 'v4', auth });
 
   const [orgsRes, contactsRes, sitesRes, woRes] = await Promise.all([
-    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:L5000' }),
+    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:P5000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Contacts!A2:J2000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Sites!A2:M5000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!AQ2:AQ5000' }),
@@ -137,6 +141,10 @@ async function fetchAll() {
       default_island: r[ORG_COL.default_island] || '',
       notes: r[ORG_COL.notes] || '',
       source: r[ORG_COL.source] || '',
+      status: r[ORG_COL.status] || '',
+      merged_into_org_id: r[ORG_COL.merged_into_org_id] || '',
+      merged_at: r[ORG_COL.merged_at] || '',
+      merged_by: r[ORG_COL.merged_by] || '',
       primary_contact: cnt ? {
         contact_id: cnt[CNT_COL.contact_id],
         name:  cnt[CNT_COL.name] || '',
