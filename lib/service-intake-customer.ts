@@ -88,15 +88,6 @@ export function parseAddressParts(address: string): { city: string; state: strin
   return result;
 }
 
-export function normalizeEntityName(value: string): string {
-  return (value || '')
-    .toLowerCase()
-    .replace(/[,\.]/g, '')
-    .replace(/\b(inc|llc|corp|corporation|ltd|co|company)\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 export function applyCustomerRecord(prev: ServiceIntakeDraft, c: CustomerRecord): ServiceIntakeDraft {
   const det = detectIslandAndArea(c.address);
   const parsedAddress = parseAddressParts(c.address);
@@ -115,7 +106,6 @@ export function applyCustomerRecord(prev: ServiceIntakeDraft, c: CustomerRecord)
     contactPerson: prev.contactPerson || c.contactPerson,
     contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
     contactEmail:  prev.contactEmail || c.email,
-    org_id:        c.org_id || prev.org_id,
     customer_id:   c.customerId || prev.customer_id,
   };
 }
