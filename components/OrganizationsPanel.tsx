@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { normalizePhone } from '@/lib/normalize';
 import ContactAutocomplete from '@/components/shared/ContactAutocomplete';
 import type { ContactResult } from '@/components/shared/ContactAutocomplete';
@@ -525,7 +525,6 @@ function OrgDetailPanel({
   const [detail, setDetail] = useState<OrgDetail | null>(null);
   const [relationships, setRelationships] = useState<GovernanceRelationship[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [governanceSaving, setGovernanceSaving] = useState(false);
   const [governanceMessage, setGovernanceMessage] = useState('');
   const [governanceError, setGovernanceError] = useState('');
@@ -533,7 +532,7 @@ function OrgDetailPanel({
   const [addingSite, setAddingSite] = useState(false);
   const [newContact, setNewContact] = useState({ name: '', title: '', email: '', phone: '', is_primary: false });
   const [newSite, setNewSite] = useState({ address_line_1: '', city: '', island: '', site_type: 'OFFICE' });
-  const [orgEditForm, setOrgEditForm] = useState({ name: '', types: '', notes: '', status: '' });
+  const [orgEditForm, setOrgEditForm] = useState<{ name: string; types: string[]; notes: string; status: string }>({ name: '', types: [], notes: '', status: '' });
   const [relationshipForm, setRelationshipForm] = useState({ target_org_id: '', relationship_type: 'property', notes: '' });
   const [mergeForm, setMergeForm] = useState({ survivor_org_id: '', notes: '' });
   const [mergePreview, setMergePreview] = useState<MergePreview | null>(null);
@@ -543,7 +542,6 @@ function OrgDetailPanel({
   const [siteEditForm, setSiteEditForm] = useState({ name: '', address_line_1: '', city: '', state: 'HI', zip: '', island: '', site_type: 'OFFICE' });
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function toggleSection(key: string) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -562,7 +560,7 @@ function OrgDetailPanel({
       setRelationships(relData.relationships || []);
       setOrgEditForm({
         name: data.org?.name || '',
-        types: (data.org?.types || []).join(', '),
+        types: data.org?.types || [],
         notes: data.org?.notes || '',
         status: data.org?.status || '',
       });
@@ -577,24 +575,6 @@ function OrgDetailPanel({
     loadDetail();
   }, [loadDetail]);
 
-  function scheduleSave(fields: Record<string, unknown>) {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      setSaving(true);
-      try {
-        await fetch(`/api/organizations/${orgId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fields),
-        });
-      } catch (err) {
-        console.error('[OrgDetailPanel] save', err);
-      } finally {
-        setSaving(false);
-      }
-    }, 800);
-  }
-
   async function saveOrgDetails() {
     setGovernanceSaving(true);
     setGovernanceMessage('');
@@ -605,7 +585,7 @@ function OrgDetailPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: orgEditForm.name,
-          types: orgEditForm.types.split(',').map(t => t.trim()).filter(Boolean),
+          types: orgEditForm.types,
           notes: orgEditForm.notes,
           status: orgEditForm.status,
         }),
@@ -841,14 +821,11 @@ function OrgDetailPanel({
             {loading || !detail ? (
               <div style={{ fontSize: 17, fontWeight: 800, color: '#94a3b8' }}>Loading…</div>
             ) : (
-              <input
-                defaultValue={detail.org.name}
-                onBlur={e => { if (e.target.value !== detail.org.name) scheduleSave({ name: e.target.value }); }}
-                style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', border: 'none', outline: 'none', background: 'transparent', width: '100%' }}
-              />
+              <span style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {detail.org.name}
+              </span>
             )}
           </div>
-          {saving && <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600 }}>Saving…</span>}
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20, padding: 0, lineHeight: 1 }}>×</button>
         </div>
 
@@ -865,18 +842,6 @@ function OrgDetailPanel({
               <span style={{ fontSize: 11, color: '#94a3b8' }}>
                 {detail.org.entity_type} · {detail.org.default_island || '—'}
               </span>
-            </div>
-
-            {/* Notes */}
-            <div style={{ marginBottom: 8 }}>
-              <label style={LBL}>Notes</label>
-              <textarea
-                defaultValue={detail.org.notes || ''}
-                onBlur={e => scheduleSave({ notes: e.target.value })}
-                rows={2}
-                placeholder="Internal notes…"
-                style={{ ...INP, resize: 'vertical', minHeight: 52 }}
-              />
             </div>
 
             {governanceMessage && (
@@ -896,17 +861,79 @@ function OrgDetailPanel({
             )}
 
             <CollapsibleSection title="Edit Organization" open={!!openSections['edit']} onToggle={() => toggleSection('edit')}>
-              <div style={{ padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc' }}>
+              <div style={{ padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Name + Save button row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <div><label style={LBL}>Name</label><input style={INP} value={orgEditForm.name} onChange={e => setOrgEditForm(p => ({ ...p, name: e.target.value }))} /></div>
-                  <div><label style={LBL}>Types</label><input style={INP} value={orgEditForm.types} onChange={e => setOrgEditForm(p => ({ ...p, types: e.target.value }))} placeholder="COMMERCIAL, PROPERTY_MGMT" /></div>
-                  <div><label style={LBL}>Status</label><input style={INP} value={orgEditForm.status} onChange={e => setOrgEditForm(p => ({ ...p, status: e.target.value }))} placeholder="active, inactive, merged" /></div>
                   <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                     <button onClick={saveOrgDetails} disabled={governanceSaving || !orgEditForm.name.trim()} style={{ width: '100%', padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: governanceSaving ? 'default' : 'pointer', opacity: governanceSaving ? 0.6 : 1 }}>
                       Save Organization
                     </button>
                   </div>
-                  <div style={{ gridColumn: '1 / -1' }}><label style={LBL}>Notes</label><textarea style={{ ...INP, resize: 'vertical', minHeight: 48 }} value={orgEditForm.notes} onChange={e => setOrgEditForm(p => ({ ...p, notes: e.target.value }))} /></div>
+                </div>
+                {/* Types — governed chips */}
+                <div>
+                  <label style={LBL}>Types</label>
+                  <div style={{ fontSize: 10, color: '#64748b', marginBottom: 5 }}>Types are governed classifications used for filtering and identity cleanup.</div>
+                  {orgEditForm.types.filter(t => !ALL_TYPES.includes(t)).length > 0 && (
+                    <div style={{ marginBottom: 6 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: '#94a3b8', marginRight: 4 }}>Legacy (unsupported):</span>
+                      {orgEditForm.types.filter(t => !ALL_TYPES.includes(t)).map(t => (
+                        <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: '#f1f5f9', color: '#94a3b8', marginRight: 4, display: 'inline-block', textTransform: 'uppercase' as const }}>{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                    {ALL_TYPES.map(t => {
+                      const selected = orgEditForm.types.includes(t);
+                      const c = TYPE_COLORS[t] || { color: '#64748b', bg: '#f8fafc' };
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setOrgEditForm(p => ({
+                            ...p,
+                            types: selected ? p.types.filter(x => x !== t) : [...p.types, t],
+                          }))}
+                          style={{
+                            fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
+                            border: selected ? `1.5px solid ${c.color}` : '1.5px solid #e2e8f0',
+                            background: selected ? c.bg : 'white',
+                            color: selected ? c.color : '#64748b',
+                            letterSpacing: '0.04em', textTransform: 'uppercase' as const,
+                          }}
+                        >
+                          {FILTER_LABELS[t] || t.replace(/_/g, ' ')}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* Status — controlled select, merged is read-only */}
+                <div>
+                  <label style={LBL}>Status</label>
+                  {detail.org.status === 'merged' ? (
+                    <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '6px 10px' }}>
+                      Status is <strong>merged</strong> — controlled by the merge workflow and cannot be manually changed.
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        style={{ ...INP, cursor: 'pointer' }}
+                        value={orgEditForm.status || 'active'}
+                        onChange={e => setOrgEditForm(p => ({ ...p, status: e.target.value }))}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 3 }}>Merged status is controlled by the merge workflow and cannot be manually selected.</div>
+                    </>
+                  )}
+                </div>
+                {/* Notes — single authoritative edit surface */}
+                <div>
+                  <label style={LBL}>Notes</label>
+                  <textarea style={{ ...INP, resize: 'vertical', minHeight: 48 }} value={orgEditForm.notes} onChange={e => setOrgEditForm(p => ({ ...p, notes: e.target.value }))} />
                 </div>
               </div>
             </CollapsibleSection>

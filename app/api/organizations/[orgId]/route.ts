@@ -10,6 +10,9 @@ import { getBackendSheetId } from '@/lib/backend-config';
 
 const SHEET_ID = getBackendSheetId();
 
+const ALLOWED_EDIT_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'GOVERNMENT', 'PROPERTY_MGMT'];
+const ALLOWED_EDIT_STATUSES = ['active', 'inactive'];
+
 function getAuth() { return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']); }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ orgId: string }> }) {
@@ -53,6 +56,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
   if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { orgId } = await params;
   const body = await req.json();
+
+  if (body.types !== undefined) {
+    const types: string[] = Array.isArray(body.types)
+      ? body.types
+      : String(body.types).split(',').map((s: string) => s.trim()).filter(Boolean);
+    const invalid = types.filter((t: string) => !ALLOWED_EDIT_TYPES.includes(t));
+    if (invalid.length > 0) {
+      return NextResponse.json({ error: `Invalid organization types: ${invalid.join(', ')}. Allowed: ${ALLOWED_EDIT_TYPES.join(', ')}` }, { status: 400 });
+    }
+  }
+
+  if (body.status !== undefined) {
+    const status = String(body.status).trim().toLowerCase();
+    if (!ALLOWED_EDIT_STATUSES.includes(status)) {
+      return NextResponse.json({ error: `Invalid status: ${body.status}. Use active or inactive. Merged status is set only by the merge workflow.` }, { status: 400 });
+    }
+  }
+
   try {
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
