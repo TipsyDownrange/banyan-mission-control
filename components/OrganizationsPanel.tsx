@@ -176,6 +176,52 @@ function WOStatusBadge({ status }: { status: string }) {
   );
 }
 
+function CollapsibleSection({
+  title,
+  count,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  count?: number;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 2 }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%', padding: '10px 0', background: 'none', border: 'none',
+          cursor: 'pointer', textAlign: 'left',
+        }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b' }}>
+            {title}
+          </span>
+          {count !== undefined && (
+            <span style={{ fontSize: 10, fontWeight: 700, background: '#f1f5f9', color: '#64748b', borderRadius: 999, padding: '1px 7px' }}>
+              {count}
+            </span>
+          )}
+        </span>
+        <span style={{ fontSize: 12, color: '#94a3b8', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ paddingBottom: 12 }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type OrgPickerFilters = {
   activeOnly: boolean;
   sameIsland: boolean;
@@ -438,11 +484,6 @@ function OrganizationPicker({
           Selected: <strong>{selectedOrg.name}</strong> · {selectedOrg.org_id}
         </div>
       )}
-      {!canShowSearchResults && (
-        <div style={{ fontSize: 12, color: '#64748b', background: 'white', border: '1px dashed #cbd5e1', borderRadius: 8, padding: '8px 10px' }}>
-          Search by organization name, address, org ID, or contact.
-        </div>
-      )}
       {bestMatches.length > 0 && (
         <div>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 5 }}>
@@ -501,7 +542,12 @@ function OrgDetailPanel({
   const [editingSiteId, setEditingSiteId] = useState<string | null>(null);
   const [siteEditForm, setSiteEditForm] = useState({ name: '', address_line_1: '', city: '', state: 'HI', zip: '', island: '', site_type: 'OFFICE' });
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function toggleSection(key: string) {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  }
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
@@ -833,27 +879,24 @@ function OrgDetailPanel({
               />
             </div>
 
-            {/* Identity Controls */}
-            <div style={SEC}>Identity Controls</div>
-            <div style={{ padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {governanceMessage && (
-                <div style={{ fontSize: 12, color: '#0f766e', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '8px 10px' }}>
-                  {governanceMessage}
-                </div>
-              )}
-              {governanceError && (
-                <div style={{ fontSize: 12, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 10px' }}>
-                  {governanceError}
-                </div>
-              )}
-              {detail.org.status === 'merged' && (
-                <div style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px' }}>
-                  This organization is marked merged into {detail.org.merged_into_org_id || 'another organization'}.
-                </div>
-              )}
+            {governanceMessage && (
+              <div style={{ fontSize: 12, color: '#0f766e', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+                {governanceMessage}
+              </div>
+            )}
+            {governanceError && (
+              <div style={{ fontSize: 12, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+                {governanceError}
+              </div>
+            )}
+            {detail.org.status === 'merged' && (
+              <div style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+                This organization is marked merged into {detail.org.merged_into_org_id || 'another organization'}.
+              </div>
+            )}
 
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Edit Organization</div>
+            <CollapsibleSection title="Edit Organization" open={!!openSections['edit']} onToggle={() => toggleSection('edit')}>
+              <div style={{ padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <div><label style={LBL}>Name</label><input style={INP} value={orgEditForm.name} onChange={e => setOrgEditForm(p => ({ ...p, name: e.target.value }))} /></div>
                   <div><label style={LBL}>Types</label><input style={INP} value={orgEditForm.types} onChange={e => setOrgEditForm(p => ({ ...p, types: e.target.value }))} placeholder="COMMERCIAL, PROPERTY_MGMT" /></div>
@@ -866,92 +909,100 @@ function OrgDetailPanel({
                   <div style={{ gridColumn: '1 / -1' }}><label style={LBL}>Notes</label><textarea style={{ ...INP, resize: 'vertical', minHeight: 48 }} value={orgEditForm.notes} onChange={e => setOrgEditForm(p => ({ ...p, notes: e.target.value }))} /></div>
                 </div>
               </div>
+            </CollapsibleSection>
 
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Merge Duplicate Org</div>
-                <OrganizationPicker
-                  title="Survivor / Primary Org"
-                  currentOrg={detail.org}
-                  orgOptions={orgOptions}
-                  selectedOrgId={mergeForm.survivor_org_id}
-                  onSelect={selectedOrgId => {
-                    setMergeForm(p => ({ ...p, survivor_org_id: selectedOrgId }));
-                    setMergePreview(null);
-                  }}
-                />
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #0f766e', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
-                    Preview
-                  </button>
-                  <button onClick={executeMerge} disabled={governanceSaving || !mergeForm.survivor_org_id || !mergePreview?.can_execute} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none', background: '#b91c1c', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id && mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id && mergePreview?.can_execute ? 1 : 0.45 }}>
-                    Confirm Merge
-                  </button>
+            <CollapsibleSection title="Merge Duplicate Org" open={!!openSections['merge']} onToggle={() => toggleSection('merge')}>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid #fde68a', background: '#fffbeb', marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+                  <strong>Use only when two org records are the same entity.</strong> This moves all references — work orders, contacts, sites, crosswalk — to the survivor org and marks this record as merged. Preview is required before confirming.
                 </div>
-                <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={mergeForm.notes} onChange={e => setMergeForm(p => ({ ...p, notes: e.target.value }))} placeholder="Merge note for audit log" />
-                {mergePreview && (
-                  <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: 'white', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? '#0f766e' : '#b91c1c', marginBottom: 6 }}>
-                      {mergePreview.can_execute ? 'Preview ready' : 'Preview blocked'} · {countTotal} affected references
+              </div>
+              <OrganizationPicker
+                title="Survivor / Primary Org"
+                currentOrg={detail.org}
+                orgOptions={orgOptions}
+                selectedOrgId={mergeForm.survivor_org_id}
+                onSelect={selectedOrgId => {
+                  setMergeForm(p => ({ ...p, survivor_org_id: selectedOrgId }));
+                  setMergePreview(null);
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #0f766e', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
+                  Preview
+                </button>
+                <button onClick={executeMerge} disabled={governanceSaving || !mergeForm.survivor_org_id || !mergePreview?.can_execute} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none', background: '#b91c1c', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id && mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id && mergePreview?.can_execute ? 1 : 0.45 }}>
+                  Confirm Merge
+                </button>
+              </div>
+              <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={mergeForm.notes} onChange={e => setMergeForm(p => ({ ...p, notes: e.target.value }))} placeholder="Merge note for audit log" />
+              {mergePreview && (
+                <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: 'white', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? '#0f766e' : '#b91c1c', marginBottom: 6 }}>
+                    {mergePreview.can_execute ? 'Preview ready' : 'Preview blocked'} · {countTotal} affected references
+                  </div>
+                  {mergePreview.blockers.length > 0 && (
+                    <div style={{ fontSize: 12, color: '#b91c1c', marginBottom: 6 }}>{mergePreview.blockers.join(' ')}</div>
+                  )}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, fontSize: 11 }}>
+                    <span>WOs: <strong>{mergePreview.counts.work_orders}</strong></span>
+                    <span>Contacts: <strong>{mergePreview.counts.contacts}</strong></span>
+                    <span>Sites: <strong>{mergePreview.counts.sites}</strong></span>
+                    <span>Crosswalk: <strong>{mergePreview.counts.crosswalk}</strong></span>
+                    <span>Projects: <strong>{mergePreview.counts.projects}</strong></span>
+                  </div>
+                  {(mergePreview.affected.work_orders[0] || mergePreview.affected.projects[0] || mergePreview.affected.contacts[0] || mergePreview.affected.sites[0]) && (
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+                      Examples: {[mergePreview.affected.work_orders[0]?.wo_number, mergePreview.affected.projects[0]?.kID, mergePreview.affected.contacts[0]?.name, mergePreview.affected.sites[0]?.address].filter(Boolean).join(' · ')}
                     </div>
-                    {mergePreview.blockers.length > 0 && (
-                      <div style={{ fontSize: 12, color: '#b91c1c', marginBottom: 6 }}>{mergePreview.blockers.join(' ')}</div>
-                    )}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, fontSize: 11 }}>
-                      <span>WOs: <strong>{mergePreview.counts.work_orders}</strong></span>
-                      <span>Contacts: <strong>{mergePreview.counts.contacts}</strong></span>
-                      <span>Sites: <strong>{mergePreview.counts.sites}</strong></span>
-                      <span>Crosswalk: <strong>{mergePreview.counts.crosswalk}</strong></span>
-                      <span>Projects: <strong>{mergePreview.counts.projects}</strong></span>
-                    </div>
-                    {(mergePreview.affected.work_orders[0] || mergePreview.affected.projects[0] || mergePreview.affected.contacts[0] || mergePreview.affected.sites[0]) && (
-                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
-                        Examples: {[mergePreview.affected.work_orders[0]?.wo_number, mergePreview.affected.projects[0]?.kID, mergePreview.affected.contacts[0]?.name, mergePreview.affected.sites[0]?.address].filter(Boolean).join(' · ')}
+                  )}
+                </div>
+              )}
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Mark Related, Not Duplicate" open={!!openSections['related']} onToggle={() => toggleSection('related')}>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid #bae6fd', background: '#f0f9ff', marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: '#0369a1', lineHeight: 1.5 }}>
+                  <strong>Use when orgs are connected but must stay separate.</strong> Examples: property and billing account, operator and owner, HOA and property manager. Records the relationship without moving or merging any data.
+                </div>
+              </div>
+              <OrganizationPicker
+                title="Related Org"
+                currentOrg={detail.org}
+                orgOptions={orgOptions}
+                selectedOrgId={relationshipForm.target_org_id}
+                helperText="Search for a related organization. Preserve separate billing/property/operator entities unless an intentional merge is required."
+                onSelect={targetOrgId => setRelationshipForm(p => ({ ...p, target_org_id: targetOrgId }))}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'end', marginTop: 8 }}>
+                <div>
+                  <label style={LBL}>Relationship</label>
+                  <select style={{ ...INP, cursor: 'pointer' }} value={relationshipForm.relationship_type} onChange={e => setRelationshipForm(p => ({ ...p, relationship_type: e.target.value }))}>
+                    {RELATIONSHIP_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                  </select>
+                </div>
+                <button onClick={saveRelationship} disabled={governanceSaving || !relationshipForm.target_org_id} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: relationshipForm.target_org_id ? 'pointer' : 'default', opacity: relationshipForm.target_org_id ? 1 : 0.5 }}>
+                  Save
+                </button>
+              </div>
+              <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={relationshipForm.notes} onChange={e => setRelationshipForm(p => ({ ...p, notes: e.target.value }))} placeholder="Relationship note" />
+              {relationships.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {relationships.map(rel => {
+                    const otherOrgId = rel.source_org_id === orgId ? rel.target_org_id : rel.source_org_id;
+                    return (
+                      <div key={rel.relationship_id} style={{ padding: '7px 9px', borderRadius: 8, background: 'white', border: '1px solid #e2e8f0', fontSize: 12 }}>
+                        <div style={{ fontWeight: 800, color: '#0f172a' }}>{rel.relationship_type.replace(/_/g, ' ')} · {orgNameById.get(otherOrgId) || otherOrgId}</div>
+                        {rel.notes && <div style={{ color: '#64748b', marginTop: 2 }}>{rel.notes}</div>}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Mark Related, Not Duplicate</div>
-                <OrganizationPicker
-                  title="Related Org"
-                  currentOrg={detail.org}
-                  orgOptions={orgOptions}
-                  selectedOrgId={relationshipForm.target_org_id}
-                  helperText="Search for a related organization. Preserve separate billing/property/operator entities unless an intentional merge is required."
-                  onSelect={targetOrgId => setRelationshipForm(p => ({ ...p, target_org_id: targetOrgId }))}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'end', marginTop: 8 }}>
-                  <div>
-                    <label style={LBL}>Relationship</label>
-                    <select style={{ ...INP, cursor: 'pointer' }} value={relationshipForm.relationship_type} onChange={e => setRelationshipForm(p => ({ ...p, relationship_type: e.target.value }))}>
-                      {RELATIONSHIP_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={saveRelationship} disabled={governanceSaving || !relationshipForm.target_org_id} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: relationshipForm.target_org_id ? 'pointer' : 'default', opacity: relationshipForm.target_org_id ? 1 : 0.5 }}>
-                    Save
-                  </button>
+                    );
+                  })}
                 </div>
-                <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={relationshipForm.notes} onChange={e => setRelationshipForm(p => ({ ...p, notes: e.target.value }))} placeholder="Relationship note" />
-                {relationships.length > 0 && (
-                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {relationships.map(rel => {
-                      const otherOrgId = rel.source_org_id === orgId ? rel.target_org_id : rel.source_org_id;
-                      return (
-                        <div key={rel.relationship_id} style={{ padding: '7px 9px', borderRadius: 8, background: 'white', border: '1px solid #e2e8f0', fontSize: 12 }}>
-                          <div style={{ fontWeight: 800, color: '#0f172a' }}>{rel.relationship_type.replace(/_/g, ' ')} · {orgNameById.get(otherOrgId) || otherOrgId}</div>
-                          {rel.notes && <div style={{ color: '#64748b', marginTop: 2 }}>{rel.notes}</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+              )}
+            </CollapsibleSection>
 
             {/* Contacts */}
-            <div style={SEC}>Contacts ({detail.contacts.length})</div>
+            <CollapsibleSection title="Contacts" count={detail.contacts.length} open={!!openSections['contacts']} onToggle={() => toggleSection('contacts')}>
             {detail.contacts.length === 0 && !addingContact && (
               <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No contacts yet.</div>
             )}
@@ -1064,9 +1115,10 @@ function OrgDetailPanel({
             ) : (
               <button onClick={() => setAddingContact(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Contact</button>
             )}
+            </CollapsibleSection>
 
             {/* Sites */}
-            <div style={SEC}>Sites ({detail.sites.length})</div>
+            <CollapsibleSection title="Sites" count={detail.sites.length} open={!!openSections['sites']} onToggle={() => toggleSection('sites')}>
             {detail.sites.length === 0 && (
               <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No sites yet.</div>
             )}
@@ -1145,12 +1197,14 @@ function OrgDetailPanel({
             ) : (
               <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Site</button>
             )}
+            </CollapsibleSection>
 
             {/* Linked Work Orders */}
-            {detail.linkedWOs.length > 0 && (
-              <>
-                <div style={SEC}>Linked Work Orders ({detail.linkedWOs.length})</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <CollapsibleSection title="Linked Work Orders" count={detail.linkedWOs.length} open={!!openSections['linkedWOs']} onToggle={() => toggleSection('linkedWOs')}>
+            {detail.linkedWOs.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked work orders.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {detail.linkedWOs.map(wo => (
                     <div
                       key={wo.id}
@@ -1176,15 +1230,15 @@ function OrgDetailPanel({
                       </div>
                     </div>
                   ))}
-                </div>
-              </>
-            )}
+            </div>
+            </CollapsibleSection>
 
             {/* Linked Projects */}
-            {detail.linkedProjects.length > 0 && (
-              <>
-                <div style={SEC}>Linked Projects ({detail.linkedProjects.length})</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <CollapsibleSection title="Linked Projects" count={detail.linkedProjects.length} open={!!openSections['linkedProjects']} onToggle={() => toggleSection('linkedProjects')}>
+            {detail.linkedProjects.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked projects.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {detail.linkedProjects.map(p => (
                     <div key={p.kID} style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
                       <div>
@@ -1194,16 +1248,8 @@ function OrgDetailPanel({
                       <span style={{ color: '#94a3b8' }}>{p.kID}</span>
                     </div>
                   ))}
-                </div>
-              </>
-            )}
-
-            {/* Empty state */}
-            {detail.linkedWOs.length === 0 && detail.linkedProjects.length === 0 && (
-              <div style={{ marginTop: 20, padding: '16px', borderRadius: 10, background: '#f8fafc', textAlign: 'center', fontSize: 12, color: '#94a3b8' }}>
-                No linked work orders or projects yet.
-              </div>
-            )}
+            </div>
+            </CollapsibleSection>
           </div>
         )}
       </div>
