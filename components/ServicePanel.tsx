@@ -24,8 +24,10 @@ type WorkOrder = {
   customer_name?: string;
   // GC-D053 FK resolution flags
   customer_id?: string;
+  org_id?: string;
   customer_resolved?: boolean | null;
   data_integrity_error?: boolean;
+  requires_org_assignment?: boolean;
   resolved_customer_name?: string;
   legacy_wo_ids?: string;
   folderUrl?: string;
@@ -163,6 +165,9 @@ function WOCard({
         )}
         {wo.data_integrity_error && (
           <div style={{ fontSize: 10, fontWeight: 700, color: '#991b1b', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ Customer ID missing</div>
+        )}
+        {wo.requires_org_assignment && (
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#92400e', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.28)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>Needs Org Assignment</div>
         )}
 
         {/* Row 3: Assigned to */}
@@ -339,7 +344,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
     // Optimistic update
     setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], ...fields } }));
     try {
-      await fetch('/api/service/update', {
+      const res = await fetch('/api/service/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -357,14 +362,19 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           contactPhone:  (fields as WorkOrder & { contact_phone?: string }).contact_phone,
           contactEmail:  (fields as WorkOrder & { contact_email?: string }).contact_email,
           customerName:  (fields as WorkOrder & { customer_name?: string }).customer_name,
+          org_id: fields.org_id,
+          requires_org_assignment: fields.requires_org_assignment,
         }),
       });
-    } catch {
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Failed to save work order.');
+    } catch (err) {
       setLocalOverrides(prev => {
         const next = { ...prev };
         delete next[woId];
         return next;
       });
+      throw err instanceof Error ? err : new Error('Failed to save work order.');
     }
   }
 

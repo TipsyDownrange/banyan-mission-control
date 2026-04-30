@@ -60,6 +60,7 @@ const COL = {
   customer_id:         43, // AR — GC-D053: FK to Customers table
   legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
   legacy_wo_ids:       45, // AT — BAN-56: searchable previous/noncanonical WO IDs
+  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -126,6 +127,7 @@ function rowToWO(row: string[]) {
     customer_id:         g(COL.customer_id),
     legacy_flag:         g(COL.legacy_flag),
     legacy_wo_ids:       g(COL.legacy_wo_ids),
+    requires_org_assignment: g(COL.requires_org_assignment).toLowerCase() === 'true' || !g(COL.org_id),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',
@@ -177,7 +179,7 @@ export async function GET() {
     const [res, custRes] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
-        range: `${TAB}!A2:AT5000`,
+        range: `${TAB}!A2:AU5000`,
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,

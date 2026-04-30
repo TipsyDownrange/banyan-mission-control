@@ -64,6 +64,7 @@ const COL_IDX: Record<string, number> = {
   org_id:              42, // AQ — Phase 2: FK to Organizations
   customer_id:         43, // AR — GC-D053: FK to Customers table
   legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
+  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
 };
 
 function colLetter(idx: number): string {
@@ -233,6 +234,7 @@ export async function PATCH(req: Request) {
       invoices_json:        'invoices_json',
       org_id:              'org_id',
       customer_id:         'customer_id',
+      requires_org_assignment: 'requires_org_assignment',
     };
 
     // Handle stage → status mapping (legacy frontend compat)
@@ -304,6 +306,13 @@ export async function PATCH(req: Request) {
           value: val,
         });
       }
+    }
+
+    if (body.org_id !== undefined && body.requires_org_assignment === undefined) {
+      updates.push({
+        col: colLetter(COL_IDX.requires_org_assignment),
+        value: String(!String(body.org_id).trim()),
+      });
     }
 
     // Always update updated_at

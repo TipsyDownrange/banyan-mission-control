@@ -88,15 +88,17 @@ async function fetchAll() {
   const auth = getAuth();
   const sheets = google.sheets({ version: 'v4', auth });
 
-  const [orgsRes, contactsRes, sitesRes] = await Promise.all([
+  const [orgsRes, contactsRes, sitesRes, woRes] = await Promise.all([
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:L5000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Contacts!A2:J2000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Sites!A2:M5000' }),
+    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!AQ2:AQ5000' }),
   ]);
 
   const orgRows = (orgsRes.data.values || []).filter(r => r[0]) as string[][];
   const cntRows = (contactsRes.data.values || []).filter(r => r[0]) as string[][];
   const siteRows = (sitesRes.data.values || []).filter(r => r[0]) as string[][];
+  const woRows = (woRes.data.values || []) as string[][];
 
   // Index contacts and sites by org_id
   const contactsByOrg = new Map<string, string[]>();
@@ -111,6 +113,12 @@ async function fetchAll() {
   for (const r of siteRows) {
     const orgId = r[SITE_COL.org_id];
     if (orgId && !sitesByOrg.has(orgId)) sitesByOrg.set(orgId, r);
+  }
+  const woCountByOrg = new Map<string, number>();
+  for (const r of woRows) {
+    const orgId = (r[0] || '').trim();
+    if (!orgId) continue;
+    woCountByOrg.set(orgId, (woCountByOrg.get(orgId) || 0) + 1);
   }
 
   const orgs: OrgRecord[] = orgRows.map(r => {
@@ -154,7 +162,7 @@ async function fetchAll() {
       email:         cnt?.[CNT_COL.email] || '',
       address,
       island,
-      woCount:       0,
+      woCount:       woCountByOrg.get(orgId) || 0,
     };
   });
 

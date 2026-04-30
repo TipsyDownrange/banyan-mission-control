@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ActivityTimeline from '@/components/ActivityTimeline';
 import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, parseDelimitedList, resolveWorkOrderIsland } from '@/lib/normalize';
@@ -22,8 +22,10 @@ type WorkOrder = {
   customer_name?: string;
   // GC-D053 FK resolution flags
   customer_id?: string;
+  org_id?: string;
   customer_resolved?: boolean | null;
   data_integrity_error?: boolean;
+  requires_org_assignment?: boolean;
   resolved_customer_name?: string;
   legacy_wo_ids?: string;
   folderUrl?: string;
@@ -42,6 +44,14 @@ type WorkOrder = {
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
+type OrgSuggestion = {
+  org_id: string;
+  name: string;
+  company?: string;
+  address?: string;
+  woCount?: number;
+  primary_site?: { address_line_1?: string; city?: string; state?: string; zip?: string };
+};
 
 const STAGES = [
   { key: 'lead',               label: 'Lead',         color: '#3b82f6' },
@@ -98,6 +108,46 @@ function formatScheduledDate(value: string): string {
   });
 }
 
+function normalizeIdentityText(value: string): string {
+  return (value || '')
+    .toLowerCase()
+    .replace(/[,\.]/g, '')
+    .replace(/\b(inc|llc|corp|ltd|co)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function scoreOrgSuggestion(org: OrgSuggestion, wo: WorkOrder): number {
+  const woName = normalizeIdentityText(wo.customer_name || wo.name || '');
+  const orgName = normalizeIdentityText(org.name || org.company || '');
+  const woAddress = normalizeIdentityText(wo.address || '');
+  const orgAddress = normalizeIdentityText(org.address || org.primary_site?.address_line_1 || '');
+  let score = 0;
+
+  if (woName && orgName) {
+    if (orgName === woName) score += 100;
+    else if (orgName.includes(woName) || woName.includes(orgName)) score += 70;
+    else {
+      const woTokens = new Set(woName.split(' ').filter(token => token.length > 2));
+      const orgTokens = orgName.split(' ').filter(token => token.length > 2);
+      const overlap = orgTokens.filter(token => woTokens.has(token)).length;
+      if (overlap > 0) score += Math.min(50, overlap * 18);
+    }
+  }
+
+  if (woAddress && orgAddress) {
+    if (orgAddress === woAddress) score += 90;
+    else if (orgAddress.includes(woAddress) || woAddress.includes(orgAddress)) score += 55;
+    else {
+      const woAddressTokens = new Set(woAddress.split(' ').filter(token => token.length > 2));
+      const overlap = orgAddress.split(' ').filter(token => woAddressTokens.has(token)).length;
+      if (overlap > 0) score += Math.min(45, overlap * 15);
+    }
+  }
+
+  return score;
+}
+
 const INP: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
   border: '1px solid #e2e8f0', background: 'white',
@@ -133,6 +183,10 @@ interface WODetailPanelProps {
 export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, onSave, onStageChange, onQuote, onEstimate, onFolderLinked }: WODetailPanelProps) {
   const [draft, setDraft] = useState<Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string }>({});
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [organizations, setOrganizations] = useState<OrgSuggestion[]>([]);
+  const [orgRepairSaving, setOrgRepairSaving] = useState('');
+  const [orgRepairError, setOrgRepairError] = useState('');
+  const [selectedOrgId, setSelectedOrgId] = useState('');
   const [procurementOrders, setProcurementOrders] = useState<any[]>([]);
   const [showAddQuote, setShowAddQuote] = useState(false);
   const [newQuote, setNewQuote] = useState({ vendor_org_id:'', vendor_name:'', quote_date:new Date().toISOString().slice(0,10), quote_valid_until:'', notes:'', quote_document_url:'', quote_document_name:'', line_items:[{ description:'', quantity:'1', unit:'EA', unit_cost:'' }] });
@@ -218,6 +272,19 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       .then(data => setCustomers(data.customers || data || []))
       .catch(err => console.error('[WODetailPanel] Failed to load customers:', err));
   }, []);
+
+  // Load organizations when this WO needs identity repair.
+  useEffect(() => {
+    if (!wo?.requires_org_assignment) {
+      setOrganizations([]);
+      setSelectedOrgId('');
+      return;
+    }
+    fetch('/api/organizations?limit=5000')
+      .then(r => r.json())
+      .then(data => setOrganizations(data.organizations || []))
+      .catch(err => console.error('[WODetailPanel] Failed to load organizations:', err));
+  }, [wo?.id, wo?.requires_org_assignment]);
 
   // Load procurement orders when WO changes
   useEffect(() => {
@@ -496,6 +563,27 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     return isField && (!woIsland || c.island === woIsland);
   });
   const contactPeople = parseDelimitedList((draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? '');
+  const orgSuggestions = useMemo(() => {
+    if (!safeWo.requires_org_assignment) return [];
+    return organizations
+      .map(org => ({ org, score: scoreOrgSuggestion(org, safeWo) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || (b.org.woCount || 0) - (a.org.woCount || 0))
+      .slice(0, 5)
+      .map(({ org }) => org);
+  }, [organizations, safeWo]);
+
+  async function handleOrgRepair(fields: Partial<WorkOrder>, savingKey: string) {
+    setOrgRepairSaving(savingKey);
+    setOrgRepairError('');
+    try {
+      await onSave(safeWo.id, fields);
+    } catch (err) {
+      setOrgRepairError(err instanceof Error ? err.message : 'Failed to update org assignment.');
+    } finally {
+      setOrgRepairSaving('');
+    }
+  }
 
   return (
     <>
@@ -537,6 +625,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 {wo.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>{wo.id}</span>}
                 {wo.legacy_wo_ids && <span title="Previous Work Order ID" style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>Legacy: {wo.legacy_wo_ids}</span>}
                 <span style={{ fontSize: 10, fontWeight: 800, color: stage.color, background: STAGE_BG[wo.status] || '#f8fafc', padding: '2px 8px', borderRadius: 999, border: `1px solid ${stage.color}33` }}>{stage.label}</span>
+                {wo.requires_org_assignment && <span style={{ fontSize: 10, fontWeight: 800, color: '#92400e', background: 'rgba(245,158,11,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.28)' }}>Needs Org Assignment</span>}
                 {wo.island && <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>{wo.island}</span>}
               </div>
             </div>
@@ -839,6 +928,95 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     >
                       Re-link
                     </button>
+                  </div>
+                )}
+                {wo.requires_org_assignment && (
+                  <div style={{ marginBottom: 14, padding: 14, borderRadius: 12, background: 'rgba(255,251,235,0.72)', border: '1px solid rgba(245,158,11,0.28)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 900, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Needs Org Assignment</div>
+                        <div style={{ fontSize: 12, color: '#92400e', fontWeight: 700, marginTop: 3 }}>Identity repair</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: '#92400e', background: 'white', padding: '3px 8px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.3)' }}>Safe repair</span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: viewport === 'stacked' ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                      {[
+                        ['Company', wo.customer_name || wo.name || ''],
+                        ['Customer ID', wo.customer_id || 'Missing'],
+                        ['Org ID', wo.org_id || 'Missing'],
+                        ['Address', wo.address || 'Missing'],
+                      ].map(([label, value]) => (
+                        <div key={label} style={{ padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(245,158,11,0.16)' }}>
+                          <div style={{ fontSize: 9, fontWeight: 800, color: '#b45309', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</div>
+                          <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 700, marginTop: 3, overflowWrap: 'anywhere' }}>{value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Suggested Matches</div>
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      {orgSuggestions.length === 0 ? (
+                        <div style={{ padding: 10, borderRadius: 8, background: 'white', border: '1px dashed rgba(245,158,11,0.35)', fontSize: 12, color: '#92400e', fontWeight: 700 }}>
+                          No suggested organizations found.
+                        </div>
+                      ) : orgSuggestions.map(org => {
+                        const selected = selectedOrgId === org.org_id;
+                        return (
+                          <button
+                            key={org.org_id}
+                            onClick={() => setSelectedOrgId(org.org_id)}
+                            style={{
+                              textAlign: 'left',
+                              padding: 10,
+                              borderRadius: 10,
+                              background: selected ? 'rgba(15,118,110,0.08)' : 'white',
+                              border: selected ? '1px solid rgba(15,118,110,0.38)' : '1px solid rgba(245,158,11,0.18)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                              <span style={{ fontSize: 12, fontWeight: 800, color: selected ? '#0f766e' : '#0f172a' }}>{org.name || org.company}</span>
+                              <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b' }}>{org.woCount || 0} WOs</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{org.org_id}</div>
+                            {(org.address || org.primary_site?.address_line_1) && (
+                              <div style={{ fontSize: 11, color: '#92400e', marginTop: 3 }}>{org.address || org.primary_site?.address_line_1}</div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {orgRepairError && (
+                      <div style={{ marginTop: 10, fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{orgRepairError}</div>
+                    )}
+
+                    {!readOnly && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                        <button
+                          onClick={() => selectedOrgId && handleOrgRepair({ org_id: selectedOrgId, requires_org_assignment: false }, 'assign')}
+                          disabled={!selectedOrgId || !!orgRepairSaving}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: selectedOrgId && !orgRepairSaving ? 'pointer' : 'default', opacity: selectedOrgId && !orgRepairSaving ? 1 : 0.5 }}
+                        >
+                          {orgRepairSaving === 'assign' ? 'Assigning...' : 'Assign to selected org'}
+                        </button>
+                        <button
+                          onClick={() => handleOrgRepair({ org_id: '', requires_org_assignment: true }, 'clear')}
+                          disabled={!!orgRepairSaving}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(148,163,184,0.45)', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: orgRepairSaving ? 'default' : 'pointer', opacity: orgRepairSaving ? 0.5 : 1 }}
+                        >
+                          {orgRepairSaving === 'clear' ? 'Clearing...' : 'Clear org assignment'}
+                        </button>
+                        <button
+                          onClick={() => handleOrgRepair({ requires_org_assignment: true }, 'review')}
+                          disabled={!!orgRepairSaving}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(245,158,11,0.35)', background: 'white', color: '#92400e', fontSize: 12, fontWeight: 800, cursor: orgRepairSaving ? 'default' : 'pointer', opacity: orgRepairSaving ? 0.5 : 1 }}
+                        >
+                          {orgRepairSaving === 'review' ? 'Marking...' : 'Mark needs review'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div style={{ display: 'grid', gap: 10 }}>

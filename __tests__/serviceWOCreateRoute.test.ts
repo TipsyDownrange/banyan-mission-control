@@ -135,15 +135,18 @@ function setupGoogleClients(options: {
 
 describe('Service WO create route', () => {
   let consoleErrorSpy: jest.SpyInstance;
+  let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockCheckPermission.mockResolvedValue({ allowed: true });
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
   });
 
   it('generates a valid sequential WO-YY-#### id when no incoming woNumber is provided', async () => {
@@ -219,6 +222,36 @@ describe('Service WO create route', () => {
           'banyan_dispatch',
         ]],
       },
+    }));
+    expect(clients.sheetsValuesUpdate).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      range: 'Service_Work_Orders!AU7',
+      requestBody: { values: [['false']] },
+    }));
+  });
+
+  it('allows WO creation with a missing org_id while logging an identity warning', async () => {
+    const clients = setupGoogleClients();
+    const { POST } = await import('@/app/api/service/dispatch/route');
+
+    const res = await POST(request(baseBody({ woNumber: '26-1235', org_id: '' })));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.woId).toBe('WO-26-1235');
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      '[identity] missing org_id on WO create',
+      expect.objectContaining({
+        customer_id: 'CUST-0001',
+        customerName: 'BAN-51 Test Customer',
+      })
+    );
+    expect(clients.sheetsValuesUpdate).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      range: 'Service_Work_Orders!AQ7:AS7',
+      requestBody: { values: [['', 'CUST-0001', 'false']] },
+    }));
+    expect(clients.sheetsValuesUpdate).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      range: 'Service_Work_Orders!AU7',
+      requestBody: { values: [['true']] },
     }));
   });
 });
