@@ -6,33 +6,78 @@ import { useSession } from 'next-auth/react';
 interface KBArticle {
   article_id: string;
   title: string;
-  body: string;
-  product_line: string;
-  tags: string[];
-  status: 'draft' | 'published';
-  author: string;
+  product_line_id: string;
+  article_type: string;
+  status: string;
+  field_visible: string;
+  revision: string;
+  symptom_terms: string;
+  safety_level: string;
+  stop_conditions: string;
+  quick_checks: string;
+  likely_causes: string;
+  parts_tools: string;
+  escalation: string;
+  source_document_ids: string[];
+  last_reviewed_at: string;
+  owner_user: string;
+  approved_by: string;
+  published_at: string;
   created_at: string;
   updated_at: string;
-  helpful_count: number;
-  not_helpful_count: number;
-  parts_refs: string[];
-  sources: string[];
+  archived_at: string;
+  notes: string;
 }
 
 interface KBFeedback {
   feedback_id: string;
   article_id: string;
-  helpful: boolean;
-  comment: string;
-  submitted_by: string;
   submitted_at: string;
+  submitted_by: string;
+  user_email: string;
+  source_app: string;
+  kID: string;
+  slot_id: string;
+  feedback_type: string;
+  feedback_text: string;
+  status: string;
+  triaged_by: string;
+  triaged_at: string;
+  resolution_notes: string;
+  created_task_id: string;
 }
 
 interface KBProductLine {
   product_line_id: string;
-  name: string;
+  manufacturer: string;
+  product_family: string;
+  display_name: string;
   description: string;
+  status: string;
+  field_visible: string;
+  sort_order: string;
+  created_at: string;
+  updated_at: string;
+  last_reviewed_at: string;
+  owner_notes: string;
   article_count?: number;
+}
+
+// ─── Status badge colors ──────────────────────────────────────────────────────
+function statusBadgeStyle(status: string): React.CSSProperties {
+  const map: Record<string, { bg: string; border: string; color: string }> = {
+    draft:      { bg: 'rgba(245,158,11,0.12)',   border: 'rgba(245,158,11,0.3)',   color: '#f59e0b' },
+    in_review:  { bg: 'rgba(96,165,250,0.12)',   border: 'rgba(96,165,250,0.3)',   color: '#60a5fa' },
+    approved:   { bg: 'rgba(167,139,250,0.12)',  border: 'rgba(167,139,250,0.3)',  color: '#a78bfa' },
+    published:  { bg: 'rgba(20,184,166,0.12)',   border: 'rgba(20,184,166,0.3)',   color: '#14b8a6' },
+    archived:   { bg: 'rgba(148,163,184,0.08)',  border: 'rgba(148,163,184,0.2)',  color: 'rgba(148,163,184,0.5)' },
+  };
+  const s = map[status] || map['draft'];
+  return {
+    fontSize: 10, fontWeight: 700, borderRadius: 5, padding: '2px 7px',
+    background: s.bg, border: `1px solid ${s.border}`, color: s.color,
+    display: 'inline-block',
+  };
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -90,16 +135,26 @@ function NewArticleForm({
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [productLine, setProductLine] = useState('');
-  const [tags, setTags] = useState('');
-  const [status, setStatus] = useState<'draft' | 'published'>('draft');
+  const [productLineId, setProductLineId] = useState('');
+  const [articleType, setArticleType] = useState('troubleshooting');
+  const [status, setStatus] = useState('draft');
+  const [fieldVisible, setFieldVisible] = useState(false);
+  const [revision, setRevision] = useState('0.1');
+  const [symptomTerms, setSymptomTerms] = useState('');
+  const [safetyLevel, setSafetyLevel] = useState('low');
+  const [stopConditions, setStopConditions] = useState('');
+  const [quickChecks, setQuickChecks] = useState('');
+  const [likelyCauses, setLikelyCauses] = useState('');
+  const [partsTools, setPartsTools] = useState('');
+  const [escalation, setEscalation] = useState('');
+  const [sourceDocumentIds, setSourceDocumentIds] = useState('');
+  const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSave() {
-    if (!title.trim() || !body.trim() || !productLine) {
-      setError('Title, body, and product line are required.');
+    if (!title.trim() || !productLineId) {
+      setError('Title and product line are required.');
       return;
     }
     setSaving(true);
@@ -110,15 +165,24 @@ function NewArticleForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
-          body: body.trim(),
-          product_line: productLine,
-          tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+          product_line_id: productLineId,
+          article_type: articleType,
           status,
+          field_visible: fieldVisible ? 'TRUE' : 'FALSE',
+          revision,
+          symptom_terms: symptomTerms,
+          safety_level: safetyLevel,
+          stop_conditions: stopConditions,
+          quick_checks: quickChecks,
+          likely_causes: likelyCauses,
+          parts_tools: partsTools,
+          escalation,
+          source_document_ids: sourceDocumentIds.split(',').map(s => s.trim()).filter(Boolean),
+          notes,
         }),
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Failed to save');
-      // Fetch the created article
       const artRes = await fetch(`/api/knowledge/${data.article_id}`);
       const artData = await artRes.json();
       if (artData.ok) onSave(artData.article);
@@ -139,6 +203,7 @@ function NewArticleForm({
     fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.6)',
     letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block',
   };
+  const ALL_STATUSES = ['draft', 'in_review', 'approved', 'published', 'archived'];
 
   return (
     <div style={{
@@ -147,7 +212,7 @@ function NewArticleForm({
     }}>
       <div style={{
         background: '#0f1c29', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 14, padding: 28, width: 560, maxWidth: '95vw',
+        borderRadius: 14, padding: 28, width: 600, maxWidth: '95vw',
         maxHeight: '90vh', overflowY: 'auto',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>
@@ -165,42 +230,112 @@ function NewArticleForm({
           <label style={labelStyle}>Title</label>
           <input value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} placeholder="Article title" />
         </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Product Line</label>
-          <select value={productLine} onChange={e => setProductLine(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-            <option value="">Select product line…</option>
-            {productLines.map(pl => (
-              <option key={pl.product_line_id} value={pl.name}>{pl.name}</option>
-            ))}
-          </select>
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Tags (comma-separated)</label>
-          <input value={tags} onChange={e => setTags(e.target.value)} style={inputStyle} placeholder="e.g. troubleshooting, sensor, motor" />
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Status</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {(['draft', 'published'] as const).map(s => (
-              <button key={s} onClick={() => setStatus(s)} style={{
-                padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                background: status === s ? (s === 'published' ? 'rgba(20,184,166,0.2)' : 'rgba(245,158,11,0.2)') : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${status === s ? (s === 'published' ? 'rgba(20,184,166,0.5)' : 'rgba(245,158,11,0.5)') : 'rgba(255,255,255,0.08)'}`,
-                color: status === s ? (s === 'published' ? '#14b8a6' : '#f59e0b') : 'rgba(148,163,184,0.6)',
-              }}>
-                {s === 'draft' ? 'Draft' : 'Published'}
-              </button>
-            ))}
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Product Line</label>
+            <select value={productLineId} onChange={e => setProductLineId(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+              <option value="">Select product line…</option>
+              {productLines.map(pl => (
+                <option key={pl.product_line_id} value={pl.product_line_id}>{pl.display_name}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Article Type</label>
+            <select value={articleType} onChange={e => setArticleType(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+              <option value="troubleshooting">Troubleshooting</option>
+              <option value="install">Install</option>
+              <option value="reference">Reference</option>
+              <option value="service_bulletin">Service Bulletin</option>
+              <option value="sop">SOP</option>
+            </select>
           </div>
         </div>
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Status</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {ALL_STATUSES.map(s => (
+                <button key={s} onClick={() => setStatus(s)} style={{
+                  ...statusBadgeStyle(s),
+                  cursor: 'pointer',
+                  opacity: status === s ? 1 : 0.45,
+                  outline: status === s ? '2px solid rgba(255,255,255,0.2)' : 'none',
+                  outlineOffset: 1,
+                }}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Safety Level</label>
+            <select value={safetyLevel} onChange={e => setSafetyLevel(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Revision</label>
+            <input value={revision} onChange={e => setRevision(e.target.value)} style={inputStyle} placeholder="0.1" />
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: 'rgba(148,163,184,0.75)', fontWeight: 600 }}>
+              <input
+                type="checkbox"
+                checked={fieldVisible}
+                onChange={e => setFieldVisible(e.target.checked)}
+                style={{ width: 14, height: 14, cursor: 'pointer' }}
+              />
+              Field Visible
+            </label>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Symptom Terms (comma-separated)</label>
+          <input value={symptomTerms} onChange={e => setSymptomTerms(e.target.value)} style={inputStyle} placeholder="e.g. door reverses, safety edge, fault code" />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Stop Conditions</label>
+          <textarea value={stopConditions} onChange={e => setStopConditions(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }} placeholder="Safety stops and hard limits" />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Quick Checks</label>
+          <textarea value={quickChecks} onChange={e => setQuickChecks(e.target.value)} style={{ ...inputStyle, minHeight: 80, resize: 'vertical', fontFamily: 'inherit' }} placeholder="Numbered quick check steps" />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Likely Causes</label>
+          <textarea value={likelyCauses} onChange={e => setLikelyCauses(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }} placeholder="Comma-separated likely causes" />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Parts & Tools</label>
+          <textarea value={partsTools} onChange={e => setPartsTools(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }} placeholder="Parts and tools required" />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Escalation</label>
+          <textarea value={escalation} onChange={e => setEscalation(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }} placeholder="Escalation path and criteria" />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Source Document IDs (comma-separated)</label>
+          <input value={sourceDocumentIds} onChange={e => setSourceDocumentIds(e.target.value)} style={inputStyle} placeholder="e.g. src-001, src-002" />
+        </div>
+
         <div style={{ marginBottom: 20 }}>
-          <label style={labelStyle}>Body</label>
-          <textarea
-            value={body}
-            onChange={e => setBody(e.target.value)}
-            style={{ ...inputStyle, minHeight: 200, resize: 'vertical', fontFamily: 'inherit' }}
-            placeholder="Article body (Markdown supported)"
-          />
+          <label style={labelStyle}>Notes (optional)</label>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }} placeholder="Internal notes" />
         </div>
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -223,6 +358,18 @@ function NewArticleForm({
   );
 }
 
+// ─── Section block ────────────────────────────────────────────────────────────
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.45)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 5 }}>
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── Article Detail ───────────────────────────────────────────────────────────
 function ArticleDetail({
   article,
@@ -238,33 +385,60 @@ function ArticleDetail({
   onDelete: (id: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
+
+  // Edit state mirrors all canon fields
   const [editTitle, setEditTitle] = useState(article.title);
-  const [editBody, setEditBody] = useState(article.body);
-  const [editProductLine, setEditProductLine] = useState(article.product_line);
-  const [editTags, setEditTags] = useState(article.tags.join(', '));
-  const [editStatus, setEditStatus] = useState<'draft' | 'published'>(article.status);
+  const [editProductLineId, setEditProductLineId] = useState(article.product_line_id);
+  const [editArticleType, setEditArticleType] = useState(article.article_type);
+  const [editStatus, setEditStatus] = useState(article.status);
+  const [editFieldVisible, setEditFieldVisible] = useState(article.field_visible === 'TRUE');
+  const [editRevision, setEditRevision] = useState(article.revision);
+  const [editSymptomTerms, setEditSymptomTerms] = useState(article.symptom_terms);
+  const [editSafetyLevel, setEditSafetyLevel] = useState(article.safety_level);
+  const [editStopConditions, setEditStopConditions] = useState(article.stop_conditions);
+  const [editQuickChecks, setEditQuickChecks] = useState(article.quick_checks);
+  const [editLikelyCauses, setEditLikelyCauses] = useState(article.likely_causes);
+  const [editPartsTools, setEditPartsTools] = useState(article.parts_tools);
+  const [editEscalation, setEditEscalation] = useState(article.escalation);
+  const [editSourceDocumentIds, setEditSourceDocumentIds] = useState(article.source_document_ids.join(', '));
+  const [editOwnerUser, setEditOwnerUser] = useState(article.owner_user);
+  const [editNotes, setEditNotes] = useState(article.notes);
+
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [voted, setVotedState] = useState<'helpful' | 'not_helpful' | undefined>(
     getVoted()[article.article_id]
   );
-  const [localHelpful, setLocalHelpful] = useState(article.helpful_count);
-  const [localNotHelpful, setLocalNotHelpful] = useState(article.not_helpful_count);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Reset edit state when article changes
   useEffect(() => {
     setEditing(false);
     setEditTitle(article.title);
-    setEditBody(article.body);
-    setEditProductLine(article.product_line);
-    setEditTags(article.tags.join(', '));
+    setEditProductLineId(article.product_line_id);
+    setEditArticleType(article.article_type);
     setEditStatus(article.status);
+    setEditFieldVisible(article.field_visible === 'TRUE');
+    setEditRevision(article.revision);
+    setEditSymptomTerms(article.symptom_terms);
+    setEditSafetyLevel(article.safety_level);
+    setEditStopConditions(article.stop_conditions);
+    setEditQuickChecks(article.quick_checks);
+    setEditLikelyCauses(article.likely_causes);
+    setEditPartsTools(article.parts_tools);
+    setEditEscalation(article.escalation);
+    setEditSourceDocumentIds(article.source_document_ids.join(', '));
+    setEditOwnerUser(article.owner_user);
+    setEditNotes(article.notes);
     setVotedState(getVoted()[article.article_id]);
-    setLocalHelpful(article.helpful_count);
-    setLocalNotHelpful(article.not_helpful_count);
-  }, [article.article_id, article.title, article.body, article.product_line, article.tags, article.status, article.helpful_count, article.not_helpful_count]);
+  }, [
+    article.article_id, article.title, article.product_line_id, article.article_type,
+    article.status, article.field_visible, article.revision, article.symptom_terms,
+    article.safety_level, article.stop_conditions, article.quick_checks, article.likely_causes,
+    article.parts_tools, article.escalation, article.source_document_ids, article.owner_user,
+    article.notes,
+  ]);
 
   function showToast(message: string, type: 'success' | 'error') {
     setToast({ message, type });
@@ -279,10 +453,21 @@ function ArticleDetail({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: editTitle,
-          body: editBody,
-          product_line: editProductLine,
-          tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
+          product_line_id: editProductLineId,
+          article_type: editArticleType,
           status: editStatus,
+          field_visible: editFieldVisible ? 'TRUE' : 'FALSE',
+          revision: editRevision,
+          symptom_terms: editSymptomTerms,
+          safety_level: editSafetyLevel,
+          stop_conditions: editStopConditions,
+          quick_checks: editQuickChecks,
+          likely_causes: editLikelyCauses,
+          parts_tools: editPartsTools,
+          escalation: editEscalation,
+          source_document_ids: editSourceDocumentIds.split(',').map(s => s.trim()).filter(Boolean),
+          owner_user: editOwnerUser,
+          notes: editNotes,
         }),
       });
       const data = await res.json();
@@ -290,10 +475,21 @@ function ArticleDetail({
       onUpdate({
         ...article,
         title: editTitle,
-        body: editBody,
-        product_line: editProductLine,
-        tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
+        product_line_id: editProductLineId,
+        article_type: editArticleType,
         status: editStatus,
+        field_visible: editFieldVisible ? 'TRUE' : 'FALSE',
+        revision: editRevision,
+        symptom_terms: editSymptomTerms,
+        safety_level: editSafetyLevel,
+        stop_conditions: editStopConditions,
+        quick_checks: editQuickChecks,
+        likely_causes: editLikelyCauses,
+        parts_tools: editPartsTools,
+        escalation: editEscalation,
+        source_document_ids: editSourceDocumentIds.split(',').map(s => s.trim()).filter(Boolean),
+        owner_user: editOwnerUser,
+        notes: editNotes,
         updated_at: new Date().toISOString(),
       });
       setEditing(false);
@@ -319,22 +515,22 @@ function ArticleDetail({
     }
   }
 
-  async function handleVote(helpful: boolean) {
+  async function handleVote(type: 'helpful' | 'not_helpful') {
     if (voted) return;
-    const voteType = helpful ? 'helpful' : 'not_helpful';
-    setVotedState(voteType);
-    setVoted(article.article_id, voteType);
-    if (helpful) setLocalHelpful(n => n + 1);
-    else setLocalNotHelpful(n => n + 1);
+    setVotedState(type);
+    setVoted(article.article_id, type);
     try {
       await fetch('/api/knowledge/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ article_id: article.article_id, helpful }),
+        body: JSON.stringify({
+          article_id: article.article_id,
+          feedback_type: type,
+          feedback_text: '',
+          source_app: 'mission_control',
+        }),
       });
-    } catch {
-      // Optimistic — ignore error
-    }
+    } catch { /* optimistic */ }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -343,139 +539,258 @@ function ArticleDetail({
     borderRadius: 8, color: 'rgba(248,250,252,0.85)', fontSize: 13,
     padding: '8px 10px', outline: 'none',
   };
+  const taStyle: React.CSSProperties = { ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 };
+  const ALL_STATUSES = ['draft', 'in_review', 'approved', 'published', 'archived'];
+  const blockText: React.CSSProperties = { fontSize: 13, color: 'rgba(248,250,252,0.75)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' };
 
   return (
     <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto', minWidth: 0 }}>
       {toast && <Toast message={toast.message} type={toast.type} />}
 
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
+      {/* Title */}
+      <div style={{ marginBottom: 16 }}>
         {editing ? (
-          <input
-            value={editTitle}
-            onChange={e => setEditTitle(e.target.value)}
-            style={{ ...inputStyle, fontSize: 18, fontWeight: 800, marginBottom: 12 }}
-          />
+          <input value={editTitle} onChange={e => setEditTitle(e.target.value)} style={{ ...inputStyle, fontSize: 18, fontWeight: 800, marginBottom: 8 }} />
         ) : (
           <div style={{ fontSize: 18, fontWeight: 800, color: 'rgba(248,250,252,0.9)', lineHeight: 1.3, marginBottom: 8 }}>
             {article.title}
           </div>
         )}
 
-        {/* Meta row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        {/* Meta chips row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {editing ? (
-            <select value={editProductLine} onChange={e => setEditProductLine(e.target.value)} style={{ ...inputStyle, width: 'auto', fontSize: 11, padding: '4px 8px' }}>
+            <select value={editProductLineId} onChange={e => setEditProductLineId(e.target.value)} style={{ ...inputStyle, width: 'auto', fontSize: 11, padding: '4px 8px' }}>
               {productLines.map(pl => (
-                <option key={pl.product_line_id} value={pl.name}>{pl.name}</option>
+                <option key={pl.product_line_id} value={pl.product_line_id}>{pl.display_name}</option>
               ))}
             </select>
           ) : (
-            <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.25)', color: '#14b8a6', borderRadius: 6, padding: '2px 8px' }}>
-              {article.product_line}
+            <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.22)', color: '#14b8a6', borderRadius: 6, padding: '2px 8px' }}>
+              {article.product_line_id}
             </span>
           )}
 
           {editing ? (
-            <div style={{ display: 'flex', gap: 6 }}>
-              {(['draft', 'published'] as const).map(s => (
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              {ALL_STATUSES.map(s => (
                 <button key={s} onClick={() => setEditStatus(s)} style={{
-                  padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                  background: editStatus === s ? (s === 'published' ? 'rgba(20,184,166,0.2)' : 'rgba(245,158,11,0.2)') : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${editStatus === s ? (s === 'published' ? 'rgba(20,184,166,0.4)' : 'rgba(245,158,11,0.4)') : 'rgba(255,255,255,0.08)'}`,
-                  color: editStatus === s ? (s === 'published' ? '#14b8a6' : '#f59e0b') : 'rgba(148,163,184,0.5)',
+                  ...statusBadgeStyle(s),
+                  cursor: 'pointer',
+                  opacity: editStatus === s ? 1 : 0.4,
+                  outline: editStatus === s ? '2px solid rgba(255,255,255,0.15)' : 'none',
+                  outlineOffset: 1,
                 }}>
-                  {s === 'draft' ? 'Draft' : 'Published'}
+                  {s}
                 </button>
               ))}
             </div>
           ) : (
-            <span style={{
-              fontSize: 11, fontWeight: 700, borderRadius: 6, padding: '2px 8px',
-              background: article.status === 'published' ? 'rgba(20,184,166,0.1)' : 'rgba(245,158,11,0.1)',
-              border: `1px solid ${article.status === 'published' ? 'rgba(20,184,166,0.25)' : 'rgba(245,158,11,0.25)'}`,
-              color: article.status === 'published' ? '#14b8a6' : '#f59e0b',
-            }}>
-              {article.status === 'published' ? 'Published' : 'Draft'}
-            </span>
+            <span style={statusBadgeStyle(article.status)}>{article.status}</span>
           )}
 
-          <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.45)' }}>
-            Updated {formatDate(article.updated_at)}
-          </span>
-          <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.45)' }}>
-            by {article.author}
-          </span>
-        </div>
-
-        {/* Tags */}
-        <div style={{ marginTop: 10 }}>
-          {editing ? (
-            <input value={editTags} onChange={e => setEditTags(e.target.value)} style={{ ...inputStyle, fontSize: 12 }} placeholder="Tags (comma-separated)" />
-          ) : (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {article.tags.map(tag => (
-                <span key={tag} style={{ fontSize: 11, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(148,163,184,0.7)', borderRadius: 5, padding: '2px 8px' }}>
-                  {tag}
-                </span>
-              ))}
-            </div>
+          {!editing && (
+            <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.45)' }}>
+              Updated {formatDate(article.updated_at)}
+            </span>
           )}
         </div>
       </div>
 
-      {/* Divider */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: 20 }} />
 
-      {/* Body */}
-      {editing ? (
-        <textarea
-          value={editBody}
-          onChange={e => setEditBody(e.target.value)}
-          style={{ ...inputStyle, minHeight: 300, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
-        />
-      ) : (
-        <div style={{ fontSize: 13, color: 'rgba(248,250,252,0.8)', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {article.body}
-        </div>
+      {/* Read mode: all canon fields */}
+      {!editing && (
+        <>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
+            <Section label="Article Type">
+              <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.7)' }}>{article.article_type || '—'}</span>
+            </Section>
+            <Section label="Field Visible">
+              <span style={{ fontSize: 12, color: article.field_visible === 'TRUE' ? '#14b8a6' : 'rgba(148,163,184,0.5)' }}>
+                {article.field_visible === 'TRUE' ? 'Yes' : 'No'}
+              </span>
+            </Section>
+            <Section label="Revision">
+              <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.7)' }}>{article.revision || '—'}</span>
+            </Section>
+            <Section label="Safety Level">
+              <span style={{ fontSize: 12, color: article.safety_level === 'high' ? '#f87171' : article.safety_level === 'medium' ? '#f59e0b' : 'rgba(148,163,184,0.7)' }}>
+                {article.safety_level || '—'}
+              </span>
+            </Section>
+          </div>
+
+          {article.symptom_terms && (
+            <Section label="Symptom Terms">
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {article.symptom_terms.split(',').map(t => t.trim()).filter(Boolean).map(term => (
+                  <span key={term} style={{ fontSize: 11, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(148,163,184,0.75)', borderRadius: 5, padding: '2px 8px' }}>
+                    {term}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {article.stop_conditions && (
+            <Section label="Stop Conditions">
+              <div style={{ ...blockText, color: '#f87171' }}>{article.stop_conditions}</div>
+            </Section>
+          )}
+          {article.quick_checks && (
+            <Section label="Quick Checks">
+              <div style={blockText}>{article.quick_checks}</div>
+            </Section>
+          )}
+          {article.likely_causes && (
+            <Section label="Likely Causes">
+              <div style={blockText}>{article.likely_causes}</div>
+            </Section>
+          )}
+          {article.parts_tools && (
+            <Section label="Parts & Tools">
+              <div style={blockText}>{article.parts_tools}</div>
+            </Section>
+          )}
+          {article.escalation && (
+            <Section label="Escalation">
+              <div style={blockText}>{article.escalation}</div>
+            </Section>
+          )}
+
+          {article.source_document_ids.length > 0 && (
+            <Section label="Source Document IDs">
+              <ul style={{ margin: 0, paddingLeft: 16 }}>
+                {article.source_document_ids.map((src, i) => (
+                  <li key={i} style={{ fontSize: 12, color: 'rgba(148,163,184,0.75)', marginBottom: 4 }}>
+                    {isUrl(src) ? (
+                      <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: '#14b8a6', textDecoration: 'underline', wordBreak: 'break-all' }}>{src}</a>
+                    ) : src}
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
+            {article.owner_user && (
+              <Section label="Owner">
+                <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.65)' }}>{article.owner_user}</span>
+              </Section>
+            )}
+            {article.approved_by && (
+              <Section label="Approved By">
+                <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.65)' }}>{article.approved_by}</span>
+              </Section>
+            )}
+            {article.published_at && (
+              <Section label="Published At">
+                <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.65)' }}>{formatDate(article.published_at)}</span>
+              </Section>
+            )}
+            {article.last_reviewed_at && (
+              <Section label="Last Reviewed At">
+                <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.65)' }}>{formatDate(article.last_reviewed_at)}</span>
+              </Section>
+            )}
+            {article.created_at && (
+              <Section label="Created At">
+                <span style={{ fontSize: 12, color: 'rgba(148,163,184,0.5)' }}>{formatDate(article.created_at)}</span>
+              </Section>
+            )}
+            {article.updated_at && (
+              <Section label="Updated At">
+                <span style={{ fontSize: 12, color: 'rgba(148,163,184,0.5)' }}>{formatDate(article.updated_at)}</span>
+              </Section>
+            )}
+          </div>
+
+          {article.notes && (
+            <Section label="Notes">
+              <div style={{ ...blockText, color: 'rgba(148,163,184,0.65)', fontStyle: 'italic' }}>{article.notes}</div>
+            </Section>
+          )}
+        </>
       )}
 
-      {/* Parts refs */}
-      {!editing && article.parts_refs.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.5)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>Parts References</div>
-          <ul style={{ margin: 0, paddingLeft: 16 }}>
-            {article.parts_refs.map((ref, i) => (
-              <li key={i} style={{ fontSize: 12, color: 'rgba(148,163,184,0.75)', marginBottom: 4 }}>{ref}</li>
-            ))}
-          </ul>
-        </div>
+      {/* Edit mode */}
+      {editing && (
+        <>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Article Type</label>
+              <select value={editArticleType} onChange={e => setEditArticleType(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="troubleshooting">Troubleshooting</option>
+                <option value="install">Install</option>
+                <option value="reference">Reference</option>
+                <option value="service_bulletin">Service Bulletin</option>
+                <option value="sop">SOP</option>
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Safety Level</label>
+              <select value={editSafetyLevel} onChange={e => setEditSafetyLevel(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Revision</label>
+              <input value={editRevision} onChange={e => setEditRevision(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ flex: 1, paddingBottom: 4 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: 'rgba(148,163,184,0.75)', fontWeight: 600 }}>
+                <input type="checkbox" checked={editFieldVisible} onChange={e => setEditFieldVisible(e.target.checked)} style={{ width: 14, height: 14, cursor: 'pointer' }} />
+                Field Visible
+              </label>
+            </div>
+          </div>
+
+          {([
+            ['Symptom Terms (comma-sep)', editSymptomTerms, setEditSymptomTerms, false],
+            ['Stop Conditions', editStopConditions, setEditStopConditions, true],
+            ['Quick Checks', editQuickChecks, setEditQuickChecks, true],
+            ['Likely Causes', editLikelyCauses, setEditLikelyCauses, true],
+            ['Parts & Tools', editPartsTools, setEditPartsTools, true],
+            ['Escalation', editEscalation, setEditEscalation, true],
+          ] as [string, string, (v: string) => void, boolean][]).map(([lbl, val, setter, isTA]) => (
+            <div key={lbl} style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>{lbl}</label>
+              {isTA ? (
+                <textarea value={val} onChange={e => setter(e.target.value)} style={{ ...taStyle, minHeight: 60 }} />
+              ) : (
+                <input value={val} onChange={e => setter(e.target.value)} style={inputStyle} />
+              )}
+            </div>
+          ))}
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Source Document IDs (comma-sep)</label>
+            <input value={editSourceDocumentIds} onChange={e => setEditSourceDocumentIds(e.target.value)} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Owner</label>
+            <input value={editOwnerUser} onChange={e => setEditOwnerUser(e.target.value)} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(148,163,184,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Notes</label>
+            <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} style={{ ...taStyle, minHeight: 60 }} />
+          </div>
+        </>
       )}
 
-      {/* Sources */}
-      {!editing && article.sources.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.5)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>Sources</div>
-          <ul style={{ margin: 0, paddingLeft: 16 }}>
-            {article.sources.map((src, i) => (
-              <li key={i} style={{ fontSize: 12, color: 'rgba(148,163,184,0.75)', marginBottom: 4 }}>
-                {isUrl(src) ? (
-                  <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: '#14b8a6', textDecoration: 'underline', wordBreak: 'break-all' }}>{src}</a>
-                ) : src}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Divider */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '20px 0' }} />
 
-      {/* Helpful / Not helpful */}
+      {/* Helpful / Not helpful vote */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
         <span style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)' }}>Was this helpful?</span>
         <button
-          onClick={() => handleVote(true)}
+          onClick={() => handleVote('helpful')}
           disabled={!!voted}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
@@ -486,10 +801,10 @@ function ArticleDetail({
             opacity: voted && voted !== 'helpful' ? 0.5 : 1,
           }}
         >
-          👍 {localHelpful}
+          👍 Helpful
         </button>
         <button
-          onClick={() => handleVote(false)}
+          onClick={() => handleVote('not_helpful')}
           disabled={!!voted}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
@@ -500,7 +815,7 @@ function ArticleDetail({
             opacity: voted && voted !== 'not_helpful' ? 0.5 : 1,
           }}
         >
-          👎 {localNotHelpful}
+          👎 Not Helpful
         </button>
       </div>
 
@@ -606,13 +921,15 @@ export default function KnowledgeLibraryPanel() {
     }
   }, [tab, isManagement]);
 
-  // Filtered articles
+  // Filtered articles — use product_line_id and search over title, symptom_terms, quick_checks, notes
   const filteredArticles = articles.filter(a => {
-    const matchLine = selectedLine === 'All' || a.product_line === selectedLine;
-    const matchSearch = !search.trim() || (
-      a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.body.toLowerCase().includes(search.toLowerCase()) ||
-      a.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+    const matchLine = selectedLine === 'All' || a.product_line_id === selectedLine;
+    const lower = search.toLowerCase().trim();
+    const matchSearch = !lower || (
+      a.title.toLowerCase().includes(lower) ||
+      a.symptom_terms.toLowerCase().includes(lower) ||
+      a.quick_checks.toLowerCase().includes(lower) ||
+      a.notes.toLowerCase().includes(lower)
     );
     return matchLine && matchSearch;
   });
@@ -702,7 +1019,7 @@ export default function KnowledgeLibraryPanel() {
         ))}
       </div>
 
-      {/* Body */}
+      {/* Articles tab */}
       {tab === 'articles' && (
         <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
           {/* Left sidebar */}
@@ -711,19 +1028,27 @@ export default function KnowledgeLibraryPanel() {
             borderRight: '1px solid rgba(255,255,255,0.06)',
             background: '#0d1f2d',
           }}>
-            {/* Product line pills */}
+            {/* Product line filter pills — use display_name for label, product_line_id for value */}
             <div style={{
               padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)',
               display: 'flex', flexWrap: 'wrap', gap: 5,
             }}>
-              {['All', ...productLines.map(pl => pl.name)].map(pl => (
-                <button key={pl} onClick={() => setSelectedLine(pl)} style={{
+              <button onClick={() => setSelectedLine('All')} style={{
+                padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                background: selectedLine === 'All' ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${selectedLine === 'All' ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                color: selectedLine === 'All' ? '#14b8a6' : 'rgba(148,163,184,0.55)',
+              }}>
+                All
+              </button>
+              {productLines.map(pl => (
+                <button key={pl.product_line_id} onClick={() => setSelectedLine(pl.product_line_id)} style={{
                   padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                  background: selectedLine === pl ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${selectedLine === pl ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                  color: selectedLine === pl ? '#14b8a6' : 'rgba(148,163,184,0.55)',
+                  background: selectedLine === pl.product_line_id ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${selectedLine === pl.product_line_id ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                  color: selectedLine === pl.product_line_id ? '#14b8a6' : 'rgba(148,163,184,0.55)',
                 }}>
-                  {pl}
+                  {pl.display_name}
                 </button>
               ))}
             </div>
@@ -762,19 +1087,9 @@ export default function KnowledgeLibraryPanel() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.15)', color: 'rgba(20,184,166,0.7)', borderRadius: 4, padding: '1px 6px' }}>
-                        {a.product_line}
+                        {a.product_line_id}
                       </span>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '1px 6px',
-                        background: a.status === 'published' ? 'rgba(20,184,166,0.08)' : 'rgba(245,158,11,0.1)',
-                        border: `1px solid ${a.status === 'published' ? 'rgba(20,184,166,0.15)' : 'rgba(245,158,11,0.2)'}`,
-                        color: a.status === 'published' ? 'rgba(20,184,166,0.7)' : '#f59e0b',
-                      }}>
-                        {a.status === 'published' ? 'Published' : 'Draft'}
-                      </span>
-                      <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.45)', marginLeft: 'auto' }}>
-                        👍 {a.helpful_count}
-                      </span>
+                      <span style={statusBadgeStyle(a.status)}>{a.status}</span>
                     </div>
                   </button>
                 );
@@ -800,6 +1115,7 @@ export default function KnowledgeLibraryPanel() {
         </div>
       )}
 
+      {/* Feedback tab */}
       {tab === 'feedback' && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
           {!isManagement && (
@@ -814,6 +1130,16 @@ export default function KnowledgeLibraryPanel() {
           )}
           {isManagement && feedback.map(f => {
             const article = articles.find(a => a.article_id === f.article_id);
+            const typeIcon = f.feedback_type === 'helpful' ? '👍'
+              : f.feedback_type === 'not_helpful' ? '👎'
+              : f.feedback_type === 'correction' ? '⚠️'
+              : '❓';
+            const fStatusStyle: React.CSSProperties = {
+              fontSize: 10, fontWeight: 700, borderRadius: 5, padding: '2px 7px',
+              background: f.status === 'open' ? 'rgba(245,158,11,0.12)' : f.status === 'triaged' ? 'rgba(96,165,250,0.12)' : 'rgba(20,184,166,0.12)',
+              border: `1px solid ${f.status === 'open' ? 'rgba(245,158,11,0.3)' : f.status === 'triaged' ? 'rgba(96,165,250,0.3)' : 'rgba(20,184,166,0.3)'}`,
+              color: f.status === 'open' ? '#f59e0b' : f.status === 'triaged' ? '#60a5fa' : '#14b8a6',
+            };
             return (
               <div key={f.feedback_id} style={{
                 background: '#0d1f2d', border: '1px solid rgba(255,255,255,0.06)',
@@ -821,19 +1147,22 @@ export default function KnowledgeLibraryPanel() {
                 display: 'flex', alignItems: 'flex-start', gap: 14,
               }}>
                 <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>
-                  {f.helpful ? '👍' : '👎'}
+                  {typeIcon}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(248,250,252,0.8)', marginBottom: 4 }}>
-                    {article?.title || f.article_id}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(248,250,252,0.8)' }}>
+                      {article?.title || f.article_id}
+                    </div>
+                    <span style={fStatusStyle}>{f.status || 'open'}</span>
                   </div>
-                  {f.comment && (
+                  {f.feedback_text && (
                     <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.7)', marginBottom: 4, fontStyle: 'italic' }}>
-                      &ldquo;{f.comment}&rdquo;
+                      &ldquo;{f.feedback_text}&rdquo;
                     </div>
                   )}
                   <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.4)' }}>
-                    {f.submitted_by} · {formatDate(f.submitted_at)}
+                    {f.user_email} · {formatDate(f.submitted_at)}
                   </div>
                 </div>
               </div>

@@ -7,6 +7,10 @@ import {
   KB_ARTICLES_SHEET,
   KB_FEEDBACK_SHEET,
   KB_PRODUCT_LINES_SHEET,
+  KB_SOURCE_DOCUMENTS_SHEET,
+  KB_PARTS_SHEET,
+  KB_SEARCH_TERMS_SHEET,
+  KB_ARTICLE_VIEWS_SHEET,
   articleToRow,
 } from '@/lib/knowledge';
 
@@ -16,40 +20,50 @@ function isAuthorized(email?: string | null) {
 
 const SHEET_ID = getBackendSheetId();
 
-const SEED_PRODUCT_LINES = [
-  { id: 'pl-auto-entrances', name: 'Automatic Entrances', description: 'Automatic sliding, swing, and revolving door systems' },
-  { id: 'pl-storefront', name: 'Storefront', description: 'Aluminum storefront framing and glazing' },
-  { id: 'pl-curtainwall', name: 'Curtainwall', description: 'Stick and unitized curtainwall systems' },
-  { id: 'pl-window-wall', name: 'Window Wall', description: 'Window wall systems and glazing' },
-  { id: 'pl-shower-bath', name: 'Shower & Bath', description: 'Frameless and semi-frameless shower enclosures' },
-  { id: 'pl-mirrors', name: 'Mirrors', description: 'Commercial and residential mirror fabrication and installation' },
-  { id: 'pl-railing', name: 'Railing', description: 'Glass and cable railing systems' },
-  { id: 'pl-igu', name: 'IGU / Glass', description: 'Insulated glass units, tempered, laminated, and specialty glass' },
+const ALL_KB_SHEETS = [
+  KB_ARTICLES_SHEET,
+  KB_FEEDBACK_SHEET,
+  KB_PRODUCT_LINES_SHEET,
+  KB_SOURCE_DOCUMENTS_SHEET,
+  KB_PARTS_SHEET,
+  KB_SEARCH_TERMS_SHEET,
+  KB_ARTICLE_VIEWS_SHEET,
 ];
 
-const SEED_ARTICLE_BODY = `## Symptoms
-- Door does not respond to sensor activation
-- Door opens partially and reverses
-- Door opens but does not close
-
-## Step 1 — Check Power
-Verify the controller box shows a green power LED. Check the circuit breaker. Confirm 120V AC at the power inlet.
-
-## Step 2 — Check Sensor Loop
-Cover the activation sensor with your hand and observe the controller indicator. If no response, test sensor wiring continuity from sensor head to controller terminal block.
-
-## Step 3 — Check Safety Edges
-Inspect all rubber safety edges for damage or disconnection. A tripped safety edge will prevent door movement.
-
-## Step 4 — Check Motor Drive
-With door in manual mode, push door by hand. Resistance indicates a drive belt or gear issue. Check belt tension and motor coupling.
-
-## Step 5 — Check Controller Fault Codes
-Refer to manufacturer fault code table. Common codes: E01 = motor overload, E02 = encoder fault, E03 = safety edge open.
-
-## Notes
-- Always engage manual mode before working on drive components
-- Document fault codes and conditions before clearing`;
+const CANON_HEADERS: Record<string, string[]> = {
+  [KB_ARTICLES_SHEET]: [
+    'article_id','title','product_line_id','article_type','status','field_visible','revision',
+    'symptom_terms','safety_level','stop_conditions','quick_checks','likely_causes','parts_tools',
+    'escalation','source_document_ids','last_reviewed_at','owner_user','approved_by','published_at',
+    'created_at','updated_at','archived_at','notes',
+  ],
+  [KB_FEEDBACK_SHEET]: [
+    'feedback_id','article_id','submitted_at','submitted_by','user_email','source_app','kID',
+    'slot_id','feedback_type','feedback_text','status','triaged_by','triaged_at',
+    'resolution_notes','created_task_id',
+  ],
+  [KB_PRODUCT_LINES_SHEET]: [
+    'product_line_id','manufacturer','product_family','display_name','description','status',
+    'field_visible','sort_order','created_at','updated_at','last_reviewed_at','owner_notes',
+  ],
+  [KB_SOURCE_DOCUMENTS_SHEET]: [
+    'source_id','title','source_type','manufacturer','product_line_id','url','storage_ref',
+    'revision_or_doc_number','source_status','copyright_notes','review_status','last_reviewed_at',
+    'reviewed_by','created_at','updated_at','notes',
+  ],
+  [KB_PARTS_SHEET]: [
+    'part_id','product_line_id','manufacturer','part_name','part_number','part_type','description',
+    'source_id','vendor_url','verification_status','field_visible','created_at','updated_at','notes',
+  ],
+  [KB_SEARCH_TERMS_SHEET]: [
+    'term_id','term','normalized_term','product_line_id','article_id','term_type','weight',
+    'status','created_at','updated_at','notes',
+  ],
+  [KB_ARTICLE_VIEWS_SHEET]: [
+    'view_id','article_id','viewed_at','viewed_by','user_email','source_app','kID',
+    'slot_id','query','matched_terms',
+  ],
+};
 
 export async function POST() {
   const session = await getServerSession();
@@ -67,9 +81,7 @@ export async function POST() {
       (spreadsheet.data.sheets || []).map(s => s.properties?.title || '')
     );
 
-    const sheetsToCreate = [KB_ARTICLES_SHEET, KB_FEEDBACK_SHEET, KB_PRODUCT_LINES_SHEET]
-      .filter(name => !existingTitles.has(name));
-
+    const sheetsToCreate = ALL_KB_SHEETS.filter(name => !existingTitles.has(name));
     const created: string[] = [];
 
     // Create missing sheets
@@ -85,25 +97,12 @@ export async function POST() {
       created.push(...sheetsToCreate);
     }
 
-    // Write headers to newly created sheets
+    // Write canon headers to newly created sheets
     const headerWrites: { range: string; values: string[][] }[] = [];
-
-    if (sheetsToCreate.includes(KB_ARTICLES_SHEET)) {
+    for (const sheetName of sheetsToCreate) {
       headerWrites.push({
-        range: `${KB_ARTICLES_SHEET}!A1`,
-        values: [['article_id', 'title', 'body', 'product_line', 'tags', 'status', 'author', 'created_at', 'updated_at', 'helpful_count', 'not_helpful_count', 'parts_refs', 'sources']],
-      });
-    }
-    if (sheetsToCreate.includes(KB_FEEDBACK_SHEET)) {
-      headerWrites.push({
-        range: `${KB_FEEDBACK_SHEET}!A1`,
-        values: [['feedback_id', 'article_id', 'helpful', 'comment', 'submitted_by', 'submitted_at']],
-      });
-    }
-    if (sheetsToCreate.includes(KB_PRODUCT_LINES_SHEET)) {
-      headerWrites.push({
-        range: `${KB_PRODUCT_LINES_SHEET}!A1`,
-        values: [['product_line_id', 'name', 'description']],
+        range: `${sheetName}!A1`,
+        values: [CANON_HEADERS[sheetName]],
       });
     }
 
@@ -118,14 +117,15 @@ export async function POST() {
     }
 
     let seeded = false;
+    const now = new Date().toISOString();
 
-    // Seed product lines if newly created OR empty
-    const seedProductLines = sheetsToCreate.includes(KB_PRODUCT_LINES_SHEET);
-    let plEmpty = seedProductLines;
+    // Seed product lines if newly created OR has empty A2
+    const plNewlyCreated = sheetsToCreate.includes(KB_PRODUCT_LINES_SHEET);
+    let plEmpty = plNewlyCreated;
     if (!plEmpty) {
       const plCheck = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `${KB_PRODUCT_LINES_SHEET}!A2:A10`,
+        range: `${KB_PRODUCT_LINES_SHEET}!A2:A3`,
       });
       plEmpty = !(plCheck.data.values && plCheck.data.values.length > 0 && plCheck.data.values[0][0]);
     }
@@ -136,15 +136,20 @@ export async function POST() {
         range: `${KB_PRODUCT_LINES_SHEET}!A2`,
         valueInputOption: 'RAW',
         requestBody: {
-          values: SEED_PRODUCT_LINES.map(pl => [pl.id, pl.name, pl.description]),
+          values: [
+            ['ASSA_SW200','ASSA ABLOY','Pedestrian','ASSA SW200','Automatic swing door operator','active','TRUE','1',now,'','',''],
+            ['ASSA_SL500','ASSA ABLOY','Pedestrian','ASSA SL500','Automatic sliding door operator','active','TRUE','2',now,'','',''],
+            ['ASSA_SL500_RESILIENCE','ASSA ABLOY','Pedestrian','ASSA SL500 Resilience','High-traffic resilience automatic sliding door','active','TRUE','3',now,'','',''],
+            ['AUTO_ENTRANCE_GENERIC','Generic','Automatic Entrances','Automatic Entrances (Generic)','Generic automatic entrance troubleshooting','active','TRUE','4',now,'','',''],
+          ],
         },
       });
       seeded = true;
     }
 
-    // Seed articles if newly created OR empty
-    const seedArticles = sheetsToCreate.includes(KB_ARTICLES_SHEET);
-    let artEmpty = seedArticles;
+    // Seed starter article if newly created OR has empty A2
+    const artNewlyCreated = sheetsToCreate.includes(KB_ARTICLES_SHEET);
+    let artEmpty = artNewlyCreated;
     if (!artEmpty) {
       const artCheck = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -154,27 +159,37 @@ export async function POST() {
     }
 
     if (artEmpty) {
-      const now = new Date().toISOString();
-      const seedArticle = articleToRow({
-        article_id: 'ka-ae-001',
-        title: 'Automatic Entrance Door Fails to Open — Troubleshooting Guide',
-        body: SEED_ARTICLE_BODY,
-        product_line: 'Automatic Entrances',
-        tags: ['troubleshooting', 'automatic entrances', 'sensor', 'motor'],
-        status: 'published',
-        author: 'BanyanOS Seed',
+      const seedRow = articleToRow({
+        article_id: 'ka-sw200-001',
+        title: 'SW200 - Door Opens Then Reverses',
+        product_line_id: 'ASSA_SW200',
+        article_type: 'troubleshooting',
+        status: 'in_review',
+        field_visible: 'FALSE',
+        revision: '0.1',
+        symptom_terms: 'door reverses,opens and closes,safety edge,obstruction',
+        safety_level: 'medium',
+        stop_conditions: 'Do not override safety edges. Do not bypass obstruction detection.',
+        quick_checks: '1. Check for physical obstruction in door path\n2. Inspect safety edges for damage or disconnection\n3. Check controller fault LED',
+        likely_causes: 'Safety edge tripped, obstruction in path, encoder fault, controller E03 fault',
+        parts_tools: 'Safety edge tester, multimeter, controller manual',
+        escalation: 'If fault persists after safety edge and obstruction check, escalate to ASSA service rep',
+        source_document_ids: [],
+        last_reviewed_at: '',
+        owner_user: 'BanyanOS Seed',
+        approved_by: '',
+        published_at: '',
         created_at: now,
         updated_at: now,
-        helpful_count: 0,
-        not_helpful_count: 0,
-        parts_refs: [],
-        sources: [],
+        archived_at: '',
+        notes: 'Seed article — review before publishing',
       });
+
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
         range: `${KB_ARTICLES_SHEET}!A2`,
         valueInputOption: 'RAW',
-        requestBody: { values: [seedArticle] },
+        requestBody: { values: [seedRow] },
       });
       seeded = true;
     }

@@ -61,24 +61,41 @@ export async function PATCH(
     };
 
     if (body.title !== undefined) updated.title = body.title;
-    if (body.body !== undefined) updated.body = body.body;
-    if (body.product_line !== undefined) updated.product_line = body.product_line;
-    if (body.tags !== undefined) {
-      updated.tags = Array.isArray(body.tags) ? body.tags : [body.tags];
+    if (body.product_line_id !== undefined) updated.product_line_id = body.product_line_id;
+    if (body.article_type !== undefined) updated.article_type = body.article_type;
+    if (body.status !== undefined) {
+      updated.status = body.status;
+      if (body.status === 'published' && !article.published_at) {
+        updated.published_at = now;
+      }
+      if (body.status === 'archived' && !article.archived_at) {
+        updated.archived_at = now;
+      }
     }
-    if (body.status !== undefined) updated.status = body.status;
-    if (body.parts_refs !== undefined) {
-      updated.parts_refs = Array.isArray(body.parts_refs) ? body.parts_refs : [body.parts_refs];
+    if (body.field_visible !== undefined) updated.field_visible = String(body.field_visible);
+    if (body.revision !== undefined) updated.revision = body.revision;
+    if (body.symptom_terms !== undefined) updated.symptom_terms = body.symptom_terms;
+    if (body.safety_level !== undefined) updated.safety_level = body.safety_level;
+    if (body.stop_conditions !== undefined) updated.stop_conditions = body.stop_conditions;
+    if (body.quick_checks !== undefined) updated.quick_checks = body.quick_checks;
+    if (body.likely_causes !== undefined) updated.likely_causes = body.likely_causes;
+    if (body.parts_tools !== undefined) updated.parts_tools = body.parts_tools;
+    if (body.escalation !== undefined) updated.escalation = body.escalation;
+    if (body.source_document_ids !== undefined) {
+      updated.source_document_ids = Array.isArray(body.source_document_ids)
+        ? body.source_document_ids
+        : [body.source_document_ids];
     }
-    if (body.sources !== undefined) {
-      updated.sources = Array.isArray(body.sources) ? body.sources : [body.sources];
-    }
+    if (body.last_reviewed_at !== undefined) updated.last_reviewed_at = body.last_reviewed_at;
+    if (body.owner_user !== undefined) updated.owner_user = body.owner_user;
+    if (body.approved_by !== undefined) updated.approved_by = body.approved_by;
+    if (body.notes !== undefined) updated.notes = body.notes;
 
     const row = articleToRow(updated);
     const sheets = getSheets();
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `${KB_ARTICLES_SHEET}!A${rowIndex}:M${rowIndex}`,
+      range: `${KB_ARTICLES_SHEET}!A${rowIndex}:W${rowIndex}`,
       valueInputOption: 'RAW',
       requestBody: { values: [row] },
     });
@@ -109,7 +126,6 @@ export async function DELETE(
 
     const { rowIndex } = result;
 
-    // Get the sheet ID (numeric sheetId) for the KB_Articles tab
     const sheets = getSheets();
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const sheet = (spreadsheet.data.sheets || []).find(

@@ -35,15 +35,16 @@ export async function GET(req: Request) {
     let articles = await getArticles(publishedOnly);
 
     if (productLineFilter) {
-      articles = articles.filter(a => a.product_line === productLineFilter);
+      articles = articles.filter(a => a.product_line_id === productLineFilter);
     }
 
     if (q) {
       const lower = q.toLowerCase();
       articles = articles.filter(a =>
         a.title.toLowerCase().includes(lower) ||
-        a.body.toLowerCase().includes(lower) ||
-        a.tags.some(t => t.toLowerCase().includes(lower))
+        a.symptom_terms.toLowerCase().includes(lower) ||
+        a.quick_checks.toLowerCase().includes(lower) ||
+        a.notes.toLowerCase().includes(lower)
       );
     }
 
@@ -62,10 +63,27 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, body: articleBody, product_line, tags, status, author, parts_refs, sources } = body;
+    const {
+      title,
+      product_line_id,
+      article_type,
+      status,
+      field_visible,
+      revision,
+      symptom_terms,
+      safety_level,
+      stop_conditions,
+      quick_checks,
+      likely_causes,
+      parts_tools,
+      escalation,
+      source_document_ids,
+      owner_user,
+      notes,
+    } = body;
 
-    if (!title || !articleBody || !product_line) {
-      return NextResponse.json({ error: 'title, body, and product_line are required' }, { status: 400 });
+    if (!title || !product_line_id) {
+      return NextResponse.json({ error: 'title and product_line_id are required' }, { status: 400 });
     }
 
     const now = new Date().toISOString();
@@ -74,17 +92,27 @@ export async function POST(req: Request) {
     const row = articleToRow({
       article_id,
       title,
-      body: articleBody,
-      product_line,
-      tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
-      status: status === 'published' ? 'published' : 'draft',
-      author: author || session?.user?.email || '',
+      product_line_id,
+      article_type: article_type || '',
+      status: status || 'draft',
+      field_visible: field_visible !== undefined ? String(field_visible) : 'FALSE',
+      revision: revision || '',
+      symptom_terms: symptom_terms || '',
+      safety_level: safety_level || '',
+      stop_conditions: stop_conditions || '',
+      quick_checks: quick_checks || '',
+      likely_causes: likely_causes || '',
+      parts_tools: parts_tools || '',
+      escalation: escalation || '',
+      source_document_ids: Array.isArray(source_document_ids) ? source_document_ids : [],
+      last_reviewed_at: '',
+      owner_user: owner_user || session?.user?.email || '',
+      approved_by: '',
+      published_at: '',
       created_at: now,
       updated_at: now,
-      helpful_count: 0,
-      not_helpful_count: 0,
-      parts_refs: Array.isArray(parts_refs) ? parts_refs : (parts_refs ? [parts_refs] : []),
-      sources: Array.isArray(sources) ? sources : (sources ? [sources] : []),
+      archived_at: '',
+      notes: notes || '',
     });
 
     const sheets = getSheets();
