@@ -3,6 +3,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { loadCrosswalkByCustomer } from '@/lib/entityCrosswalk';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -60,6 +61,7 @@ const COL = {
   customer_id:         43, // AR — GC-D053: FK to Customers table
   legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
   legacy_wo_ids:       45, // AT — BAN-56: searchable previous/noncanonical WO IDs
+  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
 };
 
 // Simple in-process cache (10 minute TTL)
@@ -126,6 +128,7 @@ function rowToWO(row: string[]) {
     customer_id:         g(COL.customer_id),
     legacy_flag:         g(COL.legacy_flag),
     legacy_wo_ids:       g(COL.legacy_wo_ids),
+    requires_org_assignment: g(COL.requires_org_assignment).toLowerCase() === 'true' || !g(COL.org_id),
     // Legacy compat
     lane:           g(COL.status) === 'closed' ? 'completed' : 'active',
     done:           g(COL.status) === 'closed',
@@ -174,15 +177,16 @@ export async function GET() {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const [res, custRes] = await Promise.all([
+    const [res, custRes, crosswalkByCustomer] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
-        range: `${TAB}!A2:AT5000`,
+        range: `${TAB}!A2:AU5000`,
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
         range: 'Customers!A:N',
       }),
+      loadCrosswalkByCustomer(sheets),
     ]);
 
     // Build customer lookup map for GC-D053 FK resolution (GC-D021 fresh-read)
@@ -202,7 +206,18 @@ export async function GET() {
     const wos = rows
       .filter(row => row.length > 2 && (row[0] || row[2])) // wo_id or name present
       .map(row => {
-        const wo = rowToWO(row as string[]);
+        const baseWo = rowToWO(row as string[]);
+        const crosswalk = !baseWo.org_id && baseWo.customer_id
+          ? crosswalkByCustomer.get(baseWo.customer_id)
+          : undefined;
+        const wo = crosswalk
+          ? {
+              ...baseWo,
+              org_id: crosswalk.org_id,
+              org_id_source: 'crosswalk',
+              requires_org_assignment: false,
+            }
+          : baseWo;
         // GC-D053: resolve customer_id FK
         if (wo.customer_id) {
           const cust = custMap.get(wo.customer_id);

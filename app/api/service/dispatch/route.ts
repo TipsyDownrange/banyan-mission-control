@@ -202,6 +202,13 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    if (!org_id) {
+      console.warn('[identity] missing org_id on WO create', {
+        customer_id,
+        customerName: customerName || businessName || '',
+      });
+    }
+    const requiresOrgAssignment = !org_id;
 
     const auth0 = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth: auth0 });
@@ -317,6 +324,13 @@ export async function POST(req: Request) {
         range: `${TAB}!AQ${sheetRow}:AS${sheetRow}`,
         valueInputOption: 'RAW',
         requestBody: { values: [[org_id || '', customer_id, 'false']] },
+      });
+      // Write requires_org_assignment (AU) without touching legacy_wo_ids (AT).
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: BACKEND_SHEET_ID,
+        range: `${TAB}!AU${sheetRow}`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [[requiresOrgAssignment ? 'true' : 'false']] },
       });
     }
 

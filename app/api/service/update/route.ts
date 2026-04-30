@@ -8,6 +8,7 @@ import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, re
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { upsertCrosswalkEntry } from '@/lib/entityCrosswalk';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -64,6 +65,7 @@ const COL_IDX: Record<string, number> = {
   org_id:              42, // AQ — Phase 2: FK to Organizations
   customer_id:         43, // AR — GC-D053: FK to Customers table
   legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
+  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
 };
 
 function colLetter(idx: number): string {
@@ -156,7 +158,7 @@ export async function PATCH(req: Request) {
     // Fetch all rows to find the target
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A2:AC5000`,
+      range: `${TAB}!A2:AU5000`,
     });
 
     const rows = res.data.values || [];
@@ -191,6 +193,16 @@ export async function PATCH(req: Request) {
     const oldStatus    = ((rows[targetRowIdx] as string[])?.[COL_IDX.status]     || '').trim();
     const oldUpdatedAt = ((rows[targetRowIdx] as string[])?.[COL_IDX.updated_at] || '').trim();
     const oldScheduledDate = ((rows[targetRowIdx] as string[])?.[COL_IDX.scheduled_date] || '').trim();
+    const oldOrgId = ((rows[targetRowIdx] as string[])?.[COL_IDX.org_id] || '').trim();
+    const currentCustomerId = ((rows[targetRowIdx] as string[])?.[COL_IDX.customer_id] || '').trim();
+    const requestedOrgId = body.org_id !== undefined ? String(body.org_id).trim() : '';
+
+    if (requestedOrgId && oldOrgId && requestedOrgId !== oldOrgId) {
+      return NextResponse.json(
+        { error: `WO already has org_id "${oldOrgId}"; refusing to overwrite with "${requestedOrgId}".` },
+        { status: 409 }
+      );
+    }
 
     // Build field updates
     const updates: { col: string; value: string }[] = [];
@@ -233,6 +245,7 @@ export async function PATCH(req: Request) {
       invoices_json:        'invoices_json',
       org_id:              'org_id',
       customer_id:         'customer_id',
+      requires_org_assignment: 'requires_org_assignment',
     };
 
     // Handle stage → status mapping (legacy frontend compat)
@@ -306,6 +319,13 @@ export async function PATCH(req: Request) {
       }
     }
 
+    if (body.org_id !== undefined && body.requires_org_assignment === undefined) {
+      updates.push({
+        col: colLetter(COL_IDX.requires_org_assignment),
+        value: String(!String(body.org_id).trim()),
+      });
+    }
+
     // Always update updated_at
     updates.push({
       col: colLetter(COL_IDX.updated_at),
@@ -356,6 +376,16 @@ export async function PATCH(req: Request) {
         data: requests,
       },
     });
+
+    if (requestedOrgId && !oldOrgId && currentCustomerId) {
+      await upsertCrosswalkEntry(sheets, {
+        customer_id: currentCustomerId,
+        org_id: requestedOrgId,
+        source: 'repair_panel',
+        confidence: '1',
+        updated_at: now,
+      });
+    }
 
     invalidateCache();
 
