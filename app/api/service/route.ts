@@ -3,6 +3,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { loadCrosswalkByCustomer } from '@/lib/entityCrosswalk';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -176,7 +177,7 @@ export async function GET() {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const [res, custRes] = await Promise.all([
+    const [res, custRes, crosswalkByCustomer] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
         range: `${TAB}!A2:AU5000`,
@@ -185,6 +186,7 @@ export async function GET() {
         spreadsheetId: BACKEND_SHEET_ID,
         range: 'Customers!A:N',
       }),
+      loadCrosswalkByCustomer(sheets),
     ]);
 
     // Build customer lookup map for GC-D053 FK resolution (GC-D021 fresh-read)
@@ -204,7 +206,18 @@ export async function GET() {
     const wos = rows
       .filter(row => row.length > 2 && (row[0] || row[2])) // wo_id or name present
       .map(row => {
-        const wo = rowToWO(row as string[]);
+        const baseWo = rowToWO(row as string[]);
+        const crosswalk = !baseWo.org_id && baseWo.customer_id
+          ? crosswalkByCustomer.get(baseWo.customer_id)
+          : undefined;
+        const wo = crosswalk
+          ? {
+              ...baseWo,
+              org_id: crosswalk.org_id,
+              org_id_source: 'crosswalk',
+              requires_org_assignment: false,
+            }
+          : baseWo;
         // GC-D053: resolve customer_id FK
         if (wo.customer_id) {
           const cust = custMap.get(wo.customer_id);

@@ -8,6 +8,7 @@ import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, re
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { upsertCrosswalkEntry } from '@/lib/entityCrosswalk';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -157,7 +158,7 @@ export async function PATCH(req: Request) {
     // Fetch all rows to find the target
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A2:AC5000`,
+      range: `${TAB}!A2:AU5000`,
     });
 
     const rows = res.data.values || [];
@@ -192,6 +193,16 @@ export async function PATCH(req: Request) {
     const oldStatus    = ((rows[targetRowIdx] as string[])?.[COL_IDX.status]     || '').trim();
     const oldUpdatedAt = ((rows[targetRowIdx] as string[])?.[COL_IDX.updated_at] || '').trim();
     const oldScheduledDate = ((rows[targetRowIdx] as string[])?.[COL_IDX.scheduled_date] || '').trim();
+    const oldOrgId = ((rows[targetRowIdx] as string[])?.[COL_IDX.org_id] || '').trim();
+    const currentCustomerId = ((rows[targetRowIdx] as string[])?.[COL_IDX.customer_id] || '').trim();
+    const requestedOrgId = body.org_id !== undefined ? String(body.org_id).trim() : '';
+
+    if (requestedOrgId && oldOrgId && requestedOrgId !== oldOrgId) {
+      return NextResponse.json(
+        { error: `WO already has org_id "${oldOrgId}"; refusing to overwrite with "${requestedOrgId}".` },
+        { status: 409 }
+      );
+    }
 
     // Build field updates
     const updates: { col: string; value: string }[] = [];
@@ -365,6 +376,16 @@ export async function PATCH(req: Request) {
         data: requests,
       },
     });
+
+    if (requestedOrgId && !oldOrgId && currentCustomerId) {
+      await upsertCrosswalkEntry(sheets, {
+        customer_id: currentCustomerId,
+        org_id: requestedOrgId,
+        source: 'repair_panel',
+        confidence: '1',
+        updated_at: now,
+      });
+    }
 
     invalidateCache();
 
