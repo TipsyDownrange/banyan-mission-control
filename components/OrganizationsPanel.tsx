@@ -159,6 +159,8 @@ function OrgDetailPanel({
   const [newSite, setNewSite] = useState({ address_line_1: '', city: '', island: '', site_type: 'OFFICE' });
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; title: string; phone: string; email: string }>({ name: '', title: '', phone: '', email: '' });
+  const [editingSiteId, setEditingSiteId] = useState<string | null>(null);
+  const [siteEditForm, setSiteEditForm] = useState({ name: '', address_line_1: '', city: '', state: 'HI', zip: '', island: '', site_type: 'OFFICE' });
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -270,6 +272,37 @@ function OrgDetailPanel({
       setAddingSite(false);
     } catch (err) {
       console.error('[OrgDetailPanel] addSite', err);
+    }
+  }
+
+  function startSiteEdit(site: Site) {
+    setEditingSiteId(site.site_id);
+    setSiteEditForm({
+      name: site.name || '',
+      address_line_1: site.address_line_1 || '',
+      city: site.city || '',
+      state: site.state || 'HI',
+      zip: site.zip || '',
+      island: site.island || '',
+      site_type: site.site_type || 'OFFICE',
+    });
+  }
+
+  async function saveSiteEdit(siteId: string) {
+    try {
+      const res = await fetch(`/api/organizations/${orgId}/sites`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siteId, ...siteEditForm }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update site');
+      }
+      await loadDetail();
+      setEditingSiteId(null);
+    } catch (err) {
+      console.error('[OrgDetailPanel] saveSiteEdit', err);
     }
   }
 
@@ -469,10 +502,50 @@ function OrgDetailPanel({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
               {detail.sites.map(s => (
                 <div key={s.site_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: 13, color: '#334155' }}>
-                  <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                    {[s.island, s.site_type, s.zip].filter(Boolean).join(' · ')}
-                  </div>
+                  {editingSiteId === s.site_id ? (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                        <div><label style={LBL}>Label</label><input style={INP} value={siteEditForm.name} onChange={e => setSiteEditForm(p => ({ ...p, name: e.target.value }))} placeholder="Office, Jobsite, Residence" /></div>
+                        <div><label style={LBL}>Address</label><PlacesAutocomplete value={siteEditForm.address_line_1} onChange={v => setSiteEditForm(p => ({ ...p, address_line_1: v }))} onSelect={(place: ParsedPlace) => setSiteEditForm(p => ({ ...p, address_line_1: place.formatted_address || p.address_line_1, city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
+                        <div><label style={LBL}>City</label><input style={INP} value={siteEditForm.city} onChange={e => setSiteEditForm(p => ({ ...p, city: e.target.value }))} /></div>
+                        <div><label style={LBL}>State</label><input style={INP} value={siteEditForm.state} onChange={e => setSiteEditForm(p => ({ ...p, state: e.target.value }))} maxLength={2} /></div>
+                        <div><label style={LBL}>Zip</label><input style={INP} value={siteEditForm.zip} onChange={e => setSiteEditForm(p => ({ ...p, zip: e.target.value }))} /></div>
+                        <div><label style={LBL}>Island</label>
+                          <select style={{ ...INP, cursor: 'pointer' }} value={siteEditForm.island} onChange={e => setSiteEditForm(p => ({ ...p, island: e.target.value }))}>
+                            <option value="">Select island</option>
+                            {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+                          </select>
+                        </div>
+                        <div><label style={LBL}>Type</label>
+                          <select style={{ ...INP, cursor: 'pointer' }} value={siteEditForm.site_type} onChange={e => setSiteEditForm(p => ({ ...p, site_type: e.target.value }))}>
+                            {['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE'].map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Site</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ minWidth: 0 }}>
+                          {s.name && <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', marginBottom: 2 }}>{s.name}</div>}
+                          <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
+                          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                            {[s.state, s.zip, s.island, s.site_type].filter(Boolean).join(' · ')}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => startSiteEdit(s)}
+                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
