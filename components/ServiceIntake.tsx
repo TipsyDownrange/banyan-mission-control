@@ -8,14 +8,12 @@ import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 import {
   applyCustomerRecord,
   detectIslandAndArea,
-  normalizeEntityName,
   type ServiceIntakeDraft,
 } from '@/lib/service-intake-customer';
 
 type StepTemplate = { step_name: string; default_hours: number; category?: string };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
-type OrganizationSummary = { org_id: string; name?: string; company?: string };
 
 const FL = (label: string, auto?: boolean, places?: boolean) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
@@ -110,25 +108,6 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       .then(d => {
         const customerRows = d.customers || [];
         setCustomers(customerRows);
-
-        // Organizations are optional enrichment for org_id/contact chips only.
-        fetch('/api/organizations?limit=500')
-          .then(r => r.ok ? r.json() : { organizations: [] })
-          .then(orgData => {
-            const orgs = orgData.organizations || [];
-            if (!orgs.length) return;
-            const orgByName = new Map<string, { org_id: string }>();
-            for (const org of orgs as OrganizationSummary[]) {
-              const key = normalizeEntityName(org.company || org.name || '');
-              if (key && !orgByName.has(key)) orgByName.set(key, org);
-            }
-            setCustomers(prev => prev.map(c => {
-              if (c.org_id) return c;
-              const org = orgByName.get(normalizeEntityName(c.company || c.name || ''));
-              return org?.org_id ? { ...c, org_id: org.org_id } : c;
-            }));
-          })
-          .catch(() => {});
       })
       .catch(() => {});
     fetch('/api/step-templates')
