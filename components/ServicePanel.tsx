@@ -364,6 +364,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           customerName:  (fields as WorkOrder & { customer_name?: string }).customer_name,
           org_id: fields.org_id,
           requires_org_assignment: fields.requires_org_assignment,
+          customer_id:   fields.customer_id,
         }),
       });
       const json = await res.json().catch(() => ({}));
