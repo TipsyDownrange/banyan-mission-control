@@ -191,6 +191,15 @@ type RankedOrg = {
   reasons: string[];
 };
 
+function primaryMatchBadge(reasons: string[], woCount: number): string {
+  if (reasons.includes('same normalized name')) return 'Exact name';
+  if (reasons.includes('name match')) return 'Similar name';
+  if (reasons.includes('same island')) return 'Same island';
+  if (woCount > 0) return 'Has WOs';
+  if (woCount === 0) return 'Zero WOs';
+  return '';
+}
+
 function normalizeOrgText(value: string): string {
   return (value || '')
     .toLowerCase()
@@ -307,12 +316,14 @@ function OrganizationPicker({
   orgOptions,
   selectedOrgId,
   onSelect,
+  helperText = 'Search for the survivor organization. Do not merge related billing/property/operator entities unless you are sure they are duplicates.',
 }: {
   title: string;
   currentOrg: OrgRecord;
   orgOptions: OrgRecord[];
   selectedOrgId: string;
   onSelect: (orgId: string) => void;
+  helperText?: string;
 }) {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<OrgPickerFilters>({
@@ -330,13 +341,15 @@ function OrganizationPicker({
     () => filterRankedOrgs(orgOptions, currentOrg, query, filters),
     [orgOptions, currentOrg, query, filters],
   );
-  const likelyMatches = useMemo(
-    () => filterRankedOrgs(orgOptions, currentOrg, '', filters)
-      .filter(result => result.score >= 35 || result.reasons.includes('same normalized name') || result.reasons.includes('name match') || result.reasons.includes('similar address'))
-      .slice(0, 5),
-    [orgOptions, currentOrg, filters],
+  const bestMatches = useMemo(
+    () => {
+      if (canShowSearchResults) return ranked;
+      return filterRankedOrgs(orgOptions, currentOrg, '', filters)
+        .filter(result => result.score >= 35 || result.reasons.includes('same normalized name') || result.reasons.includes('name match') || result.reasons.includes('similar address'));
+    },
+    [canShowSearchResults, ranked, orgOptions, currentOrg, filters],
   );
-  const visibleResults = canShowSearchResults ? ranked.slice(0, 25) : [];
+  const visibleResults = bestMatches.slice(0, 10);
   const selectedOrg = orgOptions.find(org => org.org_id === selectedOrgId);
 
   const chipStyle = (active: boolean): React.CSSProperties => ({
@@ -365,6 +378,7 @@ function OrganizationPicker({
     const org = result.org;
     const selected = org.org_id === selectedOrgId;
     const status = org.status || '';
+    const matchBadge = primaryMatchBadge(result.reasons, org.woCount || 0);
     return (
       <button
         key={org.org_id}
@@ -392,10 +406,8 @@ function OrganizationPicker({
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
           {org.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
           {orgIsland(org) && <span style={{ fontSize: 10, color: '#64748b' }}>{orgIsland(org)}</span>}
+          {matchBadge && <span style={{ fontSize: 10, color: '#0f766e', background: '#f0fdfa', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
           {status && status !== 'active' && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
-        </div>
-        <div style={{ fontSize: 10, color: '#64748b', marginTop: 6 }}>
-          {result.reasons.length > 0 ? result.reasons.slice(0, 4).join(' · ') : 'filtered result'}
         </div>
       </button>
     );
@@ -410,6 +422,9 @@ function OrganizationPicker({
         placeholder="Search by organization name, address, org ID, or contact."
         style={{ fontSize: 13, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', background: 'white', width: '100%', boxSizing: 'border-box' }}
       />
+      <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
+        {helperText}
+      </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
         <button type="button" onClick={() => toggleFilter('activeOnly')} style={chipStyle(filters.activeOnly)}>Active only</button>
         <button type="button" onClick={() => toggleFilter('sameIsland')} style={chipStyle(filters.sameIsland)}>Same island</button>
@@ -428,24 +443,24 @@ function OrganizationPicker({
           Search by organization name, address, org ID, or contact.
         </div>
       )}
-      {likelyMatches.length > 0 && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 5 }}>Likely matches</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {likelyMatches.map(renderCard)}
-          </div>
-        </div>
-      )}
-      {canShowSearchResults && (
+      {bestMatches.length > 0 && (
         <div>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 5 }}>
-            Results {ranked.length > 25 ? '(top 25 shown, refine search)' : `(${ranked.length})`}
+            Best matches {bestMatches.length > 10 ? '(top 10 shown)' : `(${bestMatches.length})`}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 360, overflowY: 'auto' }}>
-            {visibleResults.length > 0 ? visibleResults.map(renderCard) : (
-              <div style={{ fontSize: 12, color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>No matching organizations.</div>
-            )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {visibleResults.map(renderCard)}
           </div>
+          {bestMatches.length > 10 && (
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+              Refine search for more results.
+            </div>
+          )}
+        </div>
+      )}
+      {canShowSearchResults && bestMatches.length === 0 && (
+        <div style={{ fontSize: 12, color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
+          No matching organizations.
         </div>
       )}
     </div>
@@ -904,6 +919,7 @@ function OrgDetailPanel({
                   currentOrg={detail.org}
                   orgOptions={orgOptions}
                   selectedOrgId={relationshipForm.target_org_id}
+                  helperText="Search for a related organization. Preserve separate billing/property/operator entities unless an intentional merge is required."
                   onSelect={targetOrgId => setRelationshipForm(p => ({ ...p, target_org_id: targetOrgId }))}
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'end', marginTop: 8 }}>
