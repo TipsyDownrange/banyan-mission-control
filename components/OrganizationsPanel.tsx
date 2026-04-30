@@ -182,12 +182,14 @@ function WOStatusBadge({ status }: { status: string }) {
 
 function CollapsibleSection({
   title,
+  descriptor,
   count,
   open,
   onToggle,
   children,
 }: {
   title: string;
+  descriptor?: string;
   count?: number;
   open: boolean;
   onToggle: () => void;
@@ -201,18 +203,21 @@ function CollapsibleSection({
         aria-expanded={open}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          width: '100%', padding: '10px 0', background: 'none', border: 'none',
+          width: '100%', padding: '11px 0', background: 'none', border: 'none',
           cursor: 'pointer', textAlign: 'left',
         }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569' }}>
             {title}
           </span>
           {count !== undefined && (
             <span style={{ fontSize: 10, fontWeight: 700, background: '#f1f5f9', color: '#64748b', borderRadius: 999, padding: '1px 7px' }}>
               {count}
             </span>
+          )}
+          {descriptor && !open && (
+            <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 400 }}>{descriptor}</span>
           )}
         </span>
         <span style={{ fontSize: 12, color: '#94a3b8', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
@@ -864,7 +869,267 @@ function OrgDetailPanel({
               </div>
             )}
 
+            {/* Contacts */}
+            <CollapsibleSection title="Contacts" descriptor="People linked to this org" count={detail.contacts.length} open={!!openSections['contacts']} onToggle={() => toggleSection('contacts')}>
+            {detail.contacts.length === 0 && !addingContact && (
+              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No contacts yet.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
+              {detail.contacts.map(c => (
+                <div key={c.contact_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', background: c.is_primary ? '#f0fdf4' : 'white', position: 'relative' }}>
+                  {/* Card header row */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                        {c.is_primary && <span style={{ fontSize: 13 }}>⭐</span>}
+                        <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{c.name}</span>
+                      </div>
+                      {c.title && <div style={{ fontSize: 11, color: '#94a3b8' }}>{c.title}</div>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <button
+                        onClick={() => editingContactId === c.contact_id ? setEditingContactId(null) : startEdit(c)}
+                        style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: editingContactId === c.contact_id ? '#f1f5f9' : 'white', color: '#64748b', cursor: 'pointer' }}
+                      >
+                        {editingContactId === c.contact_id ? 'Cancel' : 'Edit'}
+                      </button>
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          onClick={() => setMenuOpenId(menuOpenId === c.contact_id ? null : c.contact_id)}
+                          style={{ fontSize: 14, fontWeight: 700, padding: '2px 7px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', lineHeight: 1.2 }}
+                        >···</button>
+                        {menuOpenId === c.contact_id && (
+                          <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10, minWidth: 150, overflow: 'hidden' }}>
+                            <button
+                              onClick={() => setAsPrimary(c.contact_id)}
+                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                            >⭐ Set as Primary</button>
+                            <button
+                              onClick={() => deleteContact(c.contact_id)}
+                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
+                            >🗑 Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* View mode: phone + email links */}
+                  {editingContactId !== c.contact_id && (
+                    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {c.phone && (
+                        <div style={{ fontSize: 12, color: '#334155' }}>
+                          📞 <a href={`tel:${c.phone}`} style={{ color: '#0f766e', textDecoration: 'none' }}>{c.phone}</a>
+                        </div>
+                      )}
+                      {c.email && (
+                        <div style={{ fontSize: 12, color: '#334155' }}>
+                          ✉️ <a href={`mailto:${c.email}`} style={{ color: '#0f766e', textDecoration: 'none' }}>{c.email}</a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Inline edit mode */}
+                  {editingContactId === c.contact_id && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                        <div><label style={LBL}>Name</label><input style={INP} value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} /></div>
+                        <div><label style={LBL}>Title</label><input style={INP} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} /></div>
+                        <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} onBlur={e => setEditForm(p => ({ ...p, phone: normalizePhone(e.target.value) }))} /></div>
+                        <div><label style={LBL}>Email</label><input style={INP} type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} /></div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => saveContactEdit(c.contact_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {addingContact ? (
+              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div><label style={LBL}>Name *</label><ContactAutocomplete
+                    value={newContact.name}
+                    onChange={val => setNewContact(p => ({ ...p, name: val }))}
+                    onSelect={(c: ContactResult) => {
+                      setNewContact(p => ({
+                        ...p,
+                        name: c.name,
+                        phone: c.phone || p.phone,
+                        email: c.email || p.email,
+                        title: c.title || p.title,
+                      }));
+                    }}
+                    style={INP}
+                    placeholder="Full name"
+                    orgId={orgId}
+                  /></div>
+                  <div><label style={LBL}>Title</label><input style={INP} value={newContact.title} onChange={e => setNewContact(p => ({ ...p, title: e.target.value }))} /></div>
+                  <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={newContact.phone} onChange={e => setNewContact(p => ({ ...p, phone: e.target.value }))} onBlur={e => setNewContact(p => ({ ...p, phone: normalizePhone(e.target.value) }))} /></div>
+                  <div><label style={LBL}>Email</label><input style={INP} type="email" value={newContact.email} onChange={e => setNewContact(p => ({ ...p, email: e.target.value }))} /></div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
+                    <input type="checkbox" checked={newContact.is_primary} onChange={e => setNewContact(p => ({ ...p, is_primary: e.target.checked }))} />
+                    Set as primary contact
+                  </label>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingContact(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Contact</button>
+            )}
+            </CollapsibleSection>
+
+            {/* Sites */}
+            <CollapsibleSection title="Sites" descriptor="Locations" count={detail.sites.length} open={!!openSections['sites']} onToggle={() => toggleSection('sites')}>
+            {detail.sites.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No sites yet.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
+              {detail.sites.map(s => (
+                <div key={s.site_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: 13, color: '#334155' }}>
+                  {editingSiteId === s.site_id ? (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                        <div><label style={LBL}>Label</label><input style={INP} value={siteEditForm.name} onChange={e => setSiteEditForm(p => ({ ...p, name: e.target.value }))} placeholder="Office, Jobsite, Residence" /></div>
+                        <div><label style={LBL}>Address</label><PlacesAutocomplete value={siteEditForm.address_line_1} onChange={v => setSiteEditForm(p => ({ ...p, address_line_1: v }))} onSelect={(place: ParsedPlace) => setSiteEditForm(p => ({ ...p, address_line_1: place.formatted_address || p.address_line_1, city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
+                        <div><label style={LBL}>City</label><input style={INP} value={siteEditForm.city} onChange={e => setSiteEditForm(p => ({ ...p, city: e.target.value }))} /></div>
+                        <div><label style={LBL}>State</label><input style={INP} value={siteEditForm.state} onChange={e => setSiteEditForm(p => ({ ...p, state: e.target.value }))} maxLength={2} /></div>
+                        <div><label style={LBL}>Zip</label><input style={INP} value={siteEditForm.zip} onChange={e => setSiteEditForm(p => ({ ...p, zip: e.target.value }))} /></div>
+                        <div><label style={LBL}>Island</label>
+                          <select style={{ ...INP, cursor: 'pointer' }} value={siteEditForm.island} onChange={e => setSiteEditForm(p => ({ ...p, island: e.target.value }))}>
+                            <option value="">Select island</option>
+                            {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+                          </select>
+                        </div>
+                        <div><label style={LBL}>Type</label>
+                          <select style={{ ...INP, cursor: 'pointer' }} value={siteEditForm.site_type} onChange={e => setSiteEditForm(p => ({ ...p, site_type: e.target.value }))}>
+                            {['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE'].map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Site</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ minWidth: 0 }}>
+                          {s.name && <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', marginBottom: 2 }}>{s.name}</div>}
+                          <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
+                          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                            {[s.state, s.zip, s.island, s.site_type].filter(Boolean).join(' · ')}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => startSiteEdit(s)}
+                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            {addingSite ? (
+              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div><label style={LBL}>Address</label><PlacesAutocomplete value={newSite.address_line_1} onChange={v => setNewSite(p => ({...p, address_line_1: v}))} onSelect={(place: ParsedPlace) => setNewSite(p => ({ ...p, address_line_1: place.formatted_address || '', city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
+                  <div><label style={LBL}>City</label><input style={INP} value={newSite.city} onChange={e => setNewSite(p => ({ ...p, city: e.target.value }))} /></div>
+                  <div><label style={LBL}>Island</label>
+                    <select style={{ ...INP, cursor: 'pointer' }} value={newSite.island} onChange={e => setNewSite(p => ({ ...p, island: e.target.value }))}>
+                      <option value="">Select island</option>
+                      {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                  </div>
+                  <div><label style={LBL}>Type</label>
+                    <select style={{ ...INP, cursor: 'pointer' }} value={newSite.site_type} onChange={e => setNewSite(p => ({ ...p, site_type: e.target.value }))}>
+                      {['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE'].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Site</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Site</button>
+            )}
+            </CollapsibleSection>
+
+            {/* Linked Work Orders */}
+            <CollapsibleSection title="Linked Work Orders" descriptor="Service history" count={detail.linkedWOs.length} open={!!openSections['linkedWOs']} onToggle={() => toggleSection('linkedWOs')}>
+            {detail.linkedWOs.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked work orders.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {detail.linkedWOs.map(wo => (
+                    <div
+                      key={wo.id}
+                      onClick={() => onNavigate && onNavigate('workorders', { woId: wo.id })}
+                      style={{
+                        padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        fontSize: 12, cursor: onNavigate ? 'pointer' : 'default',
+                        background: 'white',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { if (onNavigate) e.currentTarget.style.background = '#f0fdfa'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
+                    >
+                      <div>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{wo.name || wo.woNumber}</span>
+                        <span style={{ color: '#94a3b8', marginLeft: 8 }}>{wo.woNumber}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {wo.island && <span style={{ fontSize: 10, color: '#94a3b8' }}>{wo.island}</span>}
+                        <WOStatusBadge status={wo.status} />
+                        {onNavigate && <span style={{ color: '#94a3b8', fontSize: 12 }}>→</span>}
+                      </div>
+                    </div>
+                  ))}
+            </div>
+            </CollapsibleSection>
+
+            {/* Linked Projects */}
+            <CollapsibleSection title="Linked Projects" descriptor="Project links" count={detail.linkedProjects.length} open={!!openSections['linkedProjects']} onToggle={() => toggleSection('linkedProjects')}>
+            {detail.linkedProjects.length === 0 && (
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked projects.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {detail.linkedProjects.map(p => (
+                    <div key={p.kID} style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                      <div>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
+                        <span style={{ fontSize: 10, color: '#0891b2', marginLeft: 6 }}>{p.role}</span>
+                      </div>
+                      <span style={{ color: '#94a3b8' }}>{p.kID}</span>
+                    </div>
+                  ))}
+            </div>
+            </CollapsibleSection>
+
+            {/* Admin & Identity Controls divider */}
+            <div style={{ marginTop: 20, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
+              <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: '#94a3b8', whiteSpace: 'nowrap' as const }}>Admin & Identity Controls</span>
+              <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
+            </div>
+
             <CollapsibleSection title="Edit Organization" open={!!openSections['edit']} onToggle={() => toggleSection('edit')}>
+              <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
+                Admin identity fields. Changes affect filtering, reporting, and linked records.
+              </div>
               <div style={{ padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Name + Save button row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -1030,256 +1295,6 @@ function OrgDetailPanel({
                   })}
                 </div>
               )}
-            </CollapsibleSection>
-
-            {/* Contacts */}
-            <CollapsibleSection title="Contacts" count={detail.contacts.length} open={!!openSections['contacts']} onToggle={() => toggleSection('contacts')}>
-            {detail.contacts.length === 0 && !addingContact && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No contacts yet.</div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
-              {detail.contacts.map(c => (
-                <div key={c.contact_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', background: c.is_primary ? '#f0fdf4' : 'white', position: 'relative' }}>
-                  {/* Card header row */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-                        {c.is_primary && <span style={{ fontSize: 13 }}>⭐</span>}
-                        <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{c.name}</span>
-                      </div>
-                      {c.title && <div style={{ fontSize: 11, color: '#94a3b8' }}>{c.title}</div>}
-                    </div>
-                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                      <button
-                        onClick={() => editingContactId === c.contact_id ? setEditingContactId(null) : startEdit(c)}
-                        style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: editingContactId === c.contact_id ? '#f1f5f9' : 'white', color: '#64748b', cursor: 'pointer' }}
-                      >
-                        {editingContactId === c.contact_id ? 'Cancel' : 'Edit'}
-                      </button>
-                      <div style={{ position: 'relative' }}>
-                        <button
-                          onClick={() => setMenuOpenId(menuOpenId === c.contact_id ? null : c.contact_id)}
-                          style={{ fontSize: 14, fontWeight: 700, padding: '2px 7px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', lineHeight: 1.2 }}
-                        >···</button>
-                        {menuOpenId === c.contact_id && (
-                          <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10, minWidth: 150, overflow: 'hidden' }}>
-                            <button
-                              onClick={() => setAsPrimary(c.contact_id)}
-                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
-                            >⭐ Set as Primary</button>
-                            <button
-                              onClick={() => deleteContact(c.contact_id)}
-                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
-                            >🗑 Delete</button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {/* View mode: phone + email links */}
-                  {editingContactId !== c.contact_id && (
-                    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {c.phone && (
-                        <div style={{ fontSize: 12, color: '#334155' }}>
-                          📞 <a href={`tel:${c.phone}`} style={{ color: '#0f766e', textDecoration: 'none' }}>{c.phone}</a>
-                        </div>
-                      )}
-                      {c.email && (
-                        <div style={{ fontSize: 12, color: '#334155' }}>
-                          ✉️ <a href={`mailto:${c.email}`} style={{ color: '#0f766e', textDecoration: 'none' }}>{c.email}</a>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {/* Inline edit mode */}
-                  {editingContactId === c.contact_id && (
-                    <div style={{ marginTop: 10 }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                        <div><label style={LBL}>Name</label><input style={INP} value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} /></div>
-                        <div><label style={LBL}>Title</label><input style={INP} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} /></div>
-                        <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} onBlur={e => setEditForm(p => ({ ...p, phone: normalizePhone(e.target.value) }))} /></div>
-                        <div><label style={LBL}>Email</label><input style={INP} type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} /></div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                        <button onClick={() => saveContactEdit(c.contact_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            {addingContact ? (
-              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  <div><label style={LBL}>Name *</label><ContactAutocomplete
-                    value={newContact.name}
-                    onChange={val => setNewContact(p => ({ ...p, name: val }))}
-                    onSelect={(c: ContactResult) => {
-                      setNewContact(p => ({
-                        ...p,
-                        name: c.name,
-                        phone: c.phone || p.phone,
-                        email: c.email || p.email,
-                        title: c.title || p.title,
-                      }));
-                    }}
-                    style={INP}
-                    placeholder="Full name"
-                    orgId={orgId}
-                  /></div>
-                  <div><label style={LBL}>Title</label><input style={INP} value={newContact.title} onChange={e => setNewContact(p => ({ ...p, title: e.target.value }))} /></div>
-                  <div><label style={LBL}>Phone</label><input style={INP} type="tel" value={newContact.phone} onChange={e => setNewContact(p => ({ ...p, phone: e.target.value }))} onBlur={e => setNewContact(p => ({ ...p, phone: normalizePhone(e.target.value) }))} /></div>
-                  <div><label style={LBL}>Email</label><input style={INP} type="email" value={newContact.email} onChange={e => setNewContact(p => ({ ...p, email: e.target.value }))} /></div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
-                    <input type="checkbox" checked={newContact.is_primary} onChange={e => setNewContact(p => ({ ...p, is_primary: e.target.checked }))} />
-                    Set as primary contact
-                  </label>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
-                </div>
-              </div>
-            ) : (
-              <button onClick={() => setAddingContact(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Contact</button>
-            )}
-            </CollapsibleSection>
-
-            {/* Sites */}
-            <CollapsibleSection title="Sites" count={detail.sites.length} open={!!openSections['sites']} onToggle={() => toggleSection('sites')}>
-            {detail.sites.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No sites yet.</div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
-              {detail.sites.map(s => (
-                <div key={s.site_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: 13, color: '#334155' }}>
-                  {editingSiteId === s.site_id ? (
-                    <div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                        <div><label style={LBL}>Label</label><input style={INP} value={siteEditForm.name} onChange={e => setSiteEditForm(p => ({ ...p, name: e.target.value }))} placeholder="Office, Jobsite, Residence" /></div>
-                        <div><label style={LBL}>Address</label><PlacesAutocomplete value={siteEditForm.address_line_1} onChange={v => setSiteEditForm(p => ({ ...p, address_line_1: v }))} onSelect={(place: ParsedPlace) => setSiteEditForm(p => ({ ...p, address_line_1: place.formatted_address || p.address_line_1, city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
-                        <div><label style={LBL}>City</label><input style={INP} value={siteEditForm.city} onChange={e => setSiteEditForm(p => ({ ...p, city: e.target.value }))} /></div>
-                        <div><label style={LBL}>State</label><input style={INP} value={siteEditForm.state} onChange={e => setSiteEditForm(p => ({ ...p, state: e.target.value }))} maxLength={2} /></div>
-                        <div><label style={LBL}>Zip</label><input style={INP} value={siteEditForm.zip} onChange={e => setSiteEditForm(p => ({ ...p, zip: e.target.value }))} /></div>
-                        <div><label style={LBL}>Island</label>
-                          <select style={{ ...INP, cursor: 'pointer' }} value={siteEditForm.island} onChange={e => setSiteEditForm(p => ({ ...p, island: e.target.value }))}>
-                            <option value="">Select island</option>
-                            {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
-                          </select>
-                        </div>
-                        <div><label style={LBL}>Type</label>
-                          <select style={{ ...INP, cursor: 'pointer' }} value={siteEditForm.site_type} onChange={e => setSiteEditForm(p => ({ ...p, site_type: e.target.value }))}>
-                            {['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE'].map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Site</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ minWidth: 0 }}>
-                          {s.name && <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', marginBottom: 2 }}>{s.name}</div>}
-                          <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
-                          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                            {[s.state, s.zip, s.island, s.site_type].filter(Boolean).join(' · ')}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => startSiteEdit(s)}
-                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-            {addingSite ? (
-              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  <div><label style={LBL}>Address</label><PlacesAutocomplete value={newSite.address_line_1} onChange={v => setNewSite(p => ({...p, address_line_1: v}))} onSelect={(place: ParsedPlace) => setNewSite(p => ({ ...p, address_line_1: place.formatted_address || '', city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
-                  <div><label style={LBL}>City</label><input style={INP} value={newSite.city} onChange={e => setNewSite(p => ({ ...p, city: e.target.value }))} /></div>
-                  <div><label style={LBL}>Island</label>
-                    <select style={{ ...INP, cursor: 'pointer' }} value={newSite.island} onChange={e => setNewSite(p => ({ ...p, island: e.target.value }))}>
-                      <option value="">Select island</option>
-                      {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
-                    </select>
-                  </div>
-                  <div><label style={LBL}>Type</label>
-                    <select style={{ ...INP, cursor: 'pointer' }} value={newSite.site_type} onChange={e => setNewSite(p => ({ ...p, site_type: e.target.value }))}>
-                      {['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE'].map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Site</button>
-                </div>
-              </div>
-            ) : (
-              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Site</button>
-            )}
-            </CollapsibleSection>
-
-            {/* Linked Work Orders */}
-            <CollapsibleSection title="Linked Work Orders" count={detail.linkedWOs.length} open={!!openSections['linkedWOs']} onToggle={() => toggleSection('linkedWOs')}>
-            {detail.linkedWOs.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked work orders.</div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {detail.linkedWOs.map(wo => (
-                    <div
-                      key={wo.id}
-                      onClick={() => onNavigate && onNavigate('workorders', { woId: wo.id })}
-                      style={{
-                        padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9',
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        fontSize: 12, cursor: onNavigate ? 'pointer' : 'default',
-                        background: 'white',
-                        transition: 'background 0.1s',
-                      }}
-                      onMouseEnter={e => { if (onNavigate) e.currentTarget.style.background = '#f0fdfa'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
-                    >
-                      <div>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{wo.name || wo.woNumber}</span>
-                        <span style={{ color: '#94a3b8', marginLeft: 8 }}>{wo.woNumber}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {wo.island && <span style={{ fontSize: 10, color: '#94a3b8' }}>{wo.island}</span>}
-                        <WOStatusBadge status={wo.status} />
-                        {onNavigate && <span style={{ color: '#94a3b8', fontSize: 12 }}>→</span>}
-                      </div>
-                    </div>
-                  ))}
-            </div>
-            </CollapsibleSection>
-
-            {/* Linked Projects */}
-            <CollapsibleSection title="Linked Projects" count={detail.linkedProjects.length} open={!!openSections['linkedProjects']} onToggle={() => toggleSection('linkedProjects')}>
-            {detail.linkedProjects.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked projects.</div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {detail.linkedProjects.map(p => (
-                    <div key={p.kID} style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
-                      <div>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
-                        <span style={{ fontSize: 10, color: '#0891b2', marginLeft: 6 }}>{p.role}</span>
-                      </div>
-                      <span style={{ color: '#94a3b8' }}>{p.kID}</span>
-                    </div>
-                  ))}
-            </div>
             </CollapsibleSection>
           </div>
         )}
