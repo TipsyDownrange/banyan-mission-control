@@ -357,6 +357,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           contactPhone:  (fields as WorkOrder & { contact_phone?: string }).contact_phone,
           contactEmail:  (fields as WorkOrder & { contact_email?: string }).contact_email,
           customerName:  (fields as WorkOrder & { customer_name?: string }).customer_name,
+          customer_id:   fields.customer_id,
         }),
       });
     } catch {
