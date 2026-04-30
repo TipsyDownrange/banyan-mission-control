@@ -124,15 +124,19 @@ const TYPE_COLORS: Record<string, { color: string; bg: string }> = {
   CONSULTANT:    { color: '#4b5563', bg: '#f9fafb' },
 };
 
-const ALL_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'GOVERNMENT', 'PROPERTY_MGMT'];
+const ALL_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'BUILDER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
 
 const FILTER_LABELS: Record<string, string> = {
   GC: 'GC',
   COMMERCIAL: 'Commercial',
   RESIDENTIAL: 'Residential',
   VENDOR: 'Vendor',
+  ARCHITECT: 'Architect',
+  OWNER: 'Owner',
+  BUILDER: 'Builder',
   GOVERNMENT: 'Government',
   PROPERTY_MGMT: 'Property Mgmt',
+  CONSULTANT: 'Consultant',
 };
 
 const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {

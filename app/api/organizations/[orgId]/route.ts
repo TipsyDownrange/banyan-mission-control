@@ -10,7 +10,7 @@ import { getBackendSheetId } from '@/lib/backend-config';
 
 const SHEET_ID = getBackendSheetId();
 
-const ALLOWED_EDIT_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'GOVERNMENT', 'PROPERTY_MGMT'];
+const ALLOWED_EDIT_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'BUILDER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
 const ALLOWED_EDIT_STATUSES = ['active', 'inactive'];
 
 function getAuth() { return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']); }
