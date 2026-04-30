@@ -31,6 +31,7 @@ import AdminPanel from '@/components/AdminPanel';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import SuggestionButton from '@/components/SuggestionButton';
 import StepLibraryPanel from '@/components/StepLibraryPanel';
+import KnowledgeLibraryPanel from '@/components/KnowledgeLibraryPanel';
 import SuperSchedulingPanel from '@/components/SuperSchedulingPanel';
 import { useState, useEffect } from 'react';
 
@@ -43,7 +44,7 @@ export type AppView =
   | 'Work Orders'
   | 'War Room' | 'Cost & Usage'
   | 'WIP Report' | 'Financials' | 'Vendors' | 'Compliance' | 'HR' | 'Safety' | 'Fleet'
-  | 'Step Library';
+  | 'Step Library' | 'Knowledge Library';
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [activeView, setActiveView] = useState<AppView>('Today');
@@ -272,6 +273,7 @@ export default function Home() {
         {activeView === 'Safety'        && <AdminPanel section="safety" />}
         {activeView === 'Fleet'         && <AdminPanel section="fleet" />}
         {activeView === 'Step Library'   && <StepLibraryPanel />}
+        {activeView === 'Knowledge Library' && <KnowledgeLibraryPanel />}
 
         <KaiFloat activeView={activeView} sessionEmail={authSession?.user?.email || ''} />
         <SuggestionButton />
