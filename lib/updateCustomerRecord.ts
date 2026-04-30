@@ -3,7 +3,7 @@
  *
  * Searches the Customers tab by phone, email, or name.
  *   - Found → fills any empty fields with new data (never overwrites existing data with blanks)
- *   - Not found → creates a new customer record
+ *   - Not found → skips creation; canonical customer creation must be explicit
  *
  * This function is intentionally non-blocking; callers should NOT await it
  * in request handlers where a customer DB failure must not block the response.
@@ -128,22 +128,9 @@ export async function updateCustomerRecord(data: CustomerData): Promise<void> {
       });
     }
   } else {
-    // ── CREATE: new customer record ─────────────────────────────────────────
-    const existingCount = dataRows.length;
-    const newId = `CUS-${String(existingCount + 1).padStart(4, '0')}`;
-    const now   = new Date().toISOString().slice(0, 10);
-
-    const newRow = COLUMNS.map(h => {
-      if (h === 'Customer ID') return newId;
-      if (h === 'Created At')  return now;
-      return incoming[h] || '';
-    });
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: CUSTOMER_DB,
-      range: `${CUSTOMER_TAB}!A1`,
-      valueInputOption: 'RAW',
-      requestBody: { values: [newRow] },
+    console.warn('[customer-backfeed] skipped automatic customer creation', {
+      name: data.name || '',
+      source: data.source || '',
     });
   }
 }
