@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { normalizePhone } from '@/lib/normalize';
 import ContactAutocomplete from '@/components/shared/ContactAutocomplete';
 import type { ContactResult } from '@/components/shared/ContactAutocomplete';
@@ -173,6 +173,282 @@ function WOStatusBadge({ status }: { status: string }) {
     }}>
       {status?.replace(/_/g, ' ') || '—'}
     </span>
+  );
+}
+
+type OrgPickerFilters = {
+  activeOnly: boolean;
+  sameIsland: boolean;
+  sameType: boolean;
+  hasWOs: boolean;
+  zeroWOs: boolean;
+  showInactive: boolean;
+};
+
+type RankedOrg = {
+  org: OrgRecord;
+  score: number;
+  reasons: string[];
+};
+
+function normalizeOrgText(value: string): string {
+  return (value || '')
+    .toLowerCase()
+    .replace(/[,\.#]/g, ' ')
+    .replace(/\b(inc|llc|corp|ltd|co|company|association|assoc)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function orgStatus(org: OrgRecord): string {
+  return (org.status || '').trim().toLowerCase();
+}
+
+function isActiveOrg(org: OrgRecord): boolean {
+  const status = orgStatus(org);
+  return !status || status === 'active';
+}
+
+function orgIsland(org: OrgRecord): string {
+  return org.island || org.default_island || org.primary_site?.island || '';
+}
+
+function orgAddress(org: OrgRecord): string {
+  return org.address || [org.primary_site?.address_line_1, org.primary_site?.city].filter(Boolean).join(', ');
+}
+
+function rankOrgCandidate(org: OrgRecord, currentOrg: OrgRecord, query: string): RankedOrg {
+  const reasons: string[] = [];
+  let score = 0;
+  const currentName = normalizeOrgText(currentOrg.name);
+  const candidateName = normalizeOrgText(org.name);
+  const currentAddress = normalizeOrgText(orgAddress(currentOrg));
+  const candidateAddress = normalizeOrgText(orgAddress(org));
+  const currentIsland = orgIsland(currentOrg).toLowerCase();
+  const candidateIsland = orgIsland(org).toLowerCase();
+  const sharedTypes = org.types.filter(t => currentOrg.types.includes(t));
+  const queryText = normalizeOrgText(query);
+
+  if (currentName && candidateName && currentName === candidateName) {
+    score += 120;
+    reasons.push('same normalized name');
+  } else if (
+    currentName.length >= 3 &&
+    candidateName.length >= 3 &&
+    (currentName.includes(candidateName) || candidateName.includes(currentName))
+  ) {
+    score += 70;
+    reasons.push('name match');
+  }
+
+  if (currentAddress && candidateAddress && (currentAddress.includes(candidateAddress) || candidateAddress.includes(currentAddress))) {
+    score += 45;
+    reasons.push('similar address');
+  }
+  if (currentIsland && candidateIsland && currentIsland === candidateIsland) {
+    score += 15;
+    reasons.push('same island');
+  }
+  if (sharedTypes.length > 0) {
+    score += 12;
+    reasons.push('same type');
+  }
+  if (Math.abs((org.woCount || 0) - (currentOrg.woCount || 0)) <= 2) {
+    score += 6;
+    reasons.push('WO count proximity');
+  }
+  if ((org.woCount || 0) === 0) {
+    score += 8;
+    reasons.push('zero WOs');
+  }
+  if (queryText) {
+    const haystack = normalizeOrgText([
+      org.name,
+      org.org_id,
+      orgAddress(org),
+      org.primary_contact?.name,
+      org.primary_contact?.email,
+      org.contactPerson,
+      org.email,
+    ].filter(Boolean).join(' '));
+    if (haystack.includes(queryText)) {
+      score += 100;
+      reasons.unshift('search match');
+    } else {
+      score = -1;
+    }
+  }
+
+  return { org, score, reasons: [...new Set(reasons)] };
+}
+
+function filterRankedOrgs(
+  orgOptions: OrgRecord[],
+  currentOrg: OrgRecord,
+  query: string,
+  filters: OrgPickerFilters,
+): RankedOrg[] {
+  return orgOptions
+    .filter(org => org.org_id !== currentOrg.org_id)
+    .filter(org => filters.showInactive || !['merged', 'inactive'].includes(orgStatus(org)))
+    .filter(org => !filters.activeOnly || isActiveOrg(org))
+    .filter(org => !filters.sameIsland || (orgIsland(org) && orgIsland(org) === orgIsland(currentOrg)))
+    .filter(org => !filters.sameType || org.types.some(t => currentOrg.types.includes(t)))
+    .filter(org => !filters.hasWOs || (org.woCount || 0) > 0)
+    .filter(org => !filters.zeroWOs || (org.woCount || 0) === 0)
+    .map(org => rankOrgCandidate(org, currentOrg, query))
+    .filter(result => result.score >= 0)
+    .sort((a, b) => b.score - a.score || b.org.woCount - a.org.woCount || a.org.name.localeCompare(b.org.name));
+}
+
+function OrganizationPicker({
+  title,
+  currentOrg,
+  orgOptions,
+  selectedOrgId,
+  onSelect,
+}: {
+  title: string;
+  currentOrg: OrgRecord;
+  orgOptions: OrgRecord[];
+  selectedOrgId: string;
+  onSelect: (orgId: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState<OrgPickerFilters>({
+    activeOnly: true,
+    sameIsland: false,
+    sameType: false,
+    hasWOs: false,
+    zeroWOs: false,
+    showInactive: false,
+  });
+
+  const hasFilter = filters.sameIsland || filters.sameType || filters.hasWOs || filters.zeroWOs || filters.showInactive || !filters.activeOnly;
+  const canShowSearchResults = query.trim().length >= 2 || hasFilter;
+  const ranked = useMemo(
+    () => filterRankedOrgs(orgOptions, currentOrg, query, filters),
+    [orgOptions, currentOrg, query, filters],
+  );
+  const likelyMatches = useMemo(
+    () => filterRankedOrgs(orgOptions, currentOrg, '', filters)
+      .filter(result => result.score >= 35 || result.reasons.includes('same normalized name') || result.reasons.includes('name match') || result.reasons.includes('similar address'))
+      .slice(0, 5),
+    [orgOptions, currentOrg, filters],
+  );
+  const visibleResults = canShowSearchResults ? ranked.slice(0, 25) : [];
+  const selectedOrg = orgOptions.find(org => org.org_id === selectedOrgId);
+
+  const chipStyle = (active: boolean): React.CSSProperties => ({
+    fontSize: 10,
+    fontWeight: 800,
+    padding: '4px 8px',
+    borderRadius: 999,
+    border: active ? '1px solid #0f766e' : '1px solid #e2e8f0',
+    background: active ? '#f0fdfa' : 'white',
+    color: active ? '#0f766e' : '#64748b',
+    cursor: 'pointer',
+  });
+
+  function toggleFilter(key: keyof OrgPickerFilters) {
+    setFilters(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      if (key === 'showInactive' && !prev.showInactive) next.activeOnly = false;
+      if (key === 'activeOnly' && !prev.activeOnly) next.showInactive = false;
+      if (key === 'hasWOs' && !prev.hasWOs) next.zeroWOs = false;
+      if (key === 'zeroWOs' && !prev.zeroWOs) next.hasWOs = false;
+      return next;
+    });
+  }
+
+  function renderCard(result: RankedOrg) {
+    const org = result.org;
+    const selected = org.org_id === selectedOrgId;
+    const status = org.status || '';
+    return (
+      <button
+        key={org.org_id}
+        type="button"
+        onClick={() => onSelect(org.org_id)}
+        style={{
+          textAlign: 'left',
+          width: '100%',
+          padding: 9,
+          borderRadius: 9,
+          border: selected ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
+          background: selected ? '#f0fdfa' : 'white',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.name || 'Unnamed org'}</div>
+            <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{org.org_id}</div>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 800, color: '#1d4ed8', background: '#eff6ff', borderRadius: 999, padding: '2px 7px', height: 18, whiteSpace: 'nowrap' }}>
+            {org.woCount || 0} WO{org.woCount === 1 ? '' : 's'}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
+          {org.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
+          {orgIsland(org) && <span style={{ fontSize: 10, color: '#64748b' }}>{orgIsland(org)}</span>}
+          {status && status !== 'active' && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
+        </div>
+        <div style={{ fontSize: 10, color: '#64748b', marginTop: 6 }}>
+          {result.reasons.length > 0 ? result.reasons.slice(0, 4).join(' · ') : 'filtered result'}
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <label style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#94a3b8', display: 'block' }}>{title}</label>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search by organization name, address, org ID, or contact."
+        style={{ fontSize: 13, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', background: 'white', width: '100%', boxSizing: 'border-box' }}
+      />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+        <button type="button" onClick={() => toggleFilter('activeOnly')} style={chipStyle(filters.activeOnly)}>Active only</button>
+        <button type="button" onClick={() => toggleFilter('sameIsland')} style={chipStyle(filters.sameIsland)}>Same island</button>
+        <button type="button" onClick={() => toggleFilter('sameType')} style={chipStyle(filters.sameType)}>Same type</button>
+        <button type="button" onClick={() => toggleFilter('hasWOs')} style={chipStyle(filters.hasWOs)}>Has WOs</button>
+        <button type="button" onClick={() => toggleFilter('zeroWOs')} style={chipStyle(filters.zeroWOs)}>Zero WOs</button>
+        <button type="button" onClick={() => toggleFilter('showInactive')} style={chipStyle(filters.showInactive)}>Show merged/inactive</button>
+      </div>
+      {selectedOrg && (
+        <div style={{ fontSize: 12, color: '#0f766e', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '7px 9px' }}>
+          Selected: <strong>{selectedOrg.name}</strong> · {selectedOrg.org_id}
+        </div>
+      )}
+      {!canShowSearchResults && (
+        <div style={{ fontSize: 12, color: '#64748b', background: 'white', border: '1px dashed #cbd5e1', borderRadius: 8, padding: '8px 10px' }}>
+          Search by organization name, address, org ID, or contact.
+        </div>
+      )}
+      {likelyMatches.length > 0 && (
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 5 }}>Likely matches</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {likelyMatches.map(renderCard)}
+          </div>
+        </div>
+      )}
+      {canShowSearchResults && (
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 5 }}>
+            Results {ranked.length > 25 ? '(top 25 shown, refine search)' : `(${ranked.length})`}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 360, overflowY: 'auto' }}>
+            {visibleResults.length > 0 ? visibleResults.map(renderCard) : (
+              <div style={{ fontSize: 12, color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>No matching organizations.</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -479,7 +755,6 @@ function OrgDetailPanel({
     letterSpacing: '0.1em', color: '#64748b', marginBottom: 10, marginTop: 20,
     paddingBottom: 6, borderBottom: '1px solid #f1f5f9',
   };
-  const otherOrgs = orgOptions.filter(o => o.org_id !== orgId);
   const orgNameById = new Map(orgOptions.map(o => [o.org_id, o.name]));
   const countTotal = mergePreview
     ? mergePreview.counts.work_orders + mergePreview.counts.contacts + mergePreview.counts.sites + mergePreview.counts.crosswalk + mergePreview.counts.projects
@@ -579,18 +854,21 @@ function OrgDetailPanel({
 
               <div>
                 <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Merge Duplicate Org</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'end' }}>
-                  <div>
-                    <label style={LBL}>Survivor / Primary Org</label>
-                    <select style={{ ...INP, cursor: 'pointer' }} value={mergeForm.survivor_org_id} onChange={e => { setMergeForm(p => ({ ...p, survivor_org_id: e.target.value })); setMergePreview(null); }}>
-                      <option value="">Select survivor</option>
-                      {otherOrgs.map(o => <option key={o.org_id} value={o.org_id}>{o.name} · {o.org_id}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #0f766e', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
+                <OrganizationPicker
+                  title="Survivor / Primary Org"
+                  currentOrg={detail.org}
+                  orgOptions={orgOptions}
+                  selectedOrgId={mergeForm.survivor_org_id}
+                  onSelect={selectedOrgId => {
+                    setMergeForm(p => ({ ...p, survivor_org_id: selectedOrgId }));
+                    setMergePreview(null);
+                  }}
+                />
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #0f766e', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
                     Preview
                   </button>
-                  <button onClick={executeMerge} disabled={governanceSaving || !mergePreview?.can_execute} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: '#b91c1c', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergePreview?.can_execute ? 1 : 0.45 }}>
+                  <button onClick={executeMerge} disabled={governanceSaving || !mergeForm.survivor_org_id || !mergePreview?.can_execute} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none', background: '#b91c1c', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id && mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id && mergePreview?.can_execute ? 1 : 0.45 }}>
                     Confirm Merge
                   </button>
                 </div>
@@ -621,14 +899,14 @@ function OrgDetailPanel({
 
               <div>
                 <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Mark Related, Not Duplicate</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 170px auto', gap: 8, alignItems: 'end' }}>
-                  <div>
-                    <label style={LBL}>Related Org</label>
-                    <select style={{ ...INP, cursor: 'pointer' }} value={relationshipForm.target_org_id} onChange={e => setRelationshipForm(p => ({ ...p, target_org_id: e.target.value }))}>
-                      <option value="">Select related org</option>
-                      {otherOrgs.map(o => <option key={o.org_id} value={o.org_id}>{o.name} · {o.org_id}</option>)}
-                    </select>
-                  </div>
+                <OrganizationPicker
+                  title="Related Org"
+                  currentOrg={detail.org}
+                  orgOptions={orgOptions}
+                  selectedOrgId={relationshipForm.target_org_id}
+                  onSelect={targetOrgId => setRelationshipForm(p => ({ ...p, target_org_id: targetOrgId }))}
+                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'end', marginTop: 8 }}>
                   <div>
                     <label style={LBL}>Relationship</label>
                     <select style={{ ...INP, cursor: 'pointer' }} value={relationshipForm.relationship_type} onChange={e => setRelationshipForm(p => ({ ...p, relationship_type: e.target.value }))}>
