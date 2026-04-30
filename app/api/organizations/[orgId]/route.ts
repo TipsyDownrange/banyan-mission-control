@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgId: 
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
     const [orgsRes, cntRes, siteRes, woRes, ceRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:L5000' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:P5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Contacts!A2:J2000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Sites!A2:M5000' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Service_Work_Orders!A2:AQ2000' }),
@@ -42,7 +42,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgId: 
       kID: r[0], type: r[1], name: r[2], status: r[3], role: r[9]===orgId?'GC':r[10]===orgId?'Owner':'Architect',
     })).slice(0, 10);
     return NextResponse.json({
-      org: { org_id: orgRow[0], name: orgRow[1], types: (orgRow[2]||'').split(',').map((s:string)=>s.trim()).filter(Boolean), entity_type: orgRow[3], default_island: orgRow[4], tax_id: orgRow[5], payment_terms: orgRow[6], avg_days_to_pay: orgRow[7], notes: orgRow[8], source: orgRow[9], created_at: orgRow[10], updated_at: orgRow[11] },
+      org: { org_id: orgRow[0], name: orgRow[1], types: (orgRow[2]||'').split(',').map((s:string)=>s.trim()).filter(Boolean), entity_type: orgRow[3], default_island: orgRow[4], tax_id: orgRow[5], payment_terms: orgRow[6], avg_days_to_pay: orgRow[7], notes: orgRow[8], source: orgRow[9], created_at: orgRow[10], updated_at: orgRow[11], status: orgRow[12] || '', merged_into_org_id: orgRow[13] || '', merged_at: orgRow[14] || '', merged_by: orgRow[15] || '' },
       contacts, sites, linkedWOs, linkedProjects,
     });
   } catch (err) { return NextResponse.json({ error: String(err) }, { status: 500 }); }
@@ -56,14 +56,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
   try {
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
-    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:L5000' });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Organizations!A2:P5000' });
     const rows = res.data.values || [];
     const idx = rows.findIndex(r => r[0] === orgId);
     if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const rowNum = idx + 2;
     const now = new Date().toISOString();
     const updates: {range:string;values:string[][]}[] = [{ range:`Organizations!L${rowNum}`, values:[[now]] }];
-    const COL: Record<string,number> = { name:1, types:2, entity_type:3, default_island:4, tax_id:5, payment_terms:6, avg_days_to_pay:7, notes:8 };
+    const COL: Record<string,number> = { name:1, types:2, entity_type:3, default_island:4, tax_id:5, payment_terms:6, avg_days_to_pay:7, notes:8, status:12 };
     for (const [k,v] of Object.entries(body)) {
       const col = COL[k];
       if (col !== undefined) updates.push({ range:`Organizations!${String.fromCharCode(65+col)}${rowNum}`, values:[[Array.isArray(v)?v.join(','):String(v)]] });
