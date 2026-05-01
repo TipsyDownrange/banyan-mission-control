@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { getCrosswalkSheets, loadCrosswalkByCustomer } from '@/lib/entityCrosswalk';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const CUSTOMERS_TAB     = 'Customers';
@@ -77,7 +78,7 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
   const iLastDate      = idx('Last_WO_Date');
   const iSource        = idx('Source');
 
-  return rows.slice(1).map(row => {
+  const customerRecords = rows.slice(1).map(row => {
     const get = (i: number) => (i >= 0 ? (row[i] || '') : '');
     const phone = get(iPhone);
     return {
@@ -103,6 +104,12 @@ async function fetchCustomersFromGoogleSheet(): Promise<CustomerRecord[]> {
       contactPhone:  phone,
     };
   }).filter(r => r.contactPerson || r.company);
+
+  const crosswalk = await loadCrosswalkByCustomer(getCrosswalkSheets(true));
+  return customerRecords.map(record => {
+    const entry = crosswalk.get(record.customerId);
+    return entry ? { ...record, org_id: entry.org_id } : record;
+  });
 }
 
 // ── GET handler ───────────────────────────────────────────────────────────────
@@ -117,7 +124,13 @@ export async function GET() {
     const source = 'customers-tab';
 
     customersCache = { data: customers, ts: now };
-    return NextResponse.json({ customers, source, total: customers.length });
+    return NextResponse.json({
+      customers,
+      source,
+      total: customers.length,
+      identity_resolution: 'entity_crosswalk',
+      unresolved_org_count: customers.filter(customer => customer.customerId && !customer.org_id).length,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg, customers: [] }, { status: 500 });

@@ -107,6 +107,7 @@ export function applyCustomerRecord(prev: ServiceIntakeDraft, c: CustomerRecord)
     contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
     contactEmail:  prev.contactEmail || c.email,
     customer_id:   c.customerId || prev.customer_id,
+    org_id:        c.org_id || prev.org_id,
   };
 }
 

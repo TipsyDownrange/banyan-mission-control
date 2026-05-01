@@ -7,10 +7,11 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { ORGANIZATION_TYPES } from '@/lib/organization-types';
 
 const SHEET_ID = getBackendSheetId();
 
-const ALLOWED_EDIT_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'BUILDER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
+const ALLOWED_EDIT_TYPES = ORGANIZATION_TYPES;
 const ALLOWED_EDIT_STATUSES = ['active', 'inactive'];
 
 function getAuth() { return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']); }

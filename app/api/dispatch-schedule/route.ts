@@ -202,6 +202,10 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  // Permission check — dispatch:create owns slot lifecycle create/delete.
+  const { allowed } = await checkPermission(req, 'dispatch:create');
+  if (!allowed) return NextResponse.json({ error: 'Forbidden: dispatch:create required' }, { status: 403 });
+
   try {
     const { searchParams } = new URL(req.url);
     const slot_id = searchParams.get('slot_id') || '';
