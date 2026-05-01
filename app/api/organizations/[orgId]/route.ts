@@ -70,8 +70,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
 
   if (body.status !== undefined) {
     const status = String(body.status).trim().toLowerCase();
-    if (!ALLOWED_EDIT_STATUSES.includes(status)) {
+    if (!status) {
+      delete body.status;
+    } else if (!ALLOWED_EDIT_STATUSES.includes(status)) {
       return NextResponse.json({ error: `Invalid status: ${body.status}. Use active or inactive. Merged status is set only by the merge workflow.` }, { status: 400 });
+    } else {
+      body.status = status;
     }
   }
 
