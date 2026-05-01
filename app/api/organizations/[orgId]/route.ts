@@ -7,10 +7,11 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { ORGANIZATION_TYPES } from '@/lib/organization-types';
 
 const SHEET_ID = getBackendSheetId();
 
-const ALLOWED_EDIT_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'BUILDER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
+const ALLOWED_EDIT_TYPES = ORGANIZATION_TYPES;
 const ALLOWED_EDIT_STATUSES = ['active', 'inactive'];
 
 function getAuth() { return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']); }
@@ -69,8 +70,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
 
   if (body.status !== undefined) {
     const status = String(body.status).trim().toLowerCase();
-    if (!ALLOWED_EDIT_STATUSES.includes(status)) {
+    if (!status) {
+      delete body.status;
+    } else if (!ALLOWED_EDIT_STATUSES.includes(status)) {
       return NextResponse.json({ error: `Invalid status: ${body.status}. Use active or inactive. Merged status is set only by the merge workflow.` }, { status: 400 });
+    } else {
+      body.status = status;
     }
   }
 

@@ -255,3 +255,5 @@ describe('Service WO create route', () => {
     }));
   });
 });
+
+export {};

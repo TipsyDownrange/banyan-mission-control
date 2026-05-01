@@ -5,6 +5,11 @@ import ContactAutocomplete from '@/components/shared/ContactAutocomplete';
 import type { ContactResult } from '@/components/shared/ContactAutocomplete';
 import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 import type { ParsedPlace } from '@/components/PlacesAutocomplete';
+import {
+  ORGANIZATION_TYPE_COLORS,
+  ORGANIZATION_TYPE_LABELS,
+  ORGANIZATION_TYPES,
+} from '@/lib/organization-types';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type OrgRecord = {
@@ -111,33 +116,9 @@ type MergePreview = {
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────
-const TYPE_COLORS: Record<string, { color: string; bg: string }> = {
-  GC:            { color: '#1d4ed8', bg: '#eff6ff' },
-  COMMERCIAL:    { color: '#0f766e', bg: '#f0fdfa' },
-  RESIDENTIAL:   { color: '#15803d', bg: '#f0fdf4' },
-  VENDOR:        { color: '#c2410c', bg: '#fff7ed' },
-  ARCHITECT:     { color: '#7c3aed', bg: '#f5f3ff' },
-  OWNER:         { color: '#b91c1c', bg: '#fef2f2' },
-  BUILDER:       { color: '#d97706', bg: '#fffbeb' },
-  GOVERNMENT:    { color: '#0369a1', bg: '#f0f9ff' },
-  PROPERTY_MGMT: { color: '#64748b', bg: '#f8fafc' },
-  CONSULTANT:    { color: '#4b5563', bg: '#f9fafb' },
-};
-
-const ALL_TYPES = ['GC', 'COMMERCIAL', 'RESIDENTIAL', 'VENDOR', 'ARCHITECT', 'OWNER', 'BUILDER', 'GOVERNMENT', 'PROPERTY_MGMT', 'CONSULTANT'];
-
-const FILTER_LABELS: Record<string, string> = {
-  GC: 'GC',
-  COMMERCIAL: 'Commercial',
-  RESIDENTIAL: 'Residential',
-  VENDOR: 'Vendor',
-  ARCHITECT: 'Architect',
-  OWNER: 'Owner',
-  BUILDER: 'Builder',
-  GOVERNMENT: 'Government',
-  PROPERTY_MGMT: 'Property Mgmt',
-  CONSULTANT: 'Consultant',
-};
+const TYPE_COLORS = ORGANIZATION_TYPE_COLORS;
+const ALL_TYPES = ORGANIZATION_TYPES;
+const FILTER_LABELS = ORGANIZATION_TYPE_LABELS;
 
 const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   OPEN:          { bg: '#fef2f2', color: '#dc2626' },
