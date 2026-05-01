@@ -12,6 +12,7 @@ BanyanOS Build Quality System:
 - Canon file: `00_CANONICAL/BanyanOS_Build_Quality_System.md`
 - Drive ID: `1GVqFvTDv-11W8AyZ0UtpgTYXFPjlhQjg`
 - Status: ratified by `GC-D068` on `2026-05-01`
+- BAN-92 adds branch-explicit dispatch and staging verification routing.
 
 Drive remains BanyanOS canon. Linear is the command board. GitHub is code reality. Codex and Claude Code are build lanes, not canon.
 
@@ -34,8 +35,13 @@ Field App is generally the field consumer/capture app. Do not implement Field Ap
 ## Build readiness
 
 Do not implement a meaningful feature unless the task provides:
-- repo target
-- branch name
+- `REPO`
+- `BRANCH TO CHECK OUT`
+- `BASE BRANCH`
+- `CURRENT EXPECTED SHA`
+- `CREATE BRANCH? YES/NO`
+- `STAGING / VERIFICATION TARGET`
+- `PRODUCTION IMPACT ALLOWED? YES/NO`
 - canon packet or source links
 - scope
 - out of scope
@@ -45,6 +51,22 @@ Do not implement a meaningful feature unless the task provides:
 - done report requirements
 
 If build readiness is missing, produce a stop report or packet gap report instead of coding.
+
+## Branch and workspace gate
+
+Every Codex or Claude Code task must begin by verifying execution context:
+
+1. Confirm current branch.
+2. Confirm current SHA.
+3. Confirm working tree status.
+4. Check out the requested branch or create the approved branch.
+5. Stop if the branch/SHA does not match the prompt.
+6. Stop if tracked files are dirty unless the prompt explicitly handles them.
+7. Do not proceed on the wrong branch.
+
+Being in the Mission Control repo is not enough. The branch and SHA must match the task.
+
+For implementation tasks, work on the approved task branch. For staging verification, only update the `staging` branch when the prompt explicitly authorizes staging promotion. Never use `main`, `staging`, or an old feature branch just because it is currently checked out.
 
 ## Lane rules
 
@@ -84,6 +106,28 @@ Do not regress existing navigation, auth, role visibility, Work Orders, service 
 
 Do not make opportunistic improvements. Do not change unrelated files. Do not call work done without evidence.
 
+## Authenticated verification routing
+
+Random Vercel PR preview URLs are not valid authenticated Google OAuth verification surfaces for BanyanOS.
+
+Use random PR preview URLs only for:
+- build/deploy status
+- unauthenticated smoke
+- safe API smoke
+- code/diff review
+
+Mission Control authenticated UI verification must use the BAN-55 staging lane unless the task explicitly approves production post-merge verification:
+
+`https://banyan-mission-control-env-staging-sean-2881s-projects.vercel.app`
+
+Before claiming authenticated UI verification, confirm:
+1. the staging deployment includes the expected commit SHA;
+2. the deployment uses the staging target/environment;
+3. staging backend Sheet isolation is preserved;
+4. the tested URL is the staging alias above, not a random branch preview URL.
+
+If a prompt asks for authenticated verification on a random PR preview URL, stop and report verification-route drift.
+
 ## Smoke / verification
 
 Run task-specified checks. If no checks are specified, inspect package scripts and recommend checks before implementation.
@@ -99,19 +143,22 @@ Work is not done until behavior is verified against the operator workflow reques
 ## Stop conditions
 
 Stop and report if:
-- Drive canon is missing or inaccessible.
-- Drive canon and Linear issue scope conflict.
-- Linear scope is required but unavailable or missing acceptance criteria.
-- GitHub repo access is unavailable for code-reality checks.
-- Required permissions are missing.
-- Repo reality conflicts with the canonical packet or task scope.
-- Current `AGENTS.md` instructions conflict with the task or canonical packet.
-- Tracked files are dirty with unrelated changes.
-- Syncing the target branch would overwrite local work.
-- Implementation would require app code changes outside scope.
-- Work would cross repo boundaries without explicit approval.
-- Protected surfaces would be touched outside scope.
-- Verification cannot be run or cannot produce evidence.
+- required branch/SHA fields are missing for code-agent work;
+- current branch or SHA does not match the task;
+- the task routes authenticated UI verification to a random Vercel PR preview URL;
+- Drive canon is missing or inaccessible;
+- Drive canon and Linear issue scope conflict;
+- Linear scope is required but unavailable or missing acceptance criteria;
+- GitHub repo access is unavailable for code-reality checks;
+- Required permissions are missing;
+- Repo reality conflicts with the canonical packet or task scope;
+- Current `AGENTS.md` instructions conflict with the task or canonical packet;
+- Tracked files are dirty with unrelated changes;
+- Syncing the target branch would overwrite local work;
+- Implementation would require app code changes outside scope;
+- Work would cross repo boundaries without explicit approval;
+- Protected surfaces would be touched outside scope;
+- Verification cannot be run or cannot produce evidence;
 - Untracked local tool folders such as `.claude/` would need to be modified, deleted, staged, or committed.
 
 ## Stop report
