@@ -551,6 +551,8 @@ export async function PATCH(req: Request) {
 
     if (dispatchDate && assignedTo) {
       try {
+        // BAN-42: FIELD_BACKEND_SHEET_ID must be set in Vercel for dispatch sync to run.
+        // If missing, dispatch sync is silently skipped — check Vercel env if schedule writes stop appearing.
         const fieldSheetId = process.env.FIELD_BACKEND_SHEET_ID;
         if (fieldSheetId) {
           const slotId = `SVC-${resolvedWoNumber}-${dispatchDate}`;

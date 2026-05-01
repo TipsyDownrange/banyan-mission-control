@@ -15,6 +15,10 @@ jest.mock('@/lib/gauth', () => ({
   getGoogleAuth: jest.fn(() => ({})),
 }));
 
+jest.mock('@/lib/backend-config', () => ({
+  getBackendSheetId: jest.fn(() => 'backend-sheet-test'),
+}));
+
 jest.mock('@/lib/updateCustomerRecord', () => ({
   fireAndForgetCustomerUpdate: jest.fn(),
 }));
