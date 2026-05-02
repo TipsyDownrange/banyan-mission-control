@@ -9,6 +9,19 @@ import { getBackendSheetId } from '@/lib/backend-config';
 const SHEET_ID = getBackendSheetId();
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
+// BAN-93 Gate 4: parse focus_step_ids cell — handles JSON array or legacy comma-separated.
+function parseFocusStepIds(raw: string): string[] {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) return parsed.map(String).map(s => s.trim()).filter(Boolean);
+  } catch {
+    // fall through to comma-separated
+  }
+  return trimmed.split(',').map(s => s.trim()).filter(Boolean);
+}
+
 // ─── Column mappings ─────────────────────────────────────────────────────────
 // Install_Plans: A=Install_Plan_ID, B=Job_ID, C=System_Type, D=Location,
 //   E=Estimated_Total_Hours, F=Estimated_Qty, G=Status
@@ -443,7 +456,35 @@ export async function PATCH(
         valueInputOption: 'RAW',
         requestBody: { values: [updated] },
       });
-      return NextResponse.json({ ok: true });
+
+      // BAN-93 Gate 4: detect drift between the new planned_start_date and any committed Dispatch_Schedule slots
+      // that reference this step via focus_step_ids.
+      type DriftWarning = { slot_id: string; slot_date: string; step_id: string; new_planned_date: string };
+      const driftWarnings: DriftWarning[] = [];
+      const isDateEdit = 'planned_start_date' in fields || 'planned_end_date' in fields;
+      const resolvedPlannedStart: string = updated[9] || '';
+      if (isDateEdit && resolvedPlannedStart) {
+        try {
+          const dispatchRes = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: 'Dispatch_Schedule!A2:S5000',
+          });
+          const dispatchRows = (dispatchRes.data.values || []) as string[][];
+          for (const row of dispatchRows) {
+            const slotId = (row[0] || '').trim();
+            const slotDate = (row[1] || '').trim();
+            if (!slotId || !slotDate) continue;
+            const focusStepIds = parseFocusStepIds(row[18] || '');
+            if (focusStepIds.includes(id) && slotDate !== resolvedPlannedStart) {
+              driftWarnings.push({ slot_id: slotId, slot_date: slotDate, step_id: id, new_planned_date: resolvedPlannedStart });
+            }
+          }
+        } catch {
+          // non-fatal — drift detection failure must not block the step update
+        }
+      }
+
+      return NextResponse.json({ ok: true, ...(driftWarnings.length > 0 ? { drift_warnings: driftWarnings } : {}) });
     }
 
     if (type === 'completion') {
