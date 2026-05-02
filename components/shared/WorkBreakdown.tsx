@@ -31,6 +31,14 @@ interface InstallStep {
   actual_hours?: number | null;
 }
 
+// BAN-93 Gate 4: drift between planned step dates and committed Dispatch_Schedule slots.
+interface DriftWarning {
+  slot_id: string;
+  slot_date: string;
+  step_id: string;
+  new_planned_date: string;
+}
+
 const STEP_CATEGORIES = [
   'Measurement', 'Mobilization', 'Delivery', 'Material Handling', 'Spotting',
   'Installation', 'Demobilization', 'QA/Punch', 'Admin/Paperwork',
@@ -215,6 +223,10 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   // Saving state
   const [savingNote, setSavingNote] = useState<string | null>(null);
 
+  // BAN-93 Gate 4: drift warnings keyed by install_step_id
+  const [stepDriftWarnings, setStepDriftWarnings] = useState<Record<string, DriftWarning[]>>({});
+  const [reconcilingSlot, setReconcilingSlot] = useState<string | null>(null);
+
   // ─── Load data ──────────────────────────────────────────────────────────────
 
   const loadData = useCallback(async () => {
@@ -284,6 +296,30 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
   function getPlannedHoursForPlan(planId: string) {
     return getStepsForPlan(planId).reduce((sum, s) => sum + s.allotted_hours, 0);
+  }
+
+  // BAN-93 Gate 4: apply a date-only reconcile to a drifted dispatch slot.
+  async function reconcileSlotDate(slotId: string, newDate: string, stepId: string) {
+    setReconcilingSlot(slotId);
+    try {
+      const res = await fetch('/api/superintendent-scheduling', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slot_id: slotId, date: newDate }),
+      });
+      if (res.ok) {
+        setStepDriftWarnings(prev => {
+          const next = { ...prev };
+          next[stepId] = (next[stepId] || []).filter(w => w.slot_id !== slotId);
+          if (!next[stepId]?.length) delete next[stepId];
+          return next;
+        });
+      }
+    } catch {
+      // leave warning visible so operator can retry
+    } finally {
+      setReconcilingSlot(null);
+    }
   }
 
   function getCompletedStepsForPlan(planId: string) {
@@ -1076,11 +1112,23 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     value={step.planned_start_date || ''}
                     onChange={async (e) => {
                       try {
-                        await fetch(`/api/work-breakdown/${jobId}`, {
+                        const res = await fetch(`/api/work-breakdown/${jobId}`, {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ type: 'step', id: step.install_step_id, planned_start_date: e.target.value }),
                         });
+                        if (res.ok) {
+                          const json = await res.json();
+                          setStepDriftWarnings(prev => {
+                            const next = { ...prev };
+                            if (json.drift_warnings?.length) {
+                              next[step.install_step_id] = json.drift_warnings;
+                            } else {
+                              delete next[step.install_step_id];
+                            }
+                            return next;
+                          });
+                        }
                         await loadData();
                       } catch {}
                     }}
@@ -1097,11 +1145,23 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     value={step.planned_end_date || ''}
                     onChange={async (e) => {
                       try {
-                        await fetch(`/api/work-breakdown/${jobId}`, {
+                        const res = await fetch(`/api/work-breakdown/${jobId}`, {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ type: 'step', id: step.install_step_id, planned_end_date: e.target.value }),
                         });
+                        if (res.ok) {
+                          const json = await res.json();
+                          setStepDriftWarnings(prev => {
+                            const next = { ...prev };
+                            if (json.drift_warnings?.length) {
+                              next[step.install_step_id] = json.drift_warnings;
+                            } else {
+                              delete next[step.install_step_id];
+                            }
+                            return next;
+                          });
+                        }
                         await loadData();
                       } catch {}
                     }}
@@ -1110,7 +1170,43 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   />
                 </label>
 
+              </div>
+            )}
 
+            {/* BAN-93 Gate 4: Dispatch drift warning */}
+            {!readOnly && (stepDriftWarnings[step.install_step_id] || []).length > 0 && (
+              <div style={{ marginTop: 8, padding: '10px 12px', borderRadius: 8, background: '#fff7ed', border: '1px solid #fed7aa' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#c2410c', marginBottom: 6 }}>
+                  This step date no longer matches the committed crew board.
+                </div>
+                {(stepDriftWarnings[step.install_step_id] || []).map(w => (
+                  <div key={w.slot_id} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: '#78350f' }}>
+                      Crew board: <strong>{w.slot_date}</strong> → Plan: <strong>{w.new_planned_date}</strong> ({w.slot_id})
+                    </span>
+                    <button
+                      onClick={ev => { ev.stopPropagation(); reconcileSlotDate(w.slot_id, w.new_planned_date, step.install_step_id); }}
+                      disabled={reconcilingSlot === w.slot_id}
+                      style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid #c2410c', background: '#c2410c', color: 'white', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      {reconcilingSlot === w.slot_id ? 'Moving…' : 'Move crew board to this date'}
+                    </button>
+                    <button
+                      onClick={ev => {
+                        ev.stopPropagation();
+                        setStepDriftWarnings(prev => {
+                          const next = { ...prev };
+                          next[step.install_step_id] = (next[step.install_step_id] || []).filter(x => x.slot_id !== w.slot_id);
+                          if (!next[step.install_step_id]?.length) delete next[step.install_step_id];
+                          return next;
+                        });
+                      }}
+                      style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid #d97706', background: 'transparent', color: '#92400e', cursor: 'pointer' }}
+                    >
+                      Leave crew board as-is
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
