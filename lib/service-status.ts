@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import { normalizeKID } from './normalize-kid';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from './backend-config';
+import { isCompletionRowComplete } from './step-completion';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -33,7 +34,7 @@ export async function deriveWorkOrderStatus(params: {
   const [plansRes, stepsRes, completionsRes, dispatchRes, estimatesRes] = await Promise.all([
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:P5000' }),
-    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:I5000' }),
+    sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:J5000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:P5000' }),
     sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Carls_Method!A2:D5000' }),
   ]);
@@ -61,15 +62,15 @@ export async function deriveWorkOrderStatus(params: {
     return hasDispatchSlot ? 'scheduled' : 'estimated';
   }
 
-  const completionByStep = new Map<string, number>();
+  const completeStepIds = new Set<string>();
   for (const row of completions) {
     const stepId = row[1] || '';
-    const percent = parseFloat(row[6] || '0');
-    const existing = completionByStep.get(stepId) ?? 0;
-    completionByStep.set(stepId, Math.max(existing, Number.isFinite(percent) ? percent : 0));
+    if (stepId && isCompletionRowComplete(row)) {
+      completeStepIds.add(stepId);
+    }
   }
 
-  const allStepsComplete = steps.every(row => (completionByStep.get(row[0] || '') ?? 0) >= 100);
+  const allStepsComplete = steps.every(row => completeStepIds.has(row[0] || ''));
   if (allStepsComplete) {
     return 'completed';
   }
