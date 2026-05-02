@@ -9,6 +9,7 @@ import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { upsertCrosswalkEntry } from '@/lib/entityCrosswalk';
+import { buildDispatchRow, validateDispatchRow } from '@/lib/dispatch-schedule';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -539,8 +540,7 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // If this is a dispatch update (scheduledDate + assignedTo both provided),
-    // also write to Dispatch_Schedule for the field crew calendar
+    // ─── BAN-42 Gate 2: Dispatch_Schedule A:S / 19-column sync ─────────────────
     const { scheduledDate, assignedTo } = body;
     const resolvedWoNumber = woNumber || rows[targetRowIdx]?.[COL_IDX.wo_number] || woId;
     const woName = rows[targetRowIdx]?.[COL_IDX.name] || '';
@@ -549,51 +549,102 @@ export async function PATCH(req: Request) {
       ? scheduledDate.slice(0, 10)
       : scheduledDate;
 
+    type ScheduleSyncStatus = 'not_requested' | 'skipped' | 'created' | 'updated' | 'failed';
+    let scheduleSyncResult: { status: ScheduleSyncStatus; slot_id?: string; warning?: string } =
+      { status: 'not_requested' };
+
     if (dispatchDate && assignedTo) {
-      try {
+      const fieldSheetId = process.env.FIELD_BACKEND_SHEET_ID;
+      if (!fieldSheetId) {
         // BAN-42: FIELD_BACKEND_SHEET_ID must be set in Vercel for dispatch sync to run.
-        // If missing, dispatch sync is silently skipped — check Vercel env if schedule writes stop appearing.
-        const fieldSheetId = process.env.FIELD_BACKEND_SHEET_ID;
-        if (fieldSheetId) {
-          const slotId = `SVC-${resolvedWoNumber}-${dispatchDate}`;
-          const menRequired = body.men || '1';
-          const displayName = woName || `Service WO ${resolvedWoNumber}`;
+        scheduleSyncResult = { status: 'skipped', warning: 'FIELD_BACKEND_SHEET_ID is not configured' };
+        console.error('[schedule-sync] FIELD_BACKEND_SHEET_ID is not set — dispatch sync skipped');
+      } else {
+        const slotId = `SVC-${resolvedWoNumber}-${dispatchDate}`;
+        const displayName = woName || `Service WO ${resolvedWoNumber}`;
+        const createdBy = userEmail || 'service/update';
 
-          const existing = await sheets.spreadsheets.values.get({
+        try {
+          const existingRes = await sheets.spreadsheets.values.get({
             spreadsheetId: fieldSheetId,
-            range: 'Dispatch_Schedule!A2:J5000',
+            range: 'Dispatch_Schedule!A2:S5000',
           });
-          const existingRows = existing.data.values || [];
-          const alreadyExists = existingRows.some(r => r[0] === slotId);
+          const existingRows = (existingRes.data.values || []) as string[][];
+          const rowIndex = existingRows.findIndex(r => r[0] === slotId);
 
-          if (!alreadyExists) {
-            await sheets.spreadsheets.values.append({
-              spreadsheetId: fieldSheetId,
-              range: 'Dispatch_Schedule!A:J',
-              valueInputOption: 'RAW',
-              requestBody: {
-                values: [[
-                  slotId, dispatchDate, `SVC-${resolvedWoNumber}`,
-                  displayName, woIsland, menRequired,
-                  body.hoursEstimated || '', assignedTo,
-                  'Joey Ritthaler', 'filled',
-                ]],
-              },
+          if (rowIndex < 0) {
+            // Create: build a full 19-column row
+            const newRow = buildDispatchRow({
+              slot_id: slotId,
+              date: dispatchDate,
+              kID: `SVC-${resolvedWoNumber}`,
+              project_name: displayName,
+              island: woIsland,
+              men_required: String(body.men || '1'),
+              hours_estimated: body.hoursEstimated || '',
+              assigned_crew: assignedTo,
+              created_by: createdBy,
+              status: 'filled',
             });
+            const validation = validateDispatchRow(newRow);
+            if (!validation.valid) {
+              console.error('[schedule-sync] Row validation failed:', validation.errors);
+              scheduleSyncResult = { status: 'failed', slot_id: slotId, warning: 'Row validation failed' };
+            } else {
+              await sheets.spreadsheets.values.append({
+                spreadsheetId: fieldSheetId,
+                range: 'Dispatch_Schedule!A:S',
+                valueInputOption: 'RAW',
+                requestBody: { values: [newRow] },
+              });
+              scheduleSyncResult = { status: 'created', slot_id: slotId };
+            }
           } else {
-            const rowIndex = existingRows.findIndex(r => r[0] === slotId);
-            if (rowIndex >= 0) {
+            // Update: rebuild full A:S row, preserving Field App columns this route does not own.
+            // Field App columns: confirmations(10/K), work_type(11/L), notes(12/M),
+            // start_time(13/N), end_time(14/O), step_ids(15/P), hours_actual(16/Q),
+            // focus_step_ids(18/S).
+            const existing19 = [...existingRows[rowIndex]];
+            while (existing19.length < 19) existing19.push('');
+
+            const updatedRow = buildDispatchRow({
+              slot_id: slotId,
+              date: dispatchDate,
+              kID: `SVC-${resolvedWoNumber}`,
+              project_name: displayName,
+              island: woIsland,
+              men_required: String(body.men || '1'),
+              hours_estimated: body.hoursEstimated || existing19[6] || '',
+              assigned_crew: assignedTo,
+              created_by: existing19[8] || createdBy,
+              status: 'filled',
+              confirmations: existing19[10] || '',
+              work_type: existing19[11] || '',
+              notes: existing19[12] || '',
+              start_time: existing19[13] || '',
+              end_time: existing19[14] || '',
+              step_ids: existing19[15] || '',
+              hours_actual: existing19[16] || '',
+              focus_step_ids: existing19[18] || '',
+            });
+            const validation = validateDispatchRow(updatedRow);
+            if (!validation.valid) {
+              console.error('[schedule-sync] Row validation failed:', validation.errors);
+              scheduleSyncResult = { status: 'failed', slot_id: slotId, warning: 'Row validation failed' };
+            } else {
               await sheets.spreadsheets.values.update({
                 spreadsheetId: fieldSheetId,
-                range: `Dispatch_Schedule!H${rowIndex + 2}:J${rowIndex + 2}`,
+                range: `Dispatch_Schedule!A${rowIndex + 2}:S${rowIndex + 2}`,
                 valueInputOption: 'RAW',
-                requestBody: { values: [[assignedTo, 'Joey Ritthaler', 'filled']] },
+                requestBody: { values: [updatedRow] },
               });
+              scheduleSyncResult = { status: 'updated', slot_id: slotId };
             }
           }
+        } catch (err) {
+          console.error('[schedule-sync] Failed to write to Dispatch_Schedule:', err);
+          scheduleSyncResult = { status: 'failed', slot_id: slotId, warning: 'Schedule sync failed; see server logs' };
         }
-      } catch {
-        console.error('[schedule-sync] Failed to write to Dispatch_Schedule');
       }
     }
 
@@ -616,7 +667,7 @@ export async function PATCH(req: Request) {
       });
     }
 
-    return NextResponse.json({ ok: true, sheetRow, woId: woId || resolvedWoNumber });
+    return NextResponse.json({ ok: true, sheetRow, woId: woId || resolvedWoNumber, schedule_sync: scheduleSyncResult });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg }, { status: 500 });

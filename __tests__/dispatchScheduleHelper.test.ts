@@ -183,6 +183,22 @@ describe('validateDispatchRow', () => {
     expect(result.errors.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('fails when kID is a blank string', () => {
+    const row = makeValidRow();
+    row[2] = '';
+    const result = validateDispatchRow(row);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('kID'))).toBe(true);
+  });
+
+  it('fails when kID is a whitespace-only string', () => {
+    const row = makeValidRow();
+    row[2] = '   ';
+    const result = validateDispatchRow(row);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('kID'))).toBe(true);
+  });
+
   it('makes no Google Sheets calls — pure in-memory', () => {
     // No mocks needed; if googleapis were imported, jest would fail to resolve it.
     // This test passing proves the helper is purely in-memory.
