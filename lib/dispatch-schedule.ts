@@ -129,9 +129,7 @@ export function validateDispatchRow(row: unknown[]): DispatchRowValidationResult
 
   if (!str(row[0])) errors.push('slot_id (col 0 / A) is required');
   if (!str(row[1])) errors.push('date (col 1 / B) is required');
-  if (row[2] === undefined || row[2] === null) {
-    errors.push('kID (col 2 / C) is required');
-  }
+  if (!str(row[2])) errors.push('kID (col 2 / C) is required');
 
   return { valid: errors.length === 0, errors };
 }
