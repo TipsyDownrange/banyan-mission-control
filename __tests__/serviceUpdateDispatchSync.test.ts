@@ -259,6 +259,40 @@ describe('service/update — Dispatch_Schedule A:S sync (BAN-42 Gate 2)', () => 
     expect(updatedRow[7]).toBe('Alice, Bob');        // assigned_crew
   });
 
+  // ── 4b. Preserves existing men_required when body.men is absent ───────────
+  it('preserves existing men_required (col F / index 5) when body.men is absent on update', async () => {
+    const existingRow = [
+      'SVC-26-0001-2026-05-10', // 0  slot_id
+      '2026-05-10',              // 1  date
+      'SVC-26-0001',             // 2  kID
+      'Test Repair',             // 3  project_name
+      'Maui',                    // 4  island
+      '3',                       // 5  men_required ← must NOT be overwritten to '1'
+      '4',                       // 6  hours_estimated
+      'Old Crew',                // 7  assigned_crew
+      'service/update',          // 8  created_by
+      'filled',                  // 9  status
+      '', '', '', '', '', '', '', '', '', // 10-18
+    ];
+
+    const { valuesUpdate } = setupSheets({ existingDispatchRows: [existingRow] });
+    const { PATCH } = await import('@/app/api/service/update/route');
+
+    // Caller updates assignedTo + scheduledDate but does NOT send body.men
+    const res = await PATCH(makeRequest(baseBody({ assignedTo: 'Alice, Bob' })));
+    expect(res.status).toBe(200);
+
+    const updateCall = valuesUpdate.mock.calls.find(
+      (c: unknown[]) =>
+        typeof (c[0] as { range?: string }).range === 'string' &&
+        (c[0] as { range: string }).range.startsWith('Dispatch_Schedule!A'),
+    );
+    const updatedRow: string[] = updateCall[0].requestBody.values[0];
+
+    // Existing '3' must be preserved, not clobbered to '1'
+    expect(updatedRow[5]).toBe('3');
+  });
+
   // ── 5. Stamps column R / last_modified on every write ─────────────────────
   it('stamps last_modified (col R / index 17) on create', async () => {
     const { valuesAppend } = setupSheets();

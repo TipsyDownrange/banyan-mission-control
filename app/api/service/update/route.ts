@@ -613,7 +613,7 @@ export async function PATCH(req: Request) {
               kID: `SVC-${resolvedWoNumber}`,
               project_name: displayName,
               island: woIsland,
-              men_required: String(body.men || '1'),
+              men_required: body.men !== undefined ? String(body.men) : (existing19[5] || '1'),
               hours_estimated: body.hoursEstimated || existing19[6] || '',
               assigned_crew: assignedTo,
               created_by: existing19[8] || createdBy,
