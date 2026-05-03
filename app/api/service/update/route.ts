@@ -279,7 +279,13 @@ export async function PATCH(req: Request) {
       lost:               'lost',
     };
 
-    const requestedStatus = status || (stage ? stageToStatus[stage] : undefined);
+    // BAN-105: Field App sends 'qa-complete' as the QA / Install Complete handoff.
+    // Map it to the canonical MC pipeline value before any status resolution logic.
+    const FA_TO_MC_STATUS: Record<string, string> = {
+      'qa-complete': 'work_complete',
+    };
+    const rawRequestedStatus = status || (stage ? stageToStatus[stage] : undefined);
+    const requestedStatus = rawRequestedStatus ? (FA_TO_MC_STATUS[rawRequestedStatus] ?? rawRequestedStatus) : rawRequestedStatus;
     let resolvedStatus = requestedStatus;
     // 'closed', 'lost', and 'work_complete' are explicit PM decisions — never override with derived status
     const EXPLICIT_STATUSES = new Set(['closed', 'lost', 'work_complete', 'deposit_received', 'materials_ordered', 'materials_received', 'ready_to_schedule']);
