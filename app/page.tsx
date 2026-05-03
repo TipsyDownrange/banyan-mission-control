@@ -32,6 +32,7 @@ import OnboardingFlow from '@/components/OnboardingFlow';
 import SuggestionButton from '@/components/SuggestionButton';
 import StepLibraryPanel from '@/components/StepLibraryPanel';
 import SuperSchedulingPanel from '@/components/SuperSchedulingPanel';
+import LogisticsPanel from '@/components/LogisticsPanel';
 import { useState, useEffect } from 'react';
 
 export type AppView =
@@ -42,6 +43,7 @@ export type AppView =
   | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
   | 'Work Orders'
   | 'War Room' | 'Cost & Usage'
+  | 'Logistics'
   | 'WIP Report' | 'Financials' | 'Vendors' | 'Compliance' | 'HR' | 'Safety' | 'Fleet'
   | 'Step Library';
 // ── App ──────────────────────────────────────────────────────────────────────
@@ -272,6 +274,7 @@ export default function Home() {
         {activeView === 'Safety'        && <AdminPanel section="safety" />}
         {activeView === 'Fleet'         && <AdminPanel section="fleet" />}
         {activeView === 'Step Library'   && <StepLibraryPanel />}
+        {activeView === 'Logistics'      && <LogisticsPanel />}
 
         <KaiFloat activeView={activeView} sessionEmail={authSession?.user?.email || ''} />
         <SuggestionButton />
