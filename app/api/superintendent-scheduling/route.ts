@@ -38,6 +38,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { deriveWorkOrderStatus } from '@/lib/service-status';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isCompletionRowComplete } from '@/lib/step-completion';
 
 const SHEET_ID = getBackendSheetId();
 // Match actual roles from Users_Roles sheet (Superintendent, Journeyman, Apprentice)
@@ -156,6 +157,7 @@ function rowToCompletion(r: string[]) {
     notes:              r[7] || '',
     photo_urls:         r[8] || '',
     status:             r[9] || '',
+    is_complete:        isCompletionRowComplete(r),
   };
 }
 
@@ -316,9 +318,8 @@ export async function GET(req: Request) {
         totalSteps += pSteps.length;
         for (const step of pSteps) {
           const comps = completionsByStepId.get(step.install_step_id) || [];
-          const maxPct = comps.length ? Math.max(...comps.map(c => c.percent_complete)) : 0;
-          if (maxPct >= 100) completedSteps++;
-          else if (maxPct > 0) inProgressSteps++;
+          if (comps.some(c => c.is_complete)) completedSteps++;
+          else if (comps.length > 0) inProgressSteps++;
         }
       }
       return { total: totalSteps, completed: completedSteps, in_progress: inProgressSteps };
@@ -705,7 +706,7 @@ export async function PATCH(req: Request) {
           const [stepsResC, plansResC, completionsResC] = await Promise.all([
             sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Steps!A2:P5000' }),
             sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Install_Plans!A2:G5000' }),
-            sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:I5000' }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Step_Completions!A2:J5000' }),
           ]);
           const stepRowsC = stepsResC.data.values || [];
           const planRowsC = plansResC.data.values || [];
@@ -716,8 +717,10 @@ export async function PATCH(req: Request) {
           const stepActualHrsUpdates: Promise<unknown>[] = [];
 
           for (const stepId of slotStepIds) {
-            // Create Step_Completion if not already at 100%
-            const existingComp = completionRowsC.find(r => r[1] === stepId && parseInt(r[6]) >= 100);
+            // Create Step_Completion if not already marked complete (handles Field App INSTALLED rows)
+            const existingComp = completionRowsC.find(r =>
+              r[1] === stepId && isCompletionRowComplete(r.map(String))
+            );
             if (!existingComp) {
               const newCompId = `SC-${Date.now()}-${stepId.slice(-4)}`;
               const hoursForStep = (() => {
@@ -729,7 +732,7 @@ export async function PATCH(req: Request) {
                   spreadsheetId: SHEET_ID,
                   range: 'Step_Completions!A:I',
                   valueInputOption: 'RAW',
-                  requestBody: { values: [[newCompId, stepId, '', today, 'superintendent', hoursForStep, 100, 'Completed via dispatch slot', '']] },
+                  requestBody: { values: [[newCompId, stepId, kID, today, 'superintendent', hoursForStep, 100, 'Completed via dispatch slot', '']] },
                 })
               );
               // Write actual_hours to Install_Steps col P (index 15)

@@ -10,6 +10,7 @@ import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { upsertCrosswalkEntry } from '@/lib/entityCrosswalk';
 import { buildDispatchRow, validateDispatchRow } from '@/lib/dispatch-schedule';
+import { isCompletionRowComplete } from '@/lib/step-completion';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -99,7 +100,7 @@ async function deriveWOStatus(
     }),
     sheets.spreadsheets.values.get({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: 'Step_Completions!A2:I5000',
+      range: 'Step_Completions!A2:J5000',
     }),
   ]);
 
@@ -122,14 +123,15 @@ async function deriveWOStatus(
   const completions = (completionsRes.data.values || []).filter((row) => stepIds.has(row[1] || ''));
   if (completions.length === 0) return 'estimated';
 
-  const completionByStep = new Map<string, number>();
+  const completeStepIds = new Set<string>();
   for (const row of completions) {
     const stepId = row[1] || '';
-    const pct = Math.max(0, parseFloat(row[6] || '0') || 0);
-    completionByStep.set(stepId, Math.max(completionByStep.get(stepId) || 0, pct));
+    if (stepId && isCompletionRowComplete(row)) {
+      completeStepIds.add(stepId);
+    }
   }
 
-  const completedSteps = steps.filter((row) => (completionByStep.get(row[0] || '') || 0) >= 100).length;
+  const completedSteps = steps.filter((row) => completeStepIds.has(row[0] || '')).length;
   if (completedSteps === 0) return 'estimated';
   if (completedSteps === steps.length) return 'completed';
   return 'in_progress';
