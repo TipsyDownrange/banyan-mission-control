@@ -43,7 +43,7 @@ export const ROLE_PERMISSIONS_DEFAULT: Record<string, Permission[]> = {
   pm:         ['wo:view', 'project:view', 'project:edit', 'reports:view', 'crew:view'],
   estimator:  ['wo:view', 'project:view', 'estimating:view', 'estimating:edit'],
   admin_mgr:  ['wo:view', 'finance:view', 'project:view', 'crew:view', 'crew:edit', 'reports:view'],
-  admin:      ['wo:view', 'project:view', 'crew:view'],
+  admin:      ['wo:view', 'project:view', 'crew:view', 'reports:view'],
   field:      ['wo:view', 'field:log', 'field:photo'],
   pm_track:   ['wo:view', 'project:view', 'reports:view'],
   sales:      ['wo:view', 'estimating:view', 'project:view'],
