@@ -142,9 +142,20 @@ async function deriveWOStatus(
 //         scheduledDate?, startDate?, notes?, hoursEstimated?, hoursActual?,
 //         men?, contactPhone?, contactEmail?, contactPerson?, folderUrl?, island? }
 export async function PATCH(req: Request) {
-  // Permission check — wo:edit required (Joey, Nate, Sean, Jody)
-  const { allowed, email: userEmail } = await checkPermission(req, 'wo:edit');
-  if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
+  // BAN-40: dual-auth — FA server-to-server (X-Internal-Key) OR browser session (wo:edit)
+  let actorEmail: string;
+  const incomingKey = req.headers.get('X-Internal-Key');
+  if (incomingKey !== null) {
+    const envKey = process.env.INTERNAL_API_KEY || '';
+    if (!envKey || incomingKey.trim() !== envKey.trim()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    actorEmail = 'field-app-service@internal';
+  } else {
+    const { allowed, email: sessionEmail } = await checkPermission(req, 'wo:edit');
+    if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
+    actorEmail = sessionEmail || '';
+  }
 
   try {
     const body = await req.json();
@@ -404,7 +415,7 @@ export async function PATCH(req: Request) {
           old_status:   oldStatus,
           new_status:   resolvedStatus,
           notes:        reason,
-          submitted_by: userEmail || '',
+          submitted_by: actorEmail,
           origin:       'office',
         });
       } catch {
@@ -564,7 +575,7 @@ export async function PATCH(req: Request) {
       } else {
         const slotId = `SVC-${resolvedWoNumber}-${dispatchDate}`;
         const displayName = woName || `Service WO ${resolvedWoNumber}`;
-        const createdBy = userEmail || 'service/update';
+        const createdBy = actorEmail || 'service/update';
 
         try {
           const existingRes = await sheets.spreadsheets.values.get({
