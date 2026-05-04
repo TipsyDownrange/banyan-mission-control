@@ -1222,11 +1222,24 @@ function OrgDetailPanel({
                     <div style={{ fontSize: 12, color: '#b91c1c', marginBottom: 6 }}>{mergePreview.blockers.join(' ')}</div>
                   )}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, fontSize: 11 }}>
-                    <span>WOs: <strong>{mergePreview.counts.work_orders}</strong></span>
-                    <span>Contacts: <strong>{mergePreview.counts.contacts}</strong></span>
-                    <span>Sites: <strong>{mergePreview.counts.sites}</strong></span>
-                    <span>Crosswalk: <strong>{mergePreview.counts.crosswalk}</strong></span>
-                    <span>Projects: <strong>{mergePreview.counts.projects}</strong></span>
+                    {([
+                      ['WOs', mergePreview.counts.work_orders],
+                      ['Contacts', mergePreview.counts.contacts],
+                      ['Sites', mergePreview.counts.sites],
+                      ['Crosswalk', mergePreview.counts.crosswalk],
+                      ['Projects', mergePreview.counts.projects],
+                    ] as Array<[string, number]>).map(([label, n]) => {
+                      const hot = (n || 0) > 0;
+                      return (
+                        <span
+                          key={label}
+                          title={hot ? `${n} ${label.toLowerCase()} will move to the survivor org.` : `No ${label.toLowerCase()} affected.`}
+                          style={hot ? { padding: '2px 6px', borderRadius: 6, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.35)', color: '#9a3412', fontWeight: 700 } : { color: '#64748b' }}
+                        >
+                          {label}: <strong>{n}</strong>
+                        </span>
+                      );
+                    })}
                   </div>
                   {(mergePreview.affected.work_orders[0] || mergePreview.affected.projects[0] || mergePreview.affected.contacts[0] || mergePreview.affected.sites[0]) && (
                     <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>

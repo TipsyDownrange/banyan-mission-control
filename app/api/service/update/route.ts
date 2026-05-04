@@ -275,6 +275,12 @@ export async function PATCH(req: Request) {
       ready_to_schedule:  'ready_to_schedule',
       scheduled:          'scheduled',
       in_progress:        'in_progress',
+      // PM "Complete" stage button — field/QA work done, before admin closeout.
+      // Doctrine: work_complete = work done; closed = PM admin closeout.
+      work_complete:      'work_complete',
+      // Legacy synonym safety: callers sometimes send "completed". Treat as
+      // work_complete (not closed) so PM can still take an explicit close step.
+      completed:          'work_complete',
       closed:             'closed',
       lost:               'lost',
     };
