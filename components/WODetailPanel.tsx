@@ -213,8 +213,18 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [scheduleDateInput, setScheduleDateInput] = useState('');
   const [scheduleSubmitting, setScheduleSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
-  // BAN-128: Customer & Site section uses an explicit Save/Discard gate
-  // (no per-keystroke auto-save) to prevent accidental record mutation.
+  // BAN-128: Customer & Site lives in its own draft, isolated from the
+  // global `draft` so that auto-save and the bottom-bar Save All cannot
+  // flush unsaved Customer & Site edits to the backend.
+  type CustomerSiteDraft = {
+    customer_name?: string;
+    contact_person?: string;
+    contact_phone?: string;
+    contact_email?: string;
+    address?: string;
+    island?: string;
+  };
+  const [customerSiteDraft, setCustomerSiteDraft] = useState<CustomerSiteDraft>({});
   const [customerSiteDirty, setCustomerSiteDirty] = useState(false);
   const [customerSiteSaving, setCustomerSiteSaving] = useState(false);
   const [customerSiteError, setCustomerSiteError] = useState('');
@@ -324,8 +334,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
   const initializedRef = useRef(false);
   // BAN-128: Snapshot of last-saved Customer & Site values, used by Discard
-  // to revert local draft and to seed Save payloads.
-  const customerSiteOriginalRef = useRef<Partial<WorkOrder>>({});
+  // to revert customerSiteDraft and to seed Save payloads.
+  const customerSiteOriginalRef = useRef<CustomerSiteDraft>({});
   useEffect(() => {
     if (!wo) return;
     // Only initialize draft on first mount - don't wipe user edits on re-render
@@ -337,8 +347,6 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       name: wo.name,
       description: wo.description,
       contact: wo.contact,
-      address: wo.address,
-      island: initialIsland,
       scheduledDate: wo.scheduledDate,
       dueDate: wo.dueDate,
       hoursEstimated: wo.hoursEstimated,
@@ -346,13 +354,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       men: wo.men,
       comments: wo.comments,
       lane: wo.lane,
-      // Separate contact + customer fields
-      contact_person: initialContactPerson,
-      contact_phone:  wo.contact_phone,
-      contact_email:  wo.contact_email,
-      customer_name:  wo.customer_name,
+      // BAN-128: Customer & Site fields (customer_name, contact_person,
+      // contact_phone, contact_email, address, island-from-address) live
+      // in customerSiteDraft below — intentionally excluded from `draft`.
     } as Partial<WorkOrder>);
-    customerSiteOriginalRef.current = {
+    const initialCustomerSite: CustomerSiteDraft = {
       customer_name:  wo.customer_name,
       contact_person: initialContactPerson,
       contact_phone:  wo.contact_phone,
@@ -360,6 +366,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       address:        wo.address,
       island:         initialIsland,
     };
+    setCustomerSiteDraft(initialCustomerSite);
+    customerSiteOriginalRef.current = initialCustomerSite;
     setSelectedCrew(wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : []);
     setDirty(false);
     setCustomerSiteDirty(false);
@@ -416,6 +424,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftRef = useRef(draft);
   draftRef.current = draft; // always up to date
+  // BAN-128: latest customerSiteDraft for saveCustomerSite to read without
+  // depending on closure capture across renders.
+  const customerSiteDraftRef = useRef<CustomerSiteDraft>(customerSiteDraft);
+  customerSiteDraftRef.current = customerSiteDraft;
 
   function update(field: string, value: string) {
     setDraft(prev => ({ ...prev, [field]: value }));
@@ -437,10 +449,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     }, 2000);
   }
 
-  // BAN-128: Customer & Site fields update local draft only. No auto-save —
-  // the operator must explicitly Save or Discard via the section controls.
-  function updateCustomerSite(field: string, value: string) {
-    setDraft(prev => ({ ...prev, [field]: value }));
+  // BAN-128: Customer & Site edits live in customerSiteDraft (isolated from
+  // global `draft`) so that auto-save and bottom-bar Save All cannot flush
+  // unsaved Customer & Site values. Operator must Save or Discard explicitly.
+  function updateCustomerSite(field: keyof CustomerSiteDraft, value: string) {
+    setCustomerSiteDraft(prev => ({ ...prev, [field]: value }));
     setCustomerSiteDirty(true);
   }
 
@@ -448,26 +461,28 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     setCustomerSiteSaving(true);
     setCustomerSiteError('');
     try {
-      const latest = draftRef.current;
+      const cs = customerSiteDraftRef.current;
+      const latestDraft = draftRef.current;
       const payload: Partial<WorkOrder> & { _woName?: string; _island?: string } = {
-        customer_name: (latest as WorkOrder & { customer_name?: string }).customer_name ?? safeWo.customer_name,
-        contact_person: (latest as WorkOrder & { contact_person?: string }).contact_person ?? safeWo.contact_person,
-        contact_phone:  (latest as WorkOrder & { contact_phone?: string }).contact_phone ?? safeWo.contact_phone,
-        contact_email:  (latest as WorkOrder & { contact_email?: string }).contact_email ?? safeWo.contact_email,
-        address:        latest.address ?? safeWo.address,
-        island:         latest.island ?? safeWo.island,
-        _woName: latest.name || safeWo.name,
-        _island: latest.island || safeWo.island,
+        customer_name:  cs.customer_name  ?? safeWo.customer_name,
+        contact_person: cs.contact_person ?? safeWo.contact_person,
+        contact_phone:  cs.contact_phone  ?? safeWo.contact_phone,
+        contact_email:  cs.contact_email  ?? safeWo.contact_email,
+        address:        cs.address        ?? safeWo.address,
+        island:         cs.island         ?? safeWo.island,
+        _woName: latestDraft.name || safeWo.name,
+        _island: cs.island || safeWo.island,
       };
       await onSave(safeWo.id, payload);
       customerSiteOriginalRef.current = {
         customer_name:  payload.customer_name,
-        contact_person: (payload as { contact_person?: string }).contact_person,
-        contact_phone:  (payload as { contact_phone?: string }).contact_phone,
-        contact_email:  (payload as { contact_email?: string }).contact_email,
+        contact_person: payload.contact_person as string | undefined,
+        contact_phone:  payload.contact_phone as string | undefined,
+        contact_email:  payload.contact_email as string | undefined,
         address:        payload.address,
         island:         payload.island,
       };
+      setCustomerSiteDraft(customerSiteOriginalRef.current);
       setCustomerSiteDirty(false);
     } catch (err) {
       setCustomerSiteError(err instanceof Error ? err.message : 'Failed to save Customer & Site. Please try again.');
@@ -477,8 +492,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   function discardCustomerSite() {
-    const orig = customerSiteOriginalRef.current;
-    setDraft(prev => ({ ...prev, ...orig }));
+    setCustomerSiteDraft(customerSiteOriginalRef.current);
     setCustomerSiteDirty(false);
     setCustomerSiteError('');
   }
@@ -640,7 +654,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     const isField = ['Superintendent','Journeyman','Apprentice'].some(r => c.role.includes(r));
     return isField && (!woIsland || c.island === woIsland);
   });
-  const contactPeople = parseDelimitedList((draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? '');
+  const contactPeople = parseDelimitedList(customerSiteDraft.contact_person ?? wo.contact_person ?? '');
   const orgSuggestions = useMemo(() => {
     if (!safeWo.requires_org_assignment) return [];
     return organizations
@@ -664,7 +678,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   async function handleCreateOrgFromWO() {
-    const orgName = ((draft as WorkOrder & { customer_name?: string }).customer_name || safeWo.customer_name || safeWo.name || '').trim();
+    const orgName = (customerSiteDraft.customer_name || safeWo.customer_name || safeWo.name || '').trim();
     if (!orgName) {
       setOrgRepairError('Company or customer name is required before creating an organization.');
       return;
@@ -684,11 +698,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           name: orgName,
           types: ['CUSTOMER'],
           entity_type: 'COMPANY',
-          island: draft.island || safeWo.island || '',
-          contact_name: (draft as WorkOrder & { contact_person?: string }).contact_person || safeWo.contact_person || '',
-          contact_phone: (draft as WorkOrder & { contact_phone?: string }).contact_phone || safeWo.contact_phone || '',
-          contact_email: (draft as WorkOrder & { contact_email?: string }).contact_email || safeWo.contact_email || '',
-          address: draft.address || safeWo.address || '',
+          island: customerSiteDraft.island || draft.island || safeWo.island || '',
+          contact_name: customerSiteDraft.contact_person || safeWo.contact_person || '',
+          contact_phone: customerSiteDraft.contact_phone || safeWo.contact_phone || '',
+          contact_email: customerSiteDraft.contact_email || safeWo.contact_email || '',
+          address: customerSiteDraft.address || safeWo.address || '',
           notes: `Created from ${safeWo.id} identity repair`,
           source: 'WO_IDENTITY_REPAIR',
         }),
@@ -1155,7 +1169,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
                     </div>
                     <AutocompleteInput
-                      value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''}
+                      value={customerSiteDraft.customer_name ?? wo.customer_name ?? ''}
                       onChange={v => updateCustomerSite('customer_name', v)}
                       onSelect={c => {
                         updateCustomerSite('customer_name', c.company || c.name || '');
@@ -1178,7 +1192,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
                       </div>
                       <ContactAutocomplete
-                        value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? normalizeContactList(wo.contact_person || '')}
+                        value={customerSiteDraft.contact_person ?? normalizeContactList(wo.contact_person || '')}
                         onChange={v => updateCustomerSite('contact_person', normalizeContactList(v))}
                         onSelect={c => {
                           // BAN-127: replace the trailing search-query token with the selected
@@ -1204,12 +1218,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                     <div>
                       <label style={LBL}>Contact Phone</label>
-                      <input type="tel" style={INP} value={(draft as WorkOrder & { contact_phone?: string }).contact_phone ?? wo.contact_phone ?? ''} onChange={e => updateCustomerSite('contact_phone', e.target.value)} onBlur={e => updateCustomerSite('contact_phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" />
+                      <input type="tel" style={INP} value={customerSiteDraft.contact_phone ?? wo.contact_phone ?? ''} onChange={e => updateCustomerSite('contact_phone', e.target.value)} onBlur={e => updateCustomerSite('contact_phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" />
                     </div>
                   </div>
                   <div>
                     <label style={LBL}>Contact Email</label>
-                    <input type="email" style={INP} value={(draft as WorkOrder & { contact_email?: string }).contact_email ?? wo.contact_email ?? ''} onChange={e => updateCustomerSite('contact_email', e.target.value)} onBlur={e => updateCustomerSite('contact_email', normalizeEmail(e.target.value))} placeholder="email@example.com" />
+                    <input type="email" style={INP} value={customerSiteDraft.contact_email ?? wo.contact_email ?? ''} onChange={e => updateCustomerSite('contact_email', e.target.value)} onBlur={e => updateCustomerSite('contact_email', normalizeEmail(e.target.value))} placeholder="email@example.com" />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -1217,7 +1231,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(66,133,244,0.1)', color: '#1a56db', border: '1px solid rgba(66,133,244,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Places</span>
                     </div>
                     <PlacesAutocomplete
-                      value={draft.address || ''}
+                      value={customerSiteDraft.address ?? wo.address ?? ''}
                       onChange={v => updateCustomerSite('address', v)}
                       onSelect={(place: ParsedPlace) => {
                         updateCustomerSite('address', place.formatted_address);
