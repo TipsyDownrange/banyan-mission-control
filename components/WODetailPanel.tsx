@@ -1105,7 +1105,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? normalizeContactList(wo.contact_person || '')}
                         onChange={v => update('contact_person', normalizeContactList(v))}
                         onSelect={c => {
-                          const nextContacts = [...contactPeople, c.name].filter((name, index, all) => all.findIndex(entry => entry.toLowerCase() === name.toLowerCase()) === index);
+                          // BAN-127: replace the trailing search-query token with the selected
+                          // contact's full canonical name so we don't persist partial text like "peyt".
+                          const priorContacts = contactPeople.slice(0, -1);
+                          const nextContacts = [...priorContacts, c.name].filter((name, index, all) => all.findIndex(entry => entry.toLowerCase() === name.toLowerCase()) === index);
                           update('contact_person', nextContacts.join(', '));
                           if (c.phone) update('contact_phone', c.phone);
                           if (c.email) update('contact_email', c.email);
