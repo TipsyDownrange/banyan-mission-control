@@ -33,7 +33,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { kidsMatch } from '@/lib/normalize-kid';
+import { kidsMatch, kidInSet } from '@/lib/normalize-kid';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { deriveWorkOrderStatus } from '@/lib/service-status';
@@ -371,9 +371,11 @@ export async function GET(req: Request) {
         if (TERMINAL_STATUSES.has(st)) return false;
         // Must be an active status (or we include anything not terminal)
         if (st === '') return false;
-        // Check if already scheduled
-        if (wo.wo_number && scheduledKIDs.has(wo.wo_number)) return false;
-        if (wo.wo_id && scheduledKIDs.has(wo.wo_id)) return false;
+        // BAN-117: use canonical kID semantics so service-prefixed Dispatch_Schedule
+        // rows (SVC-WO-*, SVC-*) suppress the same Work Order that scheduling created
+        // as WO-* / bare 26-XXXX. Field App and Mission Control must agree on identity.
+        if (wo.wo_number && kidInSet(wo.wo_number, scheduledKIDs)) return false;
+        if (wo.wo_id && kidInSet(wo.wo_id, scheduledKIDs)) return false;
         if (scheduledProjectNames.has(wo.name.toLowerCase().trim())) return false;
         return true;
       })
