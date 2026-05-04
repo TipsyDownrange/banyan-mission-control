@@ -201,7 +201,12 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const isStandaloneWorkOrdersRoute = pathname.startsWith('/work-orders');
+  // Capture whether this panel mounted under the standalone /work-orders route.
+  // openDetail() rewrites the URL to /work-orders/{id} via replaceState, which
+  // updates `pathname` and would otherwise make closeDetail() route us through
+  // the /work-orders redirect → '/' → Today (BAN: WO close-panel friction).
+  const initialPathnameRef = useRef(pathname);
+  const isStandaloneWorkOrdersRoute = initialPathnameRef.current.startsWith('/work-orders');
   const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
   // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
   const defaultFilter = userRole === 'super' ? 'approved' : 'all';

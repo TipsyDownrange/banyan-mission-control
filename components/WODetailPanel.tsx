@@ -193,6 +193,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [vendorSearch, setVendorSearch] = useState('');
   const [vendorResults, setVendorResults] = useState<any[]>([]);
   const [showVendorDropdown, setShowVendorDropdown] = useState(false);
+  const [vendorCreating, setVendorCreating] = useState(false);
+  const [vendorCreateError, setVendorCreateError] = useState('');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [inspectionMode, setInspectionMode] = useState<string | null>(null);
   const [inspectionNotes, setInspectionNotes] = useState('');
@@ -1309,8 +1311,55 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 </div>
                               ))
                             }
-                            <div onMouseDown={() => setShowVendorDropdown(false)} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 12, color: '#0f766e', fontWeight: 700, borderTop: '1px solid #f1f5f9' }}>+ Add New Vendor</div>
+                            <div
+                              onMouseDown={async (e) => {
+                                e.preventDefault();
+                                const proposedName = vendorSearch.trim();
+                                if (!proposedName) {
+                                  setVendorCreateError('Type a vendor name first, then click Add New Vendor.');
+                                  return;
+                                }
+                                if (vendorCreating) return;
+                                setVendorCreating(true);
+                                setVendorCreateError('');
+                                try {
+                                  const res = await fetch('/api/organizations', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      name: proposedName,
+                                      types: ['VENDOR'],
+                                      entity_type: 'COMPANY',
+                                      source: 'wo_vendor_quote',
+                                    }),
+                                  });
+                                  const data = await res.json().catch(() => ({}));
+                                  if (!res.ok || !data?.org_id) {
+                                    throw new Error(data?.error || `Failed to create vendor (${res.status}).`);
+                                  }
+                                  const newVendor = { id: data.org_id, org_id: data.org_id, name: proposedName, org_name: proposedName };
+                                  setVendorResults(prev => [newVendor, ...prev.filter(v => (v.id || v.org_id) !== data.org_id)]);
+                                  setVendorSearch(proposedName);
+                                  setNewQuote(p => ({ ...p, vendor_org_id: data.org_id, vendor_name: proposedName }));
+                                  setShowVendorDropdown(false);
+                                } catch (err) {
+                                  setVendorCreateError(err instanceof Error ? err.message : 'Failed to create vendor.');
+                                } finally {
+                                  setVendorCreating(false);
+                                }
+                              }}
+                              style={{ padding: '8px 12px', cursor: vendorCreating ? 'wait' : 'pointer', fontSize: 12, color: '#0f766e', fontWeight: 700, borderTop: '1px solid #f1f5f9', opacity: vendorCreating ? 0.6 : 1 }}
+                            >
+                              {vendorCreating
+                                ? 'Creating vendor…'
+                                : vendorSearch.trim()
+                                  ? `+ Add "${vendorSearch.trim()}" as new vendor`
+                                  : '+ Add New Vendor (type name above first)'}
+                            </div>
                           </div>
+                        )}
+                        {vendorCreateError && (
+                          <div style={{ marginTop: 6, fontSize: 11, color: '#b91c1c', fontWeight: 600 }}>{vendorCreateError}</div>
                         )}
                       </div>
 
