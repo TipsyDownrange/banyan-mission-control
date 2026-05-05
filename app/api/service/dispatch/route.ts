@@ -336,11 +336,11 @@ export async function POST(req: Request) {
 
     invalidateCache();
 
-    // Fire-and-forget customer DB backfeed — never blocks WO creation
+    // Fire-and-forget customer DB backfeed — never blocks WO creation.
+    // Dispatch location fields are WO/jobsite snapshots, not account addresses.
     fireAndForgetCustomerUpdate({
       name:           customerName || businessName || '',
-      island:         island || city || '',
-      city:           city,
+      island:         island || '',
       primaryContact: contactPerson,
       phone:          contactPhone,
     });

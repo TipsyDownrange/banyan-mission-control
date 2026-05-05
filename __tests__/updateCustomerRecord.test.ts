@@ -15,12 +15,12 @@ describe('updateCustomerRecord address containment', () => {
     jest.clearAllMocks();
   });
 
-  it('does not backfeed a WO/site address into Customers.Address by default', async () => {
+  it('does not backfeed a WO/site address or city into Customers address fields by default', async () => {
     const valuesGet = jest.fn().mockResolvedValue({
       data: {
         values: [
           ['Customer ID', 'Name', 'Type', 'Island', 'Address', 'City', 'Primary Contact', 'Phone', 'Email'],
-          ['CUST-0001', 'Kula Glass', '', '', 'Account Address On File', '', '', '(808) 555-0199', ''],
+          ['CUST-0001', 'Kula Glass', '', '', 'Account Address On File', 'Wailuku', '', '(808) 555-0199', ''],
         ],
       },
     });
@@ -42,16 +42,18 @@ describe('updateCustomerRecord address containment', () => {
       phone: '(808) 555-0199',
       email: 'office@kulaglass.com',
       address: 'WO Jobsite Address',
+      city: 'Kula',
       source: 'wo_update',
     });
 
     expect(valuesUpdate).toHaveBeenCalledTimes(1);
     const updatedRow = valuesUpdate.mock.calls[0][0].requestBody.values[0];
     expect(updatedRow[4]).toBe('Account Address On File');
+    expect(updatedRow[5]).toBe('Wailuku');
     expect(updatedRow[8]).toBe('office@kulaglass.com');
   });
 
-  it('allows Customers.Address only for an explicit approved address update path', async () => {
+  it('allows Customers address fields only for an explicit approved address update path', async () => {
     const valuesGet = jest.fn().mockResolvedValue({
       data: {
         values: [
@@ -77,6 +79,7 @@ describe('updateCustomerRecord address containment', () => {
       name: 'Kula Glass',
       phone: '(808) 555-0199',
       address: 'Approved Account Address',
+      city: 'Kihei',
       allowAddressUpdate: true,
       source: 'customer_account_update',
     });
@@ -84,6 +87,7 @@ describe('updateCustomerRecord address containment', () => {
     expect(valuesUpdate).toHaveBeenCalledTimes(1);
     const updatedRow = valuesUpdate.mock.calls[0][0].requestBody.values[0];
     expect(updatedRow[4]).toBe('Approved Account Address');
+    expect(updatedRow[5]).toBe('Kihei');
   });
 });
 
