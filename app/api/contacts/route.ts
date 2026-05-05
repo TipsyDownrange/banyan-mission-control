@@ -10,6 +10,7 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -36,6 +37,14 @@ function rowToContact(row: string[], orgName?: string) {
     created_at: row[COL.created_at] || '',
     org_name: orgName || '',
   };
+}
+
+function normalizeContactField(field: string, value: unknown): string {
+  const raw = String(value ?? '');
+  if (field === 'name') return normalizeNameForWrite(raw);
+  if (field === 'email') return normalizeEmail(raw);
+  if (field === 'phone') return normalizePhone(raw);
+  return raw.trim();
 }
 
 export async function GET(req: Request) {
@@ -128,11 +137,11 @@ export async function POST(req: Request) {
     const row = new Array(NUM_COLS).fill('');
     row[COL.contact_id] = contactId;
     row[COL.org_id] = org_id;
-    row[COL.name] = name.trim();
-    row[COL.title] = title || '';
-    row[COL.role] = role || 'CONTACT';
-    row[COL.email] = email || '';
-    row[COL.phone] = phone || '';
+    row[COL.name] = normalizeNameForWrite(name);
+    row[COL.title] = String(title || '').trim();
+    row[COL.role] = String(role || 'CONTACT').trim();
+    row[COL.email] = normalizeEmail(String(email || ''));
+    row[COL.phone] = normalizePhone(String(phone || ''));
     row[COL.is_primary] = is_primary ? 'TRUE' : 'FALSE';
     row[COL.notes] = notes || '';
     row[COL.created_at] = now;
@@ -189,7 +198,7 @@ export async function PATCH(req: Request) {
       if (updates[field] !== undefined) {
         const val = field === 'is_primary'
           ? (updates[field] === true || updates[field] === 'TRUE' ? 'TRUE' : 'FALSE')
-          : String(updates[field]);
+          : normalizeContactField(field, updates[field]);
         patchData.push({ range: `Contacts!${String.fromCharCode(65 + colIdx)}${sheetRow}`, values: [[val]] });
       }
     }

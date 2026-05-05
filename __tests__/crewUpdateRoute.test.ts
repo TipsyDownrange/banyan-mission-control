@@ -96,7 +96,7 @@ describe('POST /api/crew/update', () => {
       phone: '808-555-9999',
     });
 
-    expect(writtenRow?.[3]).toBe('808-555-9999'); // E phone
+    expect(writtenRow?.[3]).toBe('(808) 555-9999'); // E phone
     expect(writtenRow?.[9]).toBe('123 Old Home Rd'); // K home_address
     expect(writtenRow?.[10]).toBe('Pat Contact 808'); // L emergency_contact
   });

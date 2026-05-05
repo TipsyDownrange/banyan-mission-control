@@ -4,7 +4,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
-import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
+import { normalizeAddressComponent, normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
@@ -337,6 +337,7 @@ export async function PATCH(req: Request) {
         else if (bodyKey === 'contactPerson' || bodyKey === 'contact_person') val = normalizeContactList(val);
         else if (NAME_FIELDS.has(bodyKey)) val = normalizeName(val);
         if (bodyKey === 'island') val = resolveWorkOrderIsland(val);
+        if (bodyKey === 'areaOfIsland' || bodyKey === 'area_of_island') val = normalizeAddressComponent(val);
         if (bodyKey === 'scheduledDate' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) val = val.slice(0, 16);
         updates.push({
           col: colLetter(COL_IDX[colKey]),
@@ -569,7 +570,9 @@ export async function PATCH(req: Request) {
     const { scheduledDate, assignedTo } = body;
     const resolvedWoNumber = woNumber || rows[targetRowIdx]?.[COL_IDX.wo_number] || woId;
     const woName = rows[targetRowIdx]?.[COL_IDX.name] || '';
-    const woIsland = body.island || rows[targetRowIdx]?.[COL_IDX.island] || '';
+    const woIsland = body.island !== undefined
+      ? resolveWorkOrderIsland(String(body.island))
+      : (rows[targetRowIdx]?.[COL_IDX.island] || '');
     const dispatchDate = typeof scheduledDate === 'string' && scheduledDate.includes('T')
       ? scheduledDate.slice(0, 10)
       : scheduledDate;
@@ -681,11 +684,11 @@ export async function PATCH(req: Request) {
     const custIsland = body.island;
     if (custName || custPhone || custEmail) {
       fireAndForgetCustomerUpdate({
-        name: custName,
-        phone: custPhone,
-        email: custEmail,
-        primaryContact: custPerson,
-        island: custIsland,
+        name: custName ? normalizeName(String(custName)) : '',
+        phone: custPhone ? normalizePhone(String(custPhone)) : '',
+        email: custEmail ? normalizeEmail(String(custEmail)) : '',
+        primaryContact: custPerson ? normalizeContactList(String(custPerson)) : '',
+        island: custIsland ? resolveWorkOrderIsland(String(custIsland)) : '',
         source: 'wo_update',
       });
     }
