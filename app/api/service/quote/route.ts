@@ -171,13 +171,13 @@ export async function POST(req: Request) {
       throw new Error('siteAddress required (WO row is missing address in Service_Work_Orders sheet)');
     }
 
-    // Fire-and-forget customer DB backfeed — never blocks quote generation
+    // Fire-and-forget customer DB backfeed — never blocks quote generation.
+    // Quote addresses are WO/jobsite snapshots, not approved account addresses.
     if (customerName || customerPhone || customerEmail) {
       fireAndForgetCustomerUpdate({
         name:    customerName,
         phone:   customerPhone,
         email:   customerEmail,
-        address: customerAddress,
         island:  island,
         source:  'quote',
       });

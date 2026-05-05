@@ -281,6 +281,7 @@ describe('Service WO create route', () => {
       phone: '(808) 555-0199',
     }));
     expect(payload).not.toHaveProperty('address');
+    expect(payload).not.toHaveProperty('city');
   });
 });
 
