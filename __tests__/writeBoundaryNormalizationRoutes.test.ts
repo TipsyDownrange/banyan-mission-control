@@ -170,7 +170,7 @@ describe('BAN-144 write-boundary normalization', () => {
     expect(row[10]).toBe('Pat Contact 808');
   });
 
-  it('service dispatch normalizes contact fields without backfeeding a jobsite address', async () => {
+  it('service dispatch normalizes WO contact fields without backfeeding Customers identity', async () => {
     const get = jest.fn()
       .mockResolvedValueOnce({ data: { values: [['Customer_ID'], ['CUST-0001']] } })
       .mockResolvedValueOnce({ data: { values: [['26-0001']] } });
@@ -207,7 +207,7 @@ describe('BAN-144 write-boundary normalization', () => {
     expect(row[8]).toBe('Pat Contact');
     expect(row[10]).toBe('(808) 555-0199');
     expect(row[11]).toBe('pat@example.test');
-    expect(mockFireAndForgetCustomerUpdate.mock.calls[0][0]).not.toHaveProperty('address');
+    expect(mockFireAndForgetCustomerUpdate).not.toHaveBeenCalled();
   });
 
   it('procurement create normalizes vendor and document names', async () => {
