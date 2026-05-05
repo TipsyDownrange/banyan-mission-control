@@ -228,7 +228,23 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [customerSiteDirty, setCustomerSiteDirty] = useState(false);
   const [customerSiteSaving, setCustomerSiteSaving] = useState(false);
   const [customerSiteError, setCustomerSiteError] = useState('');
+  // BAN-130: Job Details, Notes, and Crew each get their own isolated draft
+  // with explicit Save/Discard so that clicking into a field and typing can
+  // never autosave production Work Order data.
+  type JobDetailsDraft = { name?: string; description?: string; island?: string };
+  const [jobDetailsDraft, setJobDetailsDraft] = useState<JobDetailsDraft>({});
+  const [jobDetailsDirty, setJobDetailsDirty] = useState(false);
+  const [jobDetailsSaving, setJobDetailsSaving] = useState(false);
+  const [jobDetailsError, setJobDetailsError] = useState('');
+  type NotesDraft = { comments?: string };
+  const [notesDraft, setNotesDraft] = useState<NotesDraft>({});
+  const [notesDirty, setNotesDirty] = useState(false);
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesError, setNotesError] = useState('');
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
+  const [crewDirty, setCrewDirty] = useState(false);
+  const [crewSaving, setCrewSaving] = useState(false);
+  const [crewError, setCrewError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [stageError, setStageError] = useState('');
   const [linkingFolder, setLinkingFolder] = useState(false);
@@ -336,6 +352,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   // BAN-128: Snapshot of last-saved Customer & Site values, used by Discard
   // to revert customerSiteDraft and to seed Save payloads.
   const customerSiteOriginalRef = useRef<CustomerSiteDraft>({});
+  // BAN-130: Snapshots of last-saved values for Job Details, Notes, and Crew,
+  // used by their respective Discard buttons.
+  const jobDetailsOriginalRef = useRef<JobDetailsDraft>({});
+  const notesOriginalRef = useRef<NotesDraft>({});
+  const crewOriginalRef = useRef<string[]>([]);
   useEffect(() => {
     if (!wo) return;
     // Only initialize draft on first mount - don't wipe user edits on re-render
@@ -343,20 +364,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     initializedRef.current = true;
     const initialIsland = resolveWorkOrderIsland(wo.island, wo.area_of_island, wo.address);
     const initialContactPerson = normalizeContactList(wo.contact_person || '');
+    // BAN-130: `draft` is now reserved for fields that still flow through
+    // update()/auto-save (currently only Invoicing's invoices_json) plus
+    // scheduledDate which is set via the schedule modal. Job Details, Notes,
+    // and Crew live in their own isolated drafts below.
     setDraft({
-      name: wo.name,
-      description: wo.description,
-      contact: wo.contact,
       scheduledDate: wo.scheduledDate,
-      dueDate: wo.dueDate,
-      hoursEstimated: wo.hoursEstimated,
-      hoursActual: wo.hoursActual,
-      men: wo.men,
-      comments: wo.comments,
-      lane: wo.lane,
-      // BAN-128: Customer & Site fields (customer_name, contact_person,
-      // contact_phone, contact_email, address, island-from-address) live
-      // in customerSiteDraft below — intentionally excluded from `draft`.
     } as Partial<WorkOrder>);
     const initialCustomerSite: CustomerSiteDraft = {
       customer_name:  wo.customer_name,
@@ -368,9 +381,24 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     };
     setCustomerSiteDraft(initialCustomerSite);
     customerSiteOriginalRef.current = initialCustomerSite;
-    setSelectedCrew(wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : []);
+    const initialJobDetails: JobDetailsDraft = {
+      name:        wo.name,
+      description: wo.description,
+      island:      initialIsland,
+    };
+    setJobDetailsDraft(initialJobDetails);
+    jobDetailsOriginalRef.current = initialJobDetails;
+    const initialNotes: NotesDraft = { comments: wo.comments };
+    setNotesDraft(initialNotes);
+    notesOriginalRef.current = initialNotes;
+    const initialCrew = wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : [];
+    setSelectedCrew(initialCrew);
+    crewOriginalRef.current = [...initialCrew];
     setDirty(false);
     setCustomerSiteDirty(false);
+    setJobDetailsDirty(false);
+    setNotesDirty(false);
+    setCrewDirty(false);
   }, [wo]);
 
   if (!wo) {
@@ -428,22 +456,26 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   // depending on closure capture across renders.
   const customerSiteDraftRef = useRef<CustomerSiteDraft>(customerSiteDraft);
   customerSiteDraftRef.current = customerSiteDraft;
+  // BAN-130: latest section drafts for Save handlers.
+  const jobDetailsDraftRef = useRef<JobDetailsDraft>(jobDetailsDraft);
+  jobDetailsDraftRef.current = jobDetailsDraft;
+  const notesDraftRef = useRef<NotesDraft>(notesDraft);
+  notesDraftRef.current = notesDraft;
 
+  // BAN-130: update() now persists ONLY the single changed field. Previously
+  // it spread the whole `draft` plus selectedCrew into the autosave payload,
+  // which could accidentally flush dirty Job Details / Notes / Crew edits any
+  // time another field (e.g. invoices_json) auto-saved. Each section is now
+  // gated by its own explicit Save button.
   function update(field: string, value: string) {
     setDraft(prev => ({ ...prev, [field]: value }));
     setDirty(true);
-    // Auto-save after 2s of inactivity - reads latest draft via ref
+    // Auto-save after 2s of inactivity - persists only the field that changed
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
-      const latest = { ...draftRef.current, [field]: value };
       setSaving(true);
       try {
-        await onSave(safeWo.id, {
-          ...latest,
-          assignedTo: selectedCrew.join(', '),
-          _woName: latest.name || safeWo.name,
-          _island: latest.island || safeWo.island,
-        });
+        await onSave(safeWo.id, { [field]: value } as Partial<WorkOrder>);
         setDirty(false);
       } catch (err) { console.error('[WODetailPanel] auto-save failed:', err); } finally { setSaving(false); }
     }, 2000);
@@ -497,13 +529,113 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     setCustomerSiteError('');
   }
 
+  // BAN-130: Job Details — explicit Save/Discard, no autosave.
+  function updateJobDetails(field: keyof JobDetailsDraft, value: string) {
+    setJobDetailsDraft(prev => ({ ...prev, [field]: value }));
+    setJobDetailsDirty(true);
+  }
+
+  async function saveJobDetails() {
+    setJobDetailsSaving(true);
+    setJobDetailsError('');
+    try {
+      const jd = jobDetailsDraftRef.current;
+      const payload: Partial<WorkOrder> & { _woName?: string; _island?: string } = {
+        name:        jd.name        ?? safeWo.name,
+        description: jd.description ?? safeWo.description,
+        island:      jd.island      ?? safeWo.island,
+        _woName:     jd.name        || safeWo.name,
+        _island:     jd.island      || safeWo.island,
+      };
+      await onSave(safeWo.id, payload);
+      jobDetailsOriginalRef.current = {
+        name:        payload.name,
+        description: payload.description,
+        island:      payload.island,
+      };
+      setJobDetailsDraft(jobDetailsOriginalRef.current);
+      setJobDetailsDirty(false);
+    } catch (err) {
+      setJobDetailsError(err instanceof Error ? err.message : 'Failed to save Job Details. Please try again.');
+    } finally {
+      setJobDetailsSaving(false);
+    }
+  }
+
+  function discardJobDetails() {
+    setJobDetailsDraft(jobDetailsOriginalRef.current);
+    setJobDetailsDirty(false);
+    setJobDetailsError('');
+  }
+
+  // BAN-130: Notes — explicit Save/Discard, no autosave.
+  function updateNotes(value: string) {
+    setNotesDraft({ comments: value });
+    setNotesDirty(true);
+  }
+
+  async function saveNotes() {
+    setNotesSaving(true);
+    setNotesError('');
+    try {
+      const value = notesDraftRef.current.comments ?? safeWo.comments;
+      await onSave(safeWo.id, { comments: value });
+      notesOriginalRef.current = { comments: value };
+      setNotesDraft(notesOriginalRef.current);
+      setNotesDirty(false);
+    } catch (err) {
+      setNotesError(err instanceof Error ? err.message : 'Failed to save Notes. Please try again.');
+    } finally {
+      setNotesSaving(false);
+    }
+  }
+
+  function discardNotes() {
+    setNotesDraft(notesOriginalRef.current);
+    setNotesDirty(false);
+    setNotesError('');
+  }
+
+  // BAN-130: Crew — explicit Save/Discard, no autosave.
+  async function saveCrew() {
+    setCrewSaving(true);
+    setCrewError('');
+    try {
+      const value = selectedCrew.join(', ');
+      await onSave(safeWo.id, { assignedTo: value });
+      crewOriginalRef.current = [...selectedCrew];
+      setCrewDirty(false);
+    } catch (err) {
+      setCrewError(err instanceof Error ? err.message : 'Failed to save Crew. Please try again.');
+    } finally {
+      setCrewSaving(false);
+    }
+  }
+
+  function discardCrew() {
+    setSelectedCrew([...crewOriginalRef.current]);
+    setCrewDirty(false);
+    setCrewError('');
+  }
+
   function requestClose() {
-    if (customerSiteDirty) {
+    // BAN-130: Unified close warning across all isolated section drafts so
+    // unsaved Customer & Site, Job Details, Notes, and Crew edits aren't
+    // silently dropped. Preserves BAN-128 Customer & Site behavior.
+    const dirtySections: string[] = [];
+    if (customerSiteDirty) dirtySections.push('Customer & Site');
+    if (jobDetailsDirty)   dirtySections.push('Job Details');
+    if (notesDirty)        dirtySections.push('Notes');
+    if (crewDirty)         dirtySections.push('Crew');
+    if (dirtySections.length > 0) {
       const ok = typeof window !== 'undefined'
-        ? window.confirm('You have unsaved Customer & Site changes. Discard them and close?')
+        ? window.confirm(`You have unsaved changes in: ${dirtySections.join(', ')}. Discard them and close?`)
         : true;
       if (!ok) return;
       discardCustomerSite();
+      discardJobDetails();
+      discardNotes();
+      discardCrew();
     }
     onClose();
   }
@@ -512,19 +644,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     setSelectedCrew(prev =>
       prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     );
-    setDirty(true);
+    setCrewDirty(true);
   }
 
+  // BAN-130: handleSave is now scoped to fields that still flow through
+  // update()/auto-save (currently only invoices_json). Job Details, Notes,
+  // Crew, and Customer & Site are owned by their section Save buttons and
+  // must NOT be flushed by the global Save All path.
   async function handleSave() {
     setSaving(true);
     setSaveError('');
     try {
-      await onSave(safeWo.id, {
-        ...draft,
-        assignedTo: selectedCrew.join(', '),
-        _woName: draft.name || safeWo.name,
-        _island: draft.island || safeWo.island,
-      });
+      const payload: Partial<WorkOrder> = {};
+      if (draft.invoices_json !== undefined) payload.invoices_json = draft.invoices_json;
+      if (Object.keys(payload).length > 0) {
+        await onSave(safeWo.id, payload);
+      }
       setDirty(false);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
@@ -644,10 +779,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   const woIsland = resolveWorkOrderIsland(
-    draft.island || '',
+    jobDetailsDraft.island || '',
     wo.island,
     wo.area_of_island,
-    draft.address || '',
+    customerSiteDraft.address || '',
     wo.address,
   );
   const islandCrew = allCrew.filter(c => {
@@ -698,7 +833,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           name: orgName,
           types: ['CUSTOMER'],
           entity_type: 'COMPANY',
-          island: customerSiteDraft.island || draft.island || safeWo.island || '',
+          island: customerSiteDraft.island || jobDetailsDraft.island || safeWo.island || '',
           contact_name: customerSiteDraft.contact_person || safeWo.contact_person || '',
           contact_phone: customerSiteDraft.contact_phone || safeWo.contact_phone || '',
           contact_email: customerSiteDraft.contact_email || safeWo.contact_email || '',
@@ -1006,22 +1141,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ display: 'grid', gap: 12 }}>
                   <div>
                     <label style={LBL}>Job Name</label>
-                    <input style={INP} value={draft.name || ''} onChange={e => update('name', e.target.value)} placeholder="Customer / job name" />
+                    <input style={INP} value={jobDetailsDraft.name ?? wo.name ?? ''} onChange={e => updateJobDetails('name', e.target.value)} placeholder="Customer / job name" />
                   </div>
                   <div>
                     <label style={LBL}>Description / Scope</label>
                     <textarea
                       rows={3}
                       style={{ ...INP, resize: 'none' }}
-                      value={draft.description || ''}
-                      onChange={e => update('description', e.target.value)}
+                      value={jobDetailsDraft.description ?? wo.description ?? ''}
+                      onChange={e => updateJobDetails('description', e.target.value)}
                       placeholder="What needs to be done..."
                     />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label style={LBL}>Island</label>
-                      <select style={INP} value={resolveWorkOrderIsland(draft.island || '', wo.island, wo.area_of_island, draft.address || '', wo.address)} onChange={e => update('island', e.target.value)}>
+                      <select style={INP} value={resolveWorkOrderIsland(jobDetailsDraft.island || '', wo.island, wo.area_of_island, customerSiteDraft.address || '', wo.address)} onChange={e => updateJobDetails('island', e.target.value)}>
                         <option value="">Select...</option>
                         {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(isl => <option key={isl}>{isl}</option>)}
                       </select>
@@ -1039,6 +1174,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                   )}
                 </div>
+                {/* BAN-130: explicit Save/Discard gate — replaces auto-save for Job Details */}
+                {!readOnly && (
+                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                    {jobDetailsError && (
+                      <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {jobDetailsError}</span>
+                    )}
+                    {!jobDetailsDirty && !jobDetailsError && (
+                      <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Edits to Job Details are local until you Save.</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={discardJobDetails}
+                      disabled={!jobDetailsDirty || jobDetailsSaving}
+                      style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', opacity: (!jobDetailsDirty || jobDetailsSaving) ? 0.5 : 1 }}
+                    >
+                      Discard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveJobDetails}
+                      disabled={!jobDetailsDirty || jobDetailsSaving}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!jobDetailsDirty || jobDetailsSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!jobDetailsDirty || jobDetailsSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', boxShadow: (!jobDetailsDirty || jobDetailsSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                    >
+                      {jobDetailsSaving ? 'Saving...' : 'Save Job Details'}
+                    </button>
+                  </div>
+                )}
                 </div>{/* ── end job-details collapse wrapper ── */}
               </div>
 
@@ -1305,14 +1467,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ display: collapsed['crew'] ? 'none' : 'block' }}>
                   {islandCrew.length === 0 ? (
                     <div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually:</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually, then Save Crew:</div>
                       <input style={{ fontSize: 13, padding: '7px 11px', borderRadius: 9, border: '1px solid #e2e8f0', outline: 'none', width: '100%', boxSizing: 'border-box' as const }}
-                        defaultValue={safeWo.assignedTo || ''}
+                        value={selectedCrew.join(', ')}
                         placeholder="e.g. Karl Nakamura, Joey Ritthaler"
-                        onBlur={e => {
-                          const val = e.target.value.trim();
+                        onChange={e => {
+                          const val = e.target.value;
                           setSelectedCrew(val ? val.split(',').map(s=>s.trim()).filter(Boolean) : []);
-                          onSave(safeWo.id, { assignedTo: val }).catch(err => console.error('[WODetailPanel] saveAssigned', err));
+                          setCrewDirty(true);
                         }} />
                     </div>
                   ) : (
@@ -1338,6 +1500,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 12, color: '#4338ca', fontWeight: 600 }}>
                       {selectedCrew.join(', ')}
                       {draft.scheduledDate ? ` → ${draft.scheduledDate}` : ''}
+                    </div>
+                  )}
+                  {/* BAN-130: explicit Save/Discard gate — Crew changes are local until Save Crew */}
+                  {!readOnly && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                      {crewError && (
+                        <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {crewError}</span>
+                      )}
+                      {!crewDirty && !crewError && (
+                        <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Crew changes are local until you Save.</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={discardCrew}
+                        disabled={!crewDirty || crewSaving}
+                        style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', opacity: (!crewDirty || crewSaving) ? 0.5 : 1 }}
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveCrew}
+                        disabled={!crewDirty || crewSaving}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!crewDirty || crewSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!crewDirty || crewSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', boxShadow: (!crewDirty || crewSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      >
+                        {crewSaving ? 'Saving...' : 'Save Crew'}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1866,10 +2055,37 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <textarea
                     rows={4}
                     style={{ ...INP, resize: 'none' }}
-                    value={draft.comments || ''}
-                    onChange={e => update('comments', e.target.value)}
+                    value={notesDraft.comments ?? wo.comments ?? ''}
+                    onChange={e => updateNotes(e.target.value)}
                     placeholder="Internal notes, follow-ups, customer requests..."
                   />
+                  {/* BAN-130: explicit Save/Discard gate — replaces auto-save for Notes */}
+                  {!readOnly && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                      {notesError && (
+                        <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {notesError}</span>
+                      )}
+                      {!notesDirty && !notesError && (
+                        <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Edits to Notes are local until you Save.</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={discardNotes}
+                        disabled={!notesDirty || notesSaving}
+                        style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', opacity: (!notesDirty || notesSaving) ? 0.5 : 1 }}
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveNotes}
+                        disabled={!notesDirty || notesSaving}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!notesDirty || notesSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!notesDirty || notesSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', boxShadow: (!notesDirty || notesSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      >
+                        {notesSaving ? 'Saving...' : 'Save Notes'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2014,7 +2230,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             background: 'white', borderTop: '1px solid #e2e8f0',
             display: 'flex', justifyContent: 'flex-end', gap: 10,
           }}>
-            <button onClick={() => { setDraft({}); setDirty(false); discardCustomerSite(); onClose(); }}
+            <button onClick={() => { setDraft({}); setDirty(false); discardCustomerSite(); discardJobDetails(); discardNotes(); discardCrew(); onClose(); }}
               style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Discard
             </button>
