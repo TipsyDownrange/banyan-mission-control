@@ -19,6 +19,13 @@ export type ServiceIntakeDraft = {
   notes: string;
   org_id?: string;
   customer_id?: string;
+  // BAN-138: Customer/Account identity must not silently set jobsite address.
+  // siteAddressExplicit gates Create Work Order — operator must enter, select
+  // (PlacesAutocomplete), or confirm a jobsite address after picking a customer.
+  // legacyAccountAddress is the raw Customers.Address surfaced for warning/
+  // suggest-only UI; it is never auto-trusted as the jobsite.
+  siteAddressExplicit?: boolean;
+  legacyAccountAddress?: string;
 };
 
 const HAWAII_CITY_MAP: Array<{ patterns: string[]; island: string; area: string }> = [
@@ -89,25 +96,45 @@ export function parseAddressParts(address: string): { city: string; state: strin
 }
 
 export function applyCustomerRecord(prev: ServiceIntakeDraft, c: CustomerRecord): ServiceIntakeDraft {
-  const det = detectIslandAndArea(c.address);
-  const parsedAddress = parseAddressParts(c.address);
   const selectedName = c.company || c.name || c.contactPerson || '';
-
+  // BAN-138: Customer/Account identity ≠ Site Address. Do not copy
+  // c.address/city/state/zip/island/area into the active jobsite — those
+  // legacy Customers.Address values are stale far too often (e.g. CUS-0053
+  // Sean Daniels still listed as 99 Puamana while the real jobsite is 18
+  // Waokele). Surface the legacy address as a suggestion only and force the
+  // operator to confirm/replace it before Create Work Order is enabled.
+  const legacy = (c.address || '').trim();
   return {
     ...prev,
     businessName:  selectedName || prev.businessName,
     customerName:  selectedName || prev.customerName,
-    address:       c.address || prev.address,
-    city:          c.city || parsedAddress.city || prev.city,
-    state:         c.state || parsedAddress.state || prev.state,
-    zip:           c.zip || parsedAddress.zip || prev.zip,
-    island:        prev.island || c.island || det.island,
-    areaOfIsland:  prev.areaOfIsland || det.area,
     contactPerson: prev.contactPerson || c.contactPerson,
     contactPhone:  prev.contactPhone || c.phone || c.contactPhone,
     contactEmail:  prev.contactEmail || c.email,
     customer_id:   c.customerId || prev.customer_id,
     org_id:        c.org_id || prev.org_id,
+    siteAddressExplicit: false,
+    legacyAccountAddress: legacy || undefined,
+  };
+}
+
+// BAN-138: Operator explicitly accepted the legacy Customers.Address as the
+// jobsite. This is the only path that copies legacy address fields into the
+// site address — and it flips siteAddressExplicit on so submit unblocks.
+export function confirmLegacyAccountAddress(prev: ServiceIntakeDraft): ServiceIntakeDraft {
+  const legacy = (prev.legacyAccountAddress || '').trim();
+  if (!legacy) return prev;
+  const det = detectIslandAndArea(legacy);
+  const parsedAddress = parseAddressParts(legacy);
+  return {
+    ...prev,
+    address:      legacy,
+    city:         prev.city || parsedAddress.city,
+    state:        prev.state || parsedAddress.state,
+    zip:          prev.zip  || parsedAddress.zip,
+    island:       prev.island       || det.island,
+    areaOfIsland: prev.areaOfIsland || det.area,
+    siteAddressExplicit: true,
   };
 }
 

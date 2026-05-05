@@ -7,6 +7,7 @@ import type { CustomerRecord } from '@/app/api/service/customers/route';
 import { normalizePhone, normalizeEmail, normalizeName } from '@/lib/normalize';
 import {
   applyCustomerRecord,
+  confirmLegacyAccountAddress,
   detectIslandAndArea,
   type ServiceIntakeDraft,
 } from '@/lib/service-intake-customer';
@@ -75,7 +76,15 @@ const BLANK: ServiceIntakeDraft = {
   contactPerson: '', contactPhone: '', contactEmail: '',
   description: '', systemType: '', urgency: 'normal',
   assignedTo: '', notes: '',
+  siteAddressExplicit: false,
+  legacyAccountAddress: undefined,
 };
+
+// BAN-138: Site/jobsite fields the operator must explicitly fill — any change
+// to one of these via the form flips siteAddressExplicit on so submit unblocks.
+const SITE_ADDRESS_FIELDS: ReadonlyArray<keyof ServiceIntakeDraft> = [
+  'address', 'city', 'state', 'zip', 'island', 'areaOfIsland',
+];
 
 export default function ServiceIntake({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void }) {
   const [step, setStep] = useState<'form' | 'done'>('form');
@@ -145,7 +154,14 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   }, [draft.org_id]);
 
   function update(key: keyof ServiceIntakeDraft, val: string) {
-    setDraft(prev => ({ ...prev, [key]: val }));
+    setDraft(prev => {
+      const next: ServiceIntakeDraft = { ...prev, [key]: val };
+      // BAN-138: any operator edit to a jobsite field counts as an explicit
+      // confirmation that this is the real site address (not legacy account
+      // metadata silently inherited from a Customer record).
+      if (SITE_ADDRESS_FIELDS.includes(key)) next.siteAddressExplicit = true;
+      return next;
+    });
   }
 
   function toggleSystemType(type: string) {
@@ -160,6 +176,13 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     if (!draft.customerName || !draft.description || !draft.island) return;
     if (!draft.customer_id) {
       setError('Select an existing customer/account before creating a work order — customer_id required by GC-D053.');
+      return;
+    }
+    // BAN-138: Customer/Account selection identifies billing identity, not the
+    // jobsite. Operator must explicitly enter, select, or confirm a Site
+    // Address before we'll dispatch a Work Order.
+    if (!draft.address.trim() || !draft.siteAddressExplicit) {
+      setError('Confirm the jobsite Site Address before creating this Work Order — legacy account address is not trusted as the jobsite (BAN-138).');
       return;
     }
     setSaving(true);
@@ -189,7 +212,14 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     setSaving(false);
   }
 
-  const canSubmit = !saving && !!draft.customer_id && (draft.businessName || draft.customerName) && draft.description && draft.island;
+  const canSubmit = !saving
+    && !!draft.customer_id
+    && !!(draft.businessName || draft.customerName)
+    && !!draft.description
+    && !!draft.island
+    // BAN-138: explicit jobsite address gate — see submit() for full comment.
+    && !!draft.address.trim()
+    && !!draft.siteAddressExplicit;
 
   // PM options — always available regardless of island
   const pmOptions = pms.filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i);
@@ -274,7 +304,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               matchField="company"
               subField="address"
             />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>The billing account — selecting auto-fills address &amp; contacts below</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Billing / account identity — selecting auto-fills contacts. Site Address is set separately.</div>
             {draft.customerName.length >= 2 && !customers.some(c =>
               (c.company || '').toLowerCase().includes(draft.customerName.toLowerCase()) ||
               (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
@@ -336,7 +366,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           </div>
 
           <div>
-            {FL('Site Address', false, true)}
+            {FL('Site Address / Jobsite', false, true)}
             <PlacesAutocomplete
               value={draft.address}
               onChange={v => update('address', v)}
@@ -348,11 +378,45 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                 zip: place.zip || prev.zip,
                 island: place.island || prev.island,
                 areaOfIsland: detectIslandAndArea(place.city || place.formatted_address).area || prev.areaOfIsland,
+                // BAN-138: PlacesAutocomplete pick is an explicit jobsite confirmation.
+                siteAddressExplicit: true,
               }))}
-              placeholder="Start typing an address…"
+              placeholder="Where the work is performed (Google Places)"
               style={INP}
             />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Google Places — address auto-detects island &amp; area</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>
+              Where the work happens — not the billing address. Google Places auto-detects island &amp; area.
+            </div>
+            {/* BAN-138: warn-only surfacing of legacy Customers.Address. Not auto-trusted. */}
+            {draft.legacyAccountAddress && !draft.siteAddressExplicit && (
+              <div style={{
+                marginTop: 8,
+                padding: '9px 12px',
+                borderRadius: 10,
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                fontSize: 12,
+                color: '#92400e',
+                lineHeight: 1.5,
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 3 }}>
+                  Legacy account address found — confirm the actual jobsite before creating this Work Order.
+                </div>
+                <div style={{ marginBottom: 6 }}>
+                  Customers table has <span style={{ fontFamily: 'monospace' }}>{draft.legacyAccountAddress}</span> on file for this account. This may be a stale billing/mailing address, not where the work is happening today.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDraft(prev => confirmLegacyAccountAddress(prev))}
+                  style={{
+                    fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
+                    border: '1px solid #d97706', background: 'white', color: '#b45309', cursor: 'pointer',
+                  }}
+                >
+                  Use legacy address as jobsite
+                </button>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
