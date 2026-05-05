@@ -21,6 +21,7 @@ jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
 jest.mock('@/lib/backend-config', () => ({ getBackendSheetId: jest.fn(() => 'backend-sheet-test') }));
 jest.mock('@/lib/updateCustomerRecord', () => ({ fireAndForgetCustomerUpdate: jest.fn() }));
 jest.mock('@/lib/normalize', () => ({
+  normalizeAddressComponent: (v: string) => v,
   normalizePhone: (v: string) => v,
   normalizeEmail: (v: string) => v,
   normalizeName: (v: string) => v,
@@ -252,3 +253,5 @@ describe('BAN-105 — qa-complete field-to-office handoff', () => {
     expect(statusWrite?.values?.[0]?.[0]).toBe('work_complete');
   });
 });
+
+export {};

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeEmail, normalizeIsland, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
 
     const sheets = getSheets();
     const userId = `crew_${Date.now()}`;
-    const name = `${first_name.trim()} ${last_name.trim()}`;
+    const name = normalizeNameForWrite(`${first_name} ${last_name}`);
     const roleStr = [role, classification].filter(Boolean).join('/');
 
     await sheets.spreadsheets.values.append({
@@ -93,14 +94,14 @@ export async function POST(req: Request) {
           userId,                                      // A: user_id
           name,                                        // B: name
           roleStr,                                     // C: role
-          email || '',                                 // D: email
-          phone || '',                                 // E: phone
-          island || '',                                // F: island
+          normalizeEmail(String(email || '')),         // D: email
+          normalizePhone(String(phone || '')),          // E: phone
+          String(island || '').trim() ? normalizeIsland(String(island)) : '', // F: island
           '',                                          // G: personal_email
           classification || role || '',                // H: title
           department || '',                            // I: department
           '',                                          // J: office
-          address || '',                               // K: home_address
+          normalizeAddressComponent(String(address || '')), // K: home_address
           '',                                          // L: emergency_contact
           new Date().toISOString().slice(0, 10),       // M: start_date
           '',                                          // N: notes

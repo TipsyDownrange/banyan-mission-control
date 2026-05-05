@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -35,7 +36,13 @@ function hasOwn(body: CrewUpdateBody, field: WritableField): boolean {
 }
 
 function preserveOrUpdate(body: CrewUpdateBody, field: WritableField, existing: string | undefined): string {
-  return hasOwn(body, field) ? (body[field] ?? '') : (existing ?? '');
+  if (!hasOwn(body, field)) return existing ?? '';
+  const value = body[field] ?? '';
+  if (field === 'name') return normalizeNameForWrite(value);
+  if (field === 'email' || field === 'personal_email') return normalizeEmail(value);
+  if (field === 'phone') return normalizePhone(value);
+  if (field === 'home_address') return normalizeAddressComponent(value);
+  return value;
 }
 
 export async function POST(req: Request) {

@@ -6,6 +6,7 @@ import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeEmail, normalizeNameForWrite, normalizePhone, resolveWorkOrderIsland } from '@/lib/normalize';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -251,9 +252,21 @@ export async function POST(req: Request) {
       wo = nextServiceWONumber((existingWOs.data.values || []).flat(), yr);
     }
     const woId = buildServiceWOId(wo);
+    const cleanBusinessName = normalizeNameForWrite(String(businessName || ''));
+    const cleanCustomerName = normalizeNameForWrite(String(customerName || ''));
+    const cleanContactPerson = normalizeNameForWrite(String(contactPerson || ''));
+    const cleanContactPhone = normalizePhone(String(contactPhone || ''));
+    const cleanContactEmail = normalizeEmail(String(contactEmail || ''));
+    const cleanContactTitle = normalizeNameForWrite(String(contactTitle || ''));
+    const cleanAddress = normalizeAddressComponent(String(address || ''));
+    const cleanCity = normalizeAddressComponent(String(city || ''));
+    const cleanState = normalizeAddressComponent(String(state || ''));
+    const cleanZip = normalizeAddressComponent(String(zip || ''));
+    const cleanIsland = String(island || '').trim() ? resolveWorkOrderIsland(String(island)) : '';
+    const cleanAreaOfIsland = normalizeAddressComponent(String(areaOfIsland || cleanIsland || cleanCity || ''));
     // Column C (name): use businessName if provided; otherwise derive from customerName + systemType
-    const name = businessName ||
-      (systemType ? `${customerName} — ${systemType}` : customerName);
+    const name = cleanBusinessName ||
+      (systemType ? `${cleanCustomerName} — ${systemType}` : cleanCustomerName);
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
     // Create Drive folder structure before writing the sheet row. This is fatal:
@@ -261,7 +274,7 @@ export async function POST(req: Request) {
     let folderUrl: string;
     try {
       folderUrl = requireServiceWOFolderUrl(
-        await createWOFolderStructure(woId, customerName || businessName || '', island || city || '')
+        await createWOFolderStructure(woId, cleanCustomerName || cleanBusinessName || '', cleanIsland || cleanCity || '')
       );
     } catch (err) {
       if (err instanceof ServiceWOFolderCreationError) {
@@ -276,14 +289,14 @@ export async function POST(req: Request) {
       name,           // name
       description,    // description
       'lead',         // status — new WOs start as New Lead
-      island || city || '',                           // island (F)
-      areaOfIsland || island || city || '',            // area_of_island (G)
-      (() => { const parts = [address, city]; if (state || zip) parts.push([state, zip].filter(Boolean).join(' ')); return parts.filter(Boolean).join(', '); })(),  // address (H)
-      contactPerson || '',                             // contact_person (I)
-      contactTitle || '',                              // contact_title (J)
-      contactPhone || '',                              // contact_phone (K)
-      contactEmail || '',                              // contact_email (L)
-      customerName || businessName || '',              // customer_name (M)
+      cleanIsland || cleanCity || '',                  // island (F)
+      cleanAreaOfIsland,                               // area_of_island (G)
+      (() => { const parts = [cleanAddress, cleanCity]; if (cleanState || cleanZip) parts.push([cleanState, cleanZip].filter(Boolean).join(' ')); return parts.filter(Boolean).join(', '); })(),  // address (H)
+      cleanContactPerson,                              // contact_person (I)
+      cleanContactTitle,                               // contact_title (J)
+      cleanContactPhone,                               // contact_phone (K)
+      cleanContactEmail,                               // contact_email (L)
+      cleanCustomerName || cleanBusinessName || '',    // customer_name (M)
       systemType || '',                                // system_type
       assignedTo || '',                                // assigned_to
       today,                                           // date_received
@@ -339,10 +352,10 @@ export async function POST(req: Request) {
     // Fire-and-forget customer DB backfeed — never blocks WO creation.
     // Dispatch location fields are WO/jobsite snapshots, not account addresses.
     fireAndForgetCustomerUpdate({
-      name:           customerName || businessName || '',
-      island:         island || '',
-      primaryContact: contactPerson,
-      phone:          contactPhone,
+      name:           cleanCustomerName || cleanBusinessName || '',
+      island:         cleanIsland || '',
+      primaryContact: cleanContactPerson,
+      phone:          cleanContactPhone,
     });
 
     return NextResponse.json({ ok: true, woId, woNumber: wo, folderUrl });
