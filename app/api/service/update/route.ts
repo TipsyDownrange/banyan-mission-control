@@ -679,7 +679,6 @@ export async function PATCH(req: Request) {
     const custEmail = body.contactEmail || body.contact_email;
     const custPerson = body.contactPerson || body.contact_person;
     const custIsland = body.island;
-    const custAddress = body.address;
     if (custName || custPhone || custEmail) {
       fireAndForgetCustomerUpdate({
         name: custName,
@@ -687,7 +686,6 @@ export async function PATCH(req: Request) {
         email: custEmail,
         primaryContact: custPerson,
         island: custIsland,
-        address: custAddress,
         source: 'wo_update',
       });
     }

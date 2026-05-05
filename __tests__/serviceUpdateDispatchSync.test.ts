@@ -202,6 +202,30 @@ describe('service/update — Dispatch_Schedule A:S sync (BAN-42 Gate 2)', () => 
     expect(dispatchRead).toBeDefined();
   });
 
+  it('does not pass WO jobsite address into customer backfeed on update', async () => {
+    setupSheets();
+    const { fireAndForgetCustomerUpdate } = jest.requireMock('@/lib/updateCustomerRecord') as {
+      fireAndForgetCustomerUpdate: jest.Mock;
+    };
+    const { PATCH } = await import('@/app/api/service/update/route');
+
+    const res = await PATCH(makeRequest(baseBody({
+      customer_name: 'ACME Corp',
+      contact_phone: '(808) 555-0199',
+      address: 'WO Jobsite Address',
+    })));
+
+    expect(res.status).toBe(200);
+    expect(fireAndForgetCustomerUpdate).toHaveBeenCalledTimes(1);
+    const payload = fireAndForgetCustomerUpdate.mock.calls[0][0];
+    expect(payload).toEqual(expect.objectContaining({
+      name: 'ACME Corp',
+      phone: '(808) 555-0199',
+      source: 'wo_update',
+    }));
+    expect(payload).not.toHaveProperty('address');
+  });
+
   // ── 4. Updates an existing A:S row without truncating Field App columns ────
   it('updates an existing row as a full A:S row preserving Field App columns', async () => {
     const existingRow = [

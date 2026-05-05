@@ -223,11 +223,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     contact_email?: string;
     address?: string;
     island?: string;
+    customer_id?: string;
+    org_id?: string;
   };
   const [customerSiteDraft, setCustomerSiteDraft] = useState<CustomerSiteDraft>({});
   const [customerSiteDirty, setCustomerSiteDirty] = useState(false);
   const [customerSiteSaving, setCustomerSiteSaving] = useState(false);
   const [customerSiteError, setCustomerSiteError] = useState('');
+  const [legacyAccountAddressSuggestion, setLegacyAccountAddressSuggestion] = useState('');
   // BAN-130: Job Details, Notes, and Crew each get their own isolated draft
   // with explicit Save/Discard so that clicking into a field and typing can
   // never autosave production Work Order data.
@@ -378,9 +381,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
       contact_email:  wo.contact_email,
       address:        wo.address,
       island:         initialIsland,
+      customer_id:     wo.customer_id,
+      org_id:          wo.org_id,
     };
     setCustomerSiteDraft(initialCustomerSite);
     customerSiteOriginalRef.current = initialCustomerSite;
+    setLegacyAccountAddressSuggestion('');
     const initialJobDetails: JobDetailsDraft = {
       name:        wo.name,
       description: wo.description,
@@ -505,6 +511,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
         _woName: latestDraft.name || safeWo.name,
         _island: cs.island || safeWo.island,
       };
+      if (cs.customer_id !== undefined && (cs.customer_id || '') !== (safeWo.customer_id || '')) {
+        payload.customer_id = cs.customer_id;
+      }
+      if (cs.org_id !== undefined && (cs.org_id || '') !== (safeWo.org_id || '')) {
+        payload.org_id = cs.org_id;
+      }
       await onSave(safeWo.id, payload);
       customerSiteOriginalRef.current = {
         customer_name:  payload.customer_name,
@@ -513,9 +525,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
         contact_email:  payload.contact_email as string | undefined,
         address:        payload.address,
         island:         payload.island,
+        customer_id:     payload.customer_id ?? safeWo.customer_id,
+        org_id:          payload.org_id ?? safeWo.org_id,
       };
       setCustomerSiteDraft(customerSiteOriginalRef.current);
       setCustomerSiteDirty(false);
+      setLegacyAccountAddressSuggestion('');
     } catch (err) {
       setCustomerSiteError(err instanceof Error ? err.message : 'Failed to save Customer & Site. Please try again.');
     } finally {
@@ -527,6 +542,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     setCustomerSiteDraft(customerSiteOriginalRef.current);
     setCustomerSiteDirty(false);
     setCustomerSiteError('');
+    setLegacyAccountAddressSuggestion('');
   }
 
   // BAN-130: Job Details — explicit Save/Discard, no autosave.
@@ -1335,10 +1351,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       onChange={v => updateCustomerSite('customer_name', v)}
                       onSelect={c => {
                         updateCustomerSite('customer_name', c.company || c.name || '');
+                        if (c.customerId) updateCustomerSite('customer_id', c.customerId);
+                        if (c.org_id) updateCustomerSite('org_id', c.org_id);
                         if (c.contactPerson) updateCustomerSite('contact_person', c.contactPerson);
                         if (c.phone || c.contactPhone) updateCustomerSite('contact_phone', c.phone || c.contactPhone || '');
                         if (c.email) updateCustomerSite('contact_email', c.email);
-                        if (c.address) updateCustomerSite('address', c.address);
+                        setLegacyAccountAddressSuggestion(c.address || '');
                       }}
                       placeholder="Billing account name"
                       style={INP}
@@ -1402,6 +1420,21 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       placeholder="Start typing an address..."
                       style={INP}
                     />
+                    {legacyAccountAddressSuggestion && legacyAccountAddressSuggestion !== (customerSiteDraft.address ?? wo.address ?? '') && (
+                      <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11, color: '#92400e' }}>
+                        <span>Account address on file: {legacyAccountAddressSuggestion}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateCustomerSite('address', legacyAccountAddressSuggestion);
+                            setLegacyAccountAddressSuggestion('');
+                          }}
+                          style={{ border: '1px solid rgba(146,64,14,0.25)', background: '#fffbeb', color: '#92400e', borderRadius: 6, padding: '3px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          Use as site address
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* BAN-128: explicit Save/Discard gate — replaces auto-save for these fields */}

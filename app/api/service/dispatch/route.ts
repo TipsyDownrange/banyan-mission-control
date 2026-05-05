@@ -340,7 +340,6 @@ export async function POST(req: Request) {
     fireAndForgetCustomerUpdate({
       name:           customerName || businessName || '',
       island:         island || city || '',
-      address:        address,
       city:           city,
       primaryContact: contactPerson,
       phone:          contactPhone,
