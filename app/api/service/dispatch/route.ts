@@ -6,24 +6,22 @@ import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeEmail, normalizeNameForWrite, normalizePhone, resolveWorkOrderIsland } from '@/lib/normalize';
+import {
+  ServiceWOFolderCreationError,
+  createWOFolderStructure,
+  requireServiceWOFolderUrl,
+} from '@/lib/drive-wo-folder';
+
+export { ServiceWOFolderCreationError, requireServiceWOFolderUrl };
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
-const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 const SERVICE_WO_NUMBER_PATTERN = /^\d{2}-\d{4}$/;
 
 export class InvalidServiceWONumberError extends Error {
   constructor(value: string) {
     super(`Invalid work order number "${value}". Use the standard YY-#### format, for example 26-0001.`);
     this.name = 'InvalidServiceWONumberError';
-  }
-}
-
-export class ServiceWOFolderCreationError extends Error {
-  constructor(cause?: unknown) {
-    const detail = cause instanceof Error ? ` ${cause.message}` : '';
-    super(`Work order was not created because the Drive folder could not be created.${detail}`);
-    this.name = 'ServiceWOFolderCreationError';
   }
 }
 
@@ -51,115 +49,6 @@ export function nextServiceWONumber(existingNumbers: string[], yearTwoDigit: str
     .map(v => Number.parseInt(v.split('-')[1], 10));
   const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
   return `${yearTwoDigit}-${String(nextNum).padStart(4, '0')}`;
-}
-
-export function requireServiceWOFolderUrl(folderUrl: string | null | undefined): string {
-  const normalized = String(folderUrl || '').trim();
-  if (!normalized) throw new ServiceWOFolderCreationError();
-  return normalized;
-}
-
-/**
- * Find or create a folder by name inside a parent, using the Drive API.
- */
-async function findOrCreateFolder(
-  drive: ReturnType<typeof google.drive>,
-  name: string,
-  parentId: string,
-): Promise<string> {
-  const safeName = name.replace(/[^\w\s\-—()]/g, '').trim();
-  const search = await drive.files.list({
-    q: `name = '${safeName.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and '${parentId}' in parents and trashed = false`,
-    driveId: BANYAN_DRIVE_ID,
-    includeItemsFromAllDrives: true,
-    supportsAllDrives: true,
-    corpora: 'drive',
-    fields: 'files(id,name)',
-  });
-  if (search.data.files && search.data.files.length > 0) {
-    return search.data.files[0].id!;
-  }
-  const created = await drive.files.create({
-    requestBody: { name: safeName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
-    supportsAllDrives: true,
-    fields: 'id',
-  });
-  return created.data.id!;
-}
-
-/**
- * Creates the WO folder structure in BanyanOS shared Drive:
- *   Service / [Island] / WO-[number] — [Customer Name] /
- *     Photos/
- *     Quotes/
- *     Correspondence/
- * Returns the webViewLink of the WO folder.
- */
-async function createWOFolderStructure(
-  woId: string,
-  customerName: string,
-  island: string,
-): Promise<string> {
-  try {
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
-    const drive = google.drive({ version: 'v3', auth });
-
-    // Layer 1: Service folder
-    const serviceFolderId = await findOrCreateFolder(drive, 'Service', BANYAN_DRIVE_ID);
-
-    // Layer 2: Island folder (e.g., "Maui")
-    const islandLabel = island || 'Unassigned';
-    const islandFolderId = await findOrCreateFolder(drive, islandLabel, serviceFolderId);
-
-    // Layer 3: WO folder
-    const woFolderName = `${woId} — ${customerName}`;
-    const woFolderId = await findOrCreateFolder(drive, woFolderName, islandFolderId);
-
-    // Layer 4: Standard subfolders
-    await Promise.all([
-      findOrCreateFolder(drive, 'Photos', woFolderId),
-      findOrCreateFolder(drive, 'Quotes', woFolderId),
-      findOrCreateFolder(drive, 'Correspondence', woFolderId),
-      findOrCreateFolder(drive, 'Field Issues', woFolderId),
-      findOrCreateFolder(drive, 'Daily Reports', woFolderId),
-      findOrCreateFolder(drive, 'Measurements', woFolderId),
-    ]);
-
-    // Layer 4b: Kai shadow folder + subfolders (immutable backup, invisible to users)
-    try {
-      const shadowFolderId = await findOrCreateFolder(drive, '10 - AI Project Documents [Kai]', woFolderId);
-      await Promise.all([
-        findOrCreateFolder(drive, 'Photos', shadowFolderId),
-        findOrCreateFolder(drive, 'Daily Reports', shadowFolderId),
-        findOrCreateFolder(drive, 'Measurements', shadowFolderId),
-        findOrCreateFolder(drive, 'Field Issues', shadowFolderId),
-        findOrCreateFolder(drive, 'System Generated', shadowFolderId),
-      ]);
-    } catch (shadowErr) {
-      console.error('[createWOFolderStructure] shadow folder creation failed (non-fatal):', shadowErr);
-    }
-
-    // Share with @kulaglass.com domain
-    try {
-      await drive.permissions.create({
-        fileId: woFolderId,
-        supportsAllDrives: true,
-        requestBody: { type: 'domain', domain: 'kulaglass.com', role: 'writer' },
-      });
-    } catch { /* non-fatal if already shared via drive inheritance */ }
-
-    // Get the webViewLink
-    const meta = await drive.files.get({
-      fileId: woFolderId,
-      supportsAllDrives: true,
-      fields: 'webViewLink',
-    });
-
-    return meta.data.webViewLink || `https://drive.google.com/drive/folders/${woFolderId}`;
-  } catch (e) {
-    console.error('WO folder creation failed:', e);
-    throw new ServiceWOFolderCreationError(e);
-  }
 }
 
 // POST — create new work order row in backend sheet
