@@ -2,7 +2,6 @@ import { hawaiiToday, hawaiiNow, hawaiiYear2 } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
-import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
@@ -348,15 +347,6 @@ export async function POST(req: Request) {
     }
 
     invalidateCache();
-
-    // Fire-and-forget customer DB backfeed — never blocks WO creation.
-    // Dispatch location fields are WO/jobsite snapshots, not account addresses.
-    fireAndForgetCustomerUpdate({
-      name:           cleanCustomerName || cleanBusinessName || '',
-      island:         cleanIsland || '',
-      primaryContact: cleanContactPerson,
-      phone:          cleanContactPhone,
-    });
 
     return NextResponse.json({ ok: true, woId, woNumber: wo, folderUrl });
   } catch (err) {

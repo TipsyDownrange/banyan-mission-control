@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
-import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { normalizeAddressComponent, normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
@@ -674,23 +673,6 @@ export async function PATCH(req: Request) {
           scheduleSyncResult = { status: 'failed', slot_id: slotId, warning: 'Schedule sync failed; see server logs' };
         }
       }
-    }
-
-    // Write-back customer data to Customer DB (fire-and-forget)
-    const custName = body.customerName || body.customer_name;
-    const custPhone = body.contactPhone || body.contact_phone;
-    const custEmail = body.contactEmail || body.contact_email;
-    const custPerson = body.contactPerson || body.contact_person;
-    const custIsland = body.island;
-    if (custName || custPhone || custEmail) {
-      fireAndForgetCustomerUpdate({
-        name: custName ? normalizeName(String(custName)) : '',
-        phone: custPhone ? normalizePhone(String(custPhone)) : '',
-        email: custEmail ? normalizeEmail(String(custEmail)) : '',
-        primaryContact: custPerson ? normalizeContactList(String(custPerson)) : '',
-        island: custIsland ? resolveWorkOrderIsland(String(custIsland)) : '',
-        source: 'wo_update',
-      });
     }
 
     return NextResponse.json({ ok: true, sheetRow, woId: woId || resolvedWoNumber, schedule_sync: scheduleSyncResult });

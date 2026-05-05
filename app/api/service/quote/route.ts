@@ -5,7 +5,6 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { authOptions } from '@/lib/auth';
 import { getPreparedByUser } from '@/lib/users';
-import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import {
   calculateSiteVisitFee, getJobTypeDefaults, listJobTypes,
   LABOR_RATES, GET_RATE, estimateDriveTime, DEFAULT_SERVICE_CREW,
@@ -169,18 +168,6 @@ export async function POST(req: Request) {
       throw new Error('island required');
     } else if (!siteAddress) {
       throw new Error('siteAddress required (WO row is missing address in Service_Work_Orders sheet)');
-    }
-
-    // Fire-and-forget customer DB backfeed — never blocks quote generation.
-    // Quote addresses are WO/jobsite snapshots, not approved account addresses.
-    if (customerName || customerPhone || customerEmail) {
-      fireAndForgetCustomerUpdate({
-        name:    customerName,
-        phone:   customerPhone,
-        email:   customerEmail,
-        island:  island,
-        source:  'quote',
-      });
     }
 
     // ─── Labor calculation ────────────────────────────────────────────────────
