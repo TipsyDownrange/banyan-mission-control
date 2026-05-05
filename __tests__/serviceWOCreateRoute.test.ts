@@ -258,6 +258,30 @@ describe('Service WO create route', () => {
       requestBody: { values: [['true']] },
     }));
   });
+
+  it('does not pass WO jobsite address into customer backfeed on create', async () => {
+    setupGoogleClients();
+    const { fireAndForgetCustomerUpdate } = jest.requireMock('@/lib/updateCustomerRecord') as {
+      fireAndForgetCustomerUpdate: jest.Mock;
+    };
+    const { POST } = await import('@/app/api/service/dispatch/route');
+
+    const res = await POST(request(baseBody({
+      woNumber: '26-1236',
+      address: 'WO Jobsite Address',
+      city: 'Kula',
+      contactPhone: '(808) 555-0199',
+    })));
+
+    expect(res.status).toBe(200);
+    expect(fireAndForgetCustomerUpdate).toHaveBeenCalledTimes(1);
+    const payload = fireAndForgetCustomerUpdate.mock.calls[0][0];
+    expect(payload).toEqual(expect.objectContaining({
+      name: 'BAN-51 Test Customer',
+      phone: '(808) 555-0199',
+    }));
+    expect(payload).not.toHaveProperty('address');
+  });
 });
 
 export {};

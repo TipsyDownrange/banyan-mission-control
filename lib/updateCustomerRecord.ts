@@ -4,6 +4,8 @@
  * Searches the Customers tab by phone, email, or name.
  *   - Found → fills any empty fields with new data (never overwrites existing data with blanks)
  *   - Not found → skips creation; canonical customer creation must be explicit
+ * Address is intentionally excluded unless the caller is an approved
+ * account-address update path; WO/site addresses must not backfeed Customers.
  *
  * This function is intentionally non-blocking; callers should NOT await it
  * in request handlers where a customer DB failure must not block the response.
@@ -29,6 +31,7 @@ export type CustomerData = {
   type?:           string;
   island?:         string;
   address?:        string;
+  allowAddressUpdate?: boolean;
   city?:           string;
   primaryContact?: string;
   phone?:          string;
@@ -45,7 +48,7 @@ function toRow(data: CustomerData): Record<string, string> {
   if (data.name           != null) d['Name']            = String(data.name);
   if (data.type           != null) d['Type']            = String(data.type);
   if (data.island         != null) d['Island']          = String(data.island);
-  if (data.address        != null) d['Address']         = String(data.address);
+  if (data.allowAddressUpdate && data.address != null) d['Address'] = String(data.address);
   if (data.city           != null) d['City']            = String(data.city);
   if (data.primaryContact != null) d['Primary Contact'] = String(data.primaryContact);
   if (data.phone          != null) d['Phone']           = String(data.phone);
