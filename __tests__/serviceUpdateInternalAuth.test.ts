@@ -15,6 +15,7 @@ jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
 jest.mock('@/lib/backend-config', () => ({ getBackendSheetId: jest.fn(() => 'backend-sheet-test') }));
 jest.mock('@/lib/updateCustomerRecord', () => ({ fireAndForgetCustomerUpdate: jest.fn() }));
 jest.mock('@/lib/normalize', () => ({
+  normalizeAddressComponent: (v: string) => v,
   normalizePhone: (v: string) => v,
   normalizeEmail: (v: string) => v,
   normalizeName: (v: string) => v,
@@ -194,3 +195,5 @@ describe('service/update — BAN-40 internal auth', () => {
     expect(mockCheckPermission).not.toHaveBeenCalled();
   });
 });
+
+export {};

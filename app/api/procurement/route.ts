@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeNameForWrite } from '@/lib/normalize';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -43,7 +44,21 @@ const H = {
 };
 
 function colLetter(idx: number): string {
-  return String.fromCharCode(65 + idx);
+  let result = '';
+  let n = idx;
+  do {
+    result = String.fromCharCode(65 + (n % 26)) + result;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return result;
+}
+
+function normalizeProcurementField(field: string, value: unknown): string {
+  const raw = String(value ?? '');
+  if (field === 'vendor_name' || field === 'received_by' || field === 'quote_document_name') {
+    return normalizeNameForWrite(raw);
+  }
+  return normalizeAddressComponent(raw);
 }
 
 export async function GET(req: Request) {
@@ -135,18 +150,18 @@ export async function POST(req: Request) {
       row[H.procurement_id] = procId;
       row[H.wo_id] = wo_id;
       row[H.vendor_org_id] = vendor_org_id || '';
-      row[H.vendor_name] = vendor_name || '';
-      row[H.item_description] = item.description || '';
+      row[H.vendor_name] = normalizeNameForWrite(String(vendor_name || ''));
+      row[H.item_description] = normalizeAddressComponent(String(item.description || ''));
       row[H.quantity] = String(item.quantity || 1);
-      row[H.unit] = item.unit || 'EA';
+      row[H.unit] = normalizeAddressComponent(String(item.unit || 'EA'));
       row[H.unit_cost] = String(item.unit_cost || 0);
       row[H.line_total] = String(lineTotal);
       row[H.status] = 'VENDOR_QUOTED';
       row[H.quote_date] = quote_date || now.slice(0, 10);
       row[H.quote_valid_until] = quote_valid_until || '';
-      row[H.notes] = notes || '';
-      row[H.quote_document_url] = quote_document_url || '';
-      row[H.quote_document_name] = quote_document_name || '';
+      row[H.notes] = normalizeAddressComponent(String(notes || ''));
+      row[H.quote_document_url] = normalizeAddressComponent(String(quote_document_url || ''));
+      row[H.quote_document_name] = normalizeNameForWrite(String(quote_document_name || ''));
       row[H.created_at] = now;
       row[H.updated_at] = now;
       return row;
@@ -218,7 +233,7 @@ export async function PATCH(req: Request) {
         if (updates[field] !== undefined) {
           patchData.push({
             range: `Procurement!${colLetter(colIdx)}${sheetRow}`,
-            values: [[String(updates[field])]],
+            values: [[normalizeProcurementField(field, updates[field])]],
           });
         }
       }

@@ -3,7 +3,17 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 const SHEET_ID = getBackendSheetId();
+
+function normalizeContactField(field: string, value: unknown): string {
+  const raw = String(value ?? '');
+  if (field === 'name') return normalizeNameForWrite(raw);
+  if (field === 'email') return normalizeEmail(raw);
+  if (field === 'phone') return normalizePhone(raw);
+  return raw.trim();
+}
+
 export async function POST(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
   const session = await getServerSession();
   if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -14,7 +24,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ orgId: 
   const sheets = google.sheets({ version: 'v4', auth });
   const contactId = 'cnt_' + Math.random().toString(36).slice(2,18);
   const now = new Date().toISOString();
-  await sheets.spreadsheets.values.append({ spreadsheetId: SHEET_ID, range: 'Contacts!A:J', valueInputOption: 'USER_ENTERED', requestBody: { values: [[contactId, orgId, name, title||'', role||'PRIMARY', email||'', phone||'', is_primary?'TRUE':'FALSE', '', now]] } });
+  await sheets.spreadsheets.values.append({ spreadsheetId: SHEET_ID, range: 'Contacts!A:J', valueInputOption: 'USER_ENTERED', requestBody: { values: [[contactId, orgId, normalizeNameForWrite(name), String(title || '').trim(), String(role || 'PRIMARY').trim(), normalizeEmail(String(email || '')), normalizePhone(String(phone || '')), is_primary?'TRUE':'FALSE', '', now]] } });
   return NextResponse.json({ ok: true, contact_id: contactId });
 }
 export async function PATCH(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
@@ -30,7 +40,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
   if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const rowNum = idx + 2;
   const COL: Record<string,number> = { name:2, title:3, role:4, email:5, phone:6, is_primary:7, notes:8 };
-  const updates = Object.entries(fields).filter(([k]) => COL[k]!==undefined).map(([k,v]) => ({ range:`Contacts!${String.fromCharCode(65+COL[k])}${rowNum}`, values:[[String(v)]] }));
+  const updates = Object.entries(fields).filter(([k]) => COL[k]!==undefined).map(([k,v]) => ({ range:`Contacts!${String.fromCharCode(65+COL[k])}${rowNum}`, values:[[k === 'is_primary' ? String(v) : normalizeContactField(k, v)]] }));
   if (updates.length > 0) await sheets.spreadsheets.values.batchUpdate({ spreadsheetId: SHEET_ID, requestBody: { valueInputOption:'USER_ENTERED', data: updates } });
   return NextResponse.json({ ok: true });
 }

@@ -27,10 +27,16 @@ export function normalizeEmail(raw: string): string {
   return raw.toLowerCase().trim();
 }
 
+/** Collapse repeated spaces after trimming, without changing capitalization. */
+export function normalizeNameForWrite(raw: string): string {
+  if (!raw) return '';
+  return raw.trim().replace(/\s+/g, ' ');
+}
+
 /** Name → Title Case (preserving McX, O'X patterns) */
 export function normalizeName(raw: string): string {
   if (!raw) return '';
-  const trimmed = raw.trim();
+  const trimmed = normalizeNameForWrite(raw);
   // If not ALL CAPS, preserve original
   const letters = trimmed.replace(/[^a-zA-Z]/g, '');
   if (letters.length > 2 && letters !== letters.toUpperCase()) return trimmed;
@@ -89,6 +95,25 @@ export function normalizeIsland(raw: string): string {
   if (l === 'molokai' || l === 'moloka\'i') return 'Molokai';
   // Title case fallback
   return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+}
+
+/** Text address components are trim-only at write boundaries. */
+export function normalizeAddressComponent(raw: string): string {
+  if (!raw) return '';
+  return raw.trim();
+}
+
+const ALLOWED_SITE_TYPES = new Set(['OFFICE', 'JOBSITE', 'RESIDENCE', 'WAREHOUSE']);
+
+/** Site type → uppercase existing enum value, or blank when explicitly cleared. */
+export function normalizeSiteType(raw: string): string {
+  if (!raw) return '';
+  const normalized = raw.trim().toUpperCase();
+  if (!normalized) return '';
+  if (!ALLOWED_SITE_TYPES.has(normalized)) {
+    throw new Error(`Invalid site_type: ${raw}. Allowed: ${Array.from(ALLOWED_SITE_TYPES).join(', ')}`);
+  }
+  return normalized;
 }
 
 /** Area of island → canonical island */
