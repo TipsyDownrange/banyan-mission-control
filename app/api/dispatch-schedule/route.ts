@@ -4,6 +4,11 @@
  * POST - create a new slot (PM creates the need)
  * PATCH - assign crew to a slot / update status (superintendent fills it)
  * DELETE - remove a slot
+ *
+ * BAN-134: Reads/writes the canonical Dispatch_Schedule A:S (19-column) shape so
+ * legacy PATCHes from this route never truncate columns P:S
+ * (step_ids / hours_actual / last_modified / focus_step_ids).
+ * Superintendent Scheduling remains the canonical owner of focus_step_ids.
  */
 
 import { NextResponse } from 'next/server';
@@ -11,9 +16,12 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { checkPermission } from '@/lib/permissions';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { buildDispatchRow } from '@/lib/dispatch-schedule';
+import { DISPATCH_SCHEDULE_SCHEMA, DISPATCH_COL_COUNT, DISPATCH_COL_IDX } from '@/lib/schemas';
 
 const SHEET_ID = getBackendSheetId();
-const COLS = ['slot_id','date','kID','project_name','island','men_required','hours_estimated','assigned_crew','created_by','status','confirmations','work_type','notes','start_time','end_time'];
+const COLS = DISPATCH_SCHEDULE_SCHEMA;
+const LAST_MODIFIED_COL = DISPATCH_COL_IDX.last_modified; // 17 / R
 
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
@@ -31,7 +39,7 @@ export async function GET(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:O5000',
+      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:S5000',
     });
 
     const fromDate = new Date(from);
@@ -71,9 +79,25 @@ export async function POST(req: Request) {
     const count = (existing.data.values || []).filter(r => r[0]).length;
     const slot_id = `SLOT-${date.replace(/-/g,'')}-${String(count + 1).padStart(3,'0')}`;
 
-    const row = [slot_id, date, kID||'', project_name, island||'', men_required||'1', hours_estimated||'', '', created_by||'', 'open', '', body.work_type||'', body.notes||'', body.start_time||'', body.end_time||''];
+    const row = buildDispatchRow({
+      slot_id,
+      date,
+      kID: kID || '',
+      project_name,
+      island: island || '',
+      men_required: men_required || '1',
+      hours_estimated: hours_estimated || '',
+      assigned_crew: '',
+      created_by: created_by || '',
+      status: 'open',
+      confirmations: '',
+      work_type: body.work_type || '',
+      notes: body.notes || '',
+      start_time: body.start_time || '',
+      end_time: body.end_time || '',
+    });
     await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2',
+      spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A:S',
       valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS',
       requestBody: { values: [row] },
     });
@@ -97,14 +121,15 @@ export async function PATCH(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:O5000' });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Dispatch_Schedule!A2:S5000' });
     const rows = res.data.values || [];
     const rowIdx = rows.findIndex(r => r[0] === slot_id);
     if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
 
     const existing = rows[rowIdx].map(String);
-    // Ensure row is long enough for all 15 cols (including start_time, end_time)
-    while (existing.length < 15) existing.push('');
+    // BAN-134: pad to canonical A:S length so cols P:S (step_ids, hours_actual,
+    // last_modified, focus_step_ids) are read and re-written verbatim, never truncated.
+    while (existing.length < DISPATCH_COL_COUNT) existing.push('');
     const updated = [...existing];
     if (assigned_crew !== undefined) updated[7] = Array.isArray(assigned_crew) ? assigned_crew.join(', ') : assigned_crew;
     if (status !== undefined) updated[9] = status;
@@ -120,10 +145,17 @@ export async function PATCH(req: Request) {
       updated[10] = Object.entries(confMap).map(([n, s]) => `${n}:${s}`).join(', ');
     }
 
-    COLS.forEach((c, i) => { if (updates[c] !== undefined) updated[i] = updates[c]; });
+    // Skip last_modified — set centrally below so no caller can stomp the server stamp.
+    COLS.forEach((c, i) => {
+      if (c === 'last_modified') return;
+      if (updates[c] !== undefined) updated[i] = updates[c];
+    });
+
+    // Server-stamp last_modified (col R / 17) on every write.
+    updated[LAST_MODIFIED_COL] = new Date().toISOString();
 
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:O${rowIdx + 2}`,
+      spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx + 2}:S${rowIdx + 2}`,
       valueInputOption: 'USER_ENTERED', requestBody: { values: [updated] },
     });
 
@@ -219,8 +251,9 @@ export async function DELETE(req: Request) {
     const rowIdx = rows.findIndex(r => r[0] === slot_id);
     if (rowIdx === -1) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
 
-    // Clear the row
-    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:O${rowIdx+2}` });
+    // BAN-134: clear the full canonical A:S row so no stale P:S cells survive
+    // a delete-then-recreate cycle that would otherwise reuse the same sheet row.
+    await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `Dispatch_Schedule!A${rowIdx+2}:S${rowIdx+2}` });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
