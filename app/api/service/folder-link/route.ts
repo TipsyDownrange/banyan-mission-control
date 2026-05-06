@@ -2,27 +2,82 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { checkPermission } from '@/lib/permissions';
+import { hawaiiNow } from '@/lib/hawaii-time';
+import { invalidateCache } from '@/app/api/service/route';
+import {
+  getWODriveClient,
+  InvalidWOFolderUrlError,
+  validateWOFolderUrlForWrite,
+} from '@/lib/drive-wo-folder';
 
 const FIELD_SHEET_ID = getBackendSheetId();
 
-// Invalidate the in-process cache after a manual link save
-// (service/route.ts uses module-level folderLinkCache — we can't directly clear it,
-//  but the cache TTL is 10 min so it will refresh soon. The client gets the URL
-//  immediately via optimistic update.)
-
 export async function POST(req: Request) {
+  const { allowed } = await checkPermission(req, 'wo:edit');
+  if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
+
   try {
-    const { woName, folderUrl } = await req.json();
-    if (!woName || !folderUrl) {
-      return NextResponse.json({ error: 'woName and folderUrl required' }, { status: 400 });
+    const { woId, woName, folderUrl } = await req.json();
+    if ((!woId && !woName) || !folderUrl) {
+      return NextResponse.json({ error: 'woId or woName, and folderUrl required' }, { status: 400 });
     }
 
-    // Extract folder ID from Google Drive URL (25+ char ID segment)
-    const match = folderUrl.match(/[-\w]{25,}/);
-    const folderId = match ? match[0] : '';
+    let validFolder;
+    try {
+      validFolder = await validateWOFolderUrlForWrite(getWODriveClient(), folderUrl);
+    } catch (err) {
+      if (err instanceof InvalidWOFolderUrlError) {
+        return NextResponse.json(
+          { error: err.message, classification: err.classification },
+          { status: 400 },
+        );
+      }
+      throw err;
+    }
+
+    const canonicalFolderUrl = validFolder.folderUrl;
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
+
+    const serviceRowsRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: FIELD_SHEET_ID,
+      range: 'Service_Work_Orders!A2:AB5000',
+    });
+    const serviceRows = (serviceRowsRes.data.values || []) as string[][];
+    const normalizedWoId = String(woId || '').trim();
+    const normalizedWoName = String(woName || '').toLowerCase().trim();
+    const serviceRowIdx = serviceRows.findIndex(row => {
+      const rowWoId = String(row[0] || '').trim();
+      const rowWoNumber = String(row[1] || '').trim();
+      const rowName = String(row[2] || '').toLowerCase().trim();
+      if (normalizedWoId) {
+        return rowWoId === normalizedWoId ||
+          rowWoNumber === normalizedWoId ||
+          rowWoId === `WO-${normalizedWoId}`;
+      }
+      return rowName === normalizedWoName;
+    });
+
+    if (serviceRowIdx < 0) {
+      return NextResponse.json({ error: `Work order not found: ${woId || woName}` }, { status: 404 });
+    }
+
+    const serviceRow = serviceRows[serviceRowIdx] || [];
+    const serviceRowNumber = serviceRowIdx + 2;
+    const displayName = String(woName || serviceRow[2] || serviceRow[0] || normalizedWoId).trim();
+
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: FIELD_SHEET_ID,
+      requestBody: {
+        valueInputOption: 'RAW',
+        data: [
+          { range: `Service_Work_Orders!X${serviceRowNumber}`, values: [[canonicalFolderUrl]] },
+          { range: `Service_Work_Orders!AB${serviceRowNumber}`, values: [[hawaiiNow()]] },
+        ],
+      },
+    });
 
     // Read existing rows to avoid duplicates
     const existing = await sheets.spreadsheets.values.get({
@@ -36,7 +91,7 @@ export async function POST(req: Request) {
     const urlIdx  = headers.findIndex((h: string) => h === 'folder_url');
     const srcIdx  = headers.findIndex((h: string) => h === 'source');
 
-    const normalizedName = woName.toLowerCase().trim();
+    const normalizedName = displayName.toLowerCase().trim();
     const existingRowIdx = rows.slice(1).findIndex((r: string[]) =>
       (r[nameIdx] || '').toLowerCase().trim() === normalizedName && r[srcIdx] === 'manual'
     );
@@ -44,10 +99,10 @@ export async function POST(req: Request) {
     if (existingRowIdx >= 0) {
       // Update existing manual link (row is 1-indexed, +1 for header row)
       const rowNum = existingRowIdx + 2;
-      const updateRow: string[] = [];
-      if (nameIdx >= 0) updateRow[nameIdx] = woName;
-      if (idIdx   >= 0) updateRow[idIdx]   = folderId;
-      if (urlIdx  >= 0) updateRow[urlIdx]  = folderUrl;
+      const updateRow: string[] = new Array(headers.length || 4).fill('');
+      if (nameIdx >= 0) updateRow[nameIdx] = displayName;
+      if (idIdx   >= 0) updateRow[idIdx]   = validFolder.folderId;
+      if (urlIdx  >= 0) updateRow[urlIdx]  = canonicalFolderUrl;
       if (srcIdx  >= 0) updateRow[srcIdx]  = 'manual';
 
       await sheets.spreadsheets.values.update({
@@ -59,9 +114,9 @@ export async function POST(req: Request) {
     } else {
       // Append new row: [folder_name, folder_id, folder_url, source]
       const newRow = ['', '', '', ''];
-      if (nameIdx >= 0) newRow[nameIdx] = woName;
-      if (idIdx   >= 0) newRow[idIdx]   = folderId;
-      if (urlIdx  >= 0) newRow[urlIdx]  = folderUrl;
+      if (nameIdx >= 0) newRow[nameIdx] = displayName;
+      if (idIdx   >= 0) newRow[idIdx]   = validFolder.folderId;
+      if (urlIdx  >= 0) newRow[urlIdx]  = canonicalFolderUrl;
       if (srcIdx  >= 0) newRow[srcIdx]  = 'manual';
 
       await sheets.spreadsheets.values.append({
@@ -72,7 +127,15 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ ok: true });
+    invalidateCache();
+
+    return NextResponse.json({
+      ok: true,
+      folderId: validFolder.folderId,
+      folderUrl: canonicalFolderUrl,
+      serviceWorkOrderRow: serviceRowNumber,
+      classification: validFolder.classification,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg }, { status: 500 });

@@ -334,18 +334,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   async function handleLinkFolder() {
     if (!linkFolderInput || !wo) return;
     setLinkFolderSaving(true);
+    setSaveError('');
     try {
-      await fetch('/api/service/folder-link', {
+      const res = await fetch('/api/service/folder-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ woName: wo.name, folderUrl: linkFolderInput }),
+        body: JSON.stringify({ woId: wo.id, woName: wo.name, folderUrl: linkFolderInput }),
       });
-      setLinkedFolderUrl(linkFolderInput);
-      onFolderLinked?.(wo.id, linkFolderInput);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Failed to save folder link.');
+      const savedFolderUrl = json?.folderUrl || linkFolderInput;
+      setLinkedFolderUrl(savedFolderUrl);
+      onFolderLinked?.(wo.id, savedFolderUrl);
       setLinkingFolder(false);
       setLinkFolderInput('');
-    } catch {
-      // swallow - not critical
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save folder link.');
     } finally {
       setLinkFolderSaving(false);
     }

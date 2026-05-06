@@ -16,6 +16,7 @@ import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { emitMCEvent } from '@/lib/events';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { InvalidWOFolderUrlError, validateWOFolderUrlForWrite } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -41,11 +42,6 @@ function mimeAllowed(mime: string): boolean {
 function extBlocked(filename: string): boolean {
   const lower = filename.toLowerCase();
   return BLOCKED_EXTS.some(ext => lower.endsWith(ext));
-}
-
-function extractFolderId(url: string): string | null {
-  const m = url.match(/\/folders\/([^/?&#]+)/);
-  return m ? m[1] : null;
 }
 
 async function resolveSubfolder(
@@ -123,14 +119,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ woId: s
       }, { status: 400 });
     }
 
-    const woFolderId = extractFolderId(folderUrl);
-    if (!woFolderId) {
-      return NextResponse.json({ ok: false, error: 'Could not parse Drive folder ID from folder URL.' }, { status: 400 });
+    let validFolder;
+    try {
+      validFolder = await validateWOFolderUrlForWrite(drive, folderUrl);
+    } catch (err) {
+      if (err instanceof InvalidWOFolderUrlError) {
+        return NextResponse.json(
+          { ok: false, error: err.message, classification: err.classification },
+          { status: 400 },
+        );
+      }
+      throw err;
     }
 
     // MIME routing: images → Photos, everything else → Correspondence
     const subfolderName = file.type.startsWith('image/') ? 'Photos' : 'Correspondence';
-    const targetFolderId = await resolveSubfolder(drive, subfolderName, woFolderId);
+    const targetFolderId = await resolveSubfolder(drive, subfolderName, validFolder.folderId);
 
     // Upload file
     const bytes = await file.arrayBuffer();

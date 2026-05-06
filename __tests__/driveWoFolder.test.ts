@@ -13,11 +13,13 @@ jest.mock('googleapis', () => ({
 
 import {
   BANYAN_DRIVE_ID,
+  InvalidWOFolderUrlError,
   STANDARD_SUBFOLDERS,
   classifyWOFolder,
   createWOFolderStructure,
   ensureStandardSubfolders,
   extractFolderIdFromUrl,
+  validateWOFolderUrlForWrite,
 } from '@/lib/drive-wo-folder';
 
 type DriveMocks = {
@@ -289,6 +291,84 @@ describe('classifyWOFolder', () => {
       ]));
       expect(c.missingSubfolders).not.toContain('Photos');
     }
+  });
+});
+
+describe('validateWOFolderUrlForWrite', () => {
+  it('accepts a Banyan shared-drive folder URL', async () => {
+    const m = buildDriveMocks({
+      getImpl: () => Promise.resolve({
+        data: {
+          id: 'wo-folder',
+          name: 'WO-26-1234 — Customer',
+          driveId: BANYAN_DRIVE_ID,
+          trashed: false,
+          webViewLink: 'https://drive.google.com/drive/folders/wo-folder-id-12345678901',
+        },
+      }),
+      listImpl: () => Promise.resolve({
+        data: { files: STANDARD_SUBFOLDERS.map((name, i) => ({ id: `sub-${i}`, name })) },
+      }),
+    });
+
+    const result = await validateWOFolderUrlForWrite(m.drive as any, 'https://drive.google.com/drive/folders/wo-folder-id-12345678901');
+
+    expect(result.folderId).toBe('wo-folder-id-12345678901');
+    expect(result.folderUrl).toBe('https://drive.google.com/drive/folders/wo-folder-id-12345678901');
+    expect(result.driveId).toBe(BANYAN_DRIVE_ID);
+    expect(result.classification.kind).toBe('shared_drive_canonical');
+  });
+
+  it('rejects My Drive/private folder URLs', async () => {
+    const m = buildDriveMocks({
+      getImpl: () => Promise.resolve({
+        data: {
+          id: 'private-folder',
+          name: 'Jude Augustine',
+          driveId: null,
+          parents: ['root'],
+          owners: [{ emailAddress: 'joey@kulaglass.com' }],
+          trashed: false,
+          webViewLink: 'https://drive.google.com/drive/folders/private-folder-id-12345',
+        },
+      }),
+    });
+
+    await expect(
+      validateWOFolderUrlForWrite(m.drive as any, 'https://drive.google.com/drive/folders/private-folder-id-12345'),
+    ).rejects.toMatchObject({
+      name: 'InvalidWOFolderUrlError',
+      classification: expect.objectContaining({ kind: 'my_drive', driveId: null }),
+    });
+  });
+
+  it('rejects folders in the wrong shared drive', async () => {
+    const m = buildDriveMocks({
+      getImpl: () => Promise.resolve({
+        data: {
+          id: 'wrong-drive-folder',
+          name: 'WO-26-1234 — Customer',
+          driveId: '0WRONGDRIVE',
+          trashed: false,
+          webViewLink: 'https://drive.google.com/drive/folders/wrong-drive-folder-id-12345',
+        },
+      }),
+    });
+
+    await expect(
+      validateWOFolderUrlForWrite(m.drive as any, 'https://drive.google.com/drive/folders/wrong-drive-folder-id-12345'),
+    ).rejects.toMatchObject({
+      classification: expect.objectContaining({ kind: 'my_drive', driveId: '0WRONGDRIVE' }),
+    });
+  });
+
+  it('rejects unparseable folder URLs', async () => {
+    const m = buildDriveMocks();
+
+    await expect(
+      validateWOFolderUrlForWrite(m.drive as any, 'https://example.com/not-drive'),
+    ).rejects.toBeInstanceOf(InvalidWOFolderUrlError);
+    expect(m.get).not.toHaveBeenCalled();
   });
 });
 
