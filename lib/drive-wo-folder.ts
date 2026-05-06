@@ -32,6 +32,16 @@ export class ServiceWOFolderCreationError extends Error {
   }
 }
 
+export class InvalidWOFolderUrlError extends Error {
+  classification: WOFolderClassification;
+
+  constructor(classification: WOFolderClassification) {
+    super(describeWOFolderClassification(classification));
+    this.name = 'InvalidWOFolderUrlError';
+    this.classification = classification;
+  }
+}
+
 export function getWODriveClient(): DriveClient {
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
   return google.drive({ version: 'v3', auth });
@@ -220,6 +230,67 @@ export type WOFolderClassification =
       driveId: string;
       missingSubfolders: string[];
     };
+
+export function describeWOFolderClassification(classification: WOFolderClassification): string {
+  switch (classification.kind) {
+    case 'empty':
+      return 'Drive folder URL is required.';
+    case 'unparseable':
+      return classification.reason;
+    case 'inaccessible':
+      return `Drive folder is not accessible: ${classification.reason}`;
+    case 'trashed':
+      return 'Drive folder is trashed.';
+    case 'my_drive':
+      return classification.driveId
+        ? `Drive folder is in the wrong shared drive (${classification.driveId}).`
+        : 'Drive folder is in My Drive or a private folder, not the Banyan shared drive.';
+    case 'shared_drive_missing_subfolders':
+    case 'shared_drive_canonical':
+      return 'Drive folder is valid.';
+    default: {
+      const exhaustive: never = classification;
+      return `Unsupported Drive folder classification: ${JSON.stringify(exhaustive)}`;
+    }
+  }
+}
+
+export type ValidWOFolderUrl = {
+  folderId: string;
+  folderUrl: string;
+  name?: string;
+  driveId: string;
+  classification: Extract<
+    WOFolderClassification,
+    { kind: 'shared_drive_canonical' | 'shared_drive_missing_subfolders' }
+  >;
+};
+
+/**
+ * Validate a folder URL before writing it to Service_Work_Orders.folder_url or
+ * using it as an upload parent. This rejects My Drive/private folders, wrong
+ * shared drives, trashed/inaccessible folders, and unparseable values.
+ */
+export async function validateWOFolderUrlForWrite(
+  drive: DriveClient,
+  folderUrl: string | null | undefined,
+): Promise<ValidWOFolderUrl> {
+  const classification = await classifyWOFolder(drive, folderUrl);
+  if (
+    classification.kind !== 'shared_drive_canonical' &&
+    classification.kind !== 'shared_drive_missing_subfolders'
+  ) {
+    throw new InvalidWOFolderUrlError(classification);
+  }
+
+  return {
+    folderId: classification.folderId,
+    folderUrl: classification.folderUrl,
+    name: classification.name,
+    driveId: classification.driveId,
+    classification,
+  };
+}
 
 /**
  * Inspect a Drive folder URL and classify its routing health for repair

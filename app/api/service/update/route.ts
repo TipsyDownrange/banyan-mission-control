@@ -10,6 +10,11 @@ import { getBackendSheetId } from '@/lib/backend-config';
 import { upsertCrosswalkEntry } from '@/lib/entityCrosswalk';
 import { buildDispatchRow, validateDispatchRow } from '@/lib/dispatch-schedule';
 import { isCompletionRowComplete } from '@/lib/step-completion';
+import {
+  getWODriveClient,
+  InvalidWOFolderUrlError,
+  validateWOFolderUrlForWrite,
+} from '@/lib/drive-wo-folder';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -217,6 +222,22 @@ export async function PATCH(req: Request) {
       );
     }
 
+    let validatedFolderUrl: string | undefined;
+    if (body.folderUrl !== undefined) {
+      try {
+        const validFolder = await validateWOFolderUrlForWrite(getWODriveClient(), body.folderUrl);
+        validatedFolderUrl = validFolder.folderUrl;
+      } catch (err) {
+        if (err instanceof InvalidWOFolderUrlError) {
+          return NextResponse.json(
+            { error: err.message, classification: err.classification },
+            { status: 400 },
+          );
+        }
+        throw err;
+      }
+    }
+
     // Build field updates
     const updates: { col: string; value: string }[] = [];
 
@@ -330,6 +351,7 @@ export async function PATCH(req: Request) {
       if (bodyKey === 'status') continue; // handled above
       if (body[bodyKey] !== undefined) {
         let val = String(body[bodyKey]);
+        if (bodyKey === 'folderUrl') val = validatedFolderUrl || '';
         // Normalize on write
         if (PHONE_FIELDS.has(bodyKey)) val = normalizePhone(val);
         else if (EMAIL_FIELDS.has(bodyKey)) val = normalizeEmail(val);

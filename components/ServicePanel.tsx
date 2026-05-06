@@ -332,17 +332,15 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   }
 
   async function handleLinkFolder(woId: string, woName: string, folderUrl: string) {
-    // Optimistic update
-    setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], folderUrl } }));
-    try {
-      await fetch('/api/service/folder-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ woName, folderUrl }),
-      });
-    } catch {
-      // Non-fatal: optimistic update stays, will be confirmed on next refresh
-    }
+    const res = await fetch('/api/service/folder-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ woId, woName, folderUrl }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json?.error || 'Failed to link folder.');
+    const savedFolderUrl = json?.folderUrl || folderUrl;
+    setLocalOverrides(prev => ({ ...prev, [woId]: { ...prev[woId], folderUrl: savedFolderUrl } }));
   }
 
   async function handleSave(woId: string, fields: Partial<WorkOrder> & { hoursEstimated?: string; hoursActual?: string; _woName?: string; _island?: string; }) {
