@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { emailSkipReason } from '@/lib/env';
 
 const SHEET_ID = getBackendSheetId();
 const SENDER = 'joey@kulaglass.com';
@@ -77,6 +78,15 @@ export async function POST(req: Request) {
 
   const { kID, project_name, severity, blocking, description, category,
     responsible_party, reported_by, location, photo_count, timestamp } = body;
+
+  // BAN-170: never send field-issue emails from staging or when the
+  // dispatch-email kill switch is on. We still acknowledge the request so
+  // Field App's fire-and-forget caller doesn't treat it as a failure.
+  const skip = emailSkipReason();
+  if (skip) {
+    console.log('[notify/field-issue] skipped (staging/kill-switch):', { reason: skip, kID });
+    return NextResponse.json({ ok: true, skipped: true, skip_reason: skip });
+  }
 
   try {
     // Resolve recipients

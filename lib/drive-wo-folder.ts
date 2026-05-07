@@ -52,12 +52,14 @@ export class StagingDriveFolderConfigError extends Error {
 }
 
 /**
- * Resolve the staging WO parent folder id from STAGING_DRIVE_FOLDER_ID.
+ * Resolve the staging Drive parent folder id from STAGING_DRIVE_FOLDER_ID.
  * Throws StagingDriveFolderConfigError if the env var is missing or not a
  * plausible Drive folder id. Only called when isStaging() is true; production
- * never reaches this path.
+ * never reaches this path. Used for any Mission Control Drive write that
+ * must be fenced inside the staging yard (WO folders, estimating uploads,
+ * proposal PDFs, etc.).
  */
-export function resolveStagingWOParentId(): string {
+export function resolveStagingDriveParentId(): string {
   const raw = String(process.env[STAGING_DRIVE_FOLDER_ID_ENV] || '').trim();
   if (!raw) {
     throw new StagingDriveFolderConfigError(
@@ -71,6 +73,9 @@ export function resolveStagingWOParentId(): string {
   }
   return raw;
 }
+
+// Back-compat alias kept for the WO-folder caller in createWOFolderStructure.
+export const resolveStagingWOParentId = resolveStagingDriveParentId;
 
 export class InvalidWOFolderUrlError extends Error {
   classification: WOFolderClassification;

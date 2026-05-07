@@ -12,6 +12,8 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { emitMCEvent } from '@/lib/events';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { emailSkipReason, isStaging, shouldSkipEmailSend } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 const WO_COL = { wo_id: 0, wo_number: 1, name: 2, description: 3, status: 4, island: 5, area: 6, address: 7, contact_person: 8, assigned_to: 9, contact_phone: 10, contact_email: 11, customer_name: 12 };
@@ -56,7 +58,18 @@ async function uploadPDFToDrive(
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
     const drive = google.drive({ version: 'v3', auth });
 
-    let parentId = BANYAN_DRIVE_ID;
+    // BAN-170: in staging, never default to BANYAN_DRIVE_ID. If we cannot
+    // locate the staging-rooted WO folder, we keep the staging yard as the
+    // parent so the PDF stays inside 00_STAGING_TEST and out of production.
+    // resolveStagingDriveParentId throws on missing/invalid env, which we
+    // surface as a Drive-write failure (returns null) rather than silently
+    // routing to production.
+    let parentId: string;
+    if (isStaging()) {
+      parentId = resolveStagingDriveParentId();
+    } else {
+      parentId = BANYAN_DRIVE_ID;
+    }
 
     if (woId) {
       const woSearch = await drive.files.list({
@@ -140,7 +153,15 @@ async function emailCustomer(params: {
   filename: string;
   senderEmail?: string;
   senderName?: string;
-}): Promise<{ sent: boolean; messageId: string; threadId: string }> {
+}): Promise<{ sent: boolean; messageId: string; threadId: string; skipped?: boolean; skip_reason?: string }> {
+  // BAN-170: never deliver proposal emails from staging or when the dispatch-
+  // email kill switch is on. We still produce the PDF and Drive link, just
+  // skip the Gmail send so customers don't receive a staging proposal.
+  const skip = emailSkipReason();
+  if (skip) {
+    console.log('[Email] skipped (staging/kill-switch):', { reason: skip, to: params.to });
+    return { sent: false, messageId: '', threadId: '', skipped: true, skip_reason: skip };
+  }
   try {
     const senderEmail = (params.senderEmail && params.senderEmail.endsWith('@kulaglass.com'))
       ? params.senderEmail
@@ -266,6 +287,8 @@ export async function POST(req: Request) {
     );
 
     let emailSent = false;
+    let emailSkipped = false;
+    let emailSkipReasonOut: string | null = null;
     const recipientEmail = (emailTo as string | undefined) || pdfData.customer_email;
     if (sendEmail && recipientEmail) {
       const finalSubject = (emailSubject as string | undefined)
@@ -289,7 +312,7 @@ export async function POST(req: Request) {
           `Kula Glass Company Inc.`,
           `289 Pakana St. Wailuku HI 96793`,
         ].join('\n');
-      const { sent, messageId, threadId } = await emailCustomer({
+      const { sent, messageId, threadId, skipped, skip_reason } = await emailCustomer({
         to: recipientEmail,
         subject: finalSubject,
         body: finalBody,
@@ -299,6 +322,8 @@ export async function POST(req: Request) {
         senderName: pdfData.prepared_by?.name,
       });
       emailSent = sent;
+      emailSkipped = !!skipped;
+      emailSkipReasonOut = skip_reason || null;
       if (sent) {
         try {
           await emitMCEvent({
@@ -335,6 +360,7 @@ export async function POST(req: Request) {
       filename,
       drive_link: driveLink,
       email_sent: emailSent,
+      ...(emailSkipped ? { email_skipped: true, email_skip_reason: emailSkipReasonOut } : {}),
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
