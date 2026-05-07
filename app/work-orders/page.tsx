@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import ServicePanel from '@/components/ServicePanel';
 
 export default function WorkOrdersPage() {
-  redirect('/');
+  return <ServicePanel />;
 }

@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation';
+import ServicePanel from '@/components/ServicePanel';
 
 export default async function WorkOrderDetailRoute({ params }: { params: Promise<{ kID: string }> }) {
   const { kID } = await params;
-  redirect(`/?wo=${encodeURIComponent(kID)}`);
+  return <ServicePanel initialWoId={kID} />;
 }
