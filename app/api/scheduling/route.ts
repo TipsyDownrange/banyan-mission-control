@@ -7,8 +7,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getManpowerScheduleSheetId } from '@/lib/env';
 
-const SHEET_ID = '1099MZ_cGYqNbMKcvoKnwNp0uXnugQPY-jPOpmsJW_wQ';
+const SHEET_ID = getManpowerScheduleSheetId();
 
 export type WeekData = {
   week_ending: string;    // e.g. "WE 04/05/25"

@@ -19,6 +19,8 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { generateTMTicketPDF } from '@/lib/pdf-tm-ticket';
 import type { TMTicketData } from '@/lib/pdf-tm-ticket';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'TM_Tickets';
@@ -72,14 +74,16 @@ async function uploadPDFtoDrive(pdfBuffer: Buffer, filename: string, kID: string
     const auth = getAuth(false);
     const drive = google.drive({ version: 'v3', auth });
     const { Readable } = await import('stream');
-    // Find project folder
-    const search = await drive.files.list({
-      q: `name contains '${kID}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-      driveId: DRIVE_ROOT, corpora: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true, fields: 'files(id,name)',
-    });
-    let parentId = DRIVE_ROOT;
-    if (search.data.files && search.data.files.length > 0) {
-      parentId = search.data.files[0].id!;
+    let parentId = isStaging() ? resolveStagingDriveParentId() : DRIVE_ROOT;
+    if (!isStaging()) {
+      // Find project folder
+      const search = await drive.files.list({
+        q: `name contains '${kID}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+        driveId: DRIVE_ROOT, corpora: 'drive', supportsAllDrives: true, includeItemsFromAllDrives: true, fields: 'files(id,name)',
+      });
+      if (search.data.files && search.data.files.length > 0) {
+        parentId = search.data.files[0].id!;
+      }
     }
     const result = await drive.files.create({
       requestBody: { name: filename, parents: [parentId], mimeType: 'application/pdf' },
@@ -89,6 +93,7 @@ async function uploadPDFtoDrive(pdfBuffer: Buffer, filename: string, kID: string
     return result.data.id ?? null;
   } catch (e) {
     console.error('[TM Tickets] Drive upload failed:', e);
+    if (isStaging()) throw e;
     return null;
   }
 }

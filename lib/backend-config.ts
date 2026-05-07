@@ -3,6 +3,8 @@
 // staging  backend Sheet ends: ...nZJ90
 // Values must come from Vercel env vars, not code. Do not add fallbacks here.
 // Reference only — not used as runtime fallback.
+import { isStaging } from './env';
+
 export const PRODUCTION_BACKEND_SHEET_ID = '137IKVjyiIAAMmQmt84SgrJxpTcQ_JIh53PCvZiOtUZU';
 export const STAGING_BACKEND_SHEET_ID    = '1DZRiKveSJTbCHxBXdWgl_ZqQCaXOjnv02tFZNmnZJ90';
 
@@ -17,6 +19,15 @@ export function getBackendSheetId(): string {
         'Production must use the production backend Sheet (ends tUZU).',
         'staging must use the staging backend Sheet (ends nZJ90).',
         'Do not rely on Preview for authenticated Mission Control verification.',
+      ].join(' ')
+    );
+  }
+
+  if (isStaging() && sheetId === PRODUCTION_BACKEND_SHEET_ID) {
+    throw new Error(
+      [
+        'BACKEND_SHEET_ID is set to the production backend Sheet while VERCEL_TARGET_ENV=staging.',
+        'Refusing to run Mission Control staging against production backend data.',
       ].join(' ')
     );
   }

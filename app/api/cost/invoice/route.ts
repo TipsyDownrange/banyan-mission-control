@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { getCostInvoiceSheetId } from '@/lib/env';
 
-const SHEET_ID = '1EutKs3k0Cp3UwmpmAEDV8FaSSeIklb7Lk7wufRq5YdI';
+const SHEET_ID = getCostInvoiceSheetId();
 
 export async function POST(req: Request) {
   const session = await getServerSession();

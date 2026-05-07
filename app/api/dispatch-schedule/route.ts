@@ -18,6 +18,7 @@ import { checkPermission } from '@/lib/permissions';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { buildDispatchRow } from '@/lib/dispatch-schedule';
 import { DISPATCH_SCHEDULE_SCHEMA, DISPATCH_COL_COUNT, DISPATCH_COL_IDX } from '@/lib/schemas';
+import { emailSkipReason, getFieldAppBaseUrl, isStaging } from '@/lib/env';
 
 const SHEET_ID = getBackendSheetId();
 const COLS = DISPATCH_SCHEDULE_SCHEMA;
@@ -114,6 +115,8 @@ export async function PATCH(req: Request) {
   if (!allowed) return NextResponse.json({ error: 'Forbidden: dispatch:assign required' }, { status: 403 });
 
   try {
+    if (isStaging()) getFieldAppBaseUrl();
+
     const body = await req.json();
     const { slot_id, assigned_crew, status, ...updates } = body;
     if (!slot_id) return NextResponse.json({ error: 'slot_id required' }, { status: 400 });
@@ -160,8 +163,8 @@ export async function PATCH(req: Request) {
     });
 
     // Send email notifications to newly assigned crew (non-blocking)
-    // Set DISABLE_DISPATCH_EMAILS=true in Vercel env to suppress during testing
-    if (process.env.DISABLE_DISPATCH_EMAILS !== 'true' && assigned_crew && assigned_crew.length > 0) {
+    const skipEmail = emailSkipReason();
+    if (!skipEmail && assigned_crew && assigned_crew.length > 0) {
       try {
         const slot = rowToSlot(updated);
         const crewNames: string[] = Array.isArray(assigned_crew) ? assigned_crew : assigned_crew.split(', ').filter(Boolean);
@@ -210,7 +213,7 @@ export async function PATCH(req: Request) {
               `Full crew assigned: ${crewNames.join(', ')}`,
               '',
               `View your schedule in the BanyanOS Field App:`,
-              `https://banyan-field-app-525p.vercel.app/schedule`,
+              `${getFieldAppBaseUrl()}/schedule`,
               '',
               `— Kula Glass Company`,
             ].filter(l => l !== null).join('\n');

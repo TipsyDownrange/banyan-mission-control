@@ -16,7 +16,14 @@ import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { emitMCEvent } from '@/lib/events';
 import { getBackendSheetId } from '@/lib/backend-config';
-import { InvalidWOFolderUrlError, validateWOFolderUrlForWrite } from '@/lib/drive-wo-folder';
+import {
+  InvalidWOFolderUrlError,
+  assertDriveFolderDescendantOf,
+  extractFolderIdFromUrl,
+  resolveStagingDriveParentId,
+  validateWOFolderUrlForWrite,
+} from '@/lib/drive-wo-folder';
+import { isStaging } from '@/lib/env';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -119,9 +126,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ woId: s
       }, { status: 400 });
     }
 
-    let validFolder;
+    let validFolder: { folderId: string };
     try {
-      validFolder = await validateWOFolderUrlForWrite(drive, folderUrl);
+      if (isStaging()) {
+        const folderId = extractFolderIdFromUrl(folderUrl);
+        if (!folderId) {
+          throw new InvalidWOFolderUrlError({
+            kind: 'unparseable',
+            folderUrl,
+            reason: 'Could not parse a Drive folder ID from folder_url',
+          });
+        }
+        const stagingParentId = resolveStagingDriveParentId();
+        await assertDriveFolderDescendantOf(drive, folderId, stagingParentId);
+        validFolder = { folderId };
+      } else {
+        validFolder = await validateWOFolderUrlForWrite(drive, folderUrl);
+      }
     } catch (err) {
       if (err instanceof InvalidWOFolderUrlError) {
         return NextResponse.json(
@@ -154,11 +175,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ woId: s
       fields: 'id,webViewLink,name',
     });
 
-    await drive.permissions.create({
-      fileId: uploaded.data.id!,
-      supportsAllDrives: true,
-      requestBody: { role: 'reader', type: 'anyone' },
-    });
+    if (!isStaging()) {
+      await drive.permissions.create({
+        fileId: uploaded.data.id!,
+        supportsAllDrives: true,
+        requestBody: { role: 'reader', type: 'anyone' },
+      });
+    }
 
     const driveUrl = uploaded.data.webViewLink || `https://drive.google.com/file/d/${uploaded.data.id}/view`;
 

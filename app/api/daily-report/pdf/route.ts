@@ -10,6 +10,8 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { generateDailyReportPDF, type DailyReportPDFData } from '@/lib/pdf-daily-report';
 import { formatAttributionCaption, type PhotoEntry } from '@/lib/photo-attribution';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -83,10 +85,15 @@ function getDriveClient() {
 
 async function findOrCreateDriveFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
   const safe = name.replace(/'/g, "\\'");
-  const res = await drive.files.list({
+  const listParams: Record<string, unknown> = {
     q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-    supportsAllDrives: true, includeItemsFromAllDrives: true, corpora: 'drive', driveId: BANYAN_DRIVE_ID, fields: 'files(id)',
-  });
+    supportsAllDrives: true, includeItemsFromAllDrives: true, fields: 'files(id)',
+  };
+  if (!isStaging()) {
+    listParams.corpora = 'drive';
+    listParams.driveId = BANYAN_DRIVE_ID;
+  }
+  const res = await drive.files.list(listParams);
   if (res.data.files?.length) return res.data.files[0].id!;
   const created = await drive.files.create({
     requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
@@ -277,7 +284,9 @@ export async function POST(req: Request) {
       const dateStr = data.report_date.replace(/-/g, '');
       const filename = `DR-${dateStr.slice(2)}-${kid}.pdf`;
       const folderUrl = swoRow?.[SWO.folder_url] || '';
-      const woFolderId = folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
+      const woFolderId = isStaging()
+        ? resolveStagingDriveParentId()
+        : folderUrl.match(/folders\/([^/?]+)/)?.[1] || null;
       console.log('[daily-report/pdf] Drive write: kid=', kid, 'swoRow found:', !!swoRow, 'folderUrl=', folderUrl.slice(0,60), 'woFolderId=', woFolderId);
       if (woFolderId) {
         driveUrl = await uploadToDrive(pdfBuffer, filename, woFolderId);

@@ -110,6 +110,34 @@ function setupSheetsMock(options: {
 
 describe('dispatch schedule — BAN-134 canonical A:S preservation', () => {
   describe('PATCH', () => {
+    it('staging fails closed before sheet update when FA_BASE_URL is missing', async () => {
+      const prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+      const prevFaBaseUrl = process.env.FA_BASE_URL;
+      process.env.VERCEL_TARGET_ENV = 'staging';
+      delete process.env.FA_BASE_URL;
+      try {
+        mockCheckPermission.mockResolvedValue({ allowed: true });
+        const { valuesUpdate } = setupSheetsMock({ existingDispatchRows: [SLOT_WITH_FOCUS_STEPS] });
+        const { PATCH } = await import('@/app/api/dispatch-schedule/route');
+
+        const res = await PATCH(new Request('https://example.test/api/dispatch-schedule', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slot_id: 'SLOT-20260501-001', assigned_crew: ['Alice'] }),
+        }));
+        const json = await res.json();
+
+        expect(res.status).toBe(500);
+        expect(json.error).toMatch(/FA_BASE_URL/);
+        expect(valuesUpdate).not.toHaveBeenCalled();
+      } finally {
+        if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+        else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+        if (prevFaBaseUrl === undefined) delete process.env.FA_BASE_URL;
+        else process.env.FA_BASE_URL = prevFaBaseUrl;
+      }
+    });
+
     it('preserves columns P:S (step_ids, hours_actual, focus_step_ids) when only legacy fields are sent', async () => {
       mockCheckPermission.mockResolvedValue({ allowed: true });
       const { valuesUpdate } = setupSheetsMock({ existingDispatchRows: [SLOT_WITH_FOCUS_STEPS] });

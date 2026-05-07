@@ -6,8 +6,9 @@
 
 import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
+import { getBidLogSheetId } from '@/lib/env';
 
-const BID_LOG_ID = '6073963369156484'; // Kula Glass Bid Log
+const BID_LOG_ID = getBidLogSheetId(); // Kula Glass Bid Log in production; staging env must override.
 
 // Column IDs from the bid log
 const COL = {
