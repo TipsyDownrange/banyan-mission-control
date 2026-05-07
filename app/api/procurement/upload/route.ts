@@ -13,6 +13,8 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE = '0AKSVpf3AnH7CUk9PVA'; // BanyanOS Drive root
@@ -36,10 +38,11 @@ export async function POST(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']);
     const drive = google.drive({ version: 'v3', auth });
     const sheets = google.sheets({ version: 'v4', auth });
+    const parentRootId = isStaging() ? resolveStagingDriveParentId() : BANYAN_DRIVE;
 
     // Find or create a Vendor_Quotes subfolder in BanyanOS Drive
     const folderSearch = await drive.files.list({
-      q: `name='Vendor_Quotes' and '${BANYAN_DRIVE}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      q: `name='Vendor_Quotes' and '${parentRootId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       supportsAllDrives: true, includeItemsFromAllDrives: true, fields: 'files(id)',
     });
     let folderId: string;
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
     } else {
       const f = await drive.files.create({
         supportsAllDrives: true,
-        requestBody: { name: 'Vendor_Quotes', mimeType: 'application/vnd.google-apps.folder', parents: [BANYAN_DRIVE] },
+        requestBody: { name: 'Vendor_Quotes', mimeType: 'application/vnd.google-apps.folder', parents: [parentRootId] },
         fields: 'id',
       });
       folderId = f.data.id!;
@@ -67,12 +70,15 @@ export async function POST(req: Request) {
       fields: 'id,webViewLink,name',
     });
 
-    // Make it readable by anyone with the link
-    await drive.permissions.create({
-      fileId: uploaded.data.id!,
-      supportsAllDrives: true,
-      requestBody: { role: 'reader', type: 'anyone' },
-    });
+    // Make production uploads readable by anyone with the link. Staging must
+    // never create public anyone-with-link permissions.
+    if (!isStaging()) {
+      await drive.permissions.create({
+        fileId: uploaded.data.id!,
+        supportsAllDrives: true,
+        requestBody: { role: 'reader', type: 'anyone' },
+      });
+    }
 
     const fileUrl = uploaded.data.webViewLink || `https://drive.google.com/file/d/${uploaded.data.id}/view`;
     const displayName = file.name;

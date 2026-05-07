@@ -7,8 +7,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
-
-const SHEET_ID = '1099MZ_cGYqNbMKcvoKnwNp0uXnugQPY-jPOpmsJW_wQ';
+import { getManpowerScheduleSheetId } from '@/lib/env';
 
 export type WeekData = {
   week_ending: string;    // e.g. "WE 04/05/25"
@@ -34,6 +33,7 @@ export type IslandForecast = {
 
 export async function GET(req: Request) {
   try {
+    const sheetId = getManpowerScheduleSheetId();
     const { searchParams } = new URL(req.url);
     const weeksAhead = parseInt(searchParams.get('weeks') || '12');
 
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
+      spreadsheetId: sheetId,
       range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:DD200',
     });
 
@@ -177,6 +177,7 @@ export async function GET(req: Request) {
  */
 export async function PATCH(req: Request) {
   try {
+    const sheetId = getManpowerScheduleSheetId();
     const { job_number, date, men } = await req.json();
     if (!job_number || !date || men === undefined) {
       return NextResponse.json({ error: 'job_number, date, and men required' }, { status: 400 });
@@ -187,7 +188,7 @@ export async function PATCH(req: Request) {
 
     // Read the full sheet to find the right row and column
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
+      spreadsheetId: sheetId,
       range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:DD200',
     });
     const rows = res.data.values || [];
@@ -240,7 +241,7 @@ export async function PATCH(req: Request) {
     const cellRef = `${colToLetter(colIndex)}${rowIndex + 1}`;
 
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
+      spreadsheetId: sheetId,
       range: `Manpower Schedule - MAUI/OUTER ISLAND!${cellRef}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [[men === 0 ? '' : String(men)]] },

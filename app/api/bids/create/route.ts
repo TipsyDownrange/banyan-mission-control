@@ -6,8 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
-
-const BID_LOG_ID = '6073963369156484'; // Kula Glass Bid Log
+import { getBidLogSheetId } from '@/lib/env';
 
 // Column IDs from the bid log
 const COL = {
@@ -37,6 +36,7 @@ function nextKID(existingKIDs: string[]): string {
 
 export async function POST(req: Request) {
   try {
+    const bidLogId = getBidLogSheetId(); // Kula Glass Bid Log in production; staging env must override.
     const body = await req.json();
     const {
       project_name,
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     // Get existing rows to generate next EST-kID
     const existing = await fetch(
-      `https://api.smartsheet.com/2.0/sheets/${BID_LOG_ID}?pageSize=200`,
+      `https://api.smartsheet.com/2.0/sheets/${bidLogId}?pageSize=200`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     const sheet = await existing.json() as {
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       },
     ];
 
-    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${BID_LOG_ID}/rows`, {
+    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${bidLogId}/rows`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { isStaging } from '@/lib/env';
 
 const COLORS: Record<string, string> = {
   '1':'#7986cb','2':'#33b679','3':'#8e24aa','4':'#e67c73',
@@ -149,6 +150,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    if (isStaging()) {
+      return NextResponse.json({ ok: false, skipped: true, reason: 'staging_calendar_write_blocked' }, { status: 409 });
+    }
     const body = await req.json();
     const { user = 'sean@kulaglass.com', calendarId = 'primary', title, start, end, location, description, allDay } = body;
 
@@ -178,6 +182,9 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
+    if (isStaging()) {
+      return NextResponse.json({ ok: false, skipped: true, reason: 'staging_calendar_write_blocked' }, { status: 409 });
+    }
     const body = await req.json();
     const { user = 'sean@kulaglass.com', calendarId = 'primary', eventId, title, start, end, location, description } = body;
 
@@ -204,6 +211,9 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    if (isStaging()) {
+      return NextResponse.json({ ok: false, skipped: true, reason: 'staging_calendar_write_blocked' }, { status: 409 });
+    }
     const { searchParams } = new URL(req.url);
     const user = searchParams.get('user') || 'sean@kulaglass.com';
     const calendarId = searchParams.get('calendarId') || 'primary';
