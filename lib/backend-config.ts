@@ -23,11 +23,15 @@ export function getBackendSheetId(): string {
     );
   }
 
+  // BAN-170: fail closed if staging is pointed at the known production backend
+  // Sheet ID. Even if the Vercel env var is misconfigured, refuse to write
+  // production data from a staging deploy.
   if (isStaging() && sheetId === PRODUCTION_BACKEND_SHEET_ID) {
     throw new Error(
       [
-        'BACKEND_SHEET_ID is set to the production backend Sheet while VERCEL_TARGET_ENV=staging.',
-        'Refusing to run Mission Control staging against production backend data.',
+        'BACKEND_SHEET_ID resolves to the production backend Sheet on a staging deploy.',
+        'Refusing to write production data from staging.',
+        'Set BACKEND_SHEET_ID to the staging backend Sheet (ends nZJ90) on banyan-mission-control-staging.',
       ].join(' ')
     );
   }

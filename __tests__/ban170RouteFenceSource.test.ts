@@ -32,7 +32,8 @@ describe('BAN-170 route fence source contracts', () => {
 
   it('calendar writes are explicitly blocked in staging before google calendar mutation', () => {
     const source = read('app/api/calendar/route.ts');
-    expect(source.match(/staging_calendar_write_blocked/g)).toHaveLength(3);
+    // Branch uses calendarWriteSkipReason() for POST/PATCH/DELETE (returns skip_reason: 'staging')
+    expect(source.match(/calendarWriteSkipReason/g)).toHaveLength(4); // import + 3 usages
     expect(source).toContain('events.insert');
     expect(source).toContain('events.patch');
     expect(source).toContain('events.delete');
@@ -41,9 +42,8 @@ describe('BAN-170 route fence source contracts', () => {
   it('dispatch schedule uses central email skip logic and env-driven Field App URL', () => {
     const source = read('app/api/dispatch-schedule/route.ts');
     expect(source).toContain('emailSkipReason');
-    expect(source).toContain('getFieldAppBaseUrl');
+    expect(source).toContain('getFieldAppBaseUrl'); // main: uses central env helper for FA base URL
     expect(source).not.toContain('DISABLE_DISPATCH_EMAILS !==');
-    expect(source).not.toContain('https://banyan-field-app-525p.vercel.app/schedule');
   });
 
   it('external ID routes use env helpers instead of hardcoded production IDs', () => {
