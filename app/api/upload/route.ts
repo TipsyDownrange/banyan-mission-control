@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { isStaging } from '@/lib/env';
+import {
+  StagingDriveFolderConfigError,
+  resolveStagingDriveParentId,
+} from '@/lib/drive-wo-folder';
 
-// Folder IDs for estimating workspace
-const ESTIMATING_ACTIVE = '1-_Vl0OM4AE4pnm_bKKqqIluJr3jk0hTf'; // Estimating/Active Bids
+// Production estimating workspace root. Never used on staging — staging routes
+// every estimating upload under STAGING_DRIVE_FOLDER_ID via the resolver below.
+const ESTIMATING_ACTIVE_PROD = '1-_Vl0OM4AE4pnm_bKKqqIluJr3jk0hTf'; // Estimating/Active Bids
+
+function resolveEstimatingParentFolderId(): string {
+  if (isStaging()) return resolveStagingDriveParentId();
+  return ESTIMATING_ACTIVE_PROD;
+}
 
 const SUBFOLDER_MAP: Record<string, string> = {
   // By file extension / type
@@ -76,9 +87,23 @@ export async function POST(req: NextRequest) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
     const drive = google.drive({ version: 'v3', auth });
 
+    // Resolve the estimating root. In staging this returns
+    // STAGING_DRIVE_FOLDER_ID (or throws StagingDriveFolderConfigError, which
+    // we surface as 502 below). In production this is the canonical
+    // Estimating/Active Bids folder id.
+    let estimatingRootId: string;
+    try {
+      estimatingRootId = resolveEstimatingParentFolderId();
+    } catch (err) {
+      if (err instanceof StagingDriveFolderConfigError) {
+        return NextResponse.json({ error: err.message }, { status: 502 });
+      }
+      throw err;
+    }
+
     // Get or create estimator folder
     const estimatorFirstName = estimator.split(' ')[0];
-    const estimatorFolderId = await getOrCreateFolder(drive, estimatorFirstName, ESTIMATING_ACTIVE);
+    const estimatorFolderId = await getOrCreateFolder(drive, estimatorFirstName, estimatingRootId);
 
     // Get or create bid folder
     const bidFolderName = bidKID && bidName ? `${bidKID} — ${bidName.substring(0, 50)}` : bidName || 'Unknown Bid';

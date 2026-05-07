@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { emailSkipReason } from '@/lib/env';
 
 const SHEET_ID = getBackendSheetId();
 const SENDER = 'joey@kulaglass.com';
@@ -78,6 +79,15 @@ export async function POST(req: Request) {
   const { kID, project_name, impact_type, crew_count, hours_on_site, description,
     directed_by, going_to, gc_signer_name, gc_signer_title, timestamp,
     waiting_for, est_wait, redirect_to } = body;
+
+  // BAN-170: never send crew-impact emails from staging or when the
+  // dispatch-email kill switch is on. Field App fires-and-forgets, so we
+  // 200 with skipped:true rather than 5xx.
+  const skip = emailSkipReason();
+  if (skip) {
+    console.log('[notify/crew-impact] skipped (staging/kill-switch):', { reason: skip, kID });
+    return NextResponse.json({ ok: true, skipped: true, skip_reason: skip });
+  }
 
   try {
     const [woRow, users] = await Promise.all([lookupWO(kID), lookupUsers()]);
