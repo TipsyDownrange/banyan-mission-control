@@ -6,8 +6,38 @@
 
 import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
+import { isStaging } from '@/lib/env';
 
-const BID_LOG_ID = '6073963369156484'; // Kula Glass Bid Log
+// BAN-170: Smartsheet bid log ID is env-driven so a staging deploy cannot
+// append rows to the production Kula Glass Bid Log. Production sets
+// SMARTSHEET_BID_LOG_ID to the prod sheet id; staging must point at a staging
+// Smartsheet target. With no env var configured, staging short-circuits
+// rather than falling back to the production id.
+const PRODUCTION_BID_LOG_ID = '6073963369156484';
+
+function resolveBidLogId(): { ok: true; id: string } | { ok: false; status: number; error: string } {
+  const fromEnv = (process.env.SMARTSHEET_BID_LOG_ID || '').trim();
+  if (isStaging()) {
+    if (!fromEnv) {
+      return {
+        ok: false,
+        status: 502,
+        error: 'SMARTSHEET_BID_LOG_ID is not configured for staging — refusing to write to the production bid log',
+      };
+    }
+    if (fromEnv === PRODUCTION_BID_LOG_ID) {
+      return {
+        ok: false,
+        status: 502,
+        error: 'SMARTSHEET_BID_LOG_ID resolves to the production bid log on a staging deploy — refusing to write',
+      };
+    }
+    return { ok: true, id: fromEnv };
+  }
+  // Production keeps the existing canonical id when SMARTSHEET_BID_LOG_ID is
+  // not yet set on Vercel — preserves legacy behavior unchanged.
+  return { ok: true, id: fromEnv || PRODUCTION_BID_LOG_ID };
+}
 
 // Column IDs from the bid log
 const COL = {
@@ -53,6 +83,12 @@ export async function POST(req: Request) {
     } = body;
 
     if (!project_name) return NextResponse.json({ error: 'project_name required' }, { status: 400 });
+
+    const resolved = resolveBidLogId();
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error, staging: true }, { status: resolved.status });
+    }
+    const BID_LOG_ID = resolved.id;
 
     const token = getSSToken();
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { calendarWriteSkipReason } from '@/lib/env';
 
 const COLORS: Record<string, string> = {
   '1':'#7986cb','2':'#33b679','3':'#8e24aa','4':'#e67c73',
@@ -154,6 +155,14 @@ export async function POST(req: Request) {
 
     if (!title || !start) return NextResponse.json({ error: 'title and start required' }, { status: 400 });
 
+    // BAN-170: never create real calendar events from staging or when the kill
+    // switch is set. Skip *after* validating input so callers still get 400s
+    // for malformed bodies, but *before* any auth/Google call.
+    const skipReason = calendarWriteSkipReason();
+    if (skipReason) {
+      return NextResponse.json({ ok: true, skipped: true, skip_reason: skipReason });
+    }
+
     const auth = getGoogleAuth([CAL_SCOPE], user);
     const cal = google.calendar({ version: 'v3', auth });
 
@@ -183,6 +192,12 @@ export async function PATCH(req: Request) {
 
     if (!eventId) return NextResponse.json({ error: 'eventId required' }, { status: 400 });
 
+    // BAN-170: never patch real calendar events from staging.
+    const skipReason = calendarWriteSkipReason();
+    if (skipReason) {
+      return NextResponse.json({ ok: true, skipped: true, skip_reason: skipReason });
+    }
+
     const auth = getGoogleAuth([CAL_SCOPE], user);
     const cal = google.calendar({ version: 'v3', auth });
 
@@ -210,6 +225,12 @@ export async function DELETE(req: Request) {
     const eventId = searchParams.get('eventId') || '';
 
     if (!eventId) return NextResponse.json({ error: 'eventId required' }, { status: 400 });
+
+    // BAN-170: never delete real calendar events from staging.
+    const skipReason = calendarWriteSkipReason();
+    if (skipReason) {
+      return NextResponse.json({ ok: true, skipped: true, skip_reason: skipReason });
+    }
 
     const auth = getGoogleAuth([CAL_SCOPE], user);
     const cal = google.calendar({ version: 'v3', auth });

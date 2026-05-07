@@ -18,10 +18,19 @@ import { checkPermission } from '@/lib/permissions';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { buildDispatchRow } from '@/lib/dispatch-schedule';
 import { DISPATCH_SCHEDULE_SCHEMA, DISPATCH_COL_COUNT, DISPATCH_COL_IDX } from '@/lib/schemas';
+import { emailSkipReason } from '@/lib/env';
 
 const SHEET_ID = getBackendSheetId();
 const COLS = DISPATCH_SCHEDULE_SCHEMA;
 const LAST_MODIFIED_COL = DISPATCH_COL_IDX.last_modified; // 17 / R
+
+// BAN-170: Field App schedule URL must be env-driven so staging cannot embed
+// the production FA URL into crew email bodies. Production sets
+// FA_SCHEDULE_URL on banyan-mission-control; staging sets it to the staging
+// FA URL (or leaves it unset, in which case the link line is omitted).
+function getFaScheduleUrl(): string {
+  return (process.env.FA_SCHEDULE_URL || '').trim();
+}
 
 function rowToSlot(row: string[]) {
   const s: Record<string, string> = {};
@@ -159,9 +168,11 @@ export async function PATCH(req: Request) {
       valueInputOption: 'USER_ENTERED', requestBody: { values: [updated] },
     });
 
-    // Send email notifications to newly assigned crew (non-blocking)
-    // Set DISABLE_DISPATCH_EMAILS=true in Vercel env to suppress during testing
-    if (process.env.DISABLE_DISPATCH_EMAILS !== 'true' && assigned_crew && assigned_crew.length > 0) {
+    // BAN-170: route the crew assignment notification through the unified
+    // emailSkipReason() helper so staging and the DISABLE_DISPATCH_EMAILS kill
+    // switch suppress the Gmail send via the same path the rest of MC uses.
+    const dispatchEmailSkipReason = emailSkipReason();
+    if (dispatchEmailSkipReason === null && assigned_crew && assigned_crew.length > 0) {
       try {
         const slot = rowToSlot(updated);
         const crewNames: string[] = Array.isArray(assigned_crew) ? assigned_crew : assigned_crew.split(', ').filter(Boolean);
@@ -196,6 +207,10 @@ export async function PATCH(req: Request) {
             if (!email) continue;
 
             const subject = `You're scheduled: ${slot.project_name} — ${dateFormatted}`;
+            const faScheduleUrl = getFaScheduleUrl();
+            const linkLines = faScheduleUrl
+              ? [`View your schedule in the BanyanOS Field App:`, faScheduleUrl, '']
+              : [];
             const body = [
               `Hi ${name.split(' ')[0]},`,
               '',
@@ -209,9 +224,7 @@ export async function PATCH(req: Request) {
               '',
               `Full crew assigned: ${crewNames.join(', ')}`,
               '',
-              `View your schedule in the BanyanOS Field App:`,
-              `https://banyan-field-app-525p.vercel.app/schedule`,
-              '',
+              ...linkLines,
               `— Kula Glass Company`,
             ].filter(l => l !== null).join('\n');
 
