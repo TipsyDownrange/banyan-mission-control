@@ -1,4 +1,6 @@
 import React from 'react';
+import { readFileSync } from 'fs';
+import path from 'path';
 
 jest.mock('@/components/ServicePanel', () => ({
   __esModule: true,
@@ -26,5 +28,14 @@ describe('Work Order routes', () => {
 
     expect(result.type).toBe(ServicePanel);
     expect(result.props).toEqual({ initialWoId: 'WO-STAGE-0001' });
+  });
+
+  it('keeps Work Order card open/close on local panel state without App Router replace', () => {
+    const source = readFileSync(path.join(process.cwd(), 'components/ServicePanel.tsx'), 'utf8');
+
+    expect(source).not.toContain('useRouter');
+    expect(source).not.toContain('router.replace');
+    expect(source).toContain("window.history.replaceState(null, '', nextPath)");
+    expect(source).toContain("window.history.replaceState(null, '', isStandaloneWorkOrdersRoute ? '/work-orders' : '/')");
   });
 });

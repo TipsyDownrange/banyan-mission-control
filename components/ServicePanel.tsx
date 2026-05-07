@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar';
 import ServiceIntake from '@/components/ServiceIntake';
@@ -199,12 +199,11 @@ const READ_ONLY_BANNER = (
 
 export default function ServicePanel({ readOnly = false, focusWoId, initialWoId = null }: { readOnly?: boolean; focusWoId?: string | null; initialWoId?: string | null }) {
   const { data: session } = useSession();
-  const router = useRouter();
   const pathname = usePathname();
   // Capture whether this panel mounted under the standalone /work-orders route.
-  // openDetail() rewrites the URL to /work-orders/{id} via replaceState, which
-  // updates `pathname` and would otherwise make closeDetail() route us through
-  // the /work-orders redirect → '/' → Today (BAN: WO close-panel friction).
+  // Card clicks must open the local detail panel without triggering an App Router
+  // transition into the dynamic route, which can render the route-level error
+  // boundary before the already-loaded WO can be shown.
   const initialPathnameRef = useRef(pathname);
   const isStandaloneWorkOrdersRoute = initialPathnameRef.current.startsWith('/work-orders');
   const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
@@ -427,21 +426,13 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   const openDetail = useCallback((wo: WorkOrder) => {
     setDetailWO(wo);
     const nextPath = `/work-orders/${encodeURIComponent(wo.id)}`;
-    if (isStandaloneWorkOrdersRoute) {
-      router.replace(nextPath);
-      return;
-    }
     window.history.replaceState(null, '', nextPath);
-  }, [isStandaloneWorkOrdersRoute, router]);
+  }, []);
 
   const closeDetail = useCallback(() => {
     setDetailWO(null);
-    if (isStandaloneWorkOrdersRoute) {
-      router.replace('/work-orders');
-      return;
-    }
-    window.history.replaceState(null, '', '/');
-  }, [isStandaloneWorkOrdersRoute, router]);
+    window.history.replaceState(null, '', isStandaloneWorkOrdersRoute ? '/work-orders' : '/');
+  }, [isStandaloneWorkOrdersRoute]);
 
   // Keep 'filtered' alias for list view
   const filtered = sortedWOs;
