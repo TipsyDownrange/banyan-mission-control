@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import FilterBar, { FilterChip, SortOption } from '@/components/shared/FilterBar';
 import ServiceIntake from '@/components/ServiceIntake';
@@ -199,14 +198,6 @@ const READ_ONLY_BANNER = (
 
 export default function ServicePanel({ readOnly = false, focusWoId, initialWoId = null }: { readOnly?: boolean; focusWoId?: string | null; initialWoId?: string | null }) {
   const { data: session } = useSession();
-  const router = useRouter();
-  const pathname = usePathname();
-  // Capture whether this panel mounted under the standalone /work-orders route.
-  // openDetail() rewrites the URL to /work-orders/{id} via replaceState, which
-  // updates `pathname` and would otherwise make closeDetail() route us through
-  // the /work-orders redirect → '/' → Today (BAN: WO close-panel friction).
-  const initialPathnameRef = useRef(pathname);
-  const isStandaloneWorkOrdersRoute = initialPathnameRef.current.startsWith('/work-orders');
   const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
   // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
   const defaultFilter = userRole === 'super' ? 'approved' : 'all';
@@ -424,24 +415,34 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
     filteredByStatus[stage.key] = sortedWOs.filter(w => w.status === stage.key);
   }
 
+  // BAN-170: Always use shallow window.history.replaceState. Routing through
+  // Next.js (router.replace) on the standalone /work-orders/{id} path triggers
+  // the server redirect to /?wo={id}, which unmounts the page tree and flashes
+  // Today before the deep-link useEffect re-opens the panel. Both /work-orders
+  // and /work-orders/{id} are pure server redirects to '/', so there is no
+  // real "standalone" route to navigate into.
   const openDetail = useCallback((wo: WorkOrder) => {
     setDetailWO(wo);
     const nextPath = `/work-orders/${encodeURIComponent(wo.id)}`;
-    if (isStandaloneWorkOrdersRoute) {
-      router.replace(nextPath);
-      return;
-    }
     window.history.replaceState(null, '', nextPath);
-  }, [isStandaloneWorkOrdersRoute, router]);
+  }, []);
 
   const closeDetail = useCallback(() => {
     setDetailWO(null);
-    if (isStandaloneWorkOrdersRoute) {
-      router.replace('/work-orders');
-      return;
-    }
     window.history.replaceState(null, '', '/');
-  }, [isStandaloneWorkOrdersRoute, router]);
+  }, []);
+
+  // BAN-170: If the panel unmounts (sidebar nav away) while the URL is still
+  // /work-orders/{id} from an open detail, reset it. Otherwise re-mounting
+  // ServicePanel later would inherit the stale path and any future logic that
+  // keys off pathname would misbehave.
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/work-orders')) {
+        window.history.replaceState(null, '', '/');
+      }
+    };
+  }, []);
 
   // Keep 'filtered' alias for list view
   const filtered = sortedWOs;
