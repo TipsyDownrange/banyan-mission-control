@@ -1,7 +1,10 @@
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { isStaging } from '@/lib/env';
 
 export const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
+
+export const STAGING_DRIVE_FOLDER_ID_ENV = 'STAGING_DRIVE_FOLDER_ID';
 
 export const STANDARD_SUBFOLDERS = [
   'Photos',
@@ -30,6 +33,43 @@ export class ServiceWOFolderCreationError extends Error {
     super(`Work order was not created because the Drive folder could not be created.${detail}`);
     this.name = 'ServiceWOFolderCreationError';
   }
+}
+
+// Thrown when staging is detected but STAGING_DRIVE_FOLDER_ID is missing or
+// not a parseable Drive folder id. We refuse to fall back to the production
+// Service/Island tree from staging — see BAN-92 / staging Drive routing.
+export class StagingDriveFolderConfigError extends Error {
+  reason: string;
+
+  constructor(reason: string) {
+    super(
+      `Staging Drive folder is not configured correctly: ${reason}. ` +
+      `Refusing to create work-order folder under production Drive.`,
+    );
+    this.name = 'StagingDriveFolderConfigError';
+    this.reason = reason;
+  }
+}
+
+/**
+ * Resolve the staging WO parent folder id from STAGING_DRIVE_FOLDER_ID.
+ * Throws StagingDriveFolderConfigError if the env var is missing or not a
+ * plausible Drive folder id. Only called when isStaging() is true; production
+ * never reaches this path.
+ */
+export function resolveStagingWOParentId(): string {
+  const raw = String(process.env[STAGING_DRIVE_FOLDER_ID_ENV] || '').trim();
+  if (!raw) {
+    throw new StagingDriveFolderConfigError(
+      `${STAGING_DRIVE_FOLDER_ID_ENV} env var is not set`,
+    );
+  }
+  if (!/^[-\w]{20,}$/.test(raw)) {
+    throw new StagingDriveFolderConfigError(
+      `${STAGING_DRIVE_FOLDER_ID_ENV} is not a valid Drive folder id: "${raw}"`,
+    );
+  }
+  return raw;
 }
 
 export class InvalidWOFolderUrlError extends Error {
@@ -111,14 +151,26 @@ export async function createWOFolderStructure(
   island: string,
   driveOverride?: DriveClient,
 ): Promise<string> {
+  // Resolve the WO parent BEFORE any Drive write so staging cannot fall back
+  // to the production Service/[Island] tree on a config gap. Staging routes
+  // every WO folder under STAGING_DRIVE_FOLDER_ID; production keeps the
+  // canonical Service/[Island] routing under the Banyan shared drive root.
+  const stagingParentId = isStaging() ? resolveStagingWOParentId() : null;
+
   try {
     const drive = driveOverride || getWODriveClient();
 
-    const serviceFolderId = await findOrCreateFolder(drive, 'Service', BANYAN_DRIVE_ID);
-    const islandLabel = island || 'Unassigned';
-    const islandFolderId = await findOrCreateFolder(drive, islandLabel, serviceFolderId);
+    let woParentId: string;
+    if (stagingParentId !== null) {
+      woParentId = stagingParentId;
+    } else {
+      const serviceFolderId = await findOrCreateFolder(drive, 'Service', BANYAN_DRIVE_ID);
+      const islandLabel = island || 'Unassigned';
+      woParentId = await findOrCreateFolder(drive, islandLabel, serviceFolderId);
+    }
+
     const woFolderName = `${woId} — ${customerName}`;
-    const woFolderId = await findOrCreateFolder(drive, woFolderName, islandFolderId);
+    const woFolderId = await findOrCreateFolder(drive, woFolderName, woParentId);
 
     await ensureStandardSubfolders(drive, woFolderId);
     await ensureKaiShadowTree(drive, woFolderId);
@@ -140,6 +192,7 @@ export async function createWOFolderStructure(
     return meta.data.webViewLink || `https://drive.google.com/drive/folders/${woFolderId}`;
   } catch (e) {
     console.error('WO folder creation failed:', e);
+    if (e instanceof StagingDriveFolderConfigError) throw e;
     throw new ServiceWOFolderCreationError(e);
   }
 }

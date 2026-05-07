@@ -14,11 +14,14 @@ jest.mock('googleapis', () => ({
 import {
   BANYAN_DRIVE_ID,
   InvalidWOFolderUrlError,
+  STAGING_DRIVE_FOLDER_ID_ENV,
   STANDARD_SUBFOLDERS,
+  StagingDriveFolderConfigError,
   classifyWOFolder,
   createWOFolderStructure,
   ensureStandardSubfolders,
   extractFolderIdFromUrl,
+  resolveStagingWOParentId,
   validateWOFolderUrlForWrite,
 } from '@/lib/drive-wo-folder';
 
@@ -162,6 +165,191 @@ describe('createWOFolderStructure — shared-drive safety', () => {
     mockGoogleDrive.mockReturnValue(m.drive);
 
     await expect(createWOFolderStructure('WO-26-0003', 'C', 'Maui')).rejects.toThrow(/Drive folder could not be created/);
+  });
+
+  it('production never reads STAGING_DRIVE_FOLDER_ID even if it is set', async () => {
+    const m = buildDriveMocks();
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    const prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+    const prevStagingId = process.env.STAGING_DRIVE_FOLDER_ID;
+    delete process.env.VERCEL_TARGET_ENV;
+    process.env.STAGING_DRIVE_FOLDER_ID = '142jODngww2a4PoNDrf-rjN5O_y40I3ti';
+    try {
+      await createWOFolderStructure('WO-26-2222', 'Customer', 'Maui');
+      const createdNames = m.create.mock.calls.map(c => c[0].requestBody.name);
+      // Production routing creates Service / Maui parents at the shared-drive root.
+      expect(createdNames).toContain('Service');
+      expect(createdNames).toContain('Maui');
+      // The first created folder is parented under BANYAN_DRIVE_ID, not STAGING.
+      const firstCreate = m.create.mock.calls[0][0];
+      expect(firstCreate.requestBody.parents).toEqual([BANYAN_DRIVE_ID]);
+    } finally {
+      if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+      else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+      if (prevStagingId === undefined) delete process.env.STAGING_DRIVE_FOLDER_ID;
+      else process.env.STAGING_DRIVE_FOLDER_ID = prevStagingId;
+    }
+  });
+});
+
+describe('createWOFolderStructure — staging fences', () => {
+  const STAGING_FOLDER_ID = '142jODngww2a4PoNDrf-rjN5O_y40I3ti';
+  let prevTargetEnv: string | undefined;
+  let prevStagingId: string | undefined;
+
+  beforeEach(() => {
+    prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+    prevStagingId = process.env.STAGING_DRIVE_FOLDER_ID;
+    process.env.VERCEL_TARGET_ENV = 'staging';
+  });
+
+  afterEach(() => {
+    if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+    else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+    if (prevStagingId === undefined) delete process.env.STAGING_DRIVE_FOLDER_ID;
+    else process.env.STAGING_DRIVE_FOLDER_ID = prevStagingId;
+  });
+
+  it('parents the WO folder directly under STAGING_DRIVE_FOLDER_ID and never creates Service or island folders', async () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = STAGING_FOLDER_ID;
+    const m = buildDriveMocks();
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await createWOFolderStructure('WO-26-8480', 'Test Customer', 'Maui');
+
+    const createdNames = m.create.mock.calls.map(c => c[0].requestBody.name);
+    // Staging must NOT create Service / island parent folders.
+    expect(createdNames).not.toContain('Service');
+    expect(createdNames).not.toContain('Maui');
+    expect(createdNames).not.toContain('Unassigned');
+    // The WO folder itself is created.
+    expect(createdNames).toContain('WO-26-8480 — Test Customer');
+
+    // The WO folder create must be parented under STAGING_DRIVE_FOLDER_ID.
+    const woCreate = m.create.mock.calls.find(
+      c => c[0].requestBody.name === 'WO-26-8480 — Test Customer'
+    );
+    expect(woCreate).toBeDefined();
+    expect(woCreate![0].requestBody.parents).toEqual([STAGING_FOLDER_ID]);
+
+    // Every list call still scopes to the Banyan shared drive (the staging
+    // yard is inside that drive), so corpora/driveId stay correct.
+    for (const call of m.list.mock.calls) {
+      expect(call[0].driveId).toBe(BANYAN_DRIVE_ID);
+      expect(call[0].corpora).toBe('drive');
+      expect(call[0].supportsAllDrives).toBe(true);
+    }
+  });
+
+  it('reuses an existing WO folder under STAGING_DRIVE_FOLDER_ID instead of creating one', async () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = STAGING_FOLDER_ID;
+    const m = buildDriveMocks({
+      listImpl: (params: any) => {
+        // findOrCreateFolder name search for the WO folder returns an existing id;
+        // listChildFolders for the WO folder returns all standard subfolders so
+        // none are created.
+        if (typeof params.q === 'string' && params.q.includes('WO-26-8480')) {
+          return Promise.resolve({ data: { files: [{ id: 'existing-wo', name: 'WO-26-8480 — Test Customer' }] } });
+        }
+        if (typeof params.q === 'string' && params.q.startsWith("'existing-wo'")) {
+          return Promise.resolve({
+            data: { files: STANDARD_SUBFOLDERS.map((name, i) => ({ id: `sub-${i}`, name })) },
+          });
+        }
+        return Promise.resolve({ data: { files: [] } });
+      },
+    });
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await createWOFolderStructure('WO-26-8480', 'Test Customer', 'Maui');
+
+    const createdNames = m.create.mock.calls.map(c => c[0].requestBody.name);
+    expect(createdNames).not.toContain('WO-26-8480 — Test Customer');
+    expect(createdNames).not.toContain('Service');
+    expect(createdNames).not.toContain('Maui');
+  });
+
+  it('fails closed with StagingDriveFolderConfigError when STAGING_DRIVE_FOLDER_ID is missing', async () => {
+    delete process.env.STAGING_DRIVE_FOLDER_ID;
+    const m = buildDriveMocks();
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await expect(
+      createWOFolderStructure('WO-26-8481', 'Test Customer', 'Maui'),
+    ).rejects.toBeInstanceOf(StagingDriveFolderConfigError);
+
+    // No Drive writes may occur on a fail-closed staging guard.
+    expect(m.create).not.toHaveBeenCalled();
+    expect(m.list).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when STAGING_DRIVE_FOLDER_ID is blank/whitespace', async () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = '   ';
+    const m = buildDriveMocks();
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await expect(
+      createWOFolderStructure('WO-26-8482', 'C', 'Maui'),
+    ).rejects.toMatchObject({
+      name: 'StagingDriveFolderConfigError',
+      message: expect.stringContaining(STAGING_DRIVE_FOLDER_ID_ENV),
+    });
+    expect(m.create).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when STAGING_DRIVE_FOLDER_ID is not a valid Drive id', async () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = 'not-a-drive-id';
+    const m = buildDriveMocks();
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await expect(
+      createWOFolderStructure('WO-26-8483', 'C', 'Maui'),
+    ).rejects.toBeInstanceOf(StagingDriveFolderConfigError);
+    expect(m.create).not.toHaveBeenCalled();
+  });
+
+  it('staging never falls back to BANYAN_DRIVE_ID, Service, island, or Maui as parents', async () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = STAGING_FOLDER_ID;
+    const m = buildDriveMocks();
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await createWOFolderStructure('WO-26-8484', 'Customer', 'Maui');
+
+    for (const call of m.create.mock.calls) {
+      const parents: string[] = call[0].requestBody.parents || [];
+      // No created folder may be parented at the Banyan shared-drive root in
+      // staging — that would be the production fallback we are blocking.
+      expect(parents).not.toContain(BANYAN_DRIVE_ID);
+    }
+  });
+});
+
+describe('resolveStagingWOParentId', () => {
+  let prevStagingId: string | undefined;
+
+  beforeEach(() => {
+    prevStagingId = process.env.STAGING_DRIVE_FOLDER_ID;
+  });
+
+  afterEach(() => {
+    if (prevStagingId === undefined) delete process.env.STAGING_DRIVE_FOLDER_ID;
+    else process.env.STAGING_DRIVE_FOLDER_ID = prevStagingId;
+  });
+
+  it('returns the env value when set to a plausible Drive id', () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = '142jODngww2a4PoNDrf-rjN5O_y40I3ti';
+    expect(resolveStagingWOParentId()).toBe('142jODngww2a4PoNDrf-rjN5O_y40I3ti');
+  });
+
+  it('throws StagingDriveFolderConfigError when env var is unset', () => {
+    delete process.env.STAGING_DRIVE_FOLDER_ID;
+    expect(() => resolveStagingWOParentId()).toThrow(StagingDriveFolderConfigError);
+  });
+
+  it('throws when env value is not a plausible Drive folder id', () => {
+    process.env.STAGING_DRIVE_FOLDER_ID = 'short';
+    expect(() => resolveStagingWOParentId()).toThrow(/not a valid Drive folder id/);
   });
 });
 

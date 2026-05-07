@@ -8,11 +8,12 @@ import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeEmail, normalizeNameForWrite, normalizePhone, resolveWorkOrderIsland } from '@/lib/normalize';
 import {
   ServiceWOFolderCreationError,
+  StagingDriveFolderConfigError,
   createWOFolderStructure,
   requireServiceWOFolderUrl,
 } from '@/lib/drive-wo-folder';
 
-export { ServiceWOFolderCreationError, requireServiceWOFolderUrl };
+export { ServiceWOFolderCreationError, StagingDriveFolderConfigError, requireServiceWOFolderUrl };
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -165,7 +166,10 @@ export async function POST(req: Request) {
         await createWOFolderStructure(woId, cleanCustomerName || cleanBusinessName || '', cleanIsland || cleanCity || '')
       );
     } catch (err) {
-      if (err instanceof ServiceWOFolderCreationError) {
+      if (
+        err instanceof StagingDriveFolderConfigError ||
+        err instanceof ServiceWOFolderCreationError
+      ) {
         return NextResponse.json({ error: err.message }, { status: 502 });
       }
       throw err;

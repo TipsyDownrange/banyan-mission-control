@@ -276,6 +276,65 @@ describe('Service WO create route', () => {
     expect(res.status).toBe(200);
     expect(fireAndForgetCustomerUpdate).not.toHaveBeenCalled();
   });
+
+  describe('staging Drive routing', () => {
+    let prevTargetEnv: string | undefined;
+    let prevStagingId: string | undefined;
+
+    beforeEach(() => {
+      prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+      prevStagingId = process.env.STAGING_DRIVE_FOLDER_ID;
+      process.env.VERCEL_TARGET_ENV = 'staging';
+    });
+
+    afterEach(() => {
+      if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+      else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+      if (prevStagingId === undefined) delete process.env.STAGING_DRIVE_FOLDER_ID;
+      else process.env.STAGING_DRIVE_FOLDER_ID = prevStagingId;
+    });
+
+    it('returns 502 and does not append a row when STAGING_DRIVE_FOLDER_ID is missing', async () => {
+      delete process.env.STAGING_DRIVE_FOLDER_ID;
+      const clients = setupGoogleClients({ existingWONumbers: ['26-0001'] });
+      const { POST } = await import('@/app/api/service/dispatch/route');
+
+      const res = await POST(request(baseBody()));
+      const json = await res.json();
+
+      expect(res.status).toBe(502);
+      expect(json.error).toMatch(/STAGING_DRIVE_FOLDER_ID/);
+      expect(clients.sheetsValuesAppend).not.toHaveBeenCalled();
+      expect(clients.driveFilesCreate).not.toHaveBeenCalled();
+    });
+
+    it('parents the WO folder under STAGING_DRIVE_FOLDER_ID and skips Service/island folders', async () => {
+      process.env.STAGING_DRIVE_FOLDER_ID = '142jODngww2a4PoNDrf-rjN5O_y40I3ti';
+      const clients = setupGoogleClients({ existingWONumbers: ['26-0001'] });
+      const { POST } = await import('@/app/api/service/dispatch/route');
+
+      const res = await POST(request(baseBody()));
+      expect(res.status).toBe(200);
+
+      const folderCreateCalls = clients.driveFilesCreate.mock.calls.map(c => c[0]);
+      const createdNames = folderCreateCalls.map(c => c.requestBody.name);
+      expect(createdNames).not.toContain('Service');
+      expect(createdNames).not.toContain('Maui');
+
+      // Every created folder must be parented either under STAGING_DRIVE_FOLDER_ID
+      // or under a previously-created child of it. None may target the production
+      // shared-drive root.
+      for (const c of folderCreateCalls) {
+        const parents: string[] = c.requestBody.parents || [];
+        expect(parents).not.toContain('0AKSVpf3AnH7CUk9PVA');
+      }
+      const woCreate = folderCreateCalls.find(c =>
+        c.requestBody.name === 'WO-26-0002 — BAN-51 Test Customer'
+      );
+      expect(woCreate).toBeDefined();
+      expect(woCreate!.requestBody.parents).toEqual(['142jODngww2a4PoNDrf-rjN5O_y40I3ti']);
+    });
+  });
 });
 
 export {};
