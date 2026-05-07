@@ -6,26 +6,20 @@ import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { isStaging } from '@/lib/env';
 import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
+import { SWO_COL, columnLetterFromIndex } from '@/lib/contracts/service-work-orders';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 
-// Column indices in Service_Work_Orders (0-based)
-const COL_WO_ID        = 0;
-const COL_CUSTOMER_NAME = 12; // M
-const COL_ORG_ID       = 42; // AQ
-const COL_CUSTOMER_ID  = 43; // AR — GC-D053
-const COL_LEGACY_FLAG  = 44; // AS — GC-D053
+// Service_Work_Orders column indices come from the shared SWO contract
+// (lib/contracts/service-work-orders.ts) — BAN-179.A canonical layout.
+const COL_WO_ID         = SWO_COL.wo_id;
+const COL_CUSTOMER_NAME = SWO_COL.customer_name; // M
+const COL_ORG_ID        = SWO_COL.org_id;        // AQ
+const COL_CUSTOMER_ID   = SWO_COL.customer_id;   // AR — GC-D053
+const COL_LEGACY_FLAG   = SWO_COL.legacy_flag;   // AS — GC-D053
 
-function colLetter(idx: number): string {
-  let result = '';
-  let n = idx;
-  do {
-    result = String.fromCharCode(65 + (n % 26)) + result;
-    n = Math.floor(n / 26) - 1;
-  } while (n >= 0);
-  return result;
-}
+const colLetter = columnLetterFromIndex;
 
 // POST — run backfill. Admin-gated: Sean + Jody only.
 // Returns a JSON report and writes it to Drive governance folder.

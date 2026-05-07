@@ -4,65 +4,18 @@ import { google } from 'googleapis';
 import { normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { loadCrosswalkByCustomer } from '@/lib/entityCrosswalk';
+import {
+  SWO_COL,
+  SERVICE_WORK_ORDERS_RANGE_END,
+} from '@/lib/contracts/service-work-orders';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 
-// Column order must match the migration script HEADERS array
-const COL = {
-  wo_id:           0,
-  wo_number:       1,
-  name:            2,
-  description:     3,
-  status:          4,
-  island:          5,
-  area_of_island:  6,
-  address:         7,
-  contact_person:  8,
-  contact_title:   9,
-  contact_phone:   10,
-  contact_email:   11,
-  customer_name:   12,
-  system_type:     13,
-  assigned_to:     14,
-  date_received:   15,
-  due_date:        16,
-  scheduled_date:  17,
-  start_date:      18,
-  hours_estimated: 19,
-  hours_actual:    20,
-  men_required:    21,
-  comments:        22,
-  folder_url:      23,
-  quote_total:     24,
-  quote_status:    25,
-  created_at:      26, // AA
-  updated_at:      27, // AB
-  source:          28, // AC
-  // QBO invoice columns (actual sheet positions)
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
-  // BanyanOS invoicing tracker (new columns AF-AO)
-  deposit_status:      31, // AF
-  deposit_amount:      32, // AG
-  deposit_invoice_num: 33, // AH
-  deposit_sent_date:   34, // AI
-  deposit_paid_date:   35, // AJ
-  final_status:        36, // AK
-  final_amount:        37, // AL
-  final_invoice_num:   38, // AM
-  final_sent_date:     39, // AN
-  final_paid_date:     40, // AO
-  invoices_json:       41, // AP
-  org_id:              42, // AQ — Phase 2: FK to Organizations
-  customer_id:         43, // AR — GC-D053: FK to Customers table
-  legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
-  legacy_wo_ids:       45, // AT — BAN-56: searchable previous/noncanonical WO IDs
-  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
-};
+// Column indices imported from the shared SWO contract (BAN-179.A).
+// `SWO_COL` is the single source of truth for `Service_Work_Orders` column
+// positions. Do not redeclare local index maps in this route.
+const COL = SWO_COL;
 
 // Simple in-process cache (10 minute TTL)
 let cache: { data: ReturnType<typeof buildResponse>; ts: number } | null = null;
@@ -180,7 +133,7 @@ export async function GET() {
     const [res, custRes, crosswalkByCustomer] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
-        range: `${TAB}!A2:AU5000`,
+        range: `${TAB}!A2:${SERVICE_WORK_ORDERS_RANGE_END}5000`,
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
