@@ -4,6 +4,8 @@ import { generateDispatchWOPDF } from '@/lib/pdf-work-order-dispatch';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -108,6 +110,7 @@ export async function GET(req: Request) {
 
     const pdfBuffer = await generateDispatchWOPDF(dispatchData);
     const filename = `Dispatch-WO-${woNumber}-${dispatchData.scheduled_date || dispatchData.date}.pdf`;
+    const stagingDriveParentId = isStaging() ? resolveStagingDriveParentId() : null;
 
     // Auto-save copy to WO folder in Drive (non-blocking) + shadow dual-write
     try {
@@ -117,12 +120,13 @@ export async function GET(req: Request) {
         const drive = _g.drive({ version: 'v3', auth: driveAuth });
         const { Readable } = await import('stream');
         const folderUrl = g(COL.folder_url);
-        if (folderUrl) {
+        if (folderUrl || isStaging()) {
           const folderId = folderUrl.match(/folders\/([^/?]+)/)?.[1];
-          if (folderId) {
+          const writeFolderId = stagingDriveParentId || folderId;
+          if (writeFolderId) {
             // Primary write to WO folder root
             await drive.files.create({
-              requestBody: { name: filename, parents: [folderId], mimeType: 'application/pdf' },
+              requestBody: { name: filename, parents: [writeFolderId], mimeType: 'application/pdf' },
               media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
               supportsAllDrives: true,
             }).catch((e: unknown) => console.error('[dispatch-pdf] primary write failed:', e));
@@ -135,7 +139,7 @@ export async function GET(req: Request) {
                 const c = await drive.files.create({ requestBody:{ name, mimeType:'application/vnd.google-apps.folder', parents:[parentId] }, supportsAllDrives:true, fields:'id' });
                 return c.data.id!;
               }
-              const shadowId = await foc('10 - AI Project Documents [Kai]', folderId);
+              const shadowId = await foc('10 - AI Project Documents [Kai]', writeFolderId);
               const sysGenId = await foc('System Generated', shadowId);
               await drive.files.create({
                 requestBody: { name: filename, parents: [sysGenId], mimeType: 'application/pdf' },

@@ -13,6 +13,8 @@ import { Readable } from 'stream';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateFieldIssuePDF, type FieldIssueData } from '@/lib/pdf-field-issue';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE = '0AKSVpf3AnH7CUk9PVA';
@@ -133,10 +135,15 @@ async function resolveFolderForKID(
 
 async function findOrCreate(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
   const safe = name.replace(/'/g, "\\'");
-  const res = await drive.files.list({
+  const listParams: Record<string, unknown> = {
     q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-    supportsAllDrives: true, includeItemsFromAllDrives: true, corpora: 'drive', driveId: BANYAN_DRIVE, fields: 'files(id)',
-  });
+    supportsAllDrives: true, includeItemsFromAllDrives: true, fields: 'files(id)',
+  };
+  if (!isStaging()) {
+    listParams.corpora = 'drive';
+    listParams.driveId = BANYAN_DRIVE;
+  }
+  const res = await drive.files.list(listParams);
   if (res.data.files?.length) return res.data.files[0].id!;
   const c = await drive.files.create({
     requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
@@ -229,7 +236,8 @@ export async function POST(req: Request) {
 
     // GC-D021: Resolve folder — WO targets use Service_Work_Orders; PRJ targets use Core_Entities
     const { folderId: woFolderId, projectName, resolvedVia } = await resolveFolderForKID(kID, sheets);
-    console.log('[field-issue/pdf] DRIVE_TRACE resolvedVia=' + resolvedVia + ' woFolderId=' + woFolderId + ' kID=' + kID);
+    const writeFolderId = isStaging() ? resolveStagingDriveParentId() : woFolderId;
+    console.log('[field-issue/pdf] DRIVE_TRACE resolvedVia=' + resolvedVia + ' woFolderId=' + woFolderId + ' writeFolderId=' + writeFolderId + ' kID=' + kID);
 
     // Build photo references from evidence_ref (comma-separated Drive fileIds)
     const evidenceRef = evRow[EV.evidence_ref] || '';
@@ -281,10 +289,10 @@ export async function POST(req: Request) {
     let primaryDriveError: Record<string,unknown> | null = null;
     let shadowDriveError: Record<string,unknown> | null = null;
 
-    if (woFolderId) {
+    if (writeFolderId) {
       // Primary: [WO]/Field Issues/
       try {
-        const fieldIssuesFolderId = await findOrCreate(drive, 'Field Issues', woFolderId);
+        const fieldIssuesFolderId = await findOrCreate(drive, 'Field Issues', writeFolderId);
         console.log('[field-issue/pdf] DRIVE_TRACE fieldIssuesFolderId=' + fieldIssuesFolderId);
         const primaryFile = await drive.files.create({
           requestBody: { name: filename, parents: [fieldIssuesFolderId], mimeType: 'application/pdf' },
@@ -300,7 +308,7 @@ export async function POST(req: Request) {
 
       // Shadow: [WO]/10 - AI Project Documents [Kai]/Field Issues/ (non-fatal)
       try {
-        const shadowRoot = await findOrCreate(drive, '10 - AI Project Documents [Kai]', woFolderId);
+        const shadowRoot = await findOrCreate(drive, '10 - AI Project Documents [Kai]', writeFolderId);
         const shadowFieldIssues = await findOrCreate(drive, 'Field Issues', shadowRoot);
         const shadowStream = Readable.from(pdfBuffer);
         const shadowFile = await drive.files.create({
@@ -322,7 +330,7 @@ export async function POST(req: Request) {
         ok: false,
         event_id,
         kID,
-        error: woFolderId
+        error: writeFolderId
           ? 'PDF upload failed before a Drive file ID was returned'
           : `No Drive folder linked to ${kID} (checked ${resolvedVia})`,
         primaryFileId,

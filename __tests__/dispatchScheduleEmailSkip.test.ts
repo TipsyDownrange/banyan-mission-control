@@ -2,6 +2,7 @@
 // emailSkipReason() (staging or DISABLE_DISPATCH_EMAILS=true), and the FA
 // schedule URL embedded in the email body must be env-driven so staging
 // cannot embed the production FA URL.
+// Updated for merge: route uses getFieldAppBaseUrl() (reads FA_BASE_URL).
 
 const mockCheckPermission = jest.fn();
 const mockSheets = jest.fn();
@@ -55,7 +56,7 @@ function patchReq(extra: Record<string, unknown> = {}) {
 describe('dispatch-schedule PATCH — BAN-170 crew assignment email + FA URL', () => {
   let prevTargetEnv: string | undefined;
   let prevDisable: string | undefined;
-  let prevFaUrl: string | undefined;
+  let prevFaBaseUrl: string | undefined;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -63,7 +64,7 @@ describe('dispatch-schedule PATCH — BAN-170 crew assignment email + FA URL', (
     mockCheckPermission.mockResolvedValue({ allowed: true });
     prevTargetEnv = process.env.VERCEL_TARGET_ENV;
     prevDisable = process.env.DISABLE_DISPATCH_EMAILS;
-    prevFaUrl = process.env.FA_SCHEDULE_URL;
+    prevFaBaseUrl = process.env.FA_BASE_URL;
   });
 
   afterEach(() => {
@@ -71,12 +72,13 @@ describe('dispatch-schedule PATCH — BAN-170 crew assignment email + FA URL', (
     else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
     if (prevDisable === undefined) delete process.env.DISABLE_DISPATCH_EMAILS;
     else process.env.DISABLE_DISPATCH_EMAILS = prevDisable;
-    if (prevFaUrl === undefined) delete process.env.FA_SCHEDULE_URL;
-    else process.env.FA_SCHEDULE_URL = prevFaUrl;
+    if (prevFaBaseUrl === undefined) delete process.env.FA_BASE_URL;
+    else process.env.FA_BASE_URL = prevFaBaseUrl;
   });
 
-  it('skips Gmail send entirely when staging (VERCEL_TARGET_ENV=staging)', async () => {
+  it('skips Gmail send entirely when staging (VERCEL_TARGET_ENV=staging) — staging must set FA_BASE_URL', async () => {
     process.env.VERCEL_TARGET_ENV = 'staging';
+    process.env.FA_BASE_URL = 'https://banyan-field-app-staging.example.com';
     delete process.env.DISABLE_DISPATCH_EMAILS;
     const m = setup();
     const { PATCH } = await import('@/app/api/dispatch-schedule/route');
@@ -95,10 +97,10 @@ describe('dispatch-schedule PATCH — BAN-170 crew assignment email + FA URL', (
     expect(m.messagesSend).not.toHaveBeenCalled();
   });
 
-  it('production without flags — sends crew email and embeds FA_SCHEDULE_URL when set', async () => {
+  it('production with FA_BASE_URL set — sends crew email and embeds that base URL + /schedule', async () => {
     delete process.env.VERCEL_TARGET_ENV;
     delete process.env.DISABLE_DISPATCH_EMAILS;
-    process.env.FA_SCHEDULE_URL = 'https://banyan-field-app.example.com/schedule';
+    process.env.FA_BASE_URL = 'https://banyan-field-app.example.com';
     const m = setup();
     const { PATCH } = await import('@/app/api/dispatch-schedule/route');
     await PATCH(patchReq());
@@ -106,22 +108,22 @@ describe('dispatch-schedule PATCH — BAN-170 crew assignment email + FA URL', (
     const firstCall = m.messagesSend.mock.calls[0][0];
     const raw = Buffer.from(firstCall.requestBody.raw, 'base64url').toString('utf8');
     expect(raw).toContain('https://banyan-field-app.example.com/schedule');
-    // Hardcoded legacy FA URL must not appear regardless of env value.
+    // Hardcoded legacy FA URL must not appear when FA_BASE_URL overrides it.
     expect(raw).not.toContain('banyan-field-app-525p.vercel.app');
   });
 
-  it('production without FA_SCHEDULE_URL — email sends but contains no schedule URL line and no legacy URL', async () => {
+  it('production without FA_BASE_URL — email sends with default FA URL fallback', async () => {
     delete process.env.VERCEL_TARGET_ENV;
     delete process.env.DISABLE_DISPATCH_EMAILS;
-    delete process.env.FA_SCHEDULE_URL;
+    delete process.env.FA_BASE_URL;
     const m = setup();
     const { PATCH } = await import('@/app/api/dispatch-schedule/route');
     await PATCH(patchReq());
     expect(m.messagesSend).toHaveBeenCalled();
     const firstCall = m.messagesSend.mock.calls[0][0];
     const raw = Buffer.from(firstCall.requestBody.raw, 'base64url').toString('utf8');
-    expect(raw).not.toContain('banyan-field-app-525p.vercel.app');
-    expect(raw).not.toContain('View your schedule in the BanyanOS Field App');
+    // Default fallback URL is used; the FA schedule link is always included.
+    expect(raw).toContain('View your schedule in the BanyanOS Field App');
   });
 });
 

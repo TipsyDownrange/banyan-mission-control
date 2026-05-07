@@ -20,6 +20,8 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { randomUUID } from 'crypto';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE_PARENT = '0AKSVpf3AnH7CUk9PVA'; // BanyanOS shared drive
@@ -163,6 +165,7 @@ async function step_createDriveFolders(
   projectName: string
 ): Promise<void> {
   const drive = getDrive();
+  const parentId = isStaging() ? resolveStagingDriveParentId() : BANYAN_DRIVE_PARENT;
   const rootName = `${kID} — ${projectName}`;
 
   // Create root folder in the shared drive
@@ -171,7 +174,7 @@ async function step_createDriveFolders(
     requestBody: {
       name: rootName,
       mimeType: 'application/vnd.google-apps.folder',
-      parents: [BANYAN_DRIVE_PARENT],
+      parents: [parentId],
     },
     fields: 'id',
   });

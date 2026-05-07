@@ -6,38 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { getSSToken } from '@/lib/gauth';
-import { isStaging } from '@/lib/env';
-
-// BAN-170: Smartsheet bid log ID is env-driven so a staging deploy cannot
-// append rows to the production Kula Glass Bid Log. Production sets
-// SMARTSHEET_BID_LOG_ID to the prod sheet id; staging must point at a staging
-// Smartsheet target. With no env var configured, staging short-circuits
-// rather than falling back to the production id.
-const PRODUCTION_BID_LOG_ID = '6073963369156484';
-
-function resolveBidLogId(): { ok: true; id: string } | { ok: false; status: number; error: string } {
-  const fromEnv = (process.env.SMARTSHEET_BID_LOG_ID || '').trim();
-  if (isStaging()) {
-    if (!fromEnv) {
-      return {
-        ok: false,
-        status: 502,
-        error: 'SMARTSHEET_BID_LOG_ID is not configured for staging — refusing to write to the production bid log',
-      };
-    }
-    if (fromEnv === PRODUCTION_BID_LOG_ID) {
-      return {
-        ok: false,
-        status: 502,
-        error: 'SMARTSHEET_BID_LOG_ID resolves to the production bid log on a staging deploy — refusing to write',
-      };
-    }
-    return { ok: true, id: fromEnv };
-  }
-  // Production keeps the existing canonical id when SMARTSHEET_BID_LOG_ID is
-  // not yet set on Vercel — preserves legacy behavior unchanged.
-  return { ok: true, id: fromEnv || PRODUCTION_BID_LOG_ID };
-}
+import { getBidLogSheetId } from '@/lib/env';
 
 // Column IDs from the bid log
 const COL = {
@@ -67,6 +36,7 @@ function nextKID(existingKIDs: string[]): string {
 
 export async function POST(req: Request) {
   try {
+    const bidLogId = getBidLogSheetId(); // Kula Glass Bid Log in production; staging env must override.
     const body = await req.json();
     const {
       project_name,
@@ -84,17 +54,11 @@ export async function POST(req: Request) {
 
     if (!project_name) return NextResponse.json({ error: 'project_name required' }, { status: 400 });
 
-    const resolved = resolveBidLogId();
-    if (!resolved.ok) {
-      return NextResponse.json({ error: resolved.error, staging: true }, { status: resolved.status });
-    }
-    const BID_LOG_ID = resolved.id;
-
     const token = getSSToken();
 
     // Get existing rows to generate next EST-kID
     const existing = await fetch(
-      `https://api.smartsheet.com/2.0/sheets/${BID_LOG_ID}?pageSize=200`,
+      `https://api.smartsheet.com/2.0/sheets/${bidLogId}?pageSize=200`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     const sheet = await existing.json() as {
@@ -137,7 +101,7 @@ export async function POST(req: Request) {
       },
     ];
 
-    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${BID_LOG_ID}/rows`, {
+    const res = await fetch(`https://api.smartsheet.com/2.0/sheets/${bidLogId}/rows`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

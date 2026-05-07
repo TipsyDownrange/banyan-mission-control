@@ -324,6 +324,41 @@ export type ValidWOFolderUrl = {
   >;
 };
 
+export class StagingDriveFolderAncestryError extends Error {
+  constructor(folderId: string, stagingParentId: string) {
+    super(
+      `Drive folder ${folderId} is not inside STAGING_DRIVE_FOLDER_ID (${stagingParentId}). ` +
+      'Refusing staging Drive write.',
+    );
+    this.name = 'StagingDriveFolderAncestryError';
+  }
+}
+
+export async function assertDriveFolderDescendantOf(
+  drive: DriveClient,
+  folderId: string,
+  ancestorFolderId: string,
+): Promise<void> {
+  let current: string | undefined = folderId;
+  const visited = new Set<string>();
+
+  for (let depth = 0; current && depth < 25; depth++) {
+    if (current === ancestorFolderId) return;
+    if (visited.has(current)) break;
+    visited.add(current);
+
+    const meta = await drive.files.get({
+      fileId: current,
+      supportsAllDrives: true,
+      fields: 'id,parents,trashed',
+    }) as { data: { parents?: string[] | null; trashed?: boolean | null } };
+    if (meta.data.trashed) break;
+    current = meta.data.parents?.[0] || undefined;
+  }
+
+  throw new StagingDriveFolderAncestryError(folderId, ancestorFolderId);
+}
+
 /**
  * Validate a folder URL before writing it to Service_Work_Orders.folder_url or
  * using it as an upload parent. This rejects My Drive/private folders, wrong

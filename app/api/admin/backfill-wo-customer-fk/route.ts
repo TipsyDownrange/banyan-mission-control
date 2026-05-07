@@ -4,6 +4,8 @@ import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
@@ -32,6 +34,7 @@ export async function POST(req: Request) {
   if (!allowed) return NextResponse.json({ error: 'Forbidden: admin:backfill required (Sean / Jody only)' }, { status: 403 });
 
   try {
+    const stagingReportParentId = isStaging() ? resolveStagingDriveParentId() : null;
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']);
     const sheets = google.sheets({ version: 'v4', auth });
     const drive = google.drive({ version: 'v3', auth });
@@ -145,15 +148,18 @@ export async function POST(req: Request) {
     let driveFileId = '';
     try {
       const { Readable } = await import('stream');
-      const govFolderSearch = await drive.files.list({
-        q: `name = 'Governance' and mimeType = 'application/vnd.google-apps.folder' and '${BANYAN_DRIVE_ID}' in parents and trashed = false`,
-        driveId: BANYAN_DRIVE_ID,
-        includeItemsFromAllDrives: true,
-        supportsAllDrives: true,
-        corpora: 'drive',
-        fields: 'files(id)',
-      });
-      const govFolderId = govFolderSearch.data.files?.[0]?.id || BANYAN_DRIVE_ID;
+      let govFolderId = stagingReportParentId || '';
+      if (!govFolderId) {
+        const govFolderSearch = await drive.files.list({
+          q: `name = 'Governance' and mimeType = 'application/vnd.google-apps.folder' and '${BANYAN_DRIVE_ID}' in parents and trashed = false`,
+          driveId: BANYAN_DRIVE_ID,
+          includeItemsFromAllDrives: true,
+          supportsAllDrives: true,
+          corpora: 'drive',
+          fields: 'files(id)',
+        });
+        govFolderId = govFolderSearch.data.files?.[0]?.id || BANYAN_DRIVE_ID;
+      }
       const reportFile = await drive.files.create({
         requestBody: {
           name: `GC-D053-Backfill-Report-${now.replace(/[:.]/g, '-')}.txt`,

@@ -1,49 +1,13 @@
 /**
  * GET /api/scheduling
  * Reads the Manpower Schedule Google Sheet and returns structured forecast data.
- * Production sheet: 1099MZ_cGYqNbMKcvoKnwNp0uXnugQPY-jPOpmsJW_wQ
- *
- * BAN-170: Manpower Schedule sheet id is env-driven. Production keeps the
- * canonical id when MANPOWER_SCHEDULE_SHEET_ID is unset. Staging PATCH writes
- * fail closed unless MANPOWER_SCHEDULE_SHEET_ID is set to a non-production
- * staging copy.
+ * Sheet: 1099MZ_cGYqNbMKcvoKnwNp0uXnugQPY-jPOpmsJW_wQ
  */
 
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
-import { isStaging } from '@/lib/env';
-
-const PRODUCTION_MANPOWER_SHEET_ID = '1099MZ_cGYqNbMKcvoKnwNp0uXnugQPY-jPOpmsJW_wQ';
-
-function getManpowerSheetId(): string {
-  const fromEnv = (process.env.MANPOWER_SCHEDULE_SHEET_ID || '').trim();
-  return fromEnv || PRODUCTION_MANPOWER_SHEET_ID;
-}
-
-function resolveManpowerSheetIdForWrite():
-  | { ok: true; id: string }
-  | { ok: false; status: number; error: string } {
-  const fromEnv = (process.env.MANPOWER_SCHEDULE_SHEET_ID || '').trim();
-  if (isStaging()) {
-    if (!fromEnv) {
-      return {
-        ok: false,
-        status: 502,
-        error: 'MANPOWER_SCHEDULE_SHEET_ID is not configured for staging — refusing to write to the production manpower schedule',
-      };
-    }
-    if (fromEnv === PRODUCTION_MANPOWER_SHEET_ID) {
-      return {
-        ok: false,
-        status: 502,
-        error: 'MANPOWER_SCHEDULE_SHEET_ID resolves to the production manpower sheet on a staging deploy — refusing to write',
-      };
-    }
-    return { ok: true, id: fromEnv };
-  }
-  return { ok: true, id: fromEnv || PRODUCTION_MANPOWER_SHEET_ID };
-}
+import { getManpowerScheduleSheetId } from '@/lib/env';
 
 export type WeekData = {
   week_ending: string;    // e.g. "WE 04/05/25"
@@ -69,6 +33,7 @@ export type IslandForecast = {
 
 export async function GET(req: Request) {
   try {
+    const sheetId = getManpowerScheduleSheetId();
     const { searchParams } = new URL(req.url);
     const weeksAhead = parseInt(searchParams.get('weeks') || '12');
 
@@ -76,7 +41,7 @@ export async function GET(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: getManpowerSheetId(),
+      spreadsheetId: sheetId,
       range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:DD200',
     });
 
@@ -212,23 +177,18 @@ export async function GET(req: Request) {
  */
 export async function PATCH(req: Request) {
   try {
+    const sheetId = getManpowerScheduleSheetId();
     const { job_number, date, men } = await req.json();
     if (!job_number || !date || men === undefined) {
       return NextResponse.json({ error: 'job_number, date, and men required' }, { status: 400 });
     }
-
-    const resolved = resolveManpowerSheetIdForWrite();
-    if (!resolved.ok) {
-      return NextResponse.json({ error: resolved.error, staging: true }, { status: resolved.status });
-    }
-    const writeSheetId = resolved.id;
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const sheets = google.sheets({ version: 'v4', auth });
 
     // Read the full sheet to find the right row and column
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: writeSheetId,
+      spreadsheetId: sheetId,
       range: 'Manpower Schedule - MAUI/OUTER ISLAND!A1:DD200',
     });
     const rows = res.data.values || [];
@@ -281,7 +241,7 @@ export async function PATCH(req: Request) {
     const cellRef = `${colToLetter(colIndex)}${rowIndex + 1}`;
 
     await sheets.spreadsheets.values.update({
-      spreadsheetId: writeSheetId,
+      spreadsheetId: sheetId,
       range: `Manpower Schedule - MAUI/OUTER ISLAND!${cellRef}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [[men === 0 ? '' : String(men)]] },
