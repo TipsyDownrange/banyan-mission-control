@@ -24,7 +24,9 @@ function baseRow(overrides: Record<number, string> = {}) {
   row[3] = 'Replace shower glass';
   row[4] = 'quote';
   row[5] = 'Maui';
+  row[7] = '123 Test Road, Wailuku, HI';
   row[13] = 'Shower';
+  row[14] = 'Joey';
   row[17] = '2026-05-12';
   row[23] = 'https://drive.google.com/drive/folders/test';
   row[24] = '$1,234.56';
@@ -33,7 +35,10 @@ function baseRow(overrides: Record<number, string> = {}) {
   row[28] = '1234.56';
   row[29] = '0';
   row[30] = '2026-05-01';
+  row[42] = 'ORG-1';
   row[43] = 'CUST-1';
+  row[44] = 'false';
+  row[46] = 'false';
   return Object.assign(row, overrides);
 }
 
@@ -53,6 +58,43 @@ describe('Service Work Orders Postgres shadow adapter dry-run', () => {
     expect(mapped.metadata.qbo_deposit_ambiguity).toBe('legacy_qbo_first_dormant_deposit');
     expect(mapped.metadata.confidence).toBe('low');
     expect(mapped.legacy_payload.aa_to_ah_header).toEqual(LIVE_KNOWN_HEADER_2026_05_07.slice(26, 34));
+    expect(mapped.address_raw).toBe('123 Test Road, Wailuku, HI');
+    expect(mapped.assigned_to_raw).toBe('Joey');
+    expect(mapped.org_id_raw).toBe('ORG-1');
+    expect(mapped.customer_id_raw).toBe('CUST-1');
+    expect(mapped.metadata.identity_resolution_status).toBe('resolved');
+    expect(mapped.metadata.assignment_resolution_status).toBe('raw_only_requires_user_crosswalk');
+    expect(mapped.metadata.site_resolution_status).toBe('raw_only_requires_site_resolution');
+  });
+
+
+  it('preserves missing identity and assignment fields as explicit blocked/raw statuses', () => {
+    const mapped = buildServiceWorkOrderPostgresCandidate(LIVE_KNOWN_HEADER_2026_05_07, baseRow({
+      7: '',
+      14: '',
+      42: '',
+      43: '',
+      44: 'legacy',
+      46: 'true',
+    }));
+
+    expect(mapped.address_raw).toBeNull();
+    expect(mapped.assigned_to_raw).toBeNull();
+    expect(mapped.org_id_raw).toBeNull();
+    expect(mapped.customer_id_raw).toBeNull();
+    expect(mapped.legacy_flag_raw).toBe('legacy');
+    expect(mapped.requires_org_assignment_raw).toBe('true');
+    expect(mapped.metadata.identity_resolution_status).toBe('requires_org_assignment');
+    expect(mapped.metadata.assignment_resolution_status).toBe('unassigned');
+    expect(mapped.metadata.site_resolution_status).toBe('missing_address');
+    expect(mapped.legacy_payload).toMatchObject({
+      address_raw: null,
+      assigned_to_raw: null,
+      org_id_raw: null,
+      customer_id_raw: null,
+      legacy_flag_raw: 'legacy',
+      requires_org_assignment_raw: 'true',
+    });
   });
 
   it('flags mixed AA:AH drift for manual invoice review', () => {
