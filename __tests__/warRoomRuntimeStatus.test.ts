@@ -21,7 +21,7 @@ describe('War Room runtime status normalization', () => {
     expect(status.lastCheckedAt).toBe('2026-05-07T12:00:00.000Z');
   });
 
-  it('returns explicit unknown reasons in Vercel when no runtime endpoints are configured', async () => {
+  it('uses manual crew posture when no runtime endpoints are configured', async () => {
     const health = await buildWarRoomRuntimeHealth({
       now: new Date('2026-05-07T12:00:00.000Z'),
       env: { NODE_ENV: 'test', VERCEL: '1' },
@@ -29,10 +29,12 @@ describe('War Room runtime status normalization', () => {
       fetchImpl: jest.fn() as unknown as typeof fetch,
     });
 
-    expect(health.codex.health).toBe('unknown');
+    expect(health.kai.health).toBe('degraded');
+    expect(health.codex.health).toBe('degraded');
     expect(health.codex.quota).toBe('manual');
-    expect(health.codex.blockers.join(' ')).toContain('runtime probe unavailable in Vercel');
-    expect(health.claude.blockers.join(' ')).toContain('runtime probe unavailable in Vercel');
+    expect(health.codex.summary).toContain('manual operator check');
+    expect(health.codex.blockers.join(' ')).not.toContain('runtime probe unavailable');
+    expect(health.claude.summary).toContain('manual operator check');
     expect(health.recommendation.lane).toBe('kai');
     expect(health.recommendation.confidence).toBe('low');
   });
