@@ -36,12 +36,18 @@ function buildDrive(opts: {
   getImpl?: (params: any) => any;
 } = {}) {
   let createId = 0;
+  const parentById = new Map<string, string[]>();
   const list = jest.fn().mockImplementation(opts.listImpl || (() => Promise.resolve({ data: { files: [] } })));
-  const create = jest.fn().mockImplementation(opts.createImpl || (() => {
+  const create = jest.fn().mockImplementation(opts.createImpl || ((params: any) => {
     createId += 1;
-    return Promise.resolve({ data: { id: `created-${createId}` } });
+    const id = `created-${createId}`;
+    const parents = params.requestBody.parents || [];
+    parentById.set(id, parents);
+    return Promise.resolve({ data: { id, driveId: BANYAN_DRIVE_ID, parents } });
   }));
-  const get = jest.fn().mockImplementation(opts.getImpl || (() => Promise.resolve({ data: {} })));
+  const get = jest.fn().mockImplementation(opts.getImpl || ((params: any) => Promise.resolve({
+    data: { id: params.fileId, driveId: BANYAN_DRIVE_ID, parents: parentById.get(params.fileId) || [] },
+  })));
   const permissionsCreate = jest.fn().mockResolvedValue({ data: {} });
   return {
     list, create, get, permissionsCreate,
@@ -223,12 +229,12 @@ describe('POST /api/admin/wo-folder-repair', () => {
       getImpl: (params: any) => {
         // First files.get is the classify call on the My Drive folder.
         // Subsequent files.get inside createWOFolderStructure resolves the new webViewLink.
-        if (params.fields && params.fields.includes('driveId')) {
+        if (String(params.fileId || '').includes('joey-id')) {
           return Promise.resolve({
             data: { id: 'joey-folder', driveId: null, parents: ['root'], trashed: false },
           });
         }
-        return Promise.resolve({ data: { webViewLink: 'https://drive.google.com/drive/folders/new-canon-id' } });
+        return Promise.resolve({ data: { id: params.fileId, driveId: BANYAN_DRIVE_ID, parents: ['created-2'], webViewLink: 'https://drive.google.com/drive/folders/new-canon-id' } });
       },
     });
     const sheets = buildSheets(makeSheetRows(woRow({
