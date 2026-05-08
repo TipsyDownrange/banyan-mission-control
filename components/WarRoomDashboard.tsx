@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { buildWarRoomDispatchPrompt, canPrepareWarRoomDispatch } from '@/lib/war-room/dispatchPrompt';
-import type { WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey } from '@/lib/war-room/types';
+import type { CrewRuntimeStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState } from '@/lib/war-room/types';
 
 const NAV: Array<{ key: WarRoomQueueKey; label: string }> = [
   { key: 'myWatch', label: 'My Watch' },
@@ -29,6 +29,24 @@ function riskColor(risk: WarRoomIssue['risk']) {
 function formatDate(value?: string | null) {
   if (!value) return 'No timestamp';
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
+}
+
+function formatUsd(value: number | undefined, digits = 2) {
+  return `$${(value || 0).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+}
+
+function healthTheme(health: WarRoomRuntimeHealthState) {
+  if (health === 'ready') return { color: '#86efac', border: 'rgba(34,197,94,0.34)', bg: 'rgba(34,197,94,0.09)' };
+  if (health === 'degraded') return { color: '#fbbf24', border: 'rgba(245,158,11,0.36)', bg: 'rgba(245,158,11,0.09)' };
+  if (health === 'blocked') return { color: '#fca5a5', border: 'rgba(239,68,68,0.38)', bg: 'rgba(239,68,68,0.1)' };
+  if (health === 'disabled') return { color: '#94a3b8', border: 'rgba(148,163,184,0.24)', bg: 'rgba(148,163,184,0.08)' };
+  return { color: '#fcd34d', border: 'rgba(251,191,36,0.34)', bg: 'rgba(251,191,36,0.08)' };
+}
+
+function crewName(id: CrewRuntimeStatus['id']) {
+  if (id === 'kai') return 'Kai / Captain';
+  if (id === 'codex') return 'Codex / Build Crew';
+  return 'Claude / Audit Crew';
 }
 
 function matchesFilter(issue: WarRoomIssue, filter: string) {
@@ -120,8 +138,95 @@ function Column({ title, issues, selectedId, onSelect }: { title: string; issues
   );
 }
 
-export default function WarRoomDashboard({ initialData }: { initialData: WarRoomDashboardData }) {
+function CrewRuntimeCard({ crew }: { crew: CrewRuntimeStatus }) {
+  const theme = healthTheme(crew.health);
+  return (
+    <div
+      data-war-room-runtime-crew={crew.id}
+      style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 8, padding: 10, minWidth: 0 }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ color: '#67e8f9', fontSize: 12, fontWeight: 950 }}>{crewName(crew.id)}</div>
+        <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase' }}>
+          {crew.health}
+        </span>
+      </div>
+      <div style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginTop: 7 }}>
+        Auth {crew.auth} / runtime {crew.runtime} / quota {crew.quota}
+      </div>
+      <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{crew.summary}</p>
+      <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 8 }}>Last checked {formatDate(crew.lastCheckedAt)}</div>
+      {crew.blockers.length > 0 && (
+        <ul style={{ margin: '8px 0 0', paddingLeft: 16, color: theme.color, fontSize: 11, lineHeight: 1.35 }}>
+          {crew.blockers.slice(0, 3).map(blocker => <li key={blocker}>{blocker}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
+  const days = Object.entries(cost.byDay || {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
+  const maxCost = Math.max(...days.map(([, day]) => day.cost || 0), 1);
+  const providerTotal = Math.max(cost.providers.reduce((sum, provider) => sum + provider.value, 0), cost.allInTotal, 1);
+
+  return (
+    <section data-war-room-runtime-cost="true" style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'linear-gradient(135deg, rgba(7,23,34,0.94), rgba(12,35,48,0.86))', borderRadius: 8, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
+        <div>
+          <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Costmaster</div>
+          <div style={{ color: '#f8fafc', fontSize: 30, fontWeight: 950, marginTop: 3 }}>{formatUsd(cost.allInTotal)}</div>
+          <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>All-in tracked spend / monthly burn {formatUsd(cost.monthlyBurn)}</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: cost.overBudget ? '#fca5a5' : '#86efac', fontSize: 18, fontWeight: 950 }}>{formatUsd(cost.todayCost, 4)}</div>
+          <div style={{ color: '#94a3b8', fontSize: 11 }}>today / {formatUsd(cost.dailyBudget)} budget</div>
+        </div>
+      </div>
+      <div style={{ height: 7, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)', marginBottom: 12 }}>
+        <div style={{ height: '100%', width: `${Math.min(cost.budgetPct, 100)}%`, background: cost.overBudget ? '#ef4444' : '#14b8a6', borderRadius: 999 }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px, 1fr) minmax(160px, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {cost.providers.map(provider => {
+            const pct = providerTotal > 0 ? Math.round((provider.value / providerTotal) * 100) : 0;
+            return (
+              <div key={provider.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginBottom: 4 }}>
+                  <span>{provider.label}</span>
+                  <span>{formatUsd(provider.value)} ({pct}%)</span>
+                </div>
+                <div style={{ height: 5, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: provider.color, borderRadius: 999 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div>
+          <div style={{ height: 82, display: 'flex', gap: 4, alignItems: 'flex-end', overflow: 'hidden' }}>
+            {days.length === 0 && <div style={{ color: '#64748b', fontSize: 12 }}>No daily cost rows available.</div>}
+            {days.map(([date, day]) => {
+              const height = Math.max(4, Math.round(((day.cost || 0) / maxCost) * 74));
+              return (
+                <div key={date} title={`${date}: ${formatUsd(day.cost || 0, 4)}`} style={{ flex: 1, minWidth: 8, display: 'flex', alignItems: 'flex-end' }}>
+                  <div style={{ width: '100%', height, borderRadius: '4px 4px 0 0', background: 'linear-gradient(180deg,#67e8f9,#4f46e5)' }} />
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ color: '#64748b', fontSize: 10, marginTop: 5 }}>Last sync: {cost.lastSync ? formatDate(cost.lastSync) : 'unknown'}</div>
+        </div>
+      </div>
+      {cost.error && <div style={{ color: '#fca5a5', fontSize: 11, lineHeight: 1.35, marginTop: 10 }}>Cost route reported: {cost.error}</div>}
+    </section>
+  );
+}
+
+export default function WarRoomDashboard({ initialData, initialRuntimeHealth = null }: { initialData: WarRoomDashboardData; initialRuntimeHealth?: WarRoomRuntimeHealth | null }) {
   const [data] = useState(initialData);
+  const [runtimeHealth, setRuntimeHealth] = useState<WarRoomRuntimeHealth | null>(initialRuntimeHealth);
+  const [runtimeStatus, setRuntimeStatus] = useState<'loading' | 'ready' | 'failed'>(initialRuntimeHealth ? 'ready' : 'loading');
   const [selectedId, setSelectedId] = useState(initialData.upNext[0]?.id || initialData.issues[0]?.id || '');
   const [activeQueue, setActiveQueue] = useState<WarRoomQueueKey>('myWatch');
   const [search, setSearch] = useState('');
@@ -152,6 +257,31 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
     : [];
   const dispatchReady = canPrepareWarRoomDispatch(selectedIssue, { queueKeys: selectedIssueQueueKeys });
   const activeQueueMeta = data.queues.find(queueItem => queueItem.key === activeQueue);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadRuntimeHealth() {
+      try {
+        const response = await fetch('/api/war-room/runtime-status', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'runtime status request failed');
+        if (active) {
+          setRuntimeHealth(payload);
+          setRuntimeStatus('ready');
+        }
+      } catch {
+        if (active) setRuntimeStatus('failed');
+      }
+    }
+
+    loadRuntimeHealth();
+    const interval = setInterval(loadRuntimeHealth, 60000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -424,17 +554,38 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
 
           <div style={{ display: 'grid', gap: 12 }}>
             <section style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
-              <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Crew / Cost Routing</h2>
-              <div className="war-room-crew-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-                {data.commandBridge.crewLanes.map(lane => (
-                  <div key={lane.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(15,23,42,0.52)', borderRadius: 8, padding: 10 }}>
-                    <div style={{ color: '#67e8f9', fontSize: 12, fontWeight: 950 }}>{lane.displayName}</div>
-                    <div style={{ color: lane.health === 'ok' ? '#86efac' : '#fbbf24', fontSize: 11, fontWeight: 900, marginTop: 4 }}>Health: {lane.health} / quota {lane.quotaStatus}</div>
-                    <p style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{lane.currentRecommendation}</p>
-                    <div style={{ color: '#64748b', fontSize: 11, lineHeight: 1.35, marginTop: 8 }}>{lane.notes}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 10 }}>
+                <div>
+                  <h2 style={{ margin: 0, color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Crew / Cost Routing</h2>
+                  <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>
+                    {runtimeStatus === 'loading' && 'Checking live runtime and cost signals...'}
+                    {runtimeStatus === 'ready' && runtimeHealth && `Generated ${formatDate(runtimeHealth.generatedAt)}`}
+                    {runtimeStatus === 'failed' && 'Runtime status request failed; no signal is being inferred.'}
                   </div>
-                ))}
+                </div>
+                {runtimeHealth && (
+                  <div style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.35, textAlign: 'right', maxWidth: 280 }}>
+                    <span style={{ color: '#67e8f9', fontWeight: 950 }}>Recommendation: {runtimeHealth.recommendation.lane}</span>
+                    <br />
+                    {runtimeHealth.recommendation.summary}
+                  </div>
+                )}
               </div>
+
+              {runtimeHealth ? (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div className="war-room-crew-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                    {[runtimeHealth.kai, runtimeHealth.codex, runtimeHealth.claude].map(crew => (
+                      <CrewRuntimeCard key={crew.id} crew={crew} />
+                    ))}
+                  </div>
+                  <WarRoomCostMiniDashboard cost={runtimeHealth.cost} />
+                </div>
+              ) : (
+                <div style={{ border: '1px dashed rgba(251,191,36,0.34)', background: 'rgba(251,191,36,0.07)', borderRadius: 8, padding: 12, color: '#fcd34d', fontSize: 12, lineHeight: 1.45 }}>
+                  Runtime health and Costmaster data are unavailable. War Room will not infer OK, quota, or dispatch readiness without a verified signal.
+                </div>
+              )}
             </section>
 
             <section className="war-room-two-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
