@@ -16,7 +16,7 @@ import type {
 const PRIORITIES: WarRoomPriority[] = ['P0', 'P1', 'P2', 'P3'];
 const RISKS: WarRoomRisk[] = ['P0', 'P1', 'P2', 'P3'];
 const SCOPE_TYPES: WarRoomScopeType[] = ['audit', 'code', 'verify', 'doc', 'external-action', 'recurring'];
-const LANES: WarRoomLane[] = ['kai', 'claude', 'codex', 'sean', 'auto'];
+const LANES: WarRoomLane[] = ['kai', 'claude', 'codex', 'sean'];
 
 export const WAR_ROOM_CREW_LANES: WarRoomCrewLane[] = [
   {
@@ -75,15 +75,31 @@ export const WAR_ROOM_AGENT_CARDS: WarRoomAgentCard[] = [
     id: 'kai-captain',
     title: 'Captain / Kai',
     role: 'Orchestrator and verifier',
-    status: 'watching',
+    status: 'working',
     currentFocus: 'Command bridge intake, routing, and proof gates',
     nextAction: 'Shape approved work into scoped packets',
+  },
+  {
+    id: 'codex-build-crew',
+    title: 'Codex',
+    role: 'Scoped implementation lane',
+    status: 'idle',
+    currentFocus: 'Ready-for-Codex work with complete packet gates',
+    nextAction: 'Wait for human dispatch prompt',
+  },
+  {
+    id: 'claude-audit-crew',
+    title: 'Claude',
+    role: 'Audit and review lane',
+    status: 'idle',
+    currentFocus: 'High-context review when manually assigned',
+    nextAction: 'Wait for human dispatch prompt',
   },
   {
     id: 'canon-keeper',
     title: 'Librarian / Canon Keeper',
     role: 'Canon freshness and Drive index watch',
-    status: 'standing-by',
+    status: 'idle',
     currentFocus: 'Drive canon deltas, Module Maturity Map, Delta Ledger',
     nextAction: 'Flag stale docs before dispatch',
   },
@@ -91,7 +107,7 @@ export const WAR_ROOM_AGENT_CARDS: WarRoomAgentCard[] = [
     id: 'quartermaster',
     title: 'Quartermaster / Dispatcher',
     role: 'Task intake and lane routing',
-    status: 'standing-by',
+    status: 'waiting-approval',
     currentFocus: 'Manual intake to Linear-safe queue',
     nextAction: 'Prepare dispatch packets after human gate',
   },
@@ -99,7 +115,7 @@ export const WAR_ROOM_AGENT_CARDS: WarRoomAgentCard[] = [
     id: 'inspector',
     title: 'Inspector / QA Officer',
     role: 'Evidence verification',
-    status: 'standing-by',
+    status: 'idle',
     currentFocus: 'Receipts, tests, screenshots, and stop-condition proof',
     nextAction: 'Reject done claims without evidence',
   },
@@ -107,7 +123,7 @@ export const WAR_ROOM_AGENT_CARDS: WarRoomAgentCard[] = [
     id: 'costmaster',
     title: 'Costmaster',
     role: 'Quota and cost routing',
-    status: 'standing-by',
+    status: 'waiting-approval',
     currentFocus: 'Manual Codex/Claude/Kai capacity status',
     nextAction: 'Recommend cheapest safe lane',
   },
@@ -115,7 +131,7 @@ export const WAR_ROOM_AGENT_CARDS: WarRoomAgentCard[] = [
     id: 'scribe',
     title: 'Ship Log / Scribe',
     role: 'Linear and receipt ledger',
-    status: 'standing-by',
+    status: 'idle',
     currentFocus: 'Dispatch and return receipts',
     nextAction: 'Keep issue ledger aligned with proof',
   },
@@ -123,7 +139,7 @@ export const WAR_ROOM_AGENT_CARDS: WarRoomAgentCard[] = [
     id: 'safety-officer',
     title: 'Safety Officer',
     role: 'External-write and production gates',
-    status: 'watching',
+    status: 'working',
     currentFocus: 'Drive, Sheets, Gmail, QBO, Vercel, Supabase, production mutation gates',
     nextAction: 'Hold risky actions for Sean approval',
   },
@@ -195,7 +211,7 @@ export function validateWarRoomTaskIntake(payload: unknown, requestedBy: string)
 export function buildWarRoomLinearLabels(intake: WarRoomTaskIntake) {
   return [
     'Area: War Room',
-    `Lane: ${laneLabel(intake.suggestedLane)}`,
+    `Lane: ${linearLaneLabel(intake.suggestedLane)}`,
     'Workflow: Intake',
     `Risk: ${intake.risk}`,
     'Source: War Room',
@@ -300,12 +316,20 @@ function buildReceipts(issues: WarRoomIssue[]): WarRoomReceipt[] {
     }));
 }
 
-function laneLabel(lane: WarRoomLane) {
+function linearLaneLabel(lane: WarRoomLane) {
   if (lane === 'kai') return 'Kai';
   if (lane === 'claude') return 'Claude';
   if (lane === 'codex') return 'Codex';
   if (lane === 'sean') return 'Sean';
-  return 'Auto';
+  return 'Kai';
+}
+
+function laneLabel(lane: WarRoomLane) {
+  if (lane === 'kai') return 'Kai / Captain';
+  if (lane === 'claude') return 'Claude / Audit Crew';
+  if (lane === 'codex') return 'Codex / Build Crew';
+  if (lane === 'sean') return 'Sean / Captain';
+  return 'Kai / Captain';
 }
 
 function normalizeLane(value: string): WarRoomLane | 'operator' {

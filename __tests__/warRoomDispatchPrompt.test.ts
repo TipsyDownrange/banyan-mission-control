@@ -33,6 +33,9 @@ describe('War Room dispatch prompt', () => {
     expect(prompt).toContain('Risk: P1');
     expect(prompt).toContain('Workflow: Ready for Codex');
     expect(prompt).toContain('Generate a paste-ready Codex prompt inside BanyanOS.');
+    expect(prompt).toContain('VISUAL ACCEPTANCE SCAN:');
+    expect(prompt).toContain('First-glance scan');
+    expect(prompt).toContain('Treat non-functional visible UI as a blocker');
   });
 
   it('only enables prompt preparation for complete Ready for Codex issues that are not done', () => {

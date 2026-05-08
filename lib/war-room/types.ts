@@ -45,7 +45,7 @@ export interface WarRoomKpis {
 export type WarRoomPriority = 'P0' | 'P1' | 'P2' | 'P3';
 export type WarRoomRisk = 'P0' | 'P1' | 'P2' | 'P3';
 export type WarRoomScopeType = 'audit' | 'code' | 'verify' | 'doc' | 'external-action' | 'recurring';
-export type WarRoomLane = 'kai' | 'claude' | 'codex' | 'sean' | 'auto';
+export type WarRoomLane = 'kai' | 'claude' | 'codex' | 'sean';
 
 export interface WarRoomTaskIntake {
   title: string;
@@ -138,7 +138,7 @@ export interface WarRoomAgentCard {
   id: string;
   title: string;
   role: string;
-  status: 'standing-by' | 'watching' | 'blocked' | 'disabled';
+  status: 'working' | 'idle' | 'blocked' | 'waiting-approval' | 'disabled';
   currentFocus: string;
   nextAction: string;
 }

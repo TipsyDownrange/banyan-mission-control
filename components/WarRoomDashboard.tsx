@@ -26,6 +26,29 @@ function riskColor(risk: WarRoomIssue['risk']) {
   return '#38bdf8';
 }
 
+function statusTheme(status: string) {
+  if (status === 'working') return { label: 'working', color: '#22c55e', glow: 'rgba(34,197,94,0.32)', bg: 'rgba(34,197,94,0.11)' };
+  if (status === 'blocked') return { label: 'blocked', color: '#ef4444', glow: 'rgba(239,68,68,0.34)', bg: 'rgba(239,68,68,0.12)' };
+  if (status === 'waiting-approval') return { label: 'waiting approval', color: '#f59e0b', glow: 'rgba(245,158,11,0.34)', bg: 'rgba(245,158,11,0.12)' };
+  if (status === 'disabled') return { label: 'disabled', color: '#94a3b8', glow: 'rgba(148,163,184,0.16)', bg: 'rgba(148,163,184,0.08)' };
+  return { label: 'idle', color: '#38bdf8', glow: 'rgba(56,189,248,0.24)', bg: 'rgba(56,189,248,0.1)' };
+}
+
+function agentInitials(title: string) {
+  return title
+    .split(/[ /]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('');
+}
+
+function gaugePressure(data: WarRoomDashboardData) {
+  const warnings = data.kpis.needsSean + data.kpis.needsEvidence + data.kpis.p0p1Risks;
+  const total = Math.max(data.issues.length, 1);
+  return Math.min(100, Math.round((warnings / total) * 100));
+}
+
 function formatDate(value?: string | null) {
   if (!value) return 'No timestamp';
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
@@ -298,6 +321,15 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
   const triage = queue('captainsTriage');
   const ready = queue('readyForCodex');
   const xoReview = queue('xoReview');
+  const warningCount = data.kpis.needsSean + data.kpis.needsEvidence + data.kpis.p0p1Risks;
+  const pressure = gaugePressure(data);
+  const bridgeMode = warningCount > 0 ? 'Command attention' : 'All clear watch';
+  const signalFlags = [
+    { label: 'Sean signals', value: data.kpis.needsSean, color: '#f59e0b' },
+    { label: 'Evidence gaps', value: data.kpis.needsEvidence, color: '#fb923c' },
+    { label: 'P0/P1 risks', value: data.kpis.p0p1Risks, color: '#ef4444' },
+    { label: 'Fixture mode', value: data.source === 'fixture' ? 1 : 0, color: '#38bdf8' },
+  ];
 
   function selectIssue(issue: WarRoomIssue) {
     setSelectedId(issue.id);
@@ -416,17 +448,33 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
       </aside>
 
       <main className="war-room-main" style={{ flex: 1, minWidth: 0, padding: 24, overflow: 'auto' }}>
-        <header className="war-room-header" style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(280px, 460px)', gap: 16, alignItems: 'start', marginBottom: 18 }}>
-          <div>
+        <header className="war-room-header" style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(300px, 520px)', gap: 16, alignItems: 'stretch', marginBottom: 18 }}>
+          <div style={{ border: '1px solid rgba(94,234,212,0.24)', background: 'linear-gradient(135deg, rgba(8,47,73,0.78), rgba(3,10,20,0.72))', borderRadius: 8, padding: 16, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}>
             <div style={{ color: '#38bdf8', fontSize: 11, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
-              BanyanOS War Room / Captain's Triage
+              BanyanOS War Room / Ship Bridge
             </div>
-            <h1 style={{ margin: 0, color: '#f8fafc', fontSize: 30, fontWeight: 950, letterSpacing: '-0.02em' }}>Linear Command Dashboard</h1>
-            <div style={{ marginTop: 8, color: '#94a3b8', fontSize: 12, fontWeight: 800 }}>
-              Viewing {activeQueueMeta?.label || 'War Room'} queue ({filteredIssues.length})
+            <h1 style={{ margin: 0, color: '#f8fafc', fontSize: 32, fontWeight: 950, letterSpacing: 0 }}>Mission Control Bridge</h1>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+              <span style={{ border: warningCount ? '1px solid rgba(245,158,11,0.45)' : '1px solid rgba(34,197,94,0.36)', background: warningCount ? 'rgba(245,158,11,0.12)' : 'rgba(34,197,94,0.1)', color: warningCount ? '#fbbf24' : '#86efac', borderRadius: 8, padding: '7px 10px', fontSize: 12, fontWeight: 950 }}>
+                {bridgeMode}
+              </span>
+              <span style={{ border: '1px solid rgba(148,163,184,0.18)', background: 'rgba(15,23,42,0.58)', color: '#cbd5e1', borderRadius: 8, padding: '7px 10px', fontSize: 12, fontWeight: 850 }}>
+                {activeQueueMeta?.label || 'War Room'} / {filteredIssues.length} signals
+              </span>
+              <span style={{ border: '1px solid rgba(148,163,184,0.18)', background: 'rgba(15,23,42,0.58)', color: '#94a3b8', borderRadius: 8, padding: '7px 10px', fontSize: 12, fontWeight: 850 }}>
+                Updated {formatDate(data.generatedAt)}
+              </span>
+            </div>
+            <div className="war-room-signal-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginTop: 16 }}>
+              {signalFlags.map(flag => (
+                <div key={flag.label} style={{ border: `1px solid ${flag.color}55`, background: flag.value ? `${flag.color}1f` : 'rgba(15,23,42,0.48)', borderRadius: 8, padding: '10px 11px' }}>
+                  <div style={{ color: flag.color, fontSize: 22, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{flag.value}</div>
+                  <div style={{ color: '#cbd5e1', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{flag.label}</div>
+                </div>
+              ))}
             </div>
           </div>
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div style={{ display: 'grid', gap: 10, alignContent: 'start' }}>
             <div style={{ display: 'flex', gap: 10 }}>
               <input
                 value={search}
@@ -472,7 +520,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
           </div>
         </header>
 
-        <section className="war-room-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
+        <section className="war-room-kpis" aria-label="Bridge console gauges" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
           {[
             ['Ready', data.kpis.readyForCodex, '#22d3ee'],
             ['Needs Sean', data.kpis.needsSean, '#f59e0b'],
@@ -481,7 +529,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             ['Closed / Logged', data.kpis.closedLogged, '#22c55e'],
             ['Codex Active', data.kpis.activeCodex ?? '-', '#a7f3d0'],
           ].map(([label, value, color]) => (
-            <div key={label} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(15,23,42,0.64)', borderRadius: 8, padding: '12px 14px' }}>
+            <div key={label} style={{ border: `1px solid ${color as string}3d`, background: 'linear-gradient(180deg, rgba(15,23,42,0.76), rgba(8,20,32,0.68))', borderRadius: 8, padding: '12px 14px', minHeight: 82 }}>
               <div style={{ color: color as string, fontSize: 24, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{value}</div>
               <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             </div>
@@ -491,21 +539,21 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
         <section className="war-room-command-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 0.9fr) minmax(320px, 1.1fr)', gap: 12, marginBottom: 18 }}>
           <form onSubmit={submitIntake} style={{ border: '1px solid rgba(94,234,212,0.26)', background: 'rgba(3,10,20,0.78)', borderRadius: 8, padding: 14, display: 'grid', gap: 10 }}>
             <div>
-              <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Task Intake</div>
-              <h2 style={{ color: '#f8fafc', margin: '4px 0 0', fontSize: 18, fontWeight: 950 }}>New Command</h2>
+              <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Task Intake / Main Bridge</div>
+              <h2 style={{ color: '#f8fafc', margin: '4px 0 0', fontSize: 18, fontWeight: 950 }}>New Command / Drop Task</h2>
             </div>
             <input
               value={intake.title}
               onChange={event => setIntake(previous => ({ ...previous, title: event.target.value }))}
-              placeholder="Title"
+              placeholder="Short command title"
               maxLength={140}
               style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none' }}
             />
             <textarea
               value={intake.description}
               onChange={event => setIntake(previous => ({ ...previous, description: event.target.value }))}
-              placeholder="Plain-English task, acceptance criteria, stop conditions, and source links"
-              rows={5}
+              placeholder="Drop the plain-English task here. Include acceptance criteria, stop conditions, and source links when known."
+              rows={4}
               maxLength={4000}
               style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 8, padding: '10px 12px', fontSize: 13, lineHeight: 1.45, resize: 'vertical', outline: 'none' }}
             />
@@ -520,7 +568,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                 {['audit', 'code', 'verify', 'doc', 'external-action', 'recurring'].map(value => <option key={value} value={value}>{value}</option>)}
               </select>
               <select value={intake.suggestedLane} onChange={event => setIntake(previous => ({ ...previous, suggestedLane: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 8, padding: '9px 10px' }}>
-                {['kai', 'codex', 'claude', 'sean', 'auto'].map(value => <option key={value} value={value}>Lane {value}</option>)}
+                {['kai', 'codex', 'claude', 'sean'].map(value => <option key={value} value={value}>Lane {value}</option>)}
               </select>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
@@ -545,7 +593,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
               ))}
             </div>
             <button type="submit" disabled={intakeStatus === 'submitting'} style={{ border: '1px solid rgba(94,234,212,0.44)', background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)', color: '#04111f', borderRadius: 8, padding: '10px 12px', fontSize: 13, fontWeight: 950, cursor: intakeStatus === 'submitting' ? 'wait' : 'pointer' }}>
-              {intakeStatus === 'submitting' ? 'Submitting...' : 'Submit to War Room'}
+              {intakeStatus === 'submitting' ? 'Submitting...' : 'Go'}
             </button>
             <div style={{ color: intakeStatus === 'failed' ? '#fca5a5' : intakeStatus === 'created' ? '#86efac' : '#94a3b8', minHeight: 18, fontSize: 12, lineHeight: 1.4 }}>
               {intakeMessage || 'Authenticated route only. Creates Linear issue when Linear write config exists; otherwise returns a preview.'}
@@ -554,22 +602,28 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
 
           <div style={{ display: 'grid', gap: 12 }}>
             <section style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 10 }}>
+<div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
                 <div>
-                  <h2 style={{ margin: 0, color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Crew / Cost Routing</h2>
+                  <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Crew Deck</div>
+                  <h2 style={{ margin: '3px 0 0', color: '#f8fafc', fontSize: 16, fontWeight: 950 }}>Bridge Watch</h2>
                   <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>
                     {runtimeStatus === 'loading' && 'Checking live runtime and cost signals...'}
                     {runtimeStatus === 'ready' && runtimeHealth && `Generated ${formatDate(runtimeHealth.generatedAt)}`}
                     {runtimeStatus === 'failed' && 'Runtime status request failed; no signal is being inferred.'}
                   </div>
                 </div>
-                {runtimeHealth && (
+                {runtimeHealth ? (
                   <div style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.35, textAlign: 'right', maxWidth: 280 }}>
                     <span style={{ color: '#67e8f9', fontWeight: 950 }}>Recommendation: {runtimeHealth.recommendation.lane}</span>
                     <br />
                     {runtimeHealth.recommendation.summary}
                   </div>
+                ) : (
+                  <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 850 }}>Visual status only until runtime signal returns</div>
                 )}
+              </div>
+              <div style={{ marginBottom: 10, border: '1px solid rgba(45,212,191,0.14)', background: 'rgba(20,184,166,0.06)', borderRadius: 8, padding: 10, color: '#94a3b8', fontSize: 11, lineHeight: 1.4 }}>
+                Runtime cards show verified crew/cost signals only. War Room does not infer OK, quota, or dispatch readiness without evidence.
               </div>
 
               {runtimeHealth ? (
@@ -589,6 +643,27 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             </section>
 
             <section className="war-room-two-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
+                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Costmaster Gauge</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '96px 1fr', gap: 14, alignItems: 'center' }}>
+                  <div style={{ width: 96, height: 96, borderRadius: 999, background: `conic-gradient(#f59e0b ${pressure * 3.6}deg, rgba(148,163,184,0.16) 0deg)`, padding: 8 }}>
+                    <div style={{ width: '100%', height: '100%', borderRadius: 999, background: '#06121f', display: 'grid', placeItems: 'center', border: '1px solid rgba(148,163,184,0.18)' }}>
+                      <span style={{ color: pressure > 50 ? '#fbbf24' : '#67e8f9', fontSize: 22, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{pressure}%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#f8fafc', fontSize: 13, fontWeight: 950 }}>Budget pressure proxy</div>
+                    <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.45, marginTop: 5 }}>Derived from active warnings, evidence gaps, and P0/P1 risk count. This is a visual routing gauge, not a billing system.</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                      {data.commandBridge.crewLanes.map(lane => (
+                        <span key={lane.id} style={{ border: '1px solid rgba(148,163,184,0.16)', borderRadius: 8, padding: '5px 7px', color: lane.health === 'ok' ? '#86efac' : '#fbbf24', background: 'rgba(15,23,42,0.52)', fontSize: 10, fontWeight: 900 }}>
+                          {lane.displayName}: {lane.quotaStatus}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
                 <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Blockers / Approvals</h2>
                 <div style={{ display: 'grid', gap: 8 }}>
@@ -620,14 +695,20 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
 
         <section className="war-room-catalog-grid" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 12, marginBottom: 18 }}>
           <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
-            <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Recurring Mission Catalog</h2>
+            <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Mission Board / Signal Flags</h2>
             <div className="war-room-mission-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
               {data.commandBridge.missions.map(mission => (
-                <div key={mission.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(15,23,42,0.5)', borderRadius: 8, padding: 9 }}>
-                  <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 900 }}>{mission.name}</div>
-                  <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{mission.schedule}</div>
-                  <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 900, marginTop: 6 }}>{mission.enabled ? 'Enabled' : 'Disabled / no autonomous execution'}</div>
-                </div>
+                <details key={mission.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: mission.enabled ? 'rgba(20,184,166,0.1)' : 'rgba(15,23,42,0.5)', borderRadius: 8, padding: 9 }}>
+                  <summary style={{ listStyle: 'none', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                      <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>{mission.name}</div>
+                      <span style={{ width: 9, height: 9, borderRadius: 999, background: mission.enabled ? '#22c55e' : '#f59e0b', boxShadow: mission.enabled ? '0 0 10px rgba(34,197,94,0.45)' : '0 0 10px rgba(245,158,11,0.35)', flexShrink: 0 }} />
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{mission.schedule}</div>
+                  </summary>
+                  <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 900, marginTop: 8 }}>{mission.enabled ? 'Enabled' : 'Disabled / no autonomous execution'}</div>
+                  <div style={{ color: '#64748b', fontSize: 11, lineHeight: 1.35, marginTop: 5 }}>Owner: {mission.ownerAgent}. Approval required: {mission.approvalRequired ? 'yes' : 'no'}.</div>
+                </details>
               ))}
             </div>
           </div>
@@ -827,7 +908,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
         </section>
 
         <footer style={{ marginTop: 18, border: '1px solid rgba(45,212,191,0.16)', background: 'rgba(20,184,166,0.06)', borderRadius: 8, padding: '10px 12px', color: '#94a3b8', fontSize: 12, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <span>Safe command surface. Intake can create Linear issues only through the authenticated route; no agents, shell commands, or production writes run from War Room.</span>
+          <span>Safe command surface. Visual Acceptance Scan required for War Room UI proof. Intake can create Linear issues only through the authenticated route; no agents, shell commands, or production writes run from War Room.</span>
           <span>Updated {formatDate(data.generatedAt)} from {data.source === 'linear' ? 'Linear' : 'typed fixtures'}.</span>
         </footer>
       </main>
