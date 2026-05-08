@@ -24,10 +24,11 @@ import {
   validateWOFolderUrlForWrite,
 } from '@/lib/drive-wo-folder';
 import { isStaging } from '@/lib/env';
+import { SWO_COL } from '@/lib/contracts/service-work-orders';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
-const FOLDER_URL_COL = 23; // column X (0-based), matches COL_IDX.folder_url in update route
+const FOLDER_URL_COL = SWO_COL.folder_url; // column X — see lib/contracts/service-work-orders.ts
 
 const MAX_BYTES = 25 * 1024 * 1024;
 
