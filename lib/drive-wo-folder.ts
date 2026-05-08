@@ -51,6 +51,16 @@ export class StagingDriveFolderConfigError extends Error {
   }
 }
 
+export class WOFolderPlacementError extends Error {
+  constructor(folderName: string, folderId: string | undefined | null, reason: string) {
+    super(
+      `Drive created or returned an unsafe Work Order folder placement for "${folderName}"` +
+      `${folderId ? ` (${folderId})` : ''}: ${reason}`,
+    );
+    this.name = 'WOFolderPlacementError';
+  }
+}
+
 /**
  * Resolve the staging Drive parent folder id from STAGING_DRIVE_FOLDER_ID.
  * Throws StagingDriveFolderConfigError if the env var is missing or not a
@@ -129,17 +139,67 @@ export async function findOrCreateFolder(
     includeItemsFromAllDrives: true,
     supportsAllDrives: true,
     corpora: 'drive',
-    fields: 'files(id,name)',
+    fields: 'files(id,name,driveId,parents)',
   });
   if (search.data.files && search.data.files.length > 0) {
-    return search.data.files[0].id!;
+    const existing = search.data.files[0];
+    await assertOrFetchBanyanFolderPlacement(drive, safeName, parentId, existing);
+    return existing.id!;
   }
   const created = await drive.files.create({
     requestBody: { name: safeName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
     supportsAllDrives: true,
-    fields: 'id',
+    fields: 'id,name,driveId,parents',
   });
+  await assertOrFetchBanyanFolderPlacement(drive, safeName, parentId, created.data);
   return created.data.id!;
+}
+
+async function assertOrFetchBanyanFolderPlacement(
+  drive: DriveClient,
+  folderName: string,
+  expectedParentId: string,
+  folder: { id?: string | null; driveId?: string | null; parents?: string[] | null },
+): Promise<void> {
+  if (!folder.id) {
+    throw new WOFolderPlacementError(folderName, folder.id, 'Drive did not return a folder id.');
+  }
+  if (folder.driveId && folder.parents) {
+    assertBanyanFolderPlacement(folderName, expectedParentId, folder);
+    return;
+  }
+
+  const meta = await drive.files.get({
+    fileId: folder.id,
+    supportsAllDrives: true,
+    fields: 'id,driveId,parents',
+  });
+  assertBanyanFolderPlacement(folderName, expectedParentId, meta.data);
+}
+
+function assertBanyanFolderPlacement(
+  folderName: string,
+  expectedParentId: string,
+  folder: { id?: string | null; driveId?: string | null; parents?: string[] | null },
+): void {
+  if (!folder.id) {
+    throw new WOFolderPlacementError(folderName, folder.id, 'Drive did not return a folder id.');
+  }
+  if (folder.driveId !== BANYAN_DRIVE_ID) {
+    const actual = folder.driveId || 'My Drive / no shared drive id';
+    throw new WOFolderPlacementError(
+      folderName,
+      folder.id,
+      `expected Banyan shared drive ${BANYAN_DRIVE_ID}, got ${actual}.`,
+    );
+  }
+  if (!folder.parents?.includes(expectedParentId)) {
+    throw new WOFolderPlacementError(
+      folderName,
+      folder.id,
+      `expected parent ${expectedParentId}, got ${(folder.parents || []).join(', ') || 'no parents'}.`,
+    );
+  }
 }
 
 /**
@@ -191,7 +251,12 @@ export async function createWOFolderStructure(
     const meta = await drive.files.get({
       fileId: woFolderId,
       supportsAllDrives: true,
-      fields: 'webViewLink',
+      fields: 'id,driveId,parents,webViewLink',
+    });
+    assertBanyanFolderPlacement(woFolderName, woParentId, {
+      id: meta.data.id || woFolderId,
+      driveId: meta.data.driveId,
+      parents: meta.data.parents || undefined,
     });
 
     return meta.data.webViewLink || `https://drive.google.com/drive/folders/${woFolderId}`;

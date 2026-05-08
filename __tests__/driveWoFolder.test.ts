@@ -42,12 +42,29 @@ function buildDriveMocks(opts: {
   getImpl?: (params: any) => any;
 } = {}): DriveMocks {
   let createId = 0;
+  const parentById = new Map<string, string[]>();
   const list = jest.fn().mockImplementation(opts.listImpl || (() => Promise.resolve({ data: { files: [] } })));
-  const create = jest.fn().mockImplementation(opts.createImpl || (() => {
+  const create = jest.fn().mockImplementation(opts.createImpl || ((params: any) => {
     createId += 1;
-    return Promise.resolve({ data: { id: `created-${createId}` } });
+    const id = `created-${createId}`;
+    const parents = params.requestBody.parents || [];
+    parentById.set(id, parents);
+    return Promise.resolve({
+      data: {
+        id,
+        driveId: BANYAN_DRIVE_ID,
+        parents,
+      },
+    });
   }));
-  const get = jest.fn().mockImplementation(opts.getImpl || (() => Promise.resolve({ data: { webViewLink: 'https://drive.google.com/drive/folders/wo-link' } })));
+  const get = jest.fn().mockImplementation(opts.getImpl || ((params: any) => Promise.resolve({
+    data: {
+      id: params.fileId,
+      driveId: BANYAN_DRIVE_ID,
+      parents: parentById.get(params.fileId) || [],
+      webViewLink: 'https://drive.google.com/drive/folders/wo-link',
+    },
+  })));
   const permissionsCreate = jest.fn().mockResolvedValue({ data: {} });
   const drive = {
     files: { list, create, get },
@@ -167,6 +184,37 @@ describe('createWOFolderStructure — shared-drive safety', () => {
     await expect(createWOFolderStructure('WO-26-0003', 'C', 'Maui')).rejects.toThrow(/Drive folder could not be created/);
   });
 
+
+  it('fails closed if Drive create returns a My Drive folder instead of Banyan shared drive', async () => {
+    const m = buildDriveMocks({
+      createImpl: (params: any) => Promise.resolve({
+        data: {
+          id: 'unsafe-my-drive-folder',
+          driveId: null,
+          parents: params.requestBody.parents || [],
+        },
+      }),
+    });
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await expect(createWOFolderStructure('WO-26-0004', 'C', 'Maui')).rejects.toThrow(/unsafe Work Order folder placement/);
+  });
+
+  it('fails closed if Drive returns the created folder under the wrong parent', async () => {
+    const m = buildDriveMocks({
+      createImpl: () => Promise.resolve({
+        data: {
+          id: 'wrong-parent-folder',
+          driveId: BANYAN_DRIVE_ID,
+          parents: ['joey-or-other-parent'],
+        },
+      }),
+    });
+    mockGoogleDrive.mockReturnValue(m.drive);
+
+    await expect(createWOFolderStructure('WO-26-0005', 'C', 'Maui')).rejects.toThrow(/expected parent/);
+  });
+
   it('production never reads STAGING_DRIVE_FOLDER_ID even if it is set', async () => {
     const m = buildDriveMocks();
     mockGoogleDrive.mockReturnValue(m.drive);
@@ -250,7 +298,7 @@ describe('createWOFolderStructure — staging fences', () => {
         // listChildFolders for the WO folder returns all standard subfolders so
         // none are created.
         if (typeof params.q === 'string' && params.q.includes('WO-26-8480')) {
-          return Promise.resolve({ data: { files: [{ id: 'existing-wo', name: 'WO-26-8480 — Test Customer' }] } });
+          return Promise.resolve({ data: { files: [{ id: 'existing-wo', name: 'WO-26-8480 — Test Customer', driveId: BANYAN_DRIVE_ID, parents: [STAGING_FOLDER_ID] }] } });
         }
         if (typeof params.q === 'string' && params.q.startsWith("'existing-wo'")) {
           return Promise.resolve({
@@ -259,6 +307,14 @@ describe('createWOFolderStructure — staging fences', () => {
         }
         return Promise.resolve({ data: { files: [] } });
       },
+      getImpl: (params: any) => Promise.resolve({
+        data: {
+          id: params.fileId,
+          driveId: BANYAN_DRIVE_ID,
+          parents: params.fileId === 'existing-wo' ? [STAGING_FOLDER_ID] : [],
+          webViewLink: 'https://drive.google.com/drive/folders/existing-wo',
+        },
+      }),
     });
     mockGoogleDrive.mockReturnValue(m.drive);
 
