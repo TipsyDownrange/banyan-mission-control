@@ -45,7 +45,7 @@ export interface WarRoomKpis {
 export type WarRoomPriority = 'P0' | 'P1' | 'P2' | 'P3';
 export type WarRoomRisk = 'P0' | 'P1' | 'P2' | 'P3';
 export type WarRoomScopeType = 'audit' | 'code' | 'verify' | 'doc' | 'external-action' | 'recurring';
-export type WarRoomLane = 'kai' | 'claude' | 'codex' | 'sean' | 'auto';
+export type WarRoomLane = 'kai' | 'claude' | 'codex' | 'sean';
 
 export interface WarRoomTaskIntake {
   title: string;
@@ -76,6 +76,52 @@ export interface WarRoomCrewLane {
   notes: string;
 }
 
+export type WarRoomRuntimeHealthState = 'ready' | 'degraded' | 'blocked' | 'disabled' | 'unknown';
+export type WarRoomRuntimeAuthState = 'ok' | 'missing' | 'expired' | 'unknown';
+export type WarRoomRuntimeState = 'ok' | 'degraded' | 'blocked' | 'disabled' | 'unknown';
+export type WarRoomRuntimeQuotaState = 'verified' | 'manual' | 'constrained' | 'unknown';
+
+export interface CrewRuntimeStatus {
+  id: 'kai' | 'codex' | 'claude';
+  health: WarRoomRuntimeHealthState;
+  auth: WarRoomRuntimeAuthState;
+  runtime: WarRoomRuntimeState;
+  quota: WarRoomRuntimeQuotaState;
+  lastCheckedAt: string;
+  summary: string;
+  blockers: string[];
+}
+
+export interface WarRoomCostSnapshot {
+  allInTotal: number;
+  todayCost: number;
+  weekCost: number;
+  monthlyBurn: number;
+  dailyBudget: number;
+  budgetPct: number;
+  overBudget: boolean;
+  providers: Array<{ id: string; label: string; value: number; color: string }>;
+  byDay: Record<string, { cost: number; anthropic?: number; openai?: number }>;
+  lastSync?: string;
+  error?: string;
+}
+
+export interface WarRoomLaneRecommendation {
+  lane: 'kai' | 'codex' | 'claude' | 'sean';
+  confidence: 'high' | 'medium' | 'low';
+  summary: string;
+  reasons: string[];
+}
+
+export interface WarRoomRuntimeHealth {
+  generatedAt: string;
+  kai: CrewRuntimeStatus;
+  codex: CrewRuntimeStatus;
+  claude: CrewRuntimeStatus;
+  cost: WarRoomCostSnapshot;
+  recommendation: WarRoomLaneRecommendation;
+}
+
 export interface WarRoomMission {
   id: string;
   name: string;
@@ -92,7 +138,7 @@ export interface WarRoomAgentCard {
   id: string;
   title: string;
   role: string;
-  status: 'standing-by' | 'watching' | 'blocked' | 'disabled';
+  status: 'working' | 'idle' | 'blocked' | 'waiting-approval' | 'disabled';
   currentFocus: string;
   nextAction: string;
 }
