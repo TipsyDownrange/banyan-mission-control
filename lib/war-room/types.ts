@@ -120,6 +120,7 @@ export interface WarRoomRuntimeHealth {
   claude: CrewRuntimeStatus;
   cost: WarRoomCostSnapshot;
   recommendation: WarRoomLaneRecommendation;
+  liveOps?: import('./liveOps').WarRoomLiveOpsSnapshot;
 }
 
 export interface WarRoomMission {

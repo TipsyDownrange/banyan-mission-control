@@ -8,6 +8,7 @@ import type {
   WarRoomRuntimeQuotaState,
   WarRoomRuntimeState,
 } from './types';
+import { buildFallbackLiveOpsSnapshot, parseLiveOpsSnapshot } from './liveOps';
 
 type CrewId = CrewRuntimeStatus['id'];
 
@@ -187,6 +188,9 @@ export async function buildWarRoomRuntimeHealth(options: {
   }, nowIso);
   const cost = mapCostApiDataToWarRoomSnapshot(options.costData);
 
+  const liveOps = parseLiveOpsSnapshot(env.WAR_ROOM_RUNTIME_SNAPSHOT_JSON, options.now || new Date())
+    || buildFallbackLiveOpsSnapshot([kai, codex, claude], options.now || new Date());
+
   return {
     generatedAt: nowIso,
     kai,
@@ -194,6 +198,7 @@ export async function buildWarRoomRuntimeHealth(options: {
     claude,
     cost,
     recommendation: recommendLane({ kai, codex, claude }, cost),
+    liveOps,
   };
 }
 
