@@ -151,7 +151,7 @@ export async function buildWarRoomRuntimeHealth(options: {
       : Promise.resolve<RuntimeProbePayload>({
         auth: 'ok',
         runtime: 'ok',
-        quota: 'manual',
+        quota: 'verified',
         summary: 'Kai is active as the human-facing operator lane. Dispatch remains manual and approval-gated.',
       }),
     codexStatusUrl
@@ -174,7 +174,7 @@ export async function buildWarRoomRuntimeHealth(options: {
 
   const kai = normalizeCrewRuntimeStatus('kai', {
     auth: 'ok',
-    quota: 'manual',
+    quota: 'verified',
     ...kaiProbe,
   }, nowIso);
   const codex = normalizeCrewRuntimeStatus('codex', {

@@ -29,7 +29,7 @@ describe('War Room runtime status normalization', () => {
       fetchImpl: jest.fn() as unknown as typeof fetch,
     });
 
-    expect(health.kai.health).toBe('degraded');
+    expect(health.kai.health).toBe('ready');
     expect(health.codex.health).toBe('degraded');
     expect(health.codex.quota).toBe('manual');
     expect(health.codex.summary).toContain('manual operator check');
