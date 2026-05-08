@@ -20,11 +20,17 @@ export interface ServiceWorkOrdersPostgresCandidate {
   description: string | null;
   status: string | null;
   island: string | null;
+  address_raw: string | null;
   system_type: string | null;
+  assigned_to_raw: string | null;
   scheduled_date: string | null;
   quote_total: string | null;
   folder_url: string | null;
   legacy_customer_id: string | null;
+  org_id_raw: string | null;
+  customer_id_raw: string | null;
+  legacy_flag_raw: string | null;
+  requires_org_assignment_raw: string | null;
   legacy_payload: Record<string, unknown>;
   metadata: Record<string, unknown>;
 }
@@ -60,10 +66,17 @@ export function buildServiceWorkOrderPostgresCandidate(
   const g = (index: number) => String(row[index] || '').trim() || null;
   const rawStatus = g(SWO_COL.status);
   const normalizedStatus = rawStatus ? (STATUS_MAP[rawStatus] || rawStatus) : null;
-  const legacyCustomerId = g(SWO_COL.customer_id) || g(43);
+  const orgIdRaw = g(SWO_COL.org_id);
+  const customerIdRaw = g(SWO_COL.customer_id) || g(43);
+  const legacyFlagRaw = g(SWO_COL.legacy_flag) || g(44);
+  const requiresOrgAssignmentRaw = g(SWO_COL.requires_org_assignment);
+  const legacyCustomerId = customerIdRaw;
 
   const aaToAhValues = row.slice(26, 34).map(value => String(value || '').trim());
   const requiresManualInvoiceReview = rowReport.depositSignals > 0 || rowReport.shape === 'mixed_drift';
+  const identityResolutionStatus = classifyIdentityResolution(orgIdRaw, customerIdRaw, legacyFlagRaw, requiresOrgAssignmentRaw);
+  const assignedToRaw = g(SWO_COL.assigned_to);
+  const addressRaw = g(SWO_COL.address);
 
   return {
     wo_number: g(SWO_COL.wo_number),
@@ -72,14 +85,26 @@ export function buildServiceWorkOrderPostgresCandidate(
     description: g(SWO_COL.description),
     status: normalizedStatus,
     island: normalizeIsland(g(SWO_COL.island)),
+    address_raw: addressRaw,
     system_type: g(SWO_COL.system_type),
+    assigned_to_raw: assignedToRaw,
     scheduled_date: normalizeDate(g(SWO_COL.scheduled_date)),
     quote_total: normalizeNumberString(g(SWO_COL.quote_total)),
     folder_url: g(SWO_COL.folder_url),
     legacy_customer_id: legacyCustomerId,
+    org_id_raw: orgIdRaw,
+    customer_id_raw: customerIdRaw,
+    legacy_flag_raw: legacyFlagRaw,
+    requires_org_assignment_raw: requiresOrgAssignmentRaw,
     legacy_payload: {
       source: 'Service_Work_Orders',
       original_status: rawStatus,
+      address_raw: addressRaw,
+      assigned_to_raw: assignedToRaw,
+      org_id_raw: orgIdRaw,
+      customer_id_raw: customerIdRaw,
+      legacy_flag_raw: legacyFlagRaw,
+      requires_org_assignment_raw: requiresOrgAssignmentRaw,
       original_customer_id_header: headerRow[43] || null,
       original_legacy_flag_header: headerRow[44] || null,
       aa_to_ah_values: aaToAhValues,
@@ -94,6 +119,9 @@ export function buildServiceWorkOrderPostgresCandidate(
       qbo_deposit_ambiguity: classifyInvoiceAmbiguity(headerReport, rowReport),
       deposit_block_dormant: rowReport.depositSignals === 0,
       requires_manual_invoice_review: requiresManualInvoiceReview,
+      identity_resolution_status: identityResolutionStatus,
+      assignment_resolution_status: assignedToRaw ? 'raw_only_requires_user_crosswalk' : 'unassigned',
+      site_resolution_status: addressRaw ? 'raw_only_requires_site_resolution' : 'missing_address',
       confidence: headerReport.shape === 'contract_v2_metadata_first' && rowReport.shape !== 'mixed_drift' ? 'high' : 'low',
     },
     headerReport,
@@ -158,6 +186,25 @@ function classifyInvoiceAmbiguity(
   if (headerReport.shape === 'contract_v2_metadata_first') return 'clean_metadata_first';
   if (headerReport.shape === 'legacy_qbo_first' && rowReport.depositSignals === 0) return 'legacy_qbo_first_dormant_deposit';
   return 'unknown';
+}
+
+function classifyIdentityResolution(
+  orgIdRaw: string | null,
+  customerIdRaw: string | null,
+  legacyFlagRaw: string | null,
+  requiresOrgAssignmentRaw: string | null,
+): 'resolved' | 'missing_org' | 'missing_customer' | 'legacy_flagged' | 'requires_org_assignment' | 'unknown' {
+  if (isTruthyFlag(requiresOrgAssignmentRaw)) return 'requires_org_assignment';
+  if (isTruthyFlag(legacyFlagRaw)) return 'legacy_flagged';
+  if (!orgIdRaw && !customerIdRaw) return 'unknown';
+  if (!orgIdRaw) return 'missing_org';
+  if (!customerIdRaw) return 'missing_customer';
+  return 'resolved';
+}
+
+function isTruthyFlag(value: string | null): boolean {
+  if (!value) return false;
+  return ['true', 'yes', 'y', '1', 'legacy'].includes(value.trim().toLowerCase());
 }
 
 function normalizeIsland(value: string | null): string | null {
