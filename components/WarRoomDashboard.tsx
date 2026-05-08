@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { buildWarRoomDispatchPrompt, canPrepareWarRoomDispatch } from '@/lib/war-room/dispatchPrompt';
 import type { CrewRuntimeStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState } from '@/lib/war-room/types';
+import type { WarRoomLiveOpsLane } from '@/lib/war-room/liveOps';
 
 const NAV: Array<{ key: WarRoomQueueKey; label: string }> = [
   { key: 'myWatch', label: 'My Watch' },
@@ -65,6 +66,34 @@ function healthTheme(health: WarRoomRuntimeHealthState) {
   if (health === 'blocked') return { color: '#fca5a5', border: 'rgba(239,68,68,0.38)', bg: 'rgba(239,68,68,0.1)' };
   if (health === 'disabled') return { color: '#94a3b8', border: 'rgba(148,163,184,0.24)', bg: 'rgba(148,163,184,0.08)' };
   return { color: '#fcd34d', border: 'rgba(251,191,36,0.34)', bg: 'rgba(251,191,36,0.08)' };
+}
+
+
+function liveOpsTheme(state: WarRoomLiveOpsLane['state']) {
+  if (state === 'working') return { color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.34)' };
+  if (state === 'ready' || state === 'browser-verified' || state === 'deployed') return { color: '#86efac', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.28)' };
+  if (state === 'blocked' || state === 'stale') return { color: '#fca5a5', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.34)' };
+  if (state === 'waiting' || state === 'returned-unmerged' || state === 'pr-open' || state === 'merged' || state === 'verified-local') return { color: '#fbbf24', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.34)' };
+  return { color: '#67e8f9', bg: 'rgba(103,232,249,0.08)', border: 'rgba(103,232,249,0.26)' };
+}
+
+function LiveOpsCard({ lane }: { lane: WarRoomLiveOpsLane }) {
+  const theme = liveOpsTheme(lane.state);
+  return (
+    <div data-war-room-live-ops={lane.id} style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 14, padding: 10, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>{lane.label}</div>
+        <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase' }}>{lane.state}</span>
+      </div>
+      <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.35, marginTop: 7 }}>{lane.active || lane.note}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+        {[lane.issue, lane.session, lane.pr].filter(Boolean).map(item => (
+          <span key={item} style={{ color: '#67e8f9', border: '1px solid rgba(103,232,249,0.2)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 850 }}>{item}</span>
+        ))}
+      </div>
+      <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 8 }}>Last activity {formatDate(lane.lastActivityAt)} · {lane.source}</div>
+    </div>
+  );
 }
 
 function crewName(id: CrewRuntimeStatus['id']) {
@@ -484,6 +513,21 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             </div>
           ))}
         </section>
+
+        {runtimeHealth?.liveOps && (
+          <section data-war-room-live-ops-panel="true" style={{ border: '1px solid rgba(103,232,249,0.22)', background: 'linear-gradient(135deg, rgba(8,47,73,0.66), rgba(3,10,20,0.72))', borderRadius: 18, padding: 12, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+              <div>
+                <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live Operations</div>
+                <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Execution Heartbeat</h2>
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: 11 }}>Snapshot {formatDate(runtimeHealth.liveOps.generatedAt)}</div>
+            </div>
+            <div className="war-room-live-ops-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+              {runtimeHealth.liveOps.lanes.map(lane => <LiveOpsCard key={lane.id} lane={lane} />)}
+            </div>
+          </section>
+        )}
 
         <section className="war-room-command-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 0.52fr) minmax(520px, 1.48fr)', gap: 10, marginBottom: 12 }}>
           <form onSubmit={submitIntake} style={{ border: '1px solid rgba(94,234,212,0.26)', background: 'linear-gradient(180deg, rgba(3,10,20,0.82), rgba(8,47,73,0.48))', borderRadius: 18, padding: 12, display: 'grid', gap: 8, alignSelf: 'start' }}>
