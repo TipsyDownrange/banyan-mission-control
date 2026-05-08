@@ -205,7 +205,7 @@ function CrewRuntimeCard({ crew }: { crew: CrewRuntimeStatus }) {
         </span>
       </div>
       <div style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginTop: 7 }}>
-        Auth {crew.auth} / runtime {crew.runtime} / quota {crew.quota}
+        Auth {crew.auth} / runtime {crew.health === 'manual' ? 'manual standby' : crew.runtime} / quota {crew.quota}
       </div>
       <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{crew.summary}</p>
       <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 8 }}>Last checked {formatDate(crew.lastCheckedAt)}</div>
@@ -268,7 +268,7 @@ function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
               );
             })}
           </div>
-          <div style={{ color: '#64748b', fontSize: 10, marginTop: 5 }}>Last sync: {cost.lastSync ? formatDate(cost.lastSync) : 'unknown'}</div>
+          <div style={{ color: '#64748b', fontSize: 10, marginTop: 5 }}>Last sync: {cost.lastSync ? formatDate(cost.lastSync) : 'not connected'}</div>
         </div>
       </div>
       {cost.error && <div style={{ color: '#fca5a5', fontSize: 11, lineHeight: 1.35, marginTop: 10 }}>Cost route reported: {cost.error}</div>}
