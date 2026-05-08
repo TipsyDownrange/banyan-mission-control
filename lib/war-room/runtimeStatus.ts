@@ -61,12 +61,10 @@ export function normalizeCrewRuntimeStatus(
     health = 'blocked';
   } else if (auth === 'unknown' || runtime === 'unknown' || quota === 'unknown') {
     health = 'unknown';
+  } else if (quota === 'manual' && runtime === 'degraded' && blockers.length === 0) {
+    health = 'manual';
   } else if (runtime === 'degraded' || quota === 'manual' || quota === 'constrained' || blockers.length > 0) {
     health = 'degraded';
-  }
-
-  if (quota === 'manual' && !blockers.some(item => item.toLowerCase().includes('quota'))) {
-    blockers.push('Quota is manual-only; no verified quota API is configured.');
   }
 
   return {
@@ -160,7 +158,7 @@ export async function buildWarRoomRuntimeHealth(options: {
         auth: 'ok',
         runtime: 'degraded',
         quota: 'manual',
-        summary: 'Codex is available by manual operator check only; no live quota API is wired yet.',
+        summary: 'Codex is on standby. Use after manual quota/session check; no live quota API is wired yet.',
       }),
     claudeStatusUrl
       ? probeConfiguredRuntime(claudeStatusUrl, fetchImpl, 'Claude Code ACP')
@@ -168,7 +166,7 @@ export async function buildWarRoomRuntimeHealth(options: {
         auth: 'ok',
         runtime: 'degraded',
         quota: 'manual',
-        summary: 'Claude is available by manual operator check only; no live quota API is wired yet.',
+        summary: 'Claude is on standby. Use after manual quota/session check; no live quota API is wired yet.',
       }),
   ]);
 
@@ -225,7 +223,7 @@ function recommendLane(
   return {
     lane: 'kai',
     confidence: 'low',
-    summary: 'Keep routing manual until a build crew publishes verified auth/runtime/quota status.',
+    summary: 'Kai is the default route. Codex and Claude are standby lanes until manually assigned.',
     reasons: [crews.codex.summary, crews.claude.summary],
   };
 }

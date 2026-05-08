@@ -76,7 +76,7 @@ export interface WarRoomCrewLane {
   notes: string;
 }
 
-export type WarRoomRuntimeHealthState = 'ready' | 'degraded' | 'blocked' | 'disabled' | 'unknown';
+export type WarRoomRuntimeHealthState = 'ready' | 'manual' | 'degraded' | 'blocked' | 'disabled' | 'unknown';
 export type WarRoomRuntimeAuthState = 'ok' | 'missing' | 'expired' | 'unknown';
 export type WarRoomRuntimeState = 'ok' | 'degraded' | 'blocked' | 'disabled' | 'unknown';
 export type WarRoomRuntimeQuotaState = 'verified' | 'manual' | 'constrained' | 'unknown';

@@ -16,7 +16,6 @@ describe('War Room runtime status normalization', () => {
     expect(status.health).toBe('blocked');
     expect(status.blockers).toEqual(expect.arrayContaining([
       'Codex ACP token is missing.',
-      'Quota is manual-only; no verified quota API is configured.',
     ]));
     expect(status.lastCheckedAt).toBe('2026-05-07T12:00:00.000Z');
   });
@@ -30,11 +29,11 @@ describe('War Room runtime status normalization', () => {
     });
 
     expect(health.kai.health).toBe('ready');
-    expect(health.codex.health).toBe('degraded');
+    expect(health.codex.health).toBe('manual');
     expect(health.codex.quota).toBe('manual');
-    expect(health.codex.summary).toContain('manual operator check');
+    expect(health.codex.summary).toContain('standby');
     expect(health.codex.blockers.join(' ')).not.toContain('runtime probe unavailable');
-    expect(health.claude.summary).toContain('manual operator check');
+    expect(health.claude.summary).toContain('standby');
     expect(health.recommendation.lane).toBe('kai');
     expect(health.recommendation.confidence).toBe('low');
   });
