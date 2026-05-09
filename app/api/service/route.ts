@@ -5,6 +5,10 @@ import { normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { loadCrosswalkByCustomer } from '@/lib/entityCrosswalk';
 import {
+  loadServiceWorkOrdersFromPostgresShadow,
+  shouldReadServiceWorkOrdersFromPostgres,
+} from '@/lib/service-work-orders/postgres-read';
+import {
   SWO_COL,
   SERVICE_WORK_ORDERS_RANGE_END,
 } from '@/lib/contracts/service-work-orders';
@@ -92,7 +96,9 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
   const byStatus = {
     lead:               wos.filter(w => w.status === 'lead'),
     quote:              wos.filter(w => w.status === 'quote'),
+    quoted:             wos.filter(w => w.status === 'quoted'),
     approved:           wos.filter(w => w.status === 'approved'),
+    accepted:           wos.filter(w => w.status === 'accepted'),
     deposit_received:   wos.filter(w => w.status === 'deposit_received'),
     materials_ordered:  wos.filter(w => w.status === 'materials_ordered'),
     materials_received: wos.filter(w => w.status === 'materials_received'),
@@ -101,6 +107,7 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
     in_progress:        wos.filter(w => w.status === 'in_progress'),
     closed:             wos.filter(w => ['closed', 'completed'].includes(w.status)).slice(0, 10),
     lost:               wos.filter(w => w.status === 'lost').slice(0, 5),
+    declined:           wos.filter(w => w.status === 'declined').slice(0, 5),
   };
 
   const active = wos.filter(w => !['closed', 'completed', 'lost'].includes(w.status));
@@ -120,13 +127,22 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
 }
 
 export async function GET() {
-  // Return cached response if fresh
+  // Return cached Sheet response if fresh. Do not serve Sheet cache when the
+  // staging Postgres smoke read path is explicitly enabled.
   const now = Date.now();
-  if (cache && now - cache.ts < CACHE_TTL_MS) {
+  const readFromPostgres = shouldReadServiceWorkOrdersFromPostgres();
+  if (!readFromPostgres && cache && now - cache.ts < CACHE_TTL_MS) {
     return NextResponse.json(cache.data);
   }
 
   try {
+    if (readFromPostgres) {
+      const wos = await loadServiceWorkOrdersFromPostgresShadow();
+      const response = { ...buildResponse(wos), source: 'postgres_shadow' };
+      cache = { data: response, ts: now };
+      return NextResponse.json(response);
+    }
+
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
