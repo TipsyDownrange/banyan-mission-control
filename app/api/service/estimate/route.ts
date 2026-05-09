@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { GET_PASS_ON_RATE, getGETRate } from '@/lib/tax-rates';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'Carls_Method';
@@ -93,6 +94,9 @@ export async function GET(req: Request) {
 
 // POST /api/service/estimate — upsert estimate data for a WO
 export async function POST(req: Request) {
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/estimate');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
+
   try {
     const { woId, data } = await req.json();
     if (!woId) {

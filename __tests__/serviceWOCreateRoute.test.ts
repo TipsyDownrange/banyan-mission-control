@@ -106,12 +106,23 @@ function setupGoogleClients(options: {
     ? jest.fn().mockRejectedValue(new Error('Drive unavailable'))
     : jest.fn().mockResolvedValue({ data: { files: [] } });
   let folderId = 0;
-  const driveFilesCreate = jest.fn().mockImplementation(() => {
+  const createdFolders = new Map<string, { driveId: string; parents: string[] }>();
+  const driveFilesCreate = jest.fn().mockImplementation((args) => {
     folderId += 1;
-    return Promise.resolve({ data: { id: `folder-${folderId}` } });
+    const id = `folder-${folderId}`;
+    const parents = args?.requestBody?.parents || [];
+    createdFolders.set(id, { driveId: '0AKSVpf3AnH7CUk9PVA', parents });
+    return Promise.resolve({ data: { id, driveId: '0AKSVpf3AnH7CUk9PVA', parents } });
   });
-  const driveFilesGet = jest.fn().mockResolvedValue({
-    data: { webViewLink: options.folderUrl || 'https://drive.google.com/drive/folders/ban51-test' },
+  const driveFilesGet = jest.fn().mockImplementation((args) => {
+    const id = args?.fileId || `folder-${folderId}`;
+    const placement = createdFolders.get(id) || { driveId: '0AKSVpf3AnH7CUk9PVA', parents: ['folder-1'] };
+    return Promise.resolve({
+      data: {
+        ...placement,
+        webViewLink: options.folderUrl || 'https://drive.google.com/drive/folders/ban51-test',
+      },
+    });
   });
   const drivePermissionsCreate = jest.fn().mockResolvedValue({ data: {} });
 
@@ -143,6 +154,8 @@ describe('Service WO create route', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.VERCEL_TARGET_ENV;
+    delete process.env.WO_POSTGRES_READ_ENABLED;
     mockCheckPermission.mockResolvedValue({ allowed: true });
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -275,6 +288,30 @@ describe('Service WO create route', () => {
 
     expect(res.status).toBe(200);
     expect(fireAndForgetCustomerUpdate).not.toHaveBeenCalled();
+  });
+
+  it('blocks staging WO creation while Postgres shadow read mode is enabled', async () => {
+    const prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+    const prevReadEnabled = process.env.WO_POSTGRES_READ_ENABLED;
+    process.env.VERCEL_TARGET_ENV = 'staging';
+    process.env.WO_POSTGRES_READ_ENABLED = 'true';
+
+    try {
+      const { POST } = await import('@/app/api/service/dispatch/route');
+      const res = await POST(request(baseBody({ woNumber: '26-8888' })));
+      const json = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(json.code).toBe('WO_POSTGRES_READ_ONLY_SMOKE');
+      expect(json.route).toBe('/api/service/dispatch');
+      expect(mockSheets).not.toHaveBeenCalled();
+      expect(mockDrive).not.toHaveBeenCalled();
+    } finally {
+      if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+      else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+      if (prevReadEnabled === undefined) delete process.env.WO_POSTGRES_READ_ENABLED;
+      else process.env.WO_POSTGRES_READ_ENABLED = prevReadEnabled;
+    }
   });
 
   describe('staging Drive routing', () => {

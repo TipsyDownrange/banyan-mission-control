@@ -20,6 +20,7 @@ import {
   SERVICE_WORK_ORDERS_RANGE_END,
   columnLetterFromIndex,
 } from '@/lib/contracts/service-work-orders';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
@@ -107,6 +108,9 @@ export async function PATCH(req: Request) {
     if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
     actorEmail = sessionEmail || '';
   }
+
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/update');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
 
   try {
     const body = await req.json();

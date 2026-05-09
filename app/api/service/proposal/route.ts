@@ -14,6 +14,7 @@ import { emitMCEvent } from '@/lib/events';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { emailSkipReason, isStaging, shouldSkipEmailSend } from '@/lib/env';
 import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 const SHEET_ID = getBackendSheetId();
 const WO_COL = { wo_id: 0, wo_number: 1, name: 2, description: 3, status: 4, island: 5, area: 6, address: 7, contact_person: 8, assigned_to: 9, contact_phone: 10, contact_email: 11, customer_name: 12 };
@@ -208,6 +209,9 @@ async function emailCustomer(params: {
 }
 
 export async function POST(req: Request) {
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/proposal');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
+
   try {
     const body = await req.json();
     const { quote, sendEmail = false, emailTo, emailSubject, emailBody } = body;
