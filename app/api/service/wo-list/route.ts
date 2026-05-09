@@ -8,6 +8,10 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { SWO_COL } from '@/lib/contracts/service-work-orders';
+import {
+  loadWorkOrderPickerFromPostgresShadow,
+  shouldReadServiceWorkOrdersFromPostgres,
+} from '@/lib/service-work-orders/postgres-read';
 
 type WorkOrder = { id: string; name: string; island: string; status: string; contact: string };
 
@@ -29,6 +33,11 @@ const TERMINAL_STATUSES = new Set(['closed', 'lost', 'completed', 'rejected']);
 
 export async function GET() {
   try {
+    if (shouldReadServiceWorkOrdersFromPostgres()) {
+      const workOrders = await loadWorkOrderPickerFromPostgresShadow();
+      return NextResponse.json({ workOrders, source: 'postgres_shadow' });
+    }
+
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
