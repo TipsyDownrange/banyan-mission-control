@@ -12,6 +12,7 @@ import {
   createWOFolderStructure,
   requireServiceWOFolderUrl,
 } from '@/lib/drive-wo-folder';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 export { ServiceWOFolderCreationError, StagingDriveFolderConfigError, requireServiceWOFolderUrl };
 
@@ -57,6 +58,9 @@ export async function POST(req: Request) {
   // Permission check — wo:create required (Joey, Sean, Jody)
   const { allowed } = await checkPermission(req, 'wo:create');
   if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:create required' }, { status: 403 });
+
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/dispatch');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
 
   try {
     const body = await req.json();

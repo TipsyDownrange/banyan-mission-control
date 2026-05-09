@@ -179,6 +179,30 @@ describe('service/update — BAN-40 internal auth', () => {
     expect(res.status).toBe(403);
   });
 
+  it('blocks update writes in staging Postgres shadow read mode after auth succeeds', async () => {
+    const prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+    const prevReadEnabled = process.env.WO_POSTGRES_READ_ENABLED;
+    process.env.VERCEL_TARGET_ENV = 'staging';
+    process.env.WO_POSTGRES_READ_ENABLED = 'true';
+    mockCheckPermission.mockResolvedValue({ allowed: true, email: 'sean@kulaglass.com' });
+
+    try {
+      const { PATCH } = await import('@/app/api/service/update/route');
+      const res = await PATCH(makeRequest({ woId: 'WO-26-9999', status: 'in_progress' }));
+      const json = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(json.code).toBe('WO_POSTGRES_READ_ONLY_SMOKE');
+      expect(json.route).toBe('/api/service/update');
+      expect(mockSheets).not.toHaveBeenCalled();
+    } finally {
+      if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+      else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+      if (prevReadEnabled === undefined) delete process.env.WO_POSTGRES_READ_ENABLED;
+      else process.env.WO_POSTGRES_READ_ENABLED = prevReadEnabled;
+    }
+  });
+
   // ── 7. Valid key with INTERNAL_API_KEY unset returns 401 ──────────────────
   it('valid-looking key returns 401 when INTERNAL_API_KEY is not set', async () => {
     delete process.env.INTERNAL_API_KEY;

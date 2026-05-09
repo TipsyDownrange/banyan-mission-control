@@ -10,12 +10,16 @@ import {
   InvalidWOFolderUrlError,
   validateWOFolderUrlForWrite,
 } from '@/lib/drive-wo-folder';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 const FIELD_SHEET_ID = getBackendSheetId();
 
 export async function POST(req: Request) {
   const { allowed } = await checkPermission(req, 'wo:edit');
   if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:edit required' }, { status: 403 });
+
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/folder-link');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
 
   try {
     const { woId, woName, folderUrl } = await req.json();
