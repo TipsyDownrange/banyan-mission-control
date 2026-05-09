@@ -49,7 +49,12 @@ type InsertFn = (candidate: ServiceWorkOrdersPostgresCandidate) => Promise<unkno
 
 const STATUS_MAP: Record<string, string> = {
   quote: 'quoted',
+  quote_requested: 'lead',
+  new: 'lead',
+  estimated: 'quoted',
   approved: 'accepted',
+  lost: 'declined',
+  declined: 'declined',
   cancelled: 'cancelled',
   canceled: 'cancelled',
 };
