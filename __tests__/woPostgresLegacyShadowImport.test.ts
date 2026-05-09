@@ -83,6 +83,7 @@ describe('WO Postgres legacy shadow import helpers', () => {
       import_mode: 'legacy_payload_shadow',
       confidence: 'low',
       assignment_resolution_status: 'partial',
+      assignment_mapped_to_uuid: true,
       org_id_raw_preserved: 'not-a-uuid-org',
       org_id_mapped_to_uuid: false,
       assigned_unresolved_tokens: ['Unknown Person'],
@@ -93,6 +94,30 @@ describe('WO Postgres legacy shadow import helpers', () => {
       customer_id_raw: 'CUST-1',
       assigned_unresolved_tokens: ['Unknown Person'],
       source_folder_url: 'https://drive.google.com/drive/folders/1abcDEF_234',
+    });
+  });
+
+  it('keeps legacy non-UUID user ids out of UUID columns while preserving them in metadata', () => {
+    const aliases = buildUserAliasMap([
+      ['USR-030', 'Joey Ritthaler', '', 'joey@kulaglass.com'],
+      ['USR-031', 'Nate Nakamura', '', 'nate@kulaglass.com'],
+    ]);
+    const candidate = buildServiceWorkOrderPostgresCandidate(LIVE_KNOWN_HEADER_2026_05_07, row({ 14: 'Joey Ritthaler, Nate Nakamura' }));
+    const assignment = resolveAssignment(candidate.assigned_to_raw, aliases);
+    const importRow = buildLegacyShadowImportRow(candidate, assignment);
+
+    expect(assignment.status).toBe('resolved');
+    expect(importRow.values.assigned_to).toBeNull();
+    expect(importRow.values.assigned_crew).toBeNull();
+    expect(importRow.values.metadata).toMatchObject({
+      assignment_resolution_status: 'resolved',
+      assignment_mapped_to_uuid: false,
+      assigned_user_ids_raw_preserved: ['USR-030', 'USR-031'],
+      assigned_db_user_ids: [],
+    });
+    expect(importRow.values.legacy_payload).toMatchObject({
+      assigned_user_ids: ['USR-030', 'USR-031'],
+      assigned_db_user_ids: [],
     });
   });
 

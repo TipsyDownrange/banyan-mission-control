@@ -105,7 +105,8 @@ export function buildLegacyShadowImportRow(
   assignment: AssignmentResolution,
 ): LegacyShadowImportRow {
   const stableKey = candidate.kid || (candidate.wo_number ? `WO-${candidate.wo_number}` : 'unknown');
-  const assignedCrew = assignment.assigned_user_ids.length > 0 ? assignment.assigned_user_ids : null;
+  const dbAssignedUserIds = assignment.assigned_user_ids.filter(isUuid);
+  const assignedCrew = dbAssignedUserIds.length > 0 ? dbAssignedUserIds : null;
   const primaryAssigned = assignedCrew?.[0] || null;
   const folderId = extractDriveFolderId(candidate.folder_url);
   const orgId = isUuid(candidate.org_id_raw) ? candidate.org_id_raw : null;
@@ -118,6 +119,7 @@ export function buildLegacyShadowImportRow(
     assigned_to_raw: candidate.assigned_to_raw,
     assigned_tokens: assignment.tokens,
     assigned_user_ids: assignment.assigned_user_ids,
+    assigned_db_user_ids: dbAssignedUserIds,
     assigned_unresolved_tokens: assignment.unresolved_tokens,
     source_folder_url: candidate.folder_url,
   };
@@ -127,7 +129,10 @@ export function buildLegacyShadowImportRow(
     import_mode: 'legacy_payload_shadow',
     confidence: 'low',
     assignment_resolution_status: assignment.status,
+    assigned_user_ids_raw_preserved: assignment.assigned_user_ids,
+    assigned_db_user_ids: dbAssignedUserIds,
     assigned_unresolved_tokens: assignment.unresolved_tokens,
+    assignment_mapped_to_uuid: dbAssignedUserIds.length > 0,
     org_id_raw_preserved: candidate.org_id_raw,
     org_id_mapped_to_uuid: Boolean(orgId),
     folder_id: folderId,
