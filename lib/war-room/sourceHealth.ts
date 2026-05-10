@@ -232,27 +232,27 @@ async function buildLinearCard({ nowIso, env, fetchImpl }: { nowIso: string; env
 
   if (apiKey) {
     try {
-      const query = `
-        query SourceHealthLinear($ids: [String!]) {
-          issues(filter: { identifier: { in: $ids } }, first: 25) {
-            nodes { identifier title state { name } }
-          }
-        }
-      `;
+      const aliases = LINEAR_CONTEXT_IDS.map((id, index) => `i${index}: issue(id: \"${id}\") { identifier title state { name } }`).join('\n');
+      const query = `query SourceHealthLinear { ${aliases} }`;
       const response = await fetchWithTimeout(fetchImpl, LINEAR_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: apiKey },
-        body: JSON.stringify({ query, variables: { ids: LINEAR_CONTEXT_IDS } }),
+        body: JSON.stringify({ query }),
         cache: 'no-store',
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
       if (payload?.errors?.length) throw new Error(payload.errors.map((error: { message?: string }) => error.message || 'Linear error').join('; '));
-      issues = (payload?.data?.issues?.nodes || []).map((issue: { identifier: string; title: string; state?: { name?: string } }) => ({
-        id: issue.identifier,
-        title: issue.title,
-        status: issue.state?.name || 'Unknown',
-      }));
+      issues = Object.values(payload?.data || {})
+        .filter(Boolean)
+        .map((issue) => {
+          const typed = issue as { identifier: string; title: string; state?: { name?: string } };
+          return {
+            id: typed.identifier,
+            title: typed.title,
+            status: typed.state?.name || 'Unknown',
+          };
+        });
       checkedChannels.push('linear_graphql_issue_statuses');
       lastCheckedAt = nowIso;
       freshness = 'live';
