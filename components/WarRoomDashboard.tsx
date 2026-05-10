@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { buildWarRoomDispatchPrompt, canPrepareWarRoomDispatch } from '@/lib/war-room/dispatchPrompt';
-import type { CrewRuntimeStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState } from '@/lib/war-room/types';
+import type { CrewRuntimeStatus, SourceHealthSnapshot, SourceHealthSourceCard, SourceHealthStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState } from '@/lib/war-room/types';
 import type { WarRoomLiveOpsLane } from '@/lib/war-room/liveOps';
 
 const NAV: Array<{ key: WarRoomQueueKey; label: string }> = [
@@ -68,6 +68,83 @@ function healthTheme(health: WarRoomRuntimeHealthState) {
   return { color: '#fcd34d', border: 'rgba(251,191,36,0.34)', bg: 'rgba(251,191,36,0.08)' };
 }
 
+function sourceHealthTheme(status: SourceHealthStatus) {
+  if (status === 'healthy') return { color: '#86efac', border: 'rgba(34,197,94,0.38)', bg: 'rgba(34,197,94,0.09)' };
+  if (status === 'degraded') return { color: '#fbbf24', border: 'rgba(245,158,11,0.42)', bg: 'rgba(245,158,11,0.11)' };
+  if (status === 'warning') return { color: '#67e8f9', border: 'rgba(103,232,249,0.32)', bg: 'rgba(103,232,249,0.08)' };
+  if (status === 'critical') return { color: '#fca5a5', border: 'rgba(239,68,68,0.44)', bg: 'rgba(239,68,68,0.12)' };
+  return { color: '#cbd5e1', border: 'rgba(148,163,184,0.26)', bg: 'rgba(148,163,184,0.08)' };
+}
+
+function SourceHealthCard({ card }: { card: SourceHealthSourceCard }) {
+  const theme = sourceHealthTheme(card.status);
+  const nonAuthorizationLines = card.nonAuthorizationLabel?.split(' / ') || [];
+  return (
+    <article data-source-health-card={card.source} data-source-health-status={card.status} style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 16, padding: 11, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 10 }}>
+        <div>
+          <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>{card.label}</div>
+          <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 3 }}>Authority: {card.authority} · Freshness: {card.freshness}</div>
+        </div>
+        <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{card.status}</span>
+      </div>
+      <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{card.summary}</p>
+      <div style={{ color: card.isFallback ? '#fbbf24' : '#94a3b8', fontSize: 11, fontWeight: 850, marginTop: 7 }}>{card.freshnessLabel}</div>
+      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+        {card.isFallback && <span style={{ color: '#fbbf24', border: '1px solid rgba(245,158,11,0.34)', background: 'rgba(245,158,11,0.1)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 950 }}>last verified fallback</span>}
+        {(card.checkedChannels || []).slice(0, 3).map(channel => <span key={channel} style={{ color: '#86efac', border: '1px solid rgba(34,197,94,0.22)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 850 }}>{channel}</span>)}
+      </div>
+      {(card.unverifiedChannels || []).length > 0 && (
+        <div style={{ color: '#fbbf24', fontSize: 10, lineHeight: 1.35, marginTop: 8 }}>
+          Unverified channels: {(card.unverifiedChannels || []).join(', ')}
+        </div>
+      )}
+      {card.details.length > 0 && (
+        <ul style={{ margin: '8px 0 0', paddingLeft: 16, color: '#cbd5e1', fontSize: 11, lineHeight: 1.35 }}>
+          {card.details.slice(0, 5).map(detail => <li key={detail}>{detail}</li>)}
+        </ul>
+      )}
+      {nonAuthorizationLines.length > 0 && (
+        <div style={{ border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.09)', borderRadius: 12, padding: 8, color: '#fca5a5', fontSize: 11, fontWeight: 950, lineHeight: 1.45, marginTop: 9 }}>
+          {nonAuthorizationLines.map(line => <div key={line}>{line}</div>)}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function SourceHealthPanel({ snapshot, status }: { snapshot: SourceHealthSnapshot | null; status: 'loading' | 'ready' | 'failed' }) {
+  return (
+    <section data-source-health-panel="true" style={{ border: '1px solid rgba(251,191,36,0.28)', background: 'linear-gradient(135deg, rgba(69,43,8,0.42), rgba(3,10,20,0.78))', borderRadius: 18, padding: 12, marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 12, marginBottom: 10 }}>
+        <div>
+          <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Source Health</div>
+          <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Truth labels for build sources</h2>
+          <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>Read-only Mission Control War Room surface. No remediation, sync, fix, cutover, or Field App controls.</div>
+        </div>
+        <div style={{ color: status === 'ready' ? '#86efac' : status === 'failed' ? '#fca5a5' : '#fbbf24', fontSize: 11, fontWeight: 950, textAlign: 'right' }}>
+          {status === 'ready' && snapshot ? `Snapshot ${formatDate(snapshot.generatedAt)}` : status === 'failed' ? 'Snapshot unavailable' : 'Checking sources...'}
+        </div>
+      </div>
+      {snapshot ? (
+        <>
+          <div className="war-room-source-health-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+            {snapshot.sources.map(card => <SourceHealthCard key={card.source} card={card} />)}
+          </div>
+          {snapshot.conflicts.length > 0 && (
+            <div style={{ border: '1px solid rgba(239,68,68,0.28)', background: 'rgba(239,68,68,0.08)', borderRadius: 14, padding: 10, marginTop: 10, color: '#fca5a5', fontSize: 11, lineHeight: 1.4 }}>
+              <strong>Conflicts / stop signals:</strong> {snapshot.conflicts.map(conflict => `${conflict.id}: ${conflict.recommendedAction}`).join(' ')}
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ border: '1px dashed rgba(251,191,36,0.34)', background: 'rgba(251,191,36,0.07)', borderRadius: 18, padding: 12, color: '#fcd34d', fontSize: 12, lineHeight: 1.45 }}>
+          Source Health has not returned yet. The existing War Room queue and runtime panels remain isolated and usable.
+        </div>
+      )}
+    </section>
+  );
+}
 
 function liveOpsTheme(state: WarRoomLiveOpsLane['state']) {
   if (state === 'working') return { color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.34)' };
@@ -276,10 +353,12 @@ function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
   );
 }
 
-export default function WarRoomDashboard({ initialData, initialRuntimeHealth = null }: { initialData: WarRoomDashboardData; initialRuntimeHealth?: WarRoomRuntimeHealth | null }) {
+export default function WarRoomDashboard({ initialData, initialRuntimeHealth = null, initialSourceHealth = null }: { initialData: WarRoomDashboardData; initialRuntimeHealth?: WarRoomRuntimeHealth | null; initialSourceHealth?: SourceHealthSnapshot | null }) {
   const [data] = useState(initialData);
   const [runtimeHealth, setRuntimeHealth] = useState<WarRoomRuntimeHealth | null>(initialRuntimeHealth);
   const [runtimeStatus, setRuntimeStatus] = useState<'loading' | 'ready' | 'failed'>(initialRuntimeHealth ? 'ready' : 'loading');
+  const [sourceHealth, setSourceHealth] = useState<SourceHealthSnapshot | null>(initialSourceHealth);
+  const [sourceHealthStatus, setSourceHealthStatus] = useState<'loading' | 'ready' | 'failed'>(initialSourceHealth ? 'ready' : 'loading');
   const [selectedId, setSelectedId] = useState(initialData.upNext[0]?.id || initialData.issues[0]?.id || '');
   const [activeQueue, setActiveQueue] = useState<WarRoomQueueKey>('myWatch');
   const [search, setSearch] = useState('');
@@ -330,6 +409,31 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
 
     loadRuntimeHealth();
     const interval = setInterval(loadRuntimeHealth, 60000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSourceHealth() {
+      try {
+        const response = await fetch('/api/war-room/source-health', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'source health request failed');
+        if (active) {
+          setSourceHealth(payload);
+          setSourceHealthStatus('ready');
+        }
+      } catch {
+        if (active) setSourceHealthStatus('failed');
+      }
+    }
+
+    loadSourceHealth();
+    const interval = setInterval(loadSourceHealth, 30000);
     return () => {
       active = false;
       clearInterval(interval);
@@ -528,6 +632,8 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             </div>
           </section>
         )}
+
+        <SourceHealthPanel snapshot={sourceHealth} status={sourceHealthStatus} />
 
         <section className="war-room-command-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 0.52fr) minmax(520px, 1.48fr)', gap: 10, marginBottom: 12 }}>
           <form onSubmit={submitIntake} style={{ border: '1px solid rgba(94,234,212,0.26)', background: 'linear-gradient(180deg, rgba(3,10,20,0.82), rgba(8,47,73,0.48))', borderRadius: 18, padding: 12, display: 'grid', gap: 8, alignSelf: 'start' }}>
