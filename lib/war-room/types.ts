@@ -183,6 +183,100 @@ export interface WarRoomCommandBridgeData {
   approvalInbox: WarRoomApprovalItem[];
 }
 
+export type SourceHealthStatus = 'healthy' | 'degraded' | 'warning' | 'critical' | 'unknown';
+export type SourceAuthority =
+  | 'production_authoritative'
+  | 'staging_shadow'
+  | 'read_only_reference'
+  | 'last_verified_fallback'
+  | 'non_authoritative'
+  | 'unknown';
+export type SourceHealthFreshness = 'live' | 'last_verified' | 'stale' | 'manual' | 'unknown';
+
+export type SourceHealthSourceKey = 'linear' | 'supabase' | 'drive' | 'github' | 'vercel' | 'war_room_runtime';
+
+export interface SourceHealthSourceCard {
+  source: SourceHealthSourceKey;
+  label: string;
+  status: SourceHealthStatus;
+  authority: SourceAuthority;
+  freshness: SourceHealthFreshness;
+  freshnessLabel: string;
+  lastCheckedAt: string | null;
+  summary: string;
+  details: string[];
+  sourceUrl?: string;
+  isFallback: boolean;
+  checkedChannels?: string[];
+  unverifiedChannels?: string[];
+  nonAuthorizationLabel?: string;
+}
+
+export interface SourceHealthConflict {
+  id: string;
+  severity: 'high' | 'medium' | 'low';
+  sourceA: string;
+  sourceB: string;
+  currentA: string;
+  currentB: string;
+  recommendedAction: string;
+}
+
+export interface SupabaseStagingHealth {
+  projectRef: string;
+  projectName: string;
+  projectStatus: string;
+  region: string;
+  postgresVersion?: string;
+  serviceWorkOrdersCount: number | null;
+  driftRunCount: number | null;
+  driftDiffCount: number | null;
+  latestDriftRun?: {
+    sheetsRowCount: number;
+    postgresRowCount: number;
+    rowsInBoth: number;
+    rowsWithFieldDrift: number;
+    totalFieldDriftCount: number;
+    stopConditionTriggered: boolean;
+    stopConditionReason: string | null;
+    schemaVersion: string | null;
+  };
+  securityAdvisorCount: number | null;
+  performanceAdvisorCount: number | null;
+  edgeFunctionCount: number | null;
+  migrationCount: number | null;
+}
+
+export interface LinearHealth {
+  contextIssueIds: string[];
+  issues: Array<{ id: string; status: string; title: string }>;
+}
+
+export interface DriveCanonHealth {
+  checkedDocumentLabels: string[];
+}
+
+export interface GitHubHealth {
+  commitSha: string | null;
+}
+
+export interface VercelHealth {
+  missionControlOnly: boolean;
+  postgresGateLabel: string;
+}
+
+export interface SourceHealthSnapshot {
+  generatedAt: string;
+  environment: 'staging' | 'mixed' | 'unknown';
+  sources: SourceHealthSourceCard[];
+  conflicts: SourceHealthConflict[];
+  supabase?: SupabaseStagingHealth;
+  linear?: LinearHealth;
+  drive?: DriveCanonHealth;
+  github?: GitHubHealth;
+  vercel?: VercelHealth;
+}
+
 export interface WarRoomDashboardData {
   source: 'linear' | 'fixture';
   generatedAt: string;
