@@ -18,6 +18,11 @@ interface TakeoffData {
   flashing: Row[];
 }
 
+// ─── Packet 001: feature flag + fallback ─────────────────────────────────────
+// SYSTEM_TYPES_FALLBACK remains in code until v1.5 post-acceptance (Packet 001 §G10).
+const SYSTEM_TYPES_FALLBACK = ['Curtainwall', 'Storefront', 'Window Wall', 'Doors', 'Skylights', 'Shower Glass', 'Railings', 'Other'];
+const ML_API_ENABLED = process.env.NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API === 'true';
+
 // ─── Design helpers ───────────────────────────────────────────────────────────
 
 const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
@@ -115,6 +120,21 @@ interface AddRowFormProps {
 function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {} }: AddRowFormProps) {
   const [fields, setFields] = useState<Row>({ Bid_Version_ID: bidVersionId });
   const [saving, setSaving] = useState(false);
+  const [systemTypeOptions, setSystemTypeOptions] = useState<string[]>(SYSTEM_TYPES_FALLBACK);
+
+  useEffect(() => {
+    if (!ML_API_ENABLED) return;
+    fetch('/api/master-library/system-types')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data && Array.isArray(d.data) && d.data.length > 0) {
+          setSystemTypeOptions(d.data.map((st: { name: string }) => st.name));
+        }
+      })
+      .catch(() => {
+        console.warn('[TakeoffTab] Master Library API unavailable, using hardcoded fallback');
+      });
+  }, []);
 
   function set(k: string, v: string) {
     setFields(prev => {
@@ -245,7 +265,6 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
   };
 
   const STATUS_OPTIONS = ['HARD', 'ALLOWANCE', 'TBD'];
-  const SYSTEM_TYPES = ['Curtainwall', 'Storefront', 'Window Wall', 'Doors', 'Skylights', 'Shower Glass', 'Railings', 'Other'];
   const QTY_STATUS = STATUS_OPTIONS;
 
   return (
@@ -262,7 +281,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
 
       {subView === 'systems' && (
         <div style={formGridStyle}>
-          {select('System_Type', 'System Type', SYSTEM_TYPES)}
+          {select('System_Type', 'System Type', systemTypeOptions)}
           {field('Assembly_ID', 'Assembly ID')}
           {field('Location', 'Location')}
           {field('Qty_SF_DLO', 'Qty SF (DLO)', 'number')}
@@ -295,7 +314,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
       {subView === 'glass' && (
         <div>
           <div style={formGridStyle}>
-            {select('System_Type', 'System Type', SYSTEM_TYPES)}
+            {select('System_Type', 'System Type', systemTypeOptions)}
             {field('Assembly_ID', 'Assembly ID')}
             {field('Location', 'Location')}
             {field('Glass_Type_Code', 'Glass Type Code')}
@@ -327,7 +346,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
 
       {subView === 'sealant' && (
         <div style={formGridStyle}>
-          {select('System_Type', 'System Type', SYSTEM_TYPES)}
+          {select('System_Type', 'System Type', systemTypeOptions)}
           {field('Assembly_ID', 'Assembly ID')}
           {field('Joint_Bucket', 'Joint Bucket')}
           {field('Location', 'Location')}
@@ -344,7 +363,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
 
       {subView === 'fasteners' && (
         <div style={formGridStyle}>
-          {select('System_Type', 'System Type', SYSTEM_TYPES)}
+          {select('System_Type', 'System Type', systemTypeOptions)}
           {field('Assembly_ID', 'Assembly ID')}
           {field('Application', 'Application')}
           {field('Fastener_Type', 'Fastener Type')}
@@ -361,7 +380,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
 
       {subView === 'flashing' && (
         <div style={formGridStyle}>
-          {select('System_Type', 'System Type', SYSTEM_TYPES)}
+          {select('System_Type', 'System Type', systemTypeOptions)}
           {field('Assembly_ID', 'Assembly ID')}
           {field('Item_Description', 'Item Description')}
           {field('Material', 'Material')}

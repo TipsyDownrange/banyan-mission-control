@@ -104,3 +104,11 @@ export function getManpowerScheduleSheetId(): string {
   if (isStaging()) return requireStagingEnv('STAGING_MANPOWER_SCHEDULE_SHEET_ID', 'manpower schedule sheet');
   return process.env.MANPOWER_SCHEDULE_SHEET_ID?.trim() || '1099MZ_cGYqNbMKcvoKnwNp0uXnugQPY-jPOpmsJW_wQ';
 }
+
+// Packet 001: Master Library API feature flag.
+// Server-side: check BANYAN_FF_MASTER_LIBRARY_API.
+// Client-side components read NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API.
+// Default OFF in all environments — requires explicit opt-in.
+export function isMasterLibraryApiEnabled(): boolean {
+  return process.env.BANYAN_FF_MASTER_LIBRARY_API === 'true';
+}
