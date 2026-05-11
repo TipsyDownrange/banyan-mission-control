@@ -27,6 +27,8 @@ const FL = (label: string, auto?: boolean, places?: boolean) => (
 const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, color: '#0f172a', outline: 'none', boxSizing: 'border-box' };
 const SEL: React.CSSProperties = { ...INP, cursor: 'pointer', WebkitAppearance: 'none' };
 
+// Hardcoded fallback — remains active when BANYAN_FF_MASTER_LIBRARY_API is OFF
+// or when the API is unreachable. Do not delete until v1.5 post-acceptance (Packet 001 §G10).
 const SYSTEM_TYPES = [
   // Glass replacement / service
   'IG Unit Replacement',
@@ -63,6 +65,9 @@ const SYSTEM_TYPES = [
   'Block Frame Window',
   'Other',
 ];
+
+// Packet 001: feature flag — set NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API=true to enable API source.
+const ML_API_ENABLED = process.env.NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API === 'true';
 const ISLANDS = ['Oahu','Maui','Kauai','Hawaii','Molokai','Lanai'];
 
 // ── Autocomplete helpers ────────────────────────────────────────────────────
@@ -133,6 +138,21 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         }
       })
       .catch(() => {});
+
+    // Packet 001: when flag is ON, replace hardcoded source with Master Library API.
+    if (ML_API_ENABLED) {
+      fetch('/api/master-library/system-types')
+        .then(r => r.json())
+        .then(d => {
+          if (d.data && Array.isArray(d.data) && d.data.length > 0) {
+            const apiNames: string[] = d.data.map((st: { name: string }) => st.name);
+            setAllSystemTypes(apiNames);
+          }
+        })
+        .catch(() => {
+          console.warn('[ServiceIntake] Master Library API unavailable, using hardcoded fallback');
+        });
+    }
   }, []);
 
   // When island changes, refresh field crew for that island

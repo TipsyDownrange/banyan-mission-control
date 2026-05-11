@@ -62,6 +62,11 @@ interface JobDocs {
   drawings: string;
 }
 
+// ─── Packet 001: feature flag ─────────────────────────────────────────────────
+// Set NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API=true to populate the system type
+// datalist from the Master Library API instead of WO prop only.
+const ML_API_ENABLED = process.env.NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API === 'true';
+
 // ─── Step Templates ────────────────────────────────────────────────────────────
 
 // Templates are loaded from Step_Templates sheet tab via API
@@ -186,6 +191,23 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   // Form state
   const [scopeForm, setScopeForm] = useState({ system_type: '', location: '', estimated_total_hours: '', estimated_qty: '1' });
   const [stepForm, setStepForm] = useState({ step_name: '', allotted_hours: '', acceptance_criteria: '', required_photo_yn: 'N', category: '' });
+
+  // Packet 001: Master Library system type names for datalist suggestions (flag-gated)
+  const [mlSystemTypeNames, setMlSystemTypeNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!ML_API_ENABLED) return;
+    fetch('/api/master-library/system-types')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data && Array.isArray(d.data) && d.data.length > 0) {
+          setMlSystemTypeNames(d.data.map((st: { name: string }) => st.name));
+        }
+      })
+      .catch(() => {
+        console.warn('[WorkBreakdown] Master Library API unavailable');
+      });
+  }, []);
 
   // Template recommendation banner
   const [creatingFromTemplates, setCreatingFromTemplates] = useState(false);
@@ -1804,6 +1826,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   <datalist id="system-types">
                     {Object.keys(STEP_TEMPLATES).map(t => <option key={t} value={t} />)}
                     {systemTypes && systemTypes.split(',').map(t => t.trim()).filter(t => t && !STEP_TEMPLATES[t]).map(t => <option key={`sys-${t}`} value={t} />)}
+                    {mlSystemTypeNames.filter(n => !STEP_TEMPLATES[n]).map(n => <option key={`ml-${n}`} value={n} />)}
                   </datalist>
                 </div>
                 <div>

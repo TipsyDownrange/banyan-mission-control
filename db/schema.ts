@@ -12,6 +12,7 @@ import {
   integer,
   index,
   check,
+  unique,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -361,6 +362,111 @@ export const step_completions = pgTable('step_completions', {
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+// ─── Packet 001: Master Library Tables ───────────────────────────────────────
+
+export const families = pgTable('families', {
+  family_id: uuid('family_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  gold_data_rollup: boolean('gold_data_rollup').notNull().default(false),
+  display_order: integer('display_order').notNull().default(0),
+  status: text('status').notNull().default('canonical'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('families_tenant_kid_unique').on(table.tenant_id, table.kid),
+  index('families_tenant_active_order_idx').on(table.tenant_id, table.is_active, table.display_order),
+  check('families_status_check', sql`${table.status} IN ('canonical','active','retired','legacy')`),
+]);
+
+export const system_types = pgTable('system_types', {
+  system_type_id: uuid('system_type_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  family_id: uuid('family_id').notNull().references(() => families.family_id),
+  name: text('name').notNull(),
+  description: text('description'),
+  common_aliases: text('common_aliases').array().notNull().default(sql`'{}'`),
+  notes: text('notes'),
+  status: text('status').notNull().default('canonical'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('system_types_tenant_kid_unique').on(table.tenant_id, table.kid),
+  index('system_types_tenant_family_active_idx').on(table.tenant_id, table.family_id, table.is_active),
+  check('system_types_status_check', sql`${table.status} IN ('canonical','active','retired','legacy')`),
+]);
+
+export const manufacturers = pgTable('manufacturers', {
+  manufacturer_id: uuid('manufacturer_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  name: text('name').notNull(),
+  primary_trade_role: text('primary_trade_role'),
+  notes: text('notes'),
+  contact_info: jsonb('contact_info').notNull().default(sql`'{}'`),
+  status: text('status').notNull().default('canonical'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('manufacturers_tenant_kid_unique').on(table.tenant_id, table.kid),
+  index('manufacturers_tenant_active_idx').on(table.tenant_id, table.is_active),
+  check('manufacturers_status_check', sql`${table.status} IN ('canonical','active','retired','legacy')`),
+]);
+
+export const work_types = pgTable('work_types', {
+  work_type_id: uuid('work_type_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  status: text('status').notNull().default('locked'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('work_types_tenant_kid_unique').on(table.tenant_id, table.kid),
+  check('work_types_status_check', sql`${table.status} IN ('canonical','active','retired','legacy','locked')`),
+]);
+
+export const schema_metadata = pgTable('schema_metadata', {
+  meta_id: uuid('meta_id').defaultRandom().primaryKey(),
+  table_name: text('table_name').notNull(),
+  column_name: text('column_name').notNull(),
+  plain_english_meaning: text('plain_english_meaning').notNull(),
+  domain_owner: text('domain_owner').notNull(),
+  write_owner: text('write_owner').notNull(),
+  allowed_writers: text('allowed_writers').array().notNull().default(sql`'{}'`),
+  consumers: text('consumers').array().notNull().default(sql`'{}'`),
+  tenant_scoped: boolean('tenant_scoped').notNull(),
+  source_system: text('source_system').notNull().default('internal'),
+  migration_status: text('migration_status').notNull().default('current'),
+  legacy_alias: text('legacy_alias'),
+  validation_rules: text('validation_rules'),
+  audit_requirement: text('audit_requirement').notNull().default('changes_only'),
+  pii: boolean('pii').notNull().default(false),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('schema_metadata_table_column_unique').on(table.table_name, table.column_name),
+  check('schema_metadata_domain_owner_check', sql`${table.domain_owner} IN ('Identity','Work','Documents','Finance','Platform Governance')`),
+  check('schema_metadata_migration_status_check', sql`${table.migration_status} IN ('current','target','transitional')`),
+  check('schema_metadata_audit_requirement_check', sql`${table.audit_requirement} IN ('full','changes_only','none')`),
+]);
 
 export const field_events = pgTable('field_events', {
   event_id: uuid('event_id').defaultRandom().primaryKey(),
