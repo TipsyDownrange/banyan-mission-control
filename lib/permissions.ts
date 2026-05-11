@@ -36,6 +36,7 @@ export type Permission =
 // ── Role → Permissions Map (hardcoded fallback) ───────────────────────────────
 
 export const ROLE_PERMISSIONS_DEFAULT: Record<string, Permission[]> = {
+  super_admin: ['admin:all'],
   gm:         ['admin:all'],
   owner:      ['admin:all'],
   service_pm: ['wo:create', 'wo:edit', 'wo:view', 'project:view', 'crew:view', 'reports:view'],

@@ -17,7 +17,7 @@
 // ── User roster (mirrors Users_Roles sheet — source of truth is the sheet) ──
 export const ALL_USERS: { name: string; role: string; group: string; email?: string }[] = [
   { name: 'Jody Boeringa',            role: 'owner',      group: 'Executive',       email: 'jody@kulaglass.com' },
-  { name: 'Sean Daniels',             role: 'gm',         group: 'Executive',       email: 'sean@kulaglass.com' },
+  { name: 'Sean Daniels',             role: 'super_admin', group: 'Executive',      email: 'sean@kulaglass.com' },
   { name: 'Frank Redondo',            role: 'pm',         group: 'Management',      email: 'frank@kulaglass.com' },
   { name: 'Kyle Shimizu',             role: 'estimator',  group: 'Management',      email: 'kyle@kulaglass.com' },
   { name: 'Jenny Shimabukuro',        role: 'admin_mgr',  group: 'Management',      email: 'jenny@kulaglass.com' },
@@ -64,6 +64,7 @@ export const ALL_USERS: { name: string; role: string; group: string; email?: str
 
 // ── Role hierarchy: highest credential always wins ─────────────────────────
 const ROLE_RANK: Record<string, number> = {
+  super_admin: 110,
   owner: 100, gm: 90,
   pm: 70, estimator: 70, service_pm: 70, sales: 70, admin_mgr: 70,
   super: 60,
@@ -72,6 +73,7 @@ const ROLE_RANK: Record<string, number> = {
 };
 
 export const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin',
   gm: 'GM', owner: 'Owner', service_pm: 'Service PM', super: 'Superintendent',
   pm: 'PM', estimator: 'Estimator', admin_mgr: 'Admin Manager',
   admin: 'Admin', field: 'Field', pm_track: 'PM Track', sales: 'Sales',
@@ -121,6 +123,7 @@ export function navSectionsForAuthorityLevel(authorityLevel: string, role?: stri
 // Backwards-compatible wrapper — maps old role strings to authority levels
 export function navSectionsForRole(role: string): string[] {
   const authorityMap: Record<string, string> = {
+    super_admin: 'Executive',
     owner: 'Executive', gm: 'Executive',
     pm: 'Management', estimator: 'Management', service_pm: 'Management', sales: 'Management', admin_mgr: 'Management',
     pm_track: 'Admin', admin: 'Admin',

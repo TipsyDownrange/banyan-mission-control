@@ -48,6 +48,7 @@ const PERMISSION_LABELS: Record<string, string> = {
 };
 
 const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin',
   gm:         'GM',
   owner:      'Owner',
   service_pm: 'Service PM',
@@ -106,7 +107,7 @@ export default function PermissionsPage() {
     if (status === 'loading') return;
     if (!session) { router.push('/login'); return; }
     const role = (session.user as { role?: string })?.role || '';
-    if (role !== 'gm' && role !== 'owner') {
+    if (role !== 'super_admin' && role !== 'gm' && role !== 'owner') {
       router.push('/');
     }
   }, [session, status, router]);
@@ -136,8 +137,8 @@ export default function PermissionsPage() {
   async function handleToggle(role: string, permission: string, currentValue: boolean) {
     if (!data) return;
 
-    // Locked: GM/Owner admin:all
-    if ((role === 'gm' || role === 'owner') && permission === 'admin:all') return;
+    // Locked: Super Admin/GM/Owner admin:all
+    if ((role === 'super_admin' || role === 'gm' || role === 'owner') && permission === 'admin:all') return;
 
     const key = `${role}:${permission}`;
     setSaving(key);
@@ -329,7 +330,7 @@ export default function PermissionsPage() {
                 {allRoles.map((role, rIdx) => {
                   const rowPerms = matrix[role] || {};
                   const isHighlighted = highlightRole === role;
-                  const isLocked = role === 'gm' || role === 'owner';
+                  const isLocked = role === 'super_admin' || role === 'gm' || role === 'owner';
 
                   return (
                     <tr
@@ -479,7 +480,7 @@ export default function PermissionsPage() {
 
             {users.map((user, idx) => {
               const currentRole = userRoles[user.user_id] || user.role;
-              const isGmOwner = currentRole === 'gm' || currentRole === 'owner';
+              const isGmOwner = currentRole === 'super_admin' || currentRole === 'gm' || currentRole === 'owner';
 
               return (
                 <div
