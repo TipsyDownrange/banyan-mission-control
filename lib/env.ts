@@ -6,6 +6,16 @@ export function isStaging(): boolean {
   return process.env.VERCEL_TARGET_ENV === 'staging';
 }
 
+export const BANYAN_TENANT_KULA_UUID = '00000000-0000-4000-8000-000000000001';
+
+export function getKulaTenantUuid(): string {
+  return process.env.BANYAN_TENANT_KULA_UUID?.trim() || BANYAN_TENANT_KULA_UUID;
+}
+
+export function getDefaultTenantId(): string {
+  return process.env.DEFAULT_TENANT_ID?.trim() || getKulaTenantUuid();
+}
+
 // BAN-170: Single source of truth for "should this Gmail send be skipped?".
 // Returns true on staging or whenever DISABLE_DISPATCH_EMAILS=true. Routes
 // that send mail must check this before calling gmail.users.messages.send

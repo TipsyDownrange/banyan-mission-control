@@ -10,6 +10,8 @@ import {
   date,
   time,
   integer,
+  index,
+  check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -26,6 +28,7 @@ export const islandCodeEnum = pgEnum('island_code', [
 ]);
 
 export const userRoleEnum = pgEnum('user_role', [
+  'super_admin',
   'gm',
   'owner',
   'service_pm',
@@ -135,6 +138,22 @@ export const migrationActionEnum = pgEnum('migration_action', [
 ]);
 
 // ─── Tables ───────────────────────────────────────────────────────────────────
+
+export const tenants = pgTable('tenants', {
+  tenant_id: uuid('tenant_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull().unique(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  legal_entity_name: text('legal_entity_name'),
+  status: text('status').notNull().default('active'),
+  subscription_tier: text('subscription_tier').notNull().default('internal'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('tenants_status_idx').on(table.status),
+  check('tenants_status_check', sql`${table.status} in ('active', 'suspended', 'archived')`),
+  check('tenants_subscription_tier_check', sql`${table.subscription_tier} in ('internal', 'standard', 'enterprise')`),
+]);
 
 export const users = pgTable('users', {
   user_id: uuid('user_id').defaultRandom().primaryKey(),

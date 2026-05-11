@@ -48,6 +48,7 @@ export const ALL_PERMISSIONS: Permission[] = [
 
 // All managed roles (ordered for display)
 export const ALL_ROLES = [
+  'super_admin',
   'gm',
   'owner',
   'service_pm',
@@ -255,9 +256,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'role and permission required' }, { status: 400 });
     }
 
-    // Lock: GM and Owner admin:all can never be disabled
-    if ((role === 'gm' || role === 'owner') && permission === 'admin:all' && !enabled) {
-      return NextResponse.json({ error: 'Cannot remove admin:all from GM or Owner' }, { status: 400 });
+    // Lock: Super Admin, GM, and Owner admin:all can never be disabled
+    if ((role === 'super_admin' || role === 'gm' || role === 'owner') && permission === 'admin:all' && !enabled) {
+      return NextResponse.json({ error: 'Cannot remove admin:all from Super Admin, GM, or Owner' }, { status: 400 });
     }
 
     // Load current matrix
