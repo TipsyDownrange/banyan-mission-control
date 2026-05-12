@@ -203,6 +203,29 @@ describe('service/update — BAN-40 internal auth', () => {
     }
   });
 
+
+  it('does not roll back or fail route success when MC event emit rejects', async () => {
+    const { valuesBatchUpdate } = setupSheets();
+    mockEmitMCEvent.mockRejectedValueOnce(new Error('field event append failed'));
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      const { PATCH } = await import('@/app/api/service/update/route');
+      const res = await PATCH(
+        makeRequest(
+          { woId: 'WO-26-9999', status: 'closed' },
+          { 'X-Internal-Key': VALID_KEY },
+        ),
+      );
+
+      expect(res.status).toBe(200);
+      expect(mockEmitMCEvent).toHaveBeenCalledWith(expect.objectContaining({ event_type: 'STAGE_SKIPPED_FORWARD' }));
+      expect(valuesBatchUpdate).toHaveBeenCalledTimes(1);
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
   // ── 7. Valid key with INTERNAL_API_KEY unset returns 401 ──────────────────
   it('valid-looking key returns 401 when INTERNAL_API_KEY is not set', async () => {
     delete process.env.INTERNAL_API_KEY;

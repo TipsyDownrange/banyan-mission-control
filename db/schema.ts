@@ -108,6 +108,12 @@ export const fieldIssueStatusEnum = pgEnum('field_issue_status', [
   'CLOSED',
 ]);
 
+export const fieldEventOriginEnum = pgEnum('field_event_origin', [
+  'field',
+  'office',
+  'system',
+]);
+
 export const relationshipTypeEnum = pgEnum('relationship_type', [
   'customer_of',
   'owner_of',
@@ -572,6 +578,7 @@ export const field_events = pgTable('field_events', {
   evidence_timestamp: timestamp('evidence_timestamp', { withTimezone: true }),
   activity_type: text('activity_type'),
   field_issue_pdf_ref: text('field_issue_pdf_ref'),
+  origin: fieldEventOriginEnum('origin'),
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),

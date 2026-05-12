@@ -15,6 +15,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { isStaging } from '@/lib/env';
 import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 const BANYAN_DRIVE = '0AKSVpf3AnH7CUk9PVA'; // BanyanOS Drive root
@@ -103,6 +104,16 @@ export async function POST(req: Request) {
       await sheets.spreadsheets.values.batchUpdate({
         spreadsheetId: SHEET_ID,
         requestBody: { valueInputOption: 'RAW', data: updates },
+      });
+    }
+
+    if (wo_id) {
+      await emitMCEvent({
+        wo_id,
+        event_type: 'VENDOR_QUOTE_ADDED',
+        notes: JSON.stringify({ procurement_id, file_name: displayName, file_url: fileUrl, drive_id: uploaded.data.id }),
+        submitted_by: session.user.email || '',
+        origin: 'office',
       });
     }
 

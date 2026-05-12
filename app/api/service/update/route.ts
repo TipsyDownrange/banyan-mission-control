@@ -33,6 +33,35 @@ const TAB = 'Service_Work_Orders';
 const COL_IDX = SWO_COL;
 const colLetter = columnLetterFromIndex;
 
+const STATUS_SPINE_ORDER = [
+  'new',
+  'lead',
+  'quoted',
+  'accepted',
+  'approved',
+  'deposit_received',
+  'materials_ordered',
+  'materials_received',
+  'ready_to_schedule',
+  'scheduled',
+  'in_progress',
+  'work_complete',
+  'completed',
+  'invoiced',
+  'paid',
+  'closed',
+];
+
+function resolveStatusEventType(oldStatus: string, newStatus: string): string {
+  if (newStatus === 'lost' || newStatus === 'declined' || newStatus === 'cancelled') return 'WO_DECLINED';
+  const oldIdx = STATUS_SPINE_ORDER.indexOf(oldStatus);
+  const newIdx = STATUS_SPINE_ORDER.indexOf(newStatus);
+  if (oldIdx >= 0 && newIdx >= 0) {
+    if (newIdx < oldIdx) return 'STAGE_ROLLED_BACK';
+    if (newIdx > oldIdx + 1) return 'STAGE_SKIPPED_FORWARD';
+  }
+  return 'STATUS_CHANGED';
+}
 
 async function deriveWOStatus(
   sheets: ReturnType<typeof google.sheets>,
@@ -158,9 +187,8 @@ export async function PATCH(req: Request) {
     const now = hawaiiNow();
     const resolvedWoId = (woId || rows[targetRowIdx]?.[COL_IDX.wo_id] || '').trim();
 
-    // Snapshot pre-write values for GC-D037 either-both-or-neither rollback
+    // Snapshot pre-write values for Activity Spine status transition events.
     const oldStatus    = ((rows[targetRowIdx] as string[])?.[COL_IDX.status]     || '').trim();
-    const oldUpdatedAt = ((rows[targetRowIdx] as string[])?.[COL_IDX.updated_at] || '').trim();
     const oldScheduledDate = ((rows[targetRowIdx] as string[])?.[COL_IDX.scheduled_date] || '').trim();
     const oldOrgId = ((rows[targetRowIdx] as string[])?.[COL_IDX.org_id] || '').trim();
     const currentCustomerId = ((rows[targetRowIdx] as string[])?.[COL_IDX.customer_id] || '').trim();
@@ -388,35 +416,19 @@ export async function PATCH(req: Request) {
 
     invalidateCache();
 
-    // ─── GC-D037: emit MC event for status transitions (either-both-or-neither) ─
+    // ─── GC-D037/BAN-214: best-effort MC event for status transitions ─────────
     if (resolvedStatus && resolvedStatus !== oldStatus) {
-      const eventType =
-        resolvedStatus === 'lost'   ? 'WO_DECLINED'    :
-        resolvedStatus === 'closed' ? 'WO_CLOSED'      : 'STATUS_CHANGED';
-      try {
-        await emitMCEvent({
-          wo_id:        resolvedWoId,
-          event_type:   eventType,
-          old_status:   oldStatus,
-          new_status:   resolvedStatus,
-          notes:        reason,
-          submitted_by: actorEmail,
-          origin:       'office',
-        });
-      } catch {
-        // Compensating write — roll back status + updated_at (GC-D037 §5)
-        await sheets.spreadsheets.values.batchUpdate({
-          spreadsheetId: BACKEND_SHEET_ID,
-          requestBody: {
-            valueInputOption: 'RAW',
-            data: [
-              { range: `${TAB}!${colLetter(COL_IDX.status)}${sheetRow}`,     values: [[oldStatus]] },
-              { range: `${TAB}!${colLetter(COL_IDX.updated_at)}${sheetRow}`, values: [[oldUpdatedAt]] },
-            ],
-          },
-        });
-        return NextResponse.json({ error: 'Event emit failed; status write rolled back.' }, { status: 500 });
-      }
+      await emitMCEvent({
+        wo_id:        resolvedWoId,
+        event_type:   resolveStatusEventType(oldStatus, resolvedStatus),
+        old_status:   oldStatus,
+        new_status:   resolvedStatus,
+        notes:        reason,
+        submitted_by: actorEmail,
+        origin:       incomingKey !== null ? 'field' : 'office',
+      }).catch((emitErr) => {
+        console.warn('[service/update] MC event emit failed (non-fatal):', emitErr);
+      });
     }
 
     // ─── Acceptance trigger: write bid_hours to Install_Steps ────────────────

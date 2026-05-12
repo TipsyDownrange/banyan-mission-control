@@ -284,11 +284,22 @@ export async function POST(req: Request) {
     const pdfBuffer = await generateServiceWOPDF(pdfData);
     const filename = `Proposal-WO-${pdfData.wo_number}-${pdfData.quote_date}.pdf`;
 
+    const emittedWoId = (() => { const raw = (quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, ''); return raw ? (raw.startsWith('WO-') ? raw : `WO-${raw}`) : undefined; })();
     const driveLink = await uploadPDFToDrive(
       pdfBuffer,
       filename,
-      (() => { const raw = (quote.woId || quote.woNumber || '').replace(/[^A-Za-z0-9\-]/g, ''); return raw ? (raw.startsWith('WO-') ? raw : `WO-${raw}`) : undefined; })(),
+      emittedWoId,
     );
+
+    if (emittedWoId) {
+      await emitMCEvent({
+        wo_id: emittedWoId,
+        event_type: 'QUOTE_GENERATED',
+        notes: JSON.stringify({ source: 'service_proposal_pdf', filename, drive_link: driveLink }),
+        submitted_by: pdfData.prepared_by?.email || '',
+        origin: 'office',
+      });
+    }
 
     let emailSent = false;
     let emailSkipped = false;

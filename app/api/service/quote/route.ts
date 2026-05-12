@@ -10,6 +10,7 @@ import {
   LABOR_RATES, GET_RATE, estimateDriveTime, DEFAULT_SERVICE_CREW,
 } from '@/lib/labor';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -254,6 +255,14 @@ export async function POST(req: Request) {
       email: session.user.email || '',
       phone: '',
     } : null;
+
+    await emitMCEvent({
+      wo_id: woNumber,
+      event_type: 'QUOTE_GENERATED',
+      notes: JSON.stringify({ source: 'service_quote', job_type: jobType || null, total }),
+      submitted_by: session?.user?.email || '',
+      origin: 'office',
+    });
 
     return NextResponse.json({
       quote: {

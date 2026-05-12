@@ -5,6 +5,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { validateHeaders, INSTALL_PLANS_SCHEMA, INSTALL_STEPS_SCHEMA } from '@/lib/schemas';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -216,6 +217,13 @@ export async function POST(
           values: [[newId, jobId, system_type || '', location || '', estimated_total_hours || 0, estimated_qty || 1, 'Active']],
         },
       });
+      await emitMCEvent({
+        wo_id: jobId,
+        event_type: 'WORK_BREAKDOWN_ADDED',
+        notes: JSON.stringify({ type: 'plan', install_plan_id: newId, system_type: system_type || '', location: location || '' }),
+        submitted_by: session.user.email || '',
+        origin: 'office',
+      });
       return NextResponse.json({ install_plan_id: newId });
     }
 
@@ -229,6 +237,13 @@ export async function POST(
         requestBody: {
           values: [[newId, install_plan_id, step_seq || 1, step_name || '', allotted_hours || 0, acceptance_criteria || '', required_photo_yn || 'N', '', category || '', planned_start_date || '', planned_end_date || '', bodyAssignedCrew || '', predecessor_step_id || '', bid_hours ?? '', '', '']],
         },
+      });
+      await emitMCEvent({
+        wo_id: jobId,
+        event_type: 'WORK_BREAKDOWN_ADDED',
+        notes: JSON.stringify({ type: 'step', install_step_id: newId, step_name: step_name || '', install_plan_id }),
+        submitted_by: session.user.email || '',
+        origin: 'office',
       });
       return NextResponse.json({ install_step_id: newId });
     }
@@ -320,6 +335,13 @@ export async function POST(
         });
       }
 
+      await emitMCEvent({
+        wo_id: jobId,
+        event_type: 'WORK_BREAKDOWN_ADDED',
+        notes: JSON.stringify({ type: 'bulk', created_plans: planIds.length, id_prefix, system_type }),
+        submitted_by: session.user.email || '',
+        origin: 'office',
+      });
       return NextResponse.json({ created: planIds.length, plans: planIds });
     }
 
