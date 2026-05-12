@@ -29,6 +29,13 @@
       "when": 1778534193266,
       "tag": "0003_master_library_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778552050972,
+      "tag": "0004_packet_002_organizations_schema",
+      "breakpoints": true
     }
   ]
 }

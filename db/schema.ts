@@ -13,6 +13,7 @@ import {
   index,
   check,
   unique,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -173,29 +174,40 @@ export const users = pgTable('users', {
 
 export const organizations = pgTable('organizations', {
   org_id: uuid('org_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
   name: text('name').notNull(),
   normalized_name: text('normalized_name').generatedAlwaysAs(
     sql`lower(regexp_replace(name, '[^a-zA-Z0-9]', '', 'g'))`
   ),
-  types: text('types').array(),
-  entity_type: orgEntityTypeEnum('entity_type'),
-  default_island: islandCodeEnum('default_island'),
-  address: text('address'),
-  city: text('city'),
-  state: text('state'),
-  postal_code: text('postal_code'),
+  aliases: jsonb('aliases').notNull().default(sql`'[]'::jsonb`),
+  org_type: text('org_type').notNull().default('customer'),
+  org_role: text('org_role').array().notNull().default(sql`'{}'::text[]`),
+  primary_contact_id: uuid('primary_contact_id'),
+  address: jsonb('address').notNull().default(sql`'{}'::jsonb`),
   phone: text('phone'),
   email: text('email'),
-  website: text('website'),
+  qbo_ref_id: text('qbo_ref_id'),
+  status: text('status').notNull().default('active'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
   source: text('source'),
   notes: text('notes'),
   legacy_customer_id: text('legacy_customer_id'),
   legacy_source: jsonb('legacy_source'),
-  status: text('status'),
-  merged_into_org_id: uuid('merged_into_org_id'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+  merged_into_org_id: uuid('merged_into_org_id').references((): AnyPgColumn => organizations.org_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('organizations_tenant_kid_unique').on(table.tenant_id, table.kid),
+  index('organizations_tenant_normalized_name_idx').on(table.tenant_id, table.normalized_name),
+  index('organizations_tenant_qbo_ref_idx').on(table.tenant_id, table.qbo_ref_id),
+  index('organizations_tenant_type_active_idx').on(table.tenant_id, table.org_type, table.is_active),
+  index('organizations_aliases_gin_idx').using('gin', table.aliases),
+  check('organizations_org_type_check', sql`${table.org_type} IN ('customer','gc','vendor','supplier','fabricator','owner','architect','consultant','internal','customer_commercial_builder','other')`),
+  check('organizations_status_check', sql`${table.status} IN ('active','archived','merged')`),
+]);
 
 export const contacts = pgTable('contacts', {
   contact_id: uuid('contact_id').defaultRandom().primaryKey(),
@@ -230,14 +242,21 @@ export const sites = pgTable('sites', {
 
 export const entity_crosswalk = pgTable('entity_crosswalk', {
   crosswalk_id: uuid('crosswalk_id').defaultRandom().primaryKey(),
-  crosswalk_type: crosswalkTypeEnum('crosswalk_type').notNull(),
-  source_system: text('source_system'),
-  source_id: text('source_id'),
-  target_table: text('target_table'),
-  target_id: uuid('target_id'),
+  legacy_source: text('legacy_source').notNull(),
+  legacy_id: text('legacy_id').notNull(),
+  canonical_org_id: uuid('canonical_org_id').notNull().references(() => organizations.org_id),
+  migration_status: text('migration_status').notNull().default('pending_verify'),
+  audit_ts: timestamp('audit_ts', { withTimezone: true }).notNull().defaultNow(),
+  actor: uuid('actor').references(() => users.user_id),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
   notes: text('notes'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('entity_crosswalk_tenant_legacy_unique').on(table.tenant_id, table.legacy_source, table.legacy_id),
+  index('entity_crosswalk_canonical_org_idx').on(table.tenant_id, table.canonical_org_id),
+  check('entity_crosswalk_legacy_source_check', sql`${table.legacy_source} IN ('sheets_customers','qbo','smartsheet_legacy','manual_import')`),
+  check('entity_crosswalk_migration_status_check', sql`${table.migration_status} IN ('migrated','pending_verify','conflict','manual_review')`),
+]);
 
 export const core_entities = pgTable('core_entities', {
   entity_id: uuid('entity_id').defaultRandom().primaryKey(),
@@ -292,24 +311,34 @@ export const service_work_orders = pgTable('service_work_orders', {
 
 export const organization_relationships = pgTable('organization_relationships', {
   rel_id: uuid('rel_id').defaultRandom().primaryKey(),
-  from_org_id: uuid('from_org_id').references(() => organizations.org_id),
-  to_org_id: uuid('to_org_id').references(() => organizations.org_id),
-  relationship_type: relationshipTypeEnum('relationship_type'),
+  from_org_id: uuid('from_org_id').notNull().references(() => organizations.org_id),
+  to_org_id: uuid('to_org_id').notNull().references(() => organizations.org_id),
+  relationship_type: text('relationship_type').notNull(),
   notes: text('notes'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('organization_relationships_tenant_rel_unique').on(table.tenant_id, table.from_org_id, table.to_org_id, table.relationship_type),
+  index('organization_relationships_from_idx').on(table.tenant_id, table.from_org_id),
+  index('organization_relationships_to_idx').on(table.tenant_id, table.to_org_id),
+  check('organization_relationships_type_check', sql`${table.relationship_type} IN ('customer_of','owner_of','gc_for','architect_for','vendor_for','related_to','merged_into')`),
+]);
 
 export const entity_migration_audit_log = pgTable('entity_migration_audit_log', {
   log_id: uuid('log_id').defaultRandom().primaryKey(),
-  entity_table: text('entity_table'),
+  entity_table: text('entity_table').notNull(),
   entity_id: uuid('entity_id'),
-  action: migrationActionEnum('action'),
+  action: text('action').notNull(),
   performed_by: text('performed_by'),
   notes: text('notes'),
-  before_state: jsonb('before_state'),
-  after_state: jsonb('after_state'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+  before_state: jsonb('before_state').notNull().default(sql`'{}'::jsonb`),
+  after_state: jsonb('after_state').notNull().default(sql`'{}'::jsonb`),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('entity_migration_audit_log_tenant_entity_idx').on(table.tenant_id, table.entity_table, table.created_at),
+  check('entity_migration_audit_log_action_check', sql`${table.action} IN ('create','update','merge','repoint','migrate_files','repair','archive','rollback','other')`),
+]);
 
 export const dispatch_schedule = pgTable('dispatch_schedule', {
   slot_id: uuid('slot_id').defaultRandom().primaryKey(),
