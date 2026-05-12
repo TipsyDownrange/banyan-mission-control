@@ -33,6 +33,7 @@ export const userRoleEnum = pgEnum('user_role', [
   'super_admin',
   'gm',
   'owner',
+  'business_admin',
   'service_pm',
   'super',
   'pm',

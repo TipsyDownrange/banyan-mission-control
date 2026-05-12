@@ -36,6 +36,13 @@
       "when": 1778552050972,
       "tag": "0004_packet_002_organizations_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778557800000,
+      "tag": "0005_add_business_admin_user_role",
+      "breakpoints": true
     }
   ]
 }
