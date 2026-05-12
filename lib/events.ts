@@ -20,17 +20,32 @@ const COL = {
   origin:            34, // AI — BAN-41: moved from AG (AG is affected_count)
 };
 
+export type MCEventOrigin = 'office' | 'field' | 'system';
+
+export type MCEventType =
+  | 'STATUS_CHANGED'
+  | 'STAGE_ROLLED_BACK'
+  | 'STAGE_SKIPPED_FORWARD'
+  | 'WO_DECLINED'
+  | 'VENDOR_QUOTE_ADDED'
+  | 'ESTIMATE_SAVED'
+  | 'QUOTE_GENERATED'
+  | 'WORK_BREAKDOWN_ADDED'
+  | 'JOB_FILE_UPLOADED'
+  | 'WO_CLOSED'
+  | string;
+
 export interface MCEventPayload {
   wo_id: string;
-  event_type: 'WO_DECLINED' | 'STATUS_CHANGED' | 'WO_CLOSED' | string;
+  event_type: MCEventType;
   old_status?: string;
   new_status?: string;
   notes?: string;
   submitted_by?: string;
-  origin?: 'office' | 'field' | 'system';
+  origin?: MCEventOrigin;
 }
 
-export async function emitMCEvent(payload: MCEventPayload): Promise<void> {
+async function appendMCEvent(payload: MCEventPayload): Promise<void> {
   const {
     wo_id, event_type, old_status, new_status,
     notes, submitted_by, origin = 'office',
@@ -61,4 +76,21 @@ export async function emitMCEvent(payload: MCEventPayload): Promise<void> {
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   });
+}
+
+/**
+ * Best-effort Mission Control event emitter. Activity Spine writes must never
+ * make the user-facing mutation fail; callers can await this for ordering, but
+ * emit errors are swallowed after logging.
+ */
+export async function emitMCEvent(payload: MCEventPayload): Promise<void> {
+  try {
+    await appendMCEvent(payload);
+  } catch (err) {
+    console.warn('[emitMCEvent] non-blocking emit failed:', {
+      wo_id: payload.wo_id,
+      event_type: payload.event_type,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }

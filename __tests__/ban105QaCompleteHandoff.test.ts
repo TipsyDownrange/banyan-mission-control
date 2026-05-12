@@ -124,7 +124,7 @@ describe('BAN-105 — qa-complete field-to-office handoff', () => {
   });
 
   // ── 2. qa-complete emits STATUS_CHANGED event with correct values ────────────
-  it('qa-complete transition emits STATUS_CHANGED with new_status work_complete', async () => {
+  it('qa-complete transition emits STAGE_SKIPPED_FORWARD with new_status work_complete', async () => {
     setupSheets('scheduled');
     const { PATCH } = await import('@/app/api/service/update/route');
 
@@ -137,7 +137,7 @@ describe('BAN-105 — qa-complete field-to-office handoff', () => {
 
     expect(mockEmitMCEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        event_type: 'STATUS_CHANGED',
+        event_type: 'STAGE_SKIPPED_FORWARD',
         old_status: 'scheduled',
         new_status: 'work_complete',
         submitted_by: 'field-app-service@internal',

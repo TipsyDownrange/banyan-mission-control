@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeNameForWrite } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -171,6 +172,13 @@ export async function POST(req: Request) {
       range: 'Procurement!A:AA',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: rows },
+    });
+    await emitMCEvent({
+      wo_id,
+      event_type: 'VENDOR_QUOTE_ADDED',
+      notes: JSON.stringify({ procurement_id: procId, vendor_name: vendor_name || '', line_count: rows.length, quote_document_url: quote_document_url || '' }),
+      submitted_by: session.user.email || '',
+      origin: 'office',
     });
     return NextResponse.json({ procurement_id: procId, success: true, line_count: rows.length });
   } catch (err) {

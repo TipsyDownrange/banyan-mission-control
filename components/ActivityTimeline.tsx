@@ -50,7 +50,45 @@ type FieldEvent = {
 
 // ─── Config ───────────────────────────────────────────────────
 
-const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
+export const ACTIVITY_TIMELINE_V1_EVENT_TYPES = [
+  // Field App / shared v1 event types
+  'INSTALL_STEP',
+  'FIELD_ISSUE',
+  'DAILY_LOG',
+  'FIELD_MEASUREMENT',
+  'PHOTO_ONLY',
+  'NOTE',
+  'TM_CAPTURE',
+  'PUNCH_LIST',
+  'SITE_VISIT',
+  'TESTING',
+  'WARRANTY_CALLBACK',
+  // Mission Control Packet 004 event types
+  'STATUS_CHANGED',
+  'STAGE_ROLLED_BACK',
+  'STAGE_SKIPPED_FORWARD',
+  'WO_DECLINED',
+  'VENDOR_QUOTE_ADDED',
+  'ESTIMATE_SAVED',
+  'QUOTE_GENERATED',
+  'WORK_BREAKDOWN_ADDED',
+  'JOB_FILE_UPLOADED',
+] as const;
+
+export const ACTIVITY_TIMELINE_FUTURE_EVENT_TYPES = [
+  'MASTER_LIBRARY_ENTRY_RETIRED',
+  'MASTER_LIBRARY_TOGGLE_CHANGED',
+] as const;
+
+type ActivityTimelineEventType =
+  | typeof ACTIVITY_TIMELINE_V1_EVENT_TYPES[number]
+  | typeof ACTIVITY_TIMELINE_FUTURE_EVENT_TYPES[number]
+  | 'EMAIL_SENT'
+  | 'QA_COMPLETE'
+  | 'CREW_DEMOBILIZED'
+  | 'WO_CLOSED';
+
+export const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
   INSTALL_STEP:      { icon: '✅', color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)',  label: 'Step Complete' },
   FIELD_ISSUE:       { icon: '🚨', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',  label: 'Issue' },
   DAILY_LOG:         { icon: '📋', color: '#15803d', bg: 'rgba(21,128,61,0.08)',  label: 'Daily Report' },
@@ -62,10 +100,59 @@ const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; la
   SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
   WARRANTY_CALLBACK: { icon: '🔁', color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
+  STATUS_CHANGED:        { icon: '🔄', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Status Changed' },
+  STAGE_ROLLED_BACK:     { icon: '↩️', color: '#b45309', bg: 'rgba(180,83,9,0.08)', label: 'Stage Rolled Back' },
+  STAGE_SKIPPED_FORWARD: { icon: '⏩', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Stage Skipped Forward' },
+  WO_DECLINED:           { icon: '🚫', color: '#be123c', bg: 'rgba(190,18,60,0.08)', label: 'WO Declined' },
+  VENDOR_QUOTE_ADDED:    { icon: '🏷️', color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Vendor Quote' },
+  ESTIMATE_SAVED:        { icon: '💾', color: '#047857', bg: 'rgba(4,120,87,0.08)', label: 'Estimate Saved' },
+  QUOTE_GENERATED:       { icon: '📄', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Quote Generated' },
+  WORK_BREAKDOWN_ADDED:  { icon: '🧱', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'Work Breakdown' },
+  JOB_FILE_UPLOADED:     { icon: '📎', color: '#475569', bg: 'rgba(71,85,105,0.08)', label: 'Job File Uploaded' },
+  MASTER_LIBRARY_ENTRY_RETIRED: { icon: '🗄️', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Retired' },
+  MASTER_LIBRARY_TOGGLE_CHANGED: { icon: '🎛️', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Toggle' },
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
   QA_COMPLETE:       { icon: '🔍', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)', label: 'QA Check' },
   CREW_DEMOBILIZED:  { icon: '🚛', color: '#b91c1c', bg: 'rgba(185,28,28,0.08)', label: 'Crew Demobilized' },
+  WO_CLOSED:         { icon: '🔒', color: '#334155', bg: 'rgba(51,65,85,0.08)', label: 'WO Closed' },
 };
+
+export const ACTIVITY_TIMELINE_TYPE_GROUPS: { label: string; pills: { key: TypeFilter; label: string }[] }[] = [
+  { label: 'All', pills: [{ key: 'ALL', label: 'All' }] },
+  { label: 'Field', pills: [
+    { key: 'INSTALL_STEP', label: 'QA Step' },
+    { key: 'FIELD_ISSUE', label: 'Issue' },
+    { key: 'DAILY_LOG', label: 'Daily Report' },
+    { key: 'FIELD_MEASUREMENT', label: 'Measurement' },
+    { key: 'PHOTO_ONLY', label: 'Photo' },
+    { key: 'NOTE', label: 'Note' },
+    { key: 'TM_CAPTURE', label: 'T&M' },
+    { key: 'PUNCH_LIST', label: 'Punch List' },
+    { key: 'SITE_VISIT', label: 'Site Visit' },
+    { key: 'TESTING', label: 'Test' },
+    { key: 'WARRANTY_CALLBACK', label: 'Warranty' },
+    { key: 'QA_COMPLETE', label: 'QA' },
+    { key: 'CREW_DEMOBILIZED', label: 'Crew Demob' },
+  ] },
+  { label: 'Mission Control', pills: [
+    { key: 'STATUS_CHANGED', label: 'Status' },
+    { key: 'STAGE_ROLLED_BACK', label: 'Rollback' },
+    { key: 'STAGE_SKIPPED_FORWARD', label: 'Skip Forward' },
+    { key: 'WO_DECLINED', label: 'Declined' },
+    { key: 'VENDOR_QUOTE_ADDED', label: 'Vendor Quote' },
+    { key: 'ESTIMATE_SAVED', label: 'Estimate' },
+    { key: 'QUOTE_GENERATED', label: 'Quote' },
+    { key: 'WORK_BREAKDOWN_ADDED', label: 'WBS' },
+    { key: 'JOB_FILE_UPLOADED', label: 'File' },
+    { key: 'EMAIL_SENT', label: 'Emails' },
+    { key: 'WO_CLOSED', label: 'Closed' },
+  ] },
+  { label: 'Future', pills: [
+    { key: 'MASTER_LIBRARY_ENTRY_RETIRED', label: 'ML Retired' },
+    { key: 'MASTER_LIBRARY_TOGGLE_CHANGED', label: 'ML Toggle' },
+  ] },
+];
+
 
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   OPEN:     { label: 'Open',     color: '#dc2626', bg: 'rgba(220,38,38,0.1)' },
@@ -73,7 +160,7 @@ const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: st
   CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
 };
 
-type TypeFilter = 'ALL' | 'INSTALL_STEP' | 'FIELD_ISSUE' | 'DAILY_LOG' | 'FIELD_MEASUREMENT' | 'PHOTO_ONLY' | 'TM_CAPTURE' | 'PUNCH_LIST' | 'SITE_VISIT' | 'TESTING' | 'WARRANTY_CALLBACK' | 'EMAIL_SENT' | 'QA_COMPLETE' | 'CREW_DEMOBILIZED';
+type TypeFilter = 'ALL' | ActivityTimelineEventType;
 type DateFilter = 'today' | '7d' | '30d' | 'all';
 
 type NoteFilePayload = {
@@ -1449,23 +1536,6 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
     return e.event_type === typeFilter;
   });
 
-  const TYPE_PILLS: { key: TypeFilter; label: string }[] = [
-    { key: 'ALL',              label: 'All' },
-    { key: 'INSTALL_STEP',     label: 'QA Step' },
-    { key: 'FIELD_ISSUE',      label: 'Issue' },
-    { key: 'DAILY_LOG',        label: 'Daily Report' },
-    { key: 'FIELD_MEASUREMENT', label: 'Measurement' },
-    { key: 'PHOTO_ONLY',       label: 'Photo / Note' },
-    { key: 'TM_CAPTURE',        label: 'T&M' },
-    { key: 'PUNCH_LIST',        label: 'Punch List' },
-    { key: 'SITE_VISIT',        label: 'Site Visit' },
-    { key: 'TESTING',           label: 'Test' },
-    { key: 'WARRANTY_CALLBACK', label: 'Warranty' },
-    { key: 'EMAIL_SENT',        label: 'Emails' },
-    { key: 'QA_COMPLETE',       label: 'QA' },
-    { key: 'CREW_DEMOBILIZED',  label: 'Crew Demob' },
-  ];
-
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
     { key: 'today', label: 'Today' },
     { key: '7d',    label: '7 days' },
@@ -1478,31 +1548,40 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
       {/* Filters */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
         {/* Type pills */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {TYPE_PILLS.map(p => {
-            const cfg = p.key !== 'ALL' ? (EVENT_CONFIG[p.key] || EVENT_CONFIG.NOTE) : null;
-            const active = typeFilter === p.key;
-            return (
-              <button key={p.key} onClick={() => setTypeFilter(p.key)} style={{
-                padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                border: active ? `1.5px solid ${cfg?.color || '#0f766e'}` : '1.5px solid #e2e8f0',
-                background: active ? `${cfg?.color || '#0f766e'}12` : 'white',
-                color: active ? (cfg?.color || '#0f766e') : '#64748b',
-                transition: 'all 0.1s',
-              }}>
-                {cfg ? `${cfg.icon} ` : ''}{p.label}
-                {p.key !== 'ALL' && (
-                  <span style={{ marginLeft: 4, fontWeight: 800, opacity: 0.7 }}>
-                    ({displayEvents.filter(e =>
-                      p.key === 'PHOTO_ONLY'
-                        ? (e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE')
-                        : e.event_type === p.key
-                    ).length})
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {ACTIVITY_TIMELINE_TYPE_GROUPS.map(group => (
+            <div key={group.label} style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', minWidth: 92 }}>
+                {group.label}
+              </span>
+              {group.pills.map(p => {
+                const cfg = p.key !== 'ALL' ? (EVENT_CONFIG[p.key] || EVENT_CONFIG.NOTE) : null;
+                const active = typeFilter === p.key;
+                return (
+                  <button key={p.key} onClick={() => setTypeFilter(p.key)} style={{
+                    padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                    border: active ? `1.5px solid ${cfg?.color || '#0f766e'}` : '1.5px solid #e2e8f0',
+                    background: active ? `${cfg?.color || '#0f766e'}12` : 'white',
+                    color: active ? (cfg?.color || '#0f766e') : '#64748b',
+                    transition: 'all 0.1s',
+                  }}>
+                    {cfg ? `${cfg.icon} ` : ''}{p.label}
+                    {p.key !== 'ALL' && (
+                      <span style={{ marginLeft: 4, fontWeight: 800, opacity: 0.7 }}>
+                        ({displayEvents.filter(e =>
+                          p.key === 'PHOTO_ONLY'
+                            ? (e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE')
+                            : p.key === 'CREW_DEMOBILIZED'
+                              ? (e.event_type === 'CREW_DEMOBILIZED' || (e.event_type === 'NOTE' && e.notes?.startsWith('[CREW_DEMOBILIZED]')))
+                              : e.event_type === p.key
+                        ).length})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
         {/* Date filter */}
