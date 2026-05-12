@@ -19,6 +19,7 @@ export type Permission =
   | 'finance:view'
   | 'dispatch:assign'
   | 'dispatch:create'
+  | 'business:admin'
   | 'admin:all'
   | 'admin:backfill'
   // Future modules
@@ -39,6 +40,7 @@ export const ROLE_PERMISSIONS_DEFAULT: Record<string, Permission[]> = {
   super_admin: ['admin:all'],
   gm:         ['admin:all'],
   owner:      ['admin:all'],
+  business_admin: ['business:admin'],
   service_pm: ['wo:create', 'wo:edit', 'wo:view', 'project:view', 'crew:view', 'reports:view'],
   super:      ['wo:create', 'wo:edit', 'wo:view', 'dispatch:assign', 'dispatch:create', 'project:view', 'crew:view', 'crew:edit', 'field:log', 'field:photo'],
   pm:         ['wo:view', 'project:view', 'project:edit', 'reports:view', 'crew:view'],
@@ -81,6 +83,24 @@ export function roleHasPermission(role: string, permission: Permission): boolean
   const perms = source[role] || [];
   if (perms.includes('admin:all')) return true;
   return perms.includes(permission);
+}
+
+export function isBusinessAdmin(role: string): boolean {
+  return role === 'business_admin';
+}
+
+export async function requireBusinessAdmin(): Promise<{ allowed: boolean; role: string; email: string | null }> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email || null;
+
+  if (!email || !session) {
+    return { allowed: false, role: 'none', email: null };
+  }
+
+  const sessionUser = session.user as { email: string; role?: string };
+  const role = sessionUser.role || getRoleFromEmail(email);
+
+  return { allowed: isBusinessAdmin(role), role, email };
 }
 
 /**
