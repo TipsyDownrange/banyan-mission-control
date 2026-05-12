@@ -498,6 +498,61 @@ export const schema_metadata = pgTable('schema_metadata', {
   check('schema_metadata_audit_requirement_check', sql`${table.audit_requirement} IN ('full','changes_only','none')`),
 ]);
 
+// ─── Packet 002.5: Business Rules Registry ───────────────────────────────────
+
+export const business_rules = pgTable('business_rules', {
+  rule_id: uuid('rule_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  rule_key: text('rule_key').notNull(),
+  rule_value: jsonb('rule_value').notNull(),
+  value_type: text('value_type').notNull(),
+  description: text('description'),
+  effective_start: date('effective_start').notNull(),
+  effective_end: date('effective_end'),
+  supersedes_rule_id: uuid('supersedes_rule_id').references((): AnyPgColumn => business_rules.rule_id),
+  change_rationale: text('change_rationale'),
+  status: text('status').notNull().default('canonical'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('business_rules_tenant_kid_unique').on(table.tenant_id, table.kid),
+  index('business_rules_lookup_idx').on(table.tenant_id, table.rule_key, sql`${table.effective_start} DESC`),
+  index('business_rules_active_status_idx').on(table.tenant_id, table.is_active, table.status),
+  index('business_rules_read_idx').on(table.tenant_id, table.rule_key, table.is_active),
+  check('business_rules_value_type_check', sql`${table.value_type} IN ('numeric','percentage','currency','string','object')`),
+  check('business_rules_status_check', sql`${table.status} IN ('canonical','active','retired','legacy')`),
+]);
+
+export const business_settings = pgTable('business_settings', {
+  setting_id: uuid('setting_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  setting_key: text('setting_key').notNull(),
+  setting_value: jsonb('setting_value').notNull(),
+  value_type: text('value_type').notNull(),
+  description: text('description'),
+  status: text('status').notNull().default('canonical'),
+  is_active: boolean('is_active').notNull().default(true),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('business_settings_tenant_kid_unique').on(table.tenant_id, table.kid),
+  unique('business_settings_tenant_key_unique').on(table.tenant_id, table.setting_key),
+  index('business_settings_active_idx').on(table.tenant_id, table.is_active),
+  check('business_settings_value_type_check', sql`${table.value_type} IN ('boolean','integer','string','object')`),
+  check('business_settings_status_check', sql`${table.status} IN ('canonical','active','retired','legacy')`),
+  check('business_settings_pay_app_workflow_check', sql`
+    ${table.setting_key} <> 'pay_app_approval_workflow' OR
+    ${table.setting_value}::text = ANY(ARRAY['"single_approver"', '"reviewer_plus_approver"', '"multi_step"'])
+  `),
+]);
+
 export const field_events = pgTable('field_events', {
   event_id: uuid('event_id').defaultRandom().primaryKey(),
   kid: text('kid').unique(),
