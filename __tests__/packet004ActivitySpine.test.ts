@@ -79,4 +79,41 @@ describe('BAN-214 Packet 004 Activity Spine MC completion', () => {
     }
     expect(timeline.ACTIVITY_TIMELINE_TYPE_GROUPS.some((g: { label: string }) => g.label === 'Mission Control')).toBe(true);
   });
+
+  it('ActivityTimeline exposes BG1 app event metadata and domain groups', async () => {
+    const timeline = await import('@/components/ActivityTimeline');
+    const bg1Events = [
+      'ORG_CREATED',
+      'ORG_UPDATED',
+      'ORG_MERGED',
+      'CONTACT_CREATED',
+      'SITE_CREATED',
+      'ENGAGEMENT_CREATED',
+      'ENGAGEMENT_STATUS_CHANGED',
+      'ROUTING_DECISION_ASSIGNED',
+      'PM_HANDOFF_STATE_TRANSITIONED',
+      'WORK_RECORD_CREATED',
+      'WORK_RECORD_STATE_CHANGED',
+      'BID_PROMOTED',
+      'ESTIMATE_VERSION_FROZEN',
+      'ESTIMATE_VERSION_ACCEPTED',
+      'PROPOSAL_VERSION_FROZEN',
+      'PROPOSAL_VERSION_ACCEPTED',
+      'PRICING_EVIDENCE_ADDED',
+    ];
+
+    expect(timeline.ACTIVITY_TIMELINE_BG1_APP_EVENT_TYPES).toEqual(bg1Events);
+    for (const eventType of bg1Events) {
+      expect(timeline.EVENT_CONFIG[eventType]).toEqual(expect.objectContaining({
+        display_label: expect.any(String),
+        color_token: expect.any(String),
+        render_branch: expect.any(Function),
+        default_origin: expect.stringMatching(/^(field|office|system)$/),
+      }));
+      expect(timeline.EVENT_CONFIG[eventType].icon).toBeTruthy();
+    }
+
+    const groupLabels = timeline.ACTIVITY_TIMELINE_TYPE_GROUPS.map((g: { label: string }) => g.label);
+    expect(groupLabels).toEqual(expect.arrayContaining(['Identity', 'Engagement', 'Work Record', 'Service WO', 'Field']));
+  });
 });

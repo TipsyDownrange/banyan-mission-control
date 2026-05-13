@@ -966,10 +966,10 @@ function OrgDetailPanel({
             )}
             </CollapsibleSection>
 
-            {/* Sites */}
-            <CollapsibleSection title="Sites" descriptor="Locations" count={detail.sites.length} open={!!openSections['sites']} onToggle={() => toggleSection('sites')}>
+            {/* Addresses (schema concept remains sites) */}
+            <CollapsibleSection title="Addresses" descriptor="Locations" count={detail.sites.length} open={!!openSections['sites']} onToggle={() => toggleSection('sites')}>
             {detail.sites.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No sites yet.</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No addresses yet.</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
               {detail.sites.map(s => (
@@ -996,7 +996,7 @@ function OrgDetailPanel({
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Site</button>
+                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Address</button>
                       </div>
                     </div>
                   ) : (
@@ -1040,11 +1040,11 @@ function OrgDetailPanel({
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Site</button>
+                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Address</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Site</button>
+              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Address</button>
             )}
             </CollapsibleSection>
 
@@ -1225,7 +1225,7 @@ function OrgDetailPanel({
                     {([
                       ['WOs', mergePreview.counts.work_orders],
                       ['Contacts', mergePreview.counts.contacts],
-                      ['Sites', mergePreview.counts.sites],
+                      ['Addresses', mergePreview.counts.sites],
                       ['Crosswalk', mergePreview.counts.crosswalk],
                       ['Projects', mergePreview.counts.projects],
                     ] as Array<[string, number]>).map(([label, n]) => {

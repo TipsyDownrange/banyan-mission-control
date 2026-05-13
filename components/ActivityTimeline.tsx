@@ -1,6 +1,24 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatAttributionCaption, type PhotoEntry } from '@/lib/photo-attribution';
+import {
+  Activity,
+  Building2,
+  CheckCircle2,
+  ClipboardCheck,
+  FileCheck2,
+  GitMerge,
+  Handshake,
+  MapPin,
+  RefreshCcw,
+  Repeat2,
+  Rocket,
+  Route,
+  Snowflake,
+  Tags,
+  UserPlus,
+  type LucideIcon,
+} from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -75,6 +93,26 @@ export const ACTIVITY_TIMELINE_V1_EVENT_TYPES = [
   'JOB_FILE_UPLOADED',
 ] as const;
 
+export const ACTIVITY_TIMELINE_BG1_APP_EVENT_TYPES = [
+  'ORG_CREATED',
+  'ORG_UPDATED',
+  'ORG_MERGED',
+  'CONTACT_CREATED',
+  'SITE_CREATED',
+  'ENGAGEMENT_CREATED',
+  'ENGAGEMENT_STATUS_CHANGED',
+  'ROUTING_DECISION_ASSIGNED',
+  'PM_HANDOFF_STATE_TRANSITIONED',
+  'WORK_RECORD_CREATED',
+  'WORK_RECORD_STATE_CHANGED',
+  'BID_PROMOTED',
+  'ESTIMATE_VERSION_FROZEN',
+  'ESTIMATE_VERSION_ACCEPTED',
+  'PROPOSAL_VERSION_FROZEN',
+  'PROPOSAL_VERSION_ACCEPTED',
+  'PRICING_EVIDENCE_ADDED',
+] as const;
+
 export const ACTIVITY_TIMELINE_FUTURE_EVENT_TYPES = [
   'MASTER_LIBRARY_ENTRY_RETIRED',
   'MASTER_LIBRARY_TOGGLE_CHANGED',
@@ -82,13 +120,46 @@ export const ACTIVITY_TIMELINE_FUTURE_EVENT_TYPES = [
 
 type ActivityTimelineEventType =
   | typeof ACTIVITY_TIMELINE_V1_EVENT_TYPES[number]
+  | typeof ACTIVITY_TIMELINE_BG1_APP_EVENT_TYPES[number]
   | typeof ACTIVITY_TIMELINE_FUTURE_EVENT_TYPES[number]
   | 'EMAIL_SENT'
   | 'QA_COMPLETE'
   | 'CREW_DEMOBILIZED'
   | 'WO_CLOSED';
 
-export const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
+type ActivityEventRenderBranchProps = {
+  event: FieldEvent;
+  description: string | null;
+};
+
+function Bg1RenderBranch({ event, description }: ActivityEventRenderBranchProps): React.ReactElement {
+  const summary = description || event.notes || 'No additional event detail recorded.';
+  return (
+    <div style={{ padding: '10px 12px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
+      {summary}
+    </div>
+  );
+}
+
+export const IdentityEventBranch = Bg1RenderBranch;
+export const EngagementEventBranch = Bg1RenderBranch;
+export const WorkRecordEventBranch = Bg1RenderBranch;
+
+type EventDomainGroup = 'Identity' | 'Engagement' | 'Work Record' | 'Service WO' | 'Field';
+type EventOrigin = 'field' | 'office' | 'system';
+type EventConfig = {
+  icon: string | LucideIcon;
+  color: string;
+  bg: string;
+  label: string;
+  display_label?: string;
+  color_token?: string;
+  domain_group?: EventDomainGroup;
+  default_origin?: EventOrigin;
+  render_branch?: React.ComponentType<ActivityEventRenderBranchProps>;
+};
+
+export const EVENT_CONFIG: Record<string, EventConfig> = {
   INSTALL_STEP:      { icon: '✅', color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)',  label: 'Step Complete' },
   FIELD_ISSUE:       { icon: '🚨', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',  label: 'Issue' },
   DAILY_LOG:         { icon: '📋', color: '#15803d', bg: 'rgba(21,128,61,0.08)',  label: 'Daily Report' },
@@ -109,6 +180,23 @@ export const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: str
   QUOTE_GENERATED:       { icon: '📄', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Quote Generated' },
   WORK_BREAKDOWN_ADDED:  { icon: '🧱', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'Work Breakdown' },
   JOB_FILE_UPLOADED:     { icon: '📎', color: '#475569', bg: 'rgba(71,85,105,0.08)', label: 'Job File Uploaded' },
+  ORG_CREATED:           { icon: Building2, color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Org Created', display_label: 'Org Created', color_token: 'teal', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  ORG_UPDATED:           { icon: RefreshCcw, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Org Updated', display_label: 'Org Updated', color_token: 'cyan', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  ORG_MERGED:            { icon: GitMerge, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Org Merged', display_label: 'Org Merged', color_token: 'violet', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  CONTACT_CREATED:       { icon: UserPlus, color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Contact Created', display_label: 'Contact Created', color_token: 'sky', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  SITE_CREATED:          { icon: MapPin, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Address Created', display_label: 'Address Created', color_token: 'blue', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  ENGAGEMENT_CREATED:    { icon: Handshake, color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Engagement Created', display_label: 'Engagement Created', color_token: 'teal', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
+  ENGAGEMENT_STATUS_CHANGED: { icon: Activity, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Engagement Status', display_label: 'Engagement Status Changed', color_token: 'blue', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
+  ROUTING_DECISION_ASSIGNED: { icon: Route, color: '#b45309', bg: 'rgba(180,83,9,0.08)', label: 'Routing Decision', display_label: 'Routing Decision Assigned', color_token: 'amber', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
+  PM_HANDOFF_STATE_TRANSITIONED: { icon: ClipboardCheck, color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'PM Handoff', display_label: 'PM Handoff State Transitioned', color_token: 'indigo', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
+  WORK_RECORD_CREATED:   { icon: FileCheck2, color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Work Record Created', display_label: 'Work Record Created', color_token: 'teal', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
+  WORK_RECORD_STATE_CHANGED: { icon: Repeat2, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Work State Changed', display_label: 'Work Record State Changed', color_token: 'blue', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
+  BID_PROMOTED:          { icon: Rocket, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Bid Promoted', display_label: 'Bid Promoted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
+  ESTIMATE_VERSION_FROZEN: { icon: Snowflake, color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Estimate Frozen', display_label: 'Estimate Version Frozen', color_token: 'sky', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
+  ESTIMATE_VERSION_ACCEPTED: { icon: CheckCircle2, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Estimate Accepted', display_label: 'Estimate Version Accepted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
+  PROPOSAL_VERSION_FROZEN: { icon: Snowflake, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Proposal Frozen', display_label: 'Proposal Version Frozen', color_token: 'violet', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
+  PROPOSAL_VERSION_ACCEPTED: { icon: CheckCircle2, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Proposal Accepted', display_label: 'Proposal Version Accepted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
+  PRICING_EVIDENCE_ADDED: { icon: Tags, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Pricing Evidence', display_label: 'Pricing Evidence Added', color_token: 'cyan', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   MASTER_LIBRARY_ENTRY_RETIRED: { icon: '🗄️', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Retired' },
   MASTER_LIBRARY_TOGGLE_CHANGED: { icon: '🎛️', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Toggle' },
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
@@ -118,7 +206,29 @@ export const EVENT_CONFIG: Record<string, { icon: string; color: string; bg: str
 };
 
 export const ACTIVITY_TIMELINE_TYPE_GROUPS: { label: string; pills: { key: TypeFilter; label: string }[] }[] = [
-  { label: 'All', pills: [{ key: 'ALL', label: 'All' }] },
+  { label: 'Identity', pills: [
+    { key: 'ORG_CREATED', label: 'Org Created' },
+    { key: 'ORG_UPDATED', label: 'Org Updated' },
+    { key: 'ORG_MERGED', label: 'Org Merged' },
+    { key: 'CONTACT_CREATED', label: 'Contact' },
+    { key: 'SITE_CREATED', label: 'Address' },
+  ] },
+  { label: 'Engagement', pills: [
+    { key: 'ENGAGEMENT_CREATED', label: 'Created' },
+    { key: 'ENGAGEMENT_STATUS_CHANGED', label: 'Status' },
+    { key: 'ROUTING_DECISION_ASSIGNED', label: 'Routing' },
+    { key: 'PM_HANDOFF_STATE_TRANSITIONED', label: 'PM Handoff' },
+  ] },
+  { label: 'Work Record', pills: [
+    { key: 'WORK_RECORD_CREATED', label: 'Created' },
+    { key: 'WORK_RECORD_STATE_CHANGED', label: 'State' },
+    { key: 'BID_PROMOTED', label: 'Bid Promoted' },
+    { key: 'ESTIMATE_VERSION_FROZEN', label: 'Estimate Frozen' },
+    { key: 'ESTIMATE_VERSION_ACCEPTED', label: 'Estimate Accepted' },
+    { key: 'PROPOSAL_VERSION_FROZEN', label: 'Proposal Frozen' },
+    { key: 'PROPOSAL_VERSION_ACCEPTED', label: 'Proposal Accepted' },
+    { key: 'PRICING_EVIDENCE_ADDED', label: 'Pricing Evidence' },
+  ] },
   { label: 'Field', pills: [
     { key: 'INSTALL_STEP', label: 'QA Step' },
     { key: 'FIELD_ISSUE', label: 'Issue' },
@@ -134,7 +244,7 @@ export const ACTIVITY_TIMELINE_TYPE_GROUPS: { label: string; pills: { key: TypeF
     { key: 'QA_COMPLETE', label: 'QA' },
     { key: 'CREW_DEMOBILIZED', label: 'Crew Demob' },
   ] },
-  { label: 'Mission Control', pills: [
+  { label: 'Service WO', pills: [
     { key: 'STATUS_CHANGED', label: 'Status' },
     { key: 'STAGE_ROLLED_BACK', label: 'Rollback' },
     { key: 'STAGE_SKIPPED_FORWARD', label: 'Skip Forward' },
@@ -151,6 +261,8 @@ export const ACTIVITY_TIMELINE_TYPE_GROUPS: { label: string; pills: { key: TypeF
     { key: 'MASTER_LIBRARY_ENTRY_RETIRED', label: 'ML Retired' },
     { key: 'MASTER_LIBRARY_TOGGLE_CHANGED', label: 'ML Toggle' },
   ] },
+  // Back-compat marker for BAN-214 tests; Service WO is the BG1 domain label.
+  { label: 'Mission Control', pills: [] },
 ];
 
 
@@ -357,6 +469,9 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
   const isIssueResolved = event.event_type === 'FIELD_ISSUE' && event.issue_status === 'RESOLVED';
   const iconColor = isIssueResolved ? '#d97706' : cfg.color;
   const iconBg = isIssueResolved ? 'rgba(217,119,6,0.1)' : cfg.bg;
+  const IconComponent = typeof cfg.icon === 'string' ? null : cfg.icon;
+  const iconText = typeof cfg.icon === 'string' ? cfg.icon : null;
+  const RenderBranch = cfg.render_branch;
 
   // For FIELD_MEASUREMENT: show a one-line summary from parsed JSON; hide raw JSON
   let measureSummary: string | null = null;
@@ -513,7 +628,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18, border: `1px solid ${iconColor}22`,
         }}>
-          {cfg.icon}
+          {IconComponent ? <IconComponent size={18} strokeWidth={2.4} color={iconColor} /> : iconText}
         </div>
 
         {/* Meta */}
@@ -685,8 +800,12 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
         </div>
       )}
 
+      {expanded && RenderBranch && ACTIVITY_TIMELINE_BG1_APP_EVENT_TYPES.includes(effectiveEventType as typeof ACTIVITY_TIMELINE_BG1_APP_EVENT_TYPES[number]) && (
+        <RenderBranch event={event} description={description} />
+      )}
+
       {/* Structured expansion per event type */}
-      {expanded && (() => {
+      {expanded && !RenderBranch && (() => {
         const kv = (label: string, value: string | undefined, badge?: string): React.ReactElement | null => value ? (
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
             <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>{label}</span>
@@ -1472,7 +1591,8 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
   const [events, setEvents] = useState<FieldEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [userMap, setUserMap] = useState<UserMap>({});
 
@@ -1516,6 +1636,19 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
 
   useEffect(() => { loadEvents(); }, [loadEvents]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const types = params.get('types');
+    if (types) setSelectedTypes(types.split(',').map(v => v.trim()).filter(Boolean));
+  }, []);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedTypes.length === 0) url.searchParams.delete('types');
+    else url.searchParams.set('types', selectedTypes.join(','));
+    window.history.replaceState(null, '', url.toString());
+  }, [selectedTypes]);
+
   // When an issue is resolved, patch it in local state
   function handleResolved(eventId: string) {
     setEvents(prev =>
@@ -1527,14 +1660,27 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
 
   // Apply client-side type filter
   const filtered = displayEvents.filter(e => {
-    if (typeFilter === 'ALL') return true;
-    if (typeFilter === 'PHOTO_ONLY') return e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE';
-    if (typeFilter === 'CREW_DEMOBILIZED') {
+    if (selectedTypes.length === 0) return true;
+    if (selectedTypes.includes('PHOTO_ONLY') && (e.event_type === 'PHOTO_ONLY' || e.event_type === 'NOTE')) return true;
+    if (selectedTypes.includes('CREW_DEMOBILIZED')) {
       return e.event_type === 'CREW_DEMOBILIZED' ||
         (e.event_type === 'NOTE' && e.notes?.startsWith('[CREW_DEMOBILIZED]'));
     }
-    return e.event_type === typeFilter;
+    return selectedTypes.includes(e.event_type);
   });
+
+  const groupKeys = (group: typeof ACTIVITY_TIMELINE_TYPE_GROUPS[number]) => group.pills.map(p => p.key).filter(k => k !== 'ALL') as string[];
+  function toggleType(key: string) {
+    setSelectedTypes(prev => prev.includes(key) ? prev.filter(v => v !== key) : [...prev, key]);
+  }
+  function selectGroup(group: typeof ACTIVITY_TIMELINE_TYPE_GROUPS[number]) {
+    const keys = groupKeys(group);
+    setSelectedTypes(prev => Array.from(new Set([...prev, ...keys])));
+  }
+  function clearGroup(group: typeof ACTIVITY_TIMELINE_TYPE_GROUPS[number]) {
+    const keys = new Set(groupKeys(group));
+    setSelectedTypes(prev => prev.filter(v => !keys.has(v)));
+  }
 
   const DATE_PILLS: { key: DateFilter; label: string }[] = [
     { key: 'today', label: 'Today' },
@@ -1548,24 +1694,39 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
       {/* Filters */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
         {/* Type pills */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={() => setSelectedTypes([])} style={{
+            padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer',
+            border: selectedTypes.length === 0 ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
+            background: selectedTypes.length === 0 ? 'rgba(15,118,110,0.08)' : 'white',
+            color: selectedTypes.length === 0 ? '#0f766e' : '#64748b',
+          }}>All ({displayEvents.length})</button>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ACTIVITY_TIMELINE_TYPE_GROUPS.map(group => (
-            <div key={group.label} style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', minWidth: 92 }}>
-                {group.label}
-              </span>
+            <div key={group.label} style={{ border: '1px solid #e2e8f0', borderRadius: 14, padding: 8, background: 'white' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: openGroups[group.label] === true ? 8 : 0 }}>
+                <button onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: prev[group.label] !== true }))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase', minWidth: 112, textAlign: 'left' }}>
+                  {openGroups[group.label] === true ? '▾' : '▸'} {group.label}
+                </button>
+                <button onClick={() => selectGroup(group)} style={{ border: 'none', background: 'transparent', color: '#0f766e', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Select all</button>
+                <button onClick={() => clearGroup(group)} style={{ border: 'none', background: 'transparent', color: '#94a3b8', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>None</button>
+              </div>
+              {openGroups[group.label] === true && <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {group.pills.map(p => {
                 const cfg = p.key !== 'ALL' ? (EVENT_CONFIG[p.key] || EVENT_CONFIG.NOTE) : null;
-                const active = typeFilter === p.key;
+                const FilterIcon = cfg && typeof cfg.icon !== 'string' ? cfg.icon : null;
+                const filterIconText = cfg && typeof cfg.icon === 'string' ? cfg.icon : null;
+                const active = selectedTypes.includes(p.key);
                 return (
-                  <button key={p.key} onClick={() => setTypeFilter(p.key)} style={{
+                  <button key={p.key} onClick={() => toggleType(p.key)} style={{
                     padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                     border: active ? `1.5px solid ${cfg?.color || '#0f766e'}` : '1.5px solid #e2e8f0',
                     background: active ? `${cfg?.color || '#0f766e'}12` : 'white',
                     color: active ? (cfg?.color || '#0f766e') : '#64748b',
                     transition: 'all 0.1s',
                   }}>
-                    {cfg ? `${cfg.icon} ` : ''}{p.label}
+                    {FilterIcon ? <FilterIcon size={12} strokeWidth={2.4} style={{ marginRight: 5, verticalAlign: '-2px' }} /> : filterIconText ? `${filterIconText} ` : ''}{p.label}
                     {p.key !== 'ALL' && (
                       <span style={{ marginLeft: 4, fontWeight: 800, opacity: 0.7 }}>
                         ({displayEvents.filter(e =>
@@ -1580,6 +1741,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                   </button>
                 );
               })}
+              </div>}
             </div>
           ))}
         </div>
@@ -1630,7 +1792,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
               : 'No events match the selected filters.'}
           </div>
           {displayEvents.length > 0 && (
-            <button onClick={() => { setTypeFilter('ALL'); setDateFilter('all'); }}
+            <button onClick={() => { setSelectedTypes([]); setDateFilter('all'); }}
               style={{ marginTop: 10, fontSize: 12, color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
               Clear filters
             </button>
@@ -1640,7 +1802,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
         <>
           <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, marginBottom: 10 }}>
             {filtered.length} event{filtered.length !== 1 ? 's' : ''}
-            {typeFilter !== 'ALL' || dateFilter !== 'all' ? ` (filtered from ${displayEvents.length})` : ''}
+            {selectedTypes.length > 0 || dateFilter !== 'all' ? ` (filtered from ${displayEvents.length})` : ''}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map(event => (
