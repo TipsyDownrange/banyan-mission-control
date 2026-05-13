@@ -9,6 +9,7 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { ORGANIZATION_TYPES } from '@/lib/organization-types';
 import { normalizeIsland, normalizeNameForWrite } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -102,6 +103,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
       }
     }
     await sheets.spreadsheets.values.batchUpdate({ spreadsheetId: SHEET_ID, requestBody: { valueInputOption:'USER_ENTERED', data: updates } });
+    await emitMCEvent({
+      entity_kid: orgId,
+      entity_type: 'organization',
+      event_type: 'ORG_UPDATED',
+      submitted_by: session.user.email || undefined,
+      origin: 'office',
+      notes: Object.keys(body).filter(k => COL[k] !== undefined).join(','),
+    });
     return NextResponse.json({ ok: true });
   } catch (err) { return NextResponse.json({ error: String(err) }, { status: 500 }); }
 }
