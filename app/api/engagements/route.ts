@@ -96,3 +96,93 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, data: row, drive_folder_url: folder.folderUrl }, { status: 201 });
 }
+
+const ALLOWED_ENGAGEMENT_UPDATE_FIELDS = [
+  'status',
+  'engagement_type',
+  'primary_contact_id',
+  'start_date',
+  'end_date',
+  'target_completion_date',
+  'actual_completion_date',
+  'routing_decision',
+  'routing_rationale',
+  'pm_handoff_state',
+  'pm_assigned_user_id',
+  'warranty_supplement_routing',
+  'drive_folder_template',
+] as const;
+
+const ENGAGEMENT_STATUS_VALUES = new Set(['active', 'closed', 'cancelled', 'on_hold', 'archived']);
+
+export async function PATCH(req: NextRequest) {
+  const auth = await requireKulaSession();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const tenantId = getDefaultTenantId();
+  const body = await req.json() as Record<string, unknown>;
+
+  const engagementId = String(body.engagement_id || '');
+  if (!engagementId) return NextResponse.json({ error: 'engagement_id required' }, { status: 400 });
+
+  const current = await queryOne<{ kid: string; status: string; tenant_id: string }>(
+    `select kid, status, tenant_id from engagements where engagement_id = $1 limit 1`,
+    [engagementId],
+  );
+  if (!current) return NextResponse.json({ error: 'engagement not found' }, { status: 404 });
+  if (current.tenant_id !== tenantId) return NextResponse.json({ error: 'tenant boundary' }, { status: 403 });
+
+  const updates: Record<string, unknown> = {};
+  for (const field of ALLOWED_ENGAGEMENT_UPDATE_FIELDS) {
+    if (field in body) updates[field] = body[field];
+  }
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'no allowed fields to update' }, { status: 400 });
+  }
+
+  if ('routing_decision' in updates) {
+    if (updates.routing_decision && !canRoute(auth.role)) {
+      return NextResponse.json({ error: 'routing_decision requires leadership role' }, { status: 403 });
+    }
+    if (updates.routing_decision && !String(body.routing_rationale || '').trim()) {
+      return NextResponse.json({ error: 'routing_rationale required when routing_decision is set' }, { status: 400 });
+    }
+  }
+
+  const newStatus = 'status' in updates ? String(updates.status || '') : null;
+  if (newStatus !== null && !ENGAGEMENT_STATUS_VALUES.has(newStatus)) {
+    return NextResponse.json({ error: 'invalid engagement status' }, { status: 400 });
+  }
+  const statusChanging = newStatus !== null && newStatus !== current.status;
+
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+  let idx = 1;
+  for (const [key, value] of Object.entries(updates)) {
+    setClauses.push(`${key} = $${idx}`);
+    values.push(value);
+    idx += 1;
+  }
+  setClauses.push('updated_at = now()');
+  setClauses.push(`updated_by = $${idx}`);
+  values.push(auth.user?.user_id || null);
+  idx += 1;
+  values.push(engagementId);
+
+  const row = await queryOne(
+    `update engagements set ${setClauses.join(', ')} where engagement_id = $${idx} returning *`,
+    values,
+  );
+
+  if (statusChanging) {
+    await emitMCEvent({
+      entity_kid: current.kid,
+      entity_type: 'engagement',
+      event_type: 'ENGAGEMENT_STATUS_CHANGED',
+      notes: `${current.status} → ${newStatus}`,
+      submitted_by: auth.email,
+      origin: 'office',
+    });
+  }
+
+  return NextResponse.json({ ok: true, data: row });
+}
