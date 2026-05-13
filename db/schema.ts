@@ -559,6 +559,53 @@ export const business_settings = pgTable('business_settings', {
   `),
 ]);
 
+// ─── engagements (BG1 Packet 003 W2) ─────────────────────────────────────────
+// Engagement = unit of work scope between an org+site and one or more
+// work_records / service_work_orders. BG1 W2 reconciles the table to the
+// dispatch contract: routing_decision + pm_handoff_state + completion dates
+// + Drive folder template. Canonical engagement_type values per BQS §6.3.
+// Drizzle types reflect staging-actual column names (engagement_id PK,
+// status column, users.user_id FK), not the canon-doc abstract names.
+export const engagements = pgTable('engagements', {
+  engagement_id: uuid('engagement_id').defaultRandom().primaryKey(),
+  kid: text('kid').notNull(),
+  org_id: uuid('org_id').notNull().references(() => organizations.org_id),
+  site_id: uuid('site_id').notNull().references(() => sites.site_id),
+  engagement_type: text('engagement_type').notNull(),
+  status: text('status').notNull().default('active'),
+  primary_contact_id: uuid('primary_contact_id').references(() => contacts.contact_id),
+  start_date: date('start_date'),
+  end_date: date('end_date'),
+  target_completion_date: date('target_completion_date'),
+  actual_completion_date: date('actual_completion_date'),
+  routing_decision: text('routing_decision'),
+  routing_assigned_by: uuid('routing_assigned_by').references(() => users.user_id),
+  routing_assigned_at: timestamp('routing_assigned_at', { withTimezone: true }),
+  routing_rationale: text('routing_rationale'),
+  pm_handoff_state: text('pm_handoff_state').notNull().default('estimating'),
+  pm_assigned_user_id: uuid('pm_assigned_user_id').references(() => users.user_id),
+  warranty_supplement_routing: text('warranty_supplement_routing'),
+  drive_folder_id: text('drive_folder_id'),
+  drive_folder_template: text('drive_folder_template'),
+  metadata: jsonb('metadata').notNull().default(sql`'{}'::jsonb`),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('engagements_tenant_kid_uidx').on(table.tenant_id, table.kid),
+  index('engagements_org_id_idx').on(table.tenant_id, table.org_id),
+  index('engagements_site_id_idx').on(table.tenant_id, table.site_id),
+  index('engagements_type_status_idx').on(table.tenant_id, table.engagement_type, table.status),
+  index('engagements_tenant_status_pm_handoff_idx').on(table.tenant_id, table.status, table.pm_handoff_state),
+  check('engagements_engagement_type_check', sql`${table.engagement_type} IN ('project','work_order_small','work_order_large','warranty_small','warranty_large','maintenance','internal')`),
+  check('engagements_status_check', sql`${table.status} IN ('active','closed','cancelled','on_hold','archived')`),
+  check('engagements_routing_decision_check', sql`${table.routing_decision} IS NULL OR ${table.routing_decision} IN ('service_wo','project')`),
+  check('engagements_pm_handoff_state_check', sql`${table.pm_handoff_state} IN ('estimating','awaiting_handoff','pm_assigned','active','handoff_blocked','closed')`),
+  check('engagements_warranty_supplement_routing_check', sql`${table.warranty_supplement_routing} IS NULL OR ${table.warranty_supplement_routing} IN ('gc','owner','both','auto')`),
+]);
+
 export const field_events = pgTable('field_events', {
   event_id: uuid('event_id').defaultRandom().primaryKey(),
   kid: text('kid').unique(),
