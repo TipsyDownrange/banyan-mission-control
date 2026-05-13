@@ -16,6 +16,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeEmail, normalizeIsland, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -367,6 +368,15 @@ export async function POST(req: Request) {
     island: cleanIsland,
     woCount: 0,
   };
+
+  await emitMCEvent({
+    entity_kid: orgId,
+    entity_type: 'organization',
+    event_type: 'ORG_CREATED',
+    submitted_by: session.user.email || undefined,
+    origin: 'office',
+    notes: cleanName,
+  });
 
   return NextResponse.json({ ok: true, org_id: orgId, customer_id: customerId, contact_id: contactId, site_id: siteId, organization });
 }

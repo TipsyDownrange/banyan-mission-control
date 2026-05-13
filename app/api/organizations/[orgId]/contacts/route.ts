@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 const SHEET_ID = getBackendSheetId();
 
 function normalizeContactField(field: string, value: unknown): string {
@@ -25,6 +26,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ orgId: 
   const contactId = 'cnt_' + Math.random().toString(36).slice(2,18);
   const now = new Date().toISOString();
   await sheets.spreadsheets.values.append({ spreadsheetId: SHEET_ID, range: 'Contacts!A:J', valueInputOption: 'USER_ENTERED', requestBody: { values: [[contactId, orgId, normalizeNameForWrite(name), String(title || '').trim(), String(role || 'PRIMARY').trim(), normalizeEmail(String(email || '')), normalizePhone(String(phone || '')), is_primary?'TRUE':'FALSE', '', now]] } });
+  await emitMCEvent({
+    entity_kid: contactId,
+    entity_type: 'contact',
+    event_type: 'CONTACT_CREATED',
+    submitted_by: session.user.email || undefined,
+    origin: 'office',
+    notes: `org=${orgId}`,
+  });
   return NextResponse.json({ ok: true, contact_id: contactId });
 }
 export async function PATCH(req: Request, { params }: { params: Promise<{ orgId: string }> }) {

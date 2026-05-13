@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeIsland, normalizeNameForWrite, normalizeSiteType } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 const SHEET_ID = getBackendSheetId();
 
 function normalizeSiteField(field: string, value: unknown): string {
@@ -28,6 +29,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ orgId: 
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
+  await emitMCEvent({
+    entity_kid: siteId,
+    entity_type: 'site',
+    event_type: 'SITE_CREATED',
+    submitted_by: session.user.email || undefined,
+    origin: 'office',
+    notes: `org=${orgId}`,
+  });
   return NextResponse.json({ ok: true, site_id: siteId });
 }
 export async function PATCH(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
