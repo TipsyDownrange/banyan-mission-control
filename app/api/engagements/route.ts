@@ -96,3 +96,75 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, data: row, drive_folder_url: folder.folderUrl }, { status: 201 });
 }
+
+// BAN-240 (Wave 0 W0.5): PATCH handler emits ENGAGEMENT_STATUS_CHANGED
+// when the `status` column transitions. ADR-032 canonical state machine
+// validation is intentionally deferred — DB check constraint enforces the
+// allowed value set; handler accepts any non-empty string for now.
+const PATCH_ALLOWED_FIELDS = [
+  'status',
+  'engagement_type',
+  'pm_assigned_user_id',
+  'pm_handoff_state',
+  'primary_contact_id',
+] as const;
+
+export async function PATCH(req: NextRequest) {
+  const auth = await requireKulaSession();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const tenantId = getDefaultTenantId();
+  const body = await req.json() as Record<string, unknown>;
+
+  const engagementId = String(body.engagement_id || '');
+  if (!engagementId) return NextResponse.json({ error: 'engagement_id required' }, { status: 400 });
+
+  const current = await queryOne<{ kid: string; status: string; tenant_id: string }>(
+    `select kid, status, tenant_id from engagements where engagement_id = $1 limit 1`,
+    [engagementId],
+  );
+  if (!current) return NextResponse.json({ error: 'engagement not found' }, { status: 404 });
+  if (current.tenant_id !== tenantId) return NextResponse.json({ error: 'tenant boundary' }, { status: 403 });
+
+  const updates: Record<string, unknown> = {};
+  for (const field of PATCH_ALLOWED_FIELDS) {
+    if (field in body) updates[field] = body[field];
+  }
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'no allowed fields to update' }, { status: 400 });
+  }
+
+  const newStatus = 'status' in updates ? String(updates.status ?? '') : null;
+  const statusChanging = newStatus !== null && newStatus !== current.status;
+
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+  let idx = 1;
+  for (const [key, value] of Object.entries(updates)) {
+    setClauses.push(`${key} = $${idx}`);
+    values.push(value);
+    idx++;
+  }
+  setClauses.push(`updated_at = now()`);
+  setClauses.push(`updated_by = $${idx}`);
+  values.push(auth.user?.user_id || null);
+  idx++;
+  values.push(engagementId);
+
+  const row = await queryOne(
+    `update engagements set ${setClauses.join(', ')} where engagement_id = $${idx} returning *`,
+    values,
+  );
+
+  if (statusChanging) {
+    await emitMCEvent({
+      entity_kid: current.kid,
+      entity_type: 'engagement',
+      event_type: 'ENGAGEMENT_STATUS_CHANGED',
+      notes: `${current.status} → ${newStatus}`,
+      submitted_by: auth.email,
+      origin: 'office',
+    });
+  }
+
+  return NextResponse.json({ ok: true, data: row });
+}
