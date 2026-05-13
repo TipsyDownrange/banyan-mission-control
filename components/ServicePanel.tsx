@@ -202,7 +202,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
   const defaultFilter = userRole === 'super' ? 'approved' : 'all';
   // GM and service_pm can create new leads; supers and others cannot
-  const canCreateLeads = ['gm', 'owner', 'service_pm', 'super'].includes(userRole);
+  const canCreateLeads = ['gm', 'owner', 'service_pm', 'super_admin', 'super'].includes(userRole);
 
   const [data, setData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);
