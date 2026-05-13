@@ -52,6 +52,14 @@ export type MCEventType =
   | 'ENGAGEMENT_STATUS_CHANGED'       // emit deferred to Dispatch #3
   | 'ROUTING_DECISION_ASSIGNED'       // emit deferred to Dispatch #3
   | 'PM_HANDOFF_STATE_TRANSITIONED'   // emit deferred to Dispatch #3
+  | 'WORK_RECORD_CREATED'
+  | 'WORK_RECORD_STATE_CHANGED'
+  | 'BID_PROMOTED'
+  | 'ESTIMATE_VERSION_FROZEN'
+  | 'ESTIMATE_VERSION_ACCEPTED'
+  | 'PROPOSAL_VERSION_FROZEN'
+  | 'PROPOSAL_VERSION_ACCEPTED'
+  | 'PRICING_EVIDENCE_ADDED'
   | string;
 
 // Entity type (Sheets column I). 'work_order' is the implicit legacy default
@@ -61,7 +69,12 @@ export type MCEventEntityType =
   | 'organization'
   | 'contact'
   | 'site'
-  | 'engagement';
+  | 'engagement'
+  | 'work_record'
+  | 'bid'
+  | 'estimate'
+  | 'proposal'
+  | 'pricing_evidence';
 
 export interface MCEventPayload {
   /** Legacy WO emit path. Set wo_id when target entity is a service WO. */

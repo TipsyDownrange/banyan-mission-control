@@ -54,6 +54,8 @@ export default function BidQueuePanel() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>({});
+  const [promoting, setPromoting] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     fetch('/api/bids?limit=300')
@@ -67,6 +69,45 @@ export default function BidQueuePanel() {
   }
   function setEff(kID: string, field: string, val: string) {
     setOverrides(p => ({ ...p, [kID]: { ...p[kID], [field]: val } }));
+  }
+
+  async function promoteBid(bid: Bid) {
+    const bidKid = bid['kID'];
+    if (!bidKid) return;
+    const engagementId = window.prompt('Engagement UUID to promote this bid into:');
+    if (!engagementId) return;
+    setPromoting(p => ({ ...p, [bidKid]: true }));
+    setToast('');
+    try {
+      const created = await fetch('/api/bids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kid: bidKid.startsWith('BID-') ? bidKid : undefined,
+          bid_state: 'go_decision',
+          source_channel: bid['Bid Source'] || bid['Source'] || 'legacy_bid_queue',
+          due_date: bid['Due Date'] || null,
+          bid_amount: bid['Est Value (High)'] || null,
+        }),
+      }).then(r => r.json());
+      if (created.error) throw new Error(created.error);
+      const pgBidKid = created.data?.kid || bidKid;
+      const promoted = await fetch(`/api/bids/${encodeURIComponent(pgBidKid)}/promote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          engagement_id: engagementId,
+          work_type: 'project',
+          name: bid['Job Name'] || pgBidKid,
+        }),
+      }).then(r => r.json());
+      if (promoted.error) throw new Error(promoted.error);
+      setToast(`Promoted ${pgBidKid} → ${promoted.work_record?.kid || 'work record'}`);
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Bid promotion failed');
+    } finally {
+      setPromoting(p => ({ ...p, [bidKid]: false }));
+    }
   }
 
   const filtered = useMemo(() => {
@@ -221,6 +262,12 @@ export default function BidQueuePanel() {
         </div>
       )}
 
+      {toast && (
+        <div style={{ background: toast.includes('failed') || toast.includes('required') ? 'rgba(254,242,242,0.98)' : 'rgba(240,253,250,0.98)', border: '1px solid rgba(20,184,166,0.22)', borderRadius: 16, padding: '12px 16px', fontSize: 13, fontWeight: 700, color: toast.includes('failed') ? '#b91c1c' : '#0f766e' }}>
+          {toast}
+        </div>
+      )}
+
       {/* TABLE VIEW */}
       {viewMode === 'table' && (
         <div style={{ background: 'white', borderRadius: 20, border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)', overflow: 'hidden' }}>
@@ -298,6 +345,12 @@ export default function BidQueuePanel() {
                         {bid['Products / Specs'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Products</div>
                           <div style={{ fontSize: 13, color: '#334155' }}>{bid['Products / Specs']}</div>
                         </div>}
+                      </div>
+                      <div>
+                        <button onClick={() => promoteBid(bid)} disabled={Boolean(promoting[bid['kID']])}
+                          style={{ padding: '8px 14px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: promoting[bid['kID']] ? 'not-allowed' : 'pointer' }}>
+                          {promoting[bid['kID']] ? 'Promoting…' : 'Promote to Work Record'}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -384,6 +437,10 @@ export default function BidQueuePanel() {
                           </button>
                         ))}
                       </div>
+                      <button onClick={() => promoteBid(bid)} disabled={Boolean(promoting[bid['kID']])}
+                        style={{ marginTop: 8, padding: '8px 12px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: promoting[bid['kID']] ? 'not-allowed' : 'pointer' }}>
+                        {promoting[bid['kID']] ? 'Promoting…' : 'Promote to Work Record'}
+                      </button>
                     </div>
                   </div>
                 )}
