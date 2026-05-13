@@ -201,8 +201,8 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
   const userRole = (session?.user as { email?: string; role?: string } | undefined)?.role || 'field';
   // Superintendent defaults to 'approved' (Need to Schedule) — their actionable view
   const defaultFilter = userRole === 'super' ? 'approved' : 'all';
-  // GM and service_pm can create new leads; supers and others cannot
-  const canCreateLeads = ['gm', 'owner', 'service_pm', 'super'].includes(userRole);
+  // Executive/service roles can create new leads; field users remain read-only here.
+  const canCreateLeads = ['super_admin', 'gm', 'owner', 'service_pm', 'super'].includes(userRole);
 
   const [data, setData] = useState<ServiceData | null>(null);
   const [loading, setLoading] = useState(true);
