@@ -4,6 +4,7 @@ import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
 import ActivityTimeline from '@/components/ActivityTimeline';
+import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -96,7 +97,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -121,30 +122,15 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
   const TABS = [
     { key: 'overview', label: 'Overview' },
-    { key: 'submittals', label: `Submittals (${submittals.length})` },
-    { key: 'rfis', label: `RFIs (${rfis.length})` },
-    { key: 'cos', label: `Change Orders (${cos.length})` },
+    { key: 'submittals', label: 'Submittals' },
+    { key: 'rfis', label: 'RFIs' },
+    { key: 'cos', label: 'Change Orders' },
+    { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'budget', label: 'Budget' },
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
     { key: 'activity', label: `Activity (${project.eventCount})` },
   ] as const;
-
-  const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-    APPROVED: { bg: '#f0fdfa', color: '#0f766e' },
-    SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
-    PENDING: { bg: '#f8fafc', color: '#64748b' },
-    REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
-    REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
-    UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
-    IDENTIFIED: { bg: '#fffbeb', color: '#92400e' },
-    IN_NEGOTIATION: { bg: '#fffbeb', color: '#92400e' },
-  };
-
-  const statusTag = (status: string) => {
-    const s = STATUS_COLOR[status] || { bg: '#f8fafc', color: '#64748b' };
-    return <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}22` }}>{(status || 'PENDING').replace(/_/g, ' ')}</span>;
-  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(15,23,42,0.5)', display: 'flex', justifyContent: 'center' }}>
@@ -209,72 +195,35 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               )}
 
               {activeTab === 'submittals' && (
-                <div>
-                  {submittals.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No submittals for this project yet</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {submittals.map((s, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {s.description || s.spec_section || `Submittal #${s.sub_number}`}
-                            </div>
-                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                              #{s.sub_number} · {s.spec_section || ''} {s.ball_in_court ? `· Ball: ${s.ball_in_court}` : ''}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                            {s.submitted_to_gc_date && <span style={{ fontSize: 11, color: '#94a3b8' }}>{s.submitted_to_gc_date}</span>}
-                            {statusTag(s.status)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <BuildQueuePlaceholder
+                  surfaceName="Submittals"
+                  specDate={null}
+                  buildQueueStatus="BQS spec pending"
+                />
               )}
 
               {activeTab === 'rfis' && (
-                <div>
-                  {rfis.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No RFIs for this project yet</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {rfis.map((r, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{r.subject || `RFI #${r.rfi_number}`}</div>
-                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>#{r.rfi_number} · {r.created_at || ''}</div>
-                          </div>
-                          {statusTag(r.status)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <BuildQueuePlaceholder
+                  surfaceName="RFIs"
+                  specDate={null}
+                  buildQueueStatus="BQS spec pending"
+                />
               )}
 
               {activeTab === 'cos' && (
-                <div>
-                  {cos.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No change orders for this project yet</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {cos.map((c, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{c.title || `CO #${c.co_number}`}</div>
-                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                              #{c.co_number} {c.amount_requested ? `· $${parseFloat(c.amount_requested).toLocaleString()}` : ''}
-                            </div>
-                          </div>
-                          {statusTag(c.status)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <BuildQueuePlaceholder
+                  surfaceName="Change Orders"
+                  specDate={null}
+                  buildQueueStatus="BQS spec pending"
+                />
+              )}
+
+              {activeTab === 'pay-apps' && (
+                <BuildQueuePlaceholder
+                  surfaceName="Pay Apps"
+                  specDate={null}
+                  buildQueueStatus="BQS spec pending"
+                />
               )}
 
               {activeTab === 'budget' && (
