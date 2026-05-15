@@ -1,9 +1,13 @@
 /**
  * GET /api/qbo/sync-invoices
- * Fetches all QBO invoices, fuzzy-matches to Service_Work_Orders by customer name,
- * writes invoice data to WO columns AA–AE (qbo_invoice_id, invoice_number,
- * invoice_total, invoice_balance, invoice_date).
- * NEVER overwrites any pre-existing WO columns — only writes to AA–AE.
+ * Fetches all QBO invoices, fuzzy-matches to Service_Work_Orders by customer
+ * name, writes invoice data to WO columns AD–AH (qbo_invoice_id at AD,
+ * invoice_number at AE, invoice_total at AF, invoice_balance at AG,
+ * invoice_date at AH).
+ *
+ * The metadata columns AA–AC (created_at, updated_at, source) are NEVER
+ * touched by this route. Column positions are imported from the shared SWO
+ * contract — see `lib/contracts/service-work-orders.ts` (BAN-179.A).
  */
 
 import { NextResponse } from 'next/server';
@@ -12,31 +16,26 @@ import { qboFetch } from '@/lib/qbo';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
+import {
+  SWO_COL,
+  columnLetterFromIndex,
+} from '@/lib/contracts/service-work-orders';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 
-// Invoice columns — AD through AH (after existing metadata cols AA–AC)
-// 0-based: AD=29, AE=30, AF=31, AG=32, AH=33
+// Invoice column indices, sourced from the SWO contract (BAN-179.A).
 const INV_COL = {
-  qbo_invoice_id:  29, // AD
-  invoice_number:  30, // AE
-  invoice_total:   31, // AF
-  invoice_balance: 32, // AG
-  invoice_date:    33, // AH
-};
-const CUSTOMER_NAME_COL = 12; // M (0-based)
-const WO_ID_COL = 0; // A
+  qbo_invoice_id:  SWO_COL.qbo_invoice_id,  // AD
+  invoice_number:  SWO_COL.invoice_number,  // AE
+  invoice_total:   SWO_COL.invoice_total,   // AF
+  invoice_balance: SWO_COL.invoice_balance, // AG
+  invoice_date:    SWO_COL.invoice_date,    // AH
+} as const;
+const CUSTOMER_NAME_COL = SWO_COL.customer_name; // M (0-based)
+const WO_ID_COL = SWO_COL.wo_id;                 // A
 
-function colLetter(idx: number): string {
-  let result = '';
-  let n = idx;
-  do {
-    result = String.fromCharCode(65 + (n % 26)) + result;
-    n = Math.floor(n / 26) - 1;
-  } while (n >= 0);
-  return result;
-}
+const colLetter = columnLetterFromIndex;
 
 /** Normalize a name for fuzzy matching */
 function normalize(s: string): string {
@@ -135,7 +134,7 @@ export async function GET() {
       }
     }
 
-    // 5. Write invoice data to WO rows (only AA–AE)
+    // 5. Write invoice data to WO rows (canonical AD–AH per SWO contract).
     //    If multiple invoices match same WO, use the most recent (first in sorted list)
     const writtenRows = new Set<number>();
     const batchData: { range: string; values: string[][] }[] = [];
@@ -151,7 +150,7 @@ export async function GET() {
       const invoiceBalance = String(inv.Balance ?? '');
       const invoiceDate = String(inv.TxnDate ?? '');
 
-      // Write 5 cells: AA through AE
+      // Write 5 cells: AD through AH (canonical QBO invoice positions).
       batchData.push(
         { range: `${TAB}!${colLetter(INV_COL.qbo_invoice_id)}${sheetRow}`, values: [[match.invoiceId]] },
         { range: `${TAB}!${colLetter(INV_COL.invoice_number)}${sheetRow}`, values: [[match.invoiceNumber]] },

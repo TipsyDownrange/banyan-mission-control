@@ -106,12 +106,23 @@ function setupGoogleClients(options: {
     ? jest.fn().mockRejectedValue(new Error('Drive unavailable'))
     : jest.fn().mockResolvedValue({ data: { files: [] } });
   let folderId = 0;
-  const driveFilesCreate = jest.fn().mockImplementation(() => {
+  const createdFolders = new Map<string, { driveId: string; parents: string[] }>();
+  const driveFilesCreate = jest.fn().mockImplementation((args) => {
     folderId += 1;
-    return Promise.resolve({ data: { id: `folder-${folderId}` } });
+    const id = `folder-${folderId}`;
+    const parents = args?.requestBody?.parents || [];
+    createdFolders.set(id, { driveId: '0AKSVpf3AnH7CUk9PVA', parents });
+    return Promise.resolve({ data: { id, driveId: '0AKSVpf3AnH7CUk9PVA', parents } });
   });
-  const driveFilesGet = jest.fn().mockResolvedValue({
-    data: { webViewLink: options.folderUrl || 'https://drive.google.com/drive/folders/ban51-test' },
+  const driveFilesGet = jest.fn().mockImplementation((args) => {
+    const id = args?.fileId || `folder-${folderId}`;
+    const placement = createdFolders.get(id) || { driveId: '0AKSVpf3AnH7CUk9PVA', parents: ['folder-1'] };
+    return Promise.resolve({
+      data: {
+        ...placement,
+        webViewLink: options.folderUrl || 'https://drive.google.com/drive/folders/ban51-test',
+      },
+    });
   });
   const drivePermissionsCreate = jest.fn().mockResolvedValue({ data: {} });
 
@@ -143,6 +154,8 @@ describe('Service WO create route', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.VERCEL_TARGET_ENV;
+    delete process.env.WO_POSTGRES_READ_ENABLED;
     mockCheckPermission.mockResolvedValue({ allowed: true });
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -257,6 +270,107 @@ describe('Service WO create route', () => {
       range: 'Service_Work_Orders!AU7',
       requestBody: { values: [['true']] },
     }));
+  });
+
+  it('does not backfeed WO snapshot identity into Customers on create', async () => {
+    setupGoogleClients();
+    const { fireAndForgetCustomerUpdate } = jest.requireMock('@/lib/updateCustomerRecord') as {
+      fireAndForgetCustomerUpdate: jest.Mock;
+    };
+    const { POST } = await import('@/app/api/service/dispatch/route');
+
+    const res = await POST(request(baseBody({
+      woNumber: '26-1236',
+      address: 'WO Jobsite Address',
+      city: 'Kula',
+      contactPhone: '(808) 555-0199',
+    })));
+
+    expect(res.status).toBe(200);
+    expect(fireAndForgetCustomerUpdate).not.toHaveBeenCalled();
+  });
+
+  it('blocks staging WO creation while Postgres shadow read mode is enabled', async () => {
+    const prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+    const prevReadEnabled = process.env.WO_POSTGRES_READ_ENABLED;
+    process.env.VERCEL_TARGET_ENV = 'staging';
+    process.env.WO_POSTGRES_READ_ENABLED = 'true';
+
+    try {
+      const { POST } = await import('@/app/api/service/dispatch/route');
+      const res = await POST(request(baseBody({ woNumber: '26-8888' })));
+      const json = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(json.code).toBe('WO_POSTGRES_READ_ONLY_SMOKE');
+      expect(json.route).toBe('/api/service/dispatch');
+      expect(mockSheets).not.toHaveBeenCalled();
+      expect(mockDrive).not.toHaveBeenCalled();
+    } finally {
+      if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+      else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+      if (prevReadEnabled === undefined) delete process.env.WO_POSTGRES_READ_ENABLED;
+      else process.env.WO_POSTGRES_READ_ENABLED = prevReadEnabled;
+    }
+  });
+
+  describe('staging Drive routing', () => {
+    let prevTargetEnv: string | undefined;
+    let prevStagingId: string | undefined;
+
+    beforeEach(() => {
+      prevTargetEnv = process.env.VERCEL_TARGET_ENV;
+      prevStagingId = process.env.STAGING_DRIVE_FOLDER_ID;
+      process.env.VERCEL_TARGET_ENV = 'staging';
+    });
+
+    afterEach(() => {
+      if (prevTargetEnv === undefined) delete process.env.VERCEL_TARGET_ENV;
+      else process.env.VERCEL_TARGET_ENV = prevTargetEnv;
+      if (prevStagingId === undefined) delete process.env.STAGING_DRIVE_FOLDER_ID;
+      else process.env.STAGING_DRIVE_FOLDER_ID = prevStagingId;
+    });
+
+    it('returns 502 and does not append a row when STAGING_DRIVE_FOLDER_ID is missing', async () => {
+      delete process.env.STAGING_DRIVE_FOLDER_ID;
+      const clients = setupGoogleClients({ existingWONumbers: ['26-0001'] });
+      const { POST } = await import('@/app/api/service/dispatch/route');
+
+      const res = await POST(request(baseBody()));
+      const json = await res.json();
+
+      expect(res.status).toBe(502);
+      expect(json.error).toMatch(/STAGING_DRIVE_FOLDER_ID/);
+      expect(clients.sheetsValuesAppend).not.toHaveBeenCalled();
+      expect(clients.driveFilesCreate).not.toHaveBeenCalled();
+    });
+
+    it('parents the WO folder under STAGING_DRIVE_FOLDER_ID and skips Service/island folders', async () => {
+      process.env.STAGING_DRIVE_FOLDER_ID = '142jODngww2a4PoNDrf-rjN5O_y40I3ti';
+      const clients = setupGoogleClients({ existingWONumbers: ['26-0001'] });
+      const { POST } = await import('@/app/api/service/dispatch/route');
+
+      const res = await POST(request(baseBody()));
+      expect(res.status).toBe(200);
+
+      const folderCreateCalls = clients.driveFilesCreate.mock.calls.map(c => c[0]);
+      const createdNames = folderCreateCalls.map(c => c.requestBody.name);
+      expect(createdNames).not.toContain('Service');
+      expect(createdNames).not.toContain('Maui');
+
+      // Every created folder must be parented either under STAGING_DRIVE_FOLDER_ID
+      // or under a previously-created child of it. None may target the production
+      // shared-drive root.
+      for (const c of folderCreateCalls) {
+        const parents: string[] = c.requestBody.parents || [];
+        expect(parents).not.toContain('0AKSVpf3AnH7CUk9PVA');
+      }
+      const woCreate = folderCreateCalls.find(c =>
+        c.requestBody.name === 'WO-26-0002 — BAN-51 Test Customer'
+      );
+      expect(woCreate).toBeDefined();
+      expect(woCreate!.requestBody.parents).toEqual(['142jODngww2a4PoNDrf-rjN5O_y40I3ti']);
+    });
   });
 });
 

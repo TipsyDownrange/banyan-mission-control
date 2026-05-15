@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import EngagementCreationForm from '@/components/engagements/EngagementCreationForm';
 
 type Tab = 'overview' | 'rfi' | 'submittals' | 'co' | 'sov';
 
@@ -180,6 +181,7 @@ export default function PMPanel() {
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
+      <EngagementCreationForm />
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Project Management</div>

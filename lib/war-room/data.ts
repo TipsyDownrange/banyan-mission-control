@@ -1,4 +1,5 @@
 import { WAR_ROOM_FIXTURE_ISSUES } from './fixtures';
+import { buildWarRoomCommandBridgeData } from './commandBridge';
 import type { WarRoomDashboardData, WarRoomIssue, WarRoomQueue, WarRoomQueueKey } from './types';
 
 const PROJECT_NAME = 'BanyanOS War Room';
@@ -181,6 +182,7 @@ export function buildWarRoomDashboard(issues: WarRoomIssue[], source: WarRoomDas
       closedLogged: completed.length,
       activeCodex: null,
     },
+    commandBridge: buildWarRoomCommandBridgeData(sorted),
   };
 }
 

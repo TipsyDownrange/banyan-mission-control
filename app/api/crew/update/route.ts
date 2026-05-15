@@ -2,12 +2,53 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 
 const SHEET_ID = getBackendSheetId();
 
+const USER_ROLES_READ_RANGE = 'Users_Roles!A2:P100';
+const USER_ROLES_WRITE_START_COL = 'B';
+const USER_ROLES_WRITE_END_COL = 'P';
+
+const WRITABLE_FIELDS = [
+  'name',
+  'role',
+  'email',
+  'phone',
+  'island',
+  'personal_email',
+  'title',
+  'department',
+  'office',
+  'home_address',
+  'emergency_contact',
+  'start_date',
+  'notes',
+  'authority_level',
+  'career_track',
+] as const;
+
+type WritableField = typeof WRITABLE_FIELDS[number];
+type CrewUpdateBody = { user_id?: string } & Partial<Record<WritableField, string>>;
+
+function hasOwn(body: CrewUpdateBody, field: WritableField): boolean {
+  return Object.prototype.hasOwnProperty.call(body, field);
+}
+
+function preserveOrUpdate(body: CrewUpdateBody, field: WritableField, existing: string | undefined): string {
+  if (!hasOwn(body, field)) return existing ?? '';
+  const value = body[field] ?? '';
+  if (field === 'name') return normalizeNameForWrite(value);
+  if (field === 'email' || field === 'personal_email') return normalizeEmail(value);
+  if (field === 'phone') return normalizePhone(value);
+  if (field === 'home_address') return normalizeAddressComponent(value);
+  return value;
+}
+
 export async function POST(req: Request) {
   try {
-    const { user_id, name, role, email, phone, personal_email, title, department, office, home_address, emergency_contact, start_date, notes, authority_level, career_track } = await req.json();
+    const body = (await req.json()) as CrewUpdateBody;
+    const { user_id } = body;
     if (!user_id) return NextResponse.json({ error: 'user_id required' }, { status: 400 });
 
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
@@ -16,7 +57,7 @@ export async function POST(req: Request) {
     // Find the row for this user_id
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Users_Roles!A2:G100',
+      range: USER_ROLES_READ_RANGE,
     });
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => r[0] === user_id);
@@ -26,26 +67,13 @@ export async function POST(req: Request) {
     const r = rows[rowIndex];
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Users_Roles!B${sheetRow}:P${sheetRow}`,
+      range: `Users_Roles!${USER_ROLES_WRITE_START_COL}${sheetRow}:${USER_ROLES_WRITE_END_COL}${sheetRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[
-          name              ?? r[1]  ?? '',
-          role              ?? r[2]  ?? '',
-          email             ?? r[3]  ?? '',
-          phone             ?? r[4]  ?? '',
-          r[5]              ?? '',       // island — read-only
-          personal_email    ?? r[6]  ?? '',
-          title             ?? r[7]  ?? '',
-          department        ?? r[8]  ?? '',
-          office            ?? r[9]  ?? '',
-          home_address      ?? r[10] ?? '',
-          emergency_contact ?? r[11] ?? '',
-          start_date        ?? r[12] ?? '',
-          notes             ?? r[13] ?? '',
-          authority_level   ?? r[14] ?? '',
-          career_track      ?? r[15] ?? '',
-        ]],
+        values: [WRITABLE_FIELDS.map((field, offset) => {
+          if (field === 'island') return r[offset + 1] ?? '';
+          return preserveOrUpdate(body, field, r[offset + 1]);
+        })],
       },
     });
 

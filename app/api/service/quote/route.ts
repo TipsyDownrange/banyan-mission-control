@@ -5,12 +5,12 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { authOptions } from '@/lib/auth';
 import { getPreparedByUser } from '@/lib/users';
-import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import {
   calculateSiteVisitFee, getJobTypeDefaults, listJobTypes,
   LABOR_RATES, GET_RATE, estimateDriveTime, DEFAULT_SERVICE_CREW,
 } from '@/lib/labor';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -171,18 +171,6 @@ export async function POST(req: Request) {
       throw new Error('siteAddress required (WO row is missing address in Service_Work_Orders sheet)');
     }
 
-    // Fire-and-forget customer DB backfeed — never blocks quote generation
-    if (customerName || customerPhone || customerEmail) {
-      fireAndForgetCustomerUpdate({
-        name:    customerName,
-        phone:   customerPhone,
-        email:   customerEmail,
-        address: customerAddress,
-        island:  island,
-        source:  'quote',
-      });
-    }
-
     // ─── Labor calculation ────────────────────────────────────────────────────
     const crew     = crewCount   ?? DEFAULT_SERVICE_CREW.count;
     const rate     = hourlyRate  ?? LABOR_RATES.journeyman;
@@ -267,6 +255,14 @@ export async function POST(req: Request) {
       email: session.user.email || '',
       phone: '',
     } : null;
+
+    await emitMCEvent({
+      wo_id: woNumber,
+      event_type: 'QUOTE_GENERATED',
+      notes: JSON.stringify({ source: 'service_quote', job_type: jobType || null, total }),
+      submitted_by: session?.user?.email || '',
+      origin: 'office',
+    });
 
     return NextResponse.json({
       quote: {

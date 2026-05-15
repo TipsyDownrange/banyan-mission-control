@@ -16,10 +16,19 @@ import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
 import { emitMCEvent } from '@/lib/events';
 import { getBackendSheetId } from '@/lib/backend-config';
+import {
+  InvalidWOFolderUrlError,
+  assertDriveFolderDescendantOf,
+  extractFolderIdFromUrl,
+  resolveStagingDriveParentId,
+  validateWOFolderUrlForWrite,
+} from '@/lib/drive-wo-folder';
+import { isStaging } from '@/lib/env';
+import { SWO_COL } from '@/lib/contracts/service-work-orders';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
-const FOLDER_URL_COL = 23; // column X (0-based), matches COL_IDX.folder_url in update route
+const FOLDER_URL_COL = SWO_COL.folder_url; // column X — see lib/contracts/service-work-orders.ts
 
 const MAX_BYTES = 25 * 1024 * 1024;
 
@@ -41,11 +50,6 @@ function mimeAllowed(mime: string): boolean {
 function extBlocked(filename: string): boolean {
   const lower = filename.toLowerCase();
   return BLOCKED_EXTS.some(ext => lower.endsWith(ext));
-}
-
-function extractFolderId(url: string): string | null {
-  const m = url.match(/\/folders\/([^/?&#]+)/);
-  return m ? m[1] : null;
 }
 
 async function resolveSubfolder(
@@ -123,14 +127,36 @@ export async function POST(req: Request, { params }: { params: Promise<{ woId: s
       }, { status: 400 });
     }
 
-    const woFolderId = extractFolderId(folderUrl);
-    if (!woFolderId) {
-      return NextResponse.json({ ok: false, error: 'Could not parse Drive folder ID from folder URL.' }, { status: 400 });
+    let validFolder: { folderId: string };
+    try {
+      if (isStaging()) {
+        const folderId = extractFolderIdFromUrl(folderUrl);
+        if (!folderId) {
+          throw new InvalidWOFolderUrlError({
+            kind: 'unparseable',
+            folderUrl,
+            reason: 'Could not parse a Drive folder ID from folder_url',
+          });
+        }
+        const stagingParentId = resolveStagingDriveParentId();
+        await assertDriveFolderDescendantOf(drive, folderId, stagingParentId);
+        validFolder = { folderId };
+      } else {
+        validFolder = await validateWOFolderUrlForWrite(drive, folderUrl);
+      }
+    } catch (err) {
+      if (err instanceof InvalidWOFolderUrlError) {
+        return NextResponse.json(
+          { ok: false, error: err.message, classification: err.classification },
+          { status: 400 },
+        );
+      }
+      throw err;
     }
 
     // MIME routing: images → Photos, everything else → Correspondence
     const subfolderName = file.type.startsWith('image/') ? 'Photos' : 'Correspondence';
-    const targetFolderId = await resolveSubfolder(drive, subfolderName, woFolderId);
+    const targetFolderId = await resolveSubfolder(drive, subfolderName, validFolder.folderId);
 
     // Upload file
     const bytes = await file.arrayBuffer();
@@ -150,11 +176,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ woId: s
       fields: 'id,webViewLink,name',
     });
 
-    await drive.permissions.create({
-      fileId: uploaded.data.id!,
-      supportsAllDrives: true,
-      requestBody: { role: 'reader', type: 'anyone' },
-    });
+    if (!isStaging()) {
+      await drive.permissions.create({
+        fileId: uploaded.data.id!,
+        supportsAllDrives: true,
+        requestBody: { role: 'reader', type: 'anyone' },
+      });
+    }
 
     const driveUrl = uploaded.data.webViewLink || `https://drive.google.com/file/d/${uploaded.data.id}/view`;
 

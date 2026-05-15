@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
 import { buildWarRoomDispatchPrompt, canPrepareWarRoomDispatch } from '@/lib/war-room/dispatchPrompt';
-import type { WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey } from '@/lib/war-room/types';
+import type { CrewRuntimeStatus, SourceHealthSnapshot, SourceHealthSourceCard, SourceHealthStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState } from '@/lib/war-room/types';
+import type { WarRoomLiveOpsLane } from '@/lib/war-room/liveOps';
 
 const NAV: Array<{ key: WarRoomQueueKey; label: string }> = [
   { key: 'myWatch', label: 'My Watch' },
@@ -25,9 +27,156 @@ function riskColor(risk: WarRoomIssue['risk']) {
   return '#38bdf8';
 }
 
+function statusTheme(status: string) {
+  if (status === 'working') return { label: 'working', color: '#22c55e', glow: 'rgba(34,197,94,0.32)', bg: 'rgba(34,197,94,0.11)' };
+  if (status === 'blocked') return { label: 'blocked', color: '#ef4444', glow: 'rgba(239,68,68,0.34)', bg: 'rgba(239,68,68,0.12)' };
+  if (status === 'waiting-approval') return { label: 'waiting approval', color: '#f59e0b', glow: 'rgba(245,158,11,0.34)', bg: 'rgba(245,158,11,0.12)' };
+  if (status === 'disabled') return { label: 'disabled', color: '#94a3b8', glow: 'rgba(148,163,184,0.16)', bg: 'rgba(148,163,184,0.08)' };
+  return { label: 'idle', color: '#38bdf8', glow: 'rgba(56,189,248,0.24)', bg: 'rgba(56,189,248,0.1)' };
+}
+
+function agentInitials(title: string) {
+  return title
+    .split(/[ /]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('');
+}
+
+function gaugePressure(data: WarRoomDashboardData) {
+  const warnings = data.kpis.needsSean + data.kpis.needsEvidence + data.kpis.p0p1Risks;
+  const total = Math.max(data.issues.length, 1);
+  return Math.min(100, Math.round((warnings / total) * 100));
+}
+
 function formatDate(value?: string | null) {
   if (!value) return 'No timestamp';
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
+}
+
+function formatUsd(value: number | undefined, digits = 2) {
+  return `$${(value || 0).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+}
+
+function healthTheme(health: WarRoomRuntimeHealthState) {
+  if (health === 'ready') return { color: '#86efac', border: 'rgba(34,197,94,0.34)', bg: 'rgba(34,197,94,0.09)' };
+  if (health === 'manual') return { color: '#67e8f9', border: 'rgba(103,232,249,0.34)', bg: 'rgba(103,232,249,0.08)' };
+  if (health === 'degraded') return { color: '#fbbf24', border: 'rgba(245,158,11,0.36)', bg: 'rgba(245,158,11,0.09)' };
+  if (health === 'blocked') return { color: '#fca5a5', border: 'rgba(239,68,68,0.38)', bg: 'rgba(239,68,68,0.1)' };
+  if (health === 'disabled') return { color: '#94a3b8', border: 'rgba(148,163,184,0.24)', bg: 'rgba(148,163,184,0.08)' };
+  return { color: '#fcd34d', border: 'rgba(251,191,36,0.34)', bg: 'rgba(251,191,36,0.08)' };
+}
+
+function sourceHealthTheme(status: SourceHealthStatus) {
+  if (status === 'healthy') return { color: '#86efac', border: 'rgba(34,197,94,0.38)', bg: 'rgba(34,197,94,0.09)' };
+  if (status === 'degraded') return { color: '#fbbf24', border: 'rgba(245,158,11,0.42)', bg: 'rgba(245,158,11,0.11)' };
+  if (status === 'warning') return { color: '#67e8f9', border: 'rgba(103,232,249,0.32)', bg: 'rgba(103,232,249,0.08)' };
+  if (status === 'critical') return { color: '#fca5a5', border: 'rgba(239,68,68,0.44)', bg: 'rgba(239,68,68,0.12)' };
+  return { color: '#cbd5e1', border: 'rgba(148,163,184,0.26)', bg: 'rgba(148,163,184,0.08)' };
+}
+
+function SourceHealthCard({ card }: { card: SourceHealthSourceCard }) {
+  const theme = sourceHealthTheme(card.status);
+  const nonAuthorizationLines = card.nonAuthorizationLabel?.split(' / ') || [];
+  return (
+    <article data-source-health-card={card.source} data-source-health-status={card.status} style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 16, padding: 11, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 10 }}>
+        <div>
+          <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>{card.label}</div>
+          <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 3 }}>Authority: {card.authority} · Freshness: {card.freshness}</div>
+        </div>
+        <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{card.status}</span>
+      </div>
+      <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{card.summary}</p>
+      <div style={{ color: card.isFallback ? '#fbbf24' : '#94a3b8', fontSize: 11, fontWeight: 850, marginTop: 7 }}>{card.freshnessLabel}</div>
+      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+        {card.isFallback && <span style={{ color: '#fbbf24', border: '1px solid rgba(245,158,11,0.34)', background: 'rgba(245,158,11,0.1)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 950 }}>last verified fallback</span>}
+        {(card.checkedChannels || []).slice(0, 3).map(channel => <span key={channel} style={{ color: '#86efac', border: '1px solid rgba(34,197,94,0.22)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 850 }}>{channel}</span>)}
+      </div>
+      {(card.unverifiedChannels || []).length > 0 && (
+        <div style={{ color: '#fbbf24', fontSize: 10, lineHeight: 1.35, marginTop: 8 }}>
+          Unverified channels: {(card.unverifiedChannels || []).join(', ')}
+        </div>
+      )}
+      {card.details.length > 0 && (
+        <ul style={{ margin: '8px 0 0', paddingLeft: 16, color: '#cbd5e1', fontSize: 11, lineHeight: 1.35 }}>
+          {card.details.slice(0, 5).map(detail => <li key={detail}>{detail}</li>)}
+        </ul>
+      )}
+      {nonAuthorizationLines.length > 0 && (
+        <div style={{ border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.09)', borderRadius: 12, padding: 8, color: '#fca5a5', fontSize: 11, fontWeight: 950, lineHeight: 1.45, marginTop: 9 }}>
+          {nonAuthorizationLines.map(line => <div key={line}>{line}</div>)}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function SourceHealthPanel({ snapshot, status }: { snapshot: SourceHealthSnapshot | null; status: 'loading' | 'ready' | 'failed' }) {
+  return (
+    <section data-source-health-panel="true" style={{ border: '1px solid rgba(251,191,36,0.28)', background: 'linear-gradient(135deg, rgba(69,43,8,0.42), rgba(3,10,20,0.78))', borderRadius: 18, padding: 12, marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 12, marginBottom: 10 }}>
+        <div>
+          <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Source Health</div>
+          <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Truth labels for build sources</h2>
+          <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>Read-only Mission Control War Room surface. No remediation, sync, fix, cutover, or Field App controls.</div>
+        </div>
+        <div style={{ color: status === 'ready' ? '#86efac' : status === 'failed' ? '#fca5a5' : '#fbbf24', fontSize: 11, fontWeight: 950, textAlign: 'right' }}>
+          {status === 'ready' && snapshot ? `Snapshot ${formatDate(snapshot.generatedAt)}` : status === 'failed' ? 'Snapshot unavailable' : 'Checking sources...'}
+        </div>
+      </div>
+      {snapshot ? (
+        <>
+          <div className="war-room-source-health-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+            {snapshot.sources.map(card => <SourceHealthCard key={card.source} card={card} />)}
+          </div>
+          {snapshot.conflicts.length > 0 && (
+            <div style={{ border: '1px solid rgba(239,68,68,0.28)', background: 'rgba(239,68,68,0.08)', borderRadius: 14, padding: 10, marginTop: 10, color: '#fca5a5', fontSize: 11, lineHeight: 1.4 }}>
+              <strong>Conflicts / stop signals:</strong> {snapshot.conflicts.map(conflict => `${conflict.id}: ${conflict.recommendedAction}`).join(' ')}
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ border: '1px dashed rgba(251,191,36,0.34)', background: 'rgba(251,191,36,0.07)', borderRadius: 18, padding: 12, color: '#fcd34d', fontSize: 12, lineHeight: 1.45 }}>
+          Source Health has not returned yet. The existing War Room queue and runtime panels remain isolated and usable.
+        </div>
+      )}
+    </section>
+  );
+}
+
+function liveOpsTheme(state: WarRoomLiveOpsLane['state']) {
+  if (state === 'working') return { color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.34)' };
+  if (state === 'ready' || state === 'browser-verified' || state === 'deployed') return { color: '#86efac', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.28)' };
+  if (state === 'blocked' || state === 'stale') return { color: '#fca5a5', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.34)' };
+  if (state === 'waiting' || state === 'returned-unmerged' || state === 'pr-open' || state === 'merged' || state === 'verified-local') return { color: '#fbbf24', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.34)' };
+  return { color: '#67e8f9', bg: 'rgba(103,232,249,0.08)', border: 'rgba(103,232,249,0.26)' };
+}
+
+function LiveOpsCard({ lane }: { lane: WarRoomLiveOpsLane }) {
+  const theme = liveOpsTheme(lane.state);
+  return (
+    <div data-war-room-live-ops={lane.id} style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 14, padding: 10, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>{lane.label}</div>
+        <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase' }}>{lane.state}</span>
+      </div>
+      <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.35, marginTop: 7 }}>{lane.active || lane.note}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+        {[lane.issue, lane.session, lane.pr].filter(Boolean).map(item => (
+          <span key={item} style={{ color: '#67e8f9', border: '1px solid rgba(103,232,249,0.2)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 850 }}>{item}</span>
+        ))}
+      </div>
+      <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 8 }}>Last activity {formatDate(lane.lastActivityAt)} · {lane.source}</div>
+    </div>
+  );
+}
+
+function crewName(id: CrewRuntimeStatus['id']) {
+  if (id === 'kai') return 'Kai / Captain';
+  if (id === 'codex') return 'Codex / Build Crew';
+  return 'Claude / Audit Crew';
 }
 
 function matchesFilter(issue: WarRoomIssue, filter: string) {
@@ -50,7 +199,7 @@ function IssuePills({ issue }: { issue: WarRoomIssue }) {
           color: item.includes('Risk') ? riskColor(issue.risk) : '#a7f3d0',
           background: item.includes('Risk') ? `${riskColor(issue.risk)}1f` : 'rgba(20,184,166,0.08)',
           padding: '4px 8px',
-          borderRadius: 8,
+          borderRadius: 18,
           fontSize: 11,
           fontWeight: 800,
           letterSpacing: '0.04em',
@@ -70,7 +219,7 @@ function QueueCard({ issue, active, onSelect }: { issue: WarRoomIssue; active: b
         textAlign: 'left',
         border: active ? '1px solid rgba(94,234,212,0.65)' : '1px solid rgba(148,163,184,0.16)',
         background: active ? 'linear-gradient(135deg, rgba(20,184,166,0.18), rgba(14,165,233,0.08))' : 'rgba(15,23,42,0.58)',
-        borderRadius: 8,
+        borderRadius: 18,
         padding: 12,
         color: '#e2e8f0',
         cursor: 'pointer',
@@ -97,7 +246,7 @@ function Column({ title, issues, selectedId, onSelect }: { title: string; issues
       minWidth: 0,
       border: '1px solid rgba(148,163,184,0.14)',
       background: 'rgba(8,20,32,0.72)',
-      borderRadius: 8,
+      borderRadius: 18,
       padding: 12,
       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
     }}>
@@ -110,7 +259,7 @@ function Column({ title, issues, selectedId, onSelect }: { title: string; issues
           <QueueCard key={issue.id} issue={issue} active={issue.id === selectedId} onSelect={() => onSelect(issue)} />
         ))}
         {issues.length === 0 && (
-          <div style={{ border: '1px dashed rgba(148,163,184,0.2)', borderRadius: 8, padding: 16, color: '#64748b', fontSize: 13 }}>
+          <div style={{ border: '1px dashed rgba(148,163,184,0.2)', borderRadius: 18, padding: 16, color: '#64748b', fontSize: 13 }}>
             Queue clear.
           </div>
         )}
@@ -119,14 +268,119 @@ function Column({ title, issues, selectedId, onSelect }: { title: string; issues
   );
 }
 
-export default function WarRoomDashboard({ initialData }: { initialData: WarRoomDashboardData }) {
+function CrewRuntimeCard({ crew }: { crew: CrewRuntimeStatus }) {
+  const theme = healthTheme(crew.health);
+  return (
+    <div
+      data-war-room-runtime-crew={crew.id}
+      style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 18, padding: 10, minWidth: 0 }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ color: '#67e8f9', fontSize: 12, fontWeight: 950 }}>{crewName(crew.id)}</div>
+        <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase' }}>
+          {crew.health}
+        </span>
+      </div>
+      <div style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginTop: 7 }}>
+        Auth {crew.auth} / runtime {crew.health === 'manual' ? 'manual standby' : crew.runtime} / quota {crew.quota}
+      </div>
+      <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{crew.summary}</p>
+      <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 8 }}>Last checked {formatDate(crew.lastCheckedAt)}</div>
+      {crew.blockers.length > 0 && (
+        <ul style={{ margin: '8px 0 0', paddingLeft: 16, color: theme.color, fontSize: 11, lineHeight: 1.35 }}>
+          {crew.blockers.slice(0, 3).map(blocker => <li key={blocker}>{blocker}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
+  const days = Object.entries(cost.byDay || {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
+  const maxCost = Math.max(...days.map(([, day]) => day.cost || 0), 1);
+  const providerTotal = Math.max(cost.providers.reduce((sum, provider) => sum + provider.value, 0), cost.allInTotal, 1);
+
+  return (
+    <section data-war-room-runtime-cost="true" style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'linear-gradient(135deg, rgba(7,23,34,0.94), rgba(12,35,48,0.86))', borderRadius: 18, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
+        <div>
+          <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Costmaster</div>
+          <div style={{ color: '#f8fafc', fontSize: 30, fontWeight: 950, marginTop: 3 }}>{formatUsd(cost.allInTotal)}</div>
+          <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>All-in tracked spend / monthly burn {formatUsd(cost.monthlyBurn)}</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: cost.overBudget ? '#fca5a5' : '#86efac', fontSize: 18, fontWeight: 950 }}>{formatUsd(cost.todayCost, 4)}</div>
+          <div style={{ color: '#94a3b8', fontSize: 11 }}>today / {formatUsd(cost.dailyBudget)} budget</div>
+        </div>
+      </div>
+      <div style={{ height: 7, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)', marginBottom: 12 }}>
+        <div style={{ height: '100%', width: `${Math.min(cost.budgetPct, 100)}%`, background: cost.overBudget ? '#ef4444' : '#14b8a6', borderRadius: 999 }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px, 1fr) minmax(160px, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {cost.providers.map(provider => {
+            const pct = providerTotal > 0 ? Math.round((provider.value / providerTotal) * 100) : 0;
+            return (
+              <div key={provider.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginBottom: 4 }}>
+                  <span>{provider.label}</span>
+                  <span>{formatUsd(provider.value)} ({pct}%)</span>
+                </div>
+                <div style={{ height: 5, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: provider.color, borderRadius: 999 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div>
+          <div style={{ height: 82, display: 'flex', gap: 4, alignItems: 'flex-end', overflow: 'hidden' }}>
+            {days.length === 0 && <div style={{ color: '#64748b', fontSize: 12 }}>No daily cost rows available.</div>}
+            {days.map(([date, day]) => {
+              const height = Math.max(4, Math.round(((day.cost || 0) / maxCost) * 74));
+              return (
+                <div key={date} title={`${date}: ${formatUsd(day.cost || 0, 4)}`} style={{ flex: 1, minWidth: 8, display: 'flex', alignItems: 'flex-end' }}>
+                  <div style={{ width: '100%', height, borderRadius: '4px 4px 0 0', background: 'linear-gradient(180deg,#67e8f9,#4f46e5)' }} />
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ color: '#64748b', fontSize: 10, marginTop: 5 }}>Last sync: {cost.lastSync ? formatDate(cost.lastSync) : 'not connected'}</div>
+        </div>
+      </div>
+      {cost.error && <div style={{ color: '#fca5a5', fontSize: 11, lineHeight: 1.35, marginTop: 10 }}>Cost route reported: {cost.error}</div>}
+    </section>
+  );
+}
+
+export default function WarRoomDashboard({ initialData, initialRuntimeHealth = null, initialSourceHealth = null }: { initialData: WarRoomDashboardData; initialRuntimeHealth?: WarRoomRuntimeHealth | null; initialSourceHealth?: SourceHealthSnapshot | null }) {
   const [data] = useState(initialData);
+  const [runtimeHealth, setRuntimeHealth] = useState<WarRoomRuntimeHealth | null>(initialRuntimeHealth);
+  const [runtimeStatus, setRuntimeStatus] = useState<'loading' | 'ready' | 'failed'>(initialRuntimeHealth ? 'ready' : 'loading');
+  const [sourceHealth, setSourceHealth] = useState<SourceHealthSnapshot | null>(initialSourceHealth);
+  const [sourceHealthStatus, setSourceHealthStatus] = useState<'loading' | 'ready' | 'failed'>(initialSourceHealth ? 'ready' : 'loading');
   const [selectedId, setSelectedId] = useState(initialData.upNext[0]?.id || initialData.issues[0]?.id || '');
   const [activeQueue, setActiveQueue] = useState<WarRoomQueueKey>('myWatch');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
   const [dispatchIssueId, setDispatchIssueId] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [intake, setIntake] = useState({
+    title: '',
+    description: '',
+    priority: 'P2',
+    risk: 'P2',
+    scopeType: 'audit',
+    suggestedLane: 'kai',
+    safetyFlags: {
+      noExternalWrites: true,
+      stagingOnly: true,
+      needsApproval: true,
+      productionSensitive: false,
+    },
+  });
+  const [intakeStatus, setIntakeStatus] = useState<'idle' | 'submitting' | 'created' | 'preview' | 'failed'>('idle');
+  const [intakeMessage, setIntakeMessage] = useState('');
   const selectedIssue = data.issues.find(issue => issue.id === selectedId) || data.issues[0];
   const dispatchIssue = data.issues.find(issue => issue.id === dispatchIssueId) || null;
   const dispatchPrompt = dispatchIssue ? buildWarRoomDispatchPrompt(dispatchIssue) : '';
@@ -135,6 +389,56 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
     : [];
   const dispatchReady = canPrepareWarRoomDispatch(selectedIssue, { queueKeys: selectedIssueQueueKeys });
   const activeQueueMeta = data.queues.find(queueItem => queueItem.key === activeQueue);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadRuntimeHealth() {
+      try {
+        const response = await fetch('/api/war-room/runtime-status', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'runtime status request failed');
+        if (active) {
+          setRuntimeHealth(payload);
+          setRuntimeStatus('ready');
+        }
+      } catch {
+        if (active) setRuntimeStatus('failed');
+      }
+    }
+
+    loadRuntimeHealth();
+    const interval = setInterval(loadRuntimeHealth, 60000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSourceHealth() {
+      try {
+        const response = await fetch('/api/war-room/source-health', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'source health request failed');
+        if (active) {
+          setSourceHealth(payload);
+          setSourceHealthStatus('ready');
+        }
+      } catch {
+        if (active) setSourceHealthStatus('failed');
+      }
+    }
+
+    loadSourceHealth();
+    const interval = setInterval(loadSourceHealth, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -151,6 +455,15 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
   const triage = queue('captainsTriage');
   const ready = queue('readyForCodex');
   const xoReview = queue('xoReview');
+  const warningCount = data.kpis.needsSean + data.kpis.needsEvidence + data.kpis.p0p1Risks;
+  const pressure = gaugePressure(data);
+  const bridgeMode = warningCount > 0 ? 'Command attention' : 'All clear watch';
+  const signalFlags = [
+    { label: 'Sean signals', value: data.kpis.needsSean, color: '#f59e0b' },
+    { label: 'Evidence gaps', value: data.kpis.needsEvidence, color: '#fb923c' },
+    { label: 'P0/P1 risks', value: data.kpis.p0p1Risks, color: '#ef4444' },
+    { label: 'Fixture mode', value: data.source === 'fixture' ? 1 : 0, color: '#38bdf8' },
+  ];
 
   function selectIssue(issue: WarRoomIssue) {
     setSelectedId(issue.id);
@@ -180,78 +493,70 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
     }
   }
 
+  async function submitIntake(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIntakeStatus('submitting');
+    setIntakeMessage('');
+
+    try {
+      const response = await fetch('/api/war-room/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(intake),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.details?.join?.(', ') || payload?.error || 'War Room intake failed');
+      }
+
+      setIntakeStatus(payload.mode === 'linear' ? 'created' : 'preview');
+      setIntakeMessage(payload.mode === 'linear'
+        ? `Created ${payload.linearIssue?.identifier || 'Linear issue'} from War Room intake.`
+        : payload.message || 'Intake validated as a Linear preview.');
+      setIntake(previous => ({ ...previous, title: '', description: '' }));
+    } catch (error) {
+      setIntakeStatus('failed');
+      setIntakeMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
+
   return (
-    <div style={{
+    <div className="war-room-shell" style={{
       minHeight: '100%',
       background: 'radial-gradient(circle at top left, rgba(20,184,166,0.16), transparent 32%), linear-gradient(180deg, #06121f 0%, #071722 38%, #08111d 100%)',
       color: '#e2e8f0',
       fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif',
-      display: 'flex',
+      display: 'block',
     }}>
-      <aside style={{
-        width: 220,
-        flexShrink: 0,
-        borderRight: '1px solid rgba(148,163,184,0.14)',
-        background: 'rgba(3,10,20,0.68)',
-        padding: '20px 12px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}>
-        <div style={{ padding: '0 8px 12px', borderBottom: '1px solid rgba(148,163,184,0.12)', marginBottom: 8 }}>
-          <div style={{ color: '#2dd4bf', fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>BanyanOS</div>
-          <div style={{ color: '#f8fafc', fontSize: 18, fontWeight: 900, marginTop: 4 }}>War Room</div>
-        </div>
-        {NAV.map(item => {
-          const count = data.queues.find(queueItem => queueItem.key === item.key)?.issues.length || 0;
-          const active = item.key === activeQueue;
-          return (
-            <button
-              key={item.key}
-              type="button"
-              data-war-room-queue={item.key}
-              aria-pressed={active}
-              onClick={() => selectQueue(item.key)}
-              style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              border: active ? '1px solid rgba(45,212,191,0.36)' : '1px solid transparent',
-              background: active ? 'rgba(20,184,166,0.12)' : 'transparent',
-              color: active ? '#ccfbf1' : '#94a3b8',
-              borderRadius: 8,
-              padding: '9px 10px',
-              fontSize: 12,
-              fontWeight: 800,
-              textAlign: 'left',
-              cursor: 'pointer',
-              position: 'relative',
-              zIndex: 1,
-            }}>
-              <span>{item.label}</span>
-              <span style={{ color: active ? '#67e8f9' : '#475569', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{count}</span>
-            </button>
-          );
-        })}
-        <div style={{ marginTop: 'auto', border: '1px solid rgba(45,212,191,0.18)', background: 'rgba(20,184,166,0.07)', borderRadius: 8, padding: 12 }}>
-          <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 900, marginBottom: 5 }}>Bridge Config</div>
-          <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.45 }}>{data.source === 'linear' ? 'Read-only Linear adapter active.' : 'Fixture fallback active until LINEAR_API_KEY is configured.'}</div>
-        </div>
-      </aside>
-
-      <main style={{ flex: 1, minWidth: 0, padding: 24, overflow: 'auto' }}>
-        <header style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(280px, 460px)', gap: 16, alignItems: 'start', marginBottom: 18 }}>
-          <div>
+      <main className="war-room-main" style={{ minWidth: 0, padding: 18, overflow: 'auto', maxWidth: 1500, margin: '0 auto' }}>
+        <header className="war-room-header" style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(300px, 520px)', gap: 16, alignItems: 'stretch', marginBottom: 12 }}>
+          <div style={{ border: '1px solid rgba(94,234,212,0.24)', background: 'linear-gradient(135deg, rgba(8,47,73,0.78), rgba(3,10,20,0.72))', borderRadius: 18, padding: 16, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}>
             <div style={{ color: '#38bdf8', fontSize: 11, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
-              BanyanOS War Room / Captain's Triage
+              BanyanOS War Room / Live Command Bridge
             </div>
-            <h1 style={{ margin: 0, color: '#f8fafc', fontSize: 30, fontWeight: 950, letterSpacing: '-0.02em' }}>Linear Command Dashboard</h1>
-            <div style={{ marginTop: 8, color: '#94a3b8', fontSize: 12, fontWeight: 800 }}>
-              Viewing {activeQueueMeta?.label || 'War Room'} queue ({filteredIssues.length})
+            <h1 style={{ margin: 0, color: '#f8fafc', fontSize: 36, fontWeight: 950, letterSpacing: -1 }}>Bridge Watch</h1>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+              <span style={{ border: warningCount ? '1px solid rgba(245,158,11,0.45)' : '1px solid rgba(34,197,94,0.36)', background: warningCount ? 'rgba(245,158,11,0.12)' : 'rgba(34,197,94,0.1)', color: warningCount ? '#fbbf24' : '#86efac', borderRadius: 18, padding: '7px 10px', fontSize: 12, fontWeight: 950 }}>
+                {bridgeMode}
+              </span>
+              <span style={{ border: '1px solid rgba(148,163,184,0.18)', background: 'rgba(15,23,42,0.58)', color: '#cbd5e1', borderRadius: 18, padding: '7px 10px', fontSize: 12, fontWeight: 850 }}>
+                {activeQueueMeta?.label || 'War Room'} / {filteredIssues.length} signals
+              </span>
+              <span style={{ border: '1px solid rgba(148,163,184,0.18)', background: 'rgba(15,23,42,0.58)', color: '#94a3b8', borderRadius: 18, padding: '7px 10px', fontSize: 12, fontWeight: 850 }}>
+                Updated {formatDate(data.generatedAt)}
+              </span>
+            </div>
+            <div className="war-room-signal-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginTop: 16 }}>
+              {signalFlags.map(flag => (
+                <div key={flag.label} style={{ border: `1px solid ${flag.color}55`, background: flag.value ? `${flag.color}1f` : 'rgba(15,23,42,0.48)', borderRadius: 18, padding: '10px 11px' }}>
+                  <div style={{ color: flag.color, fontSize: 22, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{flag.value}</div>
+                  <div style={{ color: '#cbd5e1', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{flag.label}</div>
+                </div>
+              ))}
             </div>
           </div>
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div style={{ display: 'grid', gap: 10, alignContent: 'start' }}>
             <div style={{ display: 'flex', gap: 10 }}>
               <input
                 value={search}
@@ -263,13 +568,13 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                   background: 'rgba(15,23,42,0.82)',
                   color: '#e2e8f0',
                   border: '1px solid rgba(148,163,184,0.22)',
-                  borderRadius: 8,
+                  borderRadius: 18,
                   padding: '11px 12px',
                   outline: 'none',
                   fontSize: 13,
                 }}
               />
-              <div style={{ border: '1px solid rgba(34,197,94,0.32)', background: 'rgba(34,197,94,0.1)', color: '#86efac', borderRadius: 8, padding: '10px 12px', fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>
+              <div style={{ border: '1px solid rgba(34,197,94,0.32)', background: 'rgba(34,197,94,0.1)', color: '#86efac', borderRadius: 18, padding: '10px 12px', fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>
                 {data.bridgeStatus}
               </div>
             </div>
@@ -283,7 +588,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                     border: filter === item ? '1px solid rgba(94,234,212,0.55)' : '1px solid rgba(148,163,184,0.16)',
                     background: filter === item ? 'rgba(20,184,166,0.15)' : 'rgba(15,23,42,0.5)',
                     color: filter === item ? '#ccfbf1' : '#94a3b8',
-                    borderRadius: 8,
+                    borderRadius: 18,
                     padding: '6px 10px',
                     fontSize: 11,
                     fontWeight: 900,
@@ -297,7 +602,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
           </div>
         </header>
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
+        <section className="war-room-kpis" aria-label="Bridge console gauges" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 10, marginBottom: 12 }}>
           {[
             ['Ready', data.kpis.readyForCodex, '#22d3ee'],
             ['Needs Sean', data.kpis.needsSean, '#f59e0b'],
@@ -306,23 +611,242 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
             ['Closed / Logged', data.kpis.closedLogged, '#22c55e'],
             ['Codex Active', data.kpis.activeCodex ?? '-', '#a7f3d0'],
           ].map(([label, value, color]) => (
-            <div key={label} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(15,23,42,0.64)', borderRadius: 8, padding: '12px 14px' }}>
+            <div key={label} style={{ border: `1px solid ${color as string}3d`, background: 'linear-gradient(180deg, rgba(15,23,42,0.76), rgba(8,20,32,0.68))', borderRadius: 18, padding: '12px 14px', minHeight: 82 }}>
               <div style={{ color: color as string, fontSize: 24, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{value}</div>
               <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             </div>
           ))}
         </section>
 
+        {runtimeHealth?.liveOps && (
+          <section data-war-room-live-ops-panel="true" style={{ border: '1px solid rgba(103,232,249,0.22)', background: 'linear-gradient(135deg, rgba(8,47,73,0.66), rgba(3,10,20,0.72))', borderRadius: 18, padding: 12, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+              <div>
+                <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live Operations</div>
+                <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Execution Heartbeat</h2>
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: 11 }}>Snapshot {formatDate(runtimeHealth.liveOps.generatedAt)}</div>
+            </div>
+            <div className="war-room-live-ops-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+              {runtimeHealth.liveOps.lanes.map(lane => <LiveOpsCard key={lane.id} lane={lane} />)}
+            </div>
+          </section>
+        )}
+
+        <SourceHealthPanel snapshot={sourceHealth} status={sourceHealthStatus} />
+
+        <section className="war-room-command-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 0.52fr) minmax(520px, 1.48fr)', gap: 10, marginBottom: 12 }}>
+          <form onSubmit={submitIntake} style={{ border: '1px solid rgba(94,234,212,0.26)', background: 'linear-gradient(180deg, rgba(3,10,20,0.82), rgba(8,47,73,0.48))', borderRadius: 18, padding: 12, display: 'grid', gap: 8, alignSelf: 'start' }}>
+            <div>
+              <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Task Intake / Main Bridge</div>
+              <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>New Command</h2>
+            </div>
+            <input
+              value={intake.title}
+              onChange={event => setIntake(previous => ({ ...previous, title: event.target.value }))}
+              placeholder="Short command title"
+              maxLength={140}
+              style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, outline: 'none' }}
+            />
+            <textarea
+              value={intake.description}
+              onChange={event => setIntake(previous => ({ ...previous, description: event.target.value }))}
+              placeholder="Drop the plain-English task here. Include acceptance criteria, stop conditions, and source links when known."
+              rows={2}
+              maxLength={4000}
+              style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, lineHeight: 1.45, resize: 'vertical', outline: 'none' }}
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+              <select value={intake.priority} onChange={event => setIntake(previous => ({ ...previous, priority: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+                {['P0', 'P1', 'P2', 'P3'].map(value => <option key={value} value={value}>Priority {value}</option>)}
+              </select>
+              <select value={intake.risk} onChange={event => setIntake(previous => ({ ...previous, risk: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+                {['P0', 'P1', 'P2', 'P3'].map(value => <option key={value} value={value}>Risk {value}</option>)}
+              </select>
+              <select value={intake.scopeType} onChange={event => setIntake(previous => ({ ...previous, scopeType: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+                {['audit', 'code', 'verify', 'doc', 'external-action', 'recurring'].map(value => <option key={value} value={value}>{value}</option>)}
+              </select>
+              <select value={intake.suggestedLane} onChange={event => setIntake(previous => ({ ...previous, suggestedLane: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+                {['kai', 'codex', 'claude', 'sean'].map(value => <option key={value} value={value}>Lane {value}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+              {[
+                ['noExternalWrites', 'No external writes'],
+                ['stagingOnly', 'Staging only'],
+                ['needsApproval', 'Needs approval'],
+                ['productionSensitive', 'Production sensitive'],
+              ].map(([key, label]) => (
+                <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#cbd5e1', fontSize: 12, fontWeight: 800, border: '1px solid rgba(148,163,184,0.14)', borderRadius: 18, padding: '8px 9px', background: 'rgba(15,23,42,0.42)' }}>
+                  <input
+                    type="checkbox"
+                    checked={intake.safetyFlags[key as keyof typeof intake.safetyFlags]}
+                    disabled={key === 'noExternalWrites'}
+                    onChange={event => setIntake(previous => ({
+                      ...previous,
+                      safetyFlags: { ...previous.safetyFlags, [key]: event.target.checked },
+                    }))}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <button type="submit" disabled={intakeStatus === 'submitting'} style={{ border: '1px solid rgba(94,234,212,0.44)', background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)', color: '#04111f', borderRadius: 18, padding: '8px 10px', fontSize: 12, fontWeight: 950, cursor: intakeStatus === 'submitting' ? 'wait' : 'pointer' }}>
+              {intakeStatus === 'submitting' ? 'Submitting...' : 'Go'}
+            </button>
+            <div style={{ color: intakeStatus === 'failed' ? '#fca5a5' : intakeStatus === 'created' ? '#86efac' : '#94a3b8', minHeight: 18, fontSize: 12, lineHeight: 1.4 }}>
+              {intakeMessage || 'Authenticated route only. Creates Linear issue when Linear write config exists; otherwise returns a preview.'}
+            </div>
+          </form>
+
+          <div style={{ display: 'grid', gap: 12 }}>
+            <section style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
+<div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
+                <div>
+                  <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Crew Deck</div>
+                  <h2 style={{ margin: '3px 0 0', color: '#f8fafc', fontSize: 16, fontWeight: 950 }}>Bridge Watch</h2>
+                  <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>
+                    {runtimeStatus === 'loading' && 'Checking live runtime and cost signals...'}
+                    {runtimeStatus === 'ready' && runtimeHealth && `Generated ${formatDate(runtimeHealth.generatedAt)}`}
+                    {runtimeStatus === 'failed' && 'Runtime status request failed; no signal is being inferred.'}
+                  </div>
+                </div>
+                {runtimeHealth ? (
+                  <div style={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.35, textAlign: 'right', maxWidth: 280 }}>
+                    <span style={{ color: '#67e8f9', fontWeight: 950 }}>Recommendation: {runtimeHealth.recommendation.lane}</span>
+                    <br />
+                    {runtimeHealth.recommendation.summary}
+                  </div>
+                ) : (
+                  <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 850 }}>Visual status only until runtime signal returns</div>
+                )}
+              </div>
+              <div style={{ marginBottom: 10, border: '1px solid rgba(45,212,191,0.14)', background: 'rgba(20,184,166,0.06)', borderRadius: 18, padding: 10, color: '#94a3b8', fontSize: 11, lineHeight: 1.4 }}>
+                Crew lanes are operator-routed. Kai is ready; Codex and Claude stay on standby until manually assigned.
+              </div>
+
+              {runtimeHealth ? (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div className="war-room-crew-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                    {[runtimeHealth.kai, runtimeHealth.codex, runtimeHealth.claude].map(crew => (
+                      <CrewRuntimeCard key={crew.id} crew={crew} />
+                    ))}
+                  </div>
+                  <WarRoomCostMiniDashboard cost={runtimeHealth.cost} />
+                </div>
+              ) : (
+                <div style={{ border: '1px dashed rgba(251,191,36,0.34)', background: 'rgba(251,191,36,0.07)', borderRadius: 18, padding: 12, color: '#fcd34d', fontSize: 12, lineHeight: 1.45 }}>
+                  Runtime health and Costmaster data are unavailable. War Room will not infer OK, quota, or dispatch readiness without a verified signal.
+                </div>
+              )}
+            </section>
+
+            <section className="war-room-two-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
+                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Command Console</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 12 }}>
+                  {[
+                    ['Signal Pressure', `${pressure}%`, pressure > 50 ? '#f59e0b' : '#67e8f9'],
+                    ['Budget Today', runtimeHealth ? formatUsd(runtimeHealth.cost.todayCost, 4) : '$0.0000', '#22c55e'],
+                    ['Crew Mode', runtimeHealth ? 'Manual' : 'Standby', '#a78bfa'],
+                  ].map(([label, value, color]) => (
+                    <div key={label} style={{ border: `1px solid ${color}55`, background: `${color}18`, borderRadius: 14, padding: '9px 10px' }}>
+                      <div style={{ color: color as string, fontSize: 17, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{value}</div>
+                      <div style={{ color: '#cbd5e1', fontSize: 9, fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '86px 1fr', gap: 12, alignItems: 'center' }}>
+                  <div style={{ width: 86, height: 86, borderRadius: 999, background: `conic-gradient(#f59e0b ${pressure * 3.6}deg, rgba(148,163,184,0.16) 0deg)`, padding: 8 }}>
+                    <div style={{ width: '100%', height: '100%', borderRadius: 999, background: '#06121f', display: 'grid', placeItems: 'center', border: '1px solid rgba(148,163,184,0.18)' }}>
+                      <span style={{ color: pressure > 50 ? '#fbbf24' : '#67e8f9', fontSize: 22, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{pressure}%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>Budget pressure proxy</div>
+                    <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.45, marginTop: 5 }}>Derived from active warnings, evidence gaps, and P0/P1 risk count. This is a visual routing gauge, not a billing system.</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                      {data.commandBridge.crewLanes.map(lane => (
+                        <span key={lane.id} style={{ border: '1px solid rgba(148,163,184,0.16)', borderRadius: 18, padding: '5px 7px', color: lane.health === 'ok' ? '#86efac' : '#fbbf24', background: 'rgba(15,23,42,0.52)', fontSize: 10, fontWeight: 900 }}>
+                          {lane.displayName}: {lane.quotaStatus}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
+                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Blockers / Approvals</h2>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {data.commandBridge.approvalInbox.slice(0, 3).map(item => (
+                    <div key={item.id} style={{ border: '1px solid rgba(245,158,11,0.24)', background: 'rgba(245,158,11,0.08)', borderRadius: 18, padding: 9 }}>
+                      <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 950 }}>{item.issueId || item.lane} / {item.risk}</div>
+                      <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 850, marginTop: 3 }}>{item.title}</div>
+                      <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{item.requestedAction}</div>
+                    </div>
+                  ))}
+                  {data.commandBridge.approvalInbox.length === 0 && <div style={{ color: '#64748b', fontSize: 12 }}>No command blockers in the current queue.</div>}
+                </div>
+              </div>
+              <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
+                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Evidence Receipts</h2>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {data.commandBridge.receipts.slice(0, 3).map(receipt => (
+                    <div key={receipt.taskId} style={{ border: '1px solid rgba(34,197,94,0.2)', background: 'rgba(34,197,94,0.07)', borderRadius: 18, padding: 9 }}>
+                      <div style={{ color: '#86efac', fontSize: 11, fontWeight: 950 }}>{receipt.taskId} / {receipt.verificationStatus}</div>
+                      <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{receipt.blockerSummary || 'Receipt shell ready for prompt, commit, tests, and artifact proof.'}</div>
+                    </div>
+                  ))}
+                  {data.commandBridge.receipts.length === 0 && <div style={{ color: '#64748b', fontSize: 12 }}>No receipts captured yet.</div>}
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section className="war-room-catalog-grid" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 10, marginBottom: 12 }}>
+          <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
+            <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Mission Board / Signal Flags</h2>
+            <div className="war-room-mission-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+              {data.commandBridge.missions.map(mission => (
+                <details key={mission.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: mission.enabled ? 'rgba(20,184,166,0.1)' : 'rgba(15,23,42,0.5)', borderRadius: 18, padding: 9 }}>
+                  <summary style={{ listStyle: 'none', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                      <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>{mission.name}</div>
+                      <span style={{ width: 9, height: 9, borderRadius: 999, background: mission.enabled ? '#22c55e' : '#f59e0b', boxShadow: mission.enabled ? '0 0 10px rgba(34,197,94,0.45)' : '0 0 10px rgba(245,158,11,0.35)', flexShrink: 0 }} />
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{mission.schedule}</div>
+                  </summary>
+                  <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 900, marginTop: 8 }}>{mission.enabled ? 'Enabled' : 'Disabled / no autonomous execution'}</div>
+                  <div style={{ color: '#64748b', fontSize: 11, lineHeight: 1.35, marginTop: 5 }}>Owner: {mission.ownerAgent}. Approval required: {mission.approvalRequired ? 'yes' : 'no'}.</div>
+                </details>
+              ))}
+            </div>
+          </div>
+          <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
+            <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Permanent Agents</h2>
+            <div className="war-room-agent-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+              {data.commandBridge.agents.map(agent => (
+                <div key={agent.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(15,23,42,0.5)', borderRadius: 18, padding: 9 }}>
+                  <div style={{ color: '#67e8f9', fontSize: 12, fontWeight: 950 }}>{agent.title}</div>
+                  <div style={{ color: agent.status === 'disabled' ? '#fbbf24' : '#cbd5e1', fontSize: 11, fontWeight: 850, marginTop: 3 }}>{agent.status}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.35, marginTop: 5 }}>{agent.currentFocus}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {selectedIssue && (
           <section style={{
             border: '1px solid rgba(94,234,212,0.26)',
             background: 'linear-gradient(135deg, rgba(15,23,42,0.88), rgba(8,47,73,0.64))',
-            borderRadius: 8,
+            borderRadius: 18,
             padding: 18,
-            marginBottom: 18,
+            marginBottom: 12,
             boxShadow: '0 18px 60px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.05)',
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 18, alignItems: 'start' }}>
+            <div className="war-room-selected-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 18, alignItems: 'start' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <span style={{ color: '#67e8f9', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 14, fontWeight: 950 }}>{selectedIssue.id}</span>
@@ -335,7 +859,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                 </p>
               </div>
               <div style={{ display: 'grid', gap: 8, minWidth: 190 }}>
-                <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 8, padding: '10px 12px', color: '#04111f', background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)', fontWeight: 950, fontSize: 13 }}>Review / Act</a>
+                <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 18, padding: '10px 12px', color: '#04111f', background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)', fontWeight: 950, fontSize: 13 }}>Review / Act</a>
                 <button
                   type="button"
                   data-war-room-action="prepare-dispatch"
@@ -347,7 +871,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                   }}
                   title={dispatchReady ? 'Generate a copy-ready Codex dispatch prompt' : 'Dispatch prompts are enabled for Ready for Codex issues with complete issue metadata.'}
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 18,
                     padding: '10px 12px',
                     color: dispatchReady ? '#06121f' : '#64748b',
                     background: dispatchReady ? 'linear-gradient(135deg,#f8fafc,#a7f3d0)' : 'rgba(148,163,184,0.08)',
@@ -358,8 +882,8 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                 >
                   Prepare Dispatch
                 </button>
-                <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 8, padding: '10px 12px', color: '#ccfbf1', background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.28)', fontWeight: 900, fontSize: 13 }}>Open Linear</a>
-                <button disabled style={{ borderRadius: 8, padding: '10px 12px', color: '#64748b', background: 'rgba(148,163,184,0.08)', border: '1px solid rgba(148,163,184,0.16)', fontWeight: 900 }}>Mark Needs Evidence</button>
+                <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', textAlign: 'center', borderRadius: 18, padding: '10px 12px', color: '#ccfbf1', background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.28)', fontWeight: 900, fontSize: 13 }}>Open Linear</a>
+                <button disabled style={{ borderRadius: 18, padding: '10px 12px', color: '#64748b', background: 'rgba(148,163,184,0.08)', border: '1px solid rgba(148,163,184,0.16)', fontWeight: 900 }}>Mark Needs Evidence</button>
               </div>
             </div>
           </section>
@@ -369,9 +893,9 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
           <section style={{
             border: '1px solid rgba(94,234,212,0.28)',
             background: 'rgba(3,10,20,0.82)',
-            borderRadius: 8,
+            borderRadius: 18,
             padding: 16,
-            marginBottom: 18,
+            marginBottom: 12,
             boxShadow: '0 16px 50px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) auto', gap: 12, alignItems: 'start', marginBottom: 12 }}>
@@ -393,7 +917,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                     border: '1px solid rgba(94,234,212,0.44)',
                     background: 'linear-gradient(135deg,#67e8f9,#2dd4bf)',
                     color: '#04111f',
-                    borderRadius: 8,
+                    borderRadius: 18,
                     padding: '9px 12px',
                     fontSize: 12,
                     fontWeight: 950,
@@ -411,7 +935,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                     border: '1px solid rgba(148,163,184,0.18)',
                     background: 'rgba(15,23,42,0.66)',
                     color: '#cbd5e1',
-                    borderRadius: 8,
+                    borderRadius: 18,
                     padding: '9px 12px',
                     fontSize: 12,
                     fontWeight: 900,
@@ -441,7 +965,7 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
                 border: '1px solid rgba(148,163,184,0.2)',
                 background: 'rgba(2,6,23,0.82)',
                 color: '#dbeafe',
-                borderRadius: 8,
+                borderRadius: 18,
                 padding: 14,
                 fontSize: 12,
                 lineHeight: 1.55,
@@ -453,19 +977,19 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
           </section>
         )}
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18 }}>
+        <section className="war-room-column-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10, marginBottom: 12 }}>
           <Column title="Needs Command Decision" issues={commandDecision} selectedId={selectedId} onSelect={selectIssue} />
           <Column title="Captain's Triage" issues={triage} selectedId={selectedId} onSelect={selectIssue} />
           <Column title="Ready to Execute" issues={ready} selectedId={selectedId} onSelect={selectIssue} />
           <Column title="XO Review" issues={xoReview} selectedId={selectedId} onSelect={selectIssue} />
         </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 12 }}>
+        <section className="war-room-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 12 }}>
           {[
             ['Recently Completed', data.recentlyCompleted],
             ['Up Next', data.upNext],
           ].map(([title, issues]) => (
-            <div key={title as string} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
+            <div key={title as string} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
               <h2 style={{ margin: '0 0 12px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>{title as string}</h2>
               <div style={{ display: 'grid', gap: 9 }}>
                 {(issues as WarRoomIssue[]).slice(0, 5).map(issue => (
@@ -478,14 +1002,14 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
               </div>
             </div>
           ))}
-          <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 8, padding: 14 }}>
+          <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
             <h2 style={{ margin: '0 0 12px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Bridge Communications</h2>
             <div style={{ display: 'grid', gap: 10 }}>
               {data.bridgeCommunications.map(note => (
                 <button key={`${note.issueId}-${note.updatedAt}`} onClick={() => {
                   setSelectedId(note.issueId);
                   setCopyStatus('idle');
-                }} style={{ textAlign: 'left', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, padding: 10, background: 'rgba(15,23,42,0.5)', color: '#cbd5e1', cursor: 'pointer' }}>
+                }} style={{ textAlign: 'left', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 18, padding: 10, background: 'rgba(15,23,42,0.5)', color: '#cbd5e1', cursor: 'pointer' }}>
                   <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', marginBottom: 4 }}>{note.issueId}</div>
                   <div style={{ fontSize: 12, lineHeight: 1.45 }}>{note.note}</div>
                 </button>
@@ -494,8 +1018,8 @@ export default function WarRoomDashboard({ initialData }: { initialData: WarRoom
           </div>
         </section>
 
-        <footer style={{ marginTop: 18, border: '1px solid rgba(45,212,191,0.16)', background: 'rgba(20,184,166,0.06)', borderRadius: 8, padding: '10px 12px', color: '#94a3b8', fontSize: 12, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <span>Read-only command surface. No Linear mutations or production writes are enabled.</span>
+        <footer style={{ marginTop: 18, border: '1px solid rgba(45,212,191,0.16)', background: 'rgba(20,184,166,0.06)', borderRadius: 18, padding: '10px 12px', color: '#94a3b8', fontSize: 12, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span>Safe command surface. Visual Acceptance Scan required for War Room UI proof. Intake can create Linear issues only through the authenticated route; no agents, shell commands, or production writes run from War Room.</span>
           <span>Updated {formatDate(data.generatedAt)} from {data.source === 'linear' ? 'Linear' : 'typed fixtures'}.</span>
         </footer>
       </main>

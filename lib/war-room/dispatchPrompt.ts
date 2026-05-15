@@ -10,6 +10,7 @@ const REQUIRED_SECTIONS = [
   'PROTECTED SURFACES',
   'STOP CONDITIONS',
   'VERIFY',
+  'VISUAL ACCEPTANCE SCAN',
   'REPORT BACK WITH',
 ];
 
@@ -104,6 +105,14 @@ VERIFY:
 - Capture screenshots or concrete output when the change affects UI.
 - Confirm no production writes or Linear mutations occurred.
 
+VISUAL ACCEPTANCE SCAN:
+- First-glance scan: list visible warnings, orange/red indicators, disabled controls, placeholders, and stale timestamps before clicking.
+- Intent match: confirm the page communicates the intended operating state within 5 seconds.
+- Control scan: identify active, disabled, and dangerous controls; confirm labels match behavior.
+- Error scan: check banners, toasts, console errors, broken data, unknown/null/undefined, empty panels, and layout overflow.
+- Protected-surface scan: after clicking modified areas, check nearby unaffected surfaces for visual regressions.
+- Treat non-functional visible UI as a blocker even when the page renders.
+
 REPORT BACK WITH:
 1. Branch / PR
 2. Commit SHA
@@ -112,9 +121,10 @@ REPORT BACK WITH:
 5. File:line evidence
 6. Tests/checks run
 7. Local/preview/production verification evidence
-8. Known limitations
-9. Follow-up issues needed
-10. Confirmation no Field App, Drive, production data, Linear mutations, client-side secrets, or unrelated Mission Control workflows changed`;
+8. Visual Acceptance Scan findings
+9. Known limitations
+10. Follow-up issues needed
+11. Confirmation no Field App, Drive, production data, Linear mutations, client-side secrets, or unrelated Mission Control workflows changed`;
 }
 
 export function warRoomDispatchPromptSections() {

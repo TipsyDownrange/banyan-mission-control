@@ -7,26 +7,37 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { SWO_COL } from '@/lib/contracts/service-work-orders';
+import {
+  loadWorkOrderPickerFromPostgresShadow,
+  shouldReadServiceWorkOrdersFromPostgres,
+} from '@/lib/service-work-orders/postgres-read';
 
 type WorkOrder = { id: string; name: string; island: string; status: string; contact: string };
 
 const SHEET_ID = getBackendSheetId();
 
-// Column indices in Service_Work_Orders tab (0-based)
+// Service_Work_Orders column indices come from the shared SWO contract
+// (lib/contracts/service-work-orders.ts) — BAN-179.A canonical layout.
 const COL = {
-  wo_id:          0,
-  wo_number:      1,
-  name:           2,
-  status:         4,
-  island:         5,
-  contact_person: 8,
-  contact_phone:  10,
-};
+  wo_id:          SWO_COL.wo_id,
+  wo_number:      SWO_COL.wo_number,
+  name:           SWO_COL.name,
+  status:         SWO_COL.status,
+  island:         SWO_COL.island,
+  contact_person: SWO_COL.contact_person,
+  contact_phone:  SWO_COL.contact_phone,
+} as const;
 
 const TERMINAL_STATUSES = new Set(['closed', 'lost', 'completed', 'rejected']);
 
 export async function GET() {
   try {
+    if (shouldReadServiceWorkOrdersFromPostgres()) {
+      const workOrders = await loadWorkOrderPickerFromPostgresShadow();
+      return NextResponse.json({ workOrders, source: 'postgres_shadow' });
+    }
+
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({

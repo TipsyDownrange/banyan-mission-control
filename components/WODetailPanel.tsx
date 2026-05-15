@@ -193,6 +193,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [vendorSearch, setVendorSearch] = useState('');
   const [vendorResults, setVendorResults] = useState<any[]>([]);
   const [showVendorDropdown, setShowVendorDropdown] = useState(false);
+  const [vendorCreating, setVendorCreating] = useState(false);
+  const [vendorCreateError, setVendorCreateError] = useState('');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [inspectionMode, setInspectionMode] = useState<string | null>(null);
   const [inspectionNotes, setInspectionNotes] = useState('');
@@ -211,7 +213,41 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const [scheduleDateInput, setScheduleDateInput] = useState('');
   const [scheduleSubmitting, setScheduleSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
+  // BAN-128: Customer & Site lives in its own draft, isolated from the
+  // global `draft` so that auto-save and the bottom-bar Save All cannot
+  // flush unsaved Customer & Site edits to the backend.
+  type CustomerSiteDraft = {
+    customer_name?: string;
+    contact_person?: string;
+    contact_phone?: string;
+    contact_email?: string;
+    address?: string;
+    island?: string;
+    customer_id?: string;
+    org_id?: string;
+  };
+  const [customerSiteDraft, setCustomerSiteDraft] = useState<CustomerSiteDraft>({});
+  const [customerSiteDirty, setCustomerSiteDirty] = useState(false);
+  const [customerSiteSaving, setCustomerSiteSaving] = useState(false);
+  const [customerSiteError, setCustomerSiteError] = useState('');
+  const [legacyAccountAddressSuggestion, setLegacyAccountAddressSuggestion] = useState('');
+  // BAN-130: Job Details, Notes, and Crew each get their own isolated draft
+  // with explicit Save/Discard so that clicking into a field and typing can
+  // never autosave production Work Order data.
+  type JobDetailsDraft = { name?: string; description?: string; island?: string };
+  const [jobDetailsDraft, setJobDetailsDraft] = useState<JobDetailsDraft>({});
+  const [jobDetailsDirty, setJobDetailsDirty] = useState(false);
+  const [jobDetailsSaving, setJobDetailsSaving] = useState(false);
+  const [jobDetailsError, setJobDetailsError] = useState('');
+  type NotesDraft = { comments?: string };
+  const [notesDraft, setNotesDraft] = useState<NotesDraft>({});
+  const [notesDirty, setNotesDirty] = useState(false);
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesError, setNotesError] = useState('');
   const [selectedCrew, setSelectedCrew] = useState<string[]>([]);
+  const [crewDirty, setCrewDirty] = useState(false);
+  const [crewSaving, setCrewSaving] = useState(false);
+  const [crewError, setCrewError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [stageError, setStageError] = useState('');
   const [linkingFolder, setLinkingFolder] = useState(false);
@@ -298,50 +334,81 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   async function handleLinkFolder() {
     if (!linkFolderInput || !wo) return;
     setLinkFolderSaving(true);
+    setSaveError('');
     try {
-      await fetch('/api/service/folder-link', {
+      const res = await fetch('/api/service/folder-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ woName: wo.name, folderUrl: linkFolderInput }),
+        body: JSON.stringify({ woId: wo.id, woName: wo.name, folderUrl: linkFolderInput }),
       });
-      setLinkedFolderUrl(linkFolderInput);
-      onFolderLinked?.(wo.id, linkFolderInput);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Failed to save folder link.');
+      const savedFolderUrl = json?.folderUrl || linkFolderInput;
+      setLinkedFolderUrl(savedFolderUrl);
+      onFolderLinked?.(wo.id, savedFolderUrl);
       setLinkingFolder(false);
       setLinkFolderInput('');
-    } catch {
-      // swallow - not critical
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save folder link.');
     } finally {
       setLinkFolderSaving(false);
     }
   }
 
   const initializedRef = useRef(false);
+  // BAN-128: Snapshot of last-saved Customer & Site values, used by Discard
+  // to revert customerSiteDraft and to seed Save payloads.
+  const customerSiteOriginalRef = useRef<CustomerSiteDraft>({});
+  // BAN-130: Snapshots of last-saved values for Job Details, Notes, and Crew,
+  // used by their respective Discard buttons.
+  const jobDetailsOriginalRef = useRef<JobDetailsDraft>({});
+  const notesOriginalRef = useRef<NotesDraft>({});
+  const crewOriginalRef = useRef<string[]>([]);
   useEffect(() => {
     if (!wo) return;
     // Only initialize draft on first mount - don't wipe user edits on re-render
     if (initializedRef.current) return;
     initializedRef.current = true;
+    const initialIsland = resolveWorkOrderIsland(wo.island, wo.area_of_island, wo.address);
+    const initialContactPerson = normalizeContactList(wo.contact_person || '');
+    // BAN-130: `draft` is now reserved for fields that still flow through
+    // update()/auto-save (currently only Invoicing's invoices_json) plus
+    // scheduledDate which is set via the schedule modal. Job Details, Notes,
+    // and Crew live in their own isolated drafts below.
     setDraft({
-      name: wo.name,
-      description: wo.description,
-      contact: wo.contact,
-      address: wo.address,
-      island: resolveWorkOrderIsland(wo.island, wo.area_of_island, wo.address),
       scheduledDate: wo.scheduledDate,
-      dueDate: wo.dueDate,
-      hoursEstimated: wo.hoursEstimated,
-      hoursActual: wo.hoursActual,
-      men: wo.men,
-      comments: wo.comments,
-      lane: wo.lane,
-      // Separate contact + customer fields
-      contact_person: normalizeContactList(wo.contact_person || ''),
+    } as Partial<WorkOrder>);
+    const initialCustomerSite: CustomerSiteDraft = {
+      customer_name:  wo.customer_name,
+      contact_person: initialContactPerson,
       contact_phone:  wo.contact_phone,
       contact_email:  wo.contact_email,
-      customer_name:  wo.customer_name,
-    } as Partial<WorkOrder>);
-    setSelectedCrew(wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : []);
+      address:        wo.address,
+      island:         initialIsland,
+      customer_id:     wo.customer_id,
+      org_id:          wo.org_id,
+    };
+    setCustomerSiteDraft(initialCustomerSite);
+    customerSiteOriginalRef.current = initialCustomerSite;
+    setLegacyAccountAddressSuggestion('');
+    const initialJobDetails: JobDetailsDraft = {
+      name:        wo.name,
+      description: wo.description,
+      island:      initialIsland,
+    };
+    setJobDetailsDraft(initialJobDetails);
+    jobDetailsOriginalRef.current = initialJobDetails;
+    const initialNotes: NotesDraft = { comments: wo.comments };
+    setNotesDraft(initialNotes);
+    notesOriginalRef.current = initialNotes;
+    const initialCrew = wo.assignedTo ? wo.assignedTo.split(',').map(s => s.trim()).filter(Boolean) : [];
+    setSelectedCrew(initialCrew);
+    crewOriginalRef.current = [...initialCrew];
     setDirty(false);
+    setCustomerSiteDirty(false);
+    setJobDetailsDirty(false);
+    setNotesDirty(false);
+    setCrewDirty(false);
   }, [wo]);
 
   if (!wo) {
@@ -395,44 +462,224 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftRef = useRef(draft);
   draftRef.current = draft; // always up to date
+  // BAN-128: latest customerSiteDraft for saveCustomerSite to read without
+  // depending on closure capture across renders.
+  const customerSiteDraftRef = useRef<CustomerSiteDraft>(customerSiteDraft);
+  customerSiteDraftRef.current = customerSiteDraft;
+  // BAN-130: latest section drafts for Save handlers.
+  const jobDetailsDraftRef = useRef<JobDetailsDraft>(jobDetailsDraft);
+  jobDetailsDraftRef.current = jobDetailsDraft;
+  const notesDraftRef = useRef<NotesDraft>(notesDraft);
+  notesDraftRef.current = notesDraft;
 
+  // BAN-130: update() now persists ONLY the single changed field. Previously
+  // it spread the whole `draft` plus selectedCrew into the autosave payload,
+  // which could accidentally flush dirty Job Details / Notes / Crew edits any
+  // time another field (e.g. invoices_json) auto-saved. Each section is now
+  // gated by its own explicit Save button.
   function update(field: string, value: string) {
     setDraft(prev => ({ ...prev, [field]: value }));
     setDirty(true);
-    // Auto-save after 2s of inactivity - reads latest draft via ref
+    // Auto-save after 2s of inactivity - persists only the field that changed
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
-      const latest = { ...draftRef.current, [field]: value };
       setSaving(true);
       try {
-        await onSave(safeWo.id, {
-          ...latest,
-          assignedTo: selectedCrew.join(', '),
-          _woName: latest.name || safeWo.name,
-          _island: latest.island || safeWo.island,
-        });
+        await onSave(safeWo.id, { [field]: value } as Partial<WorkOrder>);
         setDirty(false);
       } catch (err) { console.error('[WODetailPanel] auto-save failed:', err); } finally { setSaving(false); }
     }, 2000);
+  }
+
+  // BAN-128: Customer & Site edits live in customerSiteDraft (isolated from
+  // global `draft`) so that auto-save and bottom-bar Save All cannot flush
+  // unsaved Customer & Site values. Operator must Save or Discard explicitly.
+  function updateCustomerSite(field: keyof CustomerSiteDraft, value: string) {
+    setCustomerSiteDraft(prev => ({ ...prev, [field]: value }));
+    setCustomerSiteDirty(true);
+  }
+
+  async function saveCustomerSite() {
+    setCustomerSiteSaving(true);
+    setCustomerSiteError('');
+    try {
+      const cs = customerSiteDraftRef.current;
+      const latestDraft = draftRef.current;
+      const payload: Partial<WorkOrder> & { _woName?: string; _island?: string } = {
+        customer_name:  cs.customer_name  ?? safeWo.customer_name,
+        contact_person: cs.contact_person ?? safeWo.contact_person,
+        contact_phone:  cs.contact_phone  ?? safeWo.contact_phone,
+        contact_email:  cs.contact_email  ?? safeWo.contact_email,
+        address:        cs.address        ?? safeWo.address,
+        island:         cs.island         ?? safeWo.island,
+        _woName: latestDraft.name || safeWo.name,
+        _island: cs.island || safeWo.island,
+      };
+      if (cs.customer_id !== undefined && (cs.customer_id || '') !== (safeWo.customer_id || '')) {
+        payload.customer_id = cs.customer_id;
+      }
+      if (cs.org_id !== undefined && (cs.org_id || '') !== (safeWo.org_id || '')) {
+        payload.org_id = cs.org_id;
+      }
+      await onSave(safeWo.id, payload);
+      customerSiteOriginalRef.current = {
+        customer_name:  payload.customer_name,
+        contact_person: payload.contact_person as string | undefined,
+        contact_phone:  payload.contact_phone as string | undefined,
+        contact_email:  payload.contact_email as string | undefined,
+        address:        payload.address,
+        island:         payload.island,
+        customer_id:     payload.customer_id ?? safeWo.customer_id,
+        org_id:          payload.org_id ?? safeWo.org_id,
+      };
+      setCustomerSiteDraft(customerSiteOriginalRef.current);
+      setCustomerSiteDirty(false);
+      setLegacyAccountAddressSuggestion('');
+    } catch (err) {
+      setCustomerSiteError(err instanceof Error ? err.message : 'Failed to save Customer & Site. Please try again.');
+    } finally {
+      setCustomerSiteSaving(false);
+    }
+  }
+
+  function discardCustomerSite() {
+    setCustomerSiteDraft(customerSiteOriginalRef.current);
+    setCustomerSiteDirty(false);
+    setCustomerSiteError('');
+    setLegacyAccountAddressSuggestion('');
+  }
+
+  // BAN-130: Job Details — explicit Save/Discard, no autosave.
+  function updateJobDetails(field: keyof JobDetailsDraft, value: string) {
+    setJobDetailsDraft(prev => ({ ...prev, [field]: value }));
+    setJobDetailsDirty(true);
+  }
+
+  async function saveJobDetails() {
+    setJobDetailsSaving(true);
+    setJobDetailsError('');
+    try {
+      const jd = jobDetailsDraftRef.current;
+      const payload: Partial<WorkOrder> & { _woName?: string; _island?: string } = {
+        name:        jd.name        ?? safeWo.name,
+        description: jd.description ?? safeWo.description,
+        island:      jd.island      ?? safeWo.island,
+        _woName:     jd.name        || safeWo.name,
+        _island:     jd.island      || safeWo.island,
+      };
+      await onSave(safeWo.id, payload);
+      jobDetailsOriginalRef.current = {
+        name:        payload.name,
+        description: payload.description,
+        island:      payload.island,
+      };
+      setJobDetailsDraft(jobDetailsOriginalRef.current);
+      setJobDetailsDirty(false);
+    } catch (err) {
+      setJobDetailsError(err instanceof Error ? err.message : 'Failed to save Job Details. Please try again.');
+    } finally {
+      setJobDetailsSaving(false);
+    }
+  }
+
+  function discardJobDetails() {
+    setJobDetailsDraft(jobDetailsOriginalRef.current);
+    setJobDetailsDirty(false);
+    setJobDetailsError('');
+  }
+
+  // BAN-130: Notes — explicit Save/Discard, no autosave.
+  function updateNotes(value: string) {
+    setNotesDraft({ comments: value });
+    setNotesDirty(true);
+  }
+
+  async function saveNotes() {
+    setNotesSaving(true);
+    setNotesError('');
+    try {
+      const value = notesDraftRef.current.comments ?? safeWo.comments;
+      await onSave(safeWo.id, { comments: value });
+      notesOriginalRef.current = { comments: value };
+      setNotesDraft(notesOriginalRef.current);
+      setNotesDirty(false);
+    } catch (err) {
+      setNotesError(err instanceof Error ? err.message : 'Failed to save Notes. Please try again.');
+    } finally {
+      setNotesSaving(false);
+    }
+  }
+
+  function discardNotes() {
+    setNotesDraft(notesOriginalRef.current);
+    setNotesDirty(false);
+    setNotesError('');
+  }
+
+  // BAN-130: Crew — explicit Save/Discard, no autosave.
+  async function saveCrew() {
+    setCrewSaving(true);
+    setCrewError('');
+    try {
+      const value = selectedCrew.join(', ');
+      await onSave(safeWo.id, { assignedTo: value });
+      crewOriginalRef.current = [...selectedCrew];
+      setCrewDirty(false);
+    } catch (err) {
+      setCrewError(err instanceof Error ? err.message : 'Failed to save Crew. Please try again.');
+    } finally {
+      setCrewSaving(false);
+    }
+  }
+
+  function discardCrew() {
+    setSelectedCrew([...crewOriginalRef.current]);
+    setCrewDirty(false);
+    setCrewError('');
+  }
+
+  function requestClose() {
+    // BAN-130: Unified close warning across all isolated section drafts so
+    // unsaved Customer & Site, Job Details, Notes, and Crew edits aren't
+    // silently dropped. Preserves BAN-128 Customer & Site behavior.
+    const dirtySections: string[] = [];
+    if (customerSiteDirty) dirtySections.push('Customer & Site');
+    if (jobDetailsDirty)   dirtySections.push('Job Details');
+    if (notesDirty)        dirtySections.push('Notes');
+    if (crewDirty)         dirtySections.push('Crew');
+    if (dirtySections.length > 0) {
+      const ok = typeof window !== 'undefined'
+        ? window.confirm(`You have unsaved changes in: ${dirtySections.join(', ')}. Discard them and close?`)
+        : true;
+      if (!ok) return;
+      discardCustomerSite();
+      discardJobDetails();
+      discardNotes();
+      discardCrew();
+    }
+    onClose();
   }
 
   function toggleCrew(name: string) {
     setSelectedCrew(prev =>
       prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     );
-    setDirty(true);
+    setCrewDirty(true);
   }
 
+  // BAN-130: handleSave is now scoped to fields that still flow through
+  // update()/auto-save (currently only invoices_json). Job Details, Notes,
+  // Crew, and Customer & Site are owned by their section Save buttons and
+  // must NOT be flushed by the global Save All path.
   async function handleSave() {
     setSaving(true);
     setSaveError('');
     try {
-      await onSave(safeWo.id, {
-        ...draft,
-        assignedTo: selectedCrew.join(', '),
-        _woName: draft.name || safeWo.name,
-        _island: draft.island || safeWo.island,
-      });
+      const payload: Partial<WorkOrder> = {};
+      if (draft.invoices_json !== undefined) payload.invoices_json = draft.invoices_json;
+      if (Object.keys(payload).length > 0) {
+        await onSave(safeWo.id, payload);
+      }
       setDirty(false);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
@@ -552,17 +799,17 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   const woIsland = resolveWorkOrderIsland(
-    draft.island || '',
+    jobDetailsDraft.island || '',
     wo.island,
     wo.area_of_island,
-    draft.address || '',
+    customerSiteDraft.address || '',
     wo.address,
   );
   const islandCrew = allCrew.filter(c => {
     const isField = ['Superintendent','Journeyman','Apprentice'].some(r => c.role.includes(r));
     return isField && (!woIsland || c.island === woIsland);
   });
-  const contactPeople = parseDelimitedList((draft as WorkOrder & { contact_person?: string }).contact_person ?? wo.contact_person ?? '');
+  const contactPeople = parseDelimitedList(customerSiteDraft.contact_person ?? wo.contact_person ?? '');
   const orgSuggestions = useMemo(() => {
     if (!safeWo.requires_org_assignment) return [];
     return organizations
@@ -586,7 +833,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
   }
 
   async function handleCreateOrgFromWO() {
-    const orgName = ((draft as WorkOrder & { customer_name?: string }).customer_name || safeWo.customer_name || safeWo.name || '').trim();
+    const orgName = (customerSiteDraft.customer_name || safeWo.customer_name || safeWo.name || '').trim();
     if (!orgName) {
       setOrgRepairError('Company or customer name is required before creating an organization.');
       return;
@@ -606,11 +853,11 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           name: orgName,
           types: ['CUSTOMER'],
           entity_type: 'COMPANY',
-          island: draft.island || safeWo.island || '',
-          contact_name: (draft as WorkOrder & { contact_person?: string }).contact_person || safeWo.contact_person || '',
-          contact_phone: (draft as WorkOrder & { contact_phone?: string }).contact_phone || safeWo.contact_phone || '',
-          contact_email: (draft as WorkOrder & { contact_email?: string }).contact_email || safeWo.contact_email || '',
-          address: draft.address || safeWo.address || '',
+          island: customerSiteDraft.island || jobDetailsDraft.island || safeWo.island || '',
+          contact_name: customerSiteDraft.contact_person || safeWo.contact_person || '',
+          contact_phone: customerSiteDraft.contact_phone || safeWo.contact_phone || '',
+          contact_email: customerSiteDraft.contact_email || safeWo.contact_email || '',
+          address: customerSiteDraft.address || safeWo.address || '',
           notes: `Created from ${safeWo.id} identity repair`,
           source: 'WO_IDENTITY_REPAIR',
         }),
@@ -633,7 +880,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
     <>
       {/* Backdrop */}
       <div
-        onClick={onClose}
+        onClick={requestClose}
         style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 400, backdropFilter: 'blur(2px)' }}
       />
 
@@ -755,7 +1002,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               </button>
             )}
             {readOnly && <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, padding: '4px 10px', background: 'rgba(245,158,11,0.08)', borderRadius: 8 }}>👁 View only</div>}
-            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+            <button onClick={requestClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
           </div>
         </div>
 
@@ -914,22 +1161,22 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ display: 'grid', gap: 12 }}>
                   <div>
                     <label style={LBL}>Job Name</label>
-                    <input style={INP} value={draft.name || ''} onChange={e => update('name', e.target.value)} placeholder="Customer / job name" />
+                    <input style={INP} value={jobDetailsDraft.name ?? wo.name ?? ''} onChange={e => updateJobDetails('name', e.target.value)} placeholder="Customer / job name" />
                   </div>
                   <div>
                     <label style={LBL}>Description / Scope</label>
                     <textarea
                       rows={3}
                       style={{ ...INP, resize: 'none' }}
-                      value={draft.description || ''}
-                      onChange={e => update('description', e.target.value)}
+                      value={jobDetailsDraft.description ?? wo.description ?? ''}
+                      onChange={e => updateJobDetails('description', e.target.value)}
                       placeholder="What needs to be done..."
                     />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label style={LBL}>Island</label>
-                      <select style={INP} value={resolveWorkOrderIsland(draft.island || '', wo.island, wo.area_of_island, draft.address || '', wo.address)} onChange={e => update('island', e.target.value)}>
+                      <select style={INP} value={resolveWorkOrderIsland(jobDetailsDraft.island || '', wo.island, wo.area_of_island, customerSiteDraft.address || '', wo.address)} onChange={e => updateJobDetails('island', e.target.value)}>
                         <option value="">Select...</option>
                         {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(isl => <option key={isl}>{isl}</option>)}
                       </select>
@@ -947,6 +1194,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                   )}
                 </div>
+                {/* BAN-130: explicit Save/Discard gate — replaces auto-save for Job Details */}
+                {!readOnly && (
+                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                    {jobDetailsError && (
+                      <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {jobDetailsError}</span>
+                    )}
+                    {!jobDetailsDirty && !jobDetailsError && (
+                      <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Edits to Job Details are local until you Save.</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={discardJobDetails}
+                      disabled={!jobDetailsDirty || jobDetailsSaving}
+                      style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', opacity: (!jobDetailsDirty || jobDetailsSaving) ? 0.5 : 1 }}
+                    >
+                      Discard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveJobDetails}
+                      disabled={!jobDetailsDirty || jobDetailsSaving}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!jobDetailsDirty || jobDetailsSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!jobDetailsDirty || jobDetailsSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', boxShadow: (!jobDetailsDirty || jobDetailsSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                    >
+                      {jobDetailsSaving ? 'Saving...' : 'Save Job Details'}
+                    </button>
+                  </div>
+                )}
                 </div>{/* ── end job-details collapse wrapper ── */}
               </div>
 
@@ -1077,14 +1351,16 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
                     </div>
                     <AutocompleteInput
-                      value={(draft as WorkOrder & { customer_name?: string }).customer_name ?? wo.customer_name ?? ''}
-                      onChange={v => update('customer_name', v)}
+                      value={customerSiteDraft.customer_name ?? wo.customer_name ?? ''}
+                      onChange={v => updateCustomerSite('customer_name', v)}
                       onSelect={c => {
-                        update('customer_name', c.company || c.name || '');
-                        if (c.contactPerson) update('contact_person', c.contactPerson);
-                        if (c.phone || c.contactPhone) update('contact_phone', c.phone || c.contactPhone || '');
-                        if (c.email) update('contact_email', c.email);
-                        if (c.address) update('address', c.address);
+                        updateCustomerSite('customer_name', c.company || c.name || '');
+                        if (c.customerId) updateCustomerSite('customer_id', c.customerId);
+                        if (c.org_id) updateCustomerSite('org_id', c.org_id);
+                        if (c.contactPerson) updateCustomerSite('contact_person', c.contactPerson);
+                        if (c.phone || c.contactPhone) updateCustomerSite('contact_phone', c.phone || c.contactPhone || '');
+                        if (c.email) updateCustomerSite('contact_email', c.email);
+                        setLegacyAccountAddressSuggestion(c.address || '');
                       }}
                       placeholder="Billing account name"
                       style={INP}
@@ -1100,13 +1376,16 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>
                       </div>
                       <ContactAutocomplete
-                        value={(draft as WorkOrder & { contact_person?: string }).contact_person ?? normalizeContactList(wo.contact_person || '')}
-                        onChange={v => update('contact_person', normalizeContactList(v))}
+                        value={customerSiteDraft.contact_person ?? normalizeContactList(wo.contact_person || '')}
+                        onChange={v => updateCustomerSite('contact_person', normalizeContactList(v))}
                         onSelect={c => {
-                          const nextContacts = [...contactPeople, c.name].filter((name, index, all) => all.findIndex(entry => entry.toLowerCase() === name.toLowerCase()) === index);
-                          update('contact_person', nextContacts.join(', '));
-                          if (c.phone) update('contact_phone', c.phone);
-                          if (c.email) update('contact_email', c.email);
+                          // BAN-127: replace the trailing search-query token with the selected
+                          // contact's full canonical name so we don't persist partial text like "peyt".
+                          const priorContacts = contactPeople.slice(0, -1);
+                          const nextContacts = [...priorContacts, c.name].filter((name, index, all) => all.findIndex(entry => entry.toLowerCase() === name.toLowerCase()) === index);
+                          updateCustomerSite('contact_person', nextContacts.join(', '));
+                          if (c.phone) updateCustomerSite('contact_phone', c.phone);
+                          if (c.email) updateCustomerSite('contact_email', c.email);
                         }}
                         placeholder="Search contacts..."
                         style={INP}
@@ -1123,12 +1402,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                     <div>
                       <label style={LBL}>Contact Phone</label>
-                      <input type="tel" style={INP} value={(draft as WorkOrder & { contact_phone?: string }).contact_phone ?? wo.contact_phone ?? ''} onChange={e => update('contact_phone', e.target.value)} onBlur={e => update('contact_phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" />
+                      <input type="tel" style={INP} value={customerSiteDraft.contact_phone ?? wo.contact_phone ?? ''} onChange={e => updateCustomerSite('contact_phone', e.target.value)} onBlur={e => updateCustomerSite('contact_phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" />
                     </div>
                   </div>
                   <div>
                     <label style={LBL}>Contact Email</label>
-                    <input type="email" style={INP} value={(draft as WorkOrder & { contact_email?: string }).contact_email ?? wo.contact_email ?? ''} onChange={e => update('contact_email', e.target.value)} onBlur={e => update('contact_email', normalizeEmail(e.target.value))} placeholder="email@example.com" />
+                    <input type="email" style={INP} value={customerSiteDraft.contact_email ?? wo.contact_email ?? ''} onChange={e => updateCustomerSite('contact_email', e.target.value)} onBlur={e => updateCustomerSite('contact_email', normalizeEmail(e.target.value))} placeholder="email@example.com" />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -1136,17 +1415,59 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(66,133,244,0.1)', color: '#1a56db', border: '1px solid rgba(66,133,244,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Places</span>
                     </div>
                     <PlacesAutocomplete
-                      value={draft.address || ''}
-                      onChange={v => update('address', v)}
+                      value={customerSiteDraft.address ?? wo.address ?? ''}
+                      onChange={v => updateCustomerSite('address', v)}
                       onSelect={(place: ParsedPlace) => {
-                        update('address', place.formatted_address);
-                        if (place.island) update('island', place.island);
+                        updateCustomerSite('address', place.formatted_address);
+                        if (place.island) updateCustomerSite('island', place.island);
                       }}
                       placeholder="Start typing an address..."
                       style={INP}
                     />
+                    {legacyAccountAddressSuggestion && legacyAccountAddressSuggestion !== (customerSiteDraft.address ?? wo.address ?? '') && (
+                      <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11, color: '#92400e' }}>
+                        <span>Account address on file: {legacyAccountAddressSuggestion}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateCustomerSite('address', legacyAccountAddressSuggestion);
+                            setLegacyAccountAddressSuggestion('');
+                          }}
+                          style={{ border: '1px solid rgba(146,64,14,0.25)', background: '#fffbeb', color: '#92400e', borderRadius: 6, padding: '3px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          Use as site address
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
+                {/* BAN-128: explicit Save/Discard gate — replaces auto-save for these fields */}
+                {!readOnly && (
+                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                    {customerSiteError && (
+                      <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {customerSiteError}</span>
+                    )}
+                    {!customerSiteDirty && !customerSiteError && (
+                      <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Edits to Customer &amp; Site are local until you Save.</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={discardCustomerSite}
+                      disabled={!customerSiteDirty || customerSiteSaving}
+                      style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!customerSiteDirty || customerSiteSaving) ? 'default' : 'pointer', opacity: (!customerSiteDirty || customerSiteSaving) ? 0.5 : 1 }}
+                    >
+                      Discard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveCustomerSite}
+                      disabled={!customerSiteDirty || customerSiteSaving}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!customerSiteDirty || customerSiteSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!customerSiteDirty || customerSiteSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!customerSiteDirty || customerSiteSaving) ? 'default' : 'pointer', boxShadow: (!customerSiteDirty || customerSiteSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                    >
+                      {customerSiteSaving ? 'Saving...' : 'Save Customer & Site'}
+                    </button>
+                  </div>
+                )}
                 </div>{/* ── end customer-site collapse wrapper ── */}
               </div>
 
@@ -1183,14 +1504,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ display: collapsed['crew'] ? 'none' : 'block' }}>
                   {islandCrew.length === 0 ? (
                     <div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually:</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 }}>No crew found for {wo.island || 'this island'} — type name manually, then Save Crew:</div>
                       <input style={{ fontSize: 13, padding: '7px 11px', borderRadius: 9, border: '1px solid #e2e8f0', outline: 'none', width: '100%', boxSizing: 'border-box' as const }}
-                        defaultValue={safeWo.assignedTo || ''}
+                        value={selectedCrew.join(', ')}
                         placeholder="e.g. Karl Nakamura, Joey Ritthaler"
-                        onBlur={e => {
-                          const val = e.target.value.trim();
+                        onChange={e => {
+                          const val = e.target.value;
                           setSelectedCrew(val ? val.split(',').map(s=>s.trim()).filter(Boolean) : []);
-                          onSave(safeWo.id, { assignedTo: val }).catch(err => console.error('[WODetailPanel] saveAssigned', err));
+                          setCrewDirty(true);
                         }} />
                     </div>
                   ) : (
@@ -1216,6 +1537,33 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 12, color: '#4338ca', fontWeight: 600 }}>
                       {selectedCrew.join(', ')}
                       {draft.scheduledDate ? ` → ${draft.scheduledDate}` : ''}
+                    </div>
+                  )}
+                  {/* BAN-130: explicit Save/Discard gate — Crew changes are local until Save Crew */}
+                  {!readOnly && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                      {crewError && (
+                        <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {crewError}</span>
+                      )}
+                      {!crewDirty && !crewError && (
+                        <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Crew changes are local until you Save.</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={discardCrew}
+                        disabled={!crewDirty || crewSaving}
+                        style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', opacity: (!crewDirty || crewSaving) ? 0.5 : 1 }}
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveCrew}
+                        disabled={!crewDirty || crewSaving}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!crewDirty || crewSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!crewDirty || crewSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', boxShadow: (!crewDirty || crewSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      >
+                        {crewSaving ? 'Saving...' : 'Save Crew'}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1309,8 +1657,55 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 </div>
                               ))
                             }
-                            <div onMouseDown={() => setShowVendorDropdown(false)} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 12, color: '#0f766e', fontWeight: 700, borderTop: '1px solid #f1f5f9' }}>+ Add New Vendor</div>
+                            <div
+                              onMouseDown={async (e) => {
+                                e.preventDefault();
+                                const proposedName = vendorSearch.trim();
+                                if (!proposedName) {
+                                  setVendorCreateError('Type a vendor name first, then click Add New Vendor.');
+                                  return;
+                                }
+                                if (vendorCreating) return;
+                                setVendorCreating(true);
+                                setVendorCreateError('');
+                                try {
+                                  const res = await fetch('/api/organizations', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      name: proposedName,
+                                      types: ['VENDOR'],
+                                      entity_type: 'COMPANY',
+                                      source: 'wo_vendor_quote',
+                                    }),
+                                  });
+                                  const data = await res.json().catch(() => ({}));
+                                  if (!res.ok || !data?.org_id) {
+                                    throw new Error(data?.error || `Failed to create vendor (${res.status}).`);
+                                  }
+                                  const newVendor = { id: data.org_id, org_id: data.org_id, name: proposedName, org_name: proposedName };
+                                  setVendorResults(prev => [newVendor, ...prev.filter(v => (v.id || v.org_id) !== data.org_id)]);
+                                  setVendorSearch(proposedName);
+                                  setNewQuote(p => ({ ...p, vendor_org_id: data.org_id, vendor_name: proposedName }));
+                                  setShowVendorDropdown(false);
+                                } catch (err) {
+                                  setVendorCreateError(err instanceof Error ? err.message : 'Failed to create vendor.');
+                                } finally {
+                                  setVendorCreating(false);
+                                }
+                              }}
+                              style={{ padding: '8px 12px', cursor: vendorCreating ? 'wait' : 'pointer', fontSize: 12, color: '#0f766e', fontWeight: 700, borderTop: '1px solid #f1f5f9', opacity: vendorCreating ? 0.6 : 1 }}
+                            >
+                              {vendorCreating
+                                ? 'Creating vendor…'
+                                : vendorSearch.trim()
+                                  ? `+ Add "${vendorSearch.trim()}" as new vendor`
+                                  : '+ Add New Vendor (type name above first)'}
+                            </div>
                           </div>
+                        )}
+                        {vendorCreateError && (
+                          <div style={{ marginTop: 6, fontSize: 11, color: '#b91c1c', fontWeight: 600 }}>{vendorCreateError}</div>
                         )}
                       </div>
 
@@ -1697,10 +2092,37 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <textarea
                     rows={4}
                     style={{ ...INP, resize: 'none' }}
-                    value={draft.comments || ''}
-                    onChange={e => update('comments', e.target.value)}
+                    value={notesDraft.comments ?? wo.comments ?? ''}
+                    onChange={e => updateNotes(e.target.value)}
                     placeholder="Internal notes, follow-ups, customer requests..."
                   />
+                  {/* BAN-130: explicit Save/Discard gate — replaces auto-save for Notes */}
+                  {!readOnly && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                      {notesError && (
+                        <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {notesError}</span>
+                      )}
+                      {!notesDirty && !notesError && (
+                        <span style={{ marginRight: 'auto', fontSize: 11, color: '#64748b', fontWeight: 600 }}>Edits to Notes are local until you Save.</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={discardNotes}
+                        disabled={!notesDirty || notesSaving}
+                        style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', opacity: (!notesDirty || notesSaving) ? 0.5 : 1 }}
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveNotes}
+                        disabled={!notesDirty || notesSaving}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!notesDirty || notesSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!notesDirty || notesSaving) ? '#94a3b8' : 'white', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', boxShadow: (!notesDirty || notesSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      >
+                        {notesSaving ? 'Saving...' : 'Save Notes'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1845,7 +2267,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             background: 'white', borderTop: '1px solid #e2e8f0',
             display: 'flex', justifyContent: 'flex-end', gap: 10,
           }}>
-            <button onClick={() => { setDraft({}); setDirty(false); onClose(); }}
+            <button onClick={() => { setDraft({}); setDirty(false); discardCustomerSite(); discardJobDetails(); discardNotes(); discardCrew(); onClose(); }}
               style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Discard
             </button>

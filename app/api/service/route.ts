@@ -4,65 +4,22 @@ import { google } from 'googleapis';
 import { normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { loadCrosswalkByCustomer } from '@/lib/entityCrosswalk';
+import {
+  loadServiceWorkOrdersFromPostgresShadow,
+  shouldReadServiceWorkOrdersFromPostgres,
+} from '@/lib/service-work-orders/postgres-read';
+import {
+  SWO_COL,
+  SERVICE_WORK_ORDERS_RANGE_END,
+} from '@/lib/contracts/service-work-orders';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 
-// Column order must match the migration script HEADERS array
-const COL = {
-  wo_id:           0,
-  wo_number:       1,
-  name:            2,
-  description:     3,
-  status:          4,
-  island:          5,
-  area_of_island:  6,
-  address:         7,
-  contact_person:  8,
-  contact_title:   9,
-  contact_phone:   10,
-  contact_email:   11,
-  customer_name:   12,
-  system_type:     13,
-  assigned_to:     14,
-  date_received:   15,
-  due_date:        16,
-  scheduled_date:  17,
-  start_date:      18,
-  hours_estimated: 19,
-  hours_actual:    20,
-  men_required:    21,
-  comments:        22,
-  folder_url:      23,
-  quote_total:     24,
-  quote_status:    25,
-  created_at:      26, // AA
-  updated_at:      27, // AB
-  source:          28, // AC
-  // QBO invoice columns (actual sheet positions)
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
-  // BanyanOS invoicing tracker (new columns AF-AO)
-  deposit_status:      31, // AF
-  deposit_amount:      32, // AG
-  deposit_invoice_num: 33, // AH
-  deposit_sent_date:   34, // AI
-  deposit_paid_date:   35, // AJ
-  final_status:        36, // AK
-  final_amount:        37, // AL
-  final_invoice_num:   38, // AM
-  final_sent_date:     39, // AN
-  final_paid_date:     40, // AO
-  invoices_json:       41, // AP
-  org_id:              42, // AQ — Phase 2: FK to Organizations
-  customer_id:         43, // AR — GC-D053: FK to Customers table
-  legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
-  legacy_wo_ids:       45, // AT — BAN-56: searchable previous/noncanonical WO IDs
-  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
-};
+// Column indices imported from the shared SWO contract (BAN-179.A).
+// `SWO_COL` is the single source of truth for `Service_Work_Orders` column
+// positions. Do not redeclare local index maps in this route.
+const COL = SWO_COL;
 
 // Simple in-process cache (10 minute TTL)
 let cache: { data: ReturnType<typeof buildResponse>; ts: number } | null = null;
@@ -139,7 +96,9 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
   const byStatus = {
     lead:               wos.filter(w => w.status === 'lead'),
     quote:              wos.filter(w => w.status === 'quote'),
+    quoted:             wos.filter(w => w.status === 'quoted'),
     approved:           wos.filter(w => w.status === 'approved'),
+    accepted:           wos.filter(w => w.status === 'accepted'),
     deposit_received:   wos.filter(w => w.status === 'deposit_received'),
     materials_ordered:  wos.filter(w => w.status === 'materials_ordered'),
     materials_received: wos.filter(w => w.status === 'materials_received'),
@@ -148,6 +107,7 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
     in_progress:        wos.filter(w => w.status === 'in_progress'),
     closed:             wos.filter(w => ['closed', 'completed'].includes(w.status)).slice(0, 10),
     lost:               wos.filter(w => w.status === 'lost').slice(0, 5),
+    declined:           wos.filter(w => w.status === 'declined').slice(0, 5),
   };
 
   const active = wos.filter(w => !['closed', 'completed', 'lost'].includes(w.status));
@@ -167,20 +127,29 @@ function buildResponse(wos: ReturnType<typeof rowToWO>[]) {
 }
 
 export async function GET() {
-  // Return cached response if fresh
+  // Return cached Sheet response if fresh. Do not serve Sheet cache when the
+  // staging Postgres smoke read path is explicitly enabled.
   const now = Date.now();
-  if (cache && now - cache.ts < CACHE_TTL_MS) {
+  const readFromPostgres = shouldReadServiceWorkOrdersFromPostgres();
+  if (!readFromPostgres && cache && now - cache.ts < CACHE_TTL_MS) {
     return NextResponse.json(cache.data);
   }
 
   try {
+    if (readFromPostgres) {
+      const wos = await loadServiceWorkOrdersFromPostgresShadow();
+      const response = { ...buildResponse(wos), source: 'postgres_shadow' };
+      cache = { data: response, ts: now };
+      return NextResponse.json(response);
+    }
+
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
     const [res, custRes, crosswalkByCustomer] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,
-        range: `${TAB}!A2:AU5000`,
+        range: `${TAB}!A2:${SERVICE_WORK_ORDERS_RANGE_END}5000`,
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: BACKEND_SHEET_ID,

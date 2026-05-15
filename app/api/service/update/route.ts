@@ -3,84 +3,65 @@ import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { checkPermission } from '@/lib/permissions';
-import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
-import { normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
+import { normalizeAddressComponent, normalizePhone, normalizeEmail, normalizeName, normalizeContactList, resolveWorkOrderIsland } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { upsertCrosswalkEntry } from '@/lib/entityCrosswalk';
 import { buildDispatchRow, validateDispatchRow } from '@/lib/dispatch-schedule';
 import { isCompletionRowComplete } from '@/lib/step-completion';
+import {
+  getWODriveClient,
+  InvalidWOFolderUrlError,
+  validateWOFolderUrlForWrite,
+} from '@/lib/drive-wo-folder';
+import {
+  SWO_COL,
+  SERVICE_WORK_ORDERS_RANGE_END,
+  columnLetterFromIndex,
+} from '@/lib/contracts/service-work-orders';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
 
-// Column index map (0-based, must match migration HEADERS)
-const COL_IDX: Record<string, number> = {
-  wo_id:           0,
-  wo_number:       1,
-  name:            2,
-  description:     3,
-  status:          4,
-  island:          5,
-  area_of_island:  6,
-  address:         7,
-  contact_person:  8,
-  contact_title:   9,
-  contact_phone:   10,
-  contact_email:   11,
-  customer_name:   12,
-  system_type:     13,
-  assigned_to:     14,
-  date_received:   15,
-  due_date:        16,
-  scheduled_date:  17,
-  start_date:      18,
-  hours_estimated: 19,
-  hours_actual:    20,
-  men_required:    21,
-  comments:        22,
-  folder_url:      23,
-  quote_total:     24,
-  quote_status:    25,
-  created_at:      26, // AA
-  updated_at:      27, // AB
-  source:          28, // AC
-  // QBO invoice fields (actual sheet positions)
-  qbo_invoice_id:  26, // AA
-  invoice_number:  27, // AB
-  invoice_total:   28, // AC
-  invoice_balance: 29, // AD
-  invoice_date:    30, // AE
-  // BanyanOS invoicing tracker (AF-AO)
-  deposit_status:      31, // AF
-  deposit_amount:      32, // AG
-  deposit_invoice_num: 33, // AH
-  deposit_sent_date:   34, // AI
-  deposit_paid_date:   35, // AJ
-  final_status:        36, // AK
-  final_amount:        37, // AL
-  final_invoice_num:   38, // AM
-  final_sent_date:     39, // AN
-  final_paid_date:     40, // AO
-  invoices_json:       41, // AP
-  org_id:              42, // AQ — Phase 2: FK to Organizations
-  customer_id:         43, // AR — GC-D053: FK to Customers table
-  legacy_flag:         44, // AS — GC-D053: pre-GC-D053 backfill marker
-  requires_org_assignment: 46, // AU — identity follow-up flag for missing org_id
-};
+// Column indices imported from the shared SWO contract (BAN-179.A).
+// `SWO_COL` is the single source of truth for `Service_Work_Orders` column
+// positions. The previous local map had duplicate-key collisions on AA/AB/AC
+// (created_at vs qbo_invoice_id/invoice_number/invoice_total) — the contract
+// resolves QBO invoices to AD–AH, matching `app/api/qbo/sync-invoices/route.ts`.
+const COL_IDX = SWO_COL;
+const colLetter = columnLetterFromIndex;
 
-function colLetter(idx: number): string {
-  // 0-based index → spreadsheet column letter (A, B, ... Z, AA, ...)
-  let result = '';
-  let n = idx;
-  do {
-    result = String.fromCharCode(65 + (n % 26)) + result;
-    n = Math.floor(n / 26) - 1;
-  } while (n >= 0);
-  return result;
+const STATUS_SPINE_ORDER = [
+  'new',
+  'lead',
+  'quoted',
+  'accepted',
+  'approved',
+  'deposit_received',
+  'materials_ordered',
+  'materials_received',
+  'ready_to_schedule',
+  'scheduled',
+  'in_progress',
+  'work_complete',
+  'completed',
+  'invoiced',
+  'paid',
+  'closed',
+];
+
+function resolveStatusEventType(oldStatus: string, newStatus: string): string {
+  if (newStatus === 'lost' || newStatus === 'declined' || newStatus === 'cancelled') return 'WO_DECLINED';
+  const oldIdx = STATUS_SPINE_ORDER.indexOf(oldStatus);
+  const newIdx = STATUS_SPINE_ORDER.indexOf(newStatus);
+  if (oldIdx >= 0 && newIdx >= 0) {
+    if (newIdx < oldIdx) return 'STAGE_ROLLED_BACK';
+    if (newIdx > oldIdx + 1) return 'STAGE_SKIPPED_FORWARD';
+  }
+  return 'STATUS_CHANGED';
 }
-
 
 async function deriveWOStatus(
   sheets: ReturnType<typeof google.sheets>,
@@ -157,6 +138,9 @@ export async function PATCH(req: Request) {
     actorEmail = sessionEmail || '';
   }
 
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/update');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
+
   try {
     const body = await req.json();
     const { woId, woNumber, stage, status } = body;
@@ -172,7 +156,7 @@ export async function PATCH(req: Request) {
     // Fetch all rows to find the target
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: BACKEND_SHEET_ID,
-      range: `${TAB}!A2:AU5000`,
+      range: `${TAB}!A2:${SERVICE_WORK_ORDERS_RANGE_END}5000`,
     });
 
     const rows = res.data.values || [];
@@ -203,9 +187,8 @@ export async function PATCH(req: Request) {
     const now = hawaiiNow();
     const resolvedWoId = (woId || rows[targetRowIdx]?.[COL_IDX.wo_id] || '').trim();
 
-    // Snapshot pre-write values for GC-D037 either-both-or-neither rollback
+    // Snapshot pre-write values for Activity Spine status transition events.
     const oldStatus    = ((rows[targetRowIdx] as string[])?.[COL_IDX.status]     || '').trim();
-    const oldUpdatedAt = ((rows[targetRowIdx] as string[])?.[COL_IDX.updated_at] || '').trim();
     const oldScheduledDate = ((rows[targetRowIdx] as string[])?.[COL_IDX.scheduled_date] || '').trim();
     const oldOrgId = ((rows[targetRowIdx] as string[])?.[COL_IDX.org_id] || '').trim();
     const currentCustomerId = ((rows[targetRowIdx] as string[])?.[COL_IDX.customer_id] || '').trim();
@@ -216,6 +199,22 @@ export async function PATCH(req: Request) {
         { error: `WO already has org_id "${oldOrgId}"; refusing to overwrite with "${requestedOrgId}".` },
         { status: 409 }
       );
+    }
+
+    let validatedFolderUrl: string | undefined;
+    if (body.folderUrl !== undefined) {
+      try {
+        const validFolder = await validateWOFolderUrlForWrite(getWODriveClient(), body.folderUrl);
+        validatedFolderUrl = validFolder.folderUrl;
+      } catch (err) {
+        if (err instanceof InvalidWOFolderUrlError) {
+          return NextResponse.json(
+            { error: err.message, classification: err.classification },
+            { status: 400 },
+          );
+        }
+        throw err;
+      }
     }
 
     // Build field updates
@@ -275,6 +274,12 @@ export async function PATCH(req: Request) {
       ready_to_schedule:  'ready_to_schedule',
       scheduled:          'scheduled',
       in_progress:        'in_progress',
+      // PM "Complete" stage button — field/QA work done, before admin closeout.
+      // Doctrine: work_complete = work done; closed = PM admin closeout.
+      work_complete:      'work_complete',
+      // Legacy synonym safety: callers sometimes send "completed". Treat as
+      // work_complete (not closed) so PM can still take an explicit close step.
+      completed:          'work_complete',
       closed:             'closed',
       lost:               'lost',
     };
@@ -325,12 +330,14 @@ export async function PATCH(req: Request) {
       if (bodyKey === 'status') continue; // handled above
       if (body[bodyKey] !== undefined) {
         let val = String(body[bodyKey]);
+        if (bodyKey === 'folderUrl') val = validatedFolderUrl || '';
         // Normalize on write
         if (PHONE_FIELDS.has(bodyKey)) val = normalizePhone(val);
         else if (EMAIL_FIELDS.has(bodyKey)) val = normalizeEmail(val);
         else if (bodyKey === 'contactPerson' || bodyKey === 'contact_person') val = normalizeContactList(val);
         else if (NAME_FIELDS.has(bodyKey)) val = normalizeName(val);
         if (bodyKey === 'island') val = resolveWorkOrderIsland(val);
+        if (bodyKey === 'areaOfIsland' || bodyKey === 'area_of_island') val = normalizeAddressComponent(val);
         if (bodyKey === 'scheduledDate' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) val = val.slice(0, 16);
         updates.push({
           col: colLetter(COL_IDX[colKey]),
@@ -409,35 +416,19 @@ export async function PATCH(req: Request) {
 
     invalidateCache();
 
-    // ─── GC-D037: emit MC event for status transitions (either-both-or-neither) ─
+    // ─── GC-D037/BAN-214: best-effort MC event for status transitions ─────────
     if (resolvedStatus && resolvedStatus !== oldStatus) {
-      const eventType =
-        resolvedStatus === 'lost'   ? 'WO_DECLINED'    :
-        resolvedStatus === 'closed' ? 'WO_CLOSED'      : 'STATUS_CHANGED';
-      try {
-        await emitMCEvent({
-          wo_id:        resolvedWoId,
-          event_type:   eventType,
-          old_status:   oldStatus,
-          new_status:   resolvedStatus,
-          notes:        reason,
-          submitted_by: actorEmail,
-          origin:       'office',
-        });
-      } catch {
-        // Compensating write — roll back status + updated_at (GC-D037 §5)
-        await sheets.spreadsheets.values.batchUpdate({
-          spreadsheetId: BACKEND_SHEET_ID,
-          requestBody: {
-            valueInputOption: 'RAW',
-            data: [
-              { range: `${TAB}!${colLetter(COL_IDX.status)}${sheetRow}`,     values: [[oldStatus]] },
-              { range: `${TAB}!${colLetter(COL_IDX.updated_at)}${sheetRow}`, values: [[oldUpdatedAt]] },
-            ],
-          },
-        });
-        return NextResponse.json({ error: 'Event emit failed; status write rolled back.' }, { status: 500 });
-      }
+      await emitMCEvent({
+        wo_id:        resolvedWoId,
+        event_type:   resolveStatusEventType(oldStatus, resolvedStatus),
+        old_status:   oldStatus,
+        new_status:   resolvedStatus,
+        notes:        reason,
+        submitted_by: actorEmail,
+        origin:       incomingKey !== null ? 'field' : 'office',
+      }).catch((emitErr) => {
+        console.warn('[service/update] MC event emit failed (non-fatal):', emitErr);
+      });
     }
 
     // ─── Acceptance trigger: write bid_hours to Install_Steps ────────────────
@@ -563,7 +554,9 @@ export async function PATCH(req: Request) {
     const { scheduledDate, assignedTo } = body;
     const resolvedWoNumber = woNumber || rows[targetRowIdx]?.[COL_IDX.wo_number] || woId;
     const woName = rows[targetRowIdx]?.[COL_IDX.name] || '';
-    const woIsland = body.island || rows[targetRowIdx]?.[COL_IDX.island] || '';
+    const woIsland = body.island !== undefined
+      ? resolveWorkOrderIsland(String(body.island))
+      : (rows[targetRowIdx]?.[COL_IDX.island] || '');
     const dispatchDate = typeof scheduledDate === 'string' && scheduledDate.includes('T')
       ? scheduledDate.slice(0, 10)
       : scheduledDate;
@@ -665,25 +658,6 @@ export async function PATCH(req: Request) {
           scheduleSyncResult = { status: 'failed', slot_id: slotId, warning: 'Schedule sync failed; see server logs' };
         }
       }
-    }
-
-    // Write-back customer data to Customer DB (fire-and-forget)
-    const custName = body.customerName || body.customer_name;
-    const custPhone = body.contactPhone || body.contact_phone;
-    const custEmail = body.contactEmail || body.contact_email;
-    const custPerson = body.contactPerson || body.contact_person;
-    const custIsland = body.island;
-    const custAddress = body.address;
-    if (custName || custPhone || custEmail) {
-      fireAndForgetCustomerUpdate({
-        name: custName,
-        phone: custPhone,
-        email: custEmail,
-        primaryContact: custPerson,
-        island: custIsland,
-        address: custAddress,
-        source: 'wo_update',
-      });
     }
 
     return NextResponse.json({ ok: true, sheetRow, woId: woId || resolvedWoNumber, schedule_sync: scheduleSyncResult });

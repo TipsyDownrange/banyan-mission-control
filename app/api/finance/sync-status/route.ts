@@ -12,23 +12,24 @@ import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { billcomLogin, getBills } from '@/lib/billcom';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { SWO_COL } from '@/lib/contracts/service-work-orders';
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const WO_TAB = 'Service_Work_Orders';
 const COSTS_TAB = 'Project_Costs';
 
-// WO columns (0-based)
+// Service_Work_Orders column indices come from the shared SWO contract
+// (lib/contracts/service-work-orders.ts) — BAN-179.A canonical layout.
 const WO_COL = {
-  wo_id:           0,
-  name:            2,
-  customer_name:   12,
-  // Invoice columns — AD through AH
-  qbo_invoice_id:  29, // AD
-  invoice_number:  30, // AE
-  invoice_total:   31, // AF
-  invoice_balance: 32, // AG
-  invoice_date:    33, // AH
-};
+  wo_id:           SWO_COL.wo_id,
+  name:            SWO_COL.name,
+  customer_name:   SWO_COL.customer_name,
+  qbo_invoice_id:  SWO_COL.qbo_invoice_id,  // AD
+  invoice_number:  SWO_COL.invoice_number,  // AE
+  invoice_total:   SWO_COL.invoice_total,   // AF
+  invoice_balance: SWO_COL.invoice_balance, // AG
+  invoice_date:    SWO_COL.invoice_date,    // AH
+} as const;
 
 export async function GET() {
   const { allowed } = await checkPermissionServer('finance:view');

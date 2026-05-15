@@ -3,6 +3,8 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { GET_PASS_ON_RATE, getGETRate } from '@/lib/tax-rates';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 const TAB = 'Carls_Method';
@@ -93,6 +95,9 @@ export async function GET(req: Request) {
 
 // POST /api/service/estimate — upsert estimate data for a WO
 export async function POST(req: Request) {
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/estimate');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
+
   try {
     const { woId, data } = await req.json();
     if (!woId) {
@@ -129,6 +134,14 @@ export async function POST(req: Request) {
         requestBody: { values: [[jsonStr, now]] },
       });
     }
+
+    await emitMCEvent({
+      wo_id: woId,
+      event_type: 'ESTIMATE_SAVED',
+      notes: JSON.stringify({ bid_version_id: bidVersionId, row_action: rowIndex === -1 ? 'created' : 'updated' }),
+      submitted_by: typeof data?.updated_by === 'string' ? data.updated_by : '',
+      origin: 'office',
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

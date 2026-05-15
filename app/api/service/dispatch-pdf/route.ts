@@ -4,29 +4,33 @@ import { generateDispatchWOPDF } from '@/lib/pdf-work-order-dispatch';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { isStaging } from '@/lib/env';
+import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
+import { SWO_COL } from '@/lib/contracts/service-work-orders';
 
 const SHEET_ID = getBackendSheetId();
 
-// Column indices in Service_Work_Orders tab (0-based)
+// Service_Work_Orders column indices come from the shared SWO contract
+// (lib/contracts/service-work-orders.ts) — BAN-179.A canonical layout.
 const COL = {
-  wo_id:          0,
-  wo_number:      1,
-  name:           2,
-  description:    3,
-  status:         4,
-  island:         5,
-  address:        7,
-  contact_person: 8,
-  contact_phone:  10,
-  contact_email:  11,
-  assigned_to:    14,
-  scheduled_date: 17,
-  hours_estimated: 19,
-  men_required:   21,
-  comments:       22,
-  folder_url:     23,
-  customer_id:    43, // AR — GC-D053
-};
+  wo_id:           SWO_COL.wo_id,
+  wo_number:       SWO_COL.wo_number,
+  name:            SWO_COL.name,
+  description:     SWO_COL.description,
+  status:          SWO_COL.status,
+  island:          SWO_COL.island,
+  address:         SWO_COL.address,
+  contact_person:  SWO_COL.contact_person,
+  contact_phone:   SWO_COL.contact_phone,
+  contact_email:   SWO_COL.contact_email,
+  assigned_to:     SWO_COL.assigned_to,
+  scheduled_date:  SWO_COL.scheduled_date,
+  hours_estimated: SWO_COL.hours_estimated,
+  men_required:    SWO_COL.men_required,
+  comments:        SWO_COL.comments,
+  folder_url:      SWO_COL.folder_url,
+  customer_id:     SWO_COL.customer_id, // AR — GC-D053
+} as const;
 
 export async function GET(req: Request) {
   try {
@@ -108,6 +112,7 @@ export async function GET(req: Request) {
 
     const pdfBuffer = await generateDispatchWOPDF(dispatchData);
     const filename = `Dispatch-WO-${woNumber}-${dispatchData.scheduled_date || dispatchData.date}.pdf`;
+    const stagingDriveParentId = isStaging() ? resolveStagingDriveParentId() : null;
 
     // Auto-save copy to WO folder in Drive (non-blocking) + shadow dual-write
     try {
@@ -117,12 +122,13 @@ export async function GET(req: Request) {
         const drive = _g.drive({ version: 'v3', auth: driveAuth });
         const { Readable } = await import('stream');
         const folderUrl = g(COL.folder_url);
-        if (folderUrl) {
+        if (folderUrl || isStaging()) {
           const folderId = folderUrl.match(/folders\/([^/?]+)/)?.[1];
-          if (folderId) {
+          const writeFolderId = stagingDriveParentId || folderId;
+          if (writeFolderId) {
             // Primary write to WO folder root
             await drive.files.create({
-              requestBody: { name: filename, parents: [folderId], mimeType: 'application/pdf' },
+              requestBody: { name: filename, parents: [writeFolderId], mimeType: 'application/pdf' },
               media: { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) },
               supportsAllDrives: true,
             }).catch((e: unknown) => console.error('[dispatch-pdf] primary write failed:', e));
@@ -135,7 +141,7 @@ export async function GET(req: Request) {
                 const c = await drive.files.create({ requestBody:{ name, mimeType:'application/vnd.google-apps.folder', parents:[parentId] }, supportsAllDrives:true, fields:'id' });
                 return c.data.id!;
               }
-              const shadowId = await foc('10 - AI Project Documents [Kai]', folderId);
+              const shadowId = await foc('10 - AI Project Documents [Kai]', writeFolderId);
               const sysGenId = await foc('System Generated', shadowId);
               await drive.files.create({
                 requestBody: { name: filename, parents: [sysGenId], mimeType: 'application/pdf' },

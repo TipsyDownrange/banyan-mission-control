@@ -67,11 +67,54 @@ const COL = {
 };
 
 function rowToEvent(row: string[]): Record<string, string> {
-  const obj: Record<string, string> = {};
+  const rawType = row[COL.event_type] || '';
+  const event: Record<string, string> = {
+    id: row[COL.event_id] || '',
+    kID: row[COL.target_kID] || '',
+    type: rawType,
+    rawType,
+    occurredAt: row[COL.event_occurred_at] || '',
+    recordedAt: row[COL.event_recorded_at] || '',
+    performedBy: row[COL.performed_by] || '',
+    recordedBy: row[COL.recorded_by] || '',
+    sourceSystem: row[COL.source_system] || '',
+    evidenceRef: row[COL.evidence_ref] || '',
+    evidenceType: row[COL.evidence_type] || '',
+    location: row[COL.location_group] || '',
+    unit: row[COL.unit_reference] || '',
+    qaStepCode: row[COL.qa_step_code] || '',
+    qaStatus: row[COL.qa_status] || '',
+    issueCategory: row[COL.issue_category] || '',
+    severity: row[COL.severity] || '',
+    blockingFlag: row[COL.blocking_flag] || '',
+    status: row[COL.issue_status] || '',
+    assignedTo: row[COL.assigned_to] || '',
+    assignedRole: row[COL.assigned_role] || '',
+    responsibleParty: row[COL.responsible_party] || '',
+    autoFlag: row[COL.auto_flag] || '',
+    manpowerCount: row[COL.manpower_count] || '',
+    workPerformed: row[COL.work_performed] || '',
+    delaysBlockers: row[COL.delays_blockers] || '',
+    materialsReceived: row[COL.materials_received] || '',
+    inspectionsVisitors: row[COL.inspections_visitors] || '',
+    weatherContext: row[COL.weather_context] || '',
+    note: row[COL.notes] || '',
+    projectId: row[COL.project_id] || '',
+    projectName: row[COL.project_id] || row[COL.target_kID] || '',
+    evidencePhoto: row[COL.evidence_photo] || '',
+    evidenceTimestamp: row[COL.evidence_timestamp] || '',
+    affectedCount: row[COL.affected_count] || '',
+    hoursLost: row[COL.hours_lost] || '',
+    origin: row[COL.origin] || '',
+    fieldIssuePdfRef: row[COL.field_issue_pdf_ref] || '',
+  };
+
+  // Back-compat aliases for existing /api/events consumers that still read the sheet contract.
   for (const [key, idx] of Object.entries(COL)) {
-    obj[key] = row[idx] || '';
+    event[key] = row[idx] || '';
   }
-  return obj;
+
+  return event;
 }
 
 export async function GET(req: Request) {
@@ -93,8 +136,8 @@ export async function GET(req: Request) {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Fetch events + Users_Roles in parallel for name resolution
-    const [res, usersRes] = await Promise.all([
+    // Fetch events + lookup sheets in parallel for display-name resolution
+    const [res, usersRes, coreEntitiesRes, serviceWOsRes] = await Promise.all([
       sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: `${TAB}!A2:AK5000`,
@@ -103,6 +146,14 @@ export async function GET(req: Request) {
         spreadsheetId: SHEET_ID,
         range: 'Users_Roles!A2:D100', // A=user_id, B=name, C=role, D=email
       }).catch(() => ({ data: { values: [] } })), // non-fatal
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Core_Entities!A2:C5000', // A=kID, B=type, C=name
+      }).catch(() => ({ data: { values: [] } })), // non-fatal
+      sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Service_Work_Orders!A2:C5000', // A=wo_id, B=wo_number, C=name
+      }).catch(() => ({ data: { values: [] } })), // non-fatal
     ]);
 
     // Build user ID → name map (also map email → name as fallback)
@@ -110,6 +161,16 @@ export async function GET(req: Request) {
     for (const u of (usersRes.data.values || []) as string[][]) {
       if (u[0] && u[1]) userNameMap[u[0]] = u[1]; // USR-xxx → name
       if (u[3] && u[1]) userNameMap[u[3].toLowerCase()] = u[1]; // email → name
+    }
+
+    // Build project/work-order ID → name map for Event Feed and Issues cards
+    const projectNameMap: Record<string, string> = {};
+    for (const p of (coreEntitiesRes.data.values || []) as string[][]) {
+      if (p[0] && p[2]) projectNameMap[p[0]] = p[2];
+    }
+    for (const wo of (serviceWOsRes.data.values || []) as string[][]) {
+      if (wo[0] && wo[2]) projectNameMap[wo[0]] = wo[2];
+      if (wo[1] && wo[2]) projectNameMap[wo[1]] = wo[2];
     }
 
     const rows = (res.data.values || []) as string[][];
@@ -151,9 +212,15 @@ export async function GET(req: Request) {
     const page = filtered.slice(offset, offset + limit).map(row => {
       const evt = rowToEvent(row);
       // Resolve USR- IDs and emails to display names
-      if (evt.performed_by && userNameMap[evt.performed_by]) evt.performed_by = userNameMap[evt.performed_by];
-      else if (evt.performed_by && userNameMap[evt.performed_by?.toLowerCase()]) evt.performed_by = userNameMap[evt.performed_by.toLowerCase()];
-      if (evt.recorded_by && userNameMap[evt.recorded_by]) evt.recorded_by = userNameMap[evt.recorded_by];
+      if (evt.performedBy && userNameMap[evt.performedBy]) evt.performedBy = userNameMap[evt.performedBy];
+      else if (evt.performedBy && userNameMap[evt.performedBy.toLowerCase()]) evt.performedBy = userNameMap[evt.performedBy.toLowerCase()];
+      if (evt.recordedBy && userNameMap[evt.recordedBy]) evt.recordedBy = userNameMap[evt.recordedBy];
+      else if (evt.recordedBy && userNameMap[evt.recordedBy.toLowerCase()]) evt.recordedBy = userNameMap[evt.recordedBy.toLowerCase()];
+      evt.performed_by = evt.performedBy;
+      evt.recorded_by = evt.recordedBy;
+
+      const resolvedProjectName = projectNameMap[evt.projectId] || projectNameMap[evt.kID] || evt.projectName;
+      evt.projectName = resolvedProjectName;
       return evt;
     });
 

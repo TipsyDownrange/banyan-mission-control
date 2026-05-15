@@ -2,28 +2,28 @@ import { hawaiiToday, hawaiiNow, hawaiiYear2 } from '@/lib/hawaii-time';
 import { NextResponse } from 'next/server';
 import { getGoogleAuth } from '@/lib/gauth';
 import { google } from 'googleapis';
-import { fireAndForgetCustomerUpdate } from '@/lib/updateCustomerRecord';
 import { checkPermission } from '@/lib/permissions';
 import { invalidateCache } from '@/app/api/service/route';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeEmail, normalizeNameForWrite, normalizePhone, resolveWorkOrderIsland } from '@/lib/normalize';
+import {
+  ServiceWOFolderCreationError,
+  StagingDriveFolderConfigError,
+  createWOFolderStructure,
+  requireServiceWOFolderUrl,
+} from '@/lib/drive-wo-folder';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
+
+export { ServiceWOFolderCreationError, StagingDriveFolderConfigError, requireServiceWOFolderUrl };
 
 const BACKEND_SHEET_ID = getBackendSheetId();
 const TAB = 'Service_Work_Orders';
-const BANYAN_DRIVE_ID = '0AKSVpf3AnH7CUk9PVA';
 const SERVICE_WO_NUMBER_PATTERN = /^\d{2}-\d{4}$/;
 
 export class InvalidServiceWONumberError extends Error {
   constructor(value: string) {
     super(`Invalid work order number "${value}". Use the standard YY-#### format, for example 26-0001.`);
     this.name = 'InvalidServiceWONumberError';
-  }
-}
-
-export class ServiceWOFolderCreationError extends Error {
-  constructor(cause?: unknown) {
-    const detail = cause instanceof Error ? ` ${cause.message}` : '';
-    super(`Work order was not created because the Drive folder could not be created.${detail}`);
-    this.name = 'ServiceWOFolderCreationError';
   }
 }
 
@@ -53,120 +53,14 @@ export function nextServiceWONumber(existingNumbers: string[], yearTwoDigit: str
   return `${yearTwoDigit}-${String(nextNum).padStart(4, '0')}`;
 }
 
-export function requireServiceWOFolderUrl(folderUrl: string | null | undefined): string {
-  const normalized = String(folderUrl || '').trim();
-  if (!normalized) throw new ServiceWOFolderCreationError();
-  return normalized;
-}
-
-/**
- * Find or create a folder by name inside a parent, using the Drive API.
- */
-async function findOrCreateFolder(
-  drive: ReturnType<typeof google.drive>,
-  name: string,
-  parentId: string,
-): Promise<string> {
-  const safeName = name.replace(/[^\w\s\-—()]/g, '').trim();
-  const search = await drive.files.list({
-    q: `name = '${safeName.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and '${parentId}' in parents and trashed = false`,
-    driveId: BANYAN_DRIVE_ID,
-    includeItemsFromAllDrives: true,
-    supportsAllDrives: true,
-    corpora: 'drive',
-    fields: 'files(id,name)',
-  });
-  if (search.data.files && search.data.files.length > 0) {
-    return search.data.files[0].id!;
-  }
-  const created = await drive.files.create({
-    requestBody: { name: safeName, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
-    supportsAllDrives: true,
-    fields: 'id',
-  });
-  return created.data.id!;
-}
-
-/**
- * Creates the WO folder structure in BanyanOS shared Drive:
- *   Service / [Island] / WO-[number] — [Customer Name] /
- *     Photos/
- *     Quotes/
- *     Correspondence/
- * Returns the webViewLink of the WO folder.
- */
-async function createWOFolderStructure(
-  woId: string,
-  customerName: string,
-  island: string,
-): Promise<string> {
-  try {
-    const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
-    const drive = google.drive({ version: 'v3', auth });
-
-    // Layer 1: Service folder
-    const serviceFolderId = await findOrCreateFolder(drive, 'Service', BANYAN_DRIVE_ID);
-
-    // Layer 2: Island folder (e.g., "Maui")
-    const islandLabel = island || 'Unassigned';
-    const islandFolderId = await findOrCreateFolder(drive, islandLabel, serviceFolderId);
-
-    // Layer 3: WO folder
-    const woFolderName = `${woId} — ${customerName}`;
-    const woFolderId = await findOrCreateFolder(drive, woFolderName, islandFolderId);
-
-    // Layer 4: Standard subfolders
-    await Promise.all([
-      findOrCreateFolder(drive, 'Photos', woFolderId),
-      findOrCreateFolder(drive, 'Quotes', woFolderId),
-      findOrCreateFolder(drive, 'Correspondence', woFolderId),
-      findOrCreateFolder(drive, 'Field Issues', woFolderId),
-      findOrCreateFolder(drive, 'Daily Reports', woFolderId),
-      findOrCreateFolder(drive, 'Measurements', woFolderId),
-    ]);
-
-    // Layer 4b: Kai shadow folder + subfolders (immutable backup, invisible to users)
-    try {
-      const shadowFolderId = await findOrCreateFolder(drive, '10 - AI Project Documents [Kai]', woFolderId);
-      await Promise.all([
-        findOrCreateFolder(drive, 'Photos', shadowFolderId),
-        findOrCreateFolder(drive, 'Daily Reports', shadowFolderId),
-        findOrCreateFolder(drive, 'Measurements', shadowFolderId),
-        findOrCreateFolder(drive, 'Field Issues', shadowFolderId),
-        findOrCreateFolder(drive, 'System Generated', shadowFolderId),
-      ]);
-    } catch (shadowErr) {
-      console.error('[createWOFolderStructure] shadow folder creation failed (non-fatal):', shadowErr);
-    }
-
-    // Share with @kulaglass.com domain
-    try {
-      await drive.permissions.create({
-        fileId: woFolderId,
-        supportsAllDrives: true,
-        requestBody: { type: 'domain', domain: 'kulaglass.com', role: 'writer' },
-      });
-    } catch { /* non-fatal if already shared via drive inheritance */ }
-
-    // Get the webViewLink
-    const meta = await drive.files.get({
-      fileId: woFolderId,
-      supportsAllDrives: true,
-      fields: 'webViewLink',
-    });
-
-    return meta.data.webViewLink || `https://drive.google.com/drive/folders/${woFolderId}`;
-  } catch (e) {
-    console.error('WO folder creation failed:', e);
-    throw new ServiceWOFolderCreationError(e);
-  }
-}
-
 // POST — create new work order row in backend sheet
 export async function POST(req: Request) {
   // Permission check — wo:create required (Joey, Sean, Jody)
   const { allowed } = await checkPermission(req, 'wo:create');
   if (!allowed) return NextResponse.json({ error: 'Forbidden: wo:create required' }, { status: 403 });
+
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/dispatch');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
 
   try {
     const body = await req.json();
@@ -251,9 +145,21 @@ export async function POST(req: Request) {
       wo = nextServiceWONumber((existingWOs.data.values || []).flat(), yr);
     }
     const woId = buildServiceWOId(wo);
+    const cleanBusinessName = normalizeNameForWrite(String(businessName || ''));
+    const cleanCustomerName = normalizeNameForWrite(String(customerName || ''));
+    const cleanContactPerson = normalizeNameForWrite(String(contactPerson || ''));
+    const cleanContactPhone = normalizePhone(String(contactPhone || ''));
+    const cleanContactEmail = normalizeEmail(String(contactEmail || ''));
+    const cleanContactTitle = normalizeNameForWrite(String(contactTitle || ''));
+    const cleanAddress = normalizeAddressComponent(String(address || ''));
+    const cleanCity = normalizeAddressComponent(String(city || ''));
+    const cleanState = normalizeAddressComponent(String(state || ''));
+    const cleanZip = normalizeAddressComponent(String(zip || ''));
+    const cleanIsland = String(island || '').trim() ? resolveWorkOrderIsland(String(island)) : '';
+    const cleanAreaOfIsland = normalizeAddressComponent(String(areaOfIsland || cleanIsland || cleanCity || ''));
     // Column C (name): use businessName if provided; otherwise derive from customerName + systemType
-    const name = businessName ||
-      (systemType ? `${customerName} — ${systemType}` : customerName);
+    const name = cleanBusinessName ||
+      (systemType ? `${cleanCustomerName} — ${systemType}` : cleanCustomerName);
     const notesStr = [notes, urgency === 'urgent' ? '⚡ URGENT' : ''].filter(Boolean).join(' | ');
 
     // Create Drive folder structure before writing the sheet row. This is fatal:
@@ -261,10 +167,13 @@ export async function POST(req: Request) {
     let folderUrl: string;
     try {
       folderUrl = requireServiceWOFolderUrl(
-        await createWOFolderStructure(woId, customerName || businessName || '', island || city || '')
+        await createWOFolderStructure(woId, cleanCustomerName || cleanBusinessName || '', cleanIsland || cleanCity || '')
       );
     } catch (err) {
-      if (err instanceof ServiceWOFolderCreationError) {
+      if (
+        err instanceof StagingDriveFolderConfigError ||
+        err instanceof ServiceWOFolderCreationError
+      ) {
         return NextResponse.json({ error: err.message }, { status: 502 });
       }
       throw err;
@@ -276,14 +185,14 @@ export async function POST(req: Request) {
       name,           // name
       description,    // description
       'lead',         // status — new WOs start as New Lead
-      island || city || '',                           // island (F)
-      areaOfIsland || island || city || '',            // area_of_island (G)
-      (() => { const parts = [address, city]; if (state || zip) parts.push([state, zip].filter(Boolean).join(' ')); return parts.filter(Boolean).join(', '); })(),  // address (H)
-      contactPerson || '',                             // contact_person (I)
-      contactTitle || '',                              // contact_title (J)
-      contactPhone || '',                              // contact_phone (K)
-      contactEmail || '',                              // contact_email (L)
-      customerName || businessName || '',              // customer_name (M)
+      cleanIsland || cleanCity || '',                  // island (F)
+      cleanAreaOfIsland,                               // area_of_island (G)
+      (() => { const parts = [cleanAddress, cleanCity]; if (cleanState || cleanZip) parts.push([cleanState, cleanZip].filter(Boolean).join(' ')); return parts.filter(Boolean).join(', '); })(),  // address (H)
+      cleanContactPerson,                              // contact_person (I)
+      cleanContactTitle,                               // contact_title (J)
+      cleanContactPhone,                               // contact_phone (K)
+      cleanContactEmail,                               // contact_email (L)
+      cleanCustomerName || cleanBusinessName || '',    // customer_name (M)
       systemType || '',                                // system_type
       assignedTo || '',                                // assigned_to
       today,                                           // date_received
@@ -335,16 +244,6 @@ export async function POST(req: Request) {
     }
 
     invalidateCache();
-
-    // Fire-and-forget customer DB backfeed — never blocks WO creation
-    fireAndForgetCustomerUpdate({
-      name:           customerName || businessName || '',
-      island:         island || city || '',
-      address:        address,
-      city:           city,
-      primaryContact: contactPerson,
-      phone:          contactPhone,
-    });
 
     return NextResponse.json({ ok: true, woId, woNumber: wo, folderUrl });
   } catch (err) {

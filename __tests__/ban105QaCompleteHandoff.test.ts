@@ -21,6 +21,7 @@ jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
 jest.mock('@/lib/backend-config', () => ({ getBackendSheetId: jest.fn(() => 'backend-sheet-test') }));
 jest.mock('@/lib/updateCustomerRecord', () => ({ fireAndForgetCustomerUpdate: jest.fn() }));
 jest.mock('@/lib/normalize', () => ({
+  normalizeAddressComponent: (v: string) => v,
   normalizePhone: (v: string) => v,
   normalizeEmail: (v: string) => v,
   normalizeName: (v: string) => v,
@@ -123,7 +124,7 @@ describe('BAN-105 — qa-complete field-to-office handoff', () => {
   });
 
   // ── 2. qa-complete emits STATUS_CHANGED event with correct values ────────────
-  it('qa-complete transition emits STATUS_CHANGED with new_status work_complete', async () => {
+  it('qa-complete transition emits STAGE_SKIPPED_FORWARD with new_status work_complete', async () => {
     setupSheets('scheduled');
     const { PATCH } = await import('@/app/api/service/update/route');
 
@@ -136,7 +137,7 @@ describe('BAN-105 — qa-complete field-to-office handoff', () => {
 
     expect(mockEmitMCEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        event_type: 'STATUS_CHANGED',
+        event_type: 'STAGE_SKIPPED_FORWARD',
         old_status: 'scheduled',
         new_status: 'work_complete',
         submitted_by: 'field-app-service@internal',
@@ -252,3 +253,5 @@ describe('BAN-105 — qa-complete field-to-office handoff', () => {
     expect(statusWrite?.values?.[0]?.[0]).toBe('work_complete');
   });
 });
+
+export {};

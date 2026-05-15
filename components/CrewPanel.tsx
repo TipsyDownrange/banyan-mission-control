@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { normalizePhone } from '@/lib/normalize';
 import PlacesAutocomplete from '@/components/PlacesAutocomplete';
 
-type CrewMember = {
+export type CrewMember = {
   user_id: string; name: string; role: string;
   email: string; phone: string; island: string;
   personal_email: string; title: string; department: string;
@@ -14,7 +14,17 @@ type CrewMember = {
   authority_level: string; career_track: string;
 };
 
-type Draft = Partial<CrewMember>;
+export type Draft = Partial<CrewMember>;
+export type CrewProfileField = Exclude<keyof CrewMember, 'departments' | 'roles'>;
+
+export function buildCrewUpdatePayload(draft: Draft, dirtyFields: Iterable<CrewProfileField>): Draft {
+  const payload: Draft = {};
+  for (const field of dirtyFields) {
+    if (field === 'user_id') continue;
+    payload[field] = draft[field] ?? '';
+  }
+  return payload;
+}
 
 const ISLAND_COLORS: Record<string, string> = {
   Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
@@ -53,23 +63,58 @@ function CrewDetailPanel({ member, onClose, onSave }: {
 }) {
   const [draft, setDraft] = useState<Draft>({});
   const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [dirtyFields, setDirtyFields] = useState<Set<CrewProfileField>>(() => new Set());
+  const [saveError, setSaveError] = useState('');
+  const dirty = dirtyFields.size > 0;
 
   useEffect(() => {
     setDraft({ ...member });
-    setDirty(false);
+    setDirtyFields(new Set());
+    setSaveError('');
   }, [member]);
 
-  function update(field: keyof CrewMember, value: string) {
+  function update(field: CrewProfileField, value: string) {
     setDraft(prev => ({ ...prev, [field]: value }));
-    setDirty(true);
+    setSaveError('');
+    setDirtyFields(prev => {
+      const next = new Set(prev);
+      const original = member[field] ?? '';
+      if (value === original) next.delete(field);
+      else next.add(field);
+      return next;
+    });
+  }
+
+  function discardDraft() {
+    setDraft({ ...member });
+    setDirtyFields(new Set());
+    setSaveError('');
+  }
+
+  function requestClose() {
+    if (saving) return;
+    if (dirty) {
+      const ok = typeof window !== 'undefined'
+        ? window.confirm('You have unsaved crew profile changes. Discard them and close?')
+        : true;
+      if (!ok) return;
+      discardDraft();
+    }
+    onClose();
   }
 
   async function handleSave() {
+    if (!dirty || saving) return;
     setSaving(true);
-    await onSave(member.user_id, draft);
-    setSaving(false);
-    setDirty(false);
+    setSaveError('');
+    try {
+      await onSave(member.user_id, buildCrewUpdatePayload(draft, dirtyFields));
+      setDirtyFields(new Set());
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save crew profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const color = avatarColor(draft.department || member.department, draft.island || member.island);
@@ -77,7 +122,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
 
   return (
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 400, backdropFilter: 'blur(2px)' }} />
+      <div onClick={requestClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 400, backdropFilter: 'blur(2px)' }} />
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 401,
         height: '90vh', background: '#f8fafc',
@@ -101,14 +146,24 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {dirty && (
-              <button onClick={handleSave} disabled={saving}
-                style={{ padding: '7px 16px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
-                {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-            )}
-            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={requestClose}
+              disabled={saving}
+              style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!dirty || saving}
+              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!dirty || saving) ? '#94a3b8' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+            <button onClick={requestClose} disabled={saving} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 18, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: saving ? 0.6 : 1 }}>×</button>
           </div>
         </div>
 
@@ -140,8 +195,8 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                           return (
                             <button key={d} type="button" onClick={() => {
                               const next = active ? depts.filter((x: string) => x !== d) : [...depts, d];
-                              update('departments_multi' as keyof typeof draft, next.join(','));
-                              update('department' as keyof typeof draft, next[0] || '');
+                              update('departments_multi', next.join(','));
+                              update('department', next[0] || '');
                             }} style={{
                               padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer',
                               border: active ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
@@ -178,14 +233,14 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10, padding: '12px 14px', background: 'rgba(99,102,241,0.04)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.12)' }}>
                   <div>
                     <label style={{ ...LBL, color: '#4338ca' }}>Authority Level</label>
-                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.authority_level || ''} onChange={e => update('authority_level' as keyof CrewMember, e.target.value)}>
+                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.authority_level || ''} onChange={e => update('authority_level', e.target.value)}>
                       <option value="">Select…</option>
                       {['Executive','Management','Superintendent','Admin','Field'].map(a => <option key={a}>{a}</option>)}
                     </select>
                   </div>
                   <div>
                     <label style={{ ...LBL, color: '#4338ca' }}>Career Track</label>
-                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.career_track || ''} onChange={e => update('career_track' as keyof CrewMember, e.target.value)}>
+                    <select style={{ ...INP, borderColor: 'rgba(99,102,241,0.25)' }} value={draft.career_track || ''} onChange={e => update('career_track', e.target.value)}>
                       <option value="">Select…</option>
                       {['PM','Estimating','Admin','Field','Field-to-Office'].map(t => <option key={t}>{t}</option>)}
                     </select>
@@ -246,19 +301,33 @@ function CrewDetailPanel({ member, onClose, onSave }: {
           </div>
         </div>
 
-        {/* Bottom save bar */}
-        {dirty && (
-          <div style={{ flexShrink: 0, padding: '12px 20px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <button onClick={() => { setDraft({ ...member }); setDirty(false); }}
-              style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              Discard
+        {/* Explicit save/discard gate — profile edits stay local until Save. */}
+        <div style={{ flexShrink: 0, padding: '12px 20px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+            {saveError && (
+              <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{saveError}</span>
+            )}
+            {!saveError && (
+              <span style={{ marginRight: 'auto', fontSize: 11, color: dirty ? '#b45309' : '#64748b', fontWeight: 700 }}>
+                {dirty ? 'Unsaved crew profile changes are local until you Save.' : 'Crew profile edits are local until you Save.'}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={discardDraft}
+              disabled={!dirty || saving}
+              style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: (!dirty || saving) ? 'default' : 'pointer', opacity: (!dirty || saving) ? 0.5 : 1 }}
+            >
+              Discard Changes
             </button>
-            <button onClick={handleSave} disabled={saving}
-              style={{ padding: '10px 24px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? '#94a3b8' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
-              {saving ? 'Saving…' : '✓ Save All Changes'}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!dirty || saving}
+              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!dirty || saving) ? '#94a3b8' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
-        )}
       </div>
     </>
   );
@@ -445,16 +514,17 @@ export default function CrewPanel() {
   }, []);
 
   const handleSave = useCallback(async (userId: string, draft: Draft) => {
+    const res = await fetch('/api/crew/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, ...draft }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to save crew profile. Please try again.');
+    }
     setCrew(prev => prev.map(m => m.user_id === userId ? { ...m, ...draft } as CrewMember : m));
-    try {
-      await fetch('/api/crew/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, ...draft }),
-      });
-      // Refresh selected
-      setSelected(prev => prev?.user_id === userId ? { ...prev, ...draft } as CrewMember : prev);
-    } catch { /* optimistic stays */ }
+    setSelected(prev => prev?.user_id === userId ? { ...prev, ...draft } as CrewMember : prev);
   }, []);
 
   const islands = ['All', 'Oahu', 'Maui', 'Kauai', 'Hawaii'];

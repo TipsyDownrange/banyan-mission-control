@@ -5,6 +5,7 @@ import {
   executeOrganizationMerge,
   getOrganizationGovernanceSheets,
 } from '@/lib/organizationGovernance';
+import { emitMCEvent } from '@/lib/events';
 
 function canUseOrganizations(session: { user?: { email?: string | null } } | null) {
   return !!session?.user?.email?.endsWith('@kulaglass.com');
@@ -37,13 +38,24 @@ export async function POST(req: Request) {
     if (body.preview_confirmed !== true) {
       return NextResponse.json({ error: 'Merge preview confirmation required before execution.' }, { status: 400 });
     }
+    const sourceOrgId = String(body.source_org_id || '');
+    const survivorOrgId = String(body.survivor_org_id || '');
     const result = await executeOrganizationMerge(
       getOrganizationGovernanceSheets(),
-      String(body.source_org_id || ''),
-      String(body.survivor_org_id || ''),
+      sourceOrgId,
+      survivorOrgId,
       session?.user?.email || 'system',
       String(body.notes || ''),
     );
+    await emitMCEvent({
+      entity_kid: survivorOrgId,
+      entity_type: 'organization',
+      event_type: 'ORG_MERGED',
+      submitted_by: session?.user?.email || undefined,
+      origin: 'office',
+      notes: `merged ${sourceOrgId} → ${survivorOrgId}`,
+      rationale: String(body.notes || ''),
+    });
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

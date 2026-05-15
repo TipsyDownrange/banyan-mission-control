@@ -15,6 +15,8 @@ import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import { normalizeAddressComponent, normalizeEmail, normalizeIsland, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -238,12 +240,12 @@ export async function POST(req: Request) {
   const sheets = google.sheets({ version: 'v4', auth });
   const now = new Date().toISOString();
   const orgId = 'org_' + Math.random().toString(36).slice(2,18);
-  const cleanName = name.trim();
-  const cleanContactName = (contact_name || '').trim();
-  const cleanPhone = (contact_phone || '').trim();
-  const cleanEmail = (contact_email || '').trim();
-  const cleanAddress = (address || '').trim();
-  const cleanIsland = (island || '').trim();
+  const cleanName = normalizeNameForWrite(name);
+  const cleanContactName = normalizeNameForWrite(String(contact_name || ''));
+  const cleanPhone = normalizePhone(String(contact_phone || ''));
+  const cleanEmail = normalizeEmail(String(contact_email || ''));
+  const cleanAddress = normalizeAddressComponent(String(address || ''));
+  const cleanIsland = String(island || '').trim() ? normalizeIsland(String(island)) : '';
   const cleanNotes = (notes || '').trim();
   const cleanSource = (source || 'MANUAL_ENTRY').trim() || session.user.email || 'MANUAL_ENTRY';
 
@@ -366,6 +368,15 @@ export async function POST(req: Request) {
     island: cleanIsland,
     woCount: 0,
   };
+
+  await emitMCEvent({
+    entity_kid: orgId,
+    entity_type: 'organization',
+    event_type: 'ORG_CREATED',
+    submitted_by: session.user.email || undefined,
+    origin: 'office',
+    notes: cleanName,
+  });
 
   return NextResponse.json({ ok: true, org_id: orgId, customer_id: customerId, contact_id: contactId, site_id: siteId, organization });
 }

@@ -8,6 +8,8 @@ import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { ORGANIZATION_TYPES } from '@/lib/organization-types';
+import { normalizeIsland, normalizeNameForWrite } from '@/lib/normalize';
+import { emitMCEvent } from '@/lib/events';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -92,9 +94,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
     const COL: Record<string,number> = { name:1, types:2, entity_type:3, default_island:4, tax_id:5, payment_terms:6, avg_days_to_pay:7, notes:8, status:12 };
     for (const [k,v] of Object.entries(body)) {
       const col = COL[k];
-      if (col !== undefined) updates.push({ range:`Organizations!${String.fromCharCode(65+col)}${rowNum}`, values:[[Array.isArray(v)?v.join(','):String(v)]] });
+      if (col !== undefined) {
+        let value = Array.isArray(v) ? v.join(',') : String(v);
+        if (k === 'name') value = normalizeNameForWrite(value);
+        if (k === 'default_island') value = value.trim() ? normalizeIsland(value) : '';
+        if (['tax_id', 'payment_terms', 'avg_days_to_pay', 'notes'].includes(k)) value = value.trim();
+        updates.push({ range:`Organizations!${String.fromCharCode(65+col)}${rowNum}`, values:[[value]] });
+      }
     }
     await sheets.spreadsheets.values.batchUpdate({ spreadsheetId: SHEET_ID, requestBody: { valueInputOption:'USER_ENTERED', data: updates } });
+    await emitMCEvent({
+      entity_kid: orgId,
+      entity_type: 'organization',
+      event_type: 'ORG_UPDATED',
+      submitted_by: session.user.email || undefined,
+      origin: 'office',
+      notes: Object.keys(body).filter(k => COL[k] !== undefined).join(','),
+    });
     return NextResponse.json({ ok: true });
   } catch (err) { return NextResponse.json({ error: String(err) }, { status: 500 }); }
 }

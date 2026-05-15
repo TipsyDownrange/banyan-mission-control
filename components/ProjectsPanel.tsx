@@ -4,11 +4,13 @@ import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
 import ActivityTimeline from '@/components/ActivityTimeline';
+import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
   island: string; eventCount: number; issues: number;
 };
+type WorkRecordProject = { work_record_id: string; kid: string; name: string; status: string; assigned_user_id?: string | null; created_at?: string };
 type Submittal = Record<string, string>;
 type CO = Record<string, string>;
 type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
@@ -95,7 +97,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -123,6 +125,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'submittals', label: `Submittals (${submittals.length})` },
     { key: 'rfis', label: `RFIs (${rfis.length})` },
     { key: 'cos', label: `Change Orders (${cos.length})` },
+    { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'budget', label: 'Budget' },
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
@@ -146,8 +149,8 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(15,23,42,0.5)', display: 'flex', justifyContent: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 1100, height: '100dvh', background: '#f8fafc', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(15,23,42,0.5)', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 1100, height: '100%', background: '#f8fafc', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}>
         {/* Header */}
         <div style={{ background: 'linear-gradient(135deg, #071722, #0c2330)', padding: '20px 28px', position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -276,6 +279,14 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                 </div>
               )}
 
+              {activeTab === 'pay-apps' && (
+                <BuildQueuePlaceholder
+                  surfaceName="Pay Apps"
+                  specDate={null}
+                  buildQueueStatus="BQS spec pending"
+                />
+              )}
+
               {activeTab === 'budget' && (
                 <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
                   Budget data will be available once Schedule of Values is populated for this project.
@@ -310,6 +321,7 @@ export default function ProjectsPanel({ onNavigate }: Props) {
   const [installSummary, setInstallSummary] = useState<InstallSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [workRecordProjects, setWorkRecordProjects] = useState<WorkRecordProject[]>([]);
   const [filterIsland, setFilterIsland] = useState('All');
   const [filterPM, setFilterPM] = useState('All');
   const [showHistorical, setShowHistorical] = useState(false);
@@ -318,11 +330,13 @@ export default function ProjectsPanel({ onNavigate }: Props) {
   useEffect(() => {
     Promise.all([
       fetch('/api/projects').then(r => r.json()),
+      fetch('/api/work-records?work_type=project&limit=100').then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/pm/submittals').then(r => r.json()).catch(() => ({ submittals: [] })),
       fetch('/api/pm/change-orders').then(r => r.json()).catch(() => ({ cos: [] })),
       fetch('/api/install').then(r => r.json()).catch(() => ({ summary: [] })),
-    ]).then(([pData, sData, cData, iData]) => {
+    ]).then(([pData, wrData, sData, cData, iData]) => {
       setProjects(pData.projects || []);
+      setWorkRecordProjects(wrData.data || []);
       setSubmittals(sData.submittals || []);
       setCos(cData.cos || []);
       setInstallSummary(iData.summary || []);
@@ -407,6 +421,29 @@ export default function ProjectsPanel({ onNavigate }: Props) {
         onChange={e => setSearch(e.target.value)}
         style={{ width: '100%', padding: '12px 18px', borderRadius: 14, border: '1.5px solid #e2e8f0', fontSize: 14, marginBottom: 16, outline: 'none', background: 'white', boxSizing: 'border-box' }}
       />
+
+      <section style={{ marginBottom: 18, padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 8px 22px rgba(15,23,42,0.04)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>BG1 Work Records</div>
+            <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Read-only project records from Postgres (`work_records where work_type='project'`).</div>
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#334155' }}>{workRecordProjects.length} records</span>
+        </div>
+        {workRecordProjects.length === 0 ? (
+          <div style={{ fontSize: 13, color: '#94a3b8' }}>No BG1 project work records yet.</div>
+        ) : (
+          <div style={{ display: 'grid', gap: 8 }}>
+            {workRecordProjects.slice(0, 12).map(wr => (
+              <div key={wr.work_record_id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px', gap: 12, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: '#f8fafc', border: '1px solid #eef2f7' }}>
+                <div style={{ fontFamily: 'monospace', fontSize: 12, color: '#64748b' }}>{wr.kid}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>{wr.name}</div>
+                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0f766e' }}>{wr.status}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Project Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>

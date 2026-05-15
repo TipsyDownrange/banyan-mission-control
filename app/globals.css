@@ -93,3 +93,62 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
+
+@layer components {
+  @media (max-width: 1100px) {
+    .war-room-header,
+    .war-room-command-grid,
+    .war-room-catalog-grid,
+    .war-room-bottom-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .war-room-kpis,
+    .war-room-signal-strip,
+    .war-room-crew-grid,
+    .war-room-mission-grid,
+    .war-room-column-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .war-room-shell {
+      display: block !important;
+    }
+
+    .war-room-nav {
+      width: 100% !important;
+      border-right: 0 !important;
+      border-bottom: 1px solid rgba(148,163,184,0.14) !important;
+      flex-direction: row !important;
+      overflow-x: auto !important;
+      padding: 12px !important;
+    }
+
+    .war-room-nav > div:first-child,
+    .war-room-nav > div:last-child {
+      display: none !important;
+    }
+
+    .war-room-nav button {
+      min-width: 150px !important;
+    }
+
+    .war-room-main {
+      padding: 14px !important;
+    }
+
+    .war-room-kpis,
+    .war-room-signal-strip,
+    .war-room-crew-grid,
+    .war-room-two-grid,
+    .war-room-mission-grid,
+    .war-room-agent-grid,
+    .war-room-selected-grid,
+    .war-room-column-grid,
+    .war-room-bottom-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}

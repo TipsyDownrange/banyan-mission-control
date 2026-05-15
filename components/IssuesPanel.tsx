@@ -69,7 +69,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
   const [assignOverrides, setAssignOverrides] = useState<Record<string, string>>({});
 
   const fetchIssues = useCallback(() => {
-    fetch('/api/events?type=FIELD_ISSUE&limit=200')
+    fetch('/api/events?event_type=FIELD_ISSUE&limit=200')
       .then(r => r.json())
       .then(d => { setIssues(d.events || []); setLoading(false); })
       .catch(e => { setError(String(e)); setLoading(false); });

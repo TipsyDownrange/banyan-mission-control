@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { emailSkipReason } from '@/lib/env';
 
 /** RFC 2047 encode a header value so non-ASCII characters survive SMTP */
 function rfc2047Encode(text: string): string {
@@ -14,6 +15,15 @@ export async function POST(req: Request) {
 
     if (!delegateEmail) return NextResponse.json({ error: 'No email for delegate' }, { status: 400 });
     if (!messageId) return NextResponse.json({ error: 'No messageId' }, { status: 400 });
+
+    // BAN-170: never forward inbox-delegate emails from staging or when the
+    // dispatch-email kill switch is on. Returning ok:true with skipped:true
+    // keeps the UI responsive without delivering mail.
+    const skip = emailSkipReason();
+    if (skip) {
+      console.log('[inbox/delegate] skipped (staging/kill-switch):', { reason: skip, delegateEmail });
+      return NextResponse.json({ ok: true, skipped: true, skip_reason: skip, to: delegateTo, email: delegateEmail });
+    }
 
     const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_SA_KEY_B64!, 'base64').toString());
     const auth = new google.auth.JWT({

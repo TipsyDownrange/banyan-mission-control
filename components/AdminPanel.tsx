@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import BuildQueuePlaceholder from './BuildQueuePlaceholder';
 
 type Section = 'wip' | 'financials' | 'vendors' | 'compliance' | 'hr' | 'safety' | 'fleet';
 
@@ -344,12 +345,13 @@ function ComingSoonPanel({ section }: { section: Section }) {
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>{meta.title}</h1>
         <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{meta.subtitle}</p>
       </div>
-      <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: '60px 40px', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>{meta.icon}</div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{meta.title} — In Build Queue</div>
-        <div style={{ fontSize: 14, color: '#64748b', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>{meta.subtitle}.</div>
-        <div style={{ marginTop: 20, fontSize: 12, color: '#94a3b8' }}>Architecture specced April 4, 2026 · Build scheduled</div>
-      </div>
+      <BuildQueuePlaceholder
+        surfaceName={meta.title}
+        specDate="April 4, 2026"
+        buildQueueStatus="Build scheduled"
+        description={meta.subtitle}
+        icon={meta.icon}
+      />
     </div>
   );
 }

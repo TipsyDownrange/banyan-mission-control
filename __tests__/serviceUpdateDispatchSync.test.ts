@@ -15,6 +15,7 @@ jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
 jest.mock('@/lib/backend-config', () => ({ getBackendSheetId: jest.fn(() => 'backend-sheet-test') }));
 jest.mock('@/lib/updateCustomerRecord', () => ({ fireAndForgetCustomerUpdate: jest.fn() }));
 jest.mock('@/lib/normalize', () => ({
+  normalizeAddressComponent: (v: string) => v,
   normalizePhone: (v: string) => v,
   normalizeEmail: (v: string) => v,
   normalizeName: (v: string) => v,
@@ -200,6 +201,23 @@ describe('service/update — Dispatch_Schedule A:S sync (BAN-42 Gate 2)', () => 
         (c[0] as { range: string }).range.includes('Dispatch_Schedule!A2:S5000')
     );
     expect(dispatchRead).toBeDefined();
+  });
+
+  it('does not backfeed WO snapshot identity into Customers on update', async () => {
+    setupSheets();
+    const { fireAndForgetCustomerUpdate } = jest.requireMock('@/lib/updateCustomerRecord') as {
+      fireAndForgetCustomerUpdate: jest.Mock;
+    };
+    const { PATCH } = await import('@/app/api/service/update/route');
+
+    const res = await PATCH(makeRequest(baseBody({
+      customer_name: 'ACME Corp',
+      contact_phone: '(808) 555-0199',
+      address: 'WO Jobsite Address',
+    })));
+
+    expect(res.status).toBe(200);
+    expect(fireAndForgetCustomerUpdate).not.toHaveBeenCalled();
   });
 
   // ── 4. Updates an existing A:S row without truncating Field App columns ────

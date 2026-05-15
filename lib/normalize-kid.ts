@@ -7,14 +7,16 @@
  *   - Core_Entities.kID = "PRJ-24-0010"
  *   - Service_Work_Orders.wo_number = "26-8289"
  *   - Service_Work_Orders.wo_id = "WO-26-8289"
+ *   - Dispatch_Schedule (service-prefixed) = "SVC-WO-26-8289" or "SVC-26-8289"
  *
  * Solution: strip ALL known prefixes before comparing.
- * "WO-26-8289" === "26-8289" === strip("WO-26-8289")
+ * "WO-26-8289" === "26-8289" === "SVC-WO-26-8289" === "SVC-26-8289"
  */
 
 export function normalizeKID(kid: string): string {
   if (!kid) return '';
   return kid
+    .replace(/^SVC-/i, '')
     .replace(/^WO-/i, '')
     .replace(/^PRJ-/i, '')
     .replace(/^SRV-/i, '')
