@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
+import { countOpenFieldIssues } from '@/lib/field-issues';
 
 type Project = { kID: string; name: string; pm: string; island: string; issues: number; eventCount: number };
-type Event = { id: string; kID: string; projectName: string; type: string; occurredAt: string; recordedBy: string; note: string; location: string };
+type Event = { id: string; kID: string; projectName: string; type: string; occurredAt: string; recordedBy: string; note: string; location: string; status?: string };
 type SubmittalSummary = { total: number; pending: number; approved: number; overdue: number };
 type COSummary = { total: number; pending: number; approved: number; totalExposure: number };
 
@@ -49,6 +50,7 @@ function fmtKpi(n: number) {
 export default function OverviewPanel() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [fieldIssues, setFieldIssues] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [submittals, setSubmittals] = useState<SubmittalSummary>({ total: 0, pending: 0, approved: 0, overdue: 0 });
   const [cos, setCos] = useState<COSummary>({ total: 0, pending: 0, approved: 0, totalExposure: 0 });
@@ -60,11 +62,13 @@ export default function OverviewPanel() {
     Promise.all([
       fetch('/api/projects').then(r => r.json()),
       fetch('/api/events?limit=20').then(r => r.json()),
+      fetch('/api/events?event_type=FIELD_ISSUE&limit=200').then(r => r.json()),
       fetch('/api/crew').then(r => r.json()).catch(() => ({ crew: [], all: [] })),
       fetch('/api/dispatch-schedule?days=1').then(r => r.json()).catch(() => ({ slots: [] })),
-    ]).then(([pData, eData, cData, dData]) => {
+    ]).then(([pData, eData, issueData, cData, dData]) => {
       setProjects(pData.projects || []);
       setEvents(eData.events || []);
+      setFieldIssues(issueData.events || []);
       
       // Count dispatched crew today
       const todaySlots = (dData.slots || []).filter((s: Record<string, string>) => {
@@ -104,7 +108,7 @@ export default function OverviewPanel() {
   }, []);
 
   // Build KPIs
-  const totalIssues = projects.reduce((s, p) => s + p.issues, 0);
+  const totalIssues = countOpenFieldIssues(fieldIssues);
   const byIsland = projects.reduce((acc, p) => { acc[p.island] = (acc[p.island] || 0) + 1; return acc; }, {} as Record<string, number>);
   const utilizationPct = crewTotal > 0 ? Math.round((crewDeployed / crewTotal) * 100) : 0;
 
