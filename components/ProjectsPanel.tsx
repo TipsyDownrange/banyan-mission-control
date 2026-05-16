@@ -5,6 +5,7 @@ import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
 import ActivityTimeline from '@/components/ActivityTimeline';
 import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
+import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -13,6 +14,7 @@ type Project = {
 type WorkRecordProject = { work_record_id: string; kid: string; name: string; status: string; assigned_user_id?: string | null; created_at?: string };
 type Submittal = Record<string, string>;
 type CO = Record<string, string>;
+type SOVLine = Record<string, string>;
 type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
 
 const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e' };
@@ -101,6 +103,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
+  const [sovLines, setSovLines] = useState<SOVLine[]>([]);
   const [install, setInstall] = useState<{ items: Record<string, string>[]; summary: InstallSummary[] }>({ items: [], summary: [] });
   const [loading, setLoading] = useState(true);
 
@@ -110,11 +113,13 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
       fetch(`/api/pm/submittals?kID=${project.kID}`).then(r => r.json()).catch(() => ({ submittals: [] })),
       fetch(`/api/pm/rfi?kID=${project.kID}`).then(r => r.json()).catch(() => ({ rfis: [] })),
       fetch(`/api/pm/change-orders?kID=${project.kID}`).then(r => r.json()).catch(() => ({ cos: [] })),
+      fetch(`/api/pm/sov?kID=${project.kID}`).then(r => r.json()).catch(() => ({ sov: [] })),
       fetch(`/api/install?kID=${project.kID}`).then(r => r.json()).catch(() => ({ items: [], summary: [] })),
-    ]).then(([sData, rData, cData, iData]) => {
+    ]).then(([sData, rData, cData, sovData, iData]) => {
       setSubmittals(sData.submittals || []);
       setRfis(rData.rfis || []);
       setCos(cData.cos || []);
+      setSovLines(sovData.sov || []);
       setInstall(iData);
       setLoading(false);
     });
@@ -147,6 +152,8 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     const s = STATUS_COLOR[status] || { bg: '#f8fafc', color: '#64748b' };
     return <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}22` }}>{(status || 'PENDING').replace(/_/g, ' ')}</span>;
   };
+
+  const sovSummary = summarizeSOV(sovLines);
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(15,23,42,0.5)', display: 'flex', justifyContent: 'center' }}>
@@ -192,6 +199,30 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
             <>
               {activeTab === 'overview' && (
                 <div>
+                  <div style={{ background: 'white', borderRadius: 18, border: '1px solid #e2e8f0', padding: '18px 20px', marginBottom: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>Financial Summary</div>
+                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>SOV rollup for contract value, billing progress, retainage, and balance to finish.</div>
+                      </div>
+                      <button onClick={() => setActiveTab('pay-apps')} style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', borderRadius: 999, padding: '7px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Pay Apps →</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+                      {[
+                        { label: 'Total Contract', value: formatCurrency(sovSummary.totalContract), sub: `${sovSummary.lineCount} SOV line${sovSummary.lineCount === 1 ? '' : 's'}` },
+                        { label: 'Billed To Date', value: formatCurrency(sovSummary.billedToDate), sub: `${sovSummary.percentComplete}% complete` },
+                        { label: 'Retainage Held', value: formatCurrency(sovSummary.retainageHeld), sub: 'From line retainage %' },
+                        { label: 'This Period', value: formatCurrency(sovSummary.thisPeriod), sub: 'Current pay period' },
+                        { label: 'Balance To Finish', value: formatCurrency(sovSummary.balanceToFinish), sub: 'Contract less billed' },
+                      ].map(k => (
+                        <div key={k.label} style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 14px' }}>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.label}</div>
+                          <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 5 }}>{k.value}</div>
+                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{k.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
                     {[
                       { label: 'Submittals', value: submittals.length, sub: `${submittals.filter(s => ['APPROVED'].includes(s.status)).length} approved` },

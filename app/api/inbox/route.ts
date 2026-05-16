@@ -1,24 +1,10 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth, getSSToken } from '@/lib/gauth';
+import { classifyEmail } from '@/lib/inbox/classify-email';
 
 const USER = 'sean@kulaglass.com';
 const BID_LOG_SHEET = '6073963369156484';
-
-function classifyEmail(subject: string, sender: string, snippet: string) {
-  const s = (subject + ' ' + snippet + ' ' + sender).toLowerCase();
-  if (s.includes('invitation to bid') || s.includes('bid invite') || s.includes('rfp') || s.includes('bid package') || (s.includes('bid') && s.includes('due')))
-    return { category: 'bid_invite', priority: 'medium', kaiNote: 'New bid opportunity — review scope and assign to estimator.' };
-  if (s.includes('pcd') || s.includes('change order') || s.includes('change notice') || s.includes('pci') || s.includes('bulletin'))
-    return { category: 'change_order', priority: 'high', kaiNote: 'Change order or design change — pricing response likely required.' };
-  if (s.includes('payment') || s.includes('pay app') || s.includes('invoice') || s.includes('disbursed') || s.includes('bill.com'))
-    return { category: 'payment', priority: 'medium', kaiNote: 'Payment or billing action item.' };
-  if (s.includes('quote') || s.includes('lead time') || (s.includes('re:') && (s.includes('glass') || s.includes('storefront'))))
-    return { category: 'vendor_quote', priority: 'low', kaiNote: 'Vendor quote — file or forward to PM.' };
-  if (sender.includes('kulaglass.com'))
-    return { category: 'internal', priority: 'medium', kaiNote: 'Internal forward — review and action or delegate.' };
-  return { category: 'other', priority: 'low', kaiNote: 'Review and categorize manually.' };
-}
 
 function extractDueDate(subject: string, snippet: string): string | null {
   const m = (subject + ' ' + snippet).match(/(?:due|deadline)[:\s]+([A-Za-z]+\.?\s+\d{1,2}(?:,?\s+\d{4})?)/i)
