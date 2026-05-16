@@ -11,4 +11,14 @@ describe('project detail sidebar navigation regression', () => {
     expect(source).toContain("position: 'absolute', inset: 0");
     expect(source).not.toContain("position: 'fixed', inset: 0, zIndex: 100");
   });
+
+  it('opens project detail on Overview so the financial summary is visible by default', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'components', 'ProjectsPanel.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview')");
+  });
+
 });
