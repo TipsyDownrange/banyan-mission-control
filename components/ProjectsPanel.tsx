@@ -4,6 +4,7 @@ import DashboardHeader, { KPI, ActionItem } from './DashboardHeader';
 import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
 import ActivityTimeline from '@/components/ActivityTimeline';
+import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -96,7 +97,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'budget'|'work-breakdown'|'matrix'|'activity'>('work-breakdown');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -124,6 +125,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'submittals', label: `Submittals (${submittals.length})` },
     { key: 'rfis', label: `RFIs (${rfis.length})` },
     { key: 'cos', label: `Change Orders (${cos.length})` },
+    { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'budget', label: 'Budget' },
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
@@ -275,6 +277,14 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                     </div>
                   )}
                 </div>
+              )}
+
+              {activeTab === 'pay-apps' && (
+                <BuildQueuePlaceholder
+                  surfaceName="Pay Apps"
+                  specDate={null}
+                  buildQueueStatus="BQS spec pending"
+                />
               )}
 
               {activeTab === 'budget' && (
