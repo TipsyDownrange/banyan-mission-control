@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import { countOpenFieldIssues, isOpenFieldIssue } from '@/lib/field-issues';
 
 type Issue = {
   id: string; kID: string; projectName: string; type: string;
@@ -100,16 +101,16 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
 
   // Filter
   const filteredIssues = sortedIssues.filter(issue => {
-    if (filter === 'open') return issue.status !== 'RESOLVED';
-    if (filter === 'resolved') return issue.status === 'RESOLVED';
+    if (filter === 'open') return isOpenFieldIssue(issue);
+    if (filter === 'resolved') return !isOpenFieldIssue(issue);
     if (filter === 'blocking') return issue.blocking;
     return true;
   });
 
   const counts = {
     all: enrichedIssues.length,
-    open: enrichedIssues.filter(i => i.status !== 'RESOLVED').length,
-    resolved: enrichedIssues.filter(i => i.status === 'RESOLVED').length,
+    open: countOpenFieldIssues(enrichedIssues),
+    resolved: enrichedIssues.filter(i => !isOpenFieldIssue(i)).length,
     blocking: enrichedIssues.filter(i => i.blocking).length,
   };
 
