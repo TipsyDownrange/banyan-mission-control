@@ -25,9 +25,13 @@ function normalizeHeader(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, '_');
 }
 
-function resolveRequiredHeader(headers: string[], field: string, aliases: string[] = []) {
+function resolveHeader(headers: string[], field: string, aliases: string[] = []) {
   const wanted = [field, ...aliases].map(normalizeHeader);
-  const index = headers.findIndex((header) => wanted.includes(normalizeHeader(header)));
+  return headers.findIndex((header) => wanted.includes(normalizeHeader(header)));
+}
+
+function resolveRequiredHeader(headers: string[], field: string, aliases: string[] = []) {
+  const index = resolveHeader(headers, field, aliases);
   if (index === -1) {
     throw new Error(
       `Users_Roles is missing required column "${field}". Headers found: ${headers.join(', ')}`
@@ -55,7 +59,9 @@ async function fetchUsersFresh(): Promise<UserRecord[]> {
   const emailIdx = resolveRequiredHeader(headers, 'email');
   const roleIdx = resolveRequiredHeader(headers, 'role');
   const islandIdx = resolveRequiredHeader(headers, 'island');
-  const statusIdx = resolveRequiredHeader(headers, 'status');
+  // Production Users_Roles currently has no status column. Treat status as optional and default active
+  // so user hydration / preview-as does not fail closed for the whole app.
+  const statusIdx = resolveHeader(headers, 'status');
 
   return rows
     .slice(1)
@@ -63,7 +69,7 @@ async function fetchUsersFresh(): Promise<UserRecord[]> {
     .map((row) => {
       const display_name = String(row[displayNameIdx] || '').trim();
       const email = String(row[emailIdx] || '').trim().toLowerCase();
-      const status = String(row[statusIdx] || '').trim();
+      const status = statusIdx === -1 ? 'active' : String(row[statusIdx] || '').trim() || 'active';
 
       return {
         user_id: String(row[userIdIdx] || '').trim(),

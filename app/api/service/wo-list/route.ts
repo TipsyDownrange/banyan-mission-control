@@ -31,10 +31,31 @@ const COL = {
 
 const TERMINAL_STATUSES = new Set(['closed', 'lost', 'completed', 'rejected']);
 
-export async function GET() {
+function normalizeSearch(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function matchesSearch(workOrder: WorkOrder, search: string) {
+  if (!search) return true;
+  const haystack = normalizeSearch([
+    workOrder.id,
+    workOrder.name,
+    workOrder.island,
+    workOrder.status,
+    workOrder.contact,
+  ].filter(Boolean).join(' '));
+  return haystack.includes(search);
+}
+
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const search = normalizeSearch(
+      searchParams.get('search') || searchParams.get('q') || searchParams.get('customer') || ''
+    );
+
     if (shouldReadServiceWorkOrdersFromPostgres()) {
-      const workOrders = await loadWorkOrderPickerFromPostgresShadow();
+      const workOrders = (await loadWorkOrderPickerFromPostgresShadow()).filter((wo) => matchesSearch(wo, search));
       return NextResponse.json({ workOrders, source: 'postgres_shadow' });
     }
 
@@ -76,7 +97,7 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ workOrders, source: 'backend_sheet' });
+    return NextResponse.json({ workOrders: workOrders.filter((wo) => matchesSearch(wo, search)), source: 'backend_sheet' });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg, workOrders: [] }, { status: 500 });
