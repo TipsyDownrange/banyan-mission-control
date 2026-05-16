@@ -8,6 +8,7 @@ import EstimatingKaiPanel from '@/components/estimating/EstimatingKaiPanel';
 import BidOverviewTab from '@/components/estimating/BidOverviewTab';
 import CarlsMethodTab from '@/components/estimating/CarlsMethodTab';
 import TakeoffTab from '@/components/estimating/TakeoffTab';
+import { normalizeBidSummary } from '@/lib/estimating/bid-summary';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -225,7 +226,8 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
     try {
       const res = await fetch('/api/estimating/bids');
       const data = await res.json();
-      const list = Array.isArray(data.bids) ? data.bids : Array.isArray(data) ? data : [];
+      const rawList = Array.isArray(data.bids) ? data.bids : Array.isArray(data) ? data : [];
+      const list = rawList.map((bid: Record<string, unknown>) => normalizeBidSummary(bid));
       setBids(list);
       return list;
     } catch (err) {

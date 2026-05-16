@@ -32,6 +32,7 @@ import OnboardingFlow from '@/components/OnboardingFlow';
 import SuggestionButton from '@/components/SuggestionButton';
 import StepLibraryPanel from '@/components/StepLibraryPanel';
 import SuperSchedulingPanel from '@/components/SuperSchedulingPanel';
+import ForecastingPanel from '@/components/ForecastingPanel';
 import LogisticsPanel from '@/components/LogisticsPanel';
 import { useState, useEffect } from 'react';
 
@@ -260,7 +261,7 @@ export default function Home() {
         }} />}
         {activeView === 'Assets'        && <AssetsPanel />}
         {activeView === 'Org Chart'     && <OrgChartPanel />}
-        {activeView === 'Forecasting'   && <SuperSchedulingPanel />}
+        {activeView === 'Forecasting'   && <ForecastingPanel />}
         {activeView === 'Scheduling'     && <SuperSchedulingPanel />}
         {activeView === 'Dispatch Board'&& <DispatchBoard />}
         {activeView === 'Schedule'        && <DispatchBoard />}
