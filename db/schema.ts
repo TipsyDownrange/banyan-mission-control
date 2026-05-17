@@ -587,6 +587,9 @@ export const engagements = pgTable('engagements', {
   warranty_supplement_routing: text('warranty_supplement_routing'),
   drive_folder_id: text('drive_folder_id'),
   drive_folder_template: text('drive_folder_template'),
+  is_test_project: boolean('is_test_project').notNull().default(false),
+  test_project_created_by: uuid('test_project_created_by').references(() => users.user_id),
+  test_project_purpose: text('test_project_purpose'),
   metadata: jsonb('metadata').notNull().default(sql`'{}'::jsonb`),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -599,11 +602,13 @@ export const engagements = pgTable('engagements', {
   index('engagements_site_id_idx').on(table.tenant_id, table.site_id),
   index('engagements_type_status_idx').on(table.tenant_id, table.engagement_type, table.status),
   index('engagements_tenant_status_pm_handoff_idx').on(table.tenant_id, table.status, table.pm_handoff_state),
+  index('engagements_production_default_idx').on(table.tenant_id, table.status).where(sql`${table.is_test_project} = false`),
   check('engagements_engagement_type_check', sql`${table.engagement_type} IN ('project','work_order_small','work_order_large','warranty_small','warranty_large','maintenance','internal')`),
   check('engagements_status_check', sql`${table.status} IN ('active','closed','cancelled','on_hold','archived')`),
   check('engagements_routing_decision_check', sql`${table.routing_decision} IS NULL OR ${table.routing_decision} IN ('service_wo','project')`),
   check('engagements_pm_handoff_state_check', sql`${table.pm_handoff_state} IN ('estimating','awaiting_handoff','pm_assigned','active','handoff_blocked','closed')`),
   check('engagements_warranty_supplement_routing_check', sql`${table.warranty_supplement_routing} IS NULL OR ${table.warranty_supplement_routing} IN ('gc','owner','both','auto')`),
+  check('engagements_test_project_created_by_required_check', sql`(${table.is_test_project} = false) OR (${table.test_project_created_by} IS NOT NULL)`),
 ]);
 
 export const field_events = pgTable('field_events', {
@@ -638,4 +643,416 @@ export const field_events = pgTable('field_events', {
     'PAY_APP_NOTARIZED', 'RETAINAGE_RELEASED', 'PUNCH_LIST_CLEARED', 'NOTICE_OF_COMPLETION_FILED', 'JOB_COST_RECONCILED', 'GOLD_DATASET_ENTRY_WRITTEN', 'DELIVERABLE_PRODUCED', 'TM_AUTHORIZATION_CONVERTED_TO_CO', 'TEST_PROJECT_RESET', 'BACK_CHARGE_APPLIED_CROSS_PROJECT', 'SOV_MODIFIED', 'HANDOFF_PROCESSED',
     'SOV_STATE_CHANGED', 'PAY_APP_STATE_CHANGED', 'LIEN_WAIVER_STATE_CHANGED', 'PROJECT_STATE_CHANGED', 'PUNCH_LIST_ITEM_STATE_CHANGED', 'WARRANTY_STATE_CHANGED', 'TM_AUTHORIZATION_STATE_CHANGED', 'TM_TICKET_STATE_CHANGED', 'TEST_PROJECT_STATE_CHANGED', 'BACK_CHARGE_STATE_CHANGED'
   )`),
+]);
+
+// ─── BAN-302 Pass 3a: TPA + AIA v1.1 entity schema ──────────────────────────
+// Per BAN-302 D1-D5 ratification, TPA v1.0 §6.5 + §11, AIA v1.1 §14.1.
+// All child entities inherit test-vs-production status from engagements.is_test_project
+// (TPA spec §4.2). Activity Spine event_contract.ts NOT modified — AIA events map to
+// canonical 34 per D4; TPA CREATED/DELETED collapse to TEST_PROJECT_STATE_CHANGED per D3.
+
+// TPA §6.5 + §11.2 — reset audit log
+export const test_project_resets = pgTable('test_project_resets', {
+  reset_id: uuid('reset_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id, { onDelete: 'cascade' }),
+  reset_by: uuid('reset_by').notNull().references(() => users.user_id),
+  reset_at: timestamp('reset_at', { withTimezone: true }).notNull().defaultNow(),
+  reason: text('reason'),
+  child_records_deleted: jsonb('child_records_deleted').notNull().default(sql`'{}'::jsonb`),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('test_project_resets_engagement_idx').on(table.tenant_id, table.engagement_id, table.reset_at),
+]);
+
+// AIA §14.1 — SOV version history (one row per version of an engagement's SOV).
+// Parent of schedule_of_values line items; carries the §4 9-stage state machine.
+export const sov_versions = pgTable('sov_versions', {
+  sov_version_id: uuid('sov_version_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  version_number: integer('version_number').notNull(),
+  state: text('state').notNull().default('NONE'),
+  locked_at: timestamp('locked_at', { withTimezone: true }),
+  retired_at: timestamp('retired_at', { withTimezone: true }),
+  source_kind: text('source_kind').notNull().default('ESTIMATOR_INITIAL'),
+  source_ref_id: uuid('source_ref_id'),
+  source_ref_type: text('source_ref_type'),
+  manager_override_by: uuid('manager_override_by').references(() => users.user_id),
+  manager_override_reason: text('manager_override_reason'),
+  total_value: numeric('total_value', { precision: 14, scale: 2 }),
+  created_by: uuid('created_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('sov_versions_engagement_version_uidx').on(table.tenant_id, table.engagement_id, table.version_number),
+  index('sov_versions_engagement_state_idx').on(table.tenant_id, table.engagement_id, table.state),
+  check('sov_versions_state_check', sql`${table.state} IN ('NONE','DRAFT_AUTOGENERATED','DRAFT_ESTIMATOR_STRUCTURED','APPROVED_INTERNAL','IN_GC_NEGOTIATION','LOCKED','IN_RECONCILIATION','RETIRED')`),
+  check('sov_versions_source_kind_check', sql`${table.source_kind} IN ('ESTIMATOR_INITIAL','CO_DRIVEN','TM_AUTH_DRIVEN','MANAGER_OVERRIDE','RECONCILIATION')`),
+]);
+
+// AIA §14.1 — SOV line items (locked + drafts) per sov_versions row
+export const schedule_of_values = pgTable('schedule_of_values', {
+  sov_line_id: uuid('sov_line_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  sov_version_id: uuid('sov_version_id').notNull().references(() => sov_versions.sov_version_id, { onDelete: 'cascade' }),
+  line_number: integer('line_number').notNull(),
+  description: text('description').notNull(),
+  cost_code: text('cost_code'),
+  scheduled_value: numeric('scheduled_value', { precision: 14, scale: 2 }).notNull().default('0'),
+  line_type: text('line_type').notNull().default('LUMP_SUM'),
+  tm_authorization_id: uuid('tm_authorization_id'),
+  retainage_pct: numeric('retainage_pct', { precision: 5, scale: 2 }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('schedule_of_values_version_line_uidx').on(table.tenant_id, table.sov_version_id, table.line_number),
+  index('schedule_of_values_engagement_idx').on(table.tenant_id, table.engagement_id),
+  index('schedule_of_values_tm_auth_idx').on(table.tenant_id, table.tm_authorization_id),
+  check('schedule_of_values_line_type_check', sql`${table.line_type} IN ('LUMP_SUM','TM_AUTHORIZATION','MOBILIZATION','RETAINAGE_RELEASE','DEPOSIT_DRAW_DOWN','STORED_MATERIALS','OTHER')`),
+]);
+
+// AIA §14.1 — per-contract billing format configuration (§5.2)
+export const billing_format_config = pgTable('billing_format_config', {
+  billing_config_id: uuid('billing_config_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  billing_format: text('billing_format').notNull(),
+  gc_billing_intake_platform: text('gc_billing_intake_platform').notNull().default('DIRECT'),
+  custom_template_ref: text('custom_template_ref'),
+  retainage_pct: numeric('retainage_pct', { precision: 5, scale: 2 }).notNull().default('10'),
+  retainage_release_trigger: text('retainage_release_trigger').notNull().default('SUBSTANTIAL_COMPLETION'),
+  payment_terms: text('payment_terms').notNull().default('NET_30'),
+  notarization_required: boolean('notarization_required').notNull().default(false),
+  architect_cert_required: boolean('architect_cert_required').notNull().default(false),
+  lien_waiver_required: boolean('lien_waiver_required').notNull().default(false),
+  get_handling: text('get_handling').notNull().default('SUMMARY_LINE_ONLY'),
+  stored_materials_policy: text('stored_materials_policy').notNull().default('G703_COLUMN_G'),
+  gc_certifier_name: text('gc_certifier_name'),
+  gc_certifier_email: text('gc_certifier_email'),
+  gc_certifier_title: text('gc_certifier_title'),
+  architect_certifier_name: text('architect_certifier_name'),
+  architect_certifier_email: text('architect_certifier_email'),
+  architect_certifier_title: text('architect_certifier_title'),
+  billing_period_definition: text('billing_period_definition').notNull().default('MONTHLY_CALENDAR'),
+  tm_authorizations_permitted: boolean('tm_authorizations_permitted').notNull().default(true),
+  tm_billing_doc: text('tm_billing_doc').notNull().default('SAME_AS_PAY_APP'),
+  pay_app_sequence_numbering: text('pay_app_sequence_numbering').notNull().default('CONTINUOUS'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('billing_format_config_engagement_uidx').on(table.tenant_id, table.engagement_id),
+  check('billing_format_config_billing_format_check', sql`${table.billing_format} IN ('AIA_G702_G703','TEXTURA_CSV_EXPORT','CUSTOM_TEMPLATE','TM_INVOICE','LUMP_SUM_PROGRESS','MIXED')`),
+  check('billing_format_config_intake_platform_check', sql`${table.gc_billing_intake_platform} IN ('TEXTURA','DIRECT','OTHER')`),
+  check('billing_format_config_retainage_trigger_check', sql`${table.retainage_release_trigger} IN ('SUBSTANTIAL_COMPLETION','FINAL_PAYMENT','CONTRACT_DATE','MANUAL')`),
+  check('billing_format_config_payment_terms_check', sql`${table.payment_terms} IN ('NET_30','NET_45','NET_60','PAY_WHEN_PAID','CONTRACT_DEFINED')`),
+  check('billing_format_config_get_handling_check', sql`${table.get_handling} IN ('SUMMARY_LINE_ONLY','NOT_APPLICABLE')`),
+  check('billing_format_config_stored_materials_policy_check', sql`${table.stored_materials_policy} IN ('G703_COLUMN_G','SEPARATE_LINE','NOT_PERMITTED')`),
+  check('billing_format_config_billing_period_check', sql`${table.billing_period_definition} IN ('MONTHLY_CALENDAR','MONTHLY_FROM_NTP','BIWEEKLY','CONTRACT_DEFINED')`),
+  check('billing_format_config_tm_billing_doc_check', sql`${table.tm_billing_doc} IN ('SAME_AS_PAY_APP','SEPARATE_TM_INVOICE')`),
+  check('billing_format_config_pay_app_seq_check', sql`${table.pay_app_sequence_numbering} IN ('CONTINUOUS','RESTART_PER_PHASE')`),
+]);
+
+// AIA §14.1 — per-contract deposit terms (§6.4)
+export const deposit_terms = pgTable('deposit_terms', {
+  deposit_terms_id: uuid('deposit_terms_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  deposit_pattern: text('deposit_pattern').notNull().default('NONE'),
+  deposit_amount: numeric('deposit_amount', { precision: 14, scale: 2 }),
+  deposit_amount_pct: numeric('deposit_amount_pct', { precision: 5, scale: 2 }),
+  deposit_due_date: date('deposit_due_date'),
+  deposit_received_date: date('deposit_received_date'),
+  draw_down_logic: text('draw_down_logic').notNull().default('AUTO'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('deposit_terms_engagement_uidx').on(table.tenant_id, table.engagement_id),
+  check('deposit_terms_pattern_check', sql`${table.deposit_pattern} IN ('MOBILIZATION_LINE','SEPARATE_INVOICE','STORED_MATERIALS','NONE')`),
+  check('deposit_terms_draw_down_check', sql`${table.draw_down_logic} IN ('AUTO','MANUAL')`),
+]);
+
+// AIA §11.2 — T&M Authorizations (parent of tm_tickets; referenced by SOV TM lines)
+export const tm_authorizations = pgTable('tm_authorizations', {
+  tm_auth_id: uuid('tm_auth_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  authorization_number: text('authorization_number').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  authorized_by_name: text('authorized_by_name'),
+  authorized_by_title: text('authorized_by_title'),
+  authorized_by_date: date('authorized_by_date'),
+  authorization_method: text('authorization_method').notNull().default('OTHER'),
+  authorization_evidence_ref: text('authorization_evidence_ref'),
+  scope_basis: text('scope_basis').notNull().default('DURING_CONSTRUCTION'),
+  rate_structure: text('rate_structure').notNull().default('STANDARD_TM'),
+  rate_per_hour_labor: numeric('rate_per_hour_labor', { precision: 10, scale: 2 }),
+  rate_per_hour_supervision: numeric('rate_per_hour_supervision', { precision: 10, scale: 2 }),
+  materials_markup_pct: numeric('materials_markup_pct', { precision: 5, scale: 2 }),
+  not_to_exceed_amount: numeric('not_to_exceed_amount', { precision: 14, scale: 2 }),
+  sov_line_id: uuid('sov_line_id').references((): AnyPgColumn => schedule_of_values.sov_line_id),
+  status: text('status').notNull().default('ACTIVE'),
+  converted_to_co_ref: text('converted_to_co_ref'),
+  closed_at: timestamp('closed_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('tm_authorizations_engagement_number_uidx').on(table.tenant_id, table.engagement_id, table.authorization_number),
+  index('tm_authorizations_engagement_status_idx').on(table.tenant_id, table.engagement_id, table.status),
+  check('tm_authorizations_method_check', sql`${table.authorization_method} IN ('VERBAL','EMAIL','WRITTEN_WORK_ORDER','OTHER')`),
+  check('tm_authorizations_scope_basis_check', sql`${table.scope_basis} IN ('PUNCHLIST_PERIOD','DURING_CONSTRUCTION','OTHER')`),
+  check('tm_authorizations_rate_structure_check', sql`${table.rate_structure} IN ('STANDARD_TM','NEGOTIATED_RATE','NTE')`),
+  check('tm_authorizations_status_check', sql`${table.status} IN ('ACTIVE','CLOSED','DISPUTED','CONVERTED_TO_CO')`),
+]);
+
+// AIA §14.1 — pay applications (parent of pay_app_line_items, pay_app_states)
+export const pay_applications = pgTable('pay_applications', {
+  pay_app_id: uuid('pay_app_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  pay_app_number: integer('pay_app_number').notNull(),
+  period_start: date('period_start').notNull(),
+  period_end: date('period_end').notNull(),
+  state: text('state').notNull().default('PENDING_DRAFT'),
+  sov_version_id: uuid('sov_version_id').references(() => sov_versions.sov_version_id),
+  contract_sum_original: numeric('contract_sum_original', { precision: 14, scale: 2 }),
+  net_change_by_co: numeric('net_change_by_co', { precision: 14, scale: 2 }).notNull().default('0'),
+  contract_sum_to_date: numeric('contract_sum_to_date', { precision: 14, scale: 2 }),
+  work_completed_to_date: numeric('work_completed_to_date', { precision: 14, scale: 2 }).notNull().default('0'),
+  stored_materials_to_date: numeric('stored_materials_to_date', { precision: 14, scale: 2 }).notNull().default('0'),
+  retainage_held: numeric('retainage_held', { precision: 14, scale: 2 }).notNull().default('0'),
+  total_earned_less_retainage: numeric('total_earned_less_retainage', { precision: 14, scale: 2 }).notNull().default('0'),
+  less_previous_certificates: numeric('less_previous_certificates', { precision: 14, scale: 2 }).notNull().default('0'),
+  current_amount_due: numeric('current_amount_due', { precision: 14, scale: 2 }).notNull().default('0'),
+  notarization_required: boolean('notarization_required').notNull().default(false),
+  architect_cert_required: boolean('architect_cert_required').notNull().default(false),
+  submitted_at: timestamp('submitted_at', { withTimezone: true }),
+  architect_certified_at: timestamp('architect_certified_at', { withTimezone: true }),
+  gc_approved_at: timestamp('gc_approved_at', { withTimezone: true }),
+  rejected_at: timestamp('rejected_at', { withTimezone: true }),
+  rejection_reason: text('rejection_reason'),
+  is_retainage_release: boolean('is_retainage_release').notNull().default(false),
+  created_by: uuid('created_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('pay_applications_engagement_number_uidx').on(table.tenant_id, table.engagement_id, table.pay_app_number),
+  index('pay_applications_engagement_state_idx').on(table.tenant_id, table.engagement_id, table.state),
+  index('pay_applications_period_idx').on(table.tenant_id, table.engagement_id, table.period_end),
+  check('pay_applications_state_check', sql`${table.state} IN ('PENDING_DRAFT','READY_FOR_NOTARIZATION','READY_FOR_SUBMISSION','SUBMITTED','ARCHITECT_CERTIFIED','GC_APPROVED','PAID_PARTIAL','PAID_FULL','REJECTED')`),
+  check('pay_applications_period_order_check', sql`${table.period_end} >= ${table.period_start}`),
+]);
+
+// AIA §14.1 — pay app G703 line items
+export const pay_app_line_items = pgTable('pay_app_line_items', {
+  pay_app_line_id: uuid('pay_app_line_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  pay_app_id: uuid('pay_app_id').notNull().references(() => pay_applications.pay_app_id, { onDelete: 'cascade' }),
+  sov_line_id: uuid('sov_line_id').references(() => schedule_of_values.sov_line_id),
+  tm_authorization_id: uuid('tm_authorization_id').references(() => tm_authorizations.tm_auth_id),
+  line_number: integer('line_number').notNull(),
+  line_type: text('line_type').notNull().default('LUMP_SUM'),
+  description: text('description').notNull(),
+  scheduled_value: numeric('scheduled_value', { precision: 14, scale: 2 }).notNull().default('0'),
+  work_completed_previous: numeric('work_completed_previous', { precision: 14, scale: 2 }).notNull().default('0'),
+  work_completed_this_period: numeric('work_completed_this_period', { precision: 14, scale: 2 }).notNull().default('0'),
+  stored_materials: numeric('stored_materials', { precision: 14, scale: 2 }).notNull().default('0'),
+  total_completed_and_stored: numeric('total_completed_and_stored', { precision: 14, scale: 2 }).notNull().default('0'),
+  percent_complete: numeric('percent_complete', { precision: 5, scale: 2 }).notNull().default('0'),
+  retainage_held: numeric('retainage_held', { precision: 14, scale: 2 }).notNull().default('0'),
+  balance_to_finish: numeric('balance_to_finish', { precision: 14, scale: 2 }).notNull().default('0'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('pay_app_line_items_pay_app_line_uidx').on(table.pay_app_id, table.line_number),
+  index('pay_app_line_items_sov_line_idx').on(table.tenant_id, table.sov_line_id),
+  check('pay_app_line_items_line_type_check', sql`${table.line_type} IN ('LUMP_SUM','TM_AUTHORIZATION','MOBILIZATION','RETAINAGE_RELEASE','DEPOSIT_DRAW_DOWN','STORED_MATERIALS','OTHER')`),
+]);
+
+// AIA §14.1 — pay app state transition history
+export const pay_app_states = pgTable('pay_app_states', {
+  state_change_id: uuid('state_change_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  pay_app_id: uuid('pay_app_id').notNull().references(() => pay_applications.pay_app_id, { onDelete: 'cascade' }),
+  from_state: text('from_state'),
+  to_state: text('to_state').notNull(),
+  changed_by: uuid('changed_by').references(() => users.user_id),
+  changed_at: timestamp('changed_at', { withTimezone: true }).notNull().defaultNow(),
+  reason: text('reason'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('pay_app_states_pay_app_idx').on(table.pay_app_id, table.changed_at),
+]);
+
+// AIA §14.1 + §8 — Proof RON notarization sessions
+export const notarization_sessions = pgTable('notarization_sessions', {
+  session_id: uuid('session_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  target_kind: text('target_kind').notNull(),
+  pay_app_id: uuid('pay_app_id').references(() => pay_applications.pay_app_id),
+  provider: text('provider').notNull().default('PROOF'),
+  provider_session_id: text('provider_session_id'),
+  provider_session_url: text('provider_session_url'),
+  signer_user_id: uuid('signer_user_id').references(() => users.user_id),
+  notary_name: text('notary_name'),
+  notary_cert_ref: text('notary_cert_ref'),
+  state: text('state').notNull().default('CREATED'),
+  cost_amount: numeric('cost_amount', { precision: 10, scale: 2 }),
+  completed_at: timestamp('completed_at', { withTimezone: true }),
+  failure_reason: text('failure_reason'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('notarization_sessions_engagement_idx').on(table.tenant_id, table.engagement_id, table.state),
+  index('notarization_sessions_pay_app_idx').on(table.tenant_id, table.pay_app_id),
+  check('notarization_sessions_target_kind_check', sql`${table.target_kind} IN ('PAY_APP','LIEN_WAIVER')`),
+  check('notarization_sessions_state_check', sql`${table.state} IN ('CREATED','IN_PROGRESS','COMPLETED','FAILED','CANCELLED')`),
+]);
+
+// AIA §14.1 + §10 — lien waivers
+export const lien_waivers = pgTable('lien_waivers', {
+  waiver_id: uuid('waiver_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  pay_app_id: uuid('pay_app_id').references(() => pay_applications.pay_app_id),
+  waiver_type: text('waiver_type').notNull(),
+  waiver_amount: numeric('waiver_amount', { precision: 14, scale: 2 }),
+  through_date: date('through_date'),
+  state: text('state').notNull().default('PENDING'),
+  notarization_session_id: uuid('notarization_session_id').references(() => notarization_sessions.session_id),
+  drive_file_ref: text('drive_file_ref'),
+  delivered_at: timestamp('delivered_at', { withTimezone: true }),
+  delivered_method: text('delivered_method'),
+  released_at: timestamp('released_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('lien_waivers_engagement_state_idx').on(table.tenant_id, table.engagement_id, table.state),
+  index('lien_waivers_pay_app_idx').on(table.tenant_id, table.pay_app_id),
+  check('lien_waivers_type_check', sql`${table.waiver_type} IN ('CONDITIONAL_PROGRESS','UNCONDITIONAL_PROGRESS','CONDITIONAL_FINAL','UNCONDITIONAL_FINAL')`),
+  check('lien_waivers_state_check', sql`${table.state} IN ('PENDING','NOTARIZED','FILED','DELIVERED','RELEASED','VOIDED')`),
+]);
+
+// AIA §14.1 + §9 — cash receipts against pay apps
+export const cash_receipts = pgTable('cash_receipts', {
+  receipt_id: uuid('receipt_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  pay_app_id: uuid('pay_app_id').references(() => pay_applications.pay_app_id),
+  receipt_date: date('receipt_date').notNull(),
+  amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
+  source: text('source').notNull().default('MANUAL'),
+  qbo_payment_ref: text('qbo_payment_ref'),
+  reconciliation_status: text('reconciliation_status').notNull().default('UNMATCHED'),
+  matched_by: uuid('matched_by').references(() => users.user_id),
+  matched_at: timestamp('matched_at', { withTimezone: true }),
+  notes: text('notes'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('cash_receipts_engagement_idx').on(table.tenant_id, table.engagement_id, table.receipt_date),
+  index('cash_receipts_pay_app_idx').on(table.tenant_id, table.pay_app_id),
+  check('cash_receipts_source_check', sql`${table.source} IN ('MANUAL','QBO_FEED')`),
+  check('cash_receipts_reconciliation_status_check', sql`${table.reconciliation_status} IN ('UNMATCHED','FULL','PARTIAL','OVER')`),
+]);
+
+// AIA §14.1 + §9.3 — retainage held per pay app (per-line granularity supported)
+export const retainage_holdings = pgTable('retainage_holdings', {
+  holding_id: uuid('holding_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  pay_app_id: uuid('pay_app_id').notNull().references(() => pay_applications.pay_app_id, { onDelete: 'cascade' }),
+  pay_app_line_id: uuid('pay_app_line_id').references(() => pay_app_line_items.pay_app_line_id, { onDelete: 'cascade' }),
+  amount_held: numeric('amount_held', { precision: 14, scale: 2 }).notNull().default('0'),
+  release_trigger: text('release_trigger').notNull().default('SUBSTANTIAL_COMPLETION'),
+  released_at: timestamp('released_at', { withTimezone: true }),
+  released_pay_app_id: uuid('released_pay_app_id').references((): AnyPgColumn => pay_applications.pay_app_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('retainage_holdings_engagement_idx').on(table.tenant_id, table.engagement_id),
+  index('retainage_holdings_pay_app_idx').on(table.pay_app_id),
+  check('retainage_holdings_release_trigger_check', sql`${table.release_trigger} IN ('SUBSTANTIAL_COMPLETION','FINAL_PAYMENT','CONTRACT_DATE','MANUAL')`),
+]);
+
+// AIA §14.1 + §13 — PM handoff validation snapshots
+export const handoff_validations = pgTable('handoff_validations', {
+  validation_id: uuid('validation_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  mode: text('mode').notNull(),
+  validated_by: uuid('validated_by').references(() => users.user_id),
+  validated_at: timestamp('validated_at', { withTimezone: true }).notNull().defaultNow(),
+  sov_state_at_handoff: text('sov_state_at_handoff'),
+  sov_version_id: uuid('sov_version_id').references(() => sov_versions.sov_version_id),
+  missing_fields: jsonb('missing_fields').notNull().default(sql`'[]'::jsonb`),
+  exceptions: jsonb('exceptions').notNull().default(sql`'[]'::jsonb`),
+  required_field_snapshot: jsonb('required_field_snapshot').notNull().default(sql`'{}'::jsonb`),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('handoff_validations_engagement_idx').on(table.tenant_id, table.engagement_id, table.validated_at),
+  check('handoff_validations_mode_check', sql`${table.mode} IN ('ACCEPT','REJECT_NEEDS_FIX','ACCEPT_WITH_EXCEPTIONS')`),
+]);
+
+// AIA §11.3 — T&M Tickets (child of tm_authorizations)
+export const tm_tickets = pgTable('tm_tickets', {
+  ticket_id: uuid('ticket_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  tm_auth_id: uuid('tm_auth_id').notNull().references(() => tm_authorizations.tm_auth_id, { onDelete: 'cascade' }),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  ticket_number: text('ticket_number').notNull(),
+  work_date: date('work_date').notNull(),
+  description: text('description'),
+  location: jsonb('location').notNull().default(sql`'{}'::jsonb`),
+  labor: jsonb('labor').notNull().default(sql`'[]'::jsonb`),
+  labor_total: numeric('labor_total', { precision: 14, scale: 2 }).notNull().default('0'),
+  materials: jsonb('materials').notNull().default(sql`'[]'::jsonb`),
+  materials_subtotal: numeric('materials_subtotal', { precision: 14, scale: 2 }).notNull().default('0'),
+  materials_markup: numeric('materials_markup', { precision: 14, scale: 2 }).notNull().default('0'),
+  materials_total: numeric('materials_total', { precision: 14, scale: 2 }).notNull().default('0'),
+  equipment: jsonb('equipment').notNull().default(sql`'[]'::jsonb`),
+  equipment_total: numeric('equipment_total', { precision: 14, scale: 2 }).notNull().default('0'),
+  ticket_total: numeric('ticket_total', { precision: 14, scale: 2 }).notNull().default('0'),
+  photos: jsonb('photos').notNull().default(sql`'[]'::jsonb`),
+  field_signoff_by: uuid('field_signoff_by').references(() => users.user_id),
+  field_signoff_at: timestamp('field_signoff_at', { withTimezone: true }),
+  gc_signoff_required: boolean('gc_signoff_required').notNull().default(false),
+  gc_signoff_name: text('gc_signoff_name'),
+  gc_signoff_at: timestamp('gc_signoff_at', { withTimezone: true }),
+  gc_signoff_evidence_ref: text('gc_signoff_evidence_ref'),
+  status: text('status').notNull().default('DRAFT'),
+  pay_app_id: uuid('pay_app_id').references(() => pay_applications.pay_app_id),
+  billed_at: timestamp('billed_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('tm_tickets_engagement_number_uidx').on(table.tenant_id, table.engagement_id, table.ticket_number),
+  index('tm_tickets_tm_auth_status_idx').on(table.tenant_id, table.tm_auth_id, table.status),
+  index('tm_tickets_pay_app_idx').on(table.tenant_id, table.pay_app_id),
+  check('tm_tickets_status_check', sql`${table.status} IN ('DRAFT','LOGGED','READY_FOR_GC_APPROVAL','GC_APPROVED','DISPUTED','BILLABLE','BILLED','PAID','REJECTED')`),
+]);
+
+// AIA §14.1 + §7.10 — Oracle Textura CSV submission records
+export const textura_submissions = pgTable('textura_submissions', {
+  submission_id: uuid('submission_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  pay_app_id: uuid('pay_app_id').notNull().references(() => pay_applications.pay_app_id, { onDelete: 'cascade' }),
+  csv_file_ref: text('csv_file_ref'),
+  textura_submission_id: text('textura_submission_id'),
+  submission_status: text('submission_status').notNull().default('UPLOADED'),
+  submitted_at: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+  failure_reason: text('failure_reason'),
+  created_by: uuid('created_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('textura_submissions_engagement_idx').on(table.tenant_id, table.engagement_id),
+  index('textura_submissions_pay_app_idx').on(table.pay_app_id),
+  check('textura_submissions_status_check', sql`${table.submission_status} IN ('UPLOADED','FAILED','REJECTED','ACCEPTED','RESUBMITTED')`),
 ]);
