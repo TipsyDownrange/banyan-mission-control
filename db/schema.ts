@@ -626,7 +626,15 @@ export const field_events = pgTable('field_events', {
   activity_type: text('activity_type'),
   field_issue_pdf_ref: text('field_issue_pdf_ref'),
   origin: fieldEventOriginEnum('origin'),
+  test_data: boolean('test_data').notNull().default(false),
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => [
+  index('field_events_production_default_idx').on(table.event_type, table.created_at).where(sql`${table.test_data} = false`),
+  check('field_events_event_type_ban293_check', sql`${table.event_type} IS NULL OR ${table.event_type} IN (
+    'INSTALL_STEP', 'FIELD_ISSUE', 'DAILY_LOG', 'FIELD_MEASUREMENT', 'NOTE', 'TM_CAPTURE', 'PHOTO_ONLY', 'PUNCH_LIST', 'SITE_VISIT', 'TESTING', 'WARRANTY_CALLBACK',
+    'PAY_APP_NOTARIZED', 'RETAINAGE_RELEASED', 'PUNCH_LIST_CLEARED', 'NOTICE_OF_COMPLETION_FILED', 'JOB_COST_RECONCILED', 'GOLD_DATASET_ENTRY_WRITTEN', 'DELIVERABLE_PRODUCED', 'TM_AUTHORIZATION_CONVERTED_TO_CO', 'TEST_PROJECT_RESET', 'BACK_CHARGE_APPLIED_CROSS_PROJECT', 'SOV_MODIFIED', 'HANDOFF_PROCESSED',
+    'SOV_STATE_CHANGED', 'PAY_APP_STATE_CHANGED', 'LIEN_WAIVER_STATE_CHANGED', 'PROJECT_STATE_CHANGED', 'PUNCH_LIST_ITEM_STATE_CHANGED', 'WARRANTY_STATE_CHANGED', 'TM_AUTHORIZATION_STATE_CHANGED', 'TM_TICKET_STATE_CHANGED', 'TEST_PROJECT_STATE_CHANGED', 'BACK_CHARGE_STATE_CHANGED'
+  )`),
+]);
