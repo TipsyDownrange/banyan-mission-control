@@ -194,9 +194,10 @@ describe('BAN-309 PR 4 — validatePatternBTransition(tm_ticket, …)', () => {
     const r = validatePatternBTransition('tm_ticket', 'BILLED', 'PAID');
     expect(r).toEqual({ ok: true });
   });
-  it('accepts REJECTED → DRAFT (reopen path)', () => {
+  it('REJECTED is terminal per AIA v1.1 §11.5 — no outgoing transitions allowed', () => {
+    expect(TM_TICKET_ALLOWED_TRANSITIONS.REJECTED).toEqual([]);
     const r = validatePatternBTransition('tm_ticket', 'REJECTED', 'DRAFT');
-    expect(r).toEqual({ ok: true });
+    expect(r).toMatchObject({ ok: false, reason: 'TRANSITION_NOT_ALLOWED' });
   });
 });
 

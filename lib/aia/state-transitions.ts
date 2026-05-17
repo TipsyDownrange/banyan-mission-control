@@ -108,10 +108,11 @@ export const LIEN_WAIVER_ALLOWED_TRANSITIONS: Record<LienWaiverState, LienWaiver
   VOIDED: [],
 };
 
-// PR 4 — tm_tickets (AIA §11.3). States mirror the schema CHECK on
-// tm_tickets.status. Transition graph derived from schema + lifecycle
-// inference; AIA v1.1 §11.3 not accessible from this execution environment
-// (UNVERIFIED against spec — see PR description).
+// PR 4 — tm_tickets. States mirror the schema CHECK on tm_tickets.status
+// (AIA v1.1 §11.3). Transition graph verified against AIA v1.1 §11.5 by XO
+// audit 2026-05-17; REJECTED is terminal — escalation of rejected tickets
+// happens via parent TM Authorization → CO conversion
+// (TM_AUTHORIZATION_CONVERTED_TO_CO emission, PR 2), not ticket reopen.
 export const TM_TICKET_STATES = [
   'DRAFT',
   'LOGGED',
@@ -134,7 +135,7 @@ export const TM_TICKET_ALLOWED_TRANSITIONS: Record<TmTicketState, TmTicketState[
   BILLABLE: ['BILLED'],
   BILLED: ['PAID'],
   PAID: [],
-  REJECTED: ['DRAFT'],
+  REJECTED: [],
 };
 
 // ── Per-entity metadata ─────────────────────────────────────────────────────
