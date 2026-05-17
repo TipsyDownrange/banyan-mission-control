@@ -48,6 +48,16 @@ export async function POST(req: Request) {
 
     const existing = data.decisions[idx];
 
+    // 409 — cannot re-resolve an already-resolved decision
+    if (!explicitStatus && existing.status === 'resolved') {
+      return NextResponse.json({ ok: false, error: `Decision ${decision_id} is already resolved` }, { status: 409 });
+    }
+
+    // 400 — overridden / rerouted require a direct order
+    if ((resolution === 'overridden' || resolution === 'rerouted') && !direct_order_text?.trim()) {
+      return NextResponse.json({ ok: false, error: 'direct_order_text is required for overridden and rerouted resolutions' }, { status: 400 });
+    }
+
     // If this is a status-only update (discussing), just update status
     if (explicitStatus === 'discussing') {
       data.decisions[idx] = { ...existing, status: 'discussing' };
