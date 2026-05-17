@@ -112,3 +112,11 @@ export function getManpowerScheduleSheetId(): string {
 export function isMasterLibraryApiEnabled(): boolean {
   return process.env.BANYAN_FF_MASTER_LIBRARY_API === 'true';
 }
+
+// BAN-309 Pass 3a.2: Postgres write-gate for new AIA / TPA routes. Routes
+// that perform Drizzle transactions against AIA / TPA tables must short-circuit
+// to 503 unless this flag is set, so staging cannot accidentally mutate
+// Postgres while the cutover is in flight. Default OFF in every environment.
+export function isPostgresWriteEnabled(): boolean {
+  return process.env.BANYAN_FF_POSTGRES_WRITE === 'true';
+}
