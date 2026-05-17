@@ -1056,3 +1056,310 @@ export const textura_submissions = pgTable('textura_submissions', {
   index('textura_submissions_pay_app_idx').on(table.pay_app_id),
   check('textura_submissions_status_check', sql`${table.submission_status} IN ('UPLOADED','FAILED','REJECTED','ACCEPTED','RESUBMITTED')`),
 ]);
+
+// ─── BAN-304 Pass 3b: Closeout v1.1 entity schema ───────────────────────────
+// Source: Closeout Trunk Spec + Build Packet v1.1 §5, §6.2, §7, §8.1, §8.6,
+// §9.3, §11.3, §12, §13, §16.2, §19.1 (BAN-291 G1 ACCEPTED 2026-05-17 HST).
+// Ratification: BAN-304 D1-D6 — Sean 2026-05-17 HST. All 10 entities inherit
+// is_test_project via FK to engagements (TPA §10.2 + D2 inheritance), so no
+// per-row test_data column on Closeout parent entities. event-contract.ts NOT
+// modified — all 8 Closeout events (per spec Appendix D) map to canonical 34
+// per D6; spec's PROJECT_LIFECYCLE_STATE_CHANGED is renamed to canonical
+// PROJECT_STATE_CHANGED Pattern B per D5 (drift filed as BAN-305).
+
+export const projectLifecycleStateEnum = pgEnum('project_lifecycle_state', [
+  'IN_CLOSEOUT',
+  'SUBSTANTIALLY_COMPLETE',
+  'FINAL_COMPLETE',
+  'ARCHIVED',
+]);
+
+export const punchListItemSourceEnum = pgEnum('punch_list_item_source', [
+  'FIELD_ISSUE',
+  'SUBSTANTIAL_WALKTHROUGH',
+  'GC_TRANSMITTAL',
+  'OWNER_WALKTHROUGH',
+  'ARCHITECT_WALKTHROUGH',
+  'INTERNAL_QA',
+]);
+
+export const punchListItemCategoryEnum = pgEnum('punch_list_item_category', [
+  'GLASS',
+  'FRAMING',
+  'HARDWARE',
+  'SEALANT',
+  'FINISH',
+  'CLEANING',
+  'DOCUMENTATION',
+  'OTHER',
+]);
+
+export const punchListItemResponsiblePartyEnum = pgEnum('punch_list_item_responsible_party', [
+  'KULA',
+  'OTHER_TRADE',
+  'GC',
+  'DISPUTED',
+]);
+
+export const punchListItemStatusEnum = pgEnum('punch_list_item_status', [
+  'NEW',
+  'ASSIGNED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'SIGNED_OFF',
+  'DISPUTED',
+  'DEFERRED_TO_WARRANTY',
+]);
+
+export const warrantyStatusEnum = pgEnum('warranty_status', [
+  'ACTIVE',
+  'EXPIRED',
+  'PARTIALLY_EXPIRED',
+]);
+
+export const warrantyClaimInboundSourceEnum = pgEnum('warranty_claim_inbound_source', [
+  'EMAIL',
+  'PHONE',
+  'PORTAL',
+  'FIELD_DISCOVERY',
+]);
+
+export const warrantyClaimTriageResultEnum = pgEnum('warranty_claim_triage_result', [
+  'KULA_RESPONSIBLE',
+  'MANUFACTURER_RESPONSIBLE',
+  'OTHER_TRADE_RESPONSIBLE',
+  'OUT_OF_WARRANTY',
+  'DISPUTED',
+]);
+
+export const warrantyClaimResolutionEnum = pgEnum('warranty_claim_resolution', [
+  'COMPLETED',
+  'REFERRED',
+  'WRITTEN_OFF',
+  'UNRESOLVED',
+]);
+
+export const deliverableTypeEnum = pgEnum('deliverable_type', [
+  'AS_BUILT_DRAWING',
+  'OM_MANUAL_COMPONENT',
+  'OM_MANUAL_COMPLETE',
+  'UNIFIED_JOB_PACKET',
+  'OTHER',
+]);
+
+// §5 — project lifecycle states + reopen audit
+export const project_lifecycle_states = pgTable('project_lifecycle_states', {
+  lifecycle_state_id: uuid('lifecycle_state_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  state: projectLifecycleStateEnum('state').notNull(),
+  entered_at: timestamp('entered_at', { withTimezone: true }).notNull().defaultNow(),
+  exited_at: timestamp('exited_at', { withTimezone: true }),
+  reopen_reason: text('reopen_reason'),
+  reopen_by: uuid('reopen_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('project_lifecycle_states_engagement_state_idx').on(table.tenant_id, table.engagement_id, table.state),
+  index('project_lifecycle_states_engagement_entered_idx').on(table.tenant_id, table.engagement_id, table.entered_at),
+]);
+
+// §6.2 — punch list items
+export const punch_list_items = pgTable('punch_list_items', {
+  item_id: uuid('item_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  item_number: text('item_number').notNull(),
+  source: punchListItemSourceEnum('source').notNull(),
+  source_ref: text('source_ref'),
+  description: text('description').notNull(),
+  location: jsonb('location').notNull().default(sql`'{}'::jsonb`),
+  category: punchListItemCategoryEnum('category').notNull().default('OTHER'),
+  responsible_party: punchListItemResponsiblePartyEnum('responsible_party').notNull().default('KULA'),
+  photos_required: boolean('photos_required').notNull().default(true),
+  photo_evidence: jsonb('photo_evidence').notNull().default(sql`'[]'::jsonb`),
+  assigned_to: uuid('assigned_to').references(() => users.user_id),
+  due_date: date('due_date'),
+  status: punchListItemStatusEnum('status').notNull().default('NEW'),
+  completion_evidence: jsonb('completion_evidence').notNull().default(sql`'{}'::jsonb`),
+  signoff_evidence: jsonb('signoff_evidence').notNull().default(sql`'{}'::jsonb`),
+  dispute_reason: text('dispute_reason'),
+  dispute_resolution: jsonb('dispute_resolution').notNull().default(sql`'{}'::jsonb`),
+  closed_at: timestamp('closed_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('punch_list_items_engagement_number_uidx').on(table.tenant_id, table.engagement_id, table.item_number),
+  index('punch_list_items_engagement_status_idx').on(table.tenant_id, table.engagement_id, table.status),
+  index('punch_list_items_assigned_idx').on(table.tenant_id, table.assigned_to, table.status),
+]);
+
+// §7 — substantial completion certifications
+export const substantial_completion_certs = pgTable('substantial_completion_certs', {
+  cert_id: uuid('cert_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  walkthrough_date: date('walkthrough_date').notNull(),
+  attendees: jsonb('attendees').notNull().default(sql`'[]'::jsonb`),
+  per_system_completion: jsonb('per_system_completion').notNull().default(sql`'{}'::jsonb`),
+  cert_evidence_drive_id: text('cert_evidence_drive_id'),
+  gc_signoff_evidence_drive_id: text('gc_signoff_evidence_drive_id'),
+  signed_at: timestamp('signed_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('substantial_completion_certs_engagement_idx').on(table.tenant_id, table.engagement_id, table.walkthrough_date),
+]);
+
+// §8.1 — warranty records (one per project)
+export const warranties = pgTable('warranties', {
+  warranty_id: uuid('warranty_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  start_date: date('start_date').notNull(),
+  scope_warranties: jsonb('scope_warranties').notNull().default(sql`'[]'::jsonb`),
+  status: warrantyStatusEnum('status').notNull().default('ACTIVE'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('warranties_engagement_uidx').on(table.tenant_id, table.engagement_id),
+  index('warranties_status_idx').on(table.tenant_id, table.status),
+]);
+
+// §8.6 — warranty claims (child of warranties)
+export const warranty_claims = pgTable('warranty_claims', {
+  claim_id: uuid('claim_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  warranty_id: uuid('warranty_id').notNull().references(() => warranties.warranty_id, { onDelete: 'cascade' }),
+  inbound_source: warrantyClaimInboundSourceEnum('inbound_source').notNull(),
+  inbound_evidence: text('inbound_evidence'),
+  inbound_date: timestamp('inbound_date', { withTimezone: true }).notNull().defaultNow(),
+  reported_by: jsonb('reported_by').notNull().default(sql`'{}'::jsonb`),
+  issue_description: text('issue_description').notNull(),
+  affected_scope: text('affected_scope'),
+  triage_result: warrantyClaimTriageResultEnum('triage_result'),
+  triage_by: uuid('triage_by').references(() => users.user_id),
+  triage_at: timestamp('triage_at', { withTimezone: true }),
+  triage_reasoning: text('triage_reasoning'),
+  service_wo_id: text('service_wo_id'),
+  back_charge_id: uuid('back_charge_id'),
+  resolution: warrantyClaimResolutionEnum('resolution'),
+  resolution_evidence_drive_id: text('resolution_evidence_drive_id'),
+  resolved_at: timestamp('resolved_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('warranty_claims_warranty_idx').on(table.tenant_id, table.warranty_id, table.inbound_date),
+  index('warranty_claims_engagement_triage_idx').on(table.tenant_id, table.engagement_id, table.triage_result),
+  index('warranty_claims_service_wo_idx').on(table.tenant_id, table.service_wo_id),
+]);
+
+// §9.3 — Notice of Completion (HRS-compliant)
+export const notices_of_completion = pgTable('notices_of_completion', {
+  noc_id: uuid('noc_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  filed_date: date('filed_date').notNull(),
+  recording_number: text('recording_number'),
+  recording_evidence_drive_id: text('recording_evidence_drive_id'),
+  hrs_basis: text('hrs_basis'),
+  lien_deadline_days: integer('lien_deadline_days').notNull().default(45),
+  lien_deadline_date: date('lien_deadline_date'),
+  filed_by: uuid('filed_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('notices_of_completion_engagement_idx').on(table.tenant_id, table.engagement_id, table.filed_date),
+  index('notices_of_completion_lien_deadline_idx').on(table.tenant_id, table.lien_deadline_date),
+]);
+
+// §11.3 — as-built + O&M deliverables
+export const deliverable_documents = pgTable('deliverable_documents', {
+  doc_id: uuid('doc_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  deliverable_type: deliverableTypeEnum('deliverable_type').notNull(),
+  category: text('category'),
+  drive_file_id: text('drive_file_id').notNull(),
+  version: text('version'),
+  uploaded_by: uuid('uploaded_by').references(() => users.user_id),
+  uploaded_at: timestamp('uploaded_at', { withTimezone: true }).notNull().defaultNow(),
+  required_for_state: projectLifecycleStateEnum('required_for_state'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('deliverable_documents_engagement_type_idx').on(table.tenant_id, table.engagement_id, table.deliverable_type),
+]);
+
+// §12 — Unified Job Packet generated records
+export const unified_job_packets = pgTable('unified_job_packets', {
+  packet_id: uuid('packet_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  template_version: text('template_version').notNull(),
+  drive_file_id: text('drive_file_id').notNull(),
+  generated_at: timestamp('generated_at', { withTimezone: true }).notNull().defaultNow(),
+  generated_by: uuid('generated_by').references(() => users.user_id),
+  sections_included: jsonb('sections_included').notNull().default(sql`'[]'::jsonb`),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('unified_job_packets_engagement_generated_idx').on(table.tenant_id, table.engagement_id, table.generated_at),
+]);
+
+// §16.2 — Gold Dataset entries written on JOB_COST_RECONCILED
+export const gold_dataset_entries = pgTable('gold_dataset_entries', {
+  entry_id: uuid('entry_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  project_classification: jsonb('project_classification').notNull().default(sql`'{}'::jsonb`),
+  bid_data: jsonb('bid_data').notNull().default(sql`'{}'::jsonb`),
+  actual_data: jsonb('actual_data').notNull().default(sql`'{}'::jsonb`),
+  schedule_data: jsonb('schedule_data').notNull().default(sql`'{}'::jsonb`),
+  punch_list_data: jsonb('punch_list_data').notNull().default(sql`'{}'::jsonb`),
+  warranty_data: jsonb('warranty_data').notNull().default(sql`'{}'::jsonb`),
+  inter_island_logistics_data: jsonb('inter_island_logistics_data').notNull().default(sql`'{}'::jsonb`),
+  test_project: boolean('test_project').notNull().default(false),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('gold_dataset_entries_engagement_idx').on(table.tenant_id, table.engagement_id),
+  index('gold_dataset_entries_production_default_idx').on(table.tenant_id, table.created_at).where(sql`${table.test_project} = false`),
+  check('gold_dataset_entries_test_project_false_check', sql`${table.test_project} = false`),
+]);
+
+// §13 — project search index payloads
+export const project_search_indexes = pgTable('project_search_indexes', {
+  search_index_id: uuid('search_index_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  index_payload: text('index_payload').notNull(),
+  last_indexed_at: timestamp('last_indexed_at', { withTimezone: true }).notNull().defaultNow(),
+  index_version: text('index_version').notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('project_search_indexes_engagement_uidx').on(table.tenant_id, table.engagement_id),
+  index('project_search_indexes_last_indexed_idx').on(table.tenant_id, table.last_indexed_at),
+]);
