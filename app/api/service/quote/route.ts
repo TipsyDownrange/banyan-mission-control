@@ -11,6 +11,7 @@ import {
 } from '@/lib/labor';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { emitMCEvent } from '@/lib/events';
+import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -133,6 +134,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const postgresReadOnlyBlock = blockWOStagingPostgresReadOnlyMutation('/api/service/quote');
+  if (postgresReadOnlyBlock) return postgresReadOnlyBlock;
+
   try {
     const body = await req.json();
     const {
