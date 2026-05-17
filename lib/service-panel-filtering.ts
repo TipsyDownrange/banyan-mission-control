@@ -9,6 +9,29 @@ export type ServicePanelSearchableWO = {
   legacy_wo_ids?: string;
 };
 
+export const SERVICE_COMPLETED_STAGE_KEYS = ['closed', 'completed', 'work_complete', 'invoiced', 'paid'] as const;
+
+export function normalizeServicePanelStatus(raw: string): string {
+  switch ((raw || '').toLowerCase()) {
+    case 'estimated':
+    case 'estimate':
+    case 'quote':
+    case 'quoted':
+      return 'quoted';
+    case 'quote_requested':
+      return 'lead';
+    case 'accepted':
+      return 'approved';
+    case 'declined':
+    case 'cancelled':
+    case 'canceled':
+    case 'rejected':
+      return 'lost';
+    default:
+      return raw || 'lead';
+  }
+}
+
 export function serviceWOMatchesSearch(wo: ServicePanelSearchableWO, search: string): boolean {
   const q = search.toLowerCase();
   if (!q) return true;
