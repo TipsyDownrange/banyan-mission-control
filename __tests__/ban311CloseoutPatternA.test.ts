@@ -230,9 +230,10 @@ describe('PUNCH_LIST_CLEARED co-fire on terminal-state transition', () => {
       total_items: 5,
       triggering_punch_item_id: PUNCH_ID,
       triggering_to_state: 'COMPLETED',
-      closeout_entity_kind: 'engagement',
-      closeout_entity_id: ENG_ID,
+      entity_kind: 'engagement',
+      entity_id: ENG_ID,
     });
+    expect((cleared[0].metadata as Record<string, unknown>).closeout_entity_kind).toBeUndefined();
   });
 
   it('does NOT fire when engagement has zero punch items (total=0 guard)', async () => {
@@ -319,8 +320,12 @@ describe('POST /api/closeout/notices-of-completion', () => {
       filed_date: '2026-05-17',
       recording_number: 'A-12345',
       lien_deadline_date: '2026-07-01',
-      closeout_entity_kind: 'engagement',
+      // ADR-014 Amendment 2: canonical entity_kind/entity_id; NOC emits
+      // now reference the NOC row itself rather than the engagement scope.
+      entity_kind: 'notice_of_completion',
+      entity_id: NOC_ID,
     });
+    expect((evt.metadata as Record<string, unknown>).closeout_entity_kind).toBeUndefined();
   });
 
   it('test_data=true propagation from engagement', async () => {

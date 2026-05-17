@@ -18,7 +18,7 @@
  */
 
 import type { ActivitySpineEventType } from '@/lib/activity-spine/event-contract';
-import type { ActivitySpineAiaEntityKind } from '@/lib/activity-spine/emit';
+import type { ActivitySpineEntityKind } from '@/lib/activity-spine/emit';
 
 export type AiaPatternBEntity =
   | 'pay_application'
@@ -142,7 +142,7 @@ export const TM_TICKET_ALLOWED_TRANSITIONS: Record<TmTicketState, TmTicketState[
 
 interface PatternBEntityMeta<S extends string> {
   event_type: ActivitySpineEventType;
-  aia_entity_kind: ActivitySpineAiaEntityKind;
+  entity_kind: ActivitySpineEntityKind;
   states: readonly S[];
   transitions: Record<S, readonly S[]>;
 }
@@ -156,31 +156,31 @@ export const PATTERN_B_ENTITIES: {
 } = {
   pay_application: {
     event_type: 'PAY_APP_STATE_CHANGED',
-    aia_entity_kind: 'pay_application',
+    entity_kind: 'pay_application',
     states: PAY_APP_STATES,
     transitions: PAY_APP_ALLOWED_TRANSITIONS,
   },
   sov_version: {
     event_type: 'SOV_STATE_CHANGED',
-    aia_entity_kind: 'sov_version',
+    entity_kind: 'sov_version',
     states: SOV_VERSION_STATES,
     transitions: SOV_VERSION_ALLOWED_TRANSITIONS,
   },
   tm_authorization: {
     event_type: 'TM_AUTHORIZATION_STATE_CHANGED',
-    aia_entity_kind: 'tm_authorization',
+    entity_kind: 'tm_authorization',
     states: TM_AUTHORIZATION_STATES,
     transitions: TM_AUTHORIZATION_ALLOWED_TRANSITIONS,
   },
   lien_waiver: {
     event_type: 'LIEN_WAIVER_STATE_CHANGED',
-    aia_entity_kind: 'lien_waiver',
+    entity_kind: 'lien_waiver',
     states: LIEN_WAIVER_STATES,
     transitions: LIEN_WAIVER_ALLOWED_TRANSITIONS,
   },
   tm_ticket: {
     event_type: 'TM_TICKET_STATE_CHANGED',
-    aia_entity_kind: 'tm_ticket',
+    entity_kind: 'tm_ticket',
     states: TM_TICKET_STATES,
     transitions: TM_TICKET_ALLOWED_TRANSITIONS,
   },
@@ -224,6 +224,6 @@ export function patternBEventTypeFor(entity: AiaPatternBEntity): ActivitySpineEv
   return PATTERN_B_ENTITIES[entity].event_type;
 }
 
-export function patternBAiaEntityKindFor(entity: AiaPatternBEntity): ActivitySpineAiaEntityKind {
-  return PATTERN_B_ENTITIES[entity].aia_entity_kind;
+export function patternBEntityKindFor(entity: AiaPatternBEntity): ActivitySpineEntityKind {
+  return PATTERN_B_ENTITIES[entity].entity_kind;
 }

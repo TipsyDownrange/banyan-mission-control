@@ -116,10 +116,10 @@ export async function POST(
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'TM_AUTHORIZATION_CONVERTED_TO_CO',
-        entity_type: 'project',
-        entity_id: auth.engagement_id,
-        aia_entity_kind: 'tm_authorization',
-        aia_entity_id: id,
+        scope_entity_type: 'project',
+        scope_entity_id: auth.engagement_id,
+        entity_kind: 'tm_authorization',
+        entity_id: id,
         test_data: auth.is_test_project === true,
         metadata: {
           tm_authorization_id: id,

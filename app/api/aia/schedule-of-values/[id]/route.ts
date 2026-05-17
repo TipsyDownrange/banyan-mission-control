@@ -162,10 +162,10 @@ export async function PATCH(
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'SOV_MODIFIED',
-        entity_type: 'project',
-        entity_id: line.engagement_id,
-        aia_entity_kind: 'schedule_of_values',
-        aia_entity_id: id,
+        scope_entity_type: 'project',
+        scope_entity_id: line.engagement_id,
+        entity_kind: 'schedule_of_values',
+        entity_id: id,
         test_data: line.is_test_project === true,
         metadata: {
           sov_line_id: id,

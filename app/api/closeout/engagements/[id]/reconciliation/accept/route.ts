@@ -118,10 +118,10 @@ export async function POST(
 
       const reconEmit = await emitActivitySpineEvent(tx, {
         event_type: 'JOB_COST_RECONCILED',
-        entity_type: 'project',
+        scope_entity_type: 'project',
+        scope_entity_id: engagementId,
+        entity_kind: 'engagement',
         entity_id: engagementId,
-        aia_entity_kind: 'engagement',
-        aia_entity_id: engagementId,
         kid: body.kid ?? null,
         test_data: isTestProject,
         metadata: {
@@ -131,8 +131,6 @@ export async function POST(
           margin_variance_pct: String(body.margin_variance_pct),
           gold_dataset_entry_id: gold.gold_entry_id,
           actor: gate.actorEmail,
-          closeout_entity_kind: 'engagement',
-          closeout_entity_id: engagementId,
         },
       });
 

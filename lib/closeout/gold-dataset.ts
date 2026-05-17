@@ -79,20 +79,22 @@ export async function writeGoldDatasetEntryInTx(
     goldEntryId = inserted[0].gold_entry_id;
   }
 
+  // ADR-014 Amendment 2: emit with the canonical `gold_dataset_entry` kind.
+  // PRODUCTION path: entity_id is the freshly-inserted gold_entry_id.
+  // TEST_BLOCKED path: no entry row is written (§16.4) — fall back to the
+  // engagement_id so the emission still has a stable subject identifier.
   const emit = await emitActivitySpineEvent(tx, {
     event_type: 'GOLD_DATASET_ENTRY_WRITTEN',
-    entity_type: 'project',
-    entity_id: input.engagementId,
-    aia_entity_kind: 'engagement',
-    aia_entity_id: input.engagementId,
+    scope_entity_type: 'project',
+    scope_entity_id: input.engagementId,
+    entity_kind: 'gold_dataset_entry',
+    entity_id: goldEntryId ?? input.engagementId,
     test_data: input.isTestProject,
     metadata: {
       write_target: writeTarget,
       is_test_project: input.isTestProject,
       gold_entry_id: goldEntryId,
       actor: input.actorEmail,
-      closeout_entity_kind: 'engagement',
-      closeout_entity_id: input.engagementId,
     },
   });
 

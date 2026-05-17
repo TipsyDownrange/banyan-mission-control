@@ -161,7 +161,7 @@ describe('BAN-309 PR 4 — TM ticket state-machine inventory', () => {
   it('registers tm_ticket in PATTERN_B_ENTITIES with TM_TICKET_STATE_CHANGED event_type', () => {
     expect(PATTERN_B_ENTITIES.tm_ticket).toMatchObject({
       event_type: 'TM_TICKET_STATE_CHANGED',
-      aia_entity_kind: 'tm_ticket',
+      entity_kind: 'tm_ticket',
     });
     expect(PATTERN_B_ENTITIES.tm_ticket.states).toBe(TM_TICKET_STATES);
   });
@@ -240,8 +240,8 @@ describe('BAN-309 PR 4 — executePatternBTransition(tm_ticket)', () => {
     expect(inserted.metadata).toMatchObject({
       from_state: 'DRAFT',
       to_state: 'LOGGED',
-      aia_entity_kind: 'tm_ticket',
-      aia_entity_id: TICKET_ID,
+      entity_kind: 'tm_ticket',
+      entity_id: TICKET_ID,
       actor: 'kai@kulaglass.com',
     });
   });

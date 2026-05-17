@@ -39,10 +39,10 @@ function fakeTxThrowingInsert(err: Error): FakeTx {
 }
 
 const BASE_INPUT = {
-  entity_type: 'project' as const,
-  entity_id: '11111111-1111-4111-8111-111111111111',
-  aia_entity_kind: 'pay_application' as const,
-  aia_entity_id: '22222222-2222-4222-8222-222222222222',
+  scope_entity_type: 'project' as const,
+  scope_entity_id: '11111111-1111-4111-8111-111111111111',
+  entity_kind: 'pay_application' as const,
+  entity_id: '22222222-2222-4222-8222-222222222222',
   test_data: false,
 };
 
@@ -91,15 +91,15 @@ describe('BAN-309 Pass 3a.2 — emitActivitySpineEvent', () => {
     expect(insertedValues).toMatchObject({
       event_type: 'PAY_APP_STATE_CHANGED',
       entity_type: 'project',
-      entity_id: BASE_INPUT.entity_id,
+      entity_id: BASE_INPUT.scope_entity_id,
       notes: 'submitted',
       test_data: false,
     });
     expect(insertedValues.metadata).toMatchObject({
       from_state: 'READY_FOR_SUBMISSION',
       to_state: 'SUBMITTED',
-      aia_entity_kind: 'pay_application',
-      aia_entity_id: BASE_INPUT.aia_entity_id,
+      entity_kind: 'pay_application',
+      entity_id: BASE_INPUT.entity_id,
     });
   });
 
