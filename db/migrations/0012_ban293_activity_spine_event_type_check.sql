@@ -25,6 +25,9 @@ ALTER TABLE public.field_events
       'TESTING',
       'WARRANTY_CALLBACK',
 
+      -- Legacy transitional values retained per BAN-293 Pass 2.5 STOP discovery 2026-05-17
+      'wo_completion',
+
       -- BAN-293 Pattern A — discrete action events
       'PAY_APP_NOTARIZED',
       'RETAINAGE_RELEASED',

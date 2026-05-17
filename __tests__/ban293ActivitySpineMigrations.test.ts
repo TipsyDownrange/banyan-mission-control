@@ -19,6 +19,7 @@ describe('BAN-293 Activity Spine migrations', () => {
 
     expect(sql).toContain('field_events_event_type_ban293_check');
     expect(sql).toContain('event_type IS NULL OR event_type IN');
+    expect(sql).toContain(`'wo_completion'`);
     for (const eventType of ACTIVITY_SPINE_EVENT_TYPES) {
       expect(sql).toContain(`'${eventType}'`);
     }
