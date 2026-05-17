@@ -42,8 +42,10 @@ export type CloseoutEntityKind =
 // ── Engagement project lifecycle (event-sourced via project_lifecycle_states
 // audit log — NOT a column on engagements). States mirror the
 // projectLifecycleStateEnum: IN_CLOSEOUT, SUBSTANTIALLY_COMPLETE,
-// FINAL_COMPLETE, ARCHIVED. "Reopen" edges return to IN_CLOSEOUT from a
-// later state; the schema's project_lifecycle_states_reopen_pair_check
+// FINAL_COMPLETE, ARCHIVED. "Reopen" edges regress to a specified prior
+// state per Closeout v1.1 §5.3 step 3 — *typically* FINAL_COMPLETE or
+// SUBSTANTIALLY_COMPLETE; the target is operator-chosen, not hardcoded to
+// IN_CLOSEOUT. The schema's project_lifecycle_states_reopen_pair_check
 // CHECK forces (reopen_reason, reopen_by) to be both-null or both-non-null.
 
 export const PROJECT_LIFECYCLE_STATES = [
@@ -54,26 +56,38 @@ export const PROJECT_LIFECYCLE_STATES = [
 ] as const;
 export type ProjectLifecycleState = typeof PROJECT_LIFECYCLE_STATES[number];
 
+// Forward ordinal — a transition is a reopen iff to_state is strictly
+// earlier in this sequence than from_state.
+const PROJECT_LIFECYCLE_ORDINAL: Record<ProjectLifecycleState, number> = {
+  IN_CLOSEOUT: 0,
+  SUBSTANTIALLY_COMPLETE: 1,
+  FINAL_COMPLETE: 2,
+  ARCHIVED: 3,
+};
+
 export const PROJECT_LIFECYCLE_ALLOWED_TRANSITIONS: Record<ProjectLifecycleState, ProjectLifecycleState[]> = {
   IN_CLOSEOUT: ['SUBSTANTIALLY_COMPLETE'],
   SUBSTANTIALLY_COMPLETE: ['FINAL_COMPLETE', 'IN_CLOSEOUT'],
-  FINAL_COMPLETE: ['ARCHIVED', 'IN_CLOSEOUT'],
-  ARCHIVED: ['IN_CLOSEOUT'],
+  FINAL_COMPLETE: ['ARCHIVED', 'SUBSTANTIALLY_COMPLETE', 'IN_CLOSEOUT'],
+  ARCHIVED: ['FINAL_COMPLETE', 'SUBSTANTIALLY_COMPLETE', 'IN_CLOSEOUT'],
 };
 
 /** Initial-entry state — used when an engagement has no prior lifecycle row. */
 export const PROJECT_LIFECYCLE_ENTRY_STATE: ProjectLifecycleState = 'IN_CLOSEOUT';
 
 /**
- * True iff a transition is a reopen (going back to IN_CLOSEOUT from any
- * non-initial state). The route uses this to enforce the reopen_pair
- * invariant (reason + by both required).
+ * True iff a transition is a reopen (regresses to an earlier state per the
+ * forward ordinal). Per Closeout v1.1 §5.3 step 3, reopen edges target an
+ * operator-specified prior state (typically FINAL_COMPLETE or
+ * SUBSTANTIALLY_COMPLETE), not a hardcoded landing state. The route uses
+ * this to enforce the reopen_pair invariant (reason + by both required).
  */
 export function isProjectLifecycleReopen(
   fromState: ProjectLifecycleState | null,
   toState: ProjectLifecycleState,
 ): boolean {
-  return toState === 'IN_CLOSEOUT' && fromState !== null && fromState !== 'IN_CLOSEOUT';
+  if (fromState === null) return false;
+  return PROJECT_LIFECYCLE_ORDINAL[toState] < PROJECT_LIFECYCLE_ORDINAL[fromState];
 }
 
 // ── punch_list_items.status (7 states; native pgEnum punch_list_item_status)

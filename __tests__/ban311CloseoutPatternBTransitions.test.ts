@@ -234,11 +234,20 @@ describe('BAN-311 PR 1 — validateCloseoutPatternBTransition', () => {
       ok: false, reason: 'TRANSITION_NOT_ALLOWED',
     });
   });
-  it('isProjectLifecycleReopen detects reopen edges', () => {
-    expect(isProjectLifecycleReopen('FINAL_COMPLETE', 'IN_CLOSEOUT')).toBe(true);
-    expect(isProjectLifecycleReopen('ARCHIVED', 'IN_CLOSEOUT')).toBe(true);
+  it('isProjectLifecycleReopen detects reopen edges by forward-ordinal regression (§5.3)', () => {
+    // Forward edges
     expect(isProjectLifecycleReopen('IN_CLOSEOUT', 'SUBSTANTIALLY_COMPLETE')).toBe(false);
+    expect(isProjectLifecycleReopen('SUBSTANTIALLY_COMPLETE', 'FINAL_COMPLETE')).toBe(false);
+    expect(isProjectLifecycleReopen('FINAL_COMPLETE', 'ARCHIVED')).toBe(false);
+    // Initial-entry → IN_CLOSEOUT is not a reopen
     expect(isProjectLifecycleReopen(null, 'IN_CLOSEOUT')).toBe(false);
+    // Reopen edges — operator-specified targets per Closeout v1.1 §5.3
+    expect(isProjectLifecycleReopen('SUBSTANTIALLY_COMPLETE', 'IN_CLOSEOUT')).toBe(true);
+    expect(isProjectLifecycleReopen('FINAL_COMPLETE', 'SUBSTANTIALLY_COMPLETE')).toBe(true); // typical
+    expect(isProjectLifecycleReopen('FINAL_COMPLETE', 'IN_CLOSEOUT')).toBe(true);
+    expect(isProjectLifecycleReopen('ARCHIVED', 'FINAL_COMPLETE')).toBe(true); // typical operator case
+    expect(isProjectLifecycleReopen('ARCHIVED', 'SUBSTANTIALLY_COMPLETE')).toBe(true);
+    expect(isProjectLifecycleReopen('ARCHIVED', 'IN_CLOSEOUT')).toBe(true);
   });
 });
 
@@ -548,7 +557,7 @@ describe('POST /api/closeout/engagements/[id]/lifecycle-transition', () => {
     expect((await res.json()).code).toBe('REOPEN_PAIR_REQUIRED');
   });
 
-  it('200 reopen happy path: closes prior row, inserts new IN_CLOSEOUT, emits with reopen metadata', async () => {
+  it('200 reopen FINAL_COMPLETE → IN_CLOSEOUT: closes prior row, inserts new row, emits with reopen metadata', async () => {
     stageLookups(
       [{ engagement_id: ENG_ID, is_test_project: false }],
       [{ lifecycle_state_id: LIFECYCLE_ROW_ID, state: 'FINAL_COMPLETE' }],
@@ -561,7 +570,6 @@ describe('POST /api/closeout/engagements/[id]/lifecycle-transition', () => {
       ctx(ENG_ID),
     );
     expect(res.status).toBe(200);
-    // Prior row's exited_at was stamped
     expect(updateSetSpy).toHaveBeenCalledWith(expect.objectContaining({ exited_at: expect.any(Date) }));
     const lcInsert = insertValuesSpy.mock.calls.find(c => c[0] === 'project_lifecycle_states')![1];
     expect(lcInsert).toMatchObject({
@@ -576,7 +584,81 @@ describe('POST /api/closeout/engagements/[id]/lifecycle-transition', () => {
     expect(evt.metadata.reopen_by).toBe(USER);
   });
 
-  it('409 illegal transition (IN_CLOSEOUT → ARCHIVED)', async () => {
+  it('200 reopen FINAL_COMPLETE → SUBSTANTIALLY_COMPLETE (typical operator workflow per §5.3)', async () => {
+    stageLookups(
+      [{ engagement_id: ENG_ID, is_test_project: false }],
+      [{ lifecycle_state_id: LIFECYCLE_ROW_ID, state: 'FINAL_COMPLETE' }],
+    );
+    txInsertReturningQueue.project_lifecycle_states = [{ lifecycle_state_id: 'new-row' }];
+    txInsertReturning = [{ event_id: 'evt-reopen-typical' }];
+    const USER = '00000000-0000-4000-8000-0000000000cc';
+    const res = await route.POST(
+      makeRequest({ to_state: 'SUBSTANTIALLY_COMPLETE', reopen_reason: 'punch item resurfaced', reopen_by: USER }),
+      ctx(ENG_ID),
+    );
+    expect(res.status).toBe(200);
+    const lcInsert = insertValuesSpy.mock.calls.find(c => c[0] === 'project_lifecycle_states')![1];
+    expect(lcInsert).toMatchObject({
+      state: 'SUBSTANTIALLY_COMPLETE',
+      reopen_reason: 'punch item resurfaced',
+      reopen_by: USER,
+    });
+    const evt = insertValuesSpy.mock.calls.find(c => c[0] === 'field_events')![1];
+    expect(evt.metadata).toMatchObject({
+      from_state: 'FINAL_COMPLETE',
+      to_state: 'SUBSTANTIALLY_COMPLETE',
+      reopen: true,
+    });
+  });
+
+  it('200 reopen ARCHIVED → FINAL_COMPLETE (typical operator one-step-back per §5.3)', async () => {
+    stageLookups(
+      [{ engagement_id: ENG_ID, is_test_project: false }],
+      [{ lifecycle_state_id: LIFECYCLE_ROW_ID, state: 'ARCHIVED' }],
+    );
+    txInsertReturningQueue.project_lifecycle_states = [{ lifecycle_state_id: 'new-row' }];
+    txInsertReturning = [{ event_id: 'evt-archived-reopen' }];
+    const USER = '00000000-0000-4000-8000-0000000000dd';
+    const res = await route.POST(
+      makeRequest({ to_state: 'FINAL_COMPLETE', reopen_reason: 'archived lien claim', reopen_by: USER }),
+      ctx(ENG_ID),
+    );
+    expect(res.status).toBe(200);
+    const lcInsert = insertValuesSpy.mock.calls.find(c => c[0] === 'project_lifecycle_states')![1];
+    expect(lcInsert).toMatchObject({
+      state: 'FINAL_COMPLETE',
+      reopen_reason: 'archived lien claim',
+      reopen_by: USER,
+    });
+    const evt = insertValuesSpy.mock.calls.find(c => c[0] === 'field_events')![1];
+    expect(evt.metadata).toMatchObject({
+      from_state: 'ARCHIVED',
+      to_state: 'FINAL_COMPLETE',
+      reopen: true,
+    });
+  });
+
+  it('400 REOPEN_PAIR_REQUIRED for any reopen target (not just IN_CLOSEOUT)', async () => {
+    stageLookups(
+      [{ engagement_id: ENG_ID, is_test_project: false }],
+      [{ lifecycle_state_id: LIFECYCLE_ROW_ID, state: 'ARCHIVED' }],
+    );
+    const res = await route.POST(makeRequest({ to_state: 'SUBSTANTIALLY_COMPLETE' }), ctx(ENG_ID));
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe('REOPEN_PAIR_REQUIRED');
+  });
+
+  it('409 illegal forward skip (IN_CLOSEOUT → FINAL_COMPLETE)', async () => {
+    stageLookups(
+      [{ engagement_id: ENG_ID, is_test_project: false }],
+      [{ lifecycle_state_id: LIFECYCLE_ROW_ID, state: 'IN_CLOSEOUT' }],
+    );
+    const res = await route.POST(makeRequest({ to_state: 'FINAL_COMPLETE' }), ctx(ENG_ID));
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('TRANSITION_NOT_ALLOWED');
+  });
+
+  it('409 illegal forward skip from prior state (IN_CLOSEOUT → ARCHIVED)', async () => {
     stageLookups(
       [{ engagement_id: ENG_ID, is_test_project: false }],
       [{ lifecycle_state_id: LIFECYCLE_ROW_ID, state: 'IN_CLOSEOUT' }],
