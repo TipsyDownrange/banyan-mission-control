@@ -120,3 +120,11 @@ Opt-in test visibility must be explicit, e.g. `include_test_data=true`.
 ## Acceptance notes
 
 This amendment intentionally does not implement AIA Billing, Closeout, Test Project APIs, PDF generation, Textura CSV, Proof RON integration, or QBO write-back. It only lands the shared Activity Spine schema contract needed by those trunks.
+
+## Amendment 2 — Legacy Retention of wo_completion (2026-05-17 HST)
+
+**Status:** Ratified by Sean, 2026-05-17 HST
+**Trigger:** Pass 2.5 BQS §17 STOP — pre-migration verification discovered 505 existing field_events rows with event_type='wo_completion', outside the 33-value canonical list.
+**Decision:** Add 'wo_completion' as 34th canonical value, classified as legacy-retained transitional. Total canonical event types = 11 existing live + 1 legacy transitional + 22 new BAN-293 = 34.
+**Service trunk gap:** The consolidation pass missed WORK_ORDER_STATE_CHANGED Pattern B event for Service WO state-machine transitions. Per Codex Service trunk audit 2026-04-21 (Drive 1BvGB2oyYFxG3Z84qwPgvTESwvhATWiZM), Service WO state machine has 11 states. WORK_ORDER_STATE_CHANGED Pattern B event addition is deferred to Service trunk re-author packet (Wave 3+); that packet will also normalize existing wo_completion rows to the new pattern.
+**Migration impact:** Migration 0012 updated to include 'wo_completion' in the CHECK constraint VALUES list before first application. No new migration file added — 0012 modified in place since it had not yet applied anywhere.

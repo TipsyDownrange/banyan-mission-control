@@ -1,6 +1,7 @@
 import {
   ACTIVITY_SPINE_EVENT_TYPE_COUNT,
   ACTIVITY_SPINE_EXISTING_EVENT_TYPE_COUNT,
+  ACTIVITY_SPINE_LEGACY_EVENT_TYPE_COUNT,
   ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT,
   ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES,
   ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES,
@@ -9,10 +10,21 @@ import {
 } from '@/lib/activity-spine/event-contract';
 
 describe('BAN-293 Activity Spine event contract', () => {
-  it('contains 11 existing + 22 ratified new event types', () => {
+  it('contains 11 existing + 1 legacy transitional + 22 ratified new event types', () => {
     expect(ACTIVITY_SPINE_EXISTING_EVENT_TYPE_COUNT).toBe(11);
+    expect(ACTIVITY_SPINE_LEGACY_EVENT_TYPE_COUNT).toBe(1);
     expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(22);
-    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(33);
+    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(34);
+  });
+
+  it('retains wo_completion as a legacy transitional event outside Pattern A/B', () => {
+    expect(isActivitySpineEventType('wo_completion')).toBe(true);
+    expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).not.toContain('wo_completion');
+    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).not.toContain('wo_completion');
+    expect(validateActivitySpinePayload('wo_completion', {})).toEqual({
+      ok: true,
+      errors: [],
+    });
   });
 
   it('keeps the corrected Pattern A / Pattern B split', () => {
