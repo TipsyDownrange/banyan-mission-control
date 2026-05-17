@@ -1,16 +1,20 @@
 /**
  * BAN-309 Pass 3a.2 — Pattern B state-machine transition helpers for AIA
  * lifecycle entities (pay_applications, sov_versions, tm_authorizations,
- * lien_waivers).
+ * lien_waivers, tm_tickets).
  *
- * Each entity owns a `state` column with a CHECK-constraint-bounded set of
- * allowed values. This module centralises the allowed-transition graphs so
- * routes don't duplicate them and so the validator + state-machine + emit
- * payload stay in lockstep.
+ * Each entity owns a lifecycle column (`state` or `status`) with a
+ * CHECK-constraint-bounded set of allowed values. This module centralises
+ * the allowed-transition graphs so routes don't duplicate them and so the
+ * validator + state-machine + emit payload stay in lockstep.
  *
  * Pattern B canon: every transition emits a *_STATE_CHANGED event with
  * from_state + to_state in metadata (per
  * lib/activity-spine/event-contract.ts:93-100).
+ *
+ * PR 4 (BAN-309 close-out): adds tm_ticket — the 5th and final Pattern B
+ * entity. Lifecycle column is `tm_tickets.status` (schema drift; same as
+ * tm_authorizations).
  */
 
 import type { ActivitySpineEventType } from '@/lib/activity-spine/event-contract';
@@ -20,7 +24,8 @@ export type AiaPatternBEntity =
   | 'pay_application'
   | 'sov_version'
   | 'tm_authorization'
-  | 'lien_waiver';
+  | 'lien_waiver'
+  | 'tm_ticket';
 
 // State machines — exact strings must match the schema CHECK constraints in
 // db/schema.ts. Keeping these mirrored here lets the route reject an
@@ -103,6 +108,36 @@ export const LIEN_WAIVER_ALLOWED_TRANSITIONS: Record<LienWaiverState, LienWaiver
   VOIDED: [],
 };
 
+// PR 4 — tm_tickets. States mirror the schema CHECK on tm_tickets.status
+// (AIA v1.1 §11.3). Transition graph verified against AIA v1.1 §11.5 by XO
+// audit 2026-05-17; REJECTED is terminal — escalation of rejected tickets
+// happens via parent TM Authorization → CO conversion
+// (TM_AUTHORIZATION_CONVERTED_TO_CO emission, PR 2), not ticket reopen.
+export const TM_TICKET_STATES = [
+  'DRAFT',
+  'LOGGED',
+  'READY_FOR_GC_APPROVAL',
+  'GC_APPROVED',
+  'DISPUTED',
+  'BILLABLE',
+  'BILLED',
+  'PAID',
+  'REJECTED',
+] as const;
+export type TmTicketState = typeof TM_TICKET_STATES[number];
+
+export const TM_TICKET_ALLOWED_TRANSITIONS: Record<TmTicketState, TmTicketState[]> = {
+  DRAFT: ['LOGGED', 'REJECTED'],
+  LOGGED: ['DRAFT', 'READY_FOR_GC_APPROVAL', 'REJECTED'],
+  READY_FOR_GC_APPROVAL: ['GC_APPROVED', 'DISPUTED', 'REJECTED'],
+  GC_APPROVED: ['BILLABLE', 'DISPUTED'],
+  DISPUTED: ['READY_FOR_GC_APPROVAL', 'REJECTED'],
+  BILLABLE: ['BILLED'],
+  BILLED: ['PAID'],
+  PAID: [],
+  REJECTED: [],
+};
+
 // ── Per-entity metadata ─────────────────────────────────────────────────────
 
 interface PatternBEntityMeta<S extends string> {
@@ -117,6 +152,7 @@ export const PATTERN_B_ENTITIES: {
   sov_version: PatternBEntityMeta<SovVersionState>;
   tm_authorization: PatternBEntityMeta<TmAuthorizationState>;
   lien_waiver: PatternBEntityMeta<LienWaiverState>;
+  tm_ticket: PatternBEntityMeta<TmTicketState>;
 } = {
   pay_application: {
     event_type: 'PAY_APP_STATE_CHANGED',
@@ -141,6 +177,12 @@ export const PATTERN_B_ENTITIES: {
     aia_entity_kind: 'lien_waiver',
     states: LIEN_WAIVER_STATES,
     transitions: LIEN_WAIVER_ALLOWED_TRANSITIONS,
+  },
+  tm_ticket: {
+    event_type: 'TM_TICKET_STATE_CHANGED',
+    aia_entity_kind: 'tm_ticket',
+    states: TM_TICKET_STATES,
+    transitions: TM_TICKET_ALLOWED_TRANSITIONS,
   },
 };
 
