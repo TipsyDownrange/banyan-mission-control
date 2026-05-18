@@ -5,6 +5,7 @@ import WorkBreakdown from '@/components/shared/WorkBreakdown';
 import ProjectMatrixView from '@/components/shared/ProjectMatrixView';
 import ActivityTimeline from '@/components/ActivityTimeline';
 import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
+import PayAppsTab from '@/components/engagements/PayAppsTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -311,11 +312,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               )}
 
               {activeTab === 'pay-apps' && (
-                <BuildQueuePlaceholder
-                  surfaceName="Pay Apps"
-                  specDate={null}
-                  buildQueueStatus="BQS spec pending"
-                />
+                <PayAppsTab kID={project.kID} />
               )}
 
               {activeTab === 'budget' && (

@@ -1,0 +1,85 @@
+/**
+ * BAN-322 Pay Apps v1 — notarization status badge.
+ *
+ * Per RF6: returns null when notarizationRequired is false (no badge at all).
+ * When required + no active session → muted "Not started" badge.
+ * When session exists → state-colored badge + "View" link to a future
+ * /notarization/[session_id] route (acceptable 404 per dispatch).
+ */
+
+import type { CSSProperties } from 'react';
+
+export type NotarizationSession = {
+  session_id: string;
+  state: string;
+  provider: string;
+  provider_session_url: string | null;
+  completed_at: string | null;
+};
+
+const STATE_BADGE: Record<string, { bg: string; color: string; label: string }> = {
+  CREATED:     { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · Created' },
+  IN_PROGRESS: { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · In Progress' },
+  COMPLETED:   { bg: '#f0fdfa', color: '#0f766e', label: 'Notarization · Completed' },
+  FAILED:      { bg: '#fef2f2', color: '#b91c1c', label: 'Notarization · Failed' },
+  CANCELLED:   { bg: '#f8fafc', color: '#64748b', label: 'Notarization · Cancelled' },
+};
+
+const ROW: CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+  background: 'white', borderRadius: 12, border: '1px solid #e2e8f0',
+};
+
+export default function NotarizationStatusIndicator({
+  latestNotarization,
+  notarizationRequired,
+}: {
+  latestNotarization: NotarizationSession | null;
+  notarizationRequired: boolean;
+}) {
+  if (!notarizationRequired) return null;
+
+  if (latestNotarization === null) {
+    return (
+      <div style={ROW}>
+        <span style={{
+          padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
+          letterSpacing: '0.04em', background: '#f8fafc', color: '#64748b',
+          border: '1px solid #64748b33',
+        }}>
+          Notarization · Not started
+        </span>
+        <span style={{ fontSize: 11, color: '#94a3b8' }}>
+          Required by billing format. No session has been created yet.
+        </span>
+      </div>
+    );
+  }
+
+  const badge = STATE_BADGE[latestNotarization.state]
+    ?? { bg: '#f8fafc', color: '#64748b', label: latestNotarization.state.replace(/_/g, ' ') };
+
+  return (
+    <div style={ROW}>
+      <span style={{
+        padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
+        letterSpacing: '0.04em', background: badge.bg, color: badge.color,
+        border: `1px solid ${badge.color}33`, whiteSpace: 'nowrap',
+      }}>
+        {badge.label}
+      </span>
+      <span style={{ fontSize: 11, color: '#94a3b8' }}>
+        {latestNotarization.provider} · {latestNotarization.session_id.slice(0, 8)}
+      </span>
+      <a
+        href={`/notarization/${latestNotarization.session_id}`}
+        style={{
+          marginLeft: 'auto', fontSize: 11, fontWeight: 700,
+          color: '#0f766e', textDecoration: 'none',
+        }}
+      >
+        View →
+      </a>
+    </div>
+  );
+}
