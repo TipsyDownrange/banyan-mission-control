@@ -107,6 +107,24 @@ export interface WarRoomCostSnapshot {
   /** Live Mac mini relay snapshot (Cost & Usage Live Tracking Phase 1). */
   liveClaudeSession?: import('../cost/types').LiveClaudeSnapshot | null;
   liveClaudeSessionAgeSeconds?: number | null;
+  /** Cost & Usage v2 — per-provider usage snapshots. */
+  usage?: WarRoomUsageEntry[];
+  /** Cost & Usage v2 — per-(provider, scope) API dollar spend. */
+  spend?: WarRoomSpendEntry[];
+  /** Cost & Usage v2 — aggregated billed subscription invoices. */
+  billedToDate?: import('../cost/types').AggregatedBilled | null;
+}
+
+export interface WarRoomUsageEntry {
+  snapshot: import('../cost/types').UsageSnapshot;
+  storedAt: string;
+  ageSeconds: number;
+}
+
+export interface WarRoomSpendEntry {
+  snapshot: import('../cost/types').ApiSpendSnapshot;
+  storedAt: string;
+  ageSeconds: number;
 }
 
 export interface WarRoomLaneRecommendation {

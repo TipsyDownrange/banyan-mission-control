@@ -3,8 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { buildWarRoomDispatchPrompt, canPrepareWarRoomDispatch } from '@/lib/war-room/dispatchPrompt';
-import type { CrewRuntimeStatus, SourceHealthSnapshot, SourceHealthSourceCard, SourceHealthStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState } from '@/lib/war-room/types';
+import type { CrewRuntimeStatus, SourceHealthSnapshot, SourceHealthSourceCard, SourceHealthStatus, WarRoomCostSnapshot, WarRoomDashboardData, WarRoomIssue, WarRoomQueueKey, WarRoomRuntimeHealth, WarRoomRuntimeHealthState, WarRoomSpendEntry, WarRoomUsageEntry } from '@/lib/war-room/types';
 import type { WarRoomLiveOpsLane } from '@/lib/war-room/liveOps';
+import type { CostProvider, SpendScope } from '@/lib/cost/types';
+import { resolveState, type CostSourceState } from '@/lib/cost/stateMachine';
+import RadialQuotaGauge from '@/components/gauges/RadialQuotaGauge';
+import ManometerSpendGauge from '@/components/gauges/ManometerSpendGauge';
 
 const NAV: Array<{ key: WarRoomQueueKey; label: string }> = [
   { key: 'myWatch', label: 'My Watch' },
@@ -295,17 +299,233 @@ function CrewRuntimeCard({ crew }: { crew: CrewRuntimeStatus }) {
   );
 }
 
+// ── Ship's Bridge War Room (BAN-319) ───────────────────────────────────────
+
+function statePillTheme(state: CostSourceState) {
+  if (state === 'LIVE') return { color: '#86efac', border: 'rgba(34,197,94,0.4)', bg: 'rgba(34,197,94,0.1)' };
+  if (state === 'STALE') return { color: '#fbbf24', border: 'rgba(245,158,11,0.4)', bg: 'rgba(245,158,11,0.1)' };
+  if (state === 'DEGRADED') return { color: '#fb923c', border: 'rgba(249,115,22,0.4)', bg: 'rgba(249,115,22,0.1)' };
+  if (state === 'BROKEN_AUTH') return { color: '#fca5a5', border: 'rgba(239,68,68,0.45)', bg: 'rgba(239,68,68,0.12)' };
+  if (state === 'BROKEN_SCHEMA') return { color: '#fca5a5', border: 'rgba(239,68,68,0.45)', bg: 'rgba(239,68,68,0.12)' };
+  return { color: '#94a3b8', border: 'rgba(148,163,184,0.34)', bg: 'rgba(148,163,184,0.1)' };
+}
+
+function StatePill({ state }: { state: CostSourceState }) {
+  const t = statePillTheme(state);
+  return (
+    <span
+      data-state-pill={state}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        color: t.color, border: `1px solid ${t.border}`, background: t.bg,
+        borderRadius: 999, padding: '3px 9px', fontSize: 10, fontWeight: 950,
+        textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap',
+      }}
+    >
+      <span style={{ width: 7, height: 7, borderRadius: '50%', background: t.color, display: 'inline-block' }} />
+      {state}
+    </span>
+  );
+}
+
+function deriveUsageState(entry: WarRoomUsageEntry | undefined): CostSourceState {
+  if (!entry) return 'NOT_CONFIGURED';
+  return resolveState({
+    lastSuccess: entry.storedAt || null,
+    lastAttempt: entry.storedAt || null,
+    lastError: null,
+    snapshotPresent: true,
+  });
+}
+
+function deriveSpendState(entries: WarRoomSpendEntry[], provider: CostProvider): CostSourceState {
+  const providerEntries = entries.filter(e => e.snapshot.provider === provider);
+  if (providerEntries.length === 0) return 'NOT_CONFIGURED';
+  const newest = providerEntries.reduce((a, b) => (a.ageSeconds <= b.ageSeconds ? a : b));
+  return resolveState({
+    lastSuccess: newest.storedAt || null,
+    lastAttempt: newest.storedAt || null,
+    lastError: null,
+    snapshotPresent: true,
+  });
+}
+
+function ClaudeStation({ usage, state }: { usage: WarRoomUsageEntry | undefined; state: CostSourceState }) {
+  const snap = usage?.snapshot;
+  return (
+    <section data-ship-station="claude" style={{ border: '1px solid rgba(176,132,56,0.32)', background: 'linear-gradient(135deg, rgba(20,32,44,0.92), rgba(10,18,28,0.96))', borderRadius: 18, padding: 14 }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div>
+          <div style={{ color: '#c08838', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Claude Station</div>
+          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 950, marginTop: 2 }}>Anthropic Subscription</div>
+        </div>
+        <StatePill state={state} />
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8, justifyItems: 'center' }}>
+        <RadialQuotaGauge
+          label="Session"
+          percentage={snap?.currentSession.percentage ?? 0}
+          resetsAt={snap?.currentSession.resetsAt ?? null}
+          state={state}
+        />
+        <RadialQuotaGauge
+          label="Weekly"
+          percentage={snap?.weeklyLimit.percentage ?? 0}
+          resetsAt={snap?.weeklyLimit.resetsAt ?? null}
+          state={state}
+        />
+        <RadialQuotaGauge
+          label="Design"
+          percentage={snap?.claudeDesign?.percentage ?? 0}
+          resetsAt={snap?.claudeDesign?.resetsAt ?? null}
+          state={state}
+        />
+      </div>
+      {snap?.extraUsage && (
+        <div style={{ marginTop: 10, color: '#cbd5e1', fontSize: 11, textAlign: 'center' }}>
+          Extra usage <span style={{ color: '#f8fafc', fontWeight: 900 }}>${snap.extraUsage.usedUsd.toFixed(2)}</span>
+          <span style={{ color: '#94a3b8' }}> / ${snap.extraUsage.budgetUsd.toFixed(0)}</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ChatGPTStation({ usage, state }: { usage: WarRoomUsageEntry | undefined; state: CostSourceState }) {
+  const snap = usage?.snapshot;
+  return (
+    <section data-ship-station="chatgpt" style={{ border: '1px solid rgba(176,132,56,0.32)', background: 'linear-gradient(135deg, rgba(20,32,44,0.92), rgba(10,18,28,0.96))', borderRadius: 18, padding: 14 }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div>
+          <div style={{ color: '#c08838', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>ChatGPT Station</div>
+          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 950, marginTop: 2 }}>OpenAI Subscription</div>
+        </div>
+        <StatePill state={state} />
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 8, justifyItems: 'center' }}>
+        <RadialQuotaGauge
+          label="Session"
+          percentage={snap?.currentSession.percentage ?? 0}
+          resetsAt={snap?.currentSession.resetsAt ?? null}
+          state={state}
+        />
+        <RadialQuotaGauge
+          label="Weekly"
+          percentage={snap?.weeklyLimit.percentage ?? 0}
+          resetsAt={snap?.weeklyLimit.resetsAt ?? null}
+          state={state}
+        />
+      </div>
+    </section>
+  );
+}
+
+function ApiSpendStrip({ spend }: { spend: WarRoomSpendEntry[] }) {
+  const scopes: SpendScope[] = ['today', 'week', 'month'];
+  const scaleByScope: Record<SpendScope, number> = { today: 50, week: 200, month: 1000 };
+  const labelByScope: Record<SpendScope, string> = { today: 'Today', week: 'Week', month: 'Month' };
+
+  function totalFor(scope: SpendScope): { amount: number; state: CostSourceState } {
+    const entries = spend.filter(e => e.snapshot.scope === scope);
+    if (entries.length === 0) return { amount: 0, state: 'NOT_CONFIGURED' };
+    const amount = entries.reduce((s, e) => s + e.snapshot.amountUsd, 0);
+    const newest = entries.reduce((a, b) => (a.ageSeconds <= b.ageSeconds ? a : b));
+    const state = resolveState({
+      lastSuccess: newest.storedAt || null,
+      lastAttempt: newest.storedAt || null,
+      lastError: null,
+      snapshotPresent: true,
+    });
+    return { amount, state };
+  }
+
+  return (
+    <section data-ship-strip="api-spend" style={{ border: '1px solid rgba(176,132,56,0.32)', background: 'linear-gradient(135deg, rgba(20,32,44,0.92), rgba(10,18,28,0.96))', borderRadius: 18, padding: 14 }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ color: '#c08838', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>API Spend (Anthropic + OpenAI)</div>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8, justifyItems: 'center' }}>
+        {scopes.map(scope => {
+          const { amount, state } = totalFor(scope);
+          return (
+            <ManometerSpendGauge
+              key={scope}
+              label={labelByScope[scope]}
+              amountUsd={amount}
+              scaleMax={scaleByScope[scope]}
+              state={state}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function BilledToDateStrip({ cost }: { cost: WarRoomCostSnapshot }) {
+  const billed = cost.billedToDate;
+  const cells = [
+    { label: 'Last 30 Days', value: billed?.last30d ?? 0 },
+    { label: 'This Month', value: billed?.thisMonth ?? 0 },
+    { label: 'Trailing 12 mo', value: billed?.trailing12mo ?? 0 },
+  ];
+  return (
+    <section data-ship-strip="billed-to-date" style={{ border: '1px solid rgba(176,132,56,0.32)', background: 'linear-gradient(135deg, rgba(20,32,44,0.92), rgba(10,18,28,0.96))', borderRadius: 18, padding: 14 }}>
+      <header style={{ marginBottom: 12 }}>
+        <div style={{ color: '#c08838', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Billed to Date · Subscription Invoices</div>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8 }}>
+        {cells.map(cell => (
+          <div key={cell.label} data-billed-cell={cell.label} style={{ border: '1px solid rgba(176,132,56,0.18)', background: 'rgba(10,20,30,0.6)', borderRadius: 14, padding: 10, textAlign: 'center' }}>
+            <div style={{ color: '#f8fafc', fontSize: 22, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>{formatUsd(cell.value)}</div>
+            <div style={{ color: '#cbd5e1', fontSize: 10, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4 }}>{cell.label}</div>
+          </div>
+        ))}
+      </div>
+      {!billed && (
+        <div style={{ marginTop: 8, color: '#94a3b8', fontSize: 10, textAlign: 'center' }}>Aggregation pending Gmail spend scrub.</div>
+      )}
+    </section>
+  );
+}
+
+function ShipsBridge({ cost }: { cost: WarRoomCostSnapshot }) {
+  const usage = cost.usage || [];
+  const spend = cost.spend || [];
+  const anthropicUsage = usage.find(u => u.snapshot.provider === 'anthropic');
+  const openaiUsage = usage.find(u => u.snapshot.provider === 'openai');
+  const anthropicState = deriveUsageState(anthropicUsage);
+  const openaiState = deriveUsageState(openaiUsage);
+
+  return (
+    <div data-war-room-ships-bridge="true" style={{ display: 'grid', gap: 10 }}>
+      <div className="war-room-ships-bridge-stations" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 10 }}>
+        <ClaudeStation usage={anthropicUsage} state={anthropicState} />
+        <ChatGPTStation usage={openaiUsage} state={openaiState} />
+      </div>
+      <ApiSpendStrip spend={spend} />
+      <BilledToDateStrip cost={cost} />
+    </div>
+  );
+}
+
 function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
   const days = Object.entries(cost.byDay || {}).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
   const maxCost = Math.max(...days.map(([, day]) => day.cost || 0), 1);
   const providerTotal = Math.max(cost.providers.reduce((sum, provider) => sum + provider.value, 0), cost.allInTotal, 1);
 
+  const hasV2Data = (cost.usage && cost.usage.length > 0) || (cost.spend && cost.spend.length > 0) || cost.billedToDate != null;
+
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      <LiveClaudeSessionPanel
-        snapshot={cost.liveClaudeSession ?? null}
-        ageSeconds={cost.liveClaudeSessionAgeSeconds ?? null}
-      />
+      {hasV2Data ? (
+        <ShipsBridge cost={cost} />
+      ) : (
+        <LiveClaudeSessionPanel
+          snapshot={cost.liveClaudeSession ?? null}
+          ageSeconds={cost.liveClaudeSessionAgeSeconds ?? null}
+        />
+      )}
       <section data-war-room-runtime-cost="true" style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'linear-gradient(135deg, rgba(7,23,34,0.94), rgba(12,35,48,0.86))', borderRadius: 18, padding: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
         <div>
