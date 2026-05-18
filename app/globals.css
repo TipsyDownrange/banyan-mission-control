@@ -147,7 +147,8 @@
     .war-room-agent-grid,
     .war-room-selected-grid,
     .war-room-column-grid,
-    .war-room-bottom-grid {
+    .war-room-bottom-grid,
+    .war-room-ships-bridge-stations {
       grid-template-columns: 1fr !important;
     }
   }

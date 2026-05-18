@@ -1,12 +1,16 @@
 /**
- * Cost & Usage Live Tracking — Phase 1
+ * Cost & Usage Live Tracking
  *
- * LiveClaudeSnapshot is the live "spend right now" payload that the Mac mini
- * relay (Kai polling the "Usage for Claude Dashboard" app) POSTs to
- * /api/cost/ingest. It is intentionally separate from the invoice-based
- * /api/cost response: invoice data answers "what have I been billed",
- * snapshot data answers "what is the subscription window doing right now".
+ * v1 (LiveClaudeSnapshot): legacy "Usage for Claude Dashboard" payload retained
+ * for backward compat with currently-deployed Mac mini relays.
+ *
+ * v2: snapshot_type-discriminated payloads. UsageSnapshot is per-provider live
+ * subscription utilization; ApiSpendSnapshot is per-provider per-scope
+ * cumulative API dollar spend; AggregatedBilled rolls Gmail-scraped subscription
+ * invoices into trailing windows.
  */
+
+// ── v1 (legacy) ─────────────────────────────────────────────────────────────
 
 export interface LiveClaudeExtraUsage {
   used: number;
@@ -14,20 +18,58 @@ export interface LiveClaudeExtraUsage {
 }
 
 export interface LiveClaudeSnapshot {
-  /** Session window utilization (0-100). */
   sessionPct: number;
-  /** Weekly window utilization (0-100). */
   weeklyPct: number;
-  /** Opus / Design model bucket utilization (0-100) when surfaced by the Mac app. */
   opusPct: number | null;
-  /** Pay-as-you-go extra usage above the subscription cap. */
   extraUsageDollars: LiveClaudeExtraUsage | null;
-  /** ISO 8601 timestamp when the active 5-hour session window resets. */
   resetSessionAt: string | null;
-  /** ISO 8601 timestamp when the weekly window resets. */
   resetWeeklyAt: string | null;
-  /** Identifier for the upstream Mac app, e.g. "usage-for-claude-dashboard". */
   sourceApp: string;
-  /** ISO 8601 timestamp recorded by the Mac app when this sample was taken. */
   capturedAt: string;
+}
+
+// ── v2 usage ────────────────────────────────────────────────────────────────
+
+export type CostProvider = 'anthropic' | 'openai';
+
+export interface QuotaWindow {
+  percentage: number;
+  resetsAt: string | null;
+}
+
+export interface ExtraUsageWindow {
+  usedUsd: number;
+  budgetUsd: number;
+  resetsAt: string | null;
+}
+
+export interface UsageSnapshot {
+  snapshot_type: 'usage';
+  provider: CostProvider;
+  currentSession: QuotaWindow;
+  weeklyLimit: QuotaWindow;
+  claudeDesign?: QuotaWindow | null;
+  extraUsage?: ExtraUsageWindow | null;
+  fetchedAt: string;
+}
+
+// ── v2 spend ────────────────────────────────────────────────────────────────
+
+export type SpendScope = 'today' | 'week' | 'month';
+
+export interface ApiSpendSnapshot {
+  snapshot_type: 'spend';
+  provider: CostProvider;
+  scope: SpendScope;
+  amountUsd: number;
+  fetchedAt: string;
+}
+
+// ── Billed-to-date (Gmail-scraped subscription invoices) ────────────────────
+
+export interface AggregatedBilled {
+  last30d: number;
+  thisMonth: number;
+  trailing12mo: number;
+  asOf: string;
 }

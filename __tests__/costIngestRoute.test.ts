@@ -164,4 +164,107 @@ describe('POST /api/cost/ingest', () => {
     expect(res.status).toBe(200);
     expect(snapshotModule.readLatestLiveClaudeSnapshot()).not.toBeNull();
   });
+
+  // ── BAN-319 v2 dispatcher ────────────────────────────────────────────────
+
+  const V2_USAGE_PAYLOAD = {
+    snapshot_type: 'usage',
+    provider: 'anthropic',
+    currentSession: { percentage: 33, resetsAt: '2026-05-18T18:00:00.000Z' },
+    weeklyLimit: { percentage: 12, resetsAt: '2026-05-25T00:00:00.000Z' },
+    claudeDesign: { percentage: 4, resetsAt: '2026-05-18T18:00:00.000Z' },
+    extraUsage: { usedUsd: 1.5, budgetUsd: 25, resetsAt: '2026-05-25T00:00:00.000Z' },
+    fetchedAt: '2026-05-18T12:00:00.000Z',
+  };
+
+  const V2_SPEND_PAYLOAD = {
+    snapshot_type: 'spend',
+    provider: 'openai',
+    scope: 'today',
+    amountUsd: 4.27,
+    fetchedAt: '2026-05-18T12:00:00.000Z',
+  };
+
+  it('v1 backward compat: legacy payload without snapshot_type returns 200', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest(VALID_PAYLOAD, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+  });
+
+  it('v1 backward compat: payload with snapshot_type="usage_legacy" still uses v1 path', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({ ...VALID_PAYLOAD, snapshot_type: 'usage_legacy' }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+  });
+
+  it('v2 usage: valid payload returns 200 with usage dispatch', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const routeModule = await import('@/app/api/cost/ingest/route');
+    const usageModule = await import('@/lib/cost/liveUsageSnapshot');
+    usageModule.__resetUsageSnapshotCacheForTests();
+    const res = await routeModule.POST(makeRequest(V2_USAGE_PAYLOAD, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.snapshotType).toBe('usage');
+    expect(json.provider).toBe('anthropic');
+    const cached = usageModule.readLatestUsageSnapshot('anthropic');
+    expect(cached?.snapshot.currentSession.percentage).toBe(33);
+  });
+
+  it('v2 spend: valid payload returns 200 with spend dispatch', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const routeModule = await import('@/app/api/cost/ingest/route');
+    const spendModule = await import('@/lib/cost/liveSpendSnapshot');
+    spendModule.__resetSpendSnapshotCacheForTests();
+    const res = await routeModule.POST(makeRequest(V2_SPEND_PAYLOAD, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.snapshotType).toBe('spend');
+    expect(json.scope).toBe('today');
+    const cached = spendModule.readLatestSpendSnapshot('openai', 'today');
+    expect(cached?.snapshot.amountUsd).toBe(4.27);
+  });
+
+  it('v2: unknown snapshot_type returns 400', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({ snapshot_type: 'mystery', provider: 'anthropic' }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('v2 usage: missing provider returns 400', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const { provider, ...rest } = V2_USAGE_PAYLOAD;
+    void provider;
+    const res = await POST(makeRequest(rest, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('v2 spend: invalid scope returns 400', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({ ...V2_SPEND_PAYLOAD, scope: 'yearly' }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('v2 spend: bearer auth is unchanged (wrong token still 401)', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest(V2_SPEND_PAYLOAD, { authorization: 'Bearer wrong' }));
+    expect(res.status).toBe(401);
+  });
+
+  it('v2 usage: claudeDesign and extraUsage are optional', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const { claudeDesign, extraUsage, ...minimal } = V2_USAGE_PAYLOAD;
+    void claudeDesign; void extraUsage;
+    const res = await POST(makeRequest(minimal, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+  });
 });

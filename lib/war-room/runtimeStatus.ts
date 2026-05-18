@@ -7,8 +7,15 @@ import type {
   WarRoomRuntimeHealthState,
   WarRoomRuntimeQuotaState,
   WarRoomRuntimeState,
+  WarRoomSpendEntry,
+  WarRoomUsageEntry,
 } from './types';
-import type { LiveClaudeSnapshot } from '../cost/types';
+import type {
+  AggregatedBilled,
+  ApiSpendSnapshot,
+  LiveClaudeSnapshot,
+  UsageSnapshot,
+} from '../cost/types';
 import { buildFallbackLiveOpsSnapshot, parseLiveOpsSnapshot } from './liveOps';
 
 type CrewId = CrewRuntimeStatus['id'];
@@ -33,6 +40,9 @@ type CostApiData = {
   error?: string;
   liveClaudeSession?: LiveClaudeSnapshot | null;
   liveClaudeSessionAgeSeconds?: number | null;
+  usage?: Array<UsageSnapshot & { storedAt?: string; ageSeconds?: number }>;
+  spend?: Array<ApiSpendSnapshot & { storedAt?: string; ageSeconds?: number }>;
+  billedToDate?: AggregatedBilled | null;
 };
 
 export type RuntimeProbePayload = Partial<{
@@ -133,7 +143,38 @@ export function mapCostApiDataToWarRoomSnapshot(data: CostApiData | null | undef
     error: data?.error,
     liveClaudeSession: data?.liveClaudeSession ?? null,
     liveClaudeSessionAgeSeconds: typeof data?.liveClaudeSessionAgeSeconds === 'number' ? data.liveClaudeSessionAgeSeconds : null,
+    usage: extractUsageEntries(data?.usage),
+    spend: extractSpendEntries(data?.spend),
+    billedToDate: data?.billedToDate ?? null,
   };
+}
+
+function extractUsageEntries(usage: CostApiData['usage']): WarRoomUsageEntry[] {
+  if (!Array.isArray(usage)) return [];
+  return usage
+    .filter(u => u && u.snapshot_type === 'usage')
+    .map(u => {
+      const { storedAt, ageSeconds, ...snapshot } = u;
+      return {
+        snapshot: snapshot as UsageSnapshot,
+        storedAt: typeof storedAt === 'string' ? storedAt : '',
+        ageSeconds: typeof ageSeconds === 'number' ? ageSeconds : 0,
+      };
+    });
+}
+
+function extractSpendEntries(spend: CostApiData['spend']): WarRoomSpendEntry[] {
+  if (!Array.isArray(spend)) return [];
+  return spend
+    .filter(s => s && s.snapshot_type === 'spend')
+    .map(s => {
+      const { storedAt, ageSeconds, ...snapshot } = s;
+      return {
+        snapshot: snapshot as ApiSpendSnapshot,
+        storedAt: typeof storedAt === 'string' ? storedAt : '',
+        ageSeconds: typeof ageSeconds === 'number' ? ageSeconds : 0,
+      };
+    });
 }
 
 export async function buildWarRoomRuntimeHealth(options: {

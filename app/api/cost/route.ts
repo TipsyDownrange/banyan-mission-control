@@ -12,6 +12,9 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { readLatestLiveClaudeSnapshot } from '@/lib/cost/liveClaudeSnapshot';
+import { readAllLatestUsage } from '@/lib/cost/liveUsageSnapshot';
+import { readAllLatestSpend } from '@/lib/cost/liveSpendSnapshot';
+import { buildAggregatedBilled } from '@/lib/cost/aiSpendReconciliation';
 
 const COST_SHEET_ID = '1EutKs3k0Cp3UwmpmAEDV8FaSSeIklb7Lk7wufRq5YdI';
 const DAILY_BUDGET = 50;
@@ -143,6 +146,38 @@ export async function GET(req: Request) {
     // Additive; existing fields unchanged.
     const liveClaude = readLatestLiveClaudeSnapshot();
 
+    // Cost & Usage v2 — usage + spend + billed-to-date.
+    const latestUsage = readAllLatestUsage();
+    const latestSpend = readAllLatestSpend();
+    const billedToDate = await buildAggregatedBilled().catch(() => ({
+      last30d: 0, thisMonth: 0, trailing12mo: 0, asOf: new Date().toISOString(),
+    }));
+
+    // Synthesize a v1 LiveClaudeSnapshot view from the latest anthropic v2
+    // usage entry if v1 isn't directly populated. Preserves WarRoom mount
+    // expectations during the transition.
+    let liveClaudeSession = liveClaude ? liveClaude.snapshot : null;
+    let liveClaudeAge = liveClaude ? liveClaude.ageSeconds : null;
+    let liveClaudeStored = liveClaude ? liveClaude.storedAt : null;
+    if (!liveClaudeSession) {
+      const anthropicUsage = latestUsage.find(u => u.snapshot.provider === 'anthropic');
+      if (anthropicUsage) {
+        const s = anthropicUsage.snapshot;
+        liveClaudeSession = {
+          sessionPct: s.currentSession.percentage,
+          weeklyPct: s.weeklyLimit.percentage,
+          opusPct: s.claudeDesign?.percentage ?? null,
+          extraUsageDollars: s.extraUsage ? { used: s.extraUsage.usedUsd, limit: s.extraUsage.budgetUsd } : null,
+          resetSessionAt: s.currentSession.resetsAt,
+          resetWeeklyAt: s.weeklyLimit.resetsAt,
+          sourceApp: 'cost-relay-v2-anthropic',
+          capturedAt: s.fetchedAt,
+        };
+        liveClaudeAge = anthropicUsage.ageSeconds;
+        liveClaudeStored = anthropicUsage.storedAt;
+      }
+    }
+
     return NextResponse.json({
       // Hero
       allInTotal:          Math.round(allInTotal * 100) / 100,
@@ -210,9 +245,14 @@ export async function GET(req: Request) {
       note: 'Anthropic: live Admin API every 5min. OpenAI: CSV imports. Subscriptions: configured.',
 
       // Live Claude subscription snapshot (Mac mini relay, BAN cost-live-phase-1).
-      liveClaudeSession: liveClaude ? liveClaude.snapshot : null,
-      liveClaudeSessionAgeSeconds: liveClaude ? liveClaude.ageSeconds : null,
-      liveClaudeSessionStoredAt: liveClaude ? liveClaude.storedAt : null,
+      liveClaudeSession,
+      liveClaudeSessionAgeSeconds: liveClaudeAge,
+      liveClaudeSessionStoredAt: liveClaudeStored,
+
+      // Cost & Usage v2 — additive top-level arrays per BAN-319.
+      usage: latestUsage.map(u => ({ ...u.snapshot, storedAt: u.storedAt, ageSeconds: u.ageSeconds })),
+      spend: latestSpend.map(s => ({ ...s.snapshot, storedAt: s.storedAt, ageSeconds: s.ageSeconds })),
+      billedToDate,
     });
 
   } catch (err) {
@@ -226,6 +266,7 @@ export async function GET(req: Request) {
       byProvider: { anthropic:{apiCostToDate:0,invoicesPaid:0,creditsReceived:0,todayCost:0,subscription:0,total:0}, openai:{apiCostToDate:0,todayCost:0,subscription:0,total:0}, vercel:{totalToDate:0,subscription:0}, subscriptions:{monthly:0,totalToDate:0,items:[]} },
       dailyBudget: 50, overBudget: false, totalInput:0, totalOutput:0, totalCache:0, totalTokens:0, totalSessions:0,
       liveClaudeSession: null, liveClaudeSessionAgeSeconds: null, liveClaudeSessionStoredAt: null,
+      usage: [], spend: [], billedToDate: { last30d: 0, thisMonth: 0, trailing12mo: 0, asOf: new Date().toISOString() },
       error: msg,
     }, { status: 500 });
   }
