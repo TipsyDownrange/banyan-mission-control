@@ -18,6 +18,11 @@ import NotarizationStatusIndicator, {
   type NotarizationSession,
 } from './NotarizationStatusIndicator';
 import PayAppEditScreen from './PayAppEditScreen';
+// BAN-338 v2c — new sub-sections mounted below the existing v2a/v2b stack
+import LienWaiverTracker from './LienWaiverTracker';
+import JointCheckAgreementsSection from './JointCheckAgreementsSection';
+import ExternalWaiverRequestsSection from './ExternalWaiverRequestsSection';
+import GCRequiredDocsChecklist from './GCRequiredDocsChecklist';
 
 type EngagementRef = {
   engagement_id: string;
@@ -222,6 +227,12 @@ export default function PayAppsTab({ kID }: { kID: string }) {
       <PayAppsList payApps={data.payApps} onOpen={(id) => setEditingPayAppId(id)} />
 
       <RetainagePanel retainage={data.retainage} />
+
+      {/* BAN-338 v2c — lien waivers, joint check, external waivers, GC docs */}
+      <LienWaiverTracker kID={kID} />
+      <JointCheckAgreementsSection kID={kID} />
+      <ExternalWaiverRequestsSection kID={kID} />
+      <GCRequiredDocsChecklist kID={kID} />
     </div>
   );
 }

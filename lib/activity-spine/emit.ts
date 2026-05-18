@@ -84,7 +84,11 @@ export type ActivitySpineEntityKind =
   | 'gold_dataset_entry'
   | 'submittal'
   | 'rfi'
-  | 'verbal_agreement';
+  | 'verbal_agreement'
+  // BAN-338 v2c — joint check + external waivers + GC-required docs
+  | 'joint_check_agreement'
+  | 'external_lien_waiver_request'
+  | 'gc_required_docs_checklist';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;

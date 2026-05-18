@@ -12,6 +12,7 @@ import { checkPermission } from '@/lib/permissions';
 import { getDefaultTenantId, isPostgresWriteEnabled } from '@/lib/env';
 import { blockWOStagingPostgresReadOnlyMutation } from '@/lib/service-work-orders/postgres-read-guard';
 import { executePatternBTransition } from '@/lib/aia/execute-state-transition';
+import { runAutoLienWaiverHook } from '@/lib/lien-waivers/post-transition-hook';
 
 export async function POST(
   req: Request,
@@ -105,11 +106,22 @@ export async function POST(
     );
   }
 
+  // BAN-338 v2c — auto-generate the matching lien waiver when the
+  // transition lands on SUBMITTED / PAID_PARTIAL / PAID_FULL. Best-effort;
+  // failures don't fail the route (manual fallback exists).
+  const waiverHook = await runAutoLienWaiverHook({
+    tenantId,
+    payAppId: id,
+    toState: result.to_state,
+    actorEmail: email ?? '',
+  });
+
   return NextResponse.json({
     ok: true,
     pay_app_id: id,
     from_state: result.from_state,
     to_state: result.to_state,
     event_id: result.event_id,
+    auto_waiver: waiverHook,
   });
 }
