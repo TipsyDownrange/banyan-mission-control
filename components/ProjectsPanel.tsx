@@ -10,6 +10,7 @@ import PunchListTab from '@/components/engagements/PunchListTab';
 import TMTicketsTab from '@/components/engagements/TMTicketsTab';
 import SubmittalsTab from '@/components/engagements/SubmittalsTab';
 import RfisTab from '@/components/engagements/RfisTab';
+import VerbalAgreementsTab from '@/components/engagements/VerbalAgreementsTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -18,6 +19,7 @@ type Project = {
 };
 type WorkRecordProject = { work_record_id: string; kid: string; name: string; status: string; assigned_user_id?: string | null; created_at?: string };
 type Submittal = Record<string, string>;
+type VerbalAgreement = Record<string, string>;
 type CO = Record<string, string>;
 type SOVLine = Record<string, string>;
 type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
@@ -104,9 +106,10 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
+  const [verbalAgreements, setVerbalAgreements] = useState<VerbalAgreement[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
   const [sovLines, setSovLines] = useState<SOVLine[]>([]);
   const [install, setInstall] = useState<{ items: Record<string, string>[]; summary: InstallSummary[] }>({ items: [], summary: [] });
@@ -117,12 +120,14 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     Promise.all([
       fetch(`/api/pm/submittals?kID=${project.kID}`).then(r => r.json()).catch(() => ({ submittals: [] })),
       fetch(`/api/pm/rfi?kID=${project.kID}`).then(r => r.json()).catch(() => ({ rfis: [] })),
+      fetch(`/api/verbal-agreements/by-kid/${encodeURIComponent(project.kID)}`).then(r => r.json()).catch(() => ({ items: [] })),
       fetch(`/api/pm/change-orders?kID=${project.kID}`).then(r => r.json()).catch(() => ({ cos: [] })),
       fetch(`/api/pm/sov?kID=${project.kID}`).then(r => r.json()).catch(() => ({ sov: [] })),
       fetch(`/api/install?kID=${project.kID}`).then(r => r.json()).catch(() => ({ items: [], summary: [] })),
-    ]).then(([sData, rData, cData, sovData, iData]) => {
+    ]).then(([sData, rData, vaData, cData, sovData, iData]) => {
       setSubmittals(sData.submittals || []);
       setRfis(rData.rfis || []);
+      setVerbalAgreements(vaData.items || []);
       setCos(cData.cos || []);
       setSovLines(sovData.sov || []);
       setInstall(iData);
@@ -134,6 +139,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'overview', label: 'Overview' },
     { key: 'submittals', label: `Submittals (${submittals.length})` },
     { key: 'rfis', label: `RFIs (${rfis.length})` },
+    { key: 'verbal-agreements', label: `Verbal Agreements (${verbalAgreements.length})` },
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'tm-tickets', label: 'T&M Tickets' },
@@ -234,6 +240,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                     {[
                       { label: 'Submittals', value: submittals.length, sub: `${submittals.filter(s => ['APPROVED'].includes(s.status)).length} approved` },
                       { label: 'RFIs', value: rfis.length, sub: `${rfis.filter(r => r.status === 'OPEN' || !r.response_received_at).length} open` },
+                      { label: 'Verbal Agreements', value: verbalAgreements.length, sub: `${verbalAgreements.filter(a => a.followup_email_sent === 'true' || a.status === 'FOLLOWED_UP').length} followed up` },
                       { label: 'Change Orders', value: cos.length, sub: `${cos.filter(c => c.status === 'APPROVED').length} approved` },
                       { label: 'Work Breakdown', value: install.items?.length || 0, sub: install.summary?.[0] ? `${install.summary[0].pctComplete}% complete` : 'No steps yet' },
                       { label: 'Field Events', value: project.eventCount, sub: `${project.issues} issues` },
@@ -254,6 +261,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
               {activeTab === 'rfis' && (
                 <RfisTab kID={project.kID} />
+              )}
+
+              {activeTab === 'verbal-agreements' && (
+                <VerbalAgreementsTab kID={project.kID} />
               )}
 
               {activeTab === 'cos' && (
