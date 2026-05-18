@@ -641,7 +641,8 @@ export const field_events = pgTable('field_events', {
     'INSTALL_STEP', 'FIELD_ISSUE', 'DAILY_LOG', 'FIELD_MEASUREMENT', 'NOTE', 'TM_CAPTURE', 'PHOTO_ONLY', 'PUNCH_LIST', 'SITE_VISIT', 'TESTING', 'WARRANTY_CALLBACK',
     'wo_completion',
     'PAY_APP_NOTARIZED', 'RETAINAGE_RELEASED', 'PUNCH_LIST_CLEARED', 'NOTICE_OF_COMPLETION_FILED', 'JOB_COST_RECONCILED', 'GOLD_DATASET_ENTRY_WRITTEN', 'DELIVERABLE_PRODUCED', 'TM_AUTHORIZATION_CONVERTED_TO_CO', 'TEST_PROJECT_RESET', 'BACK_CHARGE_APPLIED_CROSS_PROJECT', 'SOV_MODIFIED', 'HANDOFF_PROCESSED',
-    'SOV_STATE_CHANGED', 'PAY_APP_STATE_CHANGED', 'LIEN_WAIVER_STATE_CHANGED', 'PROJECT_STATE_CHANGED', 'PUNCH_LIST_ITEM_STATE_CHANGED', 'WARRANTY_STATE_CHANGED', 'TM_AUTHORIZATION_STATE_CHANGED', 'TM_TICKET_STATE_CHANGED', 'TEST_PROJECT_STATE_CHANGED', 'BACK_CHARGE_STATE_CHANGED'
+    'PAY_APP_NOTARIZATION_SKIPPED', 'PAY_APP_SUBMITTED', 'CASH_RECEIPT_RECORDED', 'RFI_GENERATED_CO',
+    'SOV_STATE_CHANGED', 'PAY_APP_STATE_CHANGED', 'LIEN_WAIVER_STATE_CHANGED', 'PROJECT_STATE_CHANGED', 'PUNCH_LIST_ITEM_STATE_CHANGED', 'WARRANTY_STATE_CHANGED', 'TM_AUTHORIZATION_STATE_CHANGED', 'TM_TICKET_STATE_CHANGED', 'TEST_PROJECT_STATE_CHANGED', 'BACK_CHARGE_STATE_CHANGED', 'SUBMITTAL_STATE_CHANGED', 'RFI_STATE_CHANGED'
   )`),
 ]);
 
@@ -1510,5 +1511,91 @@ export const submittals = pgTable('submittals', {
   check(
     'submittals_csi_sub_subsection_format',
     sql`${table.csi_sub_subsection} ~ '^[A-Z]$|^[1-9]$'`,
+  ),
+]);
+
+// ─── PM Trunk v1.0 §6 — RFI Log (BAN-341) ────────────────────────────────────
+
+export const rfiReasonEnum = pgEnum('rfi_reason', [
+  'SCOPE_CLARIFICATION',
+  'DRAWING_CONFLICT',
+  'SPEC_AMBIGUITY',
+  'FIELD_CONDITION',
+  'DESIGN_INTENT',
+  'OTHER',
+]);
+
+export const rfiStatusEnum = pgEnum('rfi_status', [
+  'DRAFT',
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'ANSWERED',
+  'RESOLVED',
+  'CLOSED',
+  'VOID',
+]);
+
+export const rfiSubmittedToEnum = pgEnum('rfi_submitted_to', [
+  'GC',
+  'ARCHITECT',
+  'ENGINEER',
+  'OWNER',
+]);
+
+export const rfiBallInCourtEnum = pgEnum('rfi_ball_in_court', [
+  'SUBCONTRACTOR',
+  'GC',
+  'ARCHITECT',
+  'ENGINEER',
+  'OWNER',
+]);
+
+export const rfis = pgTable('rfis', {
+  rfi_id: uuid('rfi_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+
+  rfi_number: text('rfi_number').notNull(),
+
+  subject: text('subject').notNull(),
+  question: text('question').notNull(),
+  reason_for_rfi: rfiReasonEnum('reason_for_rfi'),
+
+  cost_or_schedule_impact_anticipated: boolean('cost_or_schedule_impact_anticipated').notNull().default(false),
+  cost_impact_estimate: numeric('cost_impact_estimate', { precision: 14, scale: 2 }),
+  schedule_impact_days: integer('schedule_impact_days'),
+
+  submitted_to: rfiSubmittedToEnum('submitted_to'),
+  submitted_date: date('submitted_date'),
+  required_response_by_date: date('required_response_by_date'),
+
+  status: rfiStatusEnum('status').notNull().default('DRAFT'),
+  ball_in_court: rfiBallInCourtEnum('ball_in_court'),
+
+  response_received_date: date('response_received_date'),
+  response_text: text('response_text'),
+  response_documents: text('response_documents').array().notNull().default(sql`ARRAY[]::text[]`),
+
+  generates_change_order: boolean('generates_change_order').notNull().default(false),
+  linked_change_order_id: uuid('linked_change_order_id'),
+
+  rfi_pdf_drive_id: text('rfi_pdf_drive_id'),
+  submitted_attachments: text('submitted_attachments').array().notNull().default(sql`ARRAY[]::text[]`),
+
+  external_visible: boolean('external_visible').notNull().default(false),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('rfis_number_uidx').on(table.rfi_number),
+  index('rfis_engagement_idx').on(table.engagement_id),
+  index('rfis_status_idx').on(table.status),
+  index('rfis_ball_in_court_idx').on(table.ball_in_court),
+  index('rfis_required_response_idx').on(table.required_response_by_date),
+  check(
+    'rfis_number_format',
+    sql`${table.rfi_number} ~ '-RFI-[0-9]{3}$'`,
   ),
 ]);

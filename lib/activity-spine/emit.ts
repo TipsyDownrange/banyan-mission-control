@@ -82,7 +82,8 @@ export type ActivitySpineEntityKind =
   | 'unified_job_packet'
   | 'substantial_completion_cert'
   | 'gold_dataset_entry'
-  | 'submittal';
+  | 'submittal'
+  | 'rfi';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;
