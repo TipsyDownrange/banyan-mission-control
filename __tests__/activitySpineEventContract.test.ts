@@ -10,14 +10,15 @@ import {
 } from '@/lib/activity-spine/event-contract';
 
 describe('BAN-293 Activity Spine event contract', () => {
-  it('contains 11 existing + 1 legacy transitional + 26 ratified new event types', () => {
-    // BAN-340 PM-V1.0-A extended Pattern B with SUBMITTAL_STATE_CHANGED.
-    // BAN-337 v2b adds 3 Pattern A events: PAY_APP_NOTARIZATION_SKIPPED,
-    // PAY_APP_SUBMITTED, CASH_RECEIPT_RECORDED — Pattern A 12 → 15.
+  it('contains 11 existing + 1 legacy transitional + 28 ratified new event types', () => {
+    // BAN-337 v2b and BAN-341 combine to Pattern A 16
+    // (PAY_APP_NOTARIZATION_SKIPPED, PAY_APP_SUBMITTED,
+    // CASH_RECEIPT_RECORDED, RFI_GENERATED_CO) and Pattern B 12
+    // (SUBMITTAL_STATE_CHANGED, RFI_STATE_CHANGED).
     expect(ACTIVITY_SPINE_EXISTING_EVENT_TYPE_COUNT).toBe(11);
     expect(ACTIVITY_SPINE_LEGACY_EVENT_TYPE_COUNT).toBe(1);
-    expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(26);
-    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(38);
+    expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(28);
+    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(40);
   });
 
   it('retains wo_completion as a legacy transitional event outside Pattern A/B', () => {
@@ -31,18 +32,19 @@ describe('BAN-293 Activity Spine event contract', () => {
   });
 
   it('keeps the corrected Pattern A / Pattern B split', () => {
-    // BAN-337 grew Pattern A 12 → 15 (PAY_APP_NOTARIZATION_SKIPPED,
-    // PAY_APP_SUBMITTED, CASH_RECEIPT_RECORDED).
-    expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toHaveLength(15);
-    // Pattern B grew from 10 → 11 with BAN-340 SUBMITTAL_STATE_CHANGED.
-    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toHaveLength(11);
+    // BAN-337 v2b plus BAN-341 grow Pattern A 12 → 16.
+    expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toHaveLength(16);
+    // BAN-340 plus BAN-341 grow Pattern B 10 → 12.
+    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toHaveLength(12);
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('SOV_MODIFIED');
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('HANDOFF_PROCESSED');
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('PAY_APP_NOTARIZATION_SKIPPED');
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('PAY_APP_SUBMITTED');
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('CASH_RECEIPT_RECORDED');
+    expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('RFI_GENERATED_CO');
     expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toContain('PROJECT_STATE_CHANGED');
     expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toContain('SUBMITTAL_STATE_CHANGED');
+    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toContain('RFI_STATE_CHANGED');
     expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).not.toContain('PROJECT_LIFECYCLE_STATE_CHANGED');
   });
 

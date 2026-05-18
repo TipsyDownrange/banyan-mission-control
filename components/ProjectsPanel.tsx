@@ -9,6 +9,7 @@ import PayAppsTab from '@/components/engagements/PayAppsTab';
 import PunchListTab from '@/components/engagements/PunchListTab';
 import TMTicketsTab from '@/components/engagements/TMTicketsTab';
 import SubmittalsTab from '@/components/engagements/SubmittalsTab';
+import RfisTab from '@/components/engagements/RfisTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -252,23 +253,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               )}
 
               {activeTab === 'rfis' && (
-                <div>
-                  {rfis.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No RFIs for this project yet</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {rfis.map((r, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{r.subject || `RFI #${r.rfi_number}`}</div>
-                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>#{r.rfi_number} · {r.created_at || ''}</div>
-                          </div>
-                          {statusTag(r.status)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <RfisTab kID={project.kID} />
               )}
 
               {activeTab === 'cos' && (
