@@ -1785,3 +1785,87 @@ export const gc_required_docs_checklist = pgTable('gc_required_docs_checklist', 
   unique('gc_required_docs_checklist_engagement_uidx').on(table.tenant_id, table.engagement_id),
   check('gc_required_docs_checklist_phase_check', sql`${table.identified_phase} IS NULL OR ${table.identified_phase} IN ('ESTIMATING_SCOPE_REVIEW','POST_HANDOFF_REVIEW','MID_PROJECT_AMENDMENT')`),
 ]);
+
+// ── BAN-343 PM-V1.0-D — Meeting Intelligence (MANUAL source in v1.0) ────────
+// PM Trunk v1.0 §8.  Meetings can be cross-project (engagement_id nullable).
+// source_platform reserves the Connector Framework values so future
+// auto-population (Read.ai / Otter.ai / Fireflies.ai) is purely additive.
+
+export const meetingTypeEnum = pgEnum('meeting_type', [
+  'PROJECT_KICKOFF',
+  'OAC',
+  'DESIGN_REVIEW',
+  'CONSTRUCTION_PROGRESS',
+  'PRECON',
+  'PRE_INSTALL',
+  'PUNCHWALK',
+  'PROJECT_CLOSEOUT',
+  'OTHER',
+]);
+
+export const meetingSourcePlatformEnum = pgEnum('meeting_source_platform', [
+  'MANUAL',
+  'READ_AI',
+  'OTTER_AI',
+  'FIREFLIES_AI',
+  'OTHER',
+]);
+
+export const meetings = pgTable('meetings', {
+  meeting_id: uuid('meeting_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').references(() => engagements.engagement_id),
+
+  title: text('title').notNull(),
+  meeting_date: timestamp('meeting_date', { withTimezone: true }).notNull(),
+  duration_minutes: integer('duration_minutes'),
+
+  meeting_type: meetingTypeEnum('meeting_type'),
+
+  summary: text('summary'),
+  key_topics: text('key_topics').array().notNull().default(sql`ARRAY[]::text[]`),
+  decisions_made: text('decisions_made').array().notNull().default(sql`ARRAY[]::text[]`),
+
+  transcript_drive_file_id: text('transcript_drive_file_id'),
+  source_recording_url: text('source_recording_url'),
+
+  source_platform: meetingSourcePlatformEnum('source_platform').notNull().default('MANUAL'),
+  source_external_id: text('source_external_id'),
+
+  external_visible: boolean('external_visible').notNull().default(false),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').notNull().references(() => users.user_id),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('idx_meetings_engagement').on(table.engagement_id),
+  index('idx_meetings_date').on(table.meeting_date),
+  index('idx_meetings_type').on(table.meeting_type),
+  check('meetings_title_length', sql`char_length(${table.title}) <= 200`),
+]);
+
+export const meeting_attendees = pgTable('meeting_attendees', {
+  meeting_attendee_id: uuid('meeting_attendee_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  meeting_id: uuid('meeting_id').notNull().references(() => meetings.meeting_id, { onDelete: 'cascade' }),
+
+  name: text('name').notNull(),
+  email: text('email'),
+  organization: text('organization'),
+  role: text('role'),
+
+  is_kula_user: boolean('is_kula_user').notNull().default(false),
+  kula_user_id: uuid('kula_user_id').references(() => users.user_id),
+
+  attended: boolean('attended').notNull().default(true),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_meeting_attendees_meeting').on(table.meeting_id),
+  index('idx_meeting_attendees_kula_user').on(table.kula_user_id),
+  check(
+    'meeting_attendees_kula_user_consistency',
+    sql`${table.kula_user_id} IS NULL OR ${table.is_kula_user} = true`,
+  ),
+]);
