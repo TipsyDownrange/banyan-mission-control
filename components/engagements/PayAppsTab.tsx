@@ -10,13 +10,14 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PayAppsList, { type PayApp } from './PayAppsList';
 import SOVSummaryCard, { type SovLine, type SovVersion } from './SOVSummaryCard';
 import RetainagePanel, { type RetainageHolding } from './RetainagePanel';
 import NotarizationStatusIndicator, {
   type NotarizationSession,
 } from './NotarizationStatusIndicator';
+import PayAppEditScreen from './PayAppEditScreen';
 
 type EngagementRef = {
   engagement_id: string;
@@ -46,13 +47,15 @@ export default function PayAppsTab({ kID }: { kID: string }) {
   const [data, setData] = useState<BillingPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingPayAppId, setEditingPayAppId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!kID) return;
-    let cancelled = false;
+  const refresh = useCallback(() => {
+    if (!kID) return Promise.resolve();
     setLoading(true);
     setError(null);
-    fetch(`/api/aia/billing/by-kid/${encodeURIComponent(kID)}`)
+    return fetch(`/api/aia/billing/by-kid/${encodeURIComponent(kID)}`)
       .then(async (r) => {
         if (!r.ok) {
           const body = await r.json().catch(() => ({}));
@@ -61,17 +64,20 @@ export default function PayAppsTab({ kID }: { kID: string }) {
         return r.json() as Promise<BillingPayload>;
       })
       .then((payload) => {
-        if (cancelled) return;
         setData(payload);
         setLoading(false);
       })
       .catch((err: Error) => {
-        if (cancelled) return;
         setError(err.message || 'Failed to load billing data');
         setLoading(false);
       });
-    return () => { cancelled = true; };
   }, [kID]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void refresh().then(() => { if (cancelled) return; });
+    return () => { cancelled = true; };
+  }, [refresh]);
 
   if (loading) {
     return (
@@ -121,6 +127,52 @@ export default function PayAppsTab({ kID }: { kID: string }) {
   }
 
   const notarizationRequired = data.billingFormatConfig?.notarization_required === true;
+  const lockedVersion = data.sovVersions.find((v) => v.state === 'LOCKED') ?? null;
+
+  if (editingPayAppId) {
+    return (
+      <PayAppEditScreen
+        payAppId={editingPayAppId}
+        onClose={() => {
+          setEditingPayAppId(null);
+          void refresh();
+        }}
+      />
+    );
+  }
+
+  async function createNewPayApp() {
+    if (!data?.engagement || !lockedVersion) return;
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const today = new Date();
+      const periodStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
+      const periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
+      const res = await fetch('/api/pay-apps', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          engagement_id: data.engagement.engagement_id,
+          sov_version_id: lockedVersion.sov_version_id,
+          period_start: periodStart,
+          period_end: periodEnd,
+          billing_format: 'AIA_G702_G703',
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setCreateError(body.error ?? `Create failed (${res.status})`);
+        return;
+      }
+      await refresh();
+      setEditingPayAppId(body.pay_app_id);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Network error');
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -136,6 +188,25 @@ export default function PayAppsTab({ kID }: { kID: string }) {
         </div>
       )}
 
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}>
+        {createError && (
+          <span style={{ fontSize: 12, color: '#b91c1c' }}>{createError}</span>
+        )}
+        <button
+          onClick={createNewPayApp}
+          disabled={!lockedVersion || creating}
+          title={lockedVersion ? 'Create a new pay application from the locked SOV' : 'SOV must be LOCKED before creating a pay app'}
+          style={{
+            background: lockedVersion ? '#0c2330' : '#cbd5e1',
+            color: '#fff', border: 'none', padding: '10px 18px',
+            borderRadius: 10, fontSize: 12, fontWeight: 700,
+            cursor: lockedVersion && !creating ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {creating ? 'Creating…' : '+ New Pay App'}
+        </button>
+      </div>
+
       <SOVSummaryCard
         sovVersions={data.sovVersions}
         sovLines={data.sovLines}
@@ -148,7 +219,7 @@ export default function PayAppsTab({ kID }: { kID: string }) {
         notarizationRequired={notarizationRequired}
       />
 
-      <PayAppsList payApps={data.payApps} />
+      <PayAppsList payApps={data.payApps} onOpen={(id) => setEditingPayAppId(id)} />
 
       <RetainagePanel retainage={data.retainage} />
     </div>

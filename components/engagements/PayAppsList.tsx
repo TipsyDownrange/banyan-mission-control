@@ -79,7 +79,7 @@ const ROW: CSSProperties = {
   boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
 };
 
-export default function PayAppsList({ payApps }: { payApps: PayApp[] }) {
+export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; onOpen?: (payAppId: string) => void }) {
   if (payApps.length === 0) {
     return (
       <div style={{
@@ -132,7 +132,13 @@ export default function PayAppsList({ payApps }: { payApps: PayApp[] }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {payApps.map((p) => (
-          <div key={p.pay_app_id} style={ROW}>
+          <div
+            key={p.pay_app_id}
+            style={onOpen ? { ...ROW, cursor: 'pointer' } : ROW}
+            onClick={onOpen ? () => onOpen(p.pay_app_id) : undefined}
+            role={onOpen ? 'button' : undefined}
+            tabIndex={onOpen ? 0 : undefined}
+          >
             <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', letterSpacing: '0.05em' }}>
               #{p.pay_app_number}
             </div>
