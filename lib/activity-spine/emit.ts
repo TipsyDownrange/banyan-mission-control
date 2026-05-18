@@ -88,7 +88,9 @@ export type ActivitySpineEntityKind =
   // BAN-338 v2c — joint check + external waivers + GC-required docs
   | 'joint_check_agreement'
   | 'external_lien_waiver_request'
-  | 'gc_required_docs_checklist';
+  | 'gc_required_docs_checklist'
+  // BAN-343 PM-V1.0-D — meeting log
+  | 'meeting';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;
