@@ -641,7 +641,7 @@ export const field_events = pgTable('field_events', {
     'INSTALL_STEP', 'FIELD_ISSUE', 'DAILY_LOG', 'FIELD_MEASUREMENT', 'NOTE', 'TM_CAPTURE', 'PHOTO_ONLY', 'PUNCH_LIST', 'SITE_VISIT', 'TESTING', 'WARRANTY_CALLBACK',
     'wo_completion',
     'PAY_APP_NOTARIZED', 'RETAINAGE_RELEASED', 'PUNCH_LIST_CLEARED', 'NOTICE_OF_COMPLETION_FILED', 'JOB_COST_RECONCILED', 'GOLD_DATASET_ENTRY_WRITTEN', 'DELIVERABLE_PRODUCED', 'TM_AUTHORIZATION_CONVERTED_TO_CO', 'TEST_PROJECT_RESET', 'BACK_CHARGE_APPLIED_CROSS_PROJECT', 'SOV_MODIFIED', 'HANDOFF_PROCESSED',
-    'PAY_APP_NOTARIZATION_SKIPPED', 'PAY_APP_SUBMITTED', 'CASH_RECEIPT_RECORDED', 'RFI_GENERATED_CO',
+    'PAY_APP_NOTARIZATION_SKIPPED', 'PAY_APP_SUBMITTED', 'CASH_RECEIPT_RECORDED', 'RFI_GENERATED_CO', 'VERBAL_AGREEMENT_LOGGED', 'VERBAL_AGREEMENT_FOLLOWUP_SENT', 'VERBAL_AGREEMENT_FORMALIZED', 'VERBAL_AGREEMENT_RESOLVED',
     'SOV_STATE_CHANGED', 'PAY_APP_STATE_CHANGED', 'LIEN_WAIVER_STATE_CHANGED', 'PROJECT_STATE_CHANGED', 'PUNCH_LIST_ITEM_STATE_CHANGED', 'WARRANTY_STATE_CHANGED', 'TM_AUTHORIZATION_STATE_CHANGED', 'TM_TICKET_STATE_CHANGED', 'TEST_PROJECT_STATE_CHANGED', 'BACK_CHARGE_STATE_CHANGED', 'SUBMITTAL_STATE_CHANGED', 'RFI_STATE_CHANGED'
   )`),
 ]);
@@ -1597,5 +1597,76 @@ export const rfis = pgTable('rfis', {
   check(
     'rfis_number_format',
     sql`${table.rfi_number} ~ '-RFI-[0-9]{3}$'`,
+  ),
+]);
+
+// ─── PM Trunk v1.0 §7 — Verbal Agreement Log (BAN-342) ──────────────────────
+
+export const verbalAgreementTypeEnum = pgEnum('verbal_agreement_type', [
+  'SCOPE_CHANGE',
+  'SCHEDULE_AGREEMENT',
+  'T_M_AUTHORIZATION',
+  'DESIGN_CLARIFICATION',
+  'PAYMENT_TERM',
+  'DELIVERY_COMMITMENT',
+  'OTHER',
+]);
+
+export const verbalAgreementStatusEnum = pgEnum('verbal_agreement_status', [
+  'LOGGED',
+  'FOLLOWED_UP',
+  'FORMALIZED',
+  'DISPUTED',
+  'RESOLVED',
+]);
+
+export const verbal_agreements = pgTable('verbal_agreements', {
+  verbal_agreement_id: uuid('verbal_agreement_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+
+  captured_at: timestamp('captured_at', { withTimezone: true }).notNull().defaultNow(),
+  captured_by: uuid('captured_by').references(() => users.user_id),
+  occurred_at: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+
+  subject: text('subject').notNull(),
+  external_party_org: text('external_party_org').notNull(),
+  external_party_contact_name: text('external_party_contact_name'),
+  external_party_contact_role: text('external_party_contact_role'),
+  external_party_contact_email: text('external_party_contact_email'),
+  external_party_contact_phone: text('external_party_contact_phone'),
+
+  agreement_type: verbalAgreementTypeEnum('agreement_type').notNull().default('OTHER'),
+  cost_impact_estimate: numeric('cost_impact_estimate', { precision: 14, scale: 2 }),
+  schedule_impact_days: integer('schedule_impact_days'),
+
+  agreement_summary: text('agreement_summary').notNull(),
+  context_or_circumstances: text('context_or_circumstances'),
+
+  audio_recording_drive_id: text('audio_recording_drive_id'),
+  photo_documentation_drive_ids: text('photo_documentation_drive_ids').array().notNull().default(sql`ARRAY[]::text[]`),
+  written_followup_email_drive_id: text('written_followup_email_drive_id'),
+
+  followup_email_sent: boolean('followup_email_sent').notNull().default(false),
+  followup_email_sent_date: date('followup_email_sent_date'),
+  formal_documentation_generated: boolean('formal_documentation_generated').notNull().default(false),
+  formal_documentation_ref: uuid('formal_documentation_ref'),
+  formal_documentation_type: text('formal_documentation_type'),
+
+  status: verbalAgreementStatusEnum('status').notNull().default('LOGGED'),
+  external_visible: boolean('external_visible').notNull().default(false),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('verbal_agreements_engagement_idx').on(table.engagement_id),
+  index('verbal_agreements_status_idx').on(table.status),
+  index('verbal_agreements_type_idx').on(table.agreement_type),
+  index('verbal_agreements_occurred_idx').on(table.occurred_at),
+  check('verbal_agreements_subject_length', sql`char_length(${table.subject}) <= 200`),
+  check(
+    'verbal_agreements_formal_doc_type_check',
+    sql`${table.formal_documentation_type} IS NULL OR ${table.formal_documentation_type} IN ('CHANGE_ORDER','TM_TICKET','RFI')`,
   ),
 ]);

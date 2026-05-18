@@ -83,7 +83,8 @@ export type ActivitySpineEntityKind =
   | 'substantial_completion_cert'
   | 'gold_dataset_entry'
   | 'submittal'
-  | 'rfi';
+  | 'rfi'
+  | 'verbal_agreement';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;
