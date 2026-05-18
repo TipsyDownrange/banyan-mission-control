@@ -17,7 +17,7 @@ import {
 import {
   validatePatternBTransition,
   patternBEventTypeFor,
-  patternBAiaEntityKindFor,
+  patternBEntityKindFor,
   type AiaPatternBEntity,
 } from './state-transitions';
 
@@ -111,10 +111,10 @@ export async function executePatternBTransition(
 
       const emitResult = await emitActivitySpineEvent(tx, {
         event_type: patternBEventTypeFor(input.entity),
-        entity_type: 'project',
-        entity_id: input.engagementId,
-        aia_entity_kind: patternBAiaEntityKindFor(input.entity),
-        aia_entity_id: input.pkValue,
+        scope_entity_type: 'project',
+        scope_entity_id: input.engagementId,
+        entity_kind: patternBEntityKindFor(input.entity),
+        entity_id: input.pkValue,
         notes: input.reason ?? null,
         test_data: input.testData,
         metadata: {

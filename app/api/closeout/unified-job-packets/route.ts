@@ -76,10 +76,10 @@ export async function POST(req: Request) {
       const packet = inserted[0];
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'DELIVERABLE_PRODUCED',
-        entity_type: 'project',
-        entity_id: engagementId,
-        aia_entity_kind: 'engagement',
-        aia_entity_id: engagementId,
+        scope_entity_type: 'project',
+        scope_entity_id: engagementId,
+        entity_kind: 'unified_job_packet',
+        entity_id: packet.packet_id,
         test_data: eng[0].is_test_project === true,
         metadata: {
           deliverable_type: 'UNIFIED_JOB_PACKET',
@@ -87,8 +87,6 @@ export async function POST(req: Request) {
           drive_file_id: driveFileId,
           template_version: templateVersion,
           actor: gate.actorEmail,
-          closeout_entity_kind: 'engagement',
-          closeout_entity_id: engagementId,
         },
       });
 

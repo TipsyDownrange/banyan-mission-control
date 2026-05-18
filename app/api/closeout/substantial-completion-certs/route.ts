@@ -128,18 +128,16 @@ export async function POST(req: Request) {
       // (a) DELIVERABLE_PRODUCED
       const deliverableEmit = await emitActivitySpineEvent(tx, {
         event_type: 'DELIVERABLE_PRODUCED',
-        entity_type: 'project',
-        entity_id: engagementId,
-        aia_entity_kind: 'engagement',
-        aia_entity_id: engagementId,
+        scope_entity_type: 'project',
+        scope_entity_id: engagementId,
+        entity_kind: 'substantial_completion_cert',
+        entity_id: cert.cert_id,
         test_data: eng[0].is_test_project === true,
         metadata: {
           deliverable_type: 'SUBSTANTIAL_COMPLETION_CERT',
           cert_id: cert.cert_id,
           drive_file_id: driveFileId,
           actor: gate.actorEmail,
-          closeout_entity_kind: 'engagement',
-          closeout_entity_id: engagementId,
         },
       });
 

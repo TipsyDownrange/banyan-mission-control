@@ -116,10 +116,10 @@ export async function POST(
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'PAY_APP_NOTARIZED',
-        entity_type: 'project',
-        entity_id: payApp.engagement_id,
-        aia_entity_kind: 'pay_application',
-        aia_entity_id: id,
+        scope_entity_type: 'project',
+        scope_entity_id: payApp.engagement_id,
+        entity_kind: 'pay_application',
+        entity_id: id,
         notes: body.notary_name ?? null,
         test_data: payApp.is_test_project === true,
         metadata: {

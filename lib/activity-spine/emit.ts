@@ -1,12 +1,32 @@
 /**
  * BAN-309 Pass 3a.2 — Canonical Postgres Activity Spine emission helper.
  *
- * Routes that mutate AIA / TPA entities must call this helper inside a
- * Drizzle transaction so the field_events INSERT commits / rolls back
- * atomically with the entity write. See
+ * Routes that mutate AIA, TPA, or Closeout entities must call this helper
+ * inside a Drizzle transaction so the field_events INSERT commits / rolls
+ * back atomically with the entity write. See
  * docs/adr/ADR-014_AMENDMENT_1_POSTGRES_EMISSION_HELPER_2026-05-17.md for
- * the rationale and the scope boundary with Packet 005.5
+ * the original rationale and the scope boundary with Packet 005.5
  * (lib/events.ts:emitMCEvent stays Sheets-only until the 005.5 cutover).
+ *
+ * ADR-014 Amendment 2 (2026-05-17) generalizes the helper for Closeout:
+ *   - Type `ActivitySpineAiaEntityKind` renamed to `ActivitySpineEntityKind`
+ *     and extended additively from 12 AIA kinds to 19 (adds 7 Closeout
+ *     kinds: punch_list_item, warranty, notice_of_completion,
+ *     deliverable_document, unified_job_packet, substantial_completion_cert,
+ *     gold_dataset_entry; `engagement` already present from the AIA set is
+ *     reused by Closeout project_lifecycle emissions).
+ *   - Input field rename: `entity_type`/`entity_id` (project scope) →
+ *     `scope_entity_type`/`scope_entity_id`; `aia_entity_kind`/`aia_entity_id`
+ *     (entity being acted on) → `entity_kind`/`entity_id`. The renamed
+ *     `entity_kind`/`entity_id` are stored in metadata under the same keys
+ *     (the prior `aia_entity_kind`/`aia_entity_id` metadata keys are
+ *     retired for new emits). field_events.entity_type/entity_id columns
+ *     are unchanged — `scope_entity_type`/`scope_entity_id` map to them.
+ *   - Closeout routes no longer set the metadata.closeout_entity_kind /
+ *     closeout_entity_id workaround stash; the canonical entity_kind /
+ *     entity_id metadata keys carry that information directly.
+ *
+ * See docs/adr/ADR-014_AMENDMENT_2_ENTITY_KIND_GENERALIZATION.md.
  *
  * Failure modes are by design opposite of emitMCEvent: this helper THROWS
  * (an ActivitySpineEmitError) when validation or the INSERT fails, so the
@@ -20,11 +40,11 @@ import {
   type ActivitySpineEventType,
 } from './event-contract';
 
-// AIA / TPA entities are all project-scoped per the field_events
+// AIA / TPA / Closeout entities are all project-scoped per the field_events
 // coreEntityTypeEnum (project, service_work_order, service_request, estimate,
-// internal). The concrete AIA entity id and table are recorded in
-// metadata.aia_entity_kind + metadata.aia_entity_id so consumers can
-// resolve the row without changing the enum.
+// internal). The concrete entity id and table are recorded in
+// metadata.entity_kind + metadata.entity_id so consumers can resolve the
+// row without changing the enum.
 export type ActivitySpineEntityType =
   | 'project'
   | 'service_work_order'
@@ -32,7 +52,17 @@ export type ActivitySpineEntityType =
   | 'estimate'
   | 'internal';
 
-export type ActivitySpineAiaEntityKind =
+// ADR-014 Amendment 2 — 19-member additive union.
+// AIA (12, unchanged from Amendment 1):
+//   engagement, pay_application, sov_version, schedule_of_values,
+//   tm_authorization, tm_ticket, lien_waiver, retainage_holding,
+//   handoff_validation, test_project_reset, notarization_session,
+//   cash_receipt.
+// Closeout (7 new; engagement is reused from the AIA set for
+// project_lifecycle emissions):
+//   punch_list_item, warranty, notice_of_completion, deliverable_document,
+//   unified_job_packet, substantial_completion_cert, gold_dataset_entry.
+export type ActivitySpineEntityKind =
   | 'engagement'
   | 'pay_application'
   | 'sov_version'
@@ -44,14 +74,26 @@ export type ActivitySpineAiaEntityKind =
   | 'handoff_validation'
   | 'test_project_reset'
   | 'notarization_session'
-  | 'cash_receipt';
+  | 'cash_receipt'
+  | 'punch_list_item'
+  | 'warranty'
+  | 'notice_of_completion'
+  | 'deliverable_document'
+  | 'unified_job_packet'
+  | 'substantial_completion_cert'
+  | 'gold_dataset_entry';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;
-  entity_type: ActivitySpineEntityType;
+  // Scope — maps to field_events.entity_type / field_events.entity_id
+  // (typically 'project' + engagement_id for AIA/TPA/Closeout rows).
+  scope_entity_type: ActivitySpineEntityType;
+  scope_entity_id: string;
+  // The entity being acted upon — recorded in metadata.entity_kind /
+  // metadata.entity_id so consumers can resolve the concrete row without
+  // changing the field_events.entity_type enum.
+  entity_kind: ActivitySpineEntityKind;
   entity_id: string;
-  aia_entity_kind: ActivitySpineAiaEntityKind;
-  aia_entity_id: string;
   kid?: string | null;
   description?: string | null;
   notes?: string | null;
@@ -96,8 +138,8 @@ export async function emitActivitySpineEvent(
 
   const metadata: Record<string, unknown> = {
     ...(input.metadata ?? {}),
-    aia_entity_kind: input.aia_entity_kind,
-    aia_entity_id: input.aia_entity_id,
+    entity_kind: input.entity_kind,
+    entity_id: input.entity_id,
   };
 
   const validation = validateActivitySpinePayload(input.event_type, metadata);
@@ -115,8 +157,8 @@ export async function emitActivitySpineEvent(
       .insert(field_events)
       .values({
         event_type: input.event_type,
-        entity_type: input.entity_type,
-        entity_id: input.entity_id,
+        entity_type: input.scope_entity_type,
+        entity_id: input.scope_entity_id,
         kid: input.kid ?? null,
         description: input.description ?? null,
         notes: input.notes ?? null,

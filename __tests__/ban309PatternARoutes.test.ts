@@ -259,10 +259,10 @@ describe('POST /api/aia/pay-applications/[id]/notarize — PAY_APP_NOTARIZED', (
     expect(emitSpy).toHaveBeenCalledTimes(1);
     expect(emitSpy.mock.calls[0][0]).toMatchObject({
       event_type: 'PAY_APP_NOTARIZED',
-      entity_type: 'project',
-      entity_id: ENG_ID,
-      aia_entity_kind: 'pay_application',
-      aia_entity_id: PAY_APP_ID,
+      scope_entity_type: 'project',
+      scope_entity_id: ENG_ID,
+      entity_kind: 'pay_application',
+      entity_id: PAY_APP_ID,
       test_data: false,
     });
     expect((emitSpy.mock.calls[0][0] as { metadata: Record<string, unknown> }).metadata).toMatchObject({
@@ -333,8 +333,8 @@ describe('POST /api/aia/retainage-holdings/[id]/release — RETAINAGE_RELEASED',
     }));
     expect(emitSpy.mock.calls[0][0]).toMatchObject({
       event_type: 'RETAINAGE_RELEASED',
-      aia_entity_kind: 'retainage_holding',
-      aia_entity_id: HOLDING_ID,
+      entity_kind: 'retainage_holding',
+      entity_id: HOLDING_ID,
     });
     expect((emitSpy.mock.calls[0][0] as { metadata: Record<string, unknown> }).metadata).toMatchObject({
       retainage_holding_id: HOLDING_ID,
@@ -409,8 +409,8 @@ describe('POST /api/aia/tm-authorizations/[id]/convert-to-co — TM_AUTHORIZATIO
     }));
     expect(emitSpy.mock.calls[0][0]).toMatchObject({
       event_type: 'TM_AUTHORIZATION_CONVERTED_TO_CO',
-      aia_entity_kind: 'tm_authorization',
-      aia_entity_id: TM_AUTH_ID,
+      entity_kind: 'tm_authorization',
+      entity_id: TM_AUTH_ID,
     });
     expect((emitSpy.mock.calls[0][0] as { metadata: Record<string, unknown> }).metadata).toMatchObject({
       converted_to_co_ref: 'CO-2026-001',
@@ -514,8 +514,8 @@ describe('PATCH /api/aia/schedule-of-values/[id] — SOV_MODIFIED (conditional)'
     expect(j.event_id).toBeTruthy();
     expect(emitSpy.mock.calls[0][0]).toMatchObject({
       event_type: 'SOV_MODIFIED',
-      aia_entity_kind: 'schedule_of_values',
-      aia_entity_id: SOV_LINE_ID,
+      entity_kind: 'schedule_of_values',
+      entity_id: SOV_LINE_ID,
     });
     expect((emitSpy.mock.calls[0][0] as { metadata: Record<string, unknown> }).metadata).toMatchObject({
       sov_line_id: SOV_LINE_ID,
@@ -600,8 +600,8 @@ describe('POST /api/aia/handoff-validations — HANDOFF_PROCESSED (conditional)'
     expect((await res.json()).emitted).toBe(true);
     expect(emitSpy.mock.calls[0][0]).toMatchObject({
       event_type: 'HANDOFF_PROCESSED',
-      aia_entity_kind: 'handoff_validation',
-      aia_entity_id: 'hv-1',
+      entity_kind: 'handoff_validation',
+      entity_id: 'hv-1',
     });
     expect((emitSpy.mock.calls[0][0] as { metadata: Record<string, unknown> }).metadata).toMatchObject({
       handoff_validation_id: 'hv-1',
@@ -669,8 +669,8 @@ describe('POST /api/aia/test-project-resets — TEST_PROJECT_RESET', () => {
     expect(emitSpy.mock.calls[0][0]).toMatchObject({
       event_type: 'TEST_PROJECT_RESET',
       test_data: true,
-      aia_entity_kind: 'test_project_reset',
-      aia_entity_id: 'tpr-1',
+      entity_kind: 'test_project_reset',
+      entity_id: 'tpr-1',
     });
   });
 });

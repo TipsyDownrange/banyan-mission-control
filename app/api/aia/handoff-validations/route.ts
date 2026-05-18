@@ -146,10 +146,10 @@ export async function POST(req: Request) {
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'HANDOFF_PROCESSED',
-        entity_type: 'project',
-        entity_id: engagementId,
-        aia_entity_kind: 'handoff_validation',
-        aia_entity_id: validation.validation_id,
+        scope_entity_type: 'project',
+        scope_entity_id: engagementId,
+        entity_kind: 'handoff_validation',
+        entity_id: validation.validation_id,
         test_data: engagementLookup[0].is_test_project === true,
         metadata: {
           handoff_validation_id: validation.validation_id,

@@ -111,18 +111,16 @@ export async function POST(
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'PUNCH_LIST_CLEARED',
-        entity_type: 'project',
+        scope_entity_type: 'project',
+        scope_entity_id: ctx.engagementId,
+        entity_kind: 'engagement',
         entity_id: ctx.engagementId,
-        aia_entity_kind: 'engagement',
-        aia_entity_id: ctx.engagementId,
         test_data: ctx.testData,
         metadata: {
           actor: ctx.actorEmail,
           triggering_punch_item_id: id,
           triggering_to_state: ctx.toState,
           total_items: row.total,
-          closeout_entity_kind: 'engagement',
-          closeout_entity_id: ctx.engagementId,
         },
       });
       punchListClearedEventId = emit.event_id;

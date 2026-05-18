@@ -106,10 +106,10 @@ export async function POST(req: Request) {
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'TEST_PROJECT_RESET',
-        entity_type: 'project',
-        entity_id: engagementId,
-        aia_entity_kind: 'test_project_reset',
-        aia_entity_id: reset.reset_id,
+        scope_entity_type: 'project',
+        scope_entity_id: engagementId,
+        entity_kind: 'test_project_reset',
+        entity_id: reset.reset_id,
         test_data: true,
         metadata: {
           test_project_reset_id: reset.reset_id,

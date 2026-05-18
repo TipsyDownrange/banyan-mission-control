@@ -127,10 +127,10 @@ export async function POST(
 
       const emit = await emitActivitySpineEvent(tx, {
         event_type: 'RETAINAGE_RELEASED',
-        entity_type: 'project',
-        entity_id: holding.engagement_id,
-        aia_entity_kind: 'retainage_holding',
-        aia_entity_id: id,
+        scope_entity_type: 'project',
+        scope_entity_id: holding.engagement_id,
+        entity_kind: 'retainage_holding',
+        entity_id: id,
         test_data: holding.is_test_project === true,
         metadata: {
           retainage_holding_id: id,

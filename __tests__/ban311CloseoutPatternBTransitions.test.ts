@@ -271,7 +271,7 @@ describe('BAN-311 PR 1 — executeCloseoutPatternBTransition', () => {
     ...overrides,
   });
 
-  it('happy path emits WARRANTY_STATE_CHANGED with closeout_entity metadata', async () => {
+  it('happy path emits WARRANTY_STATE_CHANGED with canonical entity_kind/entity_id metadata', async () => {
     inTxExistingRow = { status: 'ACTIVE' };
     txInsertReturning = [{ event_id: 'evt-warranty' }];
     const result = await executeCloseoutPatternBTransition(baseInput({ toState: 'EXPIRED' }));
@@ -288,14 +288,18 @@ describe('BAN-311 PR 1 — executeCloseoutPatternBTransition', () => {
       entity_type: 'project',
       entity_id: ENG_ID,
     });
+    // ADR-014 Amendment 2: canonical entity_kind/entity_id keys (set by the
+    // emit helper from the caller's input) carry the concrete Closeout
+    // entity directly. The Amendment 1 `closeout_entity_kind/id` stash is
+    // retired.
     expect(inserted.metadata).toMatchObject({
       from_state: 'ACTIVE',
       to_state: 'EXPIRED',
-      closeout_entity_kind: 'warranty',
-      closeout_entity_id: WARRANTY_ID,
-      // aia_entity_kind is set inside the emit helper, not directly on the
-      // metadata we pass in — it's appended by emitActivitySpineEvent.
+      entity_kind: 'warranty',
+      entity_id: WARRANTY_ID,
     });
+    expect(inserted.metadata.closeout_entity_kind).toBeUndefined();
+    expect(inserted.metadata.closeout_entity_id).toBeUndefined();
   });
 
   it('routes the right event_type per entity', async () => {
@@ -309,7 +313,8 @@ describe('BAN-311 PR 1 — executeCloseoutPatternBTransition', () => {
     }));
     const inserted = insertValuesSpy.mock.calls.find(c => c[0] === 'field_events')![1];
     expect(inserted.event_type).toBe('PUNCH_LIST_ITEM_STATE_CHANGED');
-    expect(inserted.metadata.closeout_entity_kind).toBe('punch_list_item');
+    expect(inserted.metadata.entity_kind).toBe('punch_list_item');
+    expect(inserted.metadata.entity_id).toBe(PUNCH_ID);
   });
 
   it('404 when row missing in tenant', async () => {
@@ -544,7 +549,9 @@ describe('POST /api/closeout/engagements/[id]/lifecycle-transition', () => {
     expect(evtInsert.event_type).toBe('PROJECT_STATE_CHANGED');
     expect(evtInsert.metadata.from_state).toBe('(none)');
     expect(evtInsert.metadata.to_state).toBe('IN_CLOSEOUT');
-    expect(evtInsert.metadata.closeout_entity_kind).toBe('engagement');
+    expect(evtInsert.metadata.entity_kind).toBe('engagement');
+    expect(evtInsert.metadata.entity_id).toBe(ENG_ID);
+    expect(evtInsert.metadata.closeout_entity_kind).toBeUndefined();
   });
 
   it('400 REOPEN_PAIR_REQUIRED when transitioning back to IN_CLOSEOUT without reopen fields', async () => {

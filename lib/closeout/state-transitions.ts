@@ -17,6 +17,7 @@
  */
 
 import type { ActivitySpineEventType } from '@/lib/activity-spine/event-contract';
+import type { ActivitySpineEntityKind } from '@/lib/activity-spine/emit';
 
 export type CloseoutPatternBEntity =
   | 'project_lifecycle'
@@ -24,20 +25,19 @@ export type CloseoutPatternBEntity =
   | 'warranty';
 
 /**
- * Closeout-specific entity-kind tag for `metadata.closeout_entity_kind`.
+ * Closeout entity-kind tag for `metadata.entity_kind`.
  *
- * Closeout entities are NOT in the `ActivitySpineAiaEntityKind` union in
- * lib/activity-spine/emit.ts (that union is AIA-scoped per the field's
- * docstring). emit.ts is consume-only per BAN-309 D8 contract. So Closeout
- * emits set `aia_entity_kind: 'engagement'` (faithful — every Closeout row
- * FKs to an engagement, and `aia_entity_id` carries the engagement_id) and
- * stash the concrete Closeout entity kind + id in metadata under
- * `closeout_entity_kind` + `closeout_entity_id` for consumer resolution.
+ * Per ADR-014 Amendment 2 (2026-05-17), Closeout kinds are now first-class
+ * members of `ActivitySpineEntityKind` in lib/activity-spine/emit.ts. The
+ * Amendment 1 workaround (stash under `closeout_entity_kind`/`closeout_entity_id`
+ * with `aia_entity_kind: 'engagement'`) has been retired for new emits;
+ * canonical `entity_kind`/`entity_id` metadata keys now carry the concrete
+ * Closeout entity directly.
  */
-export type CloseoutEntityKind =
-  | 'engagement'
-  | 'punch_list_item'
-  | 'warranty';
+export type CloseoutEntityKind = Extract<
+  ActivitySpineEntityKind,
+  'engagement' | 'punch_list_item' | 'warranty'
+>;
 
 // ── Engagement project lifecycle (event-sourced via project_lifecycle_states
 // audit log — NOT a column on engagements). States mirror the
@@ -128,7 +128,7 @@ export const WARRANTY_ALLOWED_TRANSITIONS: Record<WarrantyState, WarrantyState[]
 
 interface PatternBEntityMeta<S extends string> {
   event_type: ActivitySpineEventType;
-  closeout_entity_kind: CloseoutEntityKind;
+  entity_kind: CloseoutEntityKind;
   states: readonly S[];
   transitions: Record<S, readonly S[]>;
 }
@@ -140,19 +140,19 @@ export const CLOSEOUT_PATTERN_B_ENTITIES: {
 } = {
   project_lifecycle: {
     event_type: 'PROJECT_STATE_CHANGED',
-    closeout_entity_kind: 'engagement',
+    entity_kind: 'engagement',
     states: PROJECT_LIFECYCLE_STATES,
     transitions: PROJECT_LIFECYCLE_ALLOWED_TRANSITIONS,
   },
   punch_list_item: {
     event_type: 'PUNCH_LIST_ITEM_STATE_CHANGED',
-    closeout_entity_kind: 'punch_list_item',
+    entity_kind: 'punch_list_item',
     states: PUNCH_LIST_ITEM_STATES,
     transitions: PUNCH_LIST_ITEM_ALLOWED_TRANSITIONS,
   },
   warranty: {
     event_type: 'WARRANTY_STATE_CHANGED',
-    closeout_entity_kind: 'warranty',
+    entity_kind: 'warranty',
     states: WARRANTY_STATES,
     transitions: WARRANTY_ALLOWED_TRANSITIONS,
   },
@@ -197,5 +197,5 @@ export function closeoutPatternBEventTypeFor(entity: CloseoutPatternBEntity): Ac
 }
 
 export function closeoutPatternBEntityKindFor(entity: CloseoutPatternBEntity): CloseoutEntityKind {
-  return CLOSEOUT_PATTERN_B_ENTITIES[entity].closeout_entity_kind;
+  return CLOSEOUT_PATTERN_B_ENTITIES[entity].entity_kind;
 }

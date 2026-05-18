@@ -20,12 +20,13 @@
  * Mirrors lib/aia/execute-state-transition.ts. AIA module is PROTECTED;
  * Closeout has its own executor to avoid touching AIA scope.
  *
- * emit.ts is consume-only per BAN-309 D8 contract; the ActivitySpineEmitInput's
- * `aia_entity_kind` field is AIA-scoped (union doesn't include closeout kinds).
- * This executor sets `aia_entity_kind: 'engagement'` (faithful — the engagement
- * is the project that owns the closeout row, and aia_entity_id carries the
- * engagement_id) and stashes the concrete closeout entity kind + id in
- * metadata under `closeout_entity_kind` + `closeout_entity_id`.
+ * ADR-014 Amendment 2 (2026-05-17): the Amendment 1 workaround
+ * (`aia_entity_kind: 'engagement'` plus `metadata.closeout_entity_kind` /
+ * `closeout_entity_id` stash) has been retired. Closeout kinds are
+ * first-class members of `ActivitySpineEntityKind`; emissions pass
+ * `entity_kind` / `entity_id` for the real Closeout entity directly,
+ * with `scope_entity_type: 'project'` + `scope_entity_id: engagementId`
+ * carrying the project scope.
  */
 
 import { and, eq, isNull, type AnyColumn } from 'drizzle-orm';
@@ -153,10 +154,10 @@ export async function executeCloseoutPatternBTransition(
 
       const emitResult = await emitActivitySpineEvent(tx, {
         event_type: closeoutPatternBEventTypeFor(input.entity),
-        entity_type: 'project',
-        entity_id: input.engagementId,
-        aia_entity_kind: 'engagement',
-        aia_entity_id: input.engagementId,
+        scope_entity_type: 'project',
+        scope_entity_id: input.engagementId,
+        entity_kind: closeoutPatternBEntityKindFor(input.entity),
+        entity_id: input.pkValue,
         notes: input.reason ?? null,
         test_data: input.testData,
         metadata: {
@@ -164,8 +165,6 @@ export async function executeCloseoutPatternBTransition(
           to_state: input.toState,
           reason: input.reason ?? null,
           actor: input.actorEmail,
-          closeout_entity_kind: closeoutPatternBEntityKindFor(input.entity),
-          closeout_entity_id: input.pkValue,
         },
       });
 
@@ -338,10 +337,10 @@ export async function executeProjectLifecycleTransitionInTx(
 
   const emit = await emitActivitySpineEvent(tx, {
     event_type: 'PROJECT_STATE_CHANGED',
-    entity_type: 'project',
+    scope_entity_type: 'project',
+    scope_entity_id: input.engagementId,
+    entity_kind: 'engagement',
     entity_id: input.engagementId,
-    aia_entity_kind: 'engagement',
-    aia_entity_id: input.engagementId,
     notes: input.reason ?? null,
     test_data: input.testData,
     metadata: {
@@ -349,8 +348,6 @@ export async function executeProjectLifecycleTransitionInTx(
       to_state: input.toState,
       reason: input.reason ?? null,
       actor: input.actorEmail,
-      closeout_entity_kind: 'engagement',
-      closeout_entity_id: input.engagementId,
       lifecycle_state_id: inserted[0].lifecycle_state_id,
       reopen: isReopen,
       reopen_reason: isReopen ? input.reopenReason!.trim() : null,

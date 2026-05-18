@@ -219,8 +219,8 @@ describe('BAN-309 Pass 3a.2 — executePatternBTransition', () => {
     expect(insertedValues.metadata).toMatchObject({
       from_state: 'PENDING_DRAFT',
       to_state: 'READY_FOR_NOTARIZATION',
-      aia_entity_kind: 'pay_application',
-      aia_entity_id: PAY_APP_ID,
+      entity_kind: 'pay_application',
+      entity_id: PAY_APP_ID,
       actor: 'kai@kulaglass.com',
       reason: 'estimator ready',
     });

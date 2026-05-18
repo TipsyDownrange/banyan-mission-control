@@ -6,7 +6,7 @@ import {
   LIEN_WAIVER_STATES,
   validatePatternBTransition,
   patternBEventTypeFor,
-  patternBAiaEntityKindFor,
+  patternBEntityKindFor,
 } from '@/lib/aia/state-transitions';
 
 describe('BAN-309 Pass 3a.2 — AIA Pattern B state transitions', () => {
@@ -59,7 +59,7 @@ describe('BAN-309 Pass 3a.2 — AIA Pattern B state transitions', () => {
     });
   });
 
-  describe('event_type + aia_entity_kind mapping', () => {
+  describe('event_type + entity_kind mapping', () => {
     it('maps each entity to its canonical event_type', () => {
       expect(patternBEventTypeFor('pay_application')).toBe('PAY_APP_STATE_CHANGED');
       expect(patternBEventTypeFor('sov_version')).toBe('SOV_STATE_CHANGED');
@@ -67,16 +67,16 @@ describe('BAN-309 Pass 3a.2 — AIA Pattern B state transitions', () => {
       expect(patternBEventTypeFor('lien_waiver')).toBe('LIEN_WAIVER_STATE_CHANGED');
     });
 
-    it('maps each entity to its aia_entity_kind metadata key', () => {
-      expect(patternBAiaEntityKindFor('pay_application')).toBe('pay_application');
-      expect(patternBAiaEntityKindFor('sov_version')).toBe('sov_version');
-      expect(patternBAiaEntityKindFor('tm_authorization')).toBe('tm_authorization');
-      expect(patternBAiaEntityKindFor('lien_waiver')).toBe('lien_waiver');
+    it('maps each entity to its entity_kind metadata key', () => {
+      expect(patternBEntityKindFor('pay_application')).toBe('pay_application');
+      expect(patternBEntityKindFor('sov_version')).toBe('sov_version');
+      expect(patternBEntityKindFor('tm_authorization')).toBe('tm_authorization');
+      expect(patternBEntityKindFor('lien_waiver')).toBe('lien_waiver');
     });
 
     it('exposes the same data through PATTERN_B_ENTITIES', () => {
       expect(PATTERN_B_ENTITIES.pay_application.event_type).toBe('PAY_APP_STATE_CHANGED');
-      expect(PATTERN_B_ENTITIES.sov_version.aia_entity_kind).toBe('sov_version');
+      expect(PATTERN_B_ENTITIES.sov_version.entity_kind).toBe('sov_version');
     });
   });
 
