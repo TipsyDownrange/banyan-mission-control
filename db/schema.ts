@@ -705,12 +705,17 @@ export const schedule_of_values = pgTable('schedule_of_values', {
   line_type: text('line_type').notNull().default('LUMP_SUM'),
   tm_authorization_id: uuid('tm_authorization_id'),
   retainage_pct: numeric('retainage_pct', { precision: 5, scale: 2 }),
+  // BAN-336 — hierarchical SOV (parent rolls up child leafs in the G703 grid)
+  parent_line_id: uuid('parent_line_id'),
+  display_item_number: text('display_item_number'),
+  textura_phase_code: integer('textura_phase_code'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   unique('schedule_of_values_version_line_uidx').on(table.tenant_id, table.sov_version_id, table.line_number),
   index('schedule_of_values_engagement_idx').on(table.tenant_id, table.engagement_id),
   index('schedule_of_values_tm_auth_idx').on(table.tenant_id, table.tm_authorization_id),
+  index('schedule_of_values_parent_line_idx').on(table.tenant_id, table.parent_line_id),
   check('schedule_of_values_line_type_check', sql`${table.line_type} IN ('LUMP_SUM','TM_AUTHORIZATION','MOBILIZATION','RETAINAGE_RELEASE','DEPOSIT_DRAW_DOWN','STORED_MATERIALS','OTHER')`),
 ]);
 
@@ -834,6 +839,10 @@ export const pay_applications = pgTable('pay_applications', {
   gc_approved_at: timestamp('gc_approved_at', { withTimezone: true }),
   rejected_at: timestamp('rejected_at', { withTimezone: true }),
   rejection_reason: text('rejection_reason'),
+  rejection_actor_id: uuid('rejection_actor_id'),
+  rejection_at: timestamp('rejection_at', { withTimezone: true }),
+  // BAN-336 — drives the 3 PDF renderers in lib/aia/pay-app-pdf.tsx
+  billing_format: text('billing_format').notNull().default('AIA_G702_G703'),
   is_retainage_release: boolean('is_retainage_release').notNull().default(false),
   created_by: uuid('created_by').references(() => users.user_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -844,6 +853,7 @@ export const pay_applications = pgTable('pay_applications', {
   index('pay_applications_period_idx').on(table.tenant_id, table.engagement_id, table.period_end),
   check('pay_applications_state_check', sql`${table.state} IN ('PENDING_DRAFT','READY_FOR_NOTARIZATION','READY_FOR_SUBMISSION','SUBMITTED','ARCHITECT_CERTIFIED','GC_APPROVED','PAID_PARTIAL','PAID_FULL','REJECTED')`),
   check('pay_applications_period_order_check', sql`${table.period_end} >= ${table.period_start}`),
+  check('pay_applications_billing_format_check', sql`${table.billing_format} IN ('AIA_G702_G703','CUSTOM_TEMPLATE_AIA_STYLE','CUSTOM_TEMPLATE_SCHEDULE_ABC','TEXTURA_CSV_EXPORT')`),
 ]);
 
 // AIA §14.1 — pay app G703 line items
