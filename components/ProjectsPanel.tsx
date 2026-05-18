@@ -7,6 +7,7 @@ import ActivityTimeline from '@/components/ActivityTimeline';
 import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
 import PayAppsTab from '@/components/engagements/PayAppsTab';
 import PunchListTab from '@/components/engagements/PunchListTab';
+import TMTicketsTab from '@/components/engagements/TMTicketsTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -101,7 +102,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [cos, setCos] = useState<CO[]>([]);
@@ -133,6 +134,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'rfis', label: `RFIs (${rfis.length})` },
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'pay-apps', label: 'Pay Apps' },
+    { key: 'tm-tickets', label: 'T&M Tickets' },
     { key: 'budget', label: 'Budget' },
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
@@ -315,6 +317,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
               {activeTab === 'pay-apps' && (
                 <PayAppsTab kID={project.kID} />
+              )}
+
+              {activeTab === 'tm-tickets' && (
+                <TMTicketsTab kID={project.kID} />
               )}
 
               {activeTab === 'punch-list' && (
