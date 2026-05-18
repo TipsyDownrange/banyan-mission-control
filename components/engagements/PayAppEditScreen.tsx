@@ -49,6 +49,11 @@ type SovLine = {
 
 type BillingFormatConfig = {
   retainage_pct: string | null;
+  notarization_required?: boolean | null;
+  notarization_provider?: string | null;
+  gc_billing_intake_platform?: string | null;
+  gc_certifier_name?: string | null;
+  gc_certifier_email?: string | null;
 };
 
 interface Props {
@@ -74,6 +79,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notarizeOpen, setNotarizeOpen] = useState(false);
 
   useEffect(() => {
     fetch(`/api/pay-apps/${payAppId}`)
@@ -204,6 +210,51 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function skipNotarization() {
+    if (!payApp) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/pay-apps/${payAppId}/skip-notarization`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? `Skip notarization failed (${res.status})`);
+      else setPayApp((p) => p ? { ...p, state: data.state } : p);
+    } finally { setSaving(false); }
+  }
+
+  async function submitDirect() {
+    if (!payApp) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/pay-apps/${payAppId}/submit-direct`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? `Submit failed (${res.status})`);
+      else setPayApp((p) => p ? { ...p, state: data.state } : p);
+    } finally { setSaving(false); }
+  }
+
+  async function logTexturaUpload() {
+    if (!payApp) return;
+    const extId = window.prompt('Textura confirmation # (optional):') ?? '';
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/pay-apps/${payAppId}/log-textura-upload`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(extId ? { textura_submission_id_external: extId } : {}),
+      });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? `Log Textura upload failed (${res.status})`);
+      else setPayApp((p) => p ? { ...p, state: data.state } : p);
+    } finally { setSaving(false); }
   }
 
   async function downloadPdf() {
@@ -362,6 +413,28 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
             Mark Ready →
           </button>
         )}
+        {/* BAN-337 — Notarization buttons */}
+        {(payApp.state === 'PENDING_DRAFT' || payApp.state === 'READY_FOR_NOTARIZATION') && cfg?.notarization_required && (
+          <button onClick={() => setNotarizeOpen(true)} disabled={saving} style={btnGreen}>
+            Mark Notarized (Upload PDF)
+          </button>
+        )}
+        {(payApp.state === 'PENDING_DRAFT' || payApp.state === 'READY_FOR_NOTARIZATION') && cfg && !cfg.notarization_required && (
+          <button onClick={skipNotarization} disabled={saving} style={btnSecondary}>
+            Skip Notarization →
+          </button>
+        )}
+        {/* BAN-337 — Submission buttons */}
+        {payApp.state === 'READY_FOR_SUBMISSION' && (cfg?.gc_billing_intake_platform === 'DIRECT' || !cfg?.gc_billing_intake_platform) && (
+          <button onClick={submitDirect} disabled={saving} style={btnGreen}>
+            Submit Direct →
+          </button>
+        )}
+        {payApp.state === 'READY_FOR_SUBMISSION' && cfg?.gc_billing_intake_platform === 'TEXTURA' && (
+          <button onClick={logTexturaUpload} disabled={saving} style={btnGreen}>
+            Log Textura Upload →
+          </button>
+        )}
         <button onClick={downloadPdf} style={btnSecondary}>
           Generate PDF
         </button>
@@ -371,9 +444,140 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
           </button>
         )}
       </div>
+
+      {notarizeOpen && (
+        <NotarizationUploadModal
+          payAppId={payAppId}
+          onClose={() => setNotarizeOpen(false)}
+          onCompleted={(toState) => {
+            setNotarizeOpen(false);
+            setPayApp((p) => p ? { ...p, state: toState } : p);
+          }}
+        />
+      )}
     </div>
   );
 }
+
+// ─── BAN-337 — Manual notarization upload modal ───────────────────────────────
+function NotarizationUploadModal({
+  payAppId, onClose, onCompleted,
+}: {
+  payAppId: string;
+  onClose: () => void;
+  onCompleted: (toState: string) => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [notaryName, setNotaryName] = useState('');
+  const [notaryState, setNotaryState] = useState('');
+  const [commissionExpires, setCommissionExpires] = useState('');
+  const [notarizationDate, setNotarizationDate] = useState(new Date().toISOString().slice(0, 10));
+  const [method, setMethod] = useState<'IN_PERSON' | 'REMOTE_ONLINE_PROOF' | 'REMOTE_ONLINE_OTHER' | 'MOBILE_NOTARY' | 'OTHER'>('IN_PERSON');
+  const [cost, setCost] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit() {
+    setErr(null);
+    if (!file) { setErr('PDF file is required'); return; }
+    if (!notaryName.trim()) { setErr('Notary name is required'); return; }
+    if (!notaryState.trim() || notaryState.trim().length !== 2) { setErr('Notary state must be a 2-letter code'); return; }
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('notary_name', notaryName);
+      fd.append('notary_state', notaryState.toUpperCase());
+      if (commissionExpires) fd.append('notary_commission_expires', commissionExpires);
+      fd.append('notarization_date', notarizationDate);
+      fd.append('notarization_method', method);
+      if (cost) fd.append('cost_usd', cost);
+      const res = await fetch(`/api/pay-apps/${payAppId}/upload-notarized`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) { setErr(data.error ?? `Upload failed (${res.status})`); return; }
+      onCompleted(data.state ?? 'READY_FOR_SUBMISSION');
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Network error');
+    } finally { setSubmitting(false); }
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 14, padding: 24, width: 480, maxWidth: '90vw',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+      }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#0c2330', marginBottom: 4 }}>
+          Upload Notarized Pay App PDF
+        </div>
+        <div style={{ fontSize: 11, color: '#64748b', marginBottom: 16 }}>
+          Manual notarization upload — proof of notary signature + commission stamp.
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <label style={lblStyle}>
+            <span>PDF *</span>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              style={inputStyle}
+            />
+          </label>
+          <label style={lblStyle}>
+            <span>Notary name *</span>
+            <input value={notaryName} onChange={(e) => setNotaryName(e.target.value)} style={inputStyle} />
+          </label>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <label style={{ ...lblStyle, flex: 1 }}>
+              <span>State *</span>
+              <input value={notaryState} onChange={(e) => setNotaryState(e.target.value.toUpperCase())} maxLength={2} style={inputStyle} placeholder="HI" />
+            </label>
+            <label style={{ ...lblStyle, flex: 1 }}>
+              <span>Commission expires</span>
+              <input type="date" value={commissionExpires} onChange={(e) => setCommissionExpires(e.target.value)} style={inputStyle} />
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <label style={{ ...lblStyle, flex: 1 }}>
+              <span>Date *</span>
+              <input type="date" value={notarizationDate} onChange={(e) => setNotarizationDate(e.target.value)} style={inputStyle} />
+            </label>
+            <label style={{ ...lblStyle, flex: 1 }}>
+              <span>Method *</span>
+              <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)} style={inputStyle}>
+                <option value="IN_PERSON">In person</option>
+                <option value="REMOTE_ONLINE_PROOF">Remote (Proof)</option>
+                <option value="REMOTE_ONLINE_OTHER">Remote (other)</option>
+                <option value="MOBILE_NOTARY">Mobile notary</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+          </div>
+          <label style={lblStyle}>
+            <span>Cost (USD)</span>
+            <input value={cost} onChange={(e) => setCost(e.target.value)} inputMode="decimal" style={inputStyle} placeholder="0.00" />
+          </label>
+        </div>
+
+        {err && <div style={{ marginTop: 12, color: '#b91c1c', fontSize: 12, fontWeight: 600 }}>{err}</div>}
+
+        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <button onClick={onClose} disabled={submitting} style={btnSecondary}>Cancel</button>
+          <button onClick={submit} disabled={submitting} style={btnPrimary}>
+            {submitting ? 'Uploading…' : 'Upload + Mark Notarized'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const lblStyle = { display: 'flex', flexDirection: 'column' as const, gap: 4, fontSize: 11, fontWeight: 700, color: '#0f172a' };
+const inputStyle = { padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', background: '#fff' };
 
 function summaryRow(num: string, label: string, value: number, footnote?: string, bold?: boolean) {
   return (

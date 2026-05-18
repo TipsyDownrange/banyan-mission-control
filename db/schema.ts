@@ -731,6 +731,8 @@ export const billing_format_config = pgTable('billing_format_config', {
   retainage_release_trigger: text('retainage_release_trigger').notNull().default('SUBSTANTIAL_COMPLETION'),
   payment_terms: text('payment_terms').notNull().default('NET_30'),
   notarization_required: boolean('notarization_required').notNull().default(false),
+  // BAN-337 — Amendment 1: notarization provider (MANUAL is the v2b default; PROOF_RON_API deferred to v2.b1)
+  notarization_provider: text('notarization_provider').notNull().default('MANUAL'),
   architect_cert_required: boolean('architect_cert_required').notNull().default(false),
   lien_waiver_required: boolean('lien_waiver_required').notNull().default(false),
   get_handling: text('get_handling').notNull().default('SUMMARY_LINE_ONLY'),
@@ -758,6 +760,7 @@ export const billing_format_config = pgTable('billing_format_config', {
   check('billing_format_config_billing_period_check', sql`${table.billing_period_definition} IN ('MONTHLY_CALENDAR','MONTHLY_FROM_NTP','BIWEEKLY','CONTRACT_DEFINED')`),
   check('billing_format_config_tm_billing_doc_check', sql`${table.tm_billing_doc} IN ('SAME_AS_PAY_APP','SEPARATE_TM_INVOICE')`),
   check('billing_format_config_pay_app_seq_check', sql`${table.pay_app_sequence_numbering} IN ('CONTINUOUS','RESTART_PER_PHASE')`),
+  check('billing_format_config_notarization_provider_check', sql`${table.notarization_provider} IN ('MANUAL','PROOF_RON_API','OTHER_INTEGRATION')`),
 ]);
 
 // AIA §14.1 — per-contract deposit terms (§6.4)
@@ -897,21 +900,31 @@ export const pay_app_states = pgTable('pay_app_states', {
   index('pay_app_states_pay_app_idx').on(table.pay_app_id, table.changed_at),
 ]);
 
-// AIA §14.1 + §8 — Proof RON notarization sessions
+// AIA §14.1 + §8 — Notarization sessions (BAN-337 v2b: manual-upload primary,
+// Proof RON automated integration deferred to v2.b1).
 export const notarization_sessions = pgTable('notarization_sessions', {
   session_id: uuid('session_id').defaultRandom().primaryKey(),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
   engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
   target_kind: text('target_kind').notNull(),
   pay_app_id: uuid('pay_app_id').references(() => pay_applications.pay_app_id),
+  // BAN-337 — distinguishes manual-upload vs Proof RON automation (forward-compatible)
+  notarization_source: text('notarization_source').notNull().default('MANUAL_UPLOAD'),
   provider: text('provider').notNull().default('PROOF'),
   provider_session_id: text('provider_session_id'),
   provider_session_url: text('provider_session_url'),
   signer_user_id: uuid('signer_user_id').references(() => users.user_id),
   notary_name: text('notary_name'),
+  notary_state: text('notary_state'),
+  notary_commission_expires: date('notary_commission_expires'),
   notary_cert_ref: text('notary_cert_ref'),
+  notarization_date: date('notarization_date'),
+  notarization_method: text('notarization_method'),
+  signed_pdf_drive_id: text('signed_pdf_drive_id'),
+  uploaded_by: uuid('uploaded_by').references(() => users.user_id),
   state: text('state').notNull().default('CREATED'),
   cost_amount: numeric('cost_amount', { precision: 10, scale: 2 }),
+  initiated_at: timestamp('initiated_at', { withTimezone: true }),
   completed_at: timestamp('completed_at', { withTimezone: true }),
   failure_reason: text('failure_reason'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -919,8 +932,11 @@ export const notarization_sessions = pgTable('notarization_sessions', {
 }, (table) => [
   index('notarization_sessions_engagement_idx').on(table.tenant_id, table.engagement_id, table.state),
   index('notarization_sessions_pay_app_idx').on(table.tenant_id, table.pay_app_id),
+  index('notarization_sessions_source_idx').on(table.tenant_id, table.notarization_source),
   check('notarization_sessions_target_kind_check', sql`${table.target_kind} IN ('PAY_APP','LIEN_WAIVER')`),
-  check('notarization_sessions_state_check', sql`${table.state} IN ('CREATED','IN_PROGRESS','COMPLETED','FAILED','CANCELLED')`),
+  check('notarization_sessions_state_check', sql`${table.state} IN ('CREATED','INITIATED','IN_PROGRESS','COMPLETED','FAILED','CANCELLED','EXPIRED')`),
+  check('notarization_sessions_source_check', sql`${table.notarization_source} IN ('MANUAL_UPLOAD','PROOF_RON_API','OTHER_INTEGRATION')`),
+  check('notarization_sessions_method_check', sql`${table.notarization_method} IS NULL OR ${table.notarization_method} IN ('IN_PERSON','REMOTE_ONLINE_PROOF','REMOTE_ONLINE_OTHER','MOBILE_NOTARY','OTHER')`),
 ]);
 
 // AIA §14.1 + §10 — lien waivers
@@ -1047,16 +1063,23 @@ export const tm_tickets = pgTable('tm_tickets', {
   check('tm_tickets_status_check', sql`${table.status} IN ('DRAFT','LOGGED','READY_FOR_GC_APPROVAL','GC_APPROVED','DISPUTED','BILLABLE','BILLED','PAID','REJECTED')`),
 ]);
 
-// AIA §14.1 + §7.10 — Oracle Textura CSV submission records
+// AIA §14.1 + §7.10 — Oracle Textura CSV submission records (BAN-337 v2b
+// extends with bundle drive ids + external submission id; status enum
+// expanded for the v2b GENERATED → UPLOADED_TO_TEXTURA → CONFIRMED chain).
 export const textura_submissions = pgTable('textura_submissions', {
   submission_id: uuid('submission_id').defaultRandom().primaryKey(),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
   engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
   pay_app_id: uuid('pay_app_id').notNull().references(() => pay_applications.pay_app_id, { onDelete: 'cascade' }),
   csv_file_ref: text('csv_file_ref'),
+  bundle_drive_id: text('bundle_drive_id'),
+  csv_drive_id: text('csv_drive_id'),
+  notarized_pdf_drive_id: text('notarized_pdf_drive_id'),
   textura_submission_id: text('textura_submission_id'),
+  textura_submission_id_external: text('textura_submission_id_external'),
   submission_status: text('submission_status').notNull().default('UPLOADED'),
   submitted_at: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+  submitted_by: uuid('submitted_by').references(() => users.user_id),
   failure_reason: text('failure_reason'),
   created_by: uuid('created_by').references(() => users.user_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -1064,7 +1087,7 @@ export const textura_submissions = pgTable('textura_submissions', {
 }, (table) => [
   index('textura_submissions_engagement_idx').on(table.tenant_id, table.engagement_id),
   index('textura_submissions_pay_app_idx').on(table.pay_app_id),
-  check('textura_submissions_status_check', sql`${table.submission_status} IN ('UPLOADED','FAILED','REJECTED','ACCEPTED','RESUBMITTED')`),
+  check('textura_submissions_status_check', sql`${table.submission_status} IN ('GENERATED','UPLOADED','UPLOADED_TO_TEXTURA','CONFIRMED_BY_TEXTURA','FAILED','REJECTED','REJECTED_BY_TEXTURA','ACCEPTED','RESUBMITTED')`),
 ]);
 
 // ─── BAN-304 Pass 3b: Closeout v1.1 entity schema ───────────────────────────
