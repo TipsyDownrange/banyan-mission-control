@@ -104,6 +104,9 @@ export interface WarRoomCostSnapshot {
   byDay: Record<string, { cost: number; anthropic?: number; openai?: number }>;
   lastSync?: string;
   error?: string;
+  /** Live Mac mini relay snapshot (Cost & Usage Live Tracking Phase 1). */
+  liveClaudeSession?: import('../cost/types').LiveClaudeSnapshot | null;
+  liveClaudeSessionAgeSeconds?: number | null;
 }
 
 export interface WarRoomLaneRecommendation {

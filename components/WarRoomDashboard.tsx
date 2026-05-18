@@ -301,10 +301,15 @@ function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
   const providerTotal = Math.max(cost.providers.reduce((sum, provider) => sum + provider.value, 0), cost.allInTotal, 1);
 
   return (
-    <section data-war-room-runtime-cost="true" style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'linear-gradient(135deg, rgba(7,23,34,0.94), rgba(12,35,48,0.86))', borderRadius: 18, padding: 14 }}>
+    <div style={{ display: 'grid', gap: 12 }}>
+      <LiveClaudeSessionPanel
+        snapshot={cost.liveClaudeSession ?? null}
+        ageSeconds={cost.liveClaudeSessionAgeSeconds ?? null}
+      />
+      <section data-war-room-runtime-cost="true" style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'linear-gradient(135deg, rgba(7,23,34,0.94), rgba(12,35,48,0.86))', borderRadius: 18, padding: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
         <div>
-          <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Costmaster</div>
+          <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Costmaster · Billed to Date</div>
           <div style={{ color: '#f8fafc', fontSize: 30, fontWeight: 950, marginTop: 3 }}>{formatUsd(cost.allInTotal)}</div>
           <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>All-in tracked spend / monthly burn {formatUsd(cost.monthlyBurn)}</div>
         </div>
@@ -349,8 +354,115 @@ function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
         </div>
       </div>
       {cost.error && <div style={{ color: '#fca5a5', fontSize: 11, lineHeight: 1.35, marginTop: 10 }}>Cost route reported: {cost.error}</div>}
+      </section>
+    </div>
+  );
+}
+
+function pctBarColor(pct: number): string {
+  if (pct >= 90) return '#fb7185';
+  if (pct >= 70) return '#fbbf24';
+  return '#5eead4';
+}
+
+function formatResetCountdown(iso: string | null, now: Date): string | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  const deltaMs = t - now.getTime();
+  if (deltaMs <= 0) return 'resetting now';
+  const totalMinutes = Math.round(deltaMs / 60000);
+  if (totalMinutes < 60) return `resets in ${totalMinutes}m`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours < 24) return `resets in ${hours}h ${minutes}m`;
+  const days = Math.floor(hours / 24);
+  const remHours = hours % 24;
+  return `resets in ${days}d ${remHours}h`;
+}
+
+function LiveClaudePctBar({ label, pct }: { label: string; pct: number }) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  const color = pctBarColor(clamped);
+  return (
+    <div data-live-claude-bar={label.toLowerCase()}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginBottom: 4 }}>
+        <span>{label}</span>
+        <span style={{ color }}>{clamped.toFixed(0)}%</span>
+      </div>
+      <div style={{ height: 6, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+        <div style={{ height: '100%', width: `${clamped}%`, background: color, borderRadius: 999 }} />
+      </div>
+    </div>
+  );
+}
+
+function LiveClaudeSessionPanel({ snapshot, ageSeconds }: { snapshot: WarRoomCostSnapshot['liveClaudeSession']; ageSeconds: number | null }) {
+  const freshness = computeLiveClaudeFreshness(ageSeconds);
+  const now = new Date();
+  const sessionReset = snapshot ? formatResetCountdown(snapshot.resetSessionAt, now) : null;
+  const weeklyReset = snapshot ? formatResetCountdown(snapshot.resetWeeklyAt, now) : null;
+  return (
+    <section
+      data-war-room-live-claude="true"
+      data-live-claude-freshness={freshness.state}
+      style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'linear-gradient(135deg, rgba(8,28,38,0.94), rgba(12,40,52,0.86))', borderRadius: 18, padding: 14 }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 10 }}>
+        <div>
+          <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Live Claude Session</div>
+          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 850, marginTop: 3 }}>Real-time subscription window from Mac mini relay</div>
+        </div>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          color: freshness.color,
+          border: `1px solid ${freshness.color}55`,
+          background: `${freshness.color}18`,
+          borderRadius: 999, padding: '3px 9px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', whiteSpace: 'nowrap',
+        }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: freshness.color, display: 'inline-block' }} />
+          {freshness.label}
+        </span>
+      </div>
+      {snapshot ? (
+        <div style={{ display: 'grid', gap: 10 }}>
+          <LiveClaudePctBar label="Session" pct={snapshot.sessionPct} />
+          {sessionReset && (
+            <div style={{ color: '#94a3b8', fontSize: 10, marginTop: -6 }}>Session {sessionReset}</div>
+          )}
+          <LiveClaudePctBar label="Weekly" pct={snapshot.weeklyPct} />
+          {weeklyReset && (
+            <div style={{ color: '#94a3b8', fontSize: 10, marginTop: -6 }}>Weekly {weeklyReset}</div>
+          )}
+          {typeof snapshot.opusPct === 'number' && (
+            <LiveClaudePctBar label="Opus / Design" pct={snapshot.opusPct} />
+          )}
+          {snapshot.extraUsageDollars && (
+            <div style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 850 }}>
+              Extra usage <span style={{ color: '#f8fafc' }}>{formatUsd(snapshot.extraUsageDollars.used)}</span>
+              <span style={{ color: '#94a3b8' }}> / {formatUsd(snapshot.extraUsageDollars.limit)}</span>
+            </div>
+          )}
+          <div style={{ color: '#64748b', fontSize: 10 }}>Source: {snapshot.sourceApp} · captured {formatDate(snapshot.capturedAt)}</div>
+        </div>
+      ) : (
+        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4 }}>
+          No live snapshot yet. Confirm the Mac mini relay is running and posting to /api/cost/ingest.
+        </div>
+      )}
     </section>
   );
+}
+
+function computeLiveClaudeFreshness(ageSeconds: number | null): { state: 'live' | 'stale' | 'offline'; label: string; color: string } {
+  if (ageSeconds === null || ageSeconds === undefined || ageSeconds > 300) {
+    return { state: 'offline', label: 'Not connected', color: '#fb7185' };
+  }
+  if (ageSeconds < 90) {
+    return { state: 'live', label: `Live · ${ageSeconds}s ago`, color: '#86efac' };
+  }
+  const minutes = Math.max(1, Math.round(ageSeconds / 60));
+  return { state: 'stale', label: `Stale · ${minutes}m ago`, color: '#fbbf24' };
 }
 
 export default function WarRoomDashboard({ initialData, initialRuntimeHealth = null, initialSourceHealth = null }: { initialData: WarRoomDashboardData; initialRuntimeHealth?: WarRoomRuntimeHealth | null; initialSourceHealth?: SourceHealthSnapshot | null }) {

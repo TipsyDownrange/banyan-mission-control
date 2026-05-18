@@ -86,5 +86,35 @@ describe('War Room runtime status normalization', () => {
     expect(snapshot.budgetPct).toBe(51);
     expect(snapshot.providers.map(provider => provider.label)).toEqual(['Anthropic', 'OpenAI', 'Subscriptions', 'Vercel']);
     expect(snapshot.byDay['2026-05-07']).toMatchObject({ cost: 5.1235, openai: 2.1235 });
+    // Cost & Usage Live Tracking Phase 1: defaults when relay has not posted.
+    expect(snapshot.liveClaudeSession).toBeNull();
+    expect(snapshot.liveClaudeSessionAgeSeconds).toBeNull();
+  });
+
+  it('passes live Claude session snapshot through when present in cost API payload', () => {
+    const liveClaudeSession = {
+      sessionPct: 45,
+      weeklyPct: 12,
+      opusPct: 8,
+      extraUsageDollars: { used: 3.5, limit: 25 },
+      resetSessionAt: '2026-05-07T15:00:00.000Z',
+      resetWeeklyAt: '2026-05-12T00:00:00.000Z',
+      sourceApp: 'usage-for-claude-dashboard',
+      capturedAt: '2026-05-07T12:00:30.000Z',
+    };
+    const snapshot = mapCostApiDataToWarRoomSnapshot({
+      allInTotal: 100,
+      todayCost: 2,
+      liveClaudeSession,
+      liveClaudeSessionAgeSeconds: 42,
+    });
+    expect(snapshot.liveClaudeSession).toEqual(liveClaudeSession);
+    expect(snapshot.liveClaudeSessionAgeSeconds).toBe(42);
+  });
+
+  it('coerces missing live Claude session fields to null', () => {
+    const snapshot = mapCostApiDataToWarRoomSnapshot({});
+    expect(snapshot.liveClaudeSession).toBeNull();
+    expect(snapshot.liveClaudeSessionAgeSeconds).toBeNull();
   });
 });
