@@ -1376,3 +1376,116 @@ export const project_search_indexes = pgTable('project_search_indexes', {
   unique('project_search_indexes_engagement_uidx').on(table.tenant_id, table.engagement_id),
   index('project_search_indexes_last_indexed_idx').on(table.tenant_id, table.last_indexed_at),
 ]);
+
+// ─── PM Trunk v1.0 §5 — Submittal Log (BAN-340) ──────────────────────────────
+
+export const submittalTypeEnum = pgEnum('submittal_type', [
+  'ACTION',
+  'PHYSICAL',
+  'CLOSEOUT',
+]);
+
+export const submittalStatusEnum = pgEnum('submittal_status', [
+  'REQUIRED',
+  'IN_PROGRESS',
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'APPROVED',
+  'APPROVED_AS_NOTED',
+  'REVISE_RESUBMIT',
+  'REJECTED',
+  'CLOSED',
+]);
+
+export const submittalSubmittedToEnum = pgEnum('submittal_submitted_to', [
+  'GC',
+  'ARCHITECT',
+  'ENGINEER',
+  'OWNER',
+]);
+
+export const submittalBallInCourtEnum = pgEnum('submittal_ball_in_court', [
+  'SUBCONTRACTOR',
+  'GC',
+  'ARCHITECT',
+  'ENGINEER',
+  'OWNER',
+]);
+
+export const submittalSourceEnum = pgEnum('submittal_source', [
+  'PM_MANUAL',
+  'KAI_EXTRACTED_FROM_SPEC',
+]);
+
+export const submittals = pgTable('submittals', {
+  submittal_id: uuid('submittal_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+
+  submittal_number: text('submittal_number').notNull(),
+  display_label: text('display_label'),
+
+  csi_division: text('csi_division'),
+  csi_spec_section: text('csi_spec_section').notNull(),
+  csi_subsection: text('csi_subsection').notNull(),
+  csi_sub_subsection: text('csi_sub_subsection').notNull(),
+  spec_document_ref: text('spec_document_ref'),
+
+  submittal_type: submittalTypeEnum('submittal_type').notNull(),
+  description: text('description'),
+  requirements_text: text('requirements_text'),
+  required_quantity: integer('required_quantity'),
+
+  status: submittalStatusEnum('status').notNull().default('REQUIRED'),
+
+  required_by_date: date('required_by_date'),
+  submitted_to: submittalSubmittedToEnum('submitted_to'),
+  submitted_date: date('submitted_date'),
+  reviewed_date: date('reviewed_date'),
+  approved_date: date('approved_date'),
+  closed_date: date('closed_date'),
+
+  lead_time_days: integer('lead_time_days'),
+
+  ball_in_court: submittalBallInCourtEnum('ball_in_court'),
+  current_assignee_user_id: uuid('current_assignee_user_id').references(() => users.user_id),
+
+  submitted_documents: text('submitted_documents').array().notNull().default(sql`ARRAY[]::text[]`),
+  review_comments_documents: text('review_comments_documents').array().notNull().default(sql`ARRAY[]::text[]`),
+  approved_documents: text('approved_documents').array().notNull().default(sql`ARRAY[]::text[]`),
+
+  external_visible: boolean('external_visible').notNull().default(false),
+
+  source: submittalSourceEnum('source').notNull().default('PM_MANUAL'),
+  kai_extraction_confidence: numeric('kai_extraction_confidence', { precision: 3, scale: 2 }),
+  kai_extraction_ref: uuid('kai_extraction_ref'),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  unique('submittals_number_uidx').on(table.submittal_number),
+  unique('submittals_engagement_csi_uidx').on(
+    table.engagement_id,
+    table.csi_spec_section,
+    table.csi_subsection,
+    table.csi_sub_subsection,
+  ),
+  index('submittals_engagement_idx').on(table.engagement_id),
+  index('submittals_status_idx').on(table.status),
+  index('submittals_ball_in_court_idx').on(table.ball_in_court),
+  index('submittals_required_by_date_idx').on(table.required_by_date),
+  check(
+    'submittals_csi_spec_section_format',
+    sql`${table.csi_spec_section} ~ '^[0-9]{5}$|^[0-9]{6}$'`,
+  ),
+  check(
+    'submittals_csi_subsection_format',
+    sql`${table.csi_subsection} ~ '^[0-9]+\\.[0-9]+$'`,
+  ),
+  check(
+    'submittals_csi_sub_subsection_format',
+    sql`${table.csi_sub_subsection} ~ '^[A-Z]$|^[1-9]$'`,
+  ),
+]);

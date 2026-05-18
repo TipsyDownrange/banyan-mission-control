@@ -15,13 +15,24 @@ describe('BAN-293 Activity Spine migrations', () => {
   });
 
   it('enforces every ratified canonical event type in the CHECK migration', () => {
-    const sql = fs.readFileSync(path.join(migrationDir, '0012_ban293_activity_spine_event_type_check.sql'), 'utf8');
+    // The BAN-293 CHECK is established in 0012 and additively extended by
+    // later migrations as new canonical event types are introduced (e.g.
+    // BAN-340 adds SUBMITTAL_STATE_CHANGED via 0017). Aggregate the SQL
+    // text from every migration that recreates the CHECK so the assertion
+    // matches the cumulative live shape.
+    const checkSources = fs.readdirSync(migrationDir)
+      .filter((f) => f.endsWith('.sql'))
+      .map((f) => fs.readFileSync(path.join(migrationDir, f), 'utf8'))
+      .filter((sql) => sql.includes('field_events_event_type_ban293_check'));
 
-    expect(sql).toContain('field_events_event_type_ban293_check');
-    expect(sql).toContain('event_type IS NULL OR event_type IN');
-    expect(sql).toContain(`'wo_completion'`);
+    expect(checkSources.length).toBeGreaterThanOrEqual(1);
+    const combined = checkSources.join('\n');
+
+    expect(combined).toContain('field_events_event_type_ban293_check');
+    expect(combined).toContain('event_type IS NULL OR event_type IN');
+    expect(combined).toContain(`'wo_completion'`);
     for (const eventType of ACTIVITY_SPINE_EVENT_TYPES) {
-      expect(sql).toContain(`'${eventType}'`);
+      expect(combined).toContain(`'${eventType}'`);
     }
   });
 });

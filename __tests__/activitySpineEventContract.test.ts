@@ -10,11 +10,13 @@ import {
 } from '@/lib/activity-spine/event-contract';
 
 describe('BAN-293 Activity Spine event contract', () => {
-  it('contains 11 existing + 1 legacy transitional + 22 ratified new event types', () => {
+  it('contains 11 existing + 1 legacy transitional + 23 ratified new event types', () => {
+    // BAN-340 PM-V1.0-A extends Pattern B with SUBMITTAL_STATE_CHANGED
+    // (Pattern A unchanged at 12, Pattern B 10 → 11).
     expect(ACTIVITY_SPINE_EXISTING_EVENT_TYPE_COUNT).toBe(11);
     expect(ACTIVITY_SPINE_LEGACY_EVENT_TYPE_COUNT).toBe(1);
-    expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(22);
-    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(34);
+    expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(23);
+    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(35);
   });
 
   it('retains wo_completion as a legacy transitional event outside Pattern A/B', () => {
@@ -29,10 +31,12 @@ describe('BAN-293 Activity Spine event contract', () => {
 
   it('keeps the corrected Pattern A / Pattern B split', () => {
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toHaveLength(12);
-    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toHaveLength(10);
+    // Pattern B grew from 10 → 11 with BAN-340 SUBMITTAL_STATE_CHANGED.
+    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toHaveLength(11);
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('SOV_MODIFIED');
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('HANDOFF_PROCESSED');
     expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toContain('PROJECT_STATE_CHANGED');
+    expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toContain('SUBMITTAL_STATE_CHANGED');
     expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).not.toContain('PROJECT_LIFECYCLE_STATE_CHANGED');
   });
 

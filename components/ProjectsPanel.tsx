@@ -8,6 +8,7 @@ import BuildQueuePlaceholder from '@/components/BuildQueuePlaceholder';
 import PayAppsTab from '@/components/engagements/PayAppsTab';
 import PunchListTab from '@/components/engagements/PunchListTab';
 import TMTicketsTab from '@/components/engagements/TMTicketsTab';
+import SubmittalsTab from '@/components/engagements/SubmittalsTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -247,30 +248,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               )}
 
               {activeTab === 'submittals' && (
-                <div>
-                  {submittals.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No submittals for this project yet</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {submittals.map((s, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {s.description || s.spec_section || `Submittal #${s.sub_number}`}
-                            </div>
-                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                              #{s.sub_number} · {s.spec_section || ''} {s.ball_in_court ? `· Ball: ${s.ball_in_court}` : ''}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                            {s.submitted_to_gc_date && <span style={{ fontSize: 11, color: '#94a3b8' }}>{s.submitted_to_gc_date}</span>}
-                            {statusTag(s.status)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <SubmittalsTab kID={project.kID} />
               )}
 
               {activeTab === 'rfis' && (
