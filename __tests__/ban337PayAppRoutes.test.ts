@@ -68,6 +68,7 @@ type ChainNode = PromiseLike<Array<Record<string, unknown>>> & {
   limit: (...args: unknown[]) => ChainNode;
   offset: (...args: unknown[]) => ChainNode;
   innerJoin: (...args: unknown[]) => ChainNode;
+  leftJoin: (...args: unknown[]) => ChainNode;
 };
 
 function chainNode(): ChainNode {
@@ -79,6 +80,7 @@ function chainNode(): ChainNode {
   node.limit = () => chainNode();
   node.offset = () => chainNode();
   node.innerJoin = () => chainNode();
+  node.leftJoin = () => chainNode();
   return node;
 }
 
@@ -137,6 +139,17 @@ jest.mock('@/db', () => ({
   cash_receipts: tbl('cash_receipts'),
   users: tbl('users'),
   field_events: tbl('field_events'),
+  // BAN-338 v2c tables — referenced by submit-direct's joint-check lookup
+  // and by the auto-waiver dispatcher's existing-waiver dedup query.
+  joint_check_agreements: tbl('joint_check_agreements'),
+  organizations: tbl('organizations'),
+  lien_waivers: tbl('lien_waivers'),
+}));
+
+// BAN-338 v2c — stub the auto-waiver hook so the submit-direct test
+// doesn't need a real Postgres connection for the post-transition step.
+jest.mock('@/lib/lien-waivers/post-transition-hook', () => ({
+  runAutoLienWaiverHook: jest.fn(async () => ({ ran: false })),
 }));
 
 const mockCheckPermission = jest.fn();

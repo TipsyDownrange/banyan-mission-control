@@ -848,6 +848,11 @@ export const pay_applications = pgTable('pay_applications', {
   // BAN-336 — drives the 3 PDF renderers in lib/aia/pay-app-pdf.tsx
   billing_format: text('billing_format').notNull().default('AIA_G702_G703'),
   is_retainage_release: boolean('is_retainage_release').notNull().default(false),
+  // BAN-338 v2c — PM toggle. When true, submitted/paid lifecycle events
+  // auto-generate CONDITIONAL_FINAL / UNCONDITIONAL_FINAL waivers instead of
+  // the PROGRESS variants. Default false; flipped from the PM UI when the
+  // project closes out.
+  is_final_pay_app: boolean('is_final_pay_app').notNull().default(false),
   created_by: uuid('created_by').references(() => users.user_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -940,7 +945,10 @@ export const notarization_sessions = pgTable('notarization_sessions', {
   check('notarization_sessions_method_check', sql`${table.notarization_method} IS NULL OR ${table.notarization_method} IN ('IN_PERSON','REMOTE_ONLINE_PROOF','REMOTE_ONLINE_OTHER','MOBILE_NOTARY','OTHER')`),
 ]);
 
-// AIA §14.1 + §10 — lien waivers
+// AIA §14.1 + §10 — lien waivers (BAN-338 v2c extends with auto-generation
+// metadata: GENERATED/SUPERSEDED states, trigger_source, generated_at/
+// notarized_at/filed_at timestamps, and the separated pdf_drive_id +
+// notarized_pdf_drive_id refs).
 export const lien_waivers = pgTable('lien_waivers', {
   waiver_id: uuid('waiver_id').defaultRandom().primaryKey(),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
@@ -952,6 +960,14 @@ export const lien_waivers = pgTable('lien_waivers', {
   state: text('state').notNull().default('PENDING'),
   notarization_session_id: uuid('notarization_session_id').references(() => notarization_sessions.session_id),
   drive_file_ref: text('drive_file_ref'),
+  // BAN-338 — explicit pdf refs (pre- and post-notarization)
+  pdf_drive_id: text('pdf_drive_id'),
+  notarized_pdf_drive_id: text('notarized_pdf_drive_id'),
+  // BAN-338 — lifecycle timestamps mirroring the 3-state progression
+  generated_at: timestamp('generated_at', { withTimezone: true }),
+  notarized_at: timestamp('notarized_at', { withTimezone: true }),
+  filed_at: timestamp('filed_at', { withTimezone: true }),
+  trigger_source: text('trigger_source'),
   delivered_at: timestamp('delivered_at', { withTimezone: true }),
   delivered_method: text('delivered_method'),
   released_at: timestamp('released_at', { withTimezone: true }),
@@ -961,7 +977,8 @@ export const lien_waivers = pgTable('lien_waivers', {
   index('lien_waivers_engagement_state_idx').on(table.tenant_id, table.engagement_id, table.state),
   index('lien_waivers_pay_app_idx').on(table.tenant_id, table.pay_app_id),
   check('lien_waivers_type_check', sql`${table.waiver_type} IN ('CONDITIONAL_PROGRESS','UNCONDITIONAL_PROGRESS','CONDITIONAL_FINAL','UNCONDITIONAL_FINAL')`),
-  check('lien_waivers_state_check', sql`${table.state} IN ('PENDING','NOTARIZED','FILED','DELIVERED','RELEASED','VOIDED')`),
+  check('lien_waivers_state_check', sql`${table.state} IN ('GENERATED','PENDING','NOTARIZED','FILED','DELIVERED','RELEASED','VOIDED','SUPERSEDED')`),
+  check('lien_waivers_trigger_source_check', sql`${table.trigger_source} IS NULL OR ${table.trigger_source} IN ('AUTO_PAY_APP_SUBMITTED','AUTO_PAY_APP_PAID','MANUAL')`),
 ]);
 
 // AIA §14.1 + §9 — cash receipts against pay apps
@@ -1669,4 +1686,102 @@ export const verbal_agreements = pgTable('verbal_agreements', {
     'verbal_agreements_formal_doc_type_check',
     sql`${table.formal_documentation_type} IS NULL OR ${table.formal_documentation_type} IN ('CHANGE_ORDER','TM_TICKET','RFI')`,
   ),
+]);
+
+// ── BAN-338 Pay Apps v2c — Joint Check Agreements, External Lien Waiver
+// Requests, GC-Required Docs Checklist ──────────────────────────────────────
+
+// Joint check agreements bind Kula + a manufacturer for two-party payment
+// from the GC. PROPOSED → EXECUTED → ACTIVE → CLOSED (with DISPUTED side
+// branch). When an ACTIVE agreement exists for a project, pay-app
+// submission emails include a payment-instruction footer naming the
+// manufacturer (see lib/lien-waivers/joint-check-footer.ts).
+export const joint_check_agreements = pgTable('joint_check_agreements', {
+  joint_check_id: uuid('joint_check_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  manufacturer_org_id: uuid('manufacturer_org_id').notNull().references(() => organizations.org_id),
+  manufacturer_contact_name: text('manufacturer_contact_name'),
+  manufacturer_contact_email: text('manufacturer_contact_email'),
+  manufacturer_contact_phone: text('manufacturer_contact_phone'),
+  scope: text('scope'),
+  status: text('status').notNull().default('PROPOSED'),
+  trigger_source: text('trigger_source').notNull().default('KULA_PROPOSED'),
+  execution_date: date('execution_date'),
+  execution_evidence_drive_id: text('execution_evidence_drive_id'),
+  start_date: date('start_date'),
+  end_date: date('end_date'),
+  notes: text('notes'),
+  created_by: uuid('created_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('joint_check_agreements_engagement_idx').on(table.tenant_id, table.engagement_id, table.status),
+  index('joint_check_agreements_manufacturer_idx').on(table.tenant_id, table.manufacturer_org_id),
+  check('joint_check_agreements_status_check', sql`${table.status} IN ('PROPOSED','EXECUTED','ACTIVE','CLOSED','DISPUTED')`),
+  check('joint_check_agreements_trigger_source_check', sql`${table.trigger_source} IN ('GC_REQUIRED','MANUFACTURER_REQUESTED','KULA_PROPOSED')`),
+]);
+
+// Admin-driven workflow for collecting signed waivers FROM upstream
+// manufacturers and forwarding them TO the GC. Lifecycle:
+// REQUESTED → RECEIVED → UPLOADED → DELIVERED_TO_GC (with VOIDED escape).
+export const external_lien_waiver_requests = pgTable('external_lien_waiver_requests', {
+  external_waiver_id: uuid('external_waiver_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  manufacturer_org_id: uuid('manufacturer_org_id').notNull().references(() => organizations.org_id),
+  manufacturer_contact_name: text('manufacturer_contact_name'),
+  manufacturer_contact_email: text('manufacturer_contact_email'),
+  waiver_type: text('waiver_type').notNull(),
+  status: text('status').notNull().default('REQUESTED'),
+  requested_at: timestamp('requested_at', { withTimezone: true }).notNull().defaultNow(),
+  requested_by: uuid('requested_by').references(() => users.user_id),
+  request_method: text('request_method'),
+  request_evidence_drive_id: text('request_evidence_drive_id'),
+  received_at: timestamp('received_at', { withTimezone: true }),
+  received_evidence_drive_id: text('received_evidence_drive_id'),
+  uploaded_at: timestamp('uploaded_at', { withTimezone: true }),
+  uploaded_by: uuid('uploaded_by').references(() => users.user_id),
+  delivered_to_gc_at: timestamp('delivered_to_gc_at', { withTimezone: true }),
+  delivered_to_gc_evidence_drive_id: text('delivered_to_gc_evidence_drive_id'),
+  pay_app_id: uuid('pay_app_id').references(() => pay_applications.pay_app_id),
+  joint_check_agreement_id: uuid('joint_check_agreement_id').references(() => joint_check_agreements.joint_check_id),
+  notes: text('notes'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('external_lien_waiver_requests_engagement_idx').on(table.tenant_id, table.engagement_id, table.status),
+  index('external_lien_waiver_requests_status_idx').on(table.tenant_id, table.status, table.requested_at),
+  check('external_lien_waiver_requests_status_check', sql`${table.status} IN ('REQUESTED','RECEIVED','UPLOADED','DELIVERED_TO_GC','VOIDED')`),
+  check('external_lien_waiver_requests_type_check', sql`${table.waiver_type} IN ('CONDITIONAL_PROGRESS','UNCONDITIONAL_PROGRESS','CONDITIONAL_FINAL','UNCONDITIONAL_FINAL')`),
+  check('external_lien_waiver_requests_method_check', sql`${table.request_method} IS NULL OR ${table.request_method} IN ('EMAIL','PORTAL','MAIL','PHONE')`),
+]);
+
+// Per-engagement sticky checklist of GC-required documents (informational
+// only — does NOT block pay app submission per Sean directive 2026-05-18).
+export const gc_required_docs_checklist = pgTable('gc_required_docs_checklist', {
+  checklist_id: uuid('checklist_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  identified_phase: text('identified_phase'),
+  identified_at: timestamp('identified_at', { withTimezone: true }),
+  identified_by: uuid('identified_by').references(() => users.user_id),
+  requires_conditional_progress_waiver_from_kula: boolean('requires_conditional_progress_waiver_from_kula').notNull().default(true),
+  requires_unconditional_progress_waiver_from_kula: boolean('requires_unconditional_progress_waiver_from_kula').notNull().default(true),
+  requires_conditional_final_waiver_from_kula: boolean('requires_conditional_final_waiver_from_kula').notNull().default(true),
+  requires_unconditional_final_waiver_from_kula: boolean('requires_unconditional_final_waiver_from_kula').notNull().default(true),
+  requires_external_waivers_from_manufacturers: boolean('requires_external_waivers_from_manufacturers').notNull().default(false),
+  external_waiver_required_manufacturers: jsonb('external_waiver_required_manufacturers').notNull().default(sql`'[]'::jsonb`),
+  requires_joint_check_agreement: boolean('requires_joint_check_agreement').notNull().default(false),
+  joint_check_required_manufacturers: jsonb('joint_check_required_manufacturers').notNull().default(sql`'[]'::jsonb`),
+  requires_certificate_of_vendor_compliance: boolean('requires_certificate_of_vendor_compliance').notNull().default(false),
+  requires_glaziers_union_lien_clearance: boolean('requires_glaziers_union_lien_clearance').notNull().default(false),
+  requires_certified_payroll: boolean('requires_certified_payroll').notNull().default(false),
+  requires_safety_documentation: boolean('requires_safety_documentation').notNull().default(false),
+  custom_required_docs: jsonb('custom_required_docs').notNull().default(sql`'[]'::jsonb`),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('gc_required_docs_checklist_engagement_uidx').on(table.tenant_id, table.engagement_id),
+  check('gc_required_docs_checklist_phase_check', sql`${table.identified_phase} IS NULL OR ${table.identified_phase} IN ('ESTIMATING_SCOPE_REVIEW','POST_HANDOFF_REVIEW','MID_PROJECT_AMENDMENT')`),
 ]);

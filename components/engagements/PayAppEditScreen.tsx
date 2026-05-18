@@ -11,6 +11,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import RequiredDocsStatus from './RequiredDocsStatus';
 
 type PayApp = {
   pay_app_id: string;
@@ -308,6 +309,11 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
         <button onClick={onClose} style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: 10, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
           ← Back
         </button>
+      </div>
+
+      {/* BAN-338 v2c — informational required-docs status. Never blocks. */}
+      <div style={{ marginBottom: 14 }}>
+        <RequiredDocsStatus payAppId={payAppId} />
       </div>
 
       <div style={{

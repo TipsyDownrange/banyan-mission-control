@@ -22,6 +22,8 @@ import {
 import { passAiaApiGate } from '@/lib/aia/api-gate';
 import { executePatternBTransition } from '@/lib/aia/execute-state-transition';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import { runAutoLienWaiverHook } from '@/lib/lien-waivers/post-transition-hook';
+import { hasActiveJointCheckAgreement } from '@/lib/lien-waivers/joint-check-active';
 
 export async function POST(
   req: Request,
@@ -104,6 +106,12 @@ export async function POST(
     );
   }
 
+  // BAN-338 v2c — surface joint-check footer text when an active agreement
+  // exists for the engagement. The footer is computed up-front so it lands
+  // in the spine emit metadata and in the response (callers reuse it for
+  // the actual outbound email body).
+  const jointCheck = await hasActiveJointCheckAgreement(gate.tenantId, payApp.engagement_id);
+
   // Emit PAY_APP_SUBMITTED first so the event is durable even if the
   // transition fails (will roll back state-only inside the executor).
   await db.transaction(async (tx) => {
@@ -123,6 +131,8 @@ export async function POST(
         intake_platform: cfg[0]?.gc_billing_intake_platform ?? 'DIRECT',
         pay_app_number: payApp.pay_app_number,
         actor: gate.actorEmail,
+        joint_check_footer: jointCheck.footer || null,
+        joint_check_agreement_ids: jointCheck.agreementIds,
       },
     });
   });
@@ -158,6 +168,14 @@ export async function POST(
       eq(pay_applications.tenant_id, gate.tenantId),
     ));
 
+  // BAN-338 v2c — auto-generate CONDITIONAL_{PROGRESS|FINAL} waiver
+  const waiverHook = await runAutoLienWaiverHook({
+    tenantId: gate.tenantId,
+    payAppId: id,
+    toState: transition.to_state,
+    actorEmail: gate.actorEmail,
+  });
+
   return NextResponse.json({
     ok: true,
     method: 'DIRECT_EMAIL',
@@ -165,5 +183,8 @@ export async function POST(
     state: transition.to_state,
     from_state: transition.from_state,
     event_id: transition.event_id,
+    joint_check_footer: jointCheck.footer || null,
+    joint_check_agreement_ids: jointCheck.agreementIds,
+    auto_waiver: waiverHook,
   });
 }
