@@ -12,6 +12,18 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { readLatestLiveClaudeSnapshot } from '@/lib/cost/liveClaudeSnapshot';
+import {
+  readLatestUsageSnapshot,
+  getUsageAttemptStatus,
+} from '@/lib/cost/liveUsageSnapshot';
+import {
+  readLatestSpendSnapshot,
+  getSpendAttemptStatus,
+} from '@/lib/cost/liveSpendSnapshot';
+import { getBilledAttemptStatus } from '@/lib/cost/liveBilledSnapshot';
+import { readBilledAggregate } from '@/lib/cost/aiSpendReconciliation';
+import { resolveState } from '@/lib/cost/stateMachine';
+import type { CostProvider } from '@/lib/cost/types';
 
 const COST_SHEET_ID = '1EutKs3k0Cp3UwmpmAEDV8FaSSeIklb7Lk7wufRq5YdI';
 const DAILY_BUDGET = 50;
@@ -143,6 +155,48 @@ export async function GET(req: Request) {
     // Additive; existing fields unchanged.
     const liveClaude = readLatestLiveClaudeSnapshot();
 
+    // v2: Usage / Spend / Billed lanes (BAN-319). All three are tolerant of
+    // missing data — relays are independent and may be partially configured.
+    const providers: CostProvider[] = ['anthropic', 'openai'];
+    const usage = providers.map(provider => {
+      const latest = readLatestUsageSnapshot(provider);
+      const status = getUsageAttemptStatus(provider);
+      const state = resolveState({
+        lastSuccess: status.lastSuccessAt,
+        lastAttempt: status.lastAttemptAt,
+        lastError: status.lastError,
+        snapshotPresent: status.snapshotPresent,
+      });
+      return { provider, state, snapshot: latest?.snapshot ?? null, ageSeconds: latest?.ageSeconds ?? null };
+    });
+    const spend = providers.map(provider => {
+      const status = getSpendAttemptStatus(provider);
+      const state = resolveState({
+        lastSuccess: status.lastSuccessAt,
+        lastAttempt: status.lastAttemptAt,
+        lastError: status.lastError,
+        snapshotPresent: status.snapshotPresent,
+      }, { liveWindowMs: 15 * 60_000 }); // 5-min cron → 15-min live window
+      const scopes = (['today', 'week', 'month'] as const).map(scope => ({
+        scope,
+        snapshot: readLatestSpendSnapshot(provider, scope)?.snapshot ?? null,
+      }));
+      return { provider, state, scopes };
+    });
+    const billedToDate = await readBilledAggregate();
+    const billedStates = providers.map(provider => {
+      const status = getBilledAttemptStatus(provider);
+      return {
+        provider,
+        state: resolveState({
+          lastSuccess: status.lastAttemptAt,
+          lastAttempt: status.lastAttemptAt,
+          lastError: status.lastError,
+          snapshotPresent: false,
+        }, { liveWindowMs: 4 * 60 * 60_000, attemptWindowMs: 24 * 60 * 60_000 }),
+      };
+    });
+
     return NextResponse.json({
       // Hero
       allInTotal:          Math.round(allInTotal * 100) / 100,
@@ -213,6 +267,12 @@ export async function GET(req: Request) {
       liveClaudeSession: liveClaude ? liveClaude.snapshot : null,
       liveClaudeSessionAgeSeconds: liveClaude ? liveClaude.ageSeconds : null,
       liveClaudeSessionStoredAt: liveClaude ? liveClaude.storedAt : null,
+
+      // BAN-319 v2: Cloud relay lanes (additive; do not affect v1 fields above).
+      usage,
+      spend,
+      billedToDate,
+      billedStates,
     });
 
   } catch (err) {
@@ -226,6 +286,9 @@ export async function GET(req: Request) {
       byProvider: { anthropic:{apiCostToDate:0,invoicesPaid:0,creditsReceived:0,todayCost:0,subscription:0,total:0}, openai:{apiCostToDate:0,todayCost:0,subscription:0,total:0}, vercel:{totalToDate:0,subscription:0}, subscriptions:{monthly:0,totalToDate:0,items:[]} },
       dailyBudget: 50, overBudget: false, totalInput:0, totalOutput:0, totalCache:0, totalTokens:0, totalSessions:0,
       liveClaudeSession: null, liveClaudeSessionAgeSeconds: null, liveClaudeSessionStoredAt: null,
+      usage: [], spend: [],
+      billedToDate: { combined: { last30d: 0, thisMonth: 0, trailing12m: 0 }, apiSpend: { last30d: 0, thisMonth: 0, trailing12m: 0 }, receipts: { last30d: 0, thisMonth: 0, trailing12m: 0 }, computedAt: new Date().toISOString() },
+      billedStates: [],
       error: msg,
     }, { status: 500 });
   }

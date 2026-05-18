@@ -68,6 +68,18 @@ const config: Config = {
           500: '#ef4444',
           700: '#b91c1c',
         },
+        // Brass — Ship's Bridge accents (BAN-319 v2)
+        brass: {
+          300: '#e9d39a',
+          400: '#d2a85a',
+          500: '#b8862e',
+          700: '#7a571a',
+        },
+        // Navy — Ship's Bridge panel surface (BAN-319 v2)
+        navy: {
+          panel: '#0a1e2d',
+          'panel-soft': '#112a3d',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],

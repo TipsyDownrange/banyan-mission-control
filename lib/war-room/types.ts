@@ -92,6 +92,27 @@ export interface CrewRuntimeStatus {
   blockers: string[];
 }
 
+export interface WarRoomUsageLaneSnapshot {
+  provider: 'anthropic' | 'openai';
+  state: import('../cost/types').RelayState;
+  snapshot: import('../cost/types').UsageSnapshot | null;
+  ageSeconds: number | null;
+}
+
+export interface WarRoomSpendLaneSnapshot {
+  provider: 'anthropic' | 'openai';
+  state: import('../cost/types').RelayState;
+  scopes: Array<{
+    scope: import('../cost/types').ApiSpendScope;
+    snapshot: import('../cost/types').ApiSpendSnapshot | null;
+  }>;
+}
+
+export interface WarRoomBilledLaneState {
+  provider: 'anthropic' | 'openai';
+  state: import('../cost/types').RelayState;
+}
+
 export interface WarRoomCostSnapshot {
   allInTotal: number;
   todayCost: number;
@@ -107,6 +128,17 @@ export interface WarRoomCostSnapshot {
   /** Live Mac mini relay snapshot (Cost & Usage Live Tracking Phase 1). */
   liveClaudeSession?: import('../cost/types').LiveClaudeSnapshot | null;
   liveClaudeSessionAgeSeconds?: number | null;
+
+  /** BAN-319 v2: per-provider usage / spend / billed lanes. */
+  usage?: WarRoomUsageLaneSnapshot[];
+  spend?: WarRoomSpendLaneSnapshot[];
+  billedStates?: WarRoomBilledLaneState[];
+  billedToDate?: {
+    combined: { last30d: number; thisMonth: number; trailing12m: number };
+    apiSpend: { last30d: number; thisMonth: number; trailing12m: number };
+    receipts: { last30d: number; thisMonth: number; trailing12m: number };
+    computedAt: string;
+  };
 }
 
 export interface WarRoomLaneRecommendation {

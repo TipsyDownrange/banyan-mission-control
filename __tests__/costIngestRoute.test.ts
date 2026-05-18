@@ -25,7 +25,13 @@ jest.mock('googleapis', () => ({
   google: {
     sheets: jest.fn(() => ({
       spreadsheets: {
-        values: { append: mockSheetsAppend },
+        values: { append: mockSheetsAppend, update: jest.fn().mockResolvedValue({}) },
+        get: jest.fn().mockResolvedValue({ data: { sheets: [
+          { properties: { title: 'Banyan_CostSnapshot' } },
+          { properties: { title: 'Banyan_AISpend' } },
+          { properties: { title: 'Banyan_CostRelayLog' } },
+        ] } }),
+        batchUpdate: jest.fn().mockResolvedValue({}),
       },
     })),
   },
@@ -152,6 +158,110 @@ describe('POST /api/cost/ingest', () => {
       { authorization: 'Bearer topsecret' },
     ));
     expect(res.status).toBe(200);
+  });
+
+  // ───────────────────────────── v2 envelope paths ─────────────────────────────
+
+  const VALID_USAGE_ENVELOPE = {
+    snapshot_type: 'usage',
+    payload: {
+      provider: 'anthropic',
+      currentSession: { pct: 38, resetsAt: '2026-05-18T15:00:00.000Z' },
+      weeklyLimit: { pct: 12, resetsAt: '2026-05-25T00:00:00.000Z' },
+      claudeDesign: { pct: 5, resetsAt: '2026-05-25T00:00:00.000Z' },
+      extraUsage: { used: 1.25, limit: 25 },
+      fetchedAt: '2026-05-18T12:00:30.000Z',
+      sourceApp: 'kai-oauth-relay',
+    },
+  };
+
+  it('accepts a v2 usage envelope and returns snapshot_type: usage', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest(VALID_USAGE_ENVELOPE, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.snapshot_type).toBe('usage');
+  });
+
+  it('hot-mirrors anthropic usage into the v1 LiveClaudeSnapshot cache for backward compat', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const snapshotModule = await import('@/lib/cost/liveClaudeSnapshot');
+    snapshotModule.__resetLiveClaudeSnapshotCacheForTests();
+
+    await POST(makeRequest(VALID_USAGE_ENVELOPE, { authorization: 'Bearer topsecret' }));
+
+    const cached = snapshotModule.readLatestLiveClaudeSnapshot();
+    expect(cached?.snapshot).toMatchObject({
+      sessionPct: 38,
+      weeklyPct: 12,
+      opusPct: 5,
+      sourceApp: 'kai-oauth-relay',
+    });
+  });
+
+  it('accepts a v2 spend envelope', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({
+      snapshot_type: 'spend',
+      payload: {
+        provider: 'openai',
+        scope: 'today',
+        amountUsd: 4.27,
+        fetchedAt: '2026-05-18T12:05:00.000Z',
+      },
+    }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.snapshot_type).toBe('spend');
+  });
+
+  it('accepts a v2 billed envelope', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({
+      snapshot_type: 'billed',
+      payload: {
+        provider: 'anthropic',
+        period: '2026-05-01',
+        amountUsd: 124.55,
+        source: 'gmail',
+        emailId: 'msg_abc123',
+        fetchedAt: '2026-05-18T12:00:00.000Z',
+      },
+    }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.snapshot_type).toBe('billed');
+  });
+
+  it('returns 400 for an unknown snapshot_type', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({
+      snapshot_type: 'mystery',
+      payload: {},
+    }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for a v2 envelope with invalid payload shape', async () => {
+    process.env.BANYAN_COST_INGEST_SECRET = 'topsecret';
+    const { POST } = await import('@/app/api/cost/ingest/route');
+    const res = await POST(makeRequest({
+      snapshot_type: 'usage',
+      payload: {
+        provider: 'martian',
+        currentSession: { pct: 38, resetsAt: null },
+        weeklyLimit: { pct: 12, resetsAt: null },
+        fetchedAt: '2026-05-18T12:00:30.000Z',
+        sourceApp: 'kai-oauth-relay',
+      },
+    }, { authorization: 'Bearer topsecret' }));
+    expect(res.status).toBe(400);
   });
 
   it('still returns 200 when sheet persistence fails (best-effort durability)', async () => {

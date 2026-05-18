@@ -1,8 +1,10 @@
 /**
- * Cost & Usage Live Tracking — Phase 1
+ * Cost & Usage Live Tracking — Phase 1 (v1 alias retained for v2).
  *
  * In-memory cache + best-effort sheet persistence for the live Claude
- * subscription/usage snapshot pushed by Kai from the Mac mini relay.
+ * subscription/usage snapshot. v2 adds a dedicated per-provider usage cache
+ * in liveUsageSnapshot.ts; this module continues to serve v1 callers that
+ * read liveClaudeSession from /api/cost.
  *
  * - Read path (readLatestLiveClaudeSnapshot) is synchronous and serves the
  *   War Room without blocking on Sheets I/O.

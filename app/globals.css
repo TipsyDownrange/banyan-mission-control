@@ -52,6 +52,17 @@
   --color-red-500: #ef4444;
   --color-red-700: #b91c1c;
 
+  /* Brass — Ship's Bridge accents (gauge bezel, needle, dial tick) — BAN-319 v2 */
+  --color-brass-300: #e9d39a;
+  --color-brass-400: #d2a85a;
+  --color-brass-500: #b8862e;
+  --color-brass-700: #7a571a;
+
+  /* Navy — Ship's Bridge panel surface — BAN-319 v2 */
+  --color-navy-panel: #0a1e2d;
+  --color-navy-panel-soft: #112a3d;
+  --color-navy-panel-border: rgba(184, 134, 46, 0.28);
+
   /* Shadows */
   --shadow-card: 0 1px 3px rgba(15,23,42,0.07), 0 4px 12px rgba(15,23,42,0.04);
   --shadow-card-hover: 0 4px 16px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06);
@@ -147,7 +158,8 @@
     .war-room-agent-grid,
     .war-room-selected-grid,
     .war-room-column-grid,
-    .war-room-bottom-grid {
+    .war-room-bottom-grid,
+    .war-room-bridge-stations {
       grid-template-columns: 1fr !important;
     }
   }

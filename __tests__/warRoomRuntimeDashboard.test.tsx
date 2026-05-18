@@ -65,7 +65,7 @@ const runtimeHealth: WarRoomRuntimeHealth = {
 };
 
 describe('War Room runtime dashboard rendering', () => {
-  it('renders degraded, blocked, unknown, blocker reasons, and Costmaster visuals', () => {
+  it('renders degraded, blocked, unknown, blocker reasons, and Ship\'s Bridge cost panel (BAN-319 v2)', () => {
     const html = renderToStaticMarkup(
       <WarRoomDashboard initialData={buildWarRoomDashboard([], 'fixture')} initialRuntimeHealth={runtimeHealth} />
     );
@@ -76,8 +76,10 @@ describe('War Room runtime dashboard rendering', () => {
     expect(html).toContain('unknown');
     expect(html).toContain('Codex ACP token is missing.');
     expect(html).toContain('Quota is manual-only; no verified quota API is configured.');
-    expect(html).toContain('data-war-room-runtime-cost="true"');
-    expect(html).toContain('$125.25');
+    expect(html).toContain('data-war-room-ships-bridge="true"');
+    expect(html).toContain('Claude Station');
+    expect(html).toContain('ChatGPT Station');
+    expect(html).toContain('Billed To Date');
     expect(html).toContain('Recommendation: kai');
   });
 });

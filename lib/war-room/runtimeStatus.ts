@@ -1,5 +1,6 @@
 import type {
   CrewRuntimeStatus,
+  WarRoomBilledLaneState,
   WarRoomCostSnapshot,
   WarRoomLaneRecommendation,
   WarRoomRuntimeAuthState,
@@ -7,8 +8,10 @@ import type {
   WarRoomRuntimeHealthState,
   WarRoomRuntimeQuotaState,
   WarRoomRuntimeState,
+  WarRoomSpendLaneSnapshot,
+  WarRoomUsageLaneSnapshot,
 } from './types';
-import type { LiveClaudeSnapshot } from '../cost/types';
+import type { LiveClaudeSnapshot, RelayState } from '../cost/types';
 import { buildFallbackLiveOpsSnapshot, parseLiveOpsSnapshot } from './liveOps';
 
 type CrewId = CrewRuntimeStatus['id'];
@@ -33,6 +36,10 @@ type CostApiData = {
   error?: string;
   liveClaudeSession?: LiveClaudeSnapshot | null;
   liveClaudeSessionAgeSeconds?: number | null;
+  usage?: WarRoomUsageLaneSnapshot[];
+  spend?: WarRoomSpendLaneSnapshot[];
+  billedStates?: WarRoomBilledLaneState[];
+  billedToDate?: WarRoomCostSnapshot['billedToDate'];
 };
 
 export type RuntimeProbePayload = Partial<{
@@ -133,7 +140,21 @@ export function mapCostApiDataToWarRoomSnapshot(data: CostApiData | null | undef
     error: data?.error,
     liveClaudeSession: data?.liveClaudeSession ?? null,
     liveClaudeSessionAgeSeconds: typeof data?.liveClaudeSessionAgeSeconds === 'number' ? data.liveClaudeSessionAgeSeconds : null,
+    usage: Array.isArray(data?.usage) ? data!.usage : undefined,
+    spend: Array.isArray(data?.spend) ? data!.spend : undefined,
+    billedStates: Array.isArray(data?.billedStates) ? data!.billedStates : undefined,
+    billedToDate: data?.billedToDate,
   };
+}
+
+/** Pretty-print a RelayState for instrument-panel pills. */
+export function relayStateLabel(state: RelayState): string {
+  if (state === 'LIVE') return 'Live';
+  if (state === 'STALE') return 'Stale';
+  if (state === 'DEGRADED') return 'Degraded';
+  if (state === 'BROKEN_AUTH') return 'Broken · auth';
+  if (state === 'BROKEN_SCHEMA') return 'Broken · schema';
+  return 'Not configured';
 }
 
 export async function buildWarRoomRuntimeHealth(options: {
