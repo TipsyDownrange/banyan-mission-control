@@ -11,6 +11,7 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
+import { readLatestLiveClaudeSnapshot } from '@/lib/cost/liveClaudeSnapshot';
 
 const COST_SHEET_ID = '1EutKs3k0Cp3UwmpmAEDV8FaSSeIklb7Lk7wufRq5YdI';
 const DAILY_BUDGET = 50;
@@ -138,6 +139,10 @@ export async function GET(req: Request) {
     const weekCost = anthropicEntries.filter(e => e.date >= weekAgo).reduce((s, e) => s + e.costUsd, 0)
                    + openaiEntries.filter(e => e.date >= weekAgo).reduce((s, e) => s + e.costUsd, 0);
 
+    // Cost & Usage Live Tracking Phase 1 — live Mac mini relay snapshot.
+    // Additive; existing fields unchanged.
+    const liveClaude = readLatestLiveClaudeSnapshot();
+
     return NextResponse.json({
       // Hero
       allInTotal:          Math.round(allInTotal * 100) / 100,
@@ -203,6 +208,11 @@ export async function GET(req: Request) {
       anthropicSource: 'live_admin_api',
       openaiSource: 'csv_import',
       note: 'Anthropic: live Admin API every 5min. OpenAI: CSV imports. Subscriptions: configured.',
+
+      // Live Claude subscription snapshot (Mac mini relay, BAN cost-live-phase-1).
+      liveClaudeSession: liveClaude ? liveClaude.snapshot : null,
+      liveClaudeSessionAgeSeconds: liveClaude ? liveClaude.ageSeconds : null,
+      liveClaudeSessionStoredAt: liveClaude ? liveClaude.storedAt : null,
     });
 
   } catch (err) {
@@ -215,6 +225,7 @@ export async function GET(req: Request) {
       anthropicInvoices: [], openaiDaily: [], subscriptions: [],
       byProvider: { anthropic:{apiCostToDate:0,invoicesPaid:0,creditsReceived:0,todayCost:0,subscription:0,total:0}, openai:{apiCostToDate:0,todayCost:0,subscription:0,total:0}, vercel:{totalToDate:0,subscription:0}, subscriptions:{monthly:0,totalToDate:0,items:[]} },
       dailyBudget: 50, overBudget: false, totalInput:0, totalOutput:0, totalCache:0, totalTokens:0, totalSessions:0,
+      liveClaudeSession: null, liveClaudeSessionAgeSeconds: null, liveClaudeSessionStoredAt: null,
       error: msg,
     }, { status: 500 });
   }

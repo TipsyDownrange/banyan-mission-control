@@ -8,6 +8,7 @@ import type {
   WarRoomRuntimeQuotaState,
   WarRoomRuntimeState,
 } from './types';
+import type { LiveClaudeSnapshot } from '../cost/types';
 import { buildFallbackLiveOpsSnapshot, parseLiveOpsSnapshot } from './liveOps';
 
 type CrewId = CrewRuntimeStatus['id'];
@@ -30,6 +31,8 @@ type CostApiData = {
   };
   lastSync?: string;
   error?: string;
+  liveClaudeSession?: LiveClaudeSnapshot | null;
+  liveClaudeSessionAgeSeconds?: number | null;
 };
 
 export type RuntimeProbePayload = Partial<{
@@ -128,6 +131,8 @@ export function mapCostApiDataToWarRoomSnapshot(data: CostApiData | null | undef
     }])),
     lastSync: data?.lastSync,
     error: data?.error,
+    liveClaudeSession: data?.liveClaudeSession ?? null,
+    liveClaudeSessionAgeSeconds: typeof data?.liveClaudeSessionAgeSeconds === 'number' ? data.liveClaudeSessionAgeSeconds : null,
   };
 }
 
