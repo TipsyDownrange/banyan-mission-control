@@ -18,7 +18,7 @@ describe('project detail sidebar navigation regression', () => {
       'utf8',
     );
 
-    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview')");
+    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview')");
   });
 
 });
