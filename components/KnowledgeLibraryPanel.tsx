@@ -869,10 +869,16 @@ function ArticleDetail({
   );
 }
 
+// BAN-355: KB management roles — must mirror lib/knowledge/api-gate.ts
+// KNOWLEDGE_WRITE_ROLES so the UI's affordances match what the API will
+// accept on POST/PATCH/DELETE.
+const KB_MANAGEMENT_ROLES = new Set(['pm', 'business_admin', 'super_admin', 'catalog_admin']);
+
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 export default function KnowledgeLibraryPanel() {
   const { data: session } = useSession();
-  const isManagement = session?.user?.email?.endsWith('@kulaglass.com') ?? false;
+  const role = (session?.user as { role?: string } | undefined)?.role ?? '';
+  const isManagement = KB_MANAGEMENT_ROLES.has(role);
 
   const [tab, setTab] = useState<'articles' | 'feedback'>('articles');
   const [articles, setArticles] = useState<KBArticle[]>([]);

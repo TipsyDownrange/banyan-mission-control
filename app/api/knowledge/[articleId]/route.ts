@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import {
   KB_ARTICLES_SHEET,
@@ -8,10 +7,7 @@ import {
   getSheets,
   KBArticle,
 } from '@/lib/knowledge';
-
-function isAuthorized(email?: string | null) {
-  return email?.endsWith('@kulaglass.com');
-}
+import { passKnowledgeWriteGate } from '@/lib/knowledge/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -37,10 +33,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ articleId: string }> }
 ) {
-  const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passKnowledgeWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   const { articleId } = await params;
 
@@ -108,13 +102,11 @@ export async function PATCH(
 
 // DELETE — delete article
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ articleId: string }> }
 ) {
-  const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passKnowledgeWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   const { articleId } = await params;
 
