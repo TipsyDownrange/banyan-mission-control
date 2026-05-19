@@ -65,6 +65,13 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
   * { box-sizing: border-box; }
+
+  /* Design System v1 §06 — global focus ring for keyboard navigation */
+  :focus-visible {
+    outline: none;
+    border-color: var(--bos-color-brand-primary);
+    box-shadow: 0 0 0 3px var(--bos-color-brand-primary-glow);
+  }
 }
 
 @layer utilities {
