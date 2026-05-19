@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { normalizeKID, kidsMatch } from '@/lib/normalize-kid';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { validateHeaders, INSTALL_PLANS_SCHEMA, INSTALL_STEPS_SCHEMA } from '@/lib/schemas';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { emitMCEvent } from '@/lib/events';
+import {
+  passWorkBreakdownAuthGate,
+  passWorkBreakdownWriteGate,
+} from '@/lib/work-breakdown/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -101,10 +104,8 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passWorkBreakdownAuthGate(req);
+  if (!gate.ok) return gate.response;
 
   const { jobId } = await params;
 
@@ -194,10 +195,9 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passWorkBreakdownWriteGate(req);
+  if (!gate.ok) return gate.response;
+  const actorEmail = gate.actorEmail;
 
   const { jobId } = await params;
   const body = await req.json();
@@ -221,7 +221,7 @@ export async function POST(
         wo_id: jobId,
         event_type: 'WORK_BREAKDOWN_ADDED',
         notes: JSON.stringify({ type: 'plan', install_plan_id: newId, system_type: system_type || '', location: location || '' }),
-        submitted_by: session.user.email || '',
+        submitted_by: actorEmail,
         origin: 'office',
       });
       return NextResponse.json({ install_plan_id: newId });
@@ -242,7 +242,7 @@ export async function POST(
         wo_id: jobId,
         event_type: 'WORK_BREAKDOWN_ADDED',
         notes: JSON.stringify({ type: 'step', install_step_id: newId, step_name: step_name || '', install_plan_id }),
-        submitted_by: session.user.email || '',
+        submitted_by: actorEmail,
         origin: 'office',
       });
       return NextResponse.json({ install_step_id: newId });
@@ -339,7 +339,7 @@ export async function POST(
         wo_id: jobId,
         event_type: 'WORK_BREAKDOWN_ADDED',
         notes: JSON.stringify({ type: 'bulk', created_plans: planIds.length, id_prefix, system_type }),
-        submitted_by: session.user.email || '',
+        submitted_by: actorEmail,
         origin: 'office',
       });
       return NextResponse.json({ created: planIds.length, plans: planIds });
@@ -399,10 +399,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passWorkBreakdownWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   await params; // consumed but not needed for PATCH
   const body = await req.json();
@@ -555,10 +553,8 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passWorkBreakdownWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   await params;
   const { type, id } = await req.json();
