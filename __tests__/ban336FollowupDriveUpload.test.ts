@@ -92,6 +92,14 @@ jest.mock('@/lib/aia/pay-app-pdf', () => ({
   renderPayAppPdf: (input: unknown) => (renderPayAppPdfMock as jest.Mock)(input),
 }));
 
+jest.mock('@/lib/aia/pay-app-net-change-summary', () => ({
+  composeNetChangeFootnote: jest.fn(async () => ({
+    items: [],
+    total: 0,
+    footnote: 'Net Change by Change Orders: $0\nTotal: $0',
+  })),
+}));
+
 const resolveEngagementDriveFolderIdMock = jest.fn();
 const ensurePayAppFoldersMock = jest.fn();
 const uploadBufferToDriveMock = jest.fn();

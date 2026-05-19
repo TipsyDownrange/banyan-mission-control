@@ -29,6 +29,7 @@ import {
   resolveEngagementDriveFolderId,
   uploadBufferToDrive,
 } from '@/lib/aia/drive-pay-app-folders';
+import { composeNetChangeFootnote } from '@/lib/aia/pay-app-net-change-summary';
 
 const HI_GET_RATE = 0.04712;
 const DRIVE_NOT_CONFIGURED_CODE = 'DRIVE_SERVICE_ACCOUNT_NOT_CONFIGURED';
@@ -141,15 +142,6 @@ export async function POST(
     };
   });
 
-  const summary = summarizeG702({
-    lines: pdfLines,
-    originalContractSum: Number(payApp.contract_sum_original || 0),
-    netChangeByCo: Number(payApp.net_change_by_co || 0),
-    lessPreviousCertificates: Number(payApp.less_previous_certificates || 0),
-    retainagePctCompleted: retainagePct,
-    retainagePctStored: retainagePct,
-  });
-
   const format = (payApp.billing_format ?? 'AIA_G702_G703') as PayAppPdfFormat;
   // Reject TEXTURA_CSV_EXPORT — that's a different artifact (CSV not PDF).
   if (format !== 'AIA_G702_G703' && format !== 'CUSTOM_TEMPLATE_AIA_STYLE' && format !== 'CUSTOM_TEMPLATE_SCHEDULE_ABC') {
@@ -158,6 +150,16 @@ export async function POST(
       { status: 422 },
     );
   }
+
+  const netChangeSummary = await composeNetChangeFootnote(id, gate.tenantId);
+  const summary = summarizeG702({
+    lines: pdfLines,
+    originalContractSum: Number(payApp.contract_sum_original || 0),
+    netChangeByCo: netChangeSummary.total,
+    lessPreviousCertificates: Number(payApp.less_previous_certificates || 0),
+    retainagePctCompleted: retainagePct,
+    retainagePctStored: retainagePct,
+  });
 
   const buffer = await renderPayAppPdf({
     format,
@@ -170,7 +172,7 @@ export async function POST(
     },
     summary,
     lines: pdfLines,
-    net_change_co_footnote: 'See change orders + T&M authorization log for itemization.',
+    net_change_co_footnote: netChangeSummary.footnote,
     ge_tax_summary_line: summary.line8_current_payment_due * HI_GET_RATE,
     retainage_pct_completed: retainagePct,
     retainage_pct_stored: retainagePct,

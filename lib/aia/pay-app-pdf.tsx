@@ -150,7 +150,14 @@ function G702SummaryBlock({ s, includeArchitectCert, footnote, geTaxSummary }: {
           <View style={{ width: 110 }}><Text style={S.tdRight}>{fmt(geTaxSummary)}</Text></View>
         </View>
       )}
-      {footnote && <Text style={S.footnote}>Note (line 2): {footnote}</Text>}
+      {footnote && (
+        <View style={{ marginTop: 6 }}>
+          <Text style={S.footnote}>Note (line 2):</Text>
+          {footnote.split('\n').map((line, i) => (
+            <Text style={S.footnote} key={i}>{line}</Text>
+          ))}
+        </View>
+      )}
       {includeArchitectCert && (
         <View style={{ padding: 6, borderTopWidth: 0.5, borderColor: '#0f172a' }}>
           <Text style={{ fontSize: 7, color: '#0f172a' }}>
