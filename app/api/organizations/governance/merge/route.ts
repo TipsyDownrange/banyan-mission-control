@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import {
   buildOrganizationMergePreview,
   executeOrganizationMerge,
   getOrganizationGovernanceSheets,
 } from '@/lib/organizationGovernance';
 import { emitMCEvent } from '@/lib/events';
-
-function canUseOrganizations(session: { user?: { email?: string | null } } | null) {
-  return !!session?.user?.email?.endsWith('@kulaglass.com');
-}
+import { passOrganizationsAuthGate, passOrganizationsWriteGate } from '@/lib/organizations/api-gate';
 
 export async function GET(req: Request) {
-  const session = await getServerSession();
-  if (!canUseOrganizations(session)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsAuthGate(req);
+  if (!gate.ok) return gate.response;
 
   const { searchParams } = new URL(req.url);
   const sourceOrgId = searchParams.get('source_org_id') || '';
@@ -30,8 +26,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!canUseOrganizations(session)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
+  const actorEmail = gate.actorEmail;
 
   try {
     const body = await req.json();
@@ -44,14 +41,14 @@ export async function POST(req: Request) {
       getOrganizationGovernanceSheets(),
       sourceOrgId,
       survivorOrgId,
-      session?.user?.email || 'system',
+      actorEmail || 'system',
       String(body.notes || ''),
     );
     await emitMCEvent({
       entity_kid: survivorOrgId,
       entity_type: 'organization',
       event_type: 'ORG_MERGED',
-      submitted_by: session?.user?.email || undefined,
+      submitted_by: actorEmail || undefined,
       origin: 'office',
       notes: `merged ${sourceOrgId} → ${survivorOrgId}`,
       rationale: String(body.notes || ''),

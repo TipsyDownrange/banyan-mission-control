@@ -3,13 +3,13 @@
  * PATCH /api/organizations/[orgId] — update org fields
  */
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { ORGANIZATION_TYPES } from '@/lib/organization-types';
 import { normalizeIsland, normalizeNameForWrite } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
+import { passOrganizationsAuthGate, passOrganizationsWriteGate } from '@/lib/organizations/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -18,9 +18,9 @@ const ALLOWED_EDIT_STATUSES = ['active', 'inactive'];
 
 function getAuth() { return getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']); }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
+  const gate = await passOrganizationsAuthGate(req);
+  if (!gate.ok) return gate.response;
   const { orgId } = await params;
   try {
     const auth = getAuth();
@@ -55,8 +55,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orgId: 
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
+  const actorEmail = gate.actorEmail;
   const { orgId } = await params;
   const body = await req.json();
 
@@ -107,7 +108,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
       entity_kid: orgId,
       entity_type: 'organization',
       event_type: 'ORG_UPDATED',
-      submitted_by: session.user.email || undefined,
+      submitted_by: actorEmail || undefined,
       origin: 'office',
       notes: Object.keys(body).filter(k => COL[k] !== undefined).join(','),
     });

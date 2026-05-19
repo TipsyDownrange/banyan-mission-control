@@ -11,12 +11,12 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeEmail, normalizeIsland, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
+import { passOrganizationsAuthGate, passOrganizationsWriteGate } from '@/lib/organizations/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -184,10 +184,8 @@ let cache: { data: OrgRecord[]; ts: number } | null = null;
 const CACHE_TTL = 10 * 60 * 1000;
 
 export async function GET(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passOrganizationsAuthGate(req);
+  if (!gate.ok) return gate.response;
 
   const { searchParams } = new URL(req.url);
   const q      = (searchParams.get('q') || '').toLowerCase().trim();
@@ -227,10 +225,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
+  const actorEmail = gate.actorEmail;
 
   const body = await req.json();
   const { name, types, entity_type, island, contact_name, contact_email, contact_phone, address, google_place_id, notes, source } = body;
@@ -247,7 +244,7 @@ export async function POST(req: Request) {
   const cleanAddress = normalizeAddressComponent(String(address || ''));
   const cleanIsland = String(island || '').trim() ? normalizeIsland(String(island)) : '';
   const cleanNotes = (notes || '').trim();
-  const cleanSource = (source || 'MANUAL_ENTRY').trim() || session.user.email || 'MANUAL_ENTRY';
+  const cleanSource = (source || 'MANUAL_ENTRY').trim() || actorEmail || 'MANUAL_ENTRY';
 
   const customerHeaderRes = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
@@ -308,7 +305,7 @@ export async function POST(req: Request) {
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID, range: 'Organizations!A:L',
     valueInputOption: 'USER_ENTERED',
-    requestBody: { values: [[orgId, cleanName, (types||['RESIDENTIAL']).join(','), entity_type||'COMPANY', cleanIsland, '', '', '', cleanNotes, session.user.email, now, now]] },
+    requestBody: { values: [[orgId, cleanName, (types||['RESIDENTIAL']).join(','), entity_type||'COMPANY', cleanIsland, '', '', '', cleanNotes, actorEmail, now, now]] },
   });
 
   let contactId: string | null = null;
@@ -341,7 +338,7 @@ export async function POST(req: Request) {
     entity_type: (entity_type || 'COMPANY') as 'COMPANY' | 'INDIVIDUAL',
     default_island: cleanIsland,
     notes: cleanNotes,
-    source: session.user.email || '',
+    source: actorEmail || '',
     primary_contact: contactId ? {
       contact_id: contactId,
       name: cleanContactName || cleanName,
@@ -373,7 +370,7 @@ export async function POST(req: Request) {
     entity_kid: orgId,
     entity_type: 'organization',
     event_type: 'ORG_CREATED',
-    submitted_by: session.user.email || undefined,
+    submitted_by: actorEmail || undefined,
     origin: 'office',
     notes: cleanName,
   });

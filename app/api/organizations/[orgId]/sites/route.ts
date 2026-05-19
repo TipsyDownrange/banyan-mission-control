@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeAddressComponent, normalizeIsland, normalizeNameForWrite, normalizeSiteType } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
+import { passOrganizationsWriteGate } from '@/lib/organizations/api-gate';
 const SHEET_ID = getBackendSheetId();
 
 function normalizeSiteField(field: string, value: unknown): string {
@@ -16,8 +16,9 @@ function normalizeSiteField(field: string, value: unknown): string {
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
+  const actorEmail = gate.actorEmail;
   const { orgId } = await params;
   const { name, address_line_1, address_line_2, city, state, zip, island, google_place_id, site_type } = await req.json();
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
@@ -33,15 +34,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ orgId: 
     entity_kid: siteId,
     entity_type: 'site',
     event_type: 'SITE_CREATED',
-    submitted_by: session.user.email || undefined,
+    submitted_by: actorEmail || undefined,
     origin: 'office',
     notes: `org=${orgId}`,
   });
   return NextResponse.json({ ok: true, site_id: siteId });
 }
 export async function PATCH(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
   const { orgId } = await params;
   const { siteId, ...fields } = await req.json();
   if (!siteId) return NextResponse.json({ error: 'siteId required' }, { status: 400 });

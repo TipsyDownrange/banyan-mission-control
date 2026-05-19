@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import {
   getOrganizationGovernanceSheets,
   listOrganizationRelationships,
   saveOrganizationRelationship,
 } from '@/lib/organizationGovernance';
-
-function canUseOrganizations(session: { user?: { email?: string | null } } | null) {
-  return !!session?.user?.email?.endsWith('@kulaglass.com');
-}
+import { passOrganizationsAuthGate, passOrganizationsWriteGate } from '@/lib/organizations/api-gate';
 
 export async function GET(req: Request) {
-  const session = await getServerSession();
-  if (!canUseOrganizations(session)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsAuthGate(req);
+  if (!gate.ok) return gate.response;
 
   const { searchParams } = new URL(req.url);
   const orgId = searchParams.get('org_id') || '';
@@ -28,8 +24,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!canUseOrganizations(session)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   try {
     const body = await req.json();
@@ -38,7 +34,7 @@ export async function POST(req: Request) {
       target_org_id: String(body.target_org_id || ''),
       relationship_type: body.relationship_type,
       notes: body.notes,
-      actor: session?.user?.email || 'system',
+      actor: gate.actorEmail || 'system',
       relationship_id: body.relationship_id,
     });
     return NextResponse.json({ ok: true, relationship });

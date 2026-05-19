@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
 import { emitMCEvent } from '@/lib/events';
+import { passOrganizationsWriteGate } from '@/lib/organizations/api-gate';
 const SHEET_ID = getBackendSheetId();
 
 function normalizeContactField(field: string, value: unknown): string {
@@ -16,8 +16,9 @@ function normalizeContactField(field: string, value: unknown): string {
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
+  const actorEmail = gate.actorEmail;
   const { orgId } = await params;
   const { name, title, role, email, phone, is_primary } = await req.json();
   if (!name?.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 });
@@ -30,15 +31,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ orgId: 
     entity_kid: contactId,
     entity_type: 'contact',
     event_type: 'CONTACT_CREATED',
-    submitted_by: session.user.email || undefined,
+    submitted_by: actorEmail || undefined,
     origin: 'office',
     notes: `org=${orgId}`,
   });
   return NextResponse.json({ ok: true, contact_id: contactId });
 }
-export async function PATCH(req: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function PATCH(req: Request, _ctx: { params: Promise<{ orgId: string }> }) {
+  const gate = await passOrganizationsWriteGate(req);
+  if (!gate.ok) return gate.response;
   const { contactId, ...fields } = await req.json();
   if (!contactId) return NextResponse.json({ error: 'contactId required' }, { status: 400 });
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
