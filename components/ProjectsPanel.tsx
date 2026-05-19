@@ -14,6 +14,7 @@ import VerbalAgreementsTab from '@/components/engagements/VerbalAgreementsTab';
 import MeetingsTab from '@/components/engagements/MeetingsTab';
 import ActionItemsTab from '@/components/engagements/ActionItemsTab';
 import DocumentsTab from '@/components/engagements/DocumentsTab';
+import HandoffTab from '@/components/engagements/HandoffTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -109,7 +110,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [verbalAgreements, setVerbalAgreements] = useState<VerbalAgreement[]>([]);
@@ -161,6 +162,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'meetings', label: `Meetings (${meetings.length})` },
     { key: 'action-items', label: `Action Items (${actionItemsSummary.open_count}/${actionItemsSummary.total})` },
     { key: 'documents', label: `Documents (${documentsSummary.current_count})` },
+    { key: 'handoff', label: 'Handoff' },
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'tm-tickets', label: 'T&M Tickets' },
@@ -298,6 +300,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
               {activeTab === 'documents' && (
                 <DocumentsTab kID={project.kID} />
+              )}
+
+              {activeTab === 'handoff' && (
+                <HandoffTab kID={project.kID} />
               )}
 
               {activeTab === 'cos' && (

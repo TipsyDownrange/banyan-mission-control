@@ -2022,3 +2022,51 @@ export const document_hub_entries = pgTable('document_hub_entries', {
     sql`(${table.linked_entity_type} IS NULL AND ${table.linked_entity_id} IS NULL) OR (${table.linked_entity_type} IS NOT NULL AND ${table.linked_entity_id} IS NOT NULL)`,
   ),
 ]);
+
+// BAN-346 PM-V1.0-G — PM Handoff Receipt (Estimating → PM handoff acceptance).
+export const pmHandoffStateEnum = pgEnum('pm_handoff_state', [
+  'pending_review',
+  'reviewed_complete',
+  'accepted',
+  'rejected_with_gaps',
+  'accepted_with_gaps',
+]);
+
+export const pm_handoff_receipts = pgTable('pm_handoff_receipts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  kid: text('kid'),
+  engagement_id: uuid('engagement_id').references(() => engagements.engagement_id),
+  estimate_version_id: text('estimate_version_id'),
+
+  state: pmHandoffStateEnum('state').notNull().default('pending_review'),
+
+  submitted_by_user_id: uuid('submitted_by_user_id').references(() => users.user_id),
+  submitted_at: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+
+  reviewed_by_user_id: uuid('reviewed_by_user_id').references(() => users.user_id),
+  reviewed_at: timestamp('reviewed_at', { withTimezone: true }),
+
+  accepted_at: timestamp('accepted_at', { withTimezone: true }),
+  rejected_at: timestamp('rejected_at', { withTimezone: true }),
+
+  critical_gaps: jsonb('critical_gaps').notNull().default(sql`'[]'::jsonb`),
+  reviewer_notes: text('reviewer_notes'),
+
+  packet_drive_file_id: text('packet_drive_file_id'),
+
+  is_test_project: boolean('is_test_project').notNull().default(false),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_pm_handoff_receipts_tenant_kid').on(table.tenant_id, table.kid),
+  index('idx_pm_handoff_receipts_tenant_state_pending')
+    .on(table.tenant_id, table.state)
+    .where(sql`${table.state} IN ('pending_review','reviewed_complete')`),
+  index('idx_pm_handoff_receipts_tenant_engagement').on(table.tenant_id, table.engagement_id),
+  check(
+    'pm_handoff_receipts_critical_gaps_is_array',
+    sql`jsonb_typeof(${table.critical_gaps}) = 'array'`,
+  ),
+]);
