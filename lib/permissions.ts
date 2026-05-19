@@ -157,42 +157,61 @@ export async function checkPermission(
 //   3. Replace the module's hardcoded-role gate with passPermissionGate(...).
 //
 // Future permissions to add when migrating peer api-gate modules:
-//   - KB_VIEW / KB_WRITE / KB_SETUP   (lib/knowledge/api-gate.ts)
 //   - CONTACTS_READ / CONTACTS_WRITE  (lib/contacts/api-gate.ts)
 //   - ORG_READ / ORG_WRITE            (organizations)
 //   - PM_DOC_READ / PM_DOC_WRITE      (lib/pm/documents/api-gate.ts)
 //   - SUGGESTION_VIEW / SUGGESTION_WRITE
 //   - DAILY_REPORT_VIEW / DAILY_REPORT_WRITE
+//
+// KB_PERMISSIONS dispatch (2026-05-19, first peer migration following the
+// WARROOM-PERMISSIONS template): KB_VIEW / KB_WRITE / KB_TRIAGE / KB_SETUP
+// reproduce BAN-355's behavior — KB_WRITE / KB_TRIAGE granted to pm,
+// business_admin, super_admin, catalog_admin; KB_SETUP restricted to
+// super_admin only (matches BAN-355's setup-route role gate).  KB_VIEW is
+// granted broadly so future explicit-view gates remain backward-compat with
+// today's any-authenticated-user read pattern; GET /api/knowledge stays
+// anonymous-tolerant via the inline isKnowledgeManager helper.
 
 export type RolePermission =
   | 'WARROOM_VIEW'
-  | 'WARROOM_TASK_WRITE';
+  | 'WARROOM_TASK_WRITE'
+  | 'KB_VIEW'
+  | 'KB_WRITE'
+  | 'KB_TRIAGE'
+  | 'KB_SETUP';
 
 export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   'WARROOM_VIEW',
   'WARROOM_TASK_WRITE',
+  'KB_VIEW',
+  'KB_WRITE',
+  'KB_TRIAGE',
+  'KB_SETUP',
 ];
 
 /**
- * Default role → permissions map.  Preserves PR #188 behavior when
- * ROLE_PERMISSIONS_JSON is unset: only business_admin and super_admin hold the
- * War Room permissions; every other role gets [].
+ * Default role → permissions map.  Preserves PR #188 / BAN-355 behavior when
+ * ROLE_PERMISSIONS_JSON is unset:
+ *   - War Room: business_admin + super_admin only.
+ *   - KB write/triage: pm, business_admin, super_admin, catalog_admin.
+ *   - KB setup: super_admin only.
+ *   - KB view: every documented role except 'none'.
  */
 export const ROLE_PERMISSIONS_DEFAULTS: Record<string, RolePermission[]> = {
-  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE'],
-  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE'],
-  gm:             [],
-  owner:          [],
-  service_pm:     [],
-  super:          [],
-  pm:             [],
-  estimator:      [],
-  admin_mgr:      [],
-  admin:          [],
-  field:          [],
-  pm_track:       [],
-  sales:          [],
-  catalog_admin:  [],
+  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP'],
+  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
+  gm:             ['KB_VIEW'],
+  owner:          ['KB_VIEW'],
+  service_pm:     ['KB_VIEW'],
+  super:          ['KB_VIEW'],
+  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
+  estimator:      ['KB_VIEW'],
+  admin_mgr:      ['KB_VIEW'],
+  admin:          ['KB_VIEW'],
+  field:          ['KB_VIEW'],
+  pm_track:       ['KB_VIEW'],
+  sales:          ['KB_VIEW'],
+  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
   none:           [],
 };
 
