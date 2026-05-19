@@ -20,6 +20,7 @@ import {
   type SubmittalState,
   type SubmittalSubmittedTo,
 } from './state-machine';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 
 export type ExecuteSubmittalTransitionInput = {
   submittalId: string;
@@ -56,7 +57,7 @@ export type ExecuteSubmittalTransitionResult =
 export async function executeSubmittalTransition(
   input: ExecuteSubmittalTransitionInput,
 ): Promise<ExecuteSubmittalTransitionResult> {
-  return db.transaction(async (tx) => {
+  const txResult = await db.transaction(async (tx) => {
     const rows = await tx
       .select({
         submittal_id: submittals.submittal_id,
@@ -79,7 +80,7 @@ export async function executeSubmittalTransition(
 
     if (rows.length === 0) {
       return {
-        ok: false,
+        ok: false as const,
         status: 404,
         code: 'SUBMITTAL_NOT_FOUND',
         message: `submittal ${input.submittalId} not found`,
@@ -92,7 +93,7 @@ export async function executeSubmittalTransition(
     const validation = validateSubmittalTransition(fromState, toState);
     if (!validation.ok) {
       return {
-        ok: false,
+        ok: false as const,
         status: 400,
         code: validation.reason,
         message: validation.message,
@@ -145,11 +146,45 @@ export async function executeSubmittalTransition(
     });
 
     return {
-      ok: true,
+      ok: true as const,
       from_state: fromState,
       to_state: toState,
       event_id: emit.event_id,
       submittal: updated[0] as Record<string, unknown>,
+      _subscriber: {
+        engagement_id: row.engagement_id,
+        engagement_kid: row.engagement_kid ?? null,
+        is_test_project: row.is_test_project === true,
+        submittal_number: row.submittal_number,
+        ball_in_court: updates.ball_in_court ?? null,
+      },
     };
   });
+
+  // BAN-344 PM-V1.0-E — Action Item Tracker subscriber.  Runs AFTER the
+  // source tx commits; dispatchSourceEvent swallows its own failures so
+  // the source event is never rolled back by subscriber-side issues.
+  if (txResult.ok) {
+    const ctx = txResult._subscriber;
+    await dispatchSourceEvent({
+      eventType: 'SUBMITTAL_STATE_CHANGED',
+      entityKind: 'submittal',
+      entityId: input.submittalId,
+      tenantId: input.tenantId,
+      engagementId: ctx.engagement_id,
+      kid: ctx.engagement_kid,
+      isTestProject: ctx.is_test_project,
+      metadata: {
+        from_state: txResult.from_state,
+        to_state: txResult.to_state,
+        submittal_number: ctx.submittal_number,
+        ball_in_court: ctx.ball_in_court,
+      },
+      actorEmail: input.actorEmail,
+    });
+    const { _subscriber, ...publicResult } = txResult;
+    void _subscriber;
+    return publicResult;
+  }
+  return txResult;
 }

@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { db, engagements, meetings, meeting_attendees } from '@/db';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 import {
   passMeetingCrossProjectListGate,
   passMeetingWriteGate,
@@ -153,12 +154,40 @@ export async function POST(req: Request) {
         },
       });
 
-      return { kind: 'ok' as const, meeting, attendees: attendeeRows, event_id: event.event_id };
+      return {
+        kind: 'ok' as const,
+        meeting,
+        attendees: attendeeRows,
+        event_id: event.event_id,
+        engagement_kid: engagementKidVal,
+        is_test_project: isTestProject,
+      };
     });
 
     if (result.kind === 'engagement_not_found') {
       return NextResponse.json({ error: `engagement not found for kid: ${engagementKid}` }, { status: 404 });
     }
+
+    // BAN-344 PM-V1.0-E — Action Item Tracker subscriber.  decisions_made[]
+    // is folded into one action_item per decision, with FOLLOW_UP semantics.
+    // Failures here do not roll back the meeting create (dispatchSourceEvent
+    // swallows its own errors).
+    await dispatchSourceEvent({
+      eventType: 'MEETING_LOGGED',
+      entityKind: 'meeting',
+      entityId: result.meeting.meeting_id,
+      tenantId: gate.tenantId,
+      engagementId: result.meeting.engagement_id ?? null,
+      kid: result.engagement_kid,
+      isTestProject: result.is_test_project,
+      metadata: {
+        title,
+        meeting_type: meetingType,
+        decisions_made: optionalStringArray(body.decisions_made),
+      },
+      actorEmail: gate.actorEmail,
+    });
+
     return NextResponse.json(
       { ok: true, meeting: result.meeting, attendees: result.attendees, event_id: result.event_id },
       { status: 201 },

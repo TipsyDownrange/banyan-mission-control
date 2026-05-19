@@ -43,6 +43,10 @@ export const ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES = [
   // BAN-343 PM-V1.0-D — Meeting Intelligence (MANUAL source in v1.0)
   'MEETING_LOGGED',
   'MEETING_SUMMARY_UPDATED',
+  // BAN-344 PM-V1.0-E — Action Item Tracker (cross-source aggregator)
+  'ACTION_ITEM_CREATED',
+  'ACTION_ITEM_STATE_CHANGED',
+  'ACTION_ITEM_CLOSED_AUTO',
 ] as const;
 
 export const ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES = [

@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { and, eq } from 'drizzle-orm';
 import { db, verbal_agreements } from '@/db';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 import { passVerbalAgreementWriteGate } from '@/lib/pm/verbal-agreements/api-gate';
 import { getVerbalAgreementForTenant, parseFormalDocType, trimString } from '@/lib/pm/verbal-agreements/route-utils';
 import { validateVerbalAgreementTransition } from '@/lib/pm/verbal-agreements/state-machine';
@@ -78,6 +79,20 @@ export async function POST(
     });
 
     return { verbal_agreement: updated[0], event_id: event.event_id };
+  });
+
+  // BAN-344 PM-V1.0-E — Action Item Tracker subscriber.  Formalization
+  // auto-closes the CONFIRM action item opened on VERBAL_AGREEMENT_LOGGED.
+  await dispatchSourceEvent({
+    eventType: 'VERBAL_AGREEMENT_FORMALIZED',
+    entityKind: 'verbal_agreement',
+    entityId: id,
+    tenantId: gate.tenantId,
+    engagementId: existing.engagement_id,
+    kid: existing.kid ?? null,
+    isTestProject: existing.is_test_project === true,
+    metadata: { from_state: existing.status, to_state: 'FORMALIZED' },
+    actorEmail: gate.actorEmail,
   });
 
   return NextResponse.json({ ok: true, ...result });
