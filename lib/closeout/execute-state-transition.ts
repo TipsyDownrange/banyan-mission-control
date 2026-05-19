@@ -47,6 +47,10 @@ import {
   type CloseoutPatternBEntity,
   type ProjectLifecycleState,
 } from './state-transitions';
+import {
+  dispatchSourceEvent,
+  resolveEngagementContext,
+} from '@/lib/pm/action-items/spine-subscriber';
 
 // ─── Column-update executor (punch_list_items, warranties) ──────────────────
 
@@ -97,8 +101,9 @@ export type ExecuteCloseoutPatternBTransitionResult =
 export async function executeCloseoutPatternBTransition(
   input: ExecuteCloseoutPatternBTransitionInput,
 ): Promise<ExecuteCloseoutPatternBTransitionResult> {
+  let txResult: ExecuteCloseoutPatternBTransitionResult;
   try {
-    return await db.transaction(async (tx) => {
+    txResult = await db.transaction(async (tx) => {
       const existing = await tx
         .select()
         .from(input.table)
@@ -202,6 +207,35 @@ export async function executeCloseoutPatternBTransition(
       message: err instanceof Error ? err.message : String(err),
     };
   }
+
+  // BAN-354 PM-V1.0-E.b — Action Item Tracker subscriber. Fires AFTER the
+  // source tx commits; wrapped in try/catch so a subscriber-side error
+  // (including the engagement-kid lookup) never rolls back the canonical
+  // Pattern B emit.
+  if (txResult.ok) {
+    try {
+      const engCtx = await resolveEngagementContext(input.tenantId, input.engagementId);
+      await dispatchSourceEvent({
+        eventType: closeoutPatternBEventTypeFor(input.entity),
+        entityKind: closeoutPatternBEntityKindFor(input.entity),
+        entityId: input.pkValue,
+        tenantId: input.tenantId,
+        engagementId: input.engagementId,
+        kid: engCtx?.kid ?? null,
+        isTestProject: input.testData,
+        metadata: {
+          from_state: txResult.from_state,
+          to_state: txResult.to_state,
+          reason: input.reason ?? null,
+        },
+        actorEmail: input.actorEmail,
+      });
+    } catch {
+      // Subscriber failure must never propagate back to the source path.
+    }
+  }
+
+  return txResult;
 }
 
 // ─── Project lifecycle executor (engagement audit log) ──────────────────────

@@ -24,6 +24,7 @@ import {
 } from '@/db';
 import { passAiaApiGate } from '@/lib/aia/api-gate';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 
 const VALID_FORMATS = new Set([
   'AIA_G702_G703',
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
 
   // Resolve engagement + locked SOV
   const eng = await db
-    .select({ engagement_id: engagements.engagement_id, is_test: engagements.is_test_project })
+    .select({ engagement_id: engagements.engagement_id, is_test: engagements.is_test_project, kid: engagements.kid })
     .from(engagements)
     .where(and(eq(engagements.engagement_id, body.engagement_id), eq(engagements.tenant_id, gate.tenantId)))
     .limit(1);
@@ -230,6 +231,29 @@ export async function POST(req: Request) {
 
       return { pay_app_id: payAppId, pay_app_number: nextNumber, line_count: sovLines.length };
     });
+
+    // BAN-354 PM-V1.0-E.b — Action Item Tracker subscriber. Fires AFTER the
+    // source tx commits; wrapped in try/catch so a subscriber error never
+    // rolls back the canonical pay-app create emit.
+    try {
+      await dispatchSourceEvent({
+        eventType: 'PAY_APP_STATE_CHANGED',
+        entityKind: 'pay_application',
+        entityId: result.pay_app_id,
+        tenantId: gate.tenantId,
+        engagementId: body.engagement_id,
+        kid: eng[0].kid ?? null,
+        isTestProject: !!eng[0].is_test,
+        metadata: {
+          from_state: 'NONE',
+          to_state: 'PENDING_DRAFT',
+          pay_app_number: result.pay_app_number,
+        },
+        actorEmail: gate.actorEmail,
+      });
+    } catch {
+      // Subscriber failure must never roll back the source emit.
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (err) {

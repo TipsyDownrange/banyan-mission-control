@@ -16,6 +16,7 @@ import { db, engagements, gc_required_docs_checklist } from '@/db';
 import { passAiaApiGate } from '@/lib/aia/api-gate';
 import { passAiaReadGate } from '@/lib/aia/read-gate';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 
 const ALLOWED_PHASES = [
   'ESTIMATING_SCOPE_REVIEW',
@@ -177,6 +178,33 @@ export async function PATCH(req: Request, context: { params: Promise<{ kid: stri
 
     return { newRow, eventId: emit.event_id };
   });
+
+  // BAN-354 PM-V1.0-E.b — Action Item Tracker subscriber. Post-commit; the
+  // subscriber rule keys off metadata.pending_count which the GC checklist
+  // emit does not currently surface, so this is a no-op until a future
+  // packet enriches the emit metadata. Wiring is in place so activation is
+  // a one-line change in the source emit, not a fresh route edit. Wrapped
+  // in try/catch so a subscriber error never rolls back the source emit.
+  try {
+    await dispatchSourceEvent({
+      eventType: 'GC_REQUIRED_DOCS_CHECKLIST_UPDATED',
+      entityKind: 'gc_required_docs_checklist',
+      entityId: result.newRow.checklist_id,
+      tenantId: gate.tenantId,
+      engagementId: engagementId,
+      kid: kid,
+      isTestProject: false,
+      metadata: {
+        identified_phase: result.newRow.identified_phase,
+        requires_external_waivers_from_manufacturers:
+          result.newRow.requires_external_waivers_from_manufacturers,
+        requires_joint_check_agreement: result.newRow.requires_joint_check_agreement,
+      },
+      actorEmail: gate.actorEmail,
+    });
+  } catch {
+    // Subscriber failure must never roll back the source emit.
+  }
 
   return NextResponse.json({
     ok: true,

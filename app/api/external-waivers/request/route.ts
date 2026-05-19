@@ -11,6 +11,10 @@ import { db, external_lien_waiver_requests } from '@/db';
 import { passAiaApiGate } from '@/lib/aia/api-gate';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
 import { WAIVER_TYPES, type WaiverType } from '@/lib/lien-waivers/auto-generation';
+import {
+  dispatchSourceEvent,
+  resolveEngagementContext,
+} from '@/lib/pm/action-items/spine-subscriber';
 
 const ALLOWED_METHODS = ['EMAIL', 'PORTAL', 'MAIL', 'PHONE'];
 
@@ -94,6 +98,31 @@ export async function POST(req: Request) {
     });
     return { row, eventId: emit.event_id };
   });
+
+  // BAN-354 PM-V1.0-E.b — Action Item Tracker subscriber. Post-commit;
+  // wrapped in try/catch so a subscriber error never rolls back the source
+  // EXTERNAL_LIEN_WAIVER_STATE_CHANGED emit.
+  try {
+    const engCtx = await resolveEngagementContext(gate.tenantId, result.row.engagement_id);
+    await dispatchSourceEvent({
+      eventType: 'EXTERNAL_LIEN_WAIVER_STATE_CHANGED',
+      entityKind: 'external_lien_waiver_request',
+      entityId: result.row.external_waiver_id,
+      tenantId: gate.tenantId,
+      engagementId: result.row.engagement_id,
+      kid: engCtx?.kid ?? null,
+      isTestProject: engCtx?.isTestProject ?? false,
+      metadata: {
+        from_state: null,
+        to_state: 'REQUESTED',
+        waiver_type: waiverType,
+        manufacturer_org_id: result.row.manufacturer_org_id,
+      },
+      actorEmail: gate.actorEmail,
+    });
+  } catch {
+    // Subscriber failure must never roll back the source emit.
+  }
 
   return NextResponse.json({
     ok: true,
