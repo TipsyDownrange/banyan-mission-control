@@ -197,6 +197,43 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       );
     }
   });
+
+  // SUGGESTIONS-PERMISSIONS dispatch (2026-05-19) — Suggestions defaults
+  // reproduce PR #190's SUGGESTIONS_REVIEW_ROLES exactly + the prior universal
+  // SuggestionButton submit behavior (every authenticated role).
+  it('grants SUGGESTIONS_REVIEW to pm, business_admin, super_admin, service_pm', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SUGGESTIONS_REVIEW']),
+      );
+    }
+  });
+
+  it('denies SUGGESTIONS_REVIEW for roles outside the review management set', () => {
+    const reviewRoles = new Set(['pm', 'business_admin', 'super_admin', 'service_pm']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (reviewRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['SUGGESTIONS_REVIEW']));
+    }
+  });
+
+  it('grants SUGGESTIONS_VIEW to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['SUGGESTIONS_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['SUGGESTIONS_VIEW']));
+    }
+  });
+
+  it('grants SUGGESTIONS_REVIEW implies SUGGESTIONS_VIEW for every review role', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW']),
+      );
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -217,6 +254,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'CONTACTS_WRITE',
       'ORG_VIEW',
       'ORG_WRITE',
+      'SUGGESTIONS_VIEW',
+      'SUGGESTIONS_REVIEW',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -492,6 +531,49 @@ describe('hasPermission', () => {
     expect(hasPermission(session('super'), 'ORG_WRITE')).toBe(true);
     // Override doesn't grant ORG_WRITE to field.
     expect(hasPermission(session('field'), 'ORG_WRITE')).toBe(false);
+  });
+
+  // SUGGESTIONS-PERMISSIONS dispatch (2026-05-19) — exercise the new
+  // SUGGESTIONS_* permissions.
+  it('returns true for SUGGESTIONS_REVIEW on pm, business_admin, super_admin, service_pm (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm']) {
+      expect(hasPermission(session(role), 'SUGGESTIONS_REVIEW')).toBe(true);
+      expect(hasPermission(session(role), 'SUGGESTIONS_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for SUGGESTIONS_REVIEW on roles outside the review set', () => {
+    for (const role of ['field', 'sales', 'estimator', 'admin', 'admin_mgr', 'pm_track', 'super', 'gm', 'owner', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'SUGGESTIONS_REVIEW')).toBe(false);
+    }
+  });
+
+  it('returns true for SUGGESTIONS_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'SUGGESTIONS_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for SUGGESTIONS_VIEW on role=none', () => {
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'SUGGESTIONS_VIEW')).toBe(false);
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening SUGGESTIONS_REVIEW to estimator', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      business_admin: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      super_admin: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      service_pm: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      estimator: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+    });
+    expect(hasPermission(session('estimator'), 'SUGGESTIONS_REVIEW')).toBe(true);
+    // Override doesn't grant SUGGESTIONS_REVIEW to field.
+    expect(hasPermission(session('field'), 'SUGGESTIONS_REVIEW')).toBe(false);
   });
 
   it('honors a ROLE_PERMISSIONS_JSON override widening KB_WRITE to field', () => {

@@ -187,7 +187,10 @@ export type RolePermission =
   | 'CONTACTS_WRITE'
   // Organizations (peer migration)
   | 'ORG_VIEW'
-  | 'ORG_WRITE';
+  | 'ORG_WRITE'
+  // Suggestions (peer migration)
+  | 'SUGGESTIONS_VIEW'
+  | 'SUGGESTIONS_REVIEW';
 
 export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   'WARROOM_VIEW',
@@ -205,6 +208,9 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   // Organizations (peer migration)
   'ORG_VIEW',
   'ORG_WRITE',
+  // Suggestions (peer migration)
+  'SUGGESTIONS_VIEW',
+  'SUGGESTIONS_REVIEW',
 ];
 
 /**
@@ -224,28 +230,34 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
  *   - Org view: every documented role except 'none' (preserves the
  *       passOrganizationsAuthGate behavior — any authenticated non-'none'
  *       role; ContactAutocomplete / OrganizationAutocomplete rely on this).
+ *   - Suggestions view: every documented role except 'none' (preserves the
+ *       passSuggestionsAuthGate behavior — universal SuggestionButton).
+ *   - Suggestions review: pm, business_admin, super_admin, service_pm
+ *       (preserves PR #190 SUGGESTIONS_REVIEW_ROLES exactly; PM/admin
+ *       triage queue scope).
  */
 export const ROLE_PERMISSIONS_DEFAULTS: Record<string, RolePermission[]> = {
-  // Daily Report + Contacts + Organizations (peer migrations): VIEW grants are
-  // broad (every documented role except 'none').  Daily Report WRITE: pm,
-  // business_admin, super_admin, service_pm, super (PR #191 set).  Contacts
-  // WRITE: pm, business_admin, super_admin, service_pm, estimator, sales
-  // (PR #187 set).  Org WRITE: pm, business_admin, super_admin, service_pm,
-  // estimator, sales (PR #189 set — matches contacts).
-  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
+  // Daily Report + Contacts + Organizations + Suggestions (peer migrations):
+  // VIEW grants are broad (every documented role except 'none').  Daily Report
+  // WRITE: pm, business_admin, super_admin, service_pm, super (PR #191 set).
+  // Contacts WRITE: pm, business_admin, super_admin, service_pm, estimator,
+  // sales (PR #187 set).  Org WRITE: pm, business_admin, super_admin,
+  // service_pm, estimator, sales (PR #189 set — matches contacts).
+  // Suggestions REVIEW: pm, business_admin, super_admin, service_pm (PR #190).
+  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW'],
+  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW'],
+  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
   none:           [],
 };
 
