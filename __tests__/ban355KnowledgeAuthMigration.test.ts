@@ -1,19 +1,22 @@
 /**
  * BAN-355 — KB auth migration route tests.
  *
- * Confirms each /api/knowledge/* route enforces the canonical role gate
- * (defined in lib/knowledge/api-gate.ts) and rejects insufficient
- * sessions with 401 / 403 while permitting the documented roles.
+ * KB-PERMISSIONS dispatch (2026-05-19): updated to drive the new
+ * RolePermission system in lib/permissions.ts instead of the legacy
+ * KNOWLEDGE_WRITE_ROLES set.  The gates now resolve role via
+ * next-auth's getServerSession + passPermissionGate(KB_*), so each test
+ * stamps the role directly on `session.user` and the real
+ * passPermissionGate / hasPermission logic runs.
  *
- * Mocks @/lib/permissions to drive `checkPermission` so the suite can
- * exercise the gates without standing up next-auth or the backend Sheet.
+ * Confirms each /api/knowledge/* route enforces the canonical permission gate
+ * (KB_WRITE / KB_TRIAGE / KB_SETUP, plus the inline auth gate for any
+ * signed-in kulaglass.com user) and rejects insufficient sessions with
+ * 401 / 403 while permitting the documented roles.
+ *
  * Mocks @/lib/knowledge to keep route handlers off the live Sheets API.
  */
 
-const mockCheckPermission = jest.fn();
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
-}));
+export {}; // module-scope guard
 
 const mockGetServerSession = jest.fn();
 jest.mock('next-auth', () => ({
@@ -86,13 +89,20 @@ jest.mock('@/lib/knowledge', () => ({
   })),
 }));
 
-function permResult(role: string, email: string | null = role === 'none' ? null : `${role}@kulaglass.com`) {
-  return { allowed: true, role, email };
+function kbSession(role: string | null, email?: string | null) {
+  if (role === null) return null;
+  const resolvedEmail = email ?? `${role}@kulaglass.com`;
+  return { user: { email: resolvedEmail, role } };
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGetServerSession.mockResolvedValue({ user: { email: 'pm@kulaglass.com' } });
+  // Run with default permission map regardless of env, and reset the memoized
+  // permissions cache so each test sees defaults fresh.
+  delete process.env.ROLE_PERMISSIONS_JSON;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const perms = require('@/lib/permissions');
+  perms.resetRolePermissionsCacheForTests();
 });
 
 // ═══ POST /api/knowledge (write gate) ══════════════════════════════════════
@@ -101,7 +111,7 @@ describe('POST /api/knowledge — write gate', () => {
   const body = JSON.stringify({ title: 'X', product_line_id: 'PL-1' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -112,7 +122,7 @@ describe('POST /api/knowledge — write gate', () => {
   });
 
   it('returns 403 for an authenticated non-management role (field)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -123,7 +133,7 @@ describe('POST /api/knowledge — write gate', () => {
   });
 
   it('returns 403 for estimator', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(kbSession('estimator'));
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -134,7 +144,7 @@ describe('POST /api/knowledge — write gate', () => {
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(kbSession('pm'));
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -145,7 +155,7 @@ describe('POST /api/knowledge — write gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('super_admin'));
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -156,7 +166,7 @@ describe('POST /api/knowledge — write gate', () => {
   });
 
   it('returns 200 for business_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('business_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('business_admin'));
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -167,7 +177,7 @@ describe('POST /api/knowledge — write gate', () => {
   });
 
   it('returns 200 for catalog_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('catalog_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('catalog_admin'));
     const { POST } = await import('@/app/api/knowledge/route');
     const res = await POST(new Request('http://t/api/knowledge', {
       method: 'POST',
@@ -182,7 +192,7 @@ describe('POST /api/knowledge — write gate', () => {
 
 describe('GET /api/knowledge — anonymous-tolerant', () => {
   it('serves published-only articles to unauthenticated callers (no 401)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/knowledge/route');
     const res = await GET(new Request('http://t/api/knowledge'));
     expect(res.status).toBe(200);
@@ -191,7 +201,7 @@ describe('GET /api/knowledge — anonymous-tolerant', () => {
   });
 
   it('serves all-status articles to a KB manager (pm)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(kbSession('pm'));
     const { GET } = await import('@/app/api/knowledge/route');
     const res = await GET(new Request('http://t/api/knowledge'));
     expect(res.status).toBe(200);
@@ -204,7 +214,7 @@ describe('GET /api/knowledge — anonymous-tolerant', () => {
 
 describe('PATCH /api/knowledge/[articleId] — write gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { PATCH } = await import('@/app/api/knowledge/[articleId]/route');
     const res = await PATCH(
       new Request('http://t/api/knowledge/ka-1', {
@@ -218,7 +228,7 @@ describe('PATCH /api/knowledge/[articleId] — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { PATCH } = await import('@/app/api/knowledge/[articleId]/route');
     const res = await PATCH(
       new Request('http://t/api/knowledge/ka-1', {
@@ -232,7 +242,7 @@ describe('PATCH /api/knowledge/[articleId] — write gate', () => {
   });
 
   it('returns 200 for catalog_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('catalog_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('catalog_admin'));
     const { PATCH } = await import('@/app/api/knowledge/[articleId]/route');
     const res = await PATCH(
       new Request('http://t/api/knowledge/ka-1', {
@@ -248,7 +258,7 @@ describe('PATCH /api/knowledge/[articleId] — write gate', () => {
 
 describe('DELETE /api/knowledge/[articleId] — write gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { DELETE } = await import('@/app/api/knowledge/[articleId]/route');
     const res = await DELETE(
       new Request('http://t/api/knowledge/ka-1', { method: 'DELETE' }),
@@ -258,7 +268,7 @@ describe('DELETE /api/knowledge/[articleId] — write gate', () => {
   });
 
   it('returns 403 for sales role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('sales'));
+    mockGetServerSession.mockResolvedValue(kbSession('sales'));
     const { DELETE } = await import('@/app/api/knowledge/[articleId]/route');
     const res = await DELETE(
       new Request('http://t/api/knowledge/ka-1', { method: 'DELETE' }),
@@ -268,7 +278,7 @@ describe('DELETE /api/knowledge/[articleId] — write gate', () => {
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(kbSession('pm'));
     const { DELETE } = await import('@/app/api/knowledge/[articleId]/route');
     const res = await DELETE(
       new Request('http://t/api/knowledge/ka-1', { method: 'DELETE' }),
@@ -282,28 +292,28 @@ describe('DELETE /api/knowledge/[articleId] — write gate', () => {
 
 describe('GET /api/knowledge/feedback — triage gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/knowledge/feedback/route');
     const res = await GET(new Request('http://t/api/knowledge/feedback'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { GET } = await import('@/app/api/knowledge/feedback/route');
     const res = await GET(new Request('http://t/api/knowledge/feedback'));
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(kbSession('pm'));
     const { GET } = await import('@/app/api/knowledge/feedback/route');
     const res = await GET(new Request('http://t/api/knowledge/feedback'));
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for catalog_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('catalog_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('catalog_admin'));
     const { GET } = await import('@/app/api/knowledge/feedback/route');
     const res = await GET(new Request('http://t/api/knowledge/feedback'));
     expect(res.status).toBe(200);
@@ -314,7 +324,7 @@ describe('POST /api/knowledge/feedback — auth gate (any signed-in user)', () =
   const body = JSON.stringify({ article_id: 'ka-1', feedback_type: 'helpful' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { POST } = await import('@/app/api/knowledge/feedback/route');
     const res = await POST(new Request('http://t/api/knowledge/feedback', {
       method: 'POST',
@@ -325,8 +335,7 @@ describe('POST /api/knowledge/feedback — auth gate (any signed-in user)', () =
   });
 
   it('returns 200 for field role (any authenticated user can submit)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
-    mockGetServerSession.mockResolvedValue({ user: { email: 'field@kulaglass.com' } });
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { POST } = await import('@/app/api/knowledge/feedback/route');
     const res = await POST(new Request('http://t/api/knowledge/feedback', {
       method: 'POST',
@@ -337,7 +346,7 @@ describe('POST /api/knowledge/feedback — auth gate (any signed-in user)', () =
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(kbSession('pm'));
     const { POST } = await import('@/app/api/knowledge/feedback/route');
     const res = await POST(new Request('http://t/api/knowledge/feedback', {
       method: 'POST',
@@ -352,35 +361,35 @@ describe('POST /api/knowledge/feedback — auth gate (any signed-in user)', () =
 
 describe('POST /api/knowledge/setup — setup gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { POST } = await import('@/app/api/knowledge/setup/route');
     const res = await POST(new Request('http://t/api/knowledge/setup', { method: 'POST' }));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for pm (not super_admin)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(kbSession('pm'));
     const { POST } = await import('@/app/api/knowledge/setup/route');
     const res = await POST(new Request('http://t/api/knowledge/setup', { method: 'POST' }));
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for business_admin (not super_admin)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('business_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('business_admin'));
     const { POST } = await import('@/app/api/knowledge/setup/route');
     const res = await POST(new Request('http://t/api/knowledge/setup', { method: 'POST' }));
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for catalog_admin (not super_admin)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('catalog_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('catalog_admin'));
     const { POST } = await import('@/app/api/knowledge/setup/route');
     const res = await POST(new Request('http://t/api/knowledge/setup', { method: 'POST' }));
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(kbSession('super_admin'));
     const { POST } = await import('@/app/api/knowledge/setup/route');
     const res = await POST(new Request('http://t/api/knowledge/setup', { method: 'POST' }));
     expect(res.status).toBe(200);
@@ -391,14 +400,14 @@ describe('POST /api/knowledge/setup — setup gate', () => {
 
 describe('GET /api/knowledge/parts — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/knowledge/parts/route');
     const res = await GET(new Request('http://t/api/knowledge/parts?article_id=ka-1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 200 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { GET } = await import('@/app/api/knowledge/parts/route');
     const res = await GET(new Request('http://t/api/knowledge/parts?article_id=ka-1'));
     expect(res.status).toBe(200);
@@ -407,14 +416,14 @@ describe('GET /api/knowledge/parts — auth gate', () => {
 
 describe('GET /api/knowledge/product-lines — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/knowledge/product-lines/route');
     const res = await GET(new Request('http://t/api/knowledge/product-lines'));
     expect(res.status).toBe(401);
   });
 
   it('returns 200 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { GET } = await import('@/app/api/knowledge/product-lines/route');
     const res = await GET(new Request('http://t/api/knowledge/product-lines'));
     expect(res.status).toBe(200);
@@ -423,16 +432,31 @@ describe('GET /api/knowledge/product-lines — auth gate', () => {
 
 describe('GET /api/knowledge/sources — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/knowledge/sources/route');
     const res = await GET(new Request('http://t/api/knowledge/sources?article_id=ka-1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 200 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(kbSession('field'));
     const { GET } = await import('@/app/api/knowledge/sources/route');
     const res = await GET(new Request('http://t/api/knowledge/sources?article_id=ka-1'));
     expect(res.status).toBe(200);
+  });
+});
+
+// ═══ Backward-compat role set sanity ═══════════════════════════════════════
+//
+// KNOWLEDGE_WRITE_ROLES is @deprecated and no longer referenced by any active
+// call site, but kept exported for backward-compat with anything that
+// imported it before the KB-PERMISSIONS migration.
+
+describe('KNOWLEDGE_WRITE_ROLES role set (legacy export)', () => {
+  it('still contains pm, business_admin, super_admin, catalog_admin', async () => {
+    const { KNOWLEDGE_WRITE_ROLES } = await import('@/lib/knowledge/api-gate');
+    expect(Array.from(KNOWLEDGE_WRITE_ROLES).sort()).toEqual(
+      ['business_admin', 'catalog_admin', 'pm', 'super_admin'],
+    );
   });
 });
