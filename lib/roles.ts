@@ -159,5 +159,8 @@ export function defaultViewForRole(role: string): string {
   if (role === 'super')      return 'Today';
   if (role === 'sales')      return 'Bid Queue';
   if (role === 'admin' || role === 'pm_track') return 'Today';
+  // BAN-348: PM Trunk v1.0 §13 — PM role now lands on the PM Overview Dashboard.
+  // Scoped to pm only; other roles' defaults are unchanged.
+  if (role === 'pm') return 'PM Dashboard';
   return 'Today';
 }
