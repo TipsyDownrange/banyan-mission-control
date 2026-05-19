@@ -159,6 +159,44 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       );
     }
   });
+
+  // ORG-PERMISSIONS dispatch (2026-05-19) — Organizations defaults reproduce
+  // PR #189's ORGANIZATIONS_WRITE_ROLES set + the prior "any authenticated
+  // non-none role" view behavior exactly (matches contacts since
+  // OrganizationsPanel mutates orgs and contacts side-by-side).
+  it('grants ORG_WRITE to pm, business_admin, super_admin, service_pm, estimator, sales', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['ORG_WRITE']),
+      );
+    }
+  });
+
+  it('denies ORG_WRITE for roles outside the organizations management set', () => {
+    const writeRoles = new Set(['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (writeRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['ORG_WRITE']));
+    }
+  });
+
+  it('grants ORG_VIEW to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['ORG_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['ORG_VIEW']));
+    }
+  });
+
+  it('grants ORG_WRITE implies ORG_VIEW for every write role', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['ORG_VIEW', 'ORG_WRITE']),
+      );
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -177,6 +215,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'DAILY_REPORT_WRITE',
       'CONTACTS_VIEW',
       'CONTACTS_WRITE',
+      'ORG_VIEW',
+      'ORG_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -411,6 +451,47 @@ describe('hasPermission', () => {
     expect(hasPermission(session('super'), 'CONTACTS_WRITE')).toBe(true);
     // Override doesn't grant CONTACTS_WRITE to field.
     expect(hasPermission(session('field'), 'CONTACTS_WRITE')).toBe(false);
+  });
+
+  // ORG-PERMISSIONS dispatch (2026-05-19) — exercise the new ORG_* permissions.
+  it('returns true for ORG_WRITE on pm, business_admin, super_admin, service_pm, estimator, sales (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(hasPermission(session(role), 'ORG_WRITE')).toBe(true);
+      expect(hasPermission(session(role), 'ORG_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for ORG_WRITE on roles outside the organizations management set', () => {
+    for (const role of ['field', 'admin', 'admin_mgr', 'pm_track', 'super', 'gm', 'owner', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'ORG_WRITE')).toBe(false);
+    }
+  });
+
+  it('returns true for ORG_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'ORG_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for ORG_VIEW on role=none', () => {
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'ORG_VIEW')).toBe(false);
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening ORG_WRITE to super', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['ORG_VIEW', 'ORG_WRITE'],
+      business_admin: ['ORG_VIEW', 'ORG_WRITE'],
+      super_admin: ['ORG_VIEW', 'ORG_WRITE'],
+      super: ['ORG_VIEW', 'ORG_WRITE'],
+    });
+    expect(hasPermission(session('super'), 'ORG_WRITE')).toBe(true);
+    // Override doesn't grant ORG_WRITE to field.
+    expect(hasPermission(session('field'), 'ORG_WRITE')).toBe(false);
   });
 
   it('honors a ROLE_PERMISSIONS_JSON override widening KB_WRITE to field', () => {
