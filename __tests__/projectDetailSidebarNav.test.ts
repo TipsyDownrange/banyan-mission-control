@@ -18,11 +18,12 @@ describe('project detail sidebar navigation regression', () => {
       'utf8',
     );
 
-    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview')");
+    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview')");
     expect(source).toContain("{ key: 'rfis', label: `RFIs (${rfis.length})` }");
     expect(source).toContain("{ key: 'verbal-agreements', label: `Verbal Agreements (${verbalAgreements.length})` }");
     expect(source).toContain("{ key: 'meetings', label: `Meetings (${meetings.length})` }");
     expect(source).toContain("{ key: 'action-items', label: `Action Items (${actionItemsSummary.open_count}/${actionItemsSummary.total})` }");
+    expect(source).toContain("{ key: 'documents', label: `Documents (${documentsSummary.current_count})` }");
     expect(source).toContain("{ key: 'cos', label: `Change Orders (${cos.length})` }");
   });
 

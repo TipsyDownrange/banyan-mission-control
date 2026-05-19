@@ -21,10 +21,12 @@ describe('BAN-293 Activity Spine event contract', () => {
     // MEETING_SUMMARY_UPDATED).
     // BAN-344 adds 3 Pattern A action-item events (ACTION_ITEM_CREATED,
     // ACTION_ITEM_STATE_CHANGED, ACTION_ITEM_CLOSED_AUTO).
+    // BAN-345 adds 3 Pattern A document hub events (DOCUMENT_UPLOADED,
+    // DOCUMENT_LINKED, DOCUMENT_SUPERSEDED).
     expect(ACTIVITY_SPINE_EXISTING_EVENT_TYPE_COUNT).toBe(11);
     expect(ACTIVITY_SPINE_LEGACY_EVENT_TYPE_COUNT).toBe(1);
-    expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(41);
-    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(53);
+    expect(ACTIVITY_SPINE_NEW_EVENT_TYPE_COUNT).toBe(44);
+    expect(ACTIVITY_SPINE_EVENT_TYPE_COUNT).toBe(56);
   });
 
   it('retains wo_completion as a legacy transitional event outside Pattern A/B', () => {
@@ -38,8 +40,8 @@ describe('BAN-293 Activity Spine event contract', () => {
   });
 
   it('keeps the corrected Pattern A / Pattern B split', () => {
-    // BAN-337 v2b plus BAN-341/BAN-342/BAN-338/BAN-343/BAN-344 grow Pattern A 12 → 29.
-    expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toHaveLength(29);
+    // BAN-337 v2b plus BAN-341/BAN-342/BAN-338/BAN-343/BAN-344/BAN-345 grow Pattern A 12 → 32.
+    expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toHaveLength(32);
     // BAN-340 plus BAN-341 grow Pattern B 10 → 12.
     expect(ACTIVITY_SPINE_PATTERN_B_EVENT_TYPES).toHaveLength(12);
     expect(ACTIVITY_SPINE_PATTERN_A_EVENT_TYPES).toContain('SOV_MODIFIED');

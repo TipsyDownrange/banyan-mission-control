@@ -13,6 +13,7 @@ import RfisTab from '@/components/engagements/RfisTab';
 import VerbalAgreementsTab from '@/components/engagements/VerbalAgreementsTab';
 import MeetingsTab from '@/components/engagements/MeetingsTab';
 import ActionItemsTab from '@/components/engagements/ActionItemsTab';
+import DocumentsTab from '@/components/engagements/DocumentsTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -108,12 +109,13 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [verbalAgreements, setVerbalAgreements] = useState<VerbalAgreement[]>([]);
   const [meetings, setMeetings] = useState<Record<string, unknown>[]>([]);
   const [actionItemsSummary, setActionItemsSummary] = useState<{ total: number; open_count: number }>({ total: 0, open_count: 0 });
+  const [documentsSummary, setDocumentsSummary] = useState<{ total: number; current_count: number }>({ total: 0, current_count: 0 });
   const [cos, setCos] = useState<CO[]>([]);
   const [sovLines, setSovLines] = useState<SOVLine[]>([]);
   const [install, setInstall] = useState<{ items: Record<string, string>[]; summary: InstallSummary[] }>({ items: [], summary: [] });
@@ -127,10 +129,11 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
       fetch(`/api/verbal-agreements/by-kid/${encodeURIComponent(project.kID)}`).then(r => r.json()).catch(() => ({ items: [] })),
       fetch(`/api/meetings/by-kid/${encodeURIComponent(project.kID)}`).then(r => r.json()).catch(() => ({ items: [] })),
       fetch(`/api/action-items/by-kid/${encodeURIComponent(project.kID)}`).then(r => r.json()).catch(() => ({ items: [], summary: { total: 0, open_count: 0 } })),
+      fetch(`/api/documents/by-kid/${encodeURIComponent(project.kID)}`).then(r => r.json()).catch(() => ({ items: [], summary: { total: 0, current_count: 0 } })),
       fetch(`/api/pm/change-orders?kID=${project.kID}`).then(r => r.json()).catch(() => ({ cos: [] })),
       fetch(`/api/pm/sov?kID=${project.kID}`).then(r => r.json()).catch(() => ({ sov: [] })),
       fetch(`/api/install?kID=${project.kID}`).then(r => r.json()).catch(() => ({ items: [], summary: [] })),
-    ]).then(([sData, rData, vaData, mData, aiData, cData, sovData, iData]) => {
+    ]).then(([sData, rData, vaData, mData, aiData, dData, cData, sovData, iData]) => {
       setSubmittals(sData.submittals || []);
       setRfis(rData.rfis || []);
       setVerbalAgreements(vaData.items || []);
@@ -138,6 +141,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
       setActionItemsSummary({
         total: aiData.summary?.total ?? 0,
         open_count: aiData.summary?.open_count ?? 0,
+      });
+      setDocumentsSummary({
+        total: dData.summary?.total ?? 0,
+        current_count: dData.summary?.current_count ?? 0,
       });
       setCos(cData.cos || []);
       setSovLines(sovData.sov || []);
@@ -153,6 +160,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'verbal-agreements', label: `Verbal Agreements (${verbalAgreements.length})` },
     { key: 'meetings', label: `Meetings (${meetings.length})` },
     { key: 'action-items', label: `Action Items (${actionItemsSummary.open_count}/${actionItemsSummary.total})` },
+    { key: 'documents', label: `Documents (${documentsSummary.current_count})` },
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'tm-tickets', label: 'T&M Tickets' },
@@ -286,6 +294,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
               {activeTab === 'action-items' && (
                 <ActionItemsTab kID={project.kID} />
+              )}
+
+              {activeTab === 'documents' && (
+                <DocumentsTab kID={project.kID} />
               )}
 
               {activeTab === 'cos' && (

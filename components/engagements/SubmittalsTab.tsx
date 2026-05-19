@@ -406,6 +406,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
       {selectedSubmittalId && (
         <SubmittalDetailDrawer
           submittalId={selectedSubmittalId}
+          kID={kID}
           onClose={() => setSelectedSubmittalId(null)}
           onChanged={() => fetchList()}
         />

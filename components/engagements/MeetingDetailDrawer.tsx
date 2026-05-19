@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import LinkedDocumentsPanel from './LinkedDocumentsPanel';
 
 type AttendeeRow = {
   meeting_attendee_id: string;
@@ -39,8 +40,9 @@ function formatDateTime(value: string): string {
   return d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
-export default function MeetingDetailDrawer({ meetingId, onClose, onUpdated }: {
+export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated }: {
   meetingId: string;
+  kID?: string;
   onClose: () => void;
   onUpdated: () => void;
 }) {
@@ -194,6 +196,14 @@ export default function MeetingDetailDrawer({ meetingId, onClose, onUpdated }: {
                 )}
                 <span style={{ ...chipLinkStyle, color: '#475569', background: '#f8fafc' }}>Source: {meeting.source_platform}</span>
               </div>
+            </section>
+
+            <section style={cardStyle}>
+              <LinkedDocumentsPanel
+                linkedEntityType="MEETING"
+                linkedEntityId={meeting.meeting_id}
+                kID={kID ?? meeting.kid ?? null}
+              />
             </section>
           </div>
         )}

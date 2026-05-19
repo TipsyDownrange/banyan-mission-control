@@ -1940,3 +1940,85 @@ export const action_items = pgTable('action_items', {
   index('idx_action_items_source_entity').on(table.source_entity_type, table.source_entity_id),
   check('action_items_title_length', sql`char_length(${table.title}) <= 300`),
 ]);
+
+// BAN-345 PM-V1.0-F — Document Hub (central document repository + kind tagging).
+export const documentKindEnum = pgEnum('document_kind', [
+  'CONTRACT',
+  'SHOP_DRAWING',
+  'SUBMITTAL_PACKAGE',
+  'RFI_TRANSMITTAL',
+  'CO_DOCUMENT',
+  'PAY_APP_PDF',
+  'NOC',
+  'LIEN_WAIVER',
+  'PUNCH_LIST',
+  'WARRANTY_LETTER',
+  'AS_BUILT',
+  'OM_MANUAL',
+  'SPEC_BOOK',
+  'PHOTO_PACKAGE',
+  'EMAIL_THREAD',
+  'SCHEDULE_VERSION',
+  'OTHER',
+]);
+
+export const documentLinkedEntityTypeEnum = pgEnum('document_linked_entity_type', [
+  'SUBMITTAL',
+  'RFI',
+  'CO',
+  'PAY_APP',
+  'PUNCH_LIST_ITEM',
+  'VERBAL_AGREEMENT',
+  'MEETING',
+  'WARRANTY_CLAIM',
+  'SCHEDULE_VERSION',
+  'SCHEDULE_ACTIVITY',
+  'TM_TICKET',
+  'EXTERNAL_WAIVER',
+  'FIELD_EVENT',
+  'ACTION_ITEM',
+  'OTHER',
+]);
+
+export const document_hub_entries = pgTable('document_hub_entries', {
+  document_id: uuid('document_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').references(() => engagements.engagement_id),
+  kid: text('kid'),
+
+  drive_file_id: text('drive_file_id').notNull(),
+  filename: text('filename').notNull(),
+
+  kind: documentKindEnum('kind').notNull(),
+  subkind: text('subkind'),
+
+  linked_entity_type: documentLinkedEntityTypeEnum('linked_entity_type'),
+  linked_entity_id: uuid('linked_entity_id'),
+
+  external_visible: boolean('external_visible').notNull().default(false),
+
+  version: integer('version').notNull().default(1),
+  superseded_by_document_id: uuid('superseded_by_document_id').references((): AnyPgColumn => document_hub_entries.document_id),
+  is_current: boolean('is_current').generatedAlwaysAs(sql`superseded_by_document_id IS NULL`),
+
+  uploaded_by: uuid('uploaded_by').references(() => users.user_id),
+  uploaded_at: timestamp('uploaded_at', { withTimezone: true }).notNull().defaultNow(),
+
+  notes: text('notes'),
+  is_test_project: boolean('is_test_project').notNull().default(false),
+}, (table) => [
+  index('idx_document_hub_tenant_kid').on(table.tenant_id, table.kid),
+  index('idx_document_hub_tenant_engagement_kind').on(table.tenant_id, table.engagement_id, table.kind),
+  index('idx_document_hub_linked_entity')
+    .on(table.linked_entity_type, table.linked_entity_id)
+    .where(sql`${table.linked_entity_type} IS NOT NULL`),
+  index('idx_document_hub_tenant_current')
+    .on(table.tenant_id, table.kind)
+    .where(sql`${table.is_current} = true`),
+  index('idx_document_hub_drive_file').on(table.drive_file_id),
+  check('document_hub_entries_filename_length', sql`char_length(${table.filename}) <= 500`),
+  check(
+    'document_hub_entries_linked_entity_consistency',
+    sql`(${table.linked_entity_type} IS NULL AND ${table.linked_entity_id} IS NULL) OR (${table.linked_entity_type} IS NOT NULL AND ${table.linked_entity_id} IS NOT NULL)`,
+  ),
+]);
