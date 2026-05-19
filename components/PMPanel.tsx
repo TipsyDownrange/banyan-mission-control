@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import EngagementCreationForm from '@/components/engagements/EngagementCreationForm';
+import { EmptyState } from '@/components/design-system';
 
 type Tab = 'overview' | 'rfi' | 'submittals' | 'co' | 'sov';
 
@@ -202,12 +203,12 @@ export default function PMPanel() {
       </div>
 
       {!selectedKID && (
-        <div style={{ padding: '60px 24px', textAlign: 'center', background: 'white', borderRadius: 20, border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>Select a project above to get started</div>
-          <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, maxWidth: 400, margin: '0 auto' }}>
-            View and manage <strong>RFIs</strong>, <strong>Submittals</strong>, <strong>Change Orders</strong>, and <strong>Schedule of Values</strong> — all in one place.
-          </div>
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0' }}>
+          <EmptyState
+            icon={<span style={{ fontSize: 32 }}>📋</span>}
+            heading="Select a project above to get started"
+            body="View and manage RFIs, Submittals, Change Orders, and Schedule of Values — all in one place."
+          />
         </div>
       )}
 

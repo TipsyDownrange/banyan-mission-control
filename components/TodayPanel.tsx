@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { EmptyState } from '@/components/design-system';
 
 type TodayData = {
   bids_due: { name: string; due: string; assigned: string; kID: string }[];
@@ -158,10 +159,12 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
 
       {/* Empty state */}
       {hasNoEvents && (
-        <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', marginBottom: 20 }}>
-          <div style={{ fontSize: 32, marginBottom: 12, color: '#14b8a6' }}>✓</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>Nothing logged today</div>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Quiet day or check the field app</div>
+        <div style={{ borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', marginBottom: 20 }}>
+          <EmptyState
+            icon={<span style={{ fontSize: 32, color: '#14b8a6' }}>✓</span>}
+            heading="Nothing logged today"
+            body="Quiet day or check the field app"
+          />
         </div>
       )}
 

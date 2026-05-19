@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import HandoffReviewDrawer from './engagements/HandoffReviewDrawer';
+import { Button, Card, EmptyState, StatusPill, type StatusPillVariant } from '@/components/design-system';
 
 type Receipt = {
   id: string;
@@ -22,9 +23,9 @@ type Receipt = {
   engagement_kid: string | null;
 };
 
-const STATE_LABELS: Record<string, { fg: string; bg: string; label: string }> = {
-  pending_review:    { fg: '#1d4ed8', bg: '#eff6ff', label: 'Pending Review' },
-  reviewed_complete: { fg: '#92400e', bg: '#fef3c7', label: 'Reviewed' },
+const STATE_LABELS: Record<string, { fg: string; bg: string; label: string; variant: StatusPillVariant }> = {
+  pending_review:    { fg: '#1d4ed8', bg: '#eff6ff', label: 'Pending Review', variant: 'info' },
+  reviewed_complete: { fg: '#92400e', bg: '#fef3c7', label: 'Reviewed',       variant: 'warn' },
 };
 
 export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID: string) => void }) {
@@ -51,7 +52,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
   useEffect(() => { fetchData(); }, [fetchData]);
 
   return (
-    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: '16px 18px' }}>
+    <Card>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' }}>
@@ -69,13 +70,14 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
       ) : err ? (
         <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12 }}>{err}</div>
       ) : items.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
-          No handoffs awaiting your review.
-        </div>
+        <EmptyState
+          icon={<span style={{ fontSize: 20, color: '#15803d' }}>✓</span>}
+          heading="No handoffs awaiting your review."
+        />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.map((r) => {
-            const s = STATE_LABELS[r.state] ?? { fg: '#475569', bg: '#f1f5f9', label: r.state };
+            const s = STATE_LABELS[r.state] ?? { fg: '#475569', bg: '#f1f5f9', label: r.state, variant: 'info' as StatusPillVariant };
             const unresolved = (r.critical_gaps ?? []).filter((g) => g.status !== 'RESOLVED' && g.status !== 'WAIVED').length;
             return (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', gap: 12 }}>
@@ -98,16 +100,10 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
                     )}
                   </div>
                 </button>
-                <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800, color: s.fg, background: s.bg }}>
-                  {s.label}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setOpenId(r.id)}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
-                >
+                <StatusPill variant={s.variant ?? 'info'}>{s.label}</StatusPill>
+                <Button variant="primary" onClick={() => setOpenId(r.id)}>
                   Review
-                </button>
+                </Button>
               </div>
             );
           })}
@@ -121,6 +117,6 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
           onChanged={fetchData}
         />
       )}
-    </div>
+    </Card>
   );
 }

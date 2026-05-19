@@ -19,6 +19,7 @@ import {
   UserPlus,
   type LucideIcon,
 } from 'lucide-react';
+import { EmptyState } from '@/components/design-system';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -1784,20 +1785,15 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
           </button>
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 48, textAlign: 'center' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>📋</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#64748b' }}>
-            {displayEvents.length === 0
-              ? 'No field activity logged for this project yet.'
-              : 'No events match the selected filters.'}
-          </div>
-          {displayEvents.length > 0 && (
-            <button onClick={() => { setSelectedTypes([]); setDateFilter('all'); }}
-              style={{ marginTop: 10, fontSize: 12, color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-              Clear filters
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon={<span style={{ fontSize: 36 }}>📋</span>}
+          heading={displayEvents.length === 0
+            ? 'No field activity logged for this project yet.'
+            : 'No events match the selected filters.'}
+          action={displayEvents.length > 0
+            ? { label: 'Clear filters', onClick: () => { setSelectedTypes([]); setDateFilter('all'); }, variant: 'secondary' }
+            : undefined}
+        />
       ) : (
         <>
           <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, marginBottom: 10 }}>
