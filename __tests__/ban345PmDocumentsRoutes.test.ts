@@ -145,9 +145,13 @@ jest.mock('@/db', () => ({
   field_events: docTbl('field_events'),
 }));
 
-const docMockCheckPermission = jest.fn();
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => docMockCheckPermission(...args),
+// PM-DOCUMENTS-PERMISSIONS dispatch (2026-05-19): pm-documents gates now
+// resolve role via next-auth's getServerSession + passPermissionGate(
+// PM_DOCUMENT_*).  Tests drive sessions directly; the real passPermissionGate
+// runs against ROLE_PERMISSIONS_DEFAULTS.
+const docMockGetServerSession = jest.fn();
+jest.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => docMockGetServerSession(...args),
 }));
 
 jest.mock('@/lib/service-work-orders/postgres-read-guard', () => ({
@@ -162,7 +166,11 @@ jest.mock('@/lib/env', () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   docSelectResultQueue.length = 0;
-  docMockCheckPermission.mockResolvedValue({ allowed: true, role: 'pm', email: 'pm@kulaglass.com' });
+  docMockGetServerSession.mockResolvedValue({ user: { email: 'pm@kulaglass.com', role: 'pm' } });
+  delete process.env.ROLE_PERMISSIONS_JSON;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const perms = require('@/lib/permissions');
+  perms.resetRolePermissionsCacheForTests();
 });
 
 // ═══ POST /api/documents ════════════════════════════════════════════════════
@@ -313,7 +321,7 @@ describe('POST /api/documents', () => {
   });
 
   it('forbids field_super from uploading non-PHOTO_PACKAGE kinds', async () => {
-    docMockCheckPermission.mockResolvedValueOnce({ allowed: true, role: 'field_super', email: 'super@kulaglass.com' });
+    docMockGetServerSession.mockResolvedValueOnce({ user: { email: 'super@kulaglass.com', role: 'field_super' } });
     docSelectResultQueue.push([{ user_id: DOC_ACTOR_USER_ID }]);
     const { POST } = await import('@/app/api/documents/route');
     const res = await POST(new Request('http://localhost/api/documents', {
@@ -325,7 +333,7 @@ describe('POST /api/documents', () => {
   });
 
   it('allows field_super to upload PHOTO_PACKAGE', async () => {
-    docMockCheckPermission.mockResolvedValueOnce({ allowed: true, role: 'field_super', email: 'super@kulaglass.com' });
+    docMockGetServerSession.mockResolvedValueOnce({ user: { email: 'super@kulaglass.com', role: 'field_super' } });
     docSelectResultQueue.push([{ user_id: DOC_ACTOR_USER_ID }]);
     const { POST } = await import('@/app/api/documents/route');
     const res = await POST(new Request('http://localhost/api/documents', {
@@ -337,7 +345,7 @@ describe('POST /api/documents', () => {
   });
 
   it('rejects unauthorized roles outright', async () => {
-    docMockCheckPermission.mockResolvedValueOnce({ allowed: true, role: 'crew', email: 'crew@kulaglass.com' });
+    docMockGetServerSession.mockResolvedValueOnce({ user: { email: 'crew@kulaglass.com', role: 'crew' } });
     const { POST } = await import('@/app/api/documents/route');
     const res = await POST(new Request('http://localhost/api/documents', {
       method: 'POST',
@@ -364,7 +372,7 @@ describe('GET /api/documents', () => {
   });
 
   it('rejects unauthorized roles', async () => {
-    docMockCheckPermission.mockResolvedValueOnce({ allowed: true, role: 'crew', email: 'crew@kulaglass.com' });
+    docMockGetServerSession.mockResolvedValueOnce({ user: { email: 'crew@kulaglass.com', role: 'crew' } });
     const { GET } = await import('@/app/api/documents/route');
     const res = await GET(new Request('http://localhost/api/documents'));
     expect(res.status).toBe(403);
