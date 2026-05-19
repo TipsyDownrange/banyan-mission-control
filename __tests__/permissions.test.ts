@@ -122,6 +122,43 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       expect(perms).not.toEqual(expect.arrayContaining(['DAILY_REPORT_WRITE']));
     }
   });
+
+  // CONTACTS-PERMISSIONS dispatch (2026-05-19) — Contacts defaults reproduce
+  // PR #187's CONTACTS_WRITE_ROLES set + the prior "any authenticated non-none
+  // role" view behavior exactly.
+  it('grants CONTACTS_WRITE to pm, business_admin, super_admin, service_pm, estimator, sales', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['CONTACTS_WRITE']),
+      );
+    }
+  });
+
+  it('denies CONTACTS_WRITE for roles outside the contacts management set', () => {
+    const writeRoles = new Set(['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (writeRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['CONTACTS_WRITE']));
+    }
+  });
+
+  it('grants CONTACTS_VIEW to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['CONTACTS_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['CONTACTS_VIEW']));
+    }
+  });
+
+  it('grants CONTACTS_WRITE implies CONTACTS_VIEW for every write role', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['CONTACTS_VIEW', 'CONTACTS_WRITE']),
+      );
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -138,6 +175,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'KB_SETUP',
       'DAILY_REPORT_VIEW',
       'DAILY_REPORT_WRITE',
+      'CONTACTS_VIEW',
+      'CONTACTS_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -330,6 +369,48 @@ describe('hasPermission', () => {
   it('returns false for DAILY_REPORT_VIEW / DAILY_REPORT_WRITE on none', () => {
     expect(hasPermission(session('none'), 'DAILY_REPORT_VIEW')).toBe(false);
     expect(hasPermission(session('none'), 'DAILY_REPORT_WRITE')).toBe(false);
+  });
+
+  // CONTACTS-PERMISSIONS dispatch (2026-05-19) — exercise the new CONTACTS_*
+  // permissions.
+  it('returns true for CONTACTS_WRITE on pm, business_admin, super_admin, service_pm, estimator, sales (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(hasPermission(session(role), 'CONTACTS_WRITE')).toBe(true);
+      expect(hasPermission(session(role), 'CONTACTS_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for CONTACTS_WRITE on roles outside the contacts management set', () => {
+    for (const role of ['field', 'admin', 'admin_mgr', 'pm_track', 'super', 'gm', 'owner', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'CONTACTS_WRITE')).toBe(false);
+    }
+  });
+
+  it('returns true for CONTACTS_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'CONTACTS_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for CONTACTS_VIEW on role=none', () => {
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'CONTACTS_VIEW')).toBe(false);
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening CONTACTS_WRITE to super', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['CONTACTS_VIEW', 'CONTACTS_WRITE'],
+      business_admin: ['CONTACTS_VIEW', 'CONTACTS_WRITE'],
+      super_admin: ['CONTACTS_VIEW', 'CONTACTS_WRITE'],
+      super: ['CONTACTS_VIEW', 'CONTACTS_WRITE'],
+    });
+    expect(hasPermission(session('super'), 'CONTACTS_WRITE')).toBe(true);
+    // Override doesn't grant CONTACTS_WRITE to field.
+    expect(hasPermission(session('field'), 'CONTACTS_WRITE')).toBe(false);
   });
 
   it('honors a ROLE_PERMISSIONS_JSON override widening KB_WRITE to field', () => {
