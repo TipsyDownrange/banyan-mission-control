@@ -3,13 +3,16 @@ import { redirect } from 'next/navigation';
 import WarRoomDashboard from '@/components/WarRoomDashboard';
 import { authOptions } from '@/lib/auth';
 import { getWarRoomDashboardData } from '@/lib/war-room/data';
+import { hasPermission } from '@/lib/permissions-gate';
 
 export default async function WarRoomPage() {
   const session = await getServerSession(authOptions);
-  const email = session?.user?.email?.toLowerCase() || '';
 
-  if (!session || !email.endsWith('@kulaglass.com')) {
+  if (!session) {
     redirect('/login');
+  }
+  if (!hasPermission(session, 'WARROOM_VIEW')) {
+    redirect('/?error=war_room_access');
   }
 
   const data = await getWarRoomDashboardData();
