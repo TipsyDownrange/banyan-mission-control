@@ -92,7 +92,9 @@ export type ActivitySpineEntityKind =
   // BAN-343 PM-V1.0-D — meeting log
   | 'meeting'
   // BAN-344 PM-V1.0-E — action item tracker (cross-source aggregator)
-  | 'action_item';
+  | 'action_item'
+  // BAN-345 PM-V1.0-F — Document Hub
+  | 'document';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;

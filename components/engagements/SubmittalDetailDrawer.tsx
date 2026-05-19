@@ -9,6 +9,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import LinkedDocumentsPanel from './LinkedDocumentsPanel';
 
 type Submittal = {
   submittal_id: string;
@@ -32,8 +33,9 @@ type Submittal = {
   spec_document_ref: string | null;
 };
 
-export default function SubmittalDetailDrawer({ submittalId, onClose, onChanged }: {
+export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onChanged }: {
   submittalId: string;
+  kID?: string;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -189,6 +191,14 @@ export default function SubmittalDetailDrawer({ submittalId, onClose, onChanged 
                 <input value={uploadDriveId} onChange={(e) => setUploadDriveId(e.target.value)} placeholder="Drive file ID" style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
                 <button type="button" disabled={busy} onClick={upload} style={actionBtn('#0f766e')}>Attach</button>
               </div>
+            </section>
+
+            <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+              <LinkedDocumentsPanel
+                linkedEntityType="SUBMITTAL"
+                linkedEntityId={s.submittal_id}
+                kID={kID ?? null}
+              />
             </section>
           </div>
         )}

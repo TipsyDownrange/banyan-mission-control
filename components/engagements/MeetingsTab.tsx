@@ -208,6 +208,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
       {openMeetingId && (
         <MeetingDetailDrawer
           meetingId={openMeetingId}
+          kID={kID}
           onClose={() => setOpenMeetingId(null)}
           onUpdated={fetchList}
         />

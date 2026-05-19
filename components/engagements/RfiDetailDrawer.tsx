@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import LinkedDocumentsPanel from './LinkedDocumentsPanel';
 
 type Rfi = {
   rfi_id: string;
@@ -32,8 +33,9 @@ type Rfi = {
   submitted_attachments: string[];
 };
 
-export default function RfiDetailDrawer({ rfiId, onClose, onChanged }: {
+export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
   rfiId: string;
+  kID?: string;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -248,6 +250,14 @@ export default function RfiDetailDrawer({ rfiId, onClose, onChanged }: {
                   Linked CO: <strong>{r.linked_change_order_id}</strong>
                 </div>
               )}
+            </section>
+
+            <section style={cardStyle}>
+              <LinkedDocumentsPanel
+                linkedEntityType="RFI"
+                linkedEntityId={r.rfi_id}
+                kID={kID ?? null}
+              />
             </section>
           </div>
         )}

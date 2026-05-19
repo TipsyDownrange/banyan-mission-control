@@ -413,6 +413,7 @@ export default function RfisTab({ kID }: { kID: string }) {
       {selectedRfiId && (
         <RfiDetailDrawer
           rfiId={selectedRfiId}
+          kID={kID}
           onClose={() => setSelectedRfiId(null)}
           onChanged={() => fetchList()}
         />
