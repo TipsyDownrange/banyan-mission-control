@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
-import { authOptions } from '@/lib/auth';
 import {
   buildWarRoomLinearDescription,
   buildWarRoomLinearIssuePayload,
   buildWarRoomLinearLabels,
   validateWarRoomTaskIntake,
 } from '@/lib/war-room/commandBridge';
+import { passWarRoomGate } from '@/lib/war-room/api-gate';
 
 const LINEAR_API_URL = 'https://api.linear.app/graphql';
 
@@ -25,12 +24,8 @@ interface LinearCreateIssueResponse {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email?.toLowerCase() || '';
-
-  if (!session || !email.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passWarRoomGate(request);
+  if (!gate.ok) return gate.response;
 
   let payload: unknown;
   try {
@@ -39,7 +34,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const validation = validateWarRoomTaskIntake(payload, email);
+  const validation = validateWarRoomTaskIntake(payload, gate.actorEmail);
   if (!validation.ok || !validation.intake) {
     return NextResponse.json({ error: 'Invalid War Room intake', details: validation.errors }, { status: 400 });
   }
