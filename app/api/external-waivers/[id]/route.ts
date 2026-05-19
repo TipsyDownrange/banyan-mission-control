@@ -12,6 +12,10 @@ import { db, external_lien_waiver_requests } from '@/db';
 import { passAiaApiGate } from '@/lib/aia/api-gate';
 import { passAiaReadGate } from '@/lib/aia/read-gate';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import {
+  dispatchSourceEvent,
+  resolveEngagementContext,
+} from '@/lib/pm/action-items/spine-subscriber';
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   REQUESTED: ['RECEIVED', 'VOIDED'],
@@ -133,6 +137,33 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     }
     return { newRow, eventId };
   });
+
+  // BAN-354 PM-V1.0-E.b — Action Item Tracker subscriber. Post-commit; only
+  // dispatches when a state transition emit actually happened. Wrapped in
+  // try/catch so a subscriber error never rolls back the source emit.
+  if (result.eventId && body.status && body.status !== row.status) {
+    try {
+      const engCtx = await resolveEngagementContext(gate.tenantId, result.newRow.engagement_id);
+      await dispatchSourceEvent({
+        eventType: 'EXTERNAL_LIEN_WAIVER_STATE_CHANGED',
+        entityKind: 'external_lien_waiver_request',
+        entityId: id,
+        tenantId: gate.tenantId,
+        engagementId: result.newRow.engagement_id,
+        kid: engCtx?.kid ?? null,
+        isTestProject: engCtx?.isTestProject ?? false,
+        metadata: {
+          from_state: row.status,
+          to_state: body.status,
+          waiver_type: row.waiver_type,
+          manufacturer_org_id: row.manufacturer_org_id,
+        },
+        actorEmail: gate.actorEmail,
+      });
+    } catch {
+      // Subscriber failure must never roll back the source emit.
+    }
+  }
 
   return NextResponse.json({
     ok: true,

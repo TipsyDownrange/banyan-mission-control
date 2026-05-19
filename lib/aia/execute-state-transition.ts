@@ -20,6 +20,10 @@ import {
   patternBEntityKindFor,
   type AiaPatternBEntity,
 } from './state-transitions';
+import {
+  dispatchSourceEvent,
+  resolveEngagementContext,
+} from '@/lib/pm/action-items/spine-subscriber';
 
 export interface ExecutePatternBTransitionInput {
   entity: AiaPatternBEntity;
@@ -54,8 +58,9 @@ export type ExecutePatternBTransitionResult =
 export async function executePatternBTransition(
   input: ExecutePatternBTransitionInput,
 ): Promise<ExecutePatternBTransitionResult> {
+  let txResult: ExecutePatternBTransitionResult;
   try {
-    return await db.transaction(async (tx) => {
+    txResult = await db.transaction(async (tx) => {
       const existing = await tx
         .select()
         .from(input.table)
@@ -148,4 +153,34 @@ export async function executePatternBTransition(
       message: err instanceof Error ? err.message : String(err),
     };
   }
+
+  // BAN-354 PM-V1.0-E.b — Action Item Tracker subscriber. Fires AFTER the
+  // source tx commits; wrapped in try/catch so a subscriber-side error
+  // (including the engagement-kid lookup) never rolls back the canonical
+  // Pattern B emit. Event types without a rule (sov_version, lien_waiver,
+  // tm_authorization) return { skipped: true, reason: 'no-rule-match' }.
+  if (txResult.ok) {
+    try {
+      const engCtx = await resolveEngagementContext(input.tenantId, input.engagementId);
+      await dispatchSourceEvent({
+        eventType: patternBEventTypeFor(input.entity),
+        entityKind: patternBEntityKindFor(input.entity),
+        entityId: input.pkValue,
+        tenantId: input.tenantId,
+        engagementId: input.engagementId,
+        kid: engCtx?.kid ?? null,
+        isTestProject: input.testData,
+        metadata: {
+          from_state: txResult.from_state,
+          to_state: txResult.to_state,
+          reason: input.reason ?? null,
+        },
+        actorEmail: input.actorEmail,
+      });
+    } catch {
+      // Subscriber failure must never propagate back to the source path.
+    }
+  }
+
+  return txResult;
 }
