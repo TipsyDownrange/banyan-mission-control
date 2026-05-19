@@ -1,11 +1,19 @@
 const mockGetServerSession = jest.fn();
 const mockCheckPermission = jest.fn();
+const mockPassPermissionGate = jest.fn();
 const mockSheets = jest.fn();
 const mockDrive = jest.fn();
 const mockFireAndForgetCustomerUpdate = jest.fn();
 
 jest.mock('next-auth', () => ({ getServerSession: mockGetServerSession }));
-jest.mock('@/lib/permissions', () => ({ checkPermission: mockCheckPermission }));
+jest.mock('@/lib/permissions', () => ({
+  checkPermission: mockCheckPermission,
+  // CONTACTS-PERMISSIONS dispatch (2026-05-19): contacts gate now delegates to
+  // passPermissionGate.  Default mock admits the test session (sean@kulaglass
+  // .com → super_admin) so the normalization assertions still exercise the
+  // route body.
+  passPermissionGate: mockPassPermissionGate,
+}));
 jest.mock('@/app/api/service/route', () => ({ invalidateCache: jest.fn() }));
 jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
 jest.mock('@/lib/backend-config', () => ({ getBackendSheetId: jest.fn(() => 'backend-sheet-test') }));
@@ -57,6 +65,7 @@ describe('BAN-144 write-boundary normalization', () => {
     jest.resetModules();
     mockSession();
     mockCheckPermission.mockResolvedValue({ allowed: true, role: 'super_admin', email: 'sean@kulaglass.com' });
+    mockPassPermissionGate.mockReturnValue({ ok: true, actorEmail: 'sean@kulaglass.com', role: 'super_admin' });
   });
 
   it('normalizes top-level contact name, email, and phone on create', async () => {
