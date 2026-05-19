@@ -2070,3 +2070,31 @@ export const pm_handoff_receipts = pgTable('pm_handoff_receipts', {
     sql`jsonb_typeof(${table.critical_gaps}) = 'array'`,
   ),
 ]);
+
+// BAN-348 PM-V1.0-I — User dashboard layouts (PM Overview Dashboard).
+// One row per (user_id, dashboard_kind).  Absent row → API serves the
+// seeded default layout for the user's role.  Drag-rearrange persistence
+// is pure UI state in Postgres; no LLM in the data path.
+export const userDashboardKindEnum = ['PM_OVERVIEW', 'SERVICE_PM_OVERVIEW', 'GM_OVERVIEW'] as const;
+
+export const user_dashboard_layouts = pgTable('user_dashboard_layouts', {
+  layout_id: uuid('layout_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  user_id: uuid('user_id').notNull().references(() => users.user_id),
+  dashboard_kind: text('dashboard_kind').notNull(),
+  layout_data: jsonb('layout_data').notNull().default(sql`'{}'::jsonb`),
+  visible_widgets: text('visible_widgets').array().notNull().default(sql`ARRAY[]::text[]`),
+  last_modified: timestamp('last_modified', { withTimezone: true }).notNull().defaultNow(),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('user_dashboard_layouts_user_kind_uidx').on(table.user_id, table.dashboard_kind),
+  index('user_dashboard_layouts_tenant_kind_idx').on(table.tenant_id, table.dashboard_kind),
+  check(
+    'user_dashboard_layouts_kind_check',
+    sql`${table.dashboard_kind} IN ('PM_OVERVIEW','SERVICE_PM_OVERVIEW','GM_OVERVIEW')`,
+  ),
+  check(
+    'user_dashboard_layouts_layout_is_object',
+    sql`jsonb_typeof(${table.layout_data}) = 'object'`,
+  ),
+]);

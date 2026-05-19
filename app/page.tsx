@@ -35,11 +35,13 @@ import KnowledgeLibraryPanel from '@/components/KnowledgeLibraryPanel';
 import SuperSchedulingPanel from '@/components/SuperSchedulingPanel';
 import ForecastingPanel from '@/components/ForecastingPanel';
 import LogisticsPanel from '@/components/LogisticsPanel';
+import PMDashboardPanel from '@/components/pm/PMDashboardPanel';
 import { useState, useEffect } from 'react';
 
 export type AppView =
   | 'Today' | 'Inbox' | 'Calendar'
   | 'Overview' | 'Forecasting' | 'Scheduling' | 'Dispatch Board' | 'Schedule' | 'Event Feed' | 'Issues'
+  | 'PM Dashboard'
   | 'Projects' | 'Schedules' | 'Submittals' | 'Budget' | 'Change Orders'
   | 'Crew' | 'Customers' | 'Assets' | 'Org Chart'
   | 'Bid Intake' | 'Bid Queue' | 'My Bids' | 'Estimating Workspace'
@@ -91,6 +93,13 @@ export default function Home() {
   useEffect(() => {
     const woParam = new URLSearchParams(window.location.search).get('wo');
     if (woParam) setActiveView('Work Orders');
+  }, []);
+
+  // BAN-348: deep-link restore — if ?view= is in the URL on mount, switch to it
+  // (used by /pm/dashboard which redirects here with ?view=PM%20Dashboard).
+  useEffect(() => {
+    const viewParam = new URLSearchParams(window.location.search).get('view');
+    if (viewParam) setActiveView(viewParam as AppView);
   }, []);
   const [projectsList, setProjectsList] = useState<{kID:string;name:string}[]>([]);
 
@@ -237,6 +246,7 @@ export default function Home() {
           </div>
         )}
 
+        {activeView === 'PM Dashboard'  && <PMDashboardPanel />}
         {activeView === 'Today'         && <TodayPanel onNavigate={(view) => setActiveView(view as AppView)} />}
         {activeView === 'Inbox'         && <InboxPanel />}
         {activeView === 'Calendar'      && <CalendarPanel />}
