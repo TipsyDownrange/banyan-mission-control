@@ -4,7 +4,6 @@
  * GC-D021: reads project + crew data fresh at generation time.
  */
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { generateDailyReportPDF, type DailyReportPDFData } from '@/lib/pdf-daily-report';
@@ -12,6 +11,7 @@ import { formatAttributionCaption, type PhotoEntry } from '@/lib/photo-attributi
 import { getBackendSheetId } from '@/lib/backend-config';
 import { isStaging } from '@/lib/env';
 import { resolveStagingDriveParentId } from '@/lib/drive-wo-folder';
+import { passDailyReportAuthGate } from '@/lib/daily-report/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -140,17 +140,13 @@ async function uploadToDrive(pdfBuffer: Buffer, filename: string, woFolderId: st
 
 export async function POST(req: Request) {
   // Auth: valid MC session (same-origin) OR shared internal key (FA server-to-server)
-  const internalKey = process.env.INTERNAL_API_KEY;
-  const reqKey = req.headers.get('X-Internal-Key');
   const incomingKey = req.headers.get('X-Internal-Key') || '';
   const envKey = process.env.INTERNAL_API_KEY || '';
   console.log('[daily-report/pdf] KEY CHECK incoming_prefix=' + incomingKey.slice(0,4) + ' incoming_len=' + incomingKey.length + ' env_prefix=' + envKey.slice(0,4) + ' env_len=' + envKey.length + ' match=' + (incomingKey === envKey));
   const keyMatch = incomingKey.length > 0 && incomingKey.trim() === envKey.trim();
   if (!keyMatch) {
-    const session = await getServerSession();
-    if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const gate = await passDailyReportAuthGate(req);
+    if (!gate.ok) return gate.response;
   }
 
   const { searchParams } = new URL(req.url);
