@@ -3,13 +3,18 @@
  * Verifies that editing planned_start_date returns drift_warnings when committed
  * Dispatch_Schedule slots reference the step on a different date.
  * No live Google Sheets writes.
+ *
+ * WORK-BREAKDOWN-PERMISSIONS dispatch (2026-05-19): switched the auth mock
+ * from `@/lib/permissions.checkPermission` to next-auth's `getServerSession`
+ * since the work-breakdown gate now delegates to passPermissionGate(session,
+ * 'WORK_BREAKDOWN_WRITE').
  */
 
-const mockCheckPermission = jest.fn();
+const mockGetServerSession = jest.fn();
 const mockSheets = jest.fn();
 
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
+jest.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => mockGetServerSession(...args),
 }));
 jest.mock('googleapis', () => ({ google: { sheets: mockSheets } }));
 jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
@@ -24,7 +29,7 @@ jest.mock('@/lib/schemas', () => ({
   INSTALL_STEPS_SCHEMA: [],
 }));
 
-// ─── Fixtures ─────────────────────────────────────────────────────────────────
+// ─── Fixtures ──────────────────────────────────────────────────────────────
 
 const STEP_ID = 'IS-TEST-001';
 
@@ -89,13 +94,17 @@ function setupSheets(dispatchRows: string[][]): ValuesClient {
   return { valuesGet, valuesUpdate };
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('work-breakdown PATCH type:step — BAN-93 Gate 4 drift detection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-    mockCheckPermission.mockResolvedValue({ allowed: true, role: 'pm', email: 'sean@kulaglass.com' });
+    mockGetServerSession.mockResolvedValue({ user: { email: 'sean@kulaglass.com', role: 'pm' } });
+    delete process.env.ROLE_PERMISSIONS_JSON;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const perms = require('@/lib/permissions');
+    perms.resetRolePermissionsCacheForTests();
   });
 
   // ── 1. No drift: slot date matches new planned_start_date ─────────────────
@@ -118,7 +127,7 @@ describe('work-breakdown PATCH type:step — BAN-93 Gate 4 drift detection', () 
     expect(json.drift_warnings).toBeUndefined();
   });
 
-  // ── 2. Single drift: one slot on a different date ─────────────────────────
+  // ── 2. Single drift: one slot on a different date ───────────────────────
   it('returns one drift_warning when a committed slot references the step on a different date', async () => {
     // Slot committed on 2026-05-07; step is being moved to 2026-05-12
     setupSheets([
@@ -221,7 +230,7 @@ describe('work-breakdown PATCH type:step — BAN-93 Gate 4 drift detection', () 
     expect(json.drift_warnings[0].slot_id).toBe('SLOT-20260507-001');
   });
 
-  // ── 6. Drift check failure is non-fatal ───────────────────────────────────
+  // ── 6. Drift check failure is non-fatal ───────────────────────────────
   it('returns ok:true without drift_warnings when Dispatch_Schedule read throws', async () => {
     const valuesGet = jest.fn()
       .mockResolvedValueOnce({ data: { values: [makeStepRow()] } }) // Install_Steps
