@@ -1,22 +1,27 @@
 /**
  * MC-AUTH-PHASE2-WORK-BREAKDOWN — Work Breakdown auth migration route tests.
  *
- * Confirms /api/work-breakdown/[jobId] (GET / POST / PATCH / DELETE) enforces
- * the canonical role gate defined in lib/work-breakdown/api-gate.ts and
- * rejects insufficient sessions with 401 / 403 while permitting the
- * documented roles.  This is the last module-level migration in the
- * BAN-355 follow-up chain (mirrors PR #187/189/190/191).
+ * WORK-BREAKDOWN-PERMISSIONS dispatch (2026-05-19): updated to drive the new
+ * RolePermission system in lib/permissions.ts instead of the legacy
+ * WORK_BREAKDOWN_WRITE_ROLES set (PR #193).  The gates now resolve role via
+ * next-auth's getServerSession + passPermissionGate(WORK_BREAKDOWN_*), so
+ * each test stamps the role directly on `session.user` and the real
+ * passPermissionGate / hasPermission logic runs.
  *
- * Mocks @/lib/permissions so the suite can exercise the gate without
- * standing up next-auth.  Mocks googleapis + the project's helper
- * modules to keep route handlers off the live Sheets / event bus.
+ * Confirms /api/work-breakdown/[jobId] (GET / POST / PATCH / DELETE) enforces
+ * the canonical permission gate defined in lib/work-breakdown/api-gate.ts and
+ * rejects insufficient sessions with 401 / 403 while permitting the
+ * documented roles.
+ *
+ * Mocks googleapis + the project's helper modules to keep route handlers off
+ * the live Sheets / event bus.
  */
 
 export {};
 
-const mockCheckPermission = jest.fn();
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
+const mockGetServerSession = jest.fn();
+jest.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => mockGetServerSession(...args),
 }));
 
 jest.mock('@/lib/backend-config', () => ({
@@ -63,8 +68,10 @@ jest.mock('googleapis', () => ({
   },
 }));
 
-function permResult(role: string, email: string | null = role === 'none' ? null : `${role}@kulaglass.com`) {
-  return { allowed: true, role, email };
+function wbSession(role: string | null, email?: string | null) {
+  if (role === null) return null;
+  const resolvedEmail = email ?? `${role}@kulaglass.com`;
+  return { user: { email: resolvedEmail, role } };
 }
 
 const JOB_ID = 'WO-26-0001';
@@ -86,62 +93,66 @@ beforeEach(() => {
   // Default Sheets stub: empty plans/steps/completions/headers; routes that need
   // specific row fixtures override per-test.
   mockValuesGet.mockResolvedValue({ data: { values: [] } });
+  delete process.env.ROLE_PERMISSIONS_JSON;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const perms = require('@/lib/permissions');
+  perms.resetRolePermissionsCacheForTests();
 });
 
-// ═══ GET /api/work-breakdown/[jobId] — auth gate (any signed-in user) ═══════
+// ═══ GET /api/work-breakdown/[jobId] — auth gate (WORK_BREAKDOWN_VIEW) ══════
 
 describe('GET /api/work-breakdown/[jobId] — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 for role=none (signed in but not on roster)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', 'unknown@kulaglass.com'));
+  it('returns 403 for role=none (signed in but not on roster)', async () => {
+    mockGetServerSession.mockResolvedValue(wbSession('none', 'unknown@kulaglass.com'));
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns 200 for field role (any authenticated user can read)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(wbSession('field'));
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('pm'));
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('service_pm'));
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for estimator (WOEstimatePanel read path)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(wbSession('estimator'));
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(wbSession('super_admin'));
     const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await GET(jsonRequest('GET'), paramsFor());
     expect(res.status).toBe(200);
   });
 });
 
-// ═══ POST /api/work-breakdown/[jobId] — write gate ══════════════════════════
+// ═══ POST /api/work-breakdown/[jobId] — write gate (WORK_BREAKDOWN_WRITE) ═══
 
 describe('POST /api/work-breakdown/[jobId] — write gate', () => {
   const planBody = {
@@ -153,70 +164,70 @@ describe('POST /api/work-breakdown/[jobId] — write gate', () => {
   };
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(wbSession('field'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for super (Field Superintendent) — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super'));
+    mockGetServerSession.mockResolvedValue(wbSession('super'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for sales — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('sales'));
+    mockGetServerSession.mockResolvedValue(wbSession('sales'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('pm'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('service_pm'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for estimator', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(wbSession('estimator'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for business_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('business_admin'));
+    mockGetServerSession.mockResolvedValue(wbSession('business_admin'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(wbSession('super_admin'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('threads the gate actorEmail through to emitMCEvent submitted_by', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm', 'pm-user@kulaglass.com'));
+    mockGetServerSession.mockResolvedValue(wbSession('pm', 'pm-user@kulaglass.com'));
     const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await POST(jsonRequest('POST', planBody), paramsFor());
     expect(res.status).toBe(200);
@@ -238,42 +249,42 @@ describe('PATCH /api/work-breakdown/[jobId] — write gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { PATCH } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await PATCH(jsonRequest('PATCH', planPatch), paramsFor());
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(wbSession('field'));
     const { PATCH } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await PATCH(jsonRequest('PATCH', planPatch), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for super (Field Superintendent) — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super'));
+    mockGetServerSession.mockResolvedValue(wbSession('super'));
     const { PATCH } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await PATCH(jsonRequest('PATCH', planPatch), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('pm'));
     const { PATCH } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await PATCH(jsonRequest('PATCH', planPatch), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('service_pm'));
     const { PATCH } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await PATCH(jsonRequest('PATCH', planPatch), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for estimator', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(wbSession('estimator'));
     const { PATCH } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await PATCH(jsonRequest('PATCH', planPatch), paramsFor());
     expect(res.status).toBe(200);
@@ -292,42 +303,42 @@ describe('DELETE /api/work-breakdown/[jobId] — write gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(null);
     const { DELETE } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await DELETE(jsonRequest('DELETE', deleteBody), paramsFor());
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(wbSession('field'));
     const { DELETE } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await DELETE(jsonRequest('DELETE', deleteBody), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for super (Field Superintendent) — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super'));
+    mockGetServerSession.mockResolvedValue(wbSession('super'));
     const { DELETE } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await DELETE(jsonRequest('DELETE', deleteBody), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for admin role — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('admin'));
+    mockGetServerSession.mockResolvedValue(wbSession('admin'));
     const { DELETE } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await DELETE(jsonRequest('DELETE', deleteBody), paramsFor());
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('pm'));
     const { DELETE } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await DELETE(jsonRequest('DELETE', deleteBody), paramsFor());
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(wbSession('super_admin'));
     const { DELETE } = await import('@/app/api/work-breakdown/[jobId]/route');
     const res = await DELETE(jsonRequest('DELETE', deleteBody), paramsFor());
     expect(res.status).toBe(200);
@@ -336,7 +347,7 @@ describe('DELETE /api/work-breakdown/[jobId] — write gate', () => {
 
 // ═══ Role set sanity ════════════════════════════════════════════════════════
 
-describe('WORK_BREAKDOWN_WRITE_ROLES role set', () => {
+describe('WORK_BREAKDOWN_WRITE_ROLES role set (legacy export)', () => {
   it('contains exactly pm, service_pm, estimator, business_admin, super_admin', async () => {
     const { WORK_BREAKDOWN_WRITE_ROLES } = await import('@/lib/work-breakdown/api-gate');
     expect(Array.from(WORK_BREAKDOWN_WRITE_ROLES).sort()).toEqual([
@@ -352,24 +363,24 @@ describe('WORK_BREAKDOWN_WRITE_ROLES role set', () => {
 // ═══ Gate behavior — direct calls ═══════════════════════════════════════════
 
 describe('passWorkBreakdownAuthGate — direct gate calls', () => {
-  it('returns 401 when no email', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+  it('returns 401 when no session', async () => {
+    mockGetServerSession.mockResolvedValue(null);
     const { passWorkBreakdownAuthGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownAuthGate(new Request('http://t/x'));
     expect(gate.ok).toBe(false);
     if (!gate.ok) expect(gate.response.status).toBe(401);
   });
 
-  it('returns 401 when role is none even if email present', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', 'unknown@kulaglass.com'));
+  it('returns 403 when role is none even if email present', async () => {
+    mockGetServerSession.mockResolvedValue(wbSession('none', 'unknown@kulaglass.com'));
     const { passWorkBreakdownAuthGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownAuthGate(new Request('http://t/x'));
     expect(gate.ok).toBe(false);
-    if (!gate.ok) expect(gate.response.status).toBe(401);
+    if (!gate.ok) expect(gate.response.status).toBe(403);
   });
 
   it('permits pm with email', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('pm'));
     const { passWorkBreakdownAuthGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownAuthGate(new Request('http://t/x'));
     expect(gate.ok).toBe(true);
@@ -377,8 +388,8 @@ describe('passWorkBreakdownAuthGate — direct gate calls', () => {
 });
 
 describe('passWorkBreakdownWriteGate — direct gate calls', () => {
-  it('returns 401 when no email', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+  it('returns 401 when no session', async () => {
+    mockGetServerSession.mockResolvedValue(null);
     const { passWorkBreakdownWriteGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownWriteGate(new Request('http://t/x'));
     expect(gate.ok).toBe(false);
@@ -386,7 +397,7 @@ describe('passWorkBreakdownWriteGate — direct gate calls', () => {
   });
 
   it('returns 403 for field role (not in write set)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(wbSession('field'));
     const { passWorkBreakdownWriteGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownWriteGate(new Request('http://t/x'));
     expect(gate.ok).toBe(false);
@@ -394,7 +405,7 @@ describe('passWorkBreakdownWriteGate — direct gate calls', () => {
   });
 
   it('returns 403 for super (not in write set)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super'));
+    mockGetServerSession.mockResolvedValue(wbSession('super'));
     const { passWorkBreakdownWriteGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownWriteGate(new Request('http://t/x'));
     expect(gate.ok).toBe(false);
@@ -402,16 +413,63 @@ describe('passWorkBreakdownWriteGate — direct gate calls', () => {
   });
 
   it('permits estimator', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(wbSession('estimator'));
     const { passWorkBreakdownWriteGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownWriteGate(new Request('http://t/x'));
     expect(gate.ok).toBe(true);
   });
 
   it('permits service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(wbSession('service_pm'));
     const { passWorkBreakdownWriteGate } = await import('@/lib/work-breakdown/api-gate');
     const gate = await passWorkBreakdownWriteGate(new Request('http://t/x'));
     expect(gate.ok).toBe(true);
+  });
+});
+
+// ═══ WORK-BREAKDOWN-PERMISSIONS dispatch — new RolePermission coverage ═════
+
+describe('WORK_BREAKDOWN_VIEW / WORK_BREAKDOWN_WRITE — env override', () => {
+  it('honors ROLE_PERMISSIONS_JSON widening WORK_BREAKDOWN_WRITE to super', async () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      service_pm: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      estimator: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      business_admin: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      super_admin: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      // Widen super (field) to write.
+      super: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+    });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const perms = require('@/lib/permissions');
+    perms.resetRolePermissionsCacheForTests();
+
+    mockGetServerSession.mockResolvedValue(wbSession('super'));
+    const { POST } = await import('@/app/api/work-breakdown/[jobId]/route');
+    const res = await POST(jsonRequest('POST', {
+      type: 'plan',
+      system_type: 'Glazing',
+      location: 'A1',
+      estimated_total_hours: 4,
+      estimated_qty: 1,
+    }), paramsFor());
+    expect(res.status).toBe(200);
+  });
+
+  it('honors ROLE_PERMISSIONS_JSON narrowing WORK_BREAKDOWN_VIEW (field denied)', async () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      business_admin: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      super_admin: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      // field omitted → no WORK_BREAKDOWN_VIEW.
+    });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const perms = require('@/lib/permissions');
+    perms.resetRolePermissionsCacheForTests();
+
+    mockGetServerSession.mockResolvedValue(wbSession('field'));
+    const { GET } = await import('@/app/api/work-breakdown/[jobId]/route');
+    const res = await GET(jsonRequest('GET'), paramsFor());
+    expect(res.status).toBe(403);
   });
 });

@@ -3,13 +3,18 @@
  * Verifies that editing planned_start_date returns drift_warnings when committed
  * Dispatch_Schedule slots reference the step on a different date.
  * No live Google Sheets writes.
+ *
+ * WORK-BREAKDOWN-PERMISSIONS dispatch (2026-05-19): switched the auth mock
+ * from `@/lib/permissions.checkPermission` to next-auth's `getServerSession`
+ * since the work-breakdown gate now delegates to passPermissionGate(session,
+ * 'WORK_BREAKDOWN_WRITE').
  */
 
-const mockCheckPermission = jest.fn();
+const mockGetServerSession = jest.fn();
 const mockSheets = jest.fn();
 
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
+jest.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => mockGetServerSession(...args),
 }));
 jest.mock('googleapis', () => ({ google: { sheets: mockSheets } }));
 jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
@@ -95,7 +100,11 @@ describe('work-breakdown PATCH type:step — BAN-93 Gate 4 drift detection', () 
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-    mockCheckPermission.mockResolvedValue({ allowed: true, role: 'pm', email: 'sean@kulaglass.com' });
+    mockGetServerSession.mockResolvedValue({ user: { email: 'sean@kulaglass.com', role: 'pm' } });
+    delete process.env.ROLE_PERMISSIONS_JSON;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const perms = require('@/lib/permissions');
+    perms.resetRolePermissionsCacheForTests();
   });
 
   // ── 1. No drift: slot date matches new planned_start_date ─────────────────

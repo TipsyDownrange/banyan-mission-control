@@ -190,7 +190,10 @@ export type RolePermission =
   | 'ORG_WRITE'
   // Suggestions (peer migration)
   | 'SUGGESTIONS_VIEW'
-  | 'SUGGESTIONS_REVIEW';
+  | 'SUGGESTIONS_REVIEW'
+  // Work Breakdown (peer migration)
+  | 'WORK_BREAKDOWN_VIEW'
+  | 'WORK_BREAKDOWN_WRITE';
 
 export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   'WARROOM_VIEW',
@@ -211,6 +214,9 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   // Suggestions (peer migration)
   'SUGGESTIONS_VIEW',
   'SUGGESTIONS_REVIEW',
+  // Work Breakdown (peer migration)
+  'WORK_BREAKDOWN_VIEW',
+  'WORK_BREAKDOWN_WRITE',
 ];
 
 /**
@@ -235,29 +241,37 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
  *   - Suggestions review: pm, business_admin, super_admin, service_pm
  *       (preserves PR #190 SUGGESTIONS_REVIEW_ROLES exactly; PM/admin
  *       triage queue scope).
+ *   - Work Breakdown view: every documented role except 'none' (preserves
+ *       passWorkBreakdownAuthGate behavior — multiple read-only panels
+ *       render WorkBreakdown).
+ *   - Work Breakdown write: pm, service_pm, estimator, business_admin,
+ *       super_admin (preserves PR #193 WORK_BREAKDOWN_WRITE_ROLES exactly;
+ *       operational PM scope, no field/sales).
  */
 export const ROLE_PERMISSIONS_DEFAULTS: Record<string, RolePermission[]> = {
-  // Daily Report + Contacts + Organizations + Suggestions (peer migrations):
-  // VIEW grants are broad (every documented role except 'none').  Daily Report
-  // WRITE: pm, business_admin, super_admin, service_pm, super (PR #191 set).
-  // Contacts WRITE: pm, business_admin, super_admin, service_pm, estimator,
-  // sales (PR #187 set).  Org WRITE: pm, business_admin, super_admin,
-  // service_pm, estimator, sales (PR #189 set — matches contacts).
+  // Daily Report + Contacts + Organizations + Suggestions + Work Breakdown
+  // (peer migrations): VIEW grants are broad (every documented role except
+  // 'none').  Daily Report WRITE: pm, business_admin, super_admin, service_pm,
+  // super (PR #191).  Contacts WRITE: pm, business_admin, super_admin,
+  // service_pm, estimator, sales (PR #187).  Org WRITE: pm, business_admin,
+  // super_admin, service_pm, estimator, sales (PR #189 — matches contacts).
   // Suggestions REVIEW: pm, business_admin, super_admin, service_pm (PR #190).
-  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
-  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
-  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
-  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
-  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW'],
-  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
-  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW'],
-  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW'],
+  // Work Breakdown WRITE: pm, service_pm, estimator, business_admin,
+  // super_admin (PR #193 — operational PM, no field/sales).
+  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
   none:           [],
 };
 
