@@ -853,6 +853,7 @@ export const pay_applications = pgTable('pay_applications', {
   // the PROGRESS variants. Default false; flipped from the PM UI when the
   // project closes out.
   is_final_pay_app: boolean('is_final_pay_app').notNull().default(false),
+  pdf_drive_id: text('pdf_drive_id'),
   created_by: uuid('created_by').references(() => users.user_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

@@ -2,15 +2,9 @@
  * BAN-336 Pay App Core — POST /api/pay-apps/[id]/generate-pdf
  *
  * Renders the pay app PDF in whichever format the pay_applications row is
- * configured for. Returns the PDF buffer inline (application/pdf). Drive
- * upload happens out-of-band — the response body Content-Disposition
- * filename is the canonical name the caller should use when saving under
- * `Pay Apps/{Pay App #}/`.
- *
- * (Drive folder upload deferred — staging+sandbox don't have the Drive
- * service-account credentials available; the route returns the buffer so
- * the UI can offer "Download" + so the cron lane can upload server-side
- * once Drive is wired.)
+ * configured for. Uploads the generated PDF to the engagement Drive folder
+ * when Drive is configured; otherwise returns the PDF buffer inline so the
+ * operator can still download the artifact.
  */
 
 import { NextResponse } from 'next/server';
@@ -30,8 +24,40 @@ import {
   type PayAppPdfFormat,
   type PayAppPdfLine,
 } from '@/lib/aia/pay-app-pdf';
+import {
+  ensurePayAppFolders,
+  resolveEngagementDriveFolderId,
+  uploadBufferToDrive,
+} from '@/lib/aia/drive-pay-app-folders';
 
 const HI_GET_RATE = 0.04712;
+const DRIVE_NOT_CONFIGURED_CODE = 'DRIVE_SERVICE_ACCOUNT_NOT_CONFIGURED';
+
+function hasDriveServiceAccountConfig(): boolean {
+  return !!process.env.GOOGLE_SA_KEY_B64?.trim();
+}
+
+function pdfResponse(
+  buffer: Buffer,
+  filename: string,
+  id: string,
+  format: PayAppPdfFormat,
+  driveTargetPath: string,
+  extraHeaders: Record<string, string> = {},
+) {
+  const ab = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  return new NextResponse(ab as ArrayBuffer, {
+    status: 200,
+    headers: {
+      'content-type': 'application/pdf',
+      'content-disposition': `attachment; filename="${filename}"`,
+      'x-pay-app-id': id,
+      'x-pay-app-format': format,
+      'x-drive-target-path': driveTargetPath,
+      ...extraHeaders,
+    },
+  });
+}
 
 export async function POST(
   req: Request,
@@ -64,7 +90,10 @@ export async function POST(
       ))
       .orderBy(pay_app_line_items.line_number),
     db
-      .select({ kid: engagements.kid })
+      .select({
+        kid: engagements.kid,
+        drive_folder_id: engagements.drive_folder_id,
+      })
       .from(engagements)
       .where(eq(engagements.engagement_id, payApp.engagement_id))
       .limit(1),
@@ -148,15 +177,77 @@ export async function POST(
   });
 
   const filename = `PayApp-${eng[0]?.kid ?? ''}-${String(payApp.pay_app_number).padStart(3, '0')}.pdf`;
-  const ab = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-  return new NextResponse(ab as ArrayBuffer, {
-    status: 200,
-    headers: {
-      'content-type': 'application/pdf',
-      'content-disposition': `attachment; filename="${filename}"`,
-      'x-pay-app-id': id,
-      'x-pay-app-format': format,
-      'x-drive-target-path': `Pay Apps/${payApp.pay_app_number}/${filename}`,
-    },
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const driveFilename = `${timestamp}-pay-app-${payApp.pay_app_number}.pdf`;
+  const driveTargetPath = `Pay Apps/${payApp.pay_app_number}/${driveFilename}`;
+  const engFolderId = resolveEngagementDriveFolderId({
+    drive_folder_id: eng[0]?.drive_folder_id ?? null,
   });
+
+  if (!engFolderId) {
+    return pdfResponse(buffer, filename, id, format, driveTargetPath, {
+      'x-drive-warning': 'drive_folder_not_configured',
+    });
+  }
+
+  if (!hasDriveServiceAccountConfig()) {
+    return NextResponse.json(
+      {
+        error: 'Drive service account is not configured',
+        code: DRIVE_NOT_CONFIGURED_CODE,
+        drive_target_path: driveTargetPath,
+      },
+      {
+        status: 503,
+        headers: {
+          'x-pay-app-id': id,
+          'x-pay-app-format': format,
+          'x-drive-target-path': driveTargetPath,
+        },
+      },
+    );
+  }
+
+  try {
+    const folders = await ensurePayAppFolders(engFolderId, payApp.pay_app_number);
+    const uploaded = await uploadBufferToDrive(
+      folders.pay_app_folder_id,
+      driveFilename,
+      'application/pdf',
+      buffer,
+    );
+
+    await db
+      .update(pay_applications)
+      .set({ pdf_drive_id: uploaded.drive_file_id })
+      .where(and(
+        eq(pay_applications.pay_app_id, id),
+        eq(pay_applications.tenant_id, gate.tenantId),
+      ));
+
+    const driveViewUrl = `https://drive.google.com/file/d/${uploaded.drive_file_id}/view`;
+    return NextResponse.json(
+      {
+        ok: true,
+        pay_app_id: id,
+        filename: driveFilename,
+        drive_file_id: uploaded.drive_file_id,
+        drive_view_url: driveViewUrl,
+        drive_target_path: driveTargetPath,
+      },
+      {
+        headers: {
+          'x-pay-app-id': id,
+          'x-pay-app-format': format,
+          'x-drive-target-path': driveTargetPath,
+          'x-drive-file-id': uploaded.drive_file_id,
+        },
+      },
+    );
+  } catch (err) {
+    console.error('Pay app PDF Drive upload failed:', err);
+    return pdfResponse(buffer, filename, id, format, driveTargetPath, {
+      'x-drive-warning': 'drive_upload_failed_pdf_returned_only',
+    });
+  }
 }
