@@ -94,7 +94,9 @@ export type ActivitySpineEntityKind =
   // BAN-344 PM-V1.0-E — action item tracker (cross-source aggregator)
   | 'action_item'
   // BAN-345 PM-V1.0-F — Document Hub
-  | 'document';
+  | 'document'
+  // BAN-346 PM-V1.0-G — PM Handoff Receipt
+  | 'handoff_receipt';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;
