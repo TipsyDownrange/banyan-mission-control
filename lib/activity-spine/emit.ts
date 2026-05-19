@@ -90,7 +90,10 @@ export type ActivitySpineEntityKind =
   | 'external_lien_waiver_request'
   | 'gc_required_docs_checklist'
   // BAN-343 PM-V1.0-D — meeting log
-  | 'meeting';
+  | 'meeting'
+  // BAN-344a PM-V1.0-E (CORE) — action item tracker (manual creation surface
+  // in 344a; subscriber pattern lands in 344b without changing this kind).
+  | 'action_item';
 
 export interface ActivitySpineEmitInput {
   event_type: ActivitySpineEventType | string;
