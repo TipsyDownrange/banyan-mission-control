@@ -13,6 +13,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import PunchListItemDetailCard, { type PunchListItem } from './PunchListItemDetailCard';
 import { PUNCH_LIST_STATUS_VALUES, type PunchListItemStatus } from './PunchListStatusBadge';
+import { EmptyState } from '@/components/design-system';
 
 export const PUNCH_LIST_SOURCE_VALUES = [
   'FIELD_ISSUE', 'SUBSTANTIAL_WALKTHROUGH', 'GC_TRANSMITTAL',
@@ -185,12 +186,11 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{
-          background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
-          padding: '40px 24px', textAlign: 'center',
-          fontSize: 13, color: '#94a3b8',
-        }}>
-          No items match the current filters.
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0' }}>
+          <EmptyState
+            icon={<span style={{ fontSize: 24 }}>📋</span>}
+            heading="No items match the current filters."
+          />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

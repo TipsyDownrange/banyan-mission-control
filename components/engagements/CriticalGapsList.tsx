@@ -6,6 +6,8 @@
  * When editable, exposes inline status updates and remove controls.
  */
 
+import { EmptyState, StatusPill, type StatusPillVariant } from '@/components/design-system';
+
 export type CriticalGap = {
   gap_id: string;
   gap_type: string;
@@ -20,6 +22,13 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   WAIVED:       { bg: '#f1f5f9', fg: '#475569' },
 };
 
+const STATUS_PILL_VARIANT: Record<CriticalGap['status'], StatusPillVariant> = {
+  OPEN:         'error',
+  ACKNOWLEDGED: 'warn',
+  RESOLVED:     'success',
+  WAIVED:       'info',
+};
+
 export default function CriticalGapsList({
   gaps,
   editable = false,
@@ -31,8 +40,11 @@ export default function CriticalGapsList({
 }) {
   if (!gaps || gaps.length === 0) {
     return (
-      <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12 }}>
-        No critical gaps reported.
+      <div style={{ background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+        <EmptyState
+          icon={<span style={{ fontSize: 20 }}>✓</span>}
+          heading="No critical gaps reported."
+        />
       </div>
     );
   }
@@ -70,9 +82,9 @@ export default function CriticalGapsList({
                   ))}
                 </select>
               ) : (
-                <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800, color: s.fg, background: s.bg }}>
+                <StatusPill variant={STATUS_PILL_VARIANT[g.status] ?? 'info'}>
                   {g.status}
-                </span>
+                </StatusPill>
               )}
               {editable && onChange && (
                 <button

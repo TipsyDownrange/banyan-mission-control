@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { countOpenFieldIssues, isOpenFieldIssue } from '@/lib/field-issues';
+import { EmptyState } from '@/components/design-system';
 
 type Issue = {
   id: string; kID: string; projectName: string; type: string;
@@ -194,14 +195,12 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
       {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 20 }}>{error}</div>}
 
       {!loading && filteredIssues.length === 0 && !error && (
-        <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: 20, marginBottom: 8, color: '#14b8a6' }}>✓</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
-            {filter === 'all' ? 'No issues found' : `No ${filter} issues`}
-          </div>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>
-            {filter === 'all' ? 'Field issues logged by crew will appear here.' : 'Try a different filter.'}
-          </div>
+        <div style={{ borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
+          <EmptyState
+            icon={<span style={{ fontSize: 20, color: '#14b8a6' }}>✓</span>}
+            heading={filter === 'all' ? 'No issues found' : `No ${filter} issues`}
+            body={filter === 'all' ? 'Field issues logged by crew will appear here.' : 'Try a different filter.'}
+          />
         </div>
       )}
 
