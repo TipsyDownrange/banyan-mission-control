@@ -197,6 +197,125 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       );
     }
   });
+
+  // SUGGESTIONS-PERMISSIONS dispatch (2026-05-19) — Suggestions defaults
+  // reproduce PR #190's SUGGESTIONS_REVIEW_ROLES exactly + the prior universal
+  // SuggestionButton submit behavior (every authenticated role).
+  it('grants SUGGESTIONS_REVIEW to pm, business_admin, super_admin, service_pm', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SUGGESTIONS_REVIEW']),
+      );
+    }
+  });
+
+  it('denies SUGGESTIONS_REVIEW for roles outside the review management set', () => {
+    const reviewRoles = new Set(['pm', 'business_admin', 'super_admin', 'service_pm']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (reviewRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['SUGGESTIONS_REVIEW']));
+    }
+  });
+
+  it('grants SUGGESTIONS_VIEW to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['SUGGESTIONS_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['SUGGESTIONS_VIEW']));
+    }
+  });
+
+  it('grants SUGGESTIONS_REVIEW implies SUGGESTIONS_VIEW for every review role', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW']),
+      );
+    }
+  });
+
+  // WORK-BREAKDOWN-PERMISSIONS dispatch (2026-05-19) — Work Breakdown defaults
+  // reproduce PR #193's WORK_BREAKDOWN_WRITE_ROLES exactly (operational PM, no
+  // field/sales) + the prior "any authenticated non-none role" view behavior.
+  it('grants WORK_BREAKDOWN_WRITE to pm, service_pm, estimator, business_admin, super_admin', () => {
+    for (const role of ['pm', 'service_pm', 'estimator', 'business_admin', 'super_admin']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['WORK_BREAKDOWN_WRITE']),
+      );
+    }
+  });
+
+  it('denies WORK_BREAKDOWN_WRITE for roles outside the operational PM set', () => {
+    const writeRoles = new Set(['pm', 'service_pm', 'estimator', 'business_admin', 'super_admin']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (writeRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['WORK_BREAKDOWN_WRITE']));
+    }
+  });
+
+  it('grants WORK_BREAKDOWN_VIEW to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['WORK_BREAKDOWN_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['WORK_BREAKDOWN_VIEW']));
+    }
+  });
+
+  it('grants WORK_BREAKDOWN_WRITE implies WORK_BREAKDOWN_VIEW for every write role', () => {
+    for (const role of ['pm', 'service_pm', 'estimator', 'business_admin', 'super_admin']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE']),
+      );
+    }
+  });
+
+  // PM-DOCUMENTS-PERMISSIONS dispatch (2026-05-19) — PM Documents defaults
+  // reproduce BAN-345 / PR #181 WRITE_ROLES + CROSS_PROJECT_ROLES exactly.
+  // Unlike other modules, the view and write sets match because Document Hub
+  // is a PM/admin operational surface (no broad read consumers).  field_super
+  // is route-level restricted to PHOTO_PACKAGE via roleMayWriteKind.
+  it('grants PM_DOCUMENT_WRITE to pm, business_admin, super_admin, catalog_admin, field_super, super', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'catalog_admin', 'field_super', 'super']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['PM_DOCUMENT_WRITE']),
+      );
+    }
+  });
+
+  it('denies PM_DOCUMENT_WRITE for roles outside the document management set', () => {
+    const writeRoles = new Set(['pm', 'business_admin', 'super_admin', 'catalog_admin', 'field_super', 'super']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (writeRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['PM_DOCUMENT_WRITE']));
+    }
+  });
+
+  it('grants PM_DOCUMENT_VIEW to the same set as PM_DOCUMENT_WRITE (operational surface)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'catalog_admin', 'field_super', 'super']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['PM_DOCUMENT_VIEW']),
+      );
+    }
+  });
+
+  it('denies PM_DOCUMENT_VIEW for roles outside the document management set', () => {
+    const viewRoles = new Set(['pm', 'business_admin', 'super_admin', 'catalog_admin', 'field_super', 'super']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (viewRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['PM_DOCUMENT_VIEW']));
+    }
+  });
+
+  it('grants PM_DOCUMENT_WRITE implies PM_DOCUMENT_VIEW for every write role', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'catalog_admin', 'field_super', 'super']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE']),
+      );
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -217,6 +336,12 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'CONTACTS_WRITE',
       'ORG_VIEW',
       'ORG_WRITE',
+      'SUGGESTIONS_VIEW',
+      'SUGGESTIONS_REVIEW',
+      'WORK_BREAKDOWN_VIEW',
+      'WORK_BREAKDOWN_WRITE',
+      'PM_DOCUMENT_VIEW',
+      'PM_DOCUMENT_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -492,6 +617,130 @@ describe('hasPermission', () => {
     expect(hasPermission(session('super'), 'ORG_WRITE')).toBe(true);
     // Override doesn't grant ORG_WRITE to field.
     expect(hasPermission(session('field'), 'ORG_WRITE')).toBe(false);
+  });
+
+  // SUGGESTIONS-PERMISSIONS dispatch (2026-05-19) — exercise the new
+  // SUGGESTIONS_* permissions.
+  it('returns true for SUGGESTIONS_REVIEW on pm, business_admin, super_admin, service_pm (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm']) {
+      expect(hasPermission(session(role), 'SUGGESTIONS_REVIEW')).toBe(true);
+      expect(hasPermission(session(role), 'SUGGESTIONS_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for SUGGESTIONS_REVIEW on roles outside the review set', () => {
+    for (const role of ['field', 'sales', 'estimator', 'admin', 'admin_mgr', 'pm_track', 'super', 'gm', 'owner', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'SUGGESTIONS_REVIEW')).toBe(false);
+    }
+  });
+
+  it('returns true for SUGGESTIONS_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'SUGGESTIONS_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for SUGGESTIONS_VIEW on role=none', () => {
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'SUGGESTIONS_VIEW')).toBe(false);
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening SUGGESTIONS_REVIEW to estimator', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      business_admin: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      super_admin: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      service_pm: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+      estimator: ['SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW'],
+    });
+    expect(hasPermission(session('estimator'), 'SUGGESTIONS_REVIEW')).toBe(true);
+    // Override doesn't grant SUGGESTIONS_REVIEW to field.
+    expect(hasPermission(session('field'), 'SUGGESTIONS_REVIEW')).toBe(false);
+  });
+
+  // WORK-BREAKDOWN-PERMISSIONS dispatch (2026-05-19) — exercise the new
+  // WORK_BREAKDOWN_* permissions.
+  it('returns true for WORK_BREAKDOWN_WRITE on pm, service_pm, estimator, business_admin, super_admin (defaults)', () => {
+    for (const role of ['pm', 'service_pm', 'estimator', 'business_admin', 'super_admin']) {
+      expect(hasPermission(session(role), 'WORK_BREAKDOWN_WRITE')).toBe(true);
+      expect(hasPermission(session(role), 'WORK_BREAKDOWN_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for WORK_BREAKDOWN_WRITE on roles outside the operational PM set', () => {
+    for (const role of ['field', 'sales', 'super', 'admin', 'admin_mgr', 'pm_track', 'gm', 'owner', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'WORK_BREAKDOWN_WRITE')).toBe(false);
+    }
+  });
+
+  it('returns true for WORK_BREAKDOWN_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'WORK_BREAKDOWN_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for WORK_BREAKDOWN_VIEW on role=none', () => {
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'WORK_BREAKDOWN_VIEW')).toBe(false);
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening WORK_BREAKDOWN_WRITE to super', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      service_pm: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      estimator: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      business_admin: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      super_admin: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+      super: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+    });
+    expect(hasPermission(session('super'), 'WORK_BREAKDOWN_WRITE')).toBe(true);
+    // Override doesn't grant WORK_BREAKDOWN_WRITE to field.
+    expect(hasPermission(session('field'), 'WORK_BREAKDOWN_WRITE')).toBe(false);
+  });
+
+  // PM-DOCUMENTS-PERMISSIONS dispatch (2026-05-19) — exercise the new
+  // PM_DOCUMENT_* permissions.
+  it('returns true for PM_DOCUMENT_WRITE on pm, business_admin, super_admin, catalog_admin, field_super, super (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'catalog_admin', 'field_super', 'super']) {
+      expect(hasPermission(session(role), 'PM_DOCUMENT_WRITE')).toBe(true);
+      expect(hasPermission(session(role), 'PM_DOCUMENT_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for PM_DOCUMENT_WRITE on roles outside the document set', () => {
+    for (const role of ['field', 'sales', 'estimator', 'service_pm', 'admin', 'admin_mgr', 'pm_track', 'gm', 'owner']) {
+      expect(hasPermission(session(role), 'PM_DOCUMENT_WRITE')).toBe(false);
+      expect(hasPermission(session(role), 'PM_DOCUMENT_VIEW')).toBe(false);
+    }
+  });
+
+  it('returns false for PM_DOCUMENT_VIEW / PM_DOCUMENT_WRITE on role=none', () => {
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'PM_DOCUMENT_VIEW')).toBe(false);
+    expect(hasPermission(session('none', 'unknown@kulaglass.com'), 'PM_DOCUMENT_WRITE')).toBe(false);
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening PM_DOCUMENT_WRITE to service_pm', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+      business_admin: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+      super_admin: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+      catalog_admin: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+      field_super: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+      super: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+      // Widen service_pm.
+      service_pm: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+    });
+    expect(hasPermission(session('service_pm'), 'PM_DOCUMENT_WRITE')).toBe(true);
+    // Override doesn't grant PM_DOCUMENT_WRITE to field.
+    expect(hasPermission(session('field'), 'PM_DOCUMENT_WRITE')).toBe(false);
   });
 
   it('honors a ROLE_PERMISSIONS_JSON override widening KB_WRITE to field', () => {
