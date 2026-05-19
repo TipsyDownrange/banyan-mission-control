@@ -2098,3 +2098,125 @@ export const user_dashboard_layouts = pgTable('user_dashboard_layouts', {
     sql`jsonb_typeof(${table.layout_data}) = 'object'`,
   ),
 ]);
+
+// ─── BAN-374 Scheduling Spine ───────────────────────────────────────────────
+// Phases group tasks under an engagement.  Tasks track planned/actual dates
+// + % complete.  Dependencies form a DAG (cycle detection at route layer).
+// Milestones are date-anchored gates (substantial completion, permits, etc).
+
+export const schedule_phases = pgTable('schedule_phases', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  name: text('name').notNull(),
+  sort_order: integer('sort_order').notNull().default(0),
+  planned_start: date('planned_start'),
+  planned_end: date('planned_end'),
+  actual_start: date('actual_start'),
+  actual_end: date('actual_end'),
+  status: text('status').notNull().default('planned'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('schedule_phases_tenant_engagement_idx').on(table.tenant_id, table.engagement_id, table.sort_order),
+  check(
+    'schedule_phases_status_check',
+    sql`${table.status} IN ('planned','in_progress','complete','on_hold')`,
+  ),
+]);
+
+export const schedule_tasks = pgTable('schedule_tasks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  phase_id: uuid('phase_id').notNull().references(() => schedule_phases.id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  name: text('name').notNull(),
+  description: text('description'),
+  sort_order: integer('sort_order').notNull().default(0),
+  planned_start: date('planned_start'),
+  planned_end: date('planned_end'),
+  planned_duration_days: integer('planned_duration_days'),
+  actual_start: date('actual_start'),
+  actual_end: date('actual_end'),
+  percent_complete: integer('percent_complete').notNull().default(0),
+  status: text('status').notNull().default('planned'),
+  assigned_to_user_id: uuid('assigned_to_user_id').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('schedule_tasks_tenant_phase_idx').on(table.tenant_id, table.phase_id, table.sort_order),
+  index('schedule_tasks_tenant_engagement_idx').on(table.tenant_id, table.engagement_id),
+  check(
+    'schedule_tasks_percent_complete_check',
+    sql`${table.percent_complete} BETWEEN 0 AND 100`,
+  ),
+  check(
+    'schedule_tasks_status_check',
+    sql`${table.status} IN ('planned','in_progress','complete','blocked','on_hold')`,
+  ),
+]);
+
+export const schedule_dependencies = pgTable('schedule_dependencies', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  predecessor_task_id: uuid('predecessor_task_id').notNull().references((): AnyPgColumn => schedule_tasks.id),
+  successor_task_id: uuid('successor_task_id').notNull().references((): AnyPgColumn => schedule_tasks.id),
+  type: text('type').notNull().default('finish_to_start'),
+  lag_days: integer('lag_days').notNull().default(0),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('schedule_dependencies_edge_uidx').on(table.predecessor_task_id, table.successor_task_id),
+  index('schedule_dependencies_tenant_idx').on(table.tenant_id),
+  check(
+    'schedule_dependencies_type_check',
+    sql`${table.type} IN ('finish_to_start','start_to_start','finish_to_finish','start_to_finish')`,
+  ),
+  check(
+    'schedule_dependencies_not_self_loop',
+    sql`${table.predecessor_task_id} <> ${table.successor_task_id}`,
+  ),
+]);
+
+export const schedule_milestones = pgTable('schedule_milestones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  planned_date: date('planned_date'),
+  actual_date: date('actual_date'),
+  status: text('status').notNull().default('pending'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('schedule_milestones_tenant_engagement_idx').on(table.tenant_id, table.engagement_id, table.planned_date),
+  check(
+    'schedule_milestones_type_check',
+    sql`${table.type} IN ('substantial_completion','permit','inspection','owner_walkthrough','retainage_release','custom')`,
+  ),
+  check(
+    'schedule_milestones_status_check',
+    sql`${table.status} IN ('pending','met','missed','waived')`,
+  ),
+]);
+
+export const SCHEDULE_PHASE_STATUSES = ['planned', 'in_progress', 'complete', 'on_hold'] as const;
+export type SchedulePhaseStatus = typeof SCHEDULE_PHASE_STATUSES[number];
+
+export const SCHEDULE_TASK_STATUSES = ['planned', 'in_progress', 'complete', 'blocked', 'on_hold'] as const;
+export type ScheduleTaskStatus = typeof SCHEDULE_TASK_STATUSES[number];
+
+export const SCHEDULE_DEPENDENCY_TYPES = ['finish_to_start', 'start_to_start', 'finish_to_finish', 'start_to_finish'] as const;
+export type ScheduleDependencyType = typeof SCHEDULE_DEPENDENCY_TYPES[number];
+
+export const SCHEDULE_MILESTONE_TYPES = ['substantial_completion', 'permit', 'inspection', 'owner_walkthrough', 'retainage_release', 'custom'] as const;
+export type ScheduleMilestoneType = typeof SCHEDULE_MILESTONE_TYPES[number];
+
+export const SCHEDULE_MILESTONE_STATUSES = ['pending', 'met', 'missed', 'waived'] as const;
+export type ScheduleMilestoneStatus = typeof SCHEDULE_MILESTONE_STATUSES[number];

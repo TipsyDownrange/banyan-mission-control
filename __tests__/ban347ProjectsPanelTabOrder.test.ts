@@ -1,10 +1,14 @@
 /**
  * BAN-347 PM-V1.0-H — tab-order guardrail.
  *
- * Locks the canonical 16-tab order published in the BAN-347 brief and the
+ * Locks the canonical tab order published in the BAN-347 brief and the
  * Closeout D6 ratified note (BAN-344 + BAN-346 closeout).  Also asserts that
  * the new ProjectOverview component is wired in and that BAN-344/345/346
  * tabs are not removed.
+ *
+ * BAN-374 Scheduling Spine Mega adds the 'schedule' tab between 'tm-tickets'
+ * and 'budget' (17 tabs total).  Prior 16-tab order preserved; new entry is
+ * additive per ADR-026.
  */
 
 import fs from 'node:fs';
@@ -15,7 +19,7 @@ const SRC = fs.readFileSync(
   'utf8',
 );
 
-const CANONICAL_16 = [
+const CANONICAL_TABS = [
   'overview',
   'submittals',
   'rfis',
@@ -27,6 +31,7 @@ const CANONICAL_16 = [
   'cos',
   'pay-apps',
   'tm-tickets',
+  'schedule',
   'budget',
   'work-breakdown',
   'matrix',
@@ -48,8 +53,8 @@ function extractTabKeys(source: string): string[] {
 }
 
 describe('BAN-347 tab-order canon', () => {
-  it('renders the 16-tab canonical order in TABS', () => {
-    expect(extractTabKeys(SRC)).toEqual(CANONICAL_16);
+  it('renders the canonical tab order in TABS', () => {
+    expect(extractTabKeys(SRC)).toEqual(CANONICAL_TABS);
   });
 
   it('does NOT remove BAN-344 action-items, BAN-345 documents, or BAN-346 handoff', () => {
@@ -72,7 +77,7 @@ describe('BAN-347 tab-order canon', () => {
   });
 
   it('exposes every canonical tab key in the activeTab type union', () => {
-    for (const key of CANONICAL_16) {
+    for (const key of CANONICAL_TABS) {
       expect(SRC).toContain(`'${key}'`);
     }
   });

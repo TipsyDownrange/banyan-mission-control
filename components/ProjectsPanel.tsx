@@ -16,7 +16,9 @@ import ActionItemsTab from '@/components/engagements/ActionItemsTab';
 import DocumentsTab from '@/components/engagements/DocumentsTab';
 import HandoffTab from '@/components/engagements/HandoffTab';
 import ProjectOverview from '@/components/engagements/ProjectOverview';
+import ScheduleTab from '@/components/schedule/ScheduleTab';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
+import { useSession } from 'next-auth/react';
 
 type Project = {
   kID: string; name: string; status: string; pm: string; super: string;
@@ -111,7 +113,11 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'schedule'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string } | undefined)?.role ?? 'none';
+  const SCHEDULE_WRITE_ROLES = new Set(['pm', 'business_admin', 'super_admin']);
+  const canWriteSchedule = SCHEDULE_WRITE_ROLES.has(role);
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [rfis, setRfis] = useState<Record<string, string>[]>([]);
   const [verbalAgreements, setVerbalAgreements] = useState<VerbalAgreement[]>([]);
@@ -167,6 +173,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'cos', label: `Change Orders (${cos.length})` },
     { key: 'pay-apps', label: 'Pay Apps' },
     { key: 'tm-tickets', label: 'T&M Tickets' },
+    { key: 'schedule', label: 'Schedule' },
     { key: 'budget', label: 'Budget' },
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
@@ -301,6 +308,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
               {activeTab === 'punch-list' && (
                 <PunchListTab kID={project.kID} />
+              )}
+
+              {activeTab === 'schedule' && (
+                <ScheduleTab kID={project.kID} canWrite={canWriteSchedule} />
               )}
 
               {activeTab === 'budget' && (
