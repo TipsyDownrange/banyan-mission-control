@@ -15,6 +15,7 @@ import MeetingsTab from '@/components/engagements/MeetingsTab';
 import ActionItemsTab from '@/components/engagements/ActionItemsTab';
 import DocumentsTab from '@/components/engagements/DocumentsTab';
 import HandoffTab from '@/components/engagements/HandoffTab';
+import ProjectOverview from '@/components/engagements/ProjectOverview';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 
 type Project = {
@@ -234,48 +235,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
           ) : (
             <>
               {activeTab === 'overview' && (
-                <div>
-                  <div style={{ background: 'white', borderRadius: 18, border: '1px solid #e2e8f0', padding: '18px 20px', marginBottom: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 }}>
-                      <div>
-                        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>Financial Summary</div>
-                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>SOV rollup for contract value, billing progress, retainage, and balance to finish.</div>
-                      </div>
-                      <button onClick={() => setActiveTab('pay-apps')} style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', borderRadius: 999, padding: '7px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>Pay Apps →</button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
-                      {[
-                        { label: 'Total Contract', value: formatCurrency(sovSummary.totalContract), sub: `${sovSummary.lineCount} SOV line${sovSummary.lineCount === 1 ? '' : 's'}` },
-                        { label: 'Billed To Date', value: formatCurrency(sovSummary.billedToDate), sub: `${sovSummary.percentComplete}% complete` },
-                        { label: 'Retainage Held', value: formatCurrency(sovSummary.retainageHeld), sub: 'From line retainage %' },
-                        { label: 'This Period', value: formatCurrency(sovSummary.thisPeriod), sub: 'Current pay period' },
-                        { label: 'Balance To Finish', value: formatCurrency(sovSummary.balanceToFinish), sub: 'Contract less billed' },
-                      ].map(k => (
-                        <div key={k.label} style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 14px' }}>
-                          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.label}</div>
-                          <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 5 }}>{k.value}</div>
-                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{k.sub}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-                    {[
-                      { label: 'Submittals', value: submittals.length, sub: `${submittals.filter(s => ['APPROVED'].includes(s.status)).length} approved` },
-                      { label: 'RFIs', value: rfis.length, sub: `${rfis.filter(r => r.status === 'OPEN' || !r.response_received_at).length} open` },
-                      { label: 'Verbal Agreements', value: verbalAgreements.length, sub: `${verbalAgreements.filter(a => a.followup_email_sent === 'true' || a.status === 'FOLLOWED_UP').length} followed up` },
-                      { label: 'Change Orders', value: cos.length, sub: `${cos.filter(c => c.status === 'APPROVED').length} approved` },
-                      { label: 'Work Breakdown', value: install.items?.length || 0, sub: install.summary?.[0] ? `${install.summary[0].pctComplete}% complete` : 'No steps yet' },
-                      { label: 'Field Events', value: project.eventCount, sub: `${project.issues} issues` },
-                    ].map((k, i) => (
-                      <div key={i} style={{ background: 'white', borderRadius: 14, padding: '14px 18px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</div>
-                        <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{k.value}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{k.sub}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <ProjectOverview
+                  project={{ kID: project.kID, name: project.name, pm: project.pm, island: project.island }}
+                  onNavigateTab={(tab) => setActiveTab(tab as typeof activeTab)}
+                />
               )}
 
               {activeTab === 'submittals' && (
