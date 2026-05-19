@@ -5,10 +5,12 @@
  * No live Google Sheets writes.
  */
 
-const mockGetServerSession = jest.fn();
+const mockCheckPermission = jest.fn();
 const mockSheets = jest.fn();
 
-jest.mock('next-auth', () => ({ getServerSession: () => mockGetServerSession() }));
+jest.mock('@/lib/permissions', () => ({
+  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
+}));
 jest.mock('googleapis', () => ({ google: { sheets: mockSheets } }));
 jest.mock('@/lib/gauth', () => ({ getGoogleAuth: jest.fn(() => ({})) }));
 jest.mock('@/lib/backend-config', () => ({ getBackendSheetId: jest.fn(() => 'backend-sheet-test') }));
@@ -93,7 +95,7 @@ describe('work-breakdown PATCH type:step — BAN-93 Gate 4 drift detection', () 
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-    mockGetServerSession.mockResolvedValue({ user: { email: 'sean@kulaglass.com' } });
+    mockCheckPermission.mockResolvedValue({ allowed: true, role: 'pm', email: 'sean@kulaglass.com' });
   });
 
   // ── 1. No drift: slot date matches new planned_start_date ─────────────────
