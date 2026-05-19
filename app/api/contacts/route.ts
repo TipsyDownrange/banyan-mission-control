@@ -6,11 +6,11 @@
  * DELETE /api/contacts?contact_id=  — delete contact
  */
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import { normalizeEmail, normalizeNameForWrite, normalizePhone } from '@/lib/normalize';
+import { passContactsAuthGate, passContactsWriteGate } from '@/lib/contacts/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -48,10 +48,8 @@ function normalizeContactField(field: string, value: unknown): string {
 }
 
 export async function GET(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passContactsAuthGate(req);
+  if (!gate.ok) return gate.response;
   const { searchParams } = new URL(req.url);
   const orgId = searchParams.get('org_id');
   const q = (searchParams.get('q') || '').toLowerCase();
@@ -96,10 +94,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passContactsWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   const body = await req.json();
   const { org_id, name, title, role, email, phone, notes, is_primary } = body;
@@ -160,10 +156,8 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passContactsWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   const body = await req.json();
   const { contact_id, ...updates } = body;
@@ -218,10 +212,8 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passContactsWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   const { searchParams } = new URL(req.url);
   const contactId = searchParams.get('contact_id');
