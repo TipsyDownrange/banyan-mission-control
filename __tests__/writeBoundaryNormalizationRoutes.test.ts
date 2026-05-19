@@ -6,12 +6,13 @@ const mockDrive = jest.fn();
 const mockFireAndForgetCustomerUpdate = jest.fn();
 
 jest.mock('next-auth', () => ({ getServerSession: mockGetServerSession }));
+// CONTACTS-PERMISSIONS + ORGANIZATIONS-PERMISSIONS dispatches (2026-05-19):
+// contacts and organizations routes now resolve auth through passPermissionGate.
+// This test targets write-boundary normalization, not auth, so the gate is
+// stubbed to admit the test session (sean@kulaglass.com → super_admin); auth
+// coverage lives in banContactsAuthMigration / banOrganizationsAuthMigration.
 jest.mock('@/lib/permissions', () => ({
   checkPermission: mockCheckPermission,
-  // CONTACTS-PERMISSIONS dispatch (2026-05-19): contacts gate now delegates to
-  // passPermissionGate.  Default mock admits the test session (sean@kulaglass
-  // .com → super_admin) so the normalization assertions still exercise the
-  // route body.
   passPermissionGate: mockPassPermissionGate,
 }));
 jest.mock('@/app/api/service/route', () => ({ invalidateCache: jest.fn() }));

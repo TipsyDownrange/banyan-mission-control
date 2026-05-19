@@ -159,6 +159,34 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       );
     }
   });
+
+  // ORGANIZATIONS-PERMISSIONS dispatch (2026-05-19) — ORG defaults reproduce
+  // PR #189's ORGANIZATIONS_WRITE_ROLES + any-authenticated-read behavior.
+  it('grants ORG_WRITE to pm, business_admin, super_admin, service_pm, estimator, sales', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['ORG_WRITE']),
+      );
+    }
+  });
+
+  it('denies ORG_WRITE for roles outside the org-write set', () => {
+    const writeRoles = new Set(['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (writeRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['ORG_WRITE']));
+    }
+  });
+
+  it('grants ORG_VIEW to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['ORG_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['ORG_VIEW']));
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -177,6 +205,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'DAILY_REPORT_WRITE',
       'CONTACTS_VIEW',
       'CONTACTS_WRITE',
+      'ORG_VIEW',
+      'ORG_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -413,6 +443,42 @@ describe('hasPermission', () => {
     expect(hasPermission(session('field'), 'CONTACTS_WRITE')).toBe(false);
   });
 
+  // ORGANIZATIONS-PERMISSIONS dispatch (2026-05-19) — exercise the new ORG_*
+  // permissions through hasPermission.
+  it('returns true for ORG_WRITE on pm, business_admin, super_admin, service_pm, estimator, sales (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'estimator', 'sales']) {
+      expect(hasPermission(session(role), 'ORG_WRITE')).toBe(true);
+    }
+  });
+
+  it('returns false for ORG_WRITE on roles outside the org-write set', () => {
+    for (const role of ['gm', 'owner', 'super', 'admin', 'admin_mgr', 'field', 'pm_track', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'ORG_WRITE')).toBe(false);
+    }
+  });
+
+  it('returns true for ORG_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'ORG_VIEW')).toBe(true);
+    }
+  });
+
+  it('honors a ROLE_PERMISSIONS_JSON override widening ORG_WRITE to field', () => {
+    process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
+      pm: ['ORG_VIEW', 'ORG_WRITE'],
+      field: ['ORG_VIEW', 'ORG_WRITE'],
+    });
+    expect(hasPermission(session('field'), 'ORG_WRITE')).toBe(true);
+    // Roles not present in the override map fall through to "no permissions"
+    // (the override fully replaces defaults rather than merging).
+    expect(hasPermission(session('business_admin'), 'ORG_WRITE')).toBe(false);
+  });
+
   it('honors a ROLE_PERMISSIONS_JSON override widening KB_WRITE to field', () => {
     process.env.ROLE_PERMISSIONS_JSON = JSON.stringify({
       pm: ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
@@ -450,5 +516,14 @@ describe('passPermissionGate', () => {
       expect(result.actorEmail).toBe('business_admin@kulaglass.com');
       expect(result.role).toBe('business_admin');
     }
+  });
+
+  // ORGANIZATIONS-PERMISSIONS dispatch (2026-05-19) — gate-level smoke.
+  it('returns ok for ORG_VIEW on field role and 403 on ORG_WRITE for field role', () => {
+    const ok = passPermissionGate(session('field'), 'ORG_VIEW');
+    expect(ok.ok).toBe(true);
+    const forbidden = passPermissionGate(session('field'), 'ORG_WRITE');
+    expect(forbidden.ok).toBe(false);
+    if (!forbidden.ok) expect(forbidden.response.status).toBe(403);
   });
 });

@@ -1,6 +1,13 @@
 /**
  * BAN-355 follow-up — Organizations auth migration route tests.
  *
+ * ORGANIZATIONS-PERMISSIONS dispatch (2026-05-19): updated to drive the new
+ * RolePermission system in lib/permissions.ts instead of the legacy
+ * ORGANIZATIONS_WRITE_ROLES set.  The gates now resolve role via
+ * next-auth's getServerSession + passPermissionGate(ORG_*), so each test
+ * stamps the role directly on `session.user` and the real
+ * passPermissionGate / hasPermission logic runs.
+ *
  * Confirms /api/organizations and its subroutes
  *   - /api/organizations (GET / POST)
  *   - /api/organizations/[orgId] (GET / PATCH)
@@ -8,19 +15,18 @@
  *   - /api/organizations/[orgId]/contacts (POST / PATCH)
  *   - /api/organizations/governance/relationships (GET / POST / PATCH)
  *   - /api/organizations/governance/merge (GET / POST)
- * enforce the canonical role gate defined in lib/organizations/api-gate.ts and
- * reject insufficient sessions with 401 / 403 while permitting the documented
- * roles.
+ * enforce the canonical permission gate defined in lib/organizations/api-gate.ts
+ * (ORG_VIEW for reads, ORG_WRITE for mutations) and reject insufficient
+ * sessions with 401 / 403 while permitting the documented roles.
  *
- * Mocks @/lib/permissions to drive `checkPermission` so the suite can
- * exercise the gates without standing up next-auth or the backend Sheet.
- * Mocks googleapis, organizationGovernance, and events to keep route
- * handlers off the live Sheets API.
+ * Mocks next-auth's getServerSession to drive the session shape; mocks
+ * googleapis, organizationGovernance, and events to keep route handlers
+ * off the live Sheets API.
  */
 
-const mockCheckPermission = jest.fn();
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
+const mockGetServerSession = jest.fn();
+jest.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => mockGetServerSession(...args),
 }));
 
 jest.mock('@/lib/backend-config', () => ({
@@ -68,7 +74,8 @@ jest.mock('googleapis', () => ({
 }));
 
 function permResult(role: string, email: string | null = role === 'none' ? null : `${role}@kulaglass.com`) {
-  return { allowed: true, role, email };
+  if (!email) return null;
+  return { user: { email, role } };
 }
 
 const orgRow = ['org_1', 'Acme', 'CUSTOMER', 'COMPANY', 'Oahu', '', '', '', '', 'src', '', '', '', '', '', ''];
@@ -79,6 +86,12 @@ beforeEach(() => {
   jest.clearAllMocks();
   // Default: empty sheets. Individual tests can override.
   mockValuesGet.mockResolvedValue({ data: { values: [] } });
+  // Run with default permission map regardless of env, and reset the memoized
+  // permissions cache so each test sees defaults fresh.
+  delete process.env.ROLE_PERMISSIONS_JSON;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const perms = require('@/lib/permissions');
+  perms.resetRolePermissionsCacheForTests();
 });
 
 function paramsFor(orgId = 'org_1') {
@@ -89,28 +102,32 @@ function paramsFor(orgId = 'org_1') {
 
 describe('GET /api/organizations — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { GET } = await import('@/app/api/organizations/route');
     const res = await GET(new Request('http://t/api/organizations'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 for role=none', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', 'unknown@kulaglass.com'));
+  it('returns 403 for role=none (authenticated but no ORG_VIEW)', async () => {
+    // ORGANIZATIONS-PERMISSIONS dispatch (2026-05-19): semantic tightened
+    // from 401 → 403.  An authenticated session with role='none' is now
+    // "forbidden" rather than "unauthorized" — matches WARROOM / KB pattern
+    // (passPermissionGate returns 401 only when there is no email).
+    mockGetServerSession.mockResolvedValue(permResult('none', 'unknown@kulaglass.com'));
     const { GET } = await import('@/app/api/organizations/route');
     const res = await GET(new Request('http://t/api/organizations'));
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns 200 for field role (any authenticated user can read)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { GET } = await import('@/app/api/organizations/route');
     const res = await GET(new Request('http://t/api/organizations?nocache=1'));
     expect(res.status).toBe(200);
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(permResult('super_admin'));
     const { GET } = await import('@/app/api/organizations/route');
     const res = await GET(new Request('http://t/api/organizations?nocache=1'));
     expect(res.status).toBe(200);
@@ -136,7 +153,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -145,7 +162,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -154,7 +171,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 403 for super (Superintendent) — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super'));
+    mockGetServerSession.mockResolvedValue(permResult('super'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -163,7 +180,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(permResult('pm'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -172,7 +189,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 200 for business_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('business_admin'));
+    mockGetServerSession.mockResolvedValue(permResult('business_admin'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -181,7 +198,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(permResult('super_admin'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -190,7 +207,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 200 for service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(permResult('service_pm'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -199,7 +216,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 200 for estimator', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(permResult('estimator'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -208,7 +225,7 @@ describe('POST /api/organizations — write gate', () => {
   });
 
   it('returns 200 for sales', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('sales'));
+    mockGetServerSession.mockResolvedValue(permResult('sales'));
     const { POST } = await import('@/app/api/organizations/route');
     const res = await POST(new Request('http://t/api/organizations', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -228,14 +245,14 @@ describe('GET /api/organizations/[orgId] — auth gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { GET } = await import('@/app/api/organizations/[orgId]/route');
     const res = await GET(new Request('http://t/api/organizations/org_1'), paramsFor());
     expect(res.status).toBe(401);
   });
 
   it('returns 200 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { GET } = await import('@/app/api/organizations/[orgId]/route');
     const res = await GET(new Request('http://t/api/organizations/org_1'), paramsFor());
     expect(res.status).toBe(200);
@@ -252,7 +269,7 @@ describe('PATCH /api/organizations/[orgId] — write gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -261,7 +278,7 @@ describe('PATCH /api/organizations/[orgId] — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -270,7 +287,7 @@ describe('PATCH /api/organizations/[orgId] — write gate', () => {
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(permResult('pm'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -279,7 +296,7 @@ describe('PATCH /api/organizations/[orgId] — write gate', () => {
   });
 
   it('returns 200 for service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(permResult('service_pm'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -294,7 +311,7 @@ describe('POST /api/organizations/[orgId]/sites — write gate', () => {
   const body = JSON.stringify({ name: 'Site A', address_line_1: '1 Way' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { POST } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/sites', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -303,7 +320,7 @@ describe('POST /api/organizations/[orgId]/sites — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { POST } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/sites', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -312,7 +329,7 @@ describe('POST /api/organizations/[orgId]/sites — write gate', () => {
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(permResult('pm'));
     const { POST } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/sites', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -321,7 +338,7 @@ describe('POST /api/organizations/[orgId]/sites — write gate', () => {
   });
 
   it('returns 200 for estimator', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('estimator'));
+    mockGetServerSession.mockResolvedValue(permResult('estimator'));
     const { POST } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/sites', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -340,7 +357,7 @@ describe('PATCH /api/organizations/[orgId]/sites — write gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1/sites', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -349,7 +366,7 @@ describe('PATCH /api/organizations/[orgId]/sites — write gate', () => {
   });
 
   it('returns 403 for admin role — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('admin'));
+    mockGetServerSession.mockResolvedValue(permResult('admin'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1/sites', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -358,7 +375,7 @@ describe('PATCH /api/organizations/[orgId]/sites — write gate', () => {
   });
 
   it('returns 200 for sales', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('sales'));
+    mockGetServerSession.mockResolvedValue(permResult('sales'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/sites/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1/sites', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -373,7 +390,7 @@ describe('POST /api/organizations/[orgId]/contacts — write gate', () => {
   const body = JSON.stringify({ name: 'New Contact' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { POST } = await import('@/app/api/organizations/[orgId]/contacts/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/contacts', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -382,7 +399,7 @@ describe('POST /api/organizations/[orgId]/contacts — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { POST } = await import('@/app/api/organizations/[orgId]/contacts/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/contacts', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -391,7 +408,7 @@ describe('POST /api/organizations/[orgId]/contacts — write gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(permResult('super_admin'));
     const { POST } = await import('@/app/api/organizations/[orgId]/contacts/route');
     const res = await POST(new Request('http://t/api/organizations/org_1/contacts', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -410,7 +427,7 @@ describe('PATCH /api/organizations/[orgId]/contacts — write gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/contacts/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1/contacts', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -419,7 +436,7 @@ describe('PATCH /api/organizations/[orgId]/contacts — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/contacts/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1/contacts', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -428,7 +445,7 @@ describe('PATCH /api/organizations/[orgId]/contacts — write gate', () => {
   });
 
   it('returns 200 for service_pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('service_pm'));
+    mockGetServerSession.mockResolvedValue(permResult('service_pm'));
     const { PATCH } = await import('@/app/api/organizations/[orgId]/contacts/route');
     const res = await PATCH(new Request('http://t/api/organizations/org_1/contacts', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -441,14 +458,14 @@ describe('PATCH /api/organizations/[orgId]/contacts — write gate', () => {
 
 describe('GET /api/organizations/governance/relationships — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { GET } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await GET(new Request('http://t/api/organizations/governance/relationships?org_id=org_1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 200 for field role (read)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { GET } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await GET(new Request('http://t/api/organizations/governance/relationships?org_id=org_1'));
     expect(res.status).toBe(200);
@@ -459,7 +476,7 @@ describe('POST /api/organizations/governance/relationships — write gate', () =
   const body = JSON.stringify({ source_org_id: 'org_1', target_org_id: 'org_2', relationship_type: 'PARENT' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { POST } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await POST(new Request('http://t/api/organizations/governance/relationships', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -468,7 +485,7 @@ describe('POST /api/organizations/governance/relationships — write gate', () =
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { POST } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await POST(new Request('http://t/api/organizations/governance/relationships', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -477,7 +494,7 @@ describe('POST /api/organizations/governance/relationships — write gate', () =
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(permResult('pm'));
     const { POST } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await POST(new Request('http://t/api/organizations/governance/relationships', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -490,7 +507,7 @@ describe('PATCH /api/organizations/governance/relationships — write gate', () 
   const body = JSON.stringify({ relationship_id: 'rel_1', source_org_id: 'org_1', target_org_id: 'org_2', relationship_type: 'PARENT' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { PATCH } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await PATCH(new Request('http://t/api/organizations/governance/relationships', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -499,7 +516,7 @@ describe('PATCH /api/organizations/governance/relationships — write gate', () 
   });
 
   it('returns 200 for business_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('business_admin'));
+    mockGetServerSession.mockResolvedValue(permResult('business_admin'));
     const { PATCH } = await import('@/app/api/organizations/governance/relationships/route');
     const res = await PATCH(new Request('http://t/api/organizations/governance/relationships', {
       method: 'PATCH', headers: { 'content-type': 'application/json' }, body,
@@ -512,14 +529,14 @@ describe('PATCH /api/organizations/governance/relationships — write gate', () 
 
 describe('GET /api/organizations/governance/merge — auth gate', () => {
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { GET } = await import('@/app/api/organizations/governance/merge/route');
     const res = await GET(new Request('http://t/api/organizations/governance/merge?source_org_id=a&survivor_org_id=b'));
     expect(res.status).toBe(401);
   });
 
   it('returns 200 for field role (read preview)', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { GET } = await import('@/app/api/organizations/governance/merge/route');
     const res = await GET(new Request('http://t/api/organizations/governance/merge?source_org_id=a&survivor_org_id=b'));
     expect(res.status).toBe(200);
@@ -530,7 +547,7 @@ describe('POST /api/organizations/governance/merge — write gate', () => {
   const body = JSON.stringify({ preview_confirmed: true, source_org_id: 'org_1', survivor_org_id: 'org_2' });
 
   it('returns 401 when no session', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('none', null));
+    mockGetServerSession.mockResolvedValue(permResult('none', null));
     const { POST } = await import('@/app/api/organizations/governance/merge/route');
     const res = await POST(new Request('http://t/api/organizations/governance/merge', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -539,7 +556,7 @@ describe('POST /api/organizations/governance/merge — write gate', () => {
   });
 
   it('returns 403 for field role', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('field'));
+    mockGetServerSession.mockResolvedValue(permResult('field'));
     const { POST } = await import('@/app/api/organizations/governance/merge/route');
     const res = await POST(new Request('http://t/api/organizations/governance/merge', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -548,7 +565,7 @@ describe('POST /api/organizations/governance/merge — write gate', () => {
   });
 
   it('returns 403 for super (Superintendent) — tightened from email-endsWith', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super'));
+    mockGetServerSession.mockResolvedValue(permResult('super'));
     const { POST } = await import('@/app/api/organizations/governance/merge/route');
     const res = await POST(new Request('http://t/api/organizations/governance/merge', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -557,7 +574,7 @@ describe('POST /api/organizations/governance/merge — write gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('super_admin'));
+    mockGetServerSession.mockResolvedValue(permResult('super_admin'));
     const { POST } = await import('@/app/api/organizations/governance/merge/route');
     const res = await POST(new Request('http://t/api/organizations/governance/merge', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
@@ -566,7 +583,7 @@ describe('POST /api/organizations/governance/merge — write gate', () => {
   });
 
   it('returns 200 for pm', async () => {
-    mockCheckPermission.mockResolvedValue(permResult('pm'));
+    mockGetServerSession.mockResolvedValue(permResult('pm'));
     const { POST } = await import('@/app/api/organizations/governance/merge/route');
     const res = await POST(new Request('http://t/api/organizations/governance/merge', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body,
