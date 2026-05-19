@@ -1,21 +1,22 @@
 /**
- * MC-AUTH-PHASE2-WARROOM — War Room auth migration route tests.
+ * MC-AUTH-PHASE2-WARROOM (+ WARROOM-PERMISSIONS, 2026-05-19) — War Room auth
+ * route tests.
  *
- * Confirms each /api/war-room/* route enforces the canonical role gate
- * (defined in lib/war-room/api-gate.ts) and rejects insufficient sessions
- * with 401 / 403 while permitting the documented leadership roles
- * (business_admin, super_admin).
+ * Confirms each /api/war-room/* route enforces the canonical permission gate
+ * (WARROOM_VIEW for reads, WARROOM_TASK_WRITE for writes) and rejects
+ * insufficient sessions with 401 / 403 while permitting the documented
+ * leadership roles (business_admin, super_admin) under the default
+ * ROLE_PERMISSIONS_DEFAULTS map.
  *
- * Mocks @/lib/permissions so the suite can exercise the gate without
- * standing up next-auth.  Mocks the war-room data builders + Linear fetch
- * so the route bodies stay off the live Sheets / Linear APIs.
+ * Mocks next-auth's getServerSession so the suite drives the real
+ * passPermissionGate / hasPermission logic in lib/permissions.ts.
  */
 
 export {}; // mark this file as a module so top-level consts don't collide with peer test files
 
-const warRoomCheckPermissionMock = jest.fn();
-jest.mock('@/lib/permissions', () => ({
-  checkPermission: (...args: unknown[]) => warRoomCheckPermissionMock(...args),
+const warRoomGetServerSessionMock = jest.fn();
+jest.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => warRoomGetServerSessionMock(...args),
 }));
 
 const warRoomDashboardDataMock = jest.fn();
@@ -44,12 +45,21 @@ jest.mock('@/lib/war-room/commandBridge', () => ({
   buildWarRoomLinearIssuePayload: (...args: unknown[]) => warRoomPayloadMock(...args),
 }));
 
-function warRoomPermResult(role: string, email: string | null = role === 'none' ? null : `${role}@kulaglass.com`) {
-  return { allowed: true, role, email };
+function warRoomSession(role: string | null, email: string | null = null) {
+  if (!role) return null;
+  const resolvedEmail = email ?? `${role}@kulaglass.com`;
+  return { user: { email: resolvedEmail, role } };
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Make sure tests run with the default permission map, regardless of env.
+  delete process.env.ROLE_PERMISSIONS_JSON;
+  // Reset the memoized permissions cache so each test sees defaults fresh.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const perms = require('@/lib/permissions');
+  perms.resetRolePermissionsCacheForTests();
+
   warRoomDashboardDataMock.mockResolvedValue({ queues: [], source: 'fixture' });
   warRoomRuntimeHealthMock.mockResolvedValue({ kai: { health: 'ready' } });
   warRoomSourceHealthMock.mockResolvedValue({
@@ -67,39 +77,39 @@ beforeEach(() => {
   delete process.env.LINEAR_BANYANOS_TEAM_ID;
 });
 
-// ═══ GET /api/war-room — dashboard read gate ═══════════════════════════════
+// ═══ GET /api/war-room — dashboard read gate (WARROOM_VIEW) ════════════════
 
 describe('GET /api/war-room — gate', () => {
   it('returns 401 when no session', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('none', null));
+    warRoomGetServerSessionMock.mockResolvedValue(null);
     const { GET } = await import('@/app/api/war-room/route');
     const res = await GET(new Request('http://t/api/war-room'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for pm (not leadership)', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('pm'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('pm'));
     const { GET } = await import('@/app/api/war-room/route');
     const res = await GET(new Request('http://t/api/war-room'));
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for field role', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('field'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('field'));
     const { GET } = await import('@/app/api/war-room/route');
     const res = await GET(new Request('http://t/api/war-room'));
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for estimator', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('estimator'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('estimator'));
     const { GET } = await import('@/app/api/war-room/route');
     const res = await GET(new Request('http://t/api/war-room'));
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for business_admin', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('business_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('business_admin'));
     const { GET } = await import('@/app/api/war-room/route');
     const res = await GET(new Request('http://t/api/war-room'));
     expect(res.status).toBe(200);
@@ -107,7 +117,7 @@ describe('GET /api/war-room — gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('super_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('super_admin'));
     const { GET } = await import('@/app/api/war-room/route');
     const res = await GET(new Request('http://t/api/war-room'));
     expect(res.status).toBe(200);
@@ -129,21 +139,21 @@ describe('GET /api/war-room/runtime-status — gate', () => {
   });
 
   it('returns 401 when no session', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('none', null));
+    warRoomGetServerSessionMock.mockResolvedValue(null);
     const { GET } = await import('@/app/api/war-room/runtime-status/route');
     const res = await GET(new Request('http://t/api/war-room/runtime-status'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for pm', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('pm'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('pm'));
     const { GET } = await import('@/app/api/war-room/runtime-status/route');
     const res = await GET(new Request('http://t/api/war-room/runtime-status'));
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for business_admin', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('business_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('business_admin'));
     const { GET } = await import('@/app/api/war-room/runtime-status/route');
     const res = await GET(new Request('http://t/api/war-room/runtime-status'));
     expect(res.status).toBe(200);
@@ -151,7 +161,7 @@ describe('GET /api/war-room/runtime-status — gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('super_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('super_admin'));
     const { GET } = await import('@/app/api/war-room/runtime-status/route');
     const res = await GET(new Request('http://t/api/war-room/runtime-status'));
     expect(res.status).toBe(200);
@@ -162,28 +172,28 @@ describe('GET /api/war-room/runtime-status — gate', () => {
 
 describe('GET /api/war-room/source-health — gate', () => {
   it('returns 401 when no session', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('none', null));
+    warRoomGetServerSessionMock.mockResolvedValue(null);
     const { GET } = await import('@/app/api/war-room/source-health/route');
     const res = await GET(new Request('http://t/api/war-room/source-health'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 for pm', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('pm'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('pm'));
     const { GET } = await import('@/app/api/war-room/source-health/route');
     const res = await GET(new Request('http://t/api/war-room/source-health'));
     expect(res.status).toBe(403);
   });
 
   it('returns 403 for sales', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('sales'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('sales'));
     const { GET } = await import('@/app/api/war-room/source-health/route');
     const res = await GET(new Request('http://t/api/war-room/source-health'));
     expect(res.status).toBe(403);
   });
 
   it('returns 200 for business_admin', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('business_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('business_admin'));
     const { GET } = await import('@/app/api/war-room/source-health/route');
     const res = await GET(new Request('http://t/api/war-room/source-health'));
     expect(res.status).toBe(200);
@@ -191,20 +201,20 @@ describe('GET /api/war-room/source-health — gate', () => {
   });
 
   it('returns 200 for super_admin', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('super_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('super_admin'));
     const { GET } = await import('@/app/api/war-room/source-health/route');
     const res = await GET(new Request('http://t/api/war-room/source-health'));
     expect(res.status).toBe(200);
   });
 });
 
-// ═══ POST /api/war-room/tasks — write gate (Linear dispatch) ═══════════════
+// ═══ POST /api/war-room/tasks — write gate (WARROOM_TASK_WRITE) ════════════
 
 describe('POST /api/war-room/tasks — gate', () => {
   const body = JSON.stringify({ title: 'Test intake' });
 
   it('returns 401 when no session', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('none', null));
+    warRoomGetServerSessionMock.mockResolvedValue(null);
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
       method: 'POST',
@@ -215,7 +225,7 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 
   it('returns 403 for pm', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('pm'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('pm'));
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
       method: 'POST',
@@ -226,7 +236,7 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 
   it('returns 403 for catalog_admin (not in war-room leadership set)', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('catalog_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('catalog_admin'));
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
       method: 'POST',
@@ -237,7 +247,7 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 
   it('returns 202 preview for business_admin without LINEAR_API_KEY', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('business_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('business_admin'));
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
       method: 'POST',
@@ -251,7 +261,7 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 
   it('returns 202 preview for super_admin without LINEAR_API_KEY', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('super_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('super_admin'));
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
       method: 'POST',
@@ -262,7 +272,7 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 
   it('returns 400 when JSON body is invalid (after passing gate)', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('super_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('super_admin'));
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
       method: 'POST',
@@ -273,7 +283,7 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 
   it('returns 400 when intake validation fails', async () => {
-    warRoomCheckPermissionMock.mockResolvedValue(warRoomPermResult('super_admin'));
+    warRoomGetServerSessionMock.mockResolvedValue(warRoomSession('super_admin'));
     warRoomValidateMock.mockReturnValueOnce({ ok: false, errors: ['title required'] });
     const { POST } = await import('@/app/api/war-room/tasks/route');
     const res = await POST(new Request('http://t/api/war-room/tasks', {
@@ -285,10 +295,14 @@ describe('POST /api/war-room/tasks — gate', () => {
   });
 });
 
-// ═══ Role set sanity ═══════════════════════════════════════════════════════
+// ═══ Backward-compat role set sanity ═══════════════════════════════════════
+//
+// WAR_ROOM_ROLES is @deprecated and no longer referenced by any active call
+// site, but kept exported for backward-compat with anything that imported it
+// before the WARROOM-PERMISSIONS migration.
 
-describe('WAR_ROOM_ROLES role set', () => {
-  it('contains exactly business_admin and super_admin', async () => {
+describe('WAR_ROOM_ROLES role set (legacy export)', () => {
+  it('still contains business_admin and super_admin', async () => {
     const { WAR_ROOM_ROLES } = await import('@/lib/war-room/api-gate');
     expect(Array.from(WAR_ROOM_ROLES).sort()).toEqual(['business_admin', 'super_admin']);
   });

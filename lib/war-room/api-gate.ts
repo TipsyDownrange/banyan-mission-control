@@ -1,63 +1,61 @@
 /**
- * BAN-355 follow-up (MC-AUTH-PHASE2-WARROOM) — War Room API auth gates.
+ * War Room API auth gates.
  *
- * Migrates /api/war-room/* off the email-endsWith anti-pattern onto the
- * canonical role-based gate pattern used by the rest of the BanyanOS API
- * surface (see lib/knowledge/api-gate.ts and lib/pm/documents/api-gate.ts).
+ * WARROOM-PERMISSIONS dispatch (2026-05-19): migrated from the hardcoded
+ * WAR_ROOM_ROLES set to the env-overridable RolePermission system in
+ * lib/permissions.ts.  Widening War Room access no longer requires a code
+ * change + PR + deploy — set ROLE_PERMISSIONS_JSON in Vercel instead.
  *
- * Role set rationale — TIGHT (business_admin | super_admin):
+ * Original (PR #188) rationale, preserved for context:
+ *   War Room is the BanyanOS Ship's Bridge — the leadership cockpit under
+ *   the "AI Command Center" sidebar section.  Its surfaces include
+ *   cross-project signal queues with leadership "myWatch" framing, cost /
+ *   runtime / source-health snapshots (financial + ops sensitivity), and
+ *   a write endpoint that creates Linear command-board issues.  Defaults
+ *   in ROLE_PERMISSIONS_DEFAULTS continue to grant access only to
+ *   business_admin and super_admin to preserve PR #188 behavior.
  *
- * War Room is the BanyanOS Ship's Bridge — the leadership cockpit under the
- * "AI Command Center" sidebar section.  Its surfaces include:
- *   - cross-project signal queues with leadership "myWatch" framing,
- *   - cost / runtime / source-health snapshots (financial + ops sensitivity),
- *   - a write endpoint that creates Linear command-board issues.
+ * Read gate  (GET /api/war-room, GET /api/war-room/runtime-status,
+ *             GET /api/war-room/source-health):
+ *   passWarRoomGate → WARROOM_VIEW
  *
- * None of those are project-scoped operational reads.  PMs already have
- * project-level surfaces; war-room intentionally surfaces org-level state
- * intended for GM / business_admin / super_admin review and dispatch.  The
- * dispatch packet for this work explicitly identified `business_admin |
- * super_admin only` as the appropriate set for leadership content.
- *
- * The pre-existing email-endsWith gate permitted any @kulaglass.com user;
- * this migration is therefore a tightening as well as a pattern fix.  If
- * `gm` / `owner` roles need access in the future, expand WAR_ROOM_ROLES in
- * one place rather than re-introducing email matching.
+ * Write gate (POST /api/war-room/tasks → Linear dispatch):
+ *   passWarRoomTaskGate → WARROOM_TASK_WRITE
  */
 
-import { NextResponse } from 'next/server';
-import { checkPermission } from '@/lib/permissions';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { passPermissionGate, type PermissionGateResult } from '@/lib/permissions';
 
+/**
+ * @deprecated Use the RolePermission system in lib/permissions.ts.
+ *
+ * Retained as a backward-compat export so anything still importing it does
+ * not break, but no active call site references it.  War Room access is
+ * resolved through ROLE_PERMISSIONS_DEFAULTS (env-overridable via
+ * ROLE_PERMISSIONS_JSON), not this constant.
+ */
 export const WAR_ROOM_ROLES: ReadonlySet<string> = new Set([
   'business_admin',
   'super_admin',
 ]);
 
-export type WarRoomGateResult =
-  | { ok: true; actorEmail: string; role: string }
-  | { ok: false; response: NextResponse };
+export type WarRoomGateResult = PermissionGateResult;
 
-function unauthorized(): NextResponse {
-  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-}
-
-function forbidden(): NextResponse {
-  return NextResponse.json(
-    { error: 'Forbidden: business_admin or super_admin required' },
-    { status: 403 },
-  );
+/**
+ * War Room read gate — required for GET /api/war-room/*.  Delegates to
+ * passPermissionGate(WARROOM_VIEW).
+ */
+export async function passWarRoomGate(_req: Request): Promise<WarRoomGateResult> {
+  const session = await getServerSession(authOptions);
+  return passPermissionGate(session, 'WARROOM_VIEW');
 }
 
 /**
- * War Room gate — required for every /api/war-room/* route (read + write).
- * The leadership surface is uniform: same role set guards dashboard reads,
- * runtime/source-health reads, and the Linear dispatch write.
+ * War Room task-dispatch write gate — required for POST /api/war-room/tasks.
+ * Delegates to passPermissionGate(WARROOM_TASK_WRITE).
  */
-export async function passWarRoomGate(req: Request): Promise<WarRoomGateResult> {
-  const { role, email } = await checkPermission(req, 'project:view');
-  if (!email) return { ok: false, response: unauthorized() };
-  if (!WAR_ROOM_ROLES.has(role)) {
-    return { ok: false, response: forbidden() };
-  }
-  return { ok: true, actorEmail: email, role };
+export async function passWarRoomTaskGate(_req: Request): Promise<WarRoomGateResult> {
+  const session = await getServerSession(authOptions);
+  return passPermissionGate(session, 'WARROOM_TASK_WRITE');
 }

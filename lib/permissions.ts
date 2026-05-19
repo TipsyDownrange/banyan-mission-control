@@ -4,9 +4,18 @@
  * Usage in an API route:
  *   const { allowed, role } = await checkPermission(request, 'wo:edit');
  *   if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+ *
+ * WARROOM-PERMISSIONS dispatch (2026-05-19): this file also hosts the new
+ * uppercase RolePermission system (WARROOM_VIEW, WARROOM_TASK_WRITE, ...).
+ * Consolidated here rather than split across lib/permissions{,-config,-gate}.ts
+ * to honor the dispatch's STOP rule ("3 permissions files feels excessive —
+ * consolidate to 1 or 2 + document the choice").  The new permissions are
+ * env-overridable via ROLE_PERMISSIONS_JSON; the legacy kebab-case Permission
+ * union remains the call surface for the existing API routes and is unchanged.
  */
 
-import { getServerSession } from 'next-auth';
+import { getServerSession, type Session } from 'next-auth';
+import { NextResponse } from 'next/server';
 import { authOptions, getRoleFromEmail } from '@/lib/auth';
 
 // ── Permission Types ──────────────────────────────────────────────────────────
@@ -132,4 +141,163 @@ export async function checkPermission(
   permission: Permission
 ): Promise<{ allowed: boolean; role: string; email: string | null }> {
   return checkPermissionServer(permission);
+}
+
+// ═══ Role → RolePermission system (WARROOM-PERMISSIONS, 2026-05-19) ═══════════
+//
+// Separate from the legacy kebab-case `Permission` union above.  This system
+// is env-overridable (ROLE_PERMISSIONS_JSON) so widening War Room access — and
+// future modules — does NOT require a code change + PR + deploy.  Falls back
+// to ROLE_PERMISSIONS_DEFAULTS when the env var is unset or malformed, so the
+// auth path is deterministic and offline-capable (no LLM calls, no network).
+//
+// To add a new module-scoped permission:
+//   1. Extend the `RolePermission` union below.
+//   2. Add the role-set defaults to ROLE_PERMISSIONS_DEFAULTS.
+//   3. Replace the module's hardcoded-role gate with passPermissionGate(...).
+//
+// Future permissions to add when migrating peer api-gate modules:
+//   - KB_VIEW / KB_WRITE / KB_SETUP   (lib/knowledge/api-gate.ts)
+//   - CONTACTS_READ / CONTACTS_WRITE  (lib/contacts/api-gate.ts)
+//   - ORG_READ / ORG_WRITE            (organizations)
+//   - PM_DOC_READ / PM_DOC_WRITE      (lib/pm/documents/api-gate.ts)
+//   - SUGGESTION_VIEW / SUGGESTION_WRITE
+//   - DAILY_REPORT_VIEW / DAILY_REPORT_WRITE
+
+export type RolePermission =
+  | 'WARROOM_VIEW'
+  | 'WARROOM_TASK_WRITE';
+
+export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
+  'WARROOM_VIEW',
+  'WARROOM_TASK_WRITE',
+];
+
+/**
+ * Default role → permissions map.  Preserves PR #188 behavior when
+ * ROLE_PERMISSIONS_JSON is unset: only business_admin and super_admin hold the
+ * War Room permissions; every other role gets [].
+ */
+export const ROLE_PERMISSIONS_DEFAULTS: Record<string, RolePermission[]> = {
+  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE'],
+  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE'],
+  gm:             [],
+  owner:          [],
+  service_pm:     [],
+  super:          [],
+  pm:             [],
+  estimator:      [],
+  admin_mgr:      [],
+  admin:          [],
+  field:          [],
+  pm_track:       [],
+  sales:          [],
+  catalog_admin:  [],
+  none:           [],
+};
+
+let rolePermissionsCache: Record<string, RolePermission[]> | undefined;
+
+/**
+ * Parse a ROLE_PERMISSIONS_JSON string.  Returns the parsed map on success,
+ * null on any malformed input (missing object, wrong types, unknown
+ * permission strings).  Never throws — the caller falls back to defaults.
+ */
+export function parseRolePermissions(raw: string | undefined | null): Record<string, RolePermission[]> | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+  const known = new Set<RolePermission>(ALL_ROLE_PERMISSIONS);
+  const result: Record<string, RolePermission[]> = {};
+  for (const [role, perms] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!Array.isArray(perms)) return null;
+    const cleaned: RolePermission[] = [];
+    for (const p of perms) {
+      if (typeof p !== 'string') return null;
+      if (!known.has(p as RolePermission)) return null;
+      cleaned.push(p as RolePermission);
+    }
+    result[role] = cleaned;
+  }
+  return result;
+}
+
+/**
+ * Resolve the active role → permissions map.  Memoized for the process
+ * lifetime so the env var is parsed once.  Defaults are used when the env
+ * var is unset or malformed.
+ */
+export function getRolePermissions(): Record<string, RolePermission[]> {
+  if (rolePermissionsCache) return rolePermissionsCache;
+  const parsed = parseRolePermissions(process.env.ROLE_PERMISSIONS_JSON);
+  rolePermissionsCache = parsed ?? ROLE_PERMISSIONS_DEFAULTS;
+  return rolePermissionsCache;
+}
+
+/** Test-only reset hook — used by __tests__/permissions.test.ts. */
+export function resetRolePermissionsCacheForTests(): void {
+  rolePermissionsCache = undefined;
+}
+
+type SessionLike = Session | null | undefined;
+
+function sessionRole(session: SessionLike): { email: string | null; role: string } {
+  const email = session?.user?.email ?? null;
+  if (!email) return { email: null, role: 'none' };
+  const stamped = (session?.user as { role?: string } | undefined)?.role;
+  const role = stamped || getRoleFromEmail(email);
+  return { email, role };
+}
+
+/**
+ * Synchronous permission check from a NextAuth session.  Returns false for
+ * missing sessions, unknown roles, and roles whose permission list does not
+ * include `permission`.  Pure config lookup + role-set membership — no
+ * network, no LLM, no DB.
+ */
+export function hasPermission(session: SessionLike, permission: RolePermission): boolean {
+  const { email, role } = sessionRole(session);
+  if (!email) return false;
+  const perms = getRolePermissions()[role];
+  return Array.isArray(perms) && perms.includes(permission);
+}
+
+export type PermissionGateResult =
+  | { ok: true; actorEmail: string; role: string }
+  | { ok: false; response: NextResponse };
+
+/**
+ * Generic API-route permission gate — mirrors the shape of passWarRoomGate
+ * for drop-in replacement in future module migrations.  Returns 401 when no
+ * session, 403 when the resolved role lacks `permission`.
+ */
+export function passPermissionGate(
+  session: SessionLike,
+  permission: RolePermission,
+): PermissionGateResult {
+  const { email, role } = sessionRole(session);
+  if (!email) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+    };
+  }
+  const perms = getRolePermissions()[role];
+  if (!Array.isArray(perms) || !perms.includes(permission)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: `Forbidden: missing permission ${permission}` },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true, actorEmail: email, role };
 }
