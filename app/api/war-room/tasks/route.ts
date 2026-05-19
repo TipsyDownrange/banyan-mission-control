@@ -5,7 +5,7 @@ import {
   buildWarRoomLinearLabels,
   validateWarRoomTaskIntake,
 } from '@/lib/war-room/commandBridge';
-import { passWarRoomGate } from '@/lib/war-room/api-gate';
+import { passWarRoomTaskGate } from '@/lib/war-room/api-gate';
 
 const LINEAR_API_URL = 'https://api.linear.app/graphql';
 
@@ -24,7 +24,7 @@ interface LinearCreateIssueResponse {
 }
 
 export async function POST(request: Request) {
-  const gate = await passWarRoomGate(request);
+  const gate = await passWarRoomTaskGate(request);
   if (!gate.ok) return gate.response;
 
   let payload: unknown;
