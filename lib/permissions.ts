@@ -187,7 +187,16 @@ export type RolePermission =
   | 'CONTACTS_WRITE'
   // Organizations (peer migration)
   | 'ORG_VIEW'
-  | 'ORG_WRITE';
+  | 'ORG_WRITE'
+  // Suggestions (peer migration)
+  | 'SUGGESTIONS_VIEW'
+  | 'SUGGESTIONS_REVIEW'
+  // Work Breakdown (peer migration)
+  | 'WORK_BREAKDOWN_VIEW'
+  | 'WORK_BREAKDOWN_WRITE'
+  // PM Documents (peer migration)
+  | 'PM_DOCUMENT_VIEW'
+  | 'PM_DOCUMENT_WRITE';
 
 export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   'WARROOM_VIEW',
@@ -205,6 +214,15 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   // Organizations (peer migration)
   'ORG_VIEW',
   'ORG_WRITE',
+  // Suggestions (peer migration)
+  'SUGGESTIONS_VIEW',
+  'SUGGESTIONS_REVIEW',
+  // Work Breakdown (peer migration)
+  'WORK_BREAKDOWN_VIEW',
+  'WORK_BREAKDOWN_WRITE',
+  // PM Documents (peer migration)
+  'PM_DOCUMENT_VIEW',
+  'PM_DOCUMENT_WRITE',
 ];
 
 /**
@@ -224,28 +242,61 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
  *   - Org view: every documented role except 'none' (preserves the
  *       passOrganizationsAuthGate behavior — any authenticated non-'none'
  *       role; ContactAutocomplete / OrganizationAutocomplete rely on this).
+ *   - Suggestions view: every documented role except 'none' (preserves the
+ *       passSuggestionsAuthGate behavior — universal SuggestionButton).
+ *   - Suggestions review: pm, business_admin, super_admin, service_pm
+ *       (preserves PR #190 SUGGESTIONS_REVIEW_ROLES exactly; PM/admin
+ *       triage queue scope).
+ *   - Work Breakdown view: every documented role except 'none' (preserves
+ *       passWorkBreakdownAuthGate behavior — multiple read-only panels
+ *       render WorkBreakdown).
+ *   - Work Breakdown write: pm, service_pm, estimator, business_admin,
+ *       super_admin (preserves PR #193 WORK_BREAKDOWN_WRITE_ROLES exactly;
+ *       operational PM scope, no field/sales).
+ *   - PM Documents view: pm, business_admin, super_admin, catalog_admin,
+ *       field_super, super (preserves BAN-345 / PR #181 CROSS_PROJECT_ROLES
+ *       exactly).
+ *   - PM Documents write: pm, business_admin, super_admin, catalog_admin,
+ *       field_super, super (preserves BAN-345 / PR #181 WRITE_ROLES exactly;
+ *       field_super is further restricted to PHOTO_PACKAGE at the route
+ *       level via roleMayWriteKind).
+ *
+ * Note: field_super is a Document-Hub-only role with no other module grants;
+ * it appears in ROLE_PERMISSIONS_DEFAULTS as an addressable key.
  */
 export const ROLE_PERMISSIONS_DEFAULTS: Record<string, RolePermission[]> = {
-  // Daily Report + Contacts + Organizations (peer migrations): VIEW grants are
-  // broad (every documented role except 'none').  Daily Report WRITE: pm,
-  // business_admin, super_admin, service_pm, super (PR #191 set).  Contacts
-  // WRITE: pm, business_admin, super_admin, service_pm, estimator, sales
-  // (PR #187 set).  Org WRITE: pm, business_admin, super_admin, service_pm,
-  // estimator, sales (PR #189 set — matches contacts).
-  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
-  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE'],
-  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW'],
+  // Daily Report + Contacts + Organizations + Suggestions + Work Breakdown +
+  // PM Documents (peer migrations).  VIEW grants for the broad-read modules
+  // are wide (every documented role except 'none').  Daily Report WRITE: pm,
+  // business_admin, super_admin, service_pm, super (PR #191).  Contacts WRITE:
+  // pm, business_admin, super_admin, service_pm, estimator, sales (PR #187).
+  // Org WRITE: pm, business_admin, super_admin, service_pm, estimator, sales
+  // (PR #189 — matches contacts).  Suggestions REVIEW: pm, business_admin,
+  // super_admin, service_pm (PR #190).  Work Breakdown WRITE: pm, service_pm,
+  // estimator, business_admin, super_admin (PR #193).  PM Document
+  // VIEW/WRITE: pm, business_admin, super_admin, catalog_admin, field_super,
+  // super (BAN-345 / PR #181 — unlike other modules, the view and write sets
+  // match because Document Hub is a PM/admin operational surface, not a
+  // broad read surface; non-PM read consumers don't exist).
+  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE', 'PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE', 'PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW', 'PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'SUGGESTIONS_REVIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE', 'PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
+  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'CONTACTS_WRITE', 'ORG_VIEW', 'ORG_WRITE', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW'],
+  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW', 'PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
+  // field_super is a Document-Hub-specific role (BAN-345); it gets the broad
+  // VIEW grants to match the prior "any non-none role" read pattern other
+  // modules use, plus PM_DOCUMENT_* (route-level restricted to PHOTO_PACKAGE
+  // uploads via roleMayWriteKind).
+  field_super:    ['KB_VIEW', 'DAILY_REPORT_VIEW', 'CONTACTS_VIEW', 'ORG_VIEW', 'SUGGESTIONS_VIEW', 'WORK_BREAKDOWN_VIEW', 'PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
   none:           [],
 };
 
