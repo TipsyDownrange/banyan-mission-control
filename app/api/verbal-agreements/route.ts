@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { eq, and } from 'drizzle-orm';
 import { db, engagements, verbal_agreements } from '@/db';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 import { passVerbalAgreementWriteGate } from '@/lib/pm/verbal-agreements/api-gate';
 import {
   optionalInteger,
@@ -109,12 +110,35 @@ export async function POST(req: Request) {
         },
       });
 
-      return { kind: 'ok' as const, agreement, event_id: event.event_id };
+      return {
+        kind: 'ok' as const,
+        agreement,
+        event_id: event.event_id,
+        engagement_id: engagement.engagement_id,
+        engagement_kid: engagement.kid ?? null,
+        is_test_project: engagement.is_test_project === true,
+        subject,
+      };
     });
 
     if (result.kind === 'not_found') {
       return NextResponse.json({ error: `engagement not found for kid: ${engagementKid}` }, { status: 404 });
     }
+
+    // BAN-344 PM-V1.0-E — Action Item Tracker subscriber.  A new verbal
+    // agreement triggers a CONFIRM action item to send written follow-up.
+    await dispatchSourceEvent({
+      eventType: 'VERBAL_AGREEMENT_LOGGED',
+      entityKind: 'verbal_agreement',
+      entityId: result.agreement.verbal_agreement_id,
+      tenantId: gate.tenantId,
+      engagementId: result.engagement_id,
+      kid: result.engagement_kid,
+      isTestProject: result.is_test_project,
+      metadata: { summary: result.subject },
+      actorEmail: gate.actorEmail,
+    });
+
     return NextResponse.json({ ok: true, verbal_agreement: result.agreement, event_id: result.event_id }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });

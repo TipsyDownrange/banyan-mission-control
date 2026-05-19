@@ -25,6 +25,7 @@ import {
   type RfiState,
   type RfiSubmittedTo,
 } from './state-machine';
+import { dispatchSourceEvent } from '@/lib/pm/action-items/spine-subscriber';
 
 export type ExecuteRfiTransitionInput = {
   rfiId: string;
@@ -63,7 +64,7 @@ export type ExecuteRfiTransitionResult =
 export async function executeRfiTransition(
   input: ExecuteRfiTransitionInput,
 ): Promise<ExecuteRfiTransitionResult> {
-  return db.transaction(async (tx) => {
+  const txResult = await db.transaction(async (tx) => {
     const rows = await tx
       .select({
         rfi_id: rfis.rfi_id,
@@ -88,7 +89,7 @@ export async function executeRfiTransition(
 
     if (rows.length === 0) {
       return {
-        ok: false,
+        ok: false as const,
         status: 404,
         code: 'RFI_NOT_FOUND',
         message: `rfi ${input.rfiId} not found`,
@@ -101,7 +102,7 @@ export async function executeRfiTransition(
     const validation = validateRfiTransition(fromState, toState);
     if (!validation.ok) {
       return {
-        ok: false,
+        ok: false as const,
         status: 400,
         code: validation.reason,
         message: validation.message,
@@ -180,12 +181,46 @@ export async function executeRfiTransition(
     }
 
     return {
-      ok: true,
+      ok: true as const,
       from_state: fromState,
       to_state: toState,
       event_id: emit.event_id,
       co_event_id: coEventId,
       rfi: updated[0] as Record<string, unknown>,
+      _subscriber: {
+        engagement_id: row.engagement_id,
+        engagement_kid: row.engagement_kid ?? null,
+        is_test_project: row.is_test_project === true,
+        rfi_number: row.rfi_number,
+        ball_in_court: updates.ball_in_court ?? null,
+      },
     };
   });
+
+  // BAN-344 PM-V1.0-E — Action Item Tracker subscriber.  Runs AFTER the
+  // source tx commits; dispatchSourceEvent swallows its own failures so
+  // the source event is never rolled back by subscriber-side issues.
+  if (txResult.ok) {
+    const ctx = txResult._subscriber;
+    await dispatchSourceEvent({
+      eventType: 'RFI_STATE_CHANGED',
+      entityKind: 'rfi',
+      entityId: input.rfiId,
+      tenantId: input.tenantId,
+      engagementId: ctx.engagement_id,
+      kid: ctx.engagement_kid,
+      isTestProject: ctx.is_test_project,
+      metadata: {
+        from_state: txResult.from_state,
+        to_state: txResult.to_state,
+        rfi_number: ctx.rfi_number,
+        ball_in_court: ctx.ball_in_court,
+      },
+      actorEmail: input.actorEmail,
+    });
+    const { _subscriber, ...publicResult } = txResult;
+    void _subscriber;
+    return publicResult;
+  }
+  return txResult;
 }

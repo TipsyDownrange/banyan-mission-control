@@ -1870,3 +1870,73 @@ export const meeting_attendees = pgTable('meeting_attendees', {
     sql`${table.kula_user_id} IS NULL OR ${table.is_kula_user} = true`,
   ),
 ]);
+
+// BAN-344 PM-V1.0-E — Action Item Tracker (Cross-Source Aggregator).
+export const actionItemSourceEntityTypeEnum = pgEnum('action_item_source_entity_type', [
+  'SUBMITTAL',
+  'RFI',
+  'VERBAL_AGREEMENT',
+  'MEETING',
+  'PAY_APP',
+  'TM_TICKET',
+  'CHANGE_ORDER',
+  'PUNCH_LIST_ITEM',
+  'EXTERNAL_WAIVER',
+  'GC_REQUIRED_DOC',
+  'WARRANTY_CLAIM',
+  'MANUAL',
+]);
+
+export const actionItemPriorityEnum = pgEnum('action_item_priority', [
+  'URGENT',
+  'HIGH',
+  'MEDIUM',
+  'LOW',
+]);
+
+export const actionItemStatusEnum = pgEnum('action_item_status', [
+  'OPEN',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'DEFERRED',
+  'CANCELLED',
+  'AUTO_CLOSED',
+]);
+
+export const action_items = pgTable('action_items', {
+  action_item_id: uuid('action_item_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').references(() => engagements.engagement_id),
+
+  source_event_type: text('source_event_type').notNull(),
+  source_entity_type: actionItemSourceEntityTypeEnum('source_entity_type').notNull(),
+  source_entity_id: uuid('source_entity_id').notNull(),
+
+  title: text('title').notNull(),
+  description: text('description'),
+  action_required: text('action_required'),
+
+  assigned_to: uuid('assigned_to').references(() => users.user_id),
+  due_date: date('due_date'),
+
+  priority: actionItemPriorityEnum('priority').notNull().default('MEDIUM'),
+  status: actionItemStatusEnum('status').notNull().default('OPEN'),
+  auto_closed_reason: text('auto_closed_reason'),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  completed_at: timestamp('completed_at', { withTimezone: true }),
+  completed_by: uuid('completed_by').references(() => users.user_id),
+
+  notes: text('notes'),
+}, (table) => [
+  index('idx_action_items_tenant_engagement_status').on(table.tenant_id, table.engagement_id, table.status),
+  index('idx_action_items_tenant_assignee_open')
+    .on(table.tenant_id, table.assigned_to, table.status)
+    .where(sql`${table.status} IN ('OPEN','IN_PROGRESS')`),
+  index('idx_action_items_tenant_due_open')
+    .on(table.tenant_id, table.due_date)
+    .where(sql`${table.status} IN ('OPEN','IN_PROGRESS')`),
+  index('idx_action_items_source_entity').on(table.source_entity_type, table.source_entity_id),
+  check('action_items_title_length', sql`char_length(${table.title}) <= 300`),
+]);
