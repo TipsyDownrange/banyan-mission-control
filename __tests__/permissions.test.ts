@@ -93,6 +93,35 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       expect(perms).not.toEqual(expect.arrayContaining(['KB_SETUP']));
     }
   });
+
+  // DAILY-REPORT-PERMISSIONS dispatch (2026-05-19) — daily-report defaults
+  // reproduce PR #191's DAILY_REPORT_WRITE_ROLES exactly while widening read
+  // to every authenticated role.
+  it('grants DAILY_REPORT_VIEW + DAILY_REPORT_WRITE to pm, business_admin, super_admin, service_pm, super', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'super']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE']),
+      );
+    }
+  });
+
+  it('grants DAILY_REPORT_VIEW (read-only) to every documented role except none', () => {
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (role === 'none') {
+        expect(perms).not.toEqual(expect.arrayContaining(['DAILY_REPORT_VIEW']));
+        continue;
+      }
+      expect(perms).toEqual(expect.arrayContaining(['DAILY_REPORT_VIEW']));
+    }
+  });
+
+  it('denies DAILY_REPORT_WRITE for roles outside the daily-report write set', () => {
+    const writeRoles = new Set(['pm', 'business_admin', 'super_admin', 'service_pm', 'super']);
+    for (const [role, perms] of Object.entries(ROLE_PERMISSIONS_DEFAULTS)) {
+      if (writeRoles.has(role)) continue;
+      expect(perms).not.toEqual(expect.arrayContaining(['DAILY_REPORT_WRITE']));
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -107,6 +136,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'KB_WRITE',
       'KB_TRIAGE',
       'KB_SETUP',
+      'DAILY_REPORT_VIEW',
+      'DAILY_REPORT_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -266,6 +297,39 @@ describe('hasPermission', () => {
     for (const role of documented) {
       expect(hasPermission(session(role), 'KB_VIEW')).toBe(true);
     }
+  });
+
+  // DAILY-REPORT-PERMISSIONS dispatch (2026-05-19) — exercise the new
+  // DAILY_REPORT_* permissions.  Reproduces PR #191's DAILY_REPORT_WRITE_ROLES
+  // (pm / business_admin / super_admin / service_pm / super) while widening
+  // read to every authenticated role.
+  it('returns true for DAILY_REPORT_WRITE on pm, business_admin, super_admin, service_pm, super (defaults)', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'super']) {
+      expect(hasPermission(session(role), 'DAILY_REPORT_WRITE')).toBe(true);
+      expect(hasPermission(session(role), 'DAILY_REPORT_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for DAILY_REPORT_WRITE on roles outside the daily-report write set', () => {
+    for (const role of ['gm', 'owner', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales', 'catalog_admin']) {
+      expect(hasPermission(session(role), 'DAILY_REPORT_WRITE')).toBe(false);
+    }
+  });
+
+  it('returns true for DAILY_REPORT_VIEW on every documented role except none (defaults)', () => {
+    const documented = [
+      'super_admin', 'business_admin', 'gm', 'owner', 'service_pm', 'super',
+      'pm', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales',
+      'catalog_admin',
+    ];
+    for (const role of documented) {
+      expect(hasPermission(session(role), 'DAILY_REPORT_VIEW')).toBe(true);
+    }
+  });
+
+  it('returns false for DAILY_REPORT_VIEW / DAILY_REPORT_WRITE on none', () => {
+    expect(hasPermission(session('none'), 'DAILY_REPORT_VIEW')).toBe(false);
+    expect(hasPermission(session('none'), 'DAILY_REPORT_WRITE')).toBe(false);
   });
 
   it('honors a ROLE_PERMISSIONS_JSON override widening KB_WRITE to field', () => {

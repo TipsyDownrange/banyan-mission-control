@@ -178,7 +178,10 @@ export type RolePermission =
   | 'KB_VIEW'
   | 'KB_WRITE'
   | 'KB_TRIAGE'
-  | 'KB_SETUP';
+  | 'KB_SETUP'
+  // Daily Report (peer migration)
+  | 'DAILY_REPORT_VIEW'
+  | 'DAILY_REPORT_WRITE';
 
 export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   'WARROOM_VIEW',
@@ -187,6 +190,9 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
   'KB_WRITE',
   'KB_TRIAGE',
   'KB_SETUP',
+  // Daily Report (peer migration)
+  'DAILY_REPORT_VIEW',
+  'DAILY_REPORT_WRITE',
 ];
 
 /**
@@ -198,20 +204,24 @@ export const ALL_ROLE_PERMISSIONS: ReadonlyArray<RolePermission> = [
  *   - KB view: every documented role except 'none'.
  */
 export const ROLE_PERMISSIONS_DEFAULTS: Record<string, RolePermission[]> = {
-  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP'],
-  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
-  gm:             ['KB_VIEW'],
-  owner:          ['KB_VIEW'],
-  service_pm:     ['KB_VIEW'],
-  super:          ['KB_VIEW'],
-  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
-  estimator:      ['KB_VIEW'],
-  admin_mgr:      ['KB_VIEW'],
-  admin:          ['KB_VIEW'],
-  field:          ['KB_VIEW'],
-  pm_track:       ['KB_VIEW'],
-  sales:          ['KB_VIEW'],
-  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE'],
+  // Daily Report (peer migration): VIEW + WRITE for pm / business_admin /
+  // super_admin / service_pm / super; VIEW only for every other authenticated
+  // role.  Reproduces lib/daily-report/api-gate.ts DAILY_REPORT_WRITE_ROLES
+  // exactly while widening read to any signed-in kulaglass.com user.
+  super_admin:    ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'KB_SETUP', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE'],
+  business_admin: ['WARROOM_VIEW', 'WARROOM_TASK_WRITE', 'KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE'],
+  gm:             ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  owner:          ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  service_pm:     ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE'],
+  super:          ['KB_VIEW', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE'],
+  pm:             ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW', 'DAILY_REPORT_WRITE'],
+  estimator:      ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  admin_mgr:      ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  admin:          ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  field:          ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  pm_track:       ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  sales:          ['KB_VIEW', 'DAILY_REPORT_VIEW'],
+  catalog_admin:  ['KB_VIEW', 'KB_WRITE', 'KB_TRIAGE', 'DAILY_REPORT_VIEW'],
   none:           [],
 };
 
