@@ -702,7 +702,6 @@ describe('hasPermission', () => {
       super: ['WORK_BREAKDOWN_VIEW', 'WORK_BREAKDOWN_WRITE'],
     });
     expect(hasPermission(session('super'), 'WORK_BREAKDOWN_WRITE')).toBe(true);
-    // Override doesn't grant WORK_BREAKDOWN_WRITE to field.
     expect(hasPermission(session('field'), 'WORK_BREAKDOWN_WRITE')).toBe(false);
   });
 
@@ -735,11 +734,9 @@ describe('hasPermission', () => {
       catalog_admin: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
       field_super: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
       super: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
-      // Widen service_pm.
       service_pm: ['PM_DOCUMENT_VIEW', 'PM_DOCUMENT_WRITE'],
     });
     expect(hasPermission(session('service_pm'), 'PM_DOCUMENT_WRITE')).toBe(true);
-    // Override doesn't grant PM_DOCUMENT_WRITE to field.
     expect(hasPermission(session('field'), 'PM_DOCUMENT_WRITE')).toBe(false);
   });
 
@@ -752,10 +749,7 @@ describe('hasPermission', () => {
       field: ['KB_VIEW', 'KB_WRITE'],
     });
     expect(hasPermission(session('field'), 'KB_WRITE')).toBe(true);
-    // Override doesn't grant KB_TRIAGE, so the field role still cannot triage.
     expect(hasPermission(session('field'), 'KB_TRIAGE')).toBe(false);
-    // Roles not present in the override map fall through to "no permissions"
-    // (the override fully replaces defaults rather than merging).
     expect(hasPermission(session('admin'), 'KB_VIEW')).toBe(false);
   });
 });
