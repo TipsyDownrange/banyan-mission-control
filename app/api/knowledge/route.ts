@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { getBackendSheetId } from '@/lib/backend-config';
 import {
   KB_ARTICLES_SHEET,
@@ -7,10 +6,7 @@ import {
   articleToRow,
   getSheets,
 } from '@/lib/knowledge';
-
-function isAuthorized(email?: string | null) {
-  return email?.endsWith('@kulaglass.com');
-}
+import { isKnowledgeManager, passKnowledgeWriteGate } from '@/lib/knowledge/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -18,8 +14,7 @@ const SHEET_ID = getBackendSheetId();
 export async function GET(req: Request) {
   let authorizedUser = false;
   try {
-    const session = await getServerSession();
-    authorizedUser = !!isAuthorized(session?.user?.email);
+    authorizedUser = await isKnowledgeManager(req);
   } catch {
     // Session check failed — continue as unauthenticated
   }
@@ -56,10 +51,8 @@ export async function GET(req: Request) {
 
 // POST — create article
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passKnowledgeWriteGate(req);
+  if (!gate.ok) return gate.response;
 
   try {
     const body = await req.json();
@@ -106,7 +99,7 @@ export async function POST(req: Request) {
       escalation: escalation || '',
       source_document_ids: Array.isArray(source_document_ids) ? source_document_ids : [],
       last_reviewed_at: '',
-      owner_user: owner_user || session?.user?.email || '',
+      owner_user: owner_user || gate.actorEmail || '',
       approved_by: '',
       published_at: '',
       created_at: now,

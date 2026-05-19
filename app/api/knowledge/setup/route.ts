@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
@@ -13,10 +12,7 @@ import {
   KB_ARTICLE_VIEWS_SHEET,
   articleToRow,
 } from '@/lib/knowledge';
-
-function isAuthorized(email?: string | null) {
-  return email?.endsWith('@kulaglass.com');
-}
+import { passKnowledgeSetupGate } from '@/lib/knowledge/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
@@ -65,11 +61,9 @@ const CANON_HEADERS: Record<string, string[]> = {
   ],
 };
 
-export async function POST() {
-  const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export async function POST(req: Request) {
+  const gate = await passKnowledgeSetupGate(req);
+  if (!gate.ok) return gate.response;
 
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);

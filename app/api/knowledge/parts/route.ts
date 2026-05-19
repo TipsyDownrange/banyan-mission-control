@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getArticleById } from '@/lib/knowledge';
+import { passKnowledgeAuthGate } from '@/lib/knowledge/api-gate';
 
 // GET ?article_id=X — Gate 1 placeholder; returns product_line_id for UI context
 export async function GET(req: Request) {
+  const gate = await passKnowledgeAuthGate(req);
+  if (!gate.ok) return gate.response;
+
   const { searchParams } = new URL(req.url);
   const article_id = searchParams.get('article_id');
 

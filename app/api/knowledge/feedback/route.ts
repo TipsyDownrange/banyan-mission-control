@@ -6,19 +6,17 @@ import {
   getFeedback,
   getSheets,
 } from '@/lib/knowledge';
-
-function isAuthorized(email?: string | null) {
-  return email?.endsWith('@kulaglass.com');
-}
+import {
+  passKnowledgeAuthGate,
+  passKnowledgeTriageGate,
+} from '@/lib/knowledge/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
-// GET — list feedback
+// GET — list feedback (triage)
 export async function GET(req: Request) {
-  const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passKnowledgeTriageGate(req);
+  if (!gate.ok) return gate.response;
 
   try {
     const { searchParams } = new URL(req.url);
@@ -30,12 +28,11 @@ export async function GET(req: Request) {
   }
 }
 
-// POST — submit feedback
+// POST — submit feedback (any authenticated user)
 export async function POST(req: Request) {
+  const gate = await passKnowledgeAuthGate(req);
+  if (!gate.ok) return gate.response;
   const session = await getServerSession();
-  if (!isAuthorized(session?.user?.email)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   try {
     const body = await req.json();

@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getArticles, getProductLines, KBProductLine } from '@/lib/knowledge';
+import { passKnowledgeAuthGate } from '@/lib/knowledge/api-gate';
 
 // GET — product line summary cards with article counts
-export async function GET() {
+export async function GET(req: Request) {
+  const gate = await passKnowledgeAuthGate(req);
+  if (!gate.ok) return gate.response;
+
   try {
     const [productLines, articles] = await Promise.all([
       getProductLines(),
