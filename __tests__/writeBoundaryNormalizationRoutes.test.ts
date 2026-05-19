@@ -56,7 +56,7 @@ describe('BAN-144 write-boundary normalization', () => {
     jest.clearAllMocks();
     jest.resetModules();
     mockSession();
-    mockCheckPermission.mockResolvedValue({ allowed: true, email: 'sean@kulaglass.com' });
+    mockCheckPermission.mockResolvedValue({ allowed: true, role: 'super_admin', email: 'sean@kulaglass.com' });
   });
 
   it('normalizes top-level contact name, email, and phone on create', async () => {
