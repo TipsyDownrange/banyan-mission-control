@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
 import { getGoogleAuth } from '@/lib/gauth';
 import { getBackendSheetId } from '@/lib/backend-config';
+import {
+  passSuggestionsAuthGate,
+  passSuggestionsReviewGate,
+} from '@/lib/suggestions/api-gate';
 
 const SHEET_ID = getBackendSheetId();
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await passSuggestionsAuthGate(req);
+  if (!gate.ok) return gate.response;
 
   const { description, email, name } = await req.json();
   if (!description) return NextResponse.json({ error: 'No description' }, { status: 400 });
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
 
     const id = `SUG-${Date.now().toString(36)}`;
     const now = new Date().toISOString();
-    const userName = name || session.user?.name || email || session.user?.email || 'Unknown';
+    const userName = name || email || gate.actorEmail || 'Unknown';
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       requestBody: {
         values: [[
           id,
-          email || session.user?.email || '',
+          email || gate.actorEmail || '',
           userName,
           description,
           '', // kai_interpretation (to be filled by Kai)
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     // Also create a Task so the suggestion is visible on the Task Board
     const taskId = `TSK-SUG-${Date.now()}`;
     const taskTitle = `[SUGGESTION] ${description.slice(0, 60)}`;
-    const taskDetail = `${description} | From: ${userName} (${email || session.user?.email || ''}) at ${now}`;
+    const taskDetail = `${description} | From: ${userName} (${email || gate.actorEmail || ''}) at ${now}`;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: 'Tasks!A1',
@@ -77,11 +78,9 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
-  const session = await getServerSession();
-  if (!session?.user?.email?.endsWith('@kulaglass.com')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export async function GET(req: Request) {
+  const gate = await passSuggestionsReviewGate(req);
+  if (!gate.ok) return gate.response;
 
   try {
     const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets.readonly']);
