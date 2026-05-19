@@ -94,6 +94,7 @@ const SITE_ADDRESS_FIELDS: ReadonlyArray<keyof ServiceIntakeDraft> = [
 export default function ServiceIntake({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void }) {
   const [step, setStep] = useState<'form' | 'done'>('form');
   const [saving, setSaving] = useState(false);
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
   const [error, setError] = useState('');
   const [createdWO, setCreatedWO] = useState('');
   const [draft, setDraft] = useState<ServiceIntakeDraft>({ ...BLANK });
@@ -107,6 +108,14 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   // Org contact picker
   const [orgContacts, setOrgContacts] = useState<Array<{contact_id: string; name: string; phone: string; email: string; title: string; is_primary: boolean}>>([]);
 
+  async function loadCustomers() {
+    const res = await fetch('/api/service/customers');
+    const data = await res.json();
+    const customerRows = data.customers || [];
+    setCustomers(customerRows);
+    return customerRows;
+  }
+
   // Load PMs + customers + step templates on mount
   useEffect(() => {
     fetch('/api/crew')
@@ -117,12 +126,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       })
       .catch(() => {});
     // GC-D053: Customers table is the source of truth for customer_id.
-    fetch('/api/service/customers')
-      .then(r => r.json())
-      .then(d => {
-        const customerRows = d.customers || [];
-        setCustomers(customerRows);
-      })
+    loadCustomers()
       .catch(() => {});
     fetch('/api/step-templates')
       .then(r => r.json())
@@ -232,6 +236,42 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
     setSaving(false);
   }
 
+  async function createInlineCustomer() {
+    const company = draft.customerName.trim();
+    if (!company) return;
+
+    setCreatingCustomer(true);
+    setError('');
+    try {
+      const res = await fetch('/api/service/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company,
+          contactPerson: draft.contactPerson,
+          phone: draft.contactPhone,
+          email: draft.contactEmail,
+          address: draft.address,
+          city: draft.city,
+          state: draft.state,
+          zip: draft.zip,
+          island: draft.island,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error || !data.customer) {
+        setError(data.error || 'Failed to create customer');
+        return;
+      }
+      setDraft(prev => applyCustomerRecord(prev, data.customer));
+      await loadCustomers();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setCreatingCustomer(false);
+    }
+  }
+
   const canSubmit = !saving
     && !!draft.customer_id
     && !!(draft.businessName || draft.customerName)
@@ -325,13 +365,28 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               subField="address"
             />
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Billing / account identity — selecting auto-fills contacts. Site Address is set separately.</div>
-            {draft.customerName.length >= 2 && !customers.some(c =>
+            {draft.customerName.length >= 2 && !draft.customer_id && !customers.some(c =>
               (c.company || '').toLowerCase().includes(draft.customerName.toLowerCase()) ||
               (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
             ) && (
-              <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
-                No existing customer matches &quot;{draft.customerName}&quot;. Select an existing customer/account before creating the work order.
-              </div>
+              <>
+                <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
+                  No existing customer matches &quot;{draft.customerName}&quot;. Select an existing customer/account before creating the work order.
+                </div>
+                <button
+                  type="button"
+                  onClick={createInlineCustomer}
+                  disabled={creatingCustomer}
+                  style={{
+                    fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
+                    border: '1px solid #d97706', background: 'white', color: '#b45309',
+                    cursor: creatingCustomer ? 'default' : 'pointer', marginTop: 6,
+                    opacity: creatingCustomer ? 0.7 : 1,
+                  }}
+                >
+                  {creatingCustomer ? 'Creating customer...' : `+ Create new customer: ${draft.customerName}`}
+                </button>
+              </>
             )}
           </div>
 
