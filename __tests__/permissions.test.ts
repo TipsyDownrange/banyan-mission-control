@@ -352,6 +352,43 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       );
     }
   });
+
+  // BAN-376 Customer Pipeline — INQUIRY_WRITE granted to PM + Service PM +
+  // GM + Admin per dispatch spec §1 "front desk roles" (plus the always-on
+  // business_admin / super_admin).  INQUIRY_VIEW broad — every documented
+  // role except 'none' (matches the CONTACTS_VIEW / SCHEDULE_VIEW pattern).
+  it('grants INQUIRY_WRITE to pm, service_pm, gm, admin, business_admin, super_admin', () => {
+    for (const role of ['pm', 'service_pm', 'gm', 'admin', 'business_admin', 'super_admin']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['INQUIRY_WRITE']),
+      );
+    }
+  });
+
+  it('denies INQUIRY_WRITE for read-only roles', () => {
+    for (const role of ['owner', 'service_pm' /* keep */, 'super', 'estimator', 'admin_mgr', 'field', 'pm_track', 'sales', 'catalog_admin', 'field_super']) {
+      if (role === 'service_pm') continue; // service_pm DOES get INQUIRY_WRITE
+      const perms = ROLE_PERMISSIONS_DEFAULTS[role];
+      expect(perms).not.toEqual(expect.arrayContaining(['INQUIRY_WRITE']));
+    }
+  });
+
+  it('grants INQUIRY_VIEW to every documented role except none', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'super', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales', 'gm', 'owner', 'catalog_admin', 'field_super']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['INQUIRY_VIEW']),
+      );
+    }
+    expect(ROLE_PERMISSIONS_DEFAULTS.none).not.toEqual(expect.arrayContaining(['INQUIRY_VIEW']));
+  });
+
+  it('INQUIRY_WRITE implies INQUIRY_VIEW for every write role', () => {
+    for (const role of ['pm', 'service_pm', 'gm', 'admin', 'business_admin', 'super_admin']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['INQUIRY_VIEW', 'INQUIRY_WRITE']),
+      );
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -380,6 +417,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'PM_DOCUMENT_WRITE',
       'SCHEDULE_VIEW',
       'SCHEDULE_WRITE',
+      'INQUIRY_VIEW',
+      'INQUIRY_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
@@ -812,5 +851,21 @@ describe('passPermissionGate', () => {
       expect(result.actorEmail).toBe('business_admin@kulaglass.com');
       expect(result.role).toBe('business_admin');
     }
+  });
+
+  // BAN-376 Customer Pipeline — INQUIRY_* surfaces.
+  it('grants INQUIRY_VIEW + INQUIRY_WRITE to PM via gate', () => {
+    const read = passPermissionGate(session('pm'), 'INQUIRY_VIEW');
+    const write = passPermissionGate(session('pm'), 'INQUIRY_WRITE');
+    expect(read.ok).toBe(true);
+    expect(write.ok).toBe(true);
+  });
+
+  it('grants INQUIRY_VIEW but denies INQUIRY_WRITE for estimator', () => {
+    const read = passPermissionGate(session('estimator'), 'INQUIRY_VIEW');
+    const write = passPermissionGate(session('estimator'), 'INQUIRY_WRITE');
+    expect(read.ok).toBe(true);
+    expect(write.ok).toBe(false);
+    if (!write.ok) expect(write.response.status).toBe(403);
   });
 });
