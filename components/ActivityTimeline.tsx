@@ -165,8 +165,8 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   FIELD_ISSUE:       { icon: '🚨', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',  label: 'Issue' },
   DAILY_LOG:         { icon: '📋', color: '#15803d', bg: 'rgba(21,128,61,0.08)',  label: 'Daily Report' },
   FIELD_MEASUREMENT: { icon: '📏', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', label: 'Measurement' },
-  PHOTO_ONLY:        { icon: '📸', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Photo' },
-  NOTE:              { icon: '📝', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Note' },
+  PHOTO_ONLY:        { icon: '📸', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Photo' },
+  NOTE:              { icon: '📝', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Note' },
   TM_CAPTURE:        { icon: '⏱️', color: '#92400e', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
   PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
   SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
@@ -198,8 +198,8 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   PROPOSAL_VERSION_FROZEN: { icon: Snowflake, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Proposal Frozen', display_label: 'Proposal Version Frozen', color_token: 'violet', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   PROPOSAL_VERSION_ACCEPTED: { icon: CheckCircle2, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Proposal Accepted', display_label: 'Proposal Version Accepted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   PRICING_EVIDENCE_ADDED: { icon: Tags, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Pricing Evidence', display_label: 'Pricing Evidence Added', color_token: 'cyan', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
-  MASTER_LIBRARY_ENTRY_RETIRED: { icon: '🗄️', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Retired' },
-  MASTER_LIBRARY_TOGGLE_CHANGED: { icon: '🎛️', color: '#64748b', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Toggle' },
+  MASTER_LIBRARY_ENTRY_RETIRED: { icon: '🗄️', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Retired' },
+  MASTER_LIBRARY_TOGGLE_CHANGED: { icon: '🎛️', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Toggle' },
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
   QA_COMPLETE:       { icon: '🔍', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)', label: 'QA Check' },
   CREW_DEMOBILIZED:  { icon: '🚛', color: '#b91c1c', bg: 'rgba(185,28,28,0.08)', label: 'Crew Demobilized' },
@@ -270,7 +270,7 @@ export const ACTIVITY_TIMELINE_TYPE_GROUPS: { label: string; pills: { key: TypeF
 const ISSUE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   OPEN:     { label: 'Open',     color: '#dc2626', bg: 'rgba(220,38,38,0.1)' },
   RESOLVED: { label: 'Resolved', color: '#15803d', bg: 'rgba(21,128,61,0.1)' },
-  CLOSED:   { label: 'Closed',   color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
+  CLOSED:   { label: 'Closed',   color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.1)' },
 };
 
 type TypeFilter = 'ALL' | ActivityTimelineEventType;
@@ -384,7 +384,7 @@ function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
           {payload.fileName}
         </span>
         {payload.destinationSubfolder && (
-          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>
+          <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>
             → {payload.destinationSubfolder}
           </span>
         )}
@@ -657,7 +657,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             {/* Location pill */}
             {locationPill && (
               <span style={{
-                fontSize: 10, fontWeight: 700, color: '#64748b',
+                fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)',
                 background: '#f1f5f9', padding: '2px 8px', borderRadius: 999,
                 border: '1px solid #e2e8f0',
               }}>
@@ -667,13 +667,13 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
+            <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>
               {formatTimestamp(event.event_occurred_at)}
             </span>
             {event.performed_by && (
               <>
                 <span style={{ fontSize: 10, color: '#cbd5e1' }}>·</span>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                   {resolveUser(event.performed_by)}
                 </span>
               </>
@@ -736,7 +736,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               padding: showFieldIssueGeneratePdf ? '0 10px' : 0,
               borderRadius: 7, border: '1px solid #e2e8f0', background: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: pdfState==='generating'?'default':'pointer',
-              fontSize: 13, flexShrink: 0, color: pdfState==='done' ? '#15803d' : pdfState==='error' ? '#dc2626' : '#64748b',
+              fontSize: 13, flexShrink: 0, color: pdfState==='done' ? '#15803d' : pdfState==='error' ? '#dc2626' : 'var(--bos-color-ink-disabled)',
               fontWeight: showFieldIssueGeneratePdf ? 800 : undefined,
               whiteSpace: 'nowrap',
             }}>
@@ -760,7 +760,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             style={{
               padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 800,
               background: resolving ? '#f1f5f9' : 'rgba(21,128,61,0.1)',
-              color: resolving ? '#94a3b8' : '#15803d',
+              color: resolving ? 'var(--bos-color-ink-tertiary)' : '#15803d',
               border: '1px solid rgba(21,128,61,0.2)',
               cursor: resolving ? 'default' : 'pointer',
               flexShrink: 0,
@@ -809,7 +809,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
       {expanded && !RenderBranch && (() => {
         const kv = (label: string, value: string | undefined, badge?: string): React.ReactElement | null => value ? (
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
-            <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>{label}</span>
+            <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>{label}</span>
             {badge
               ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? '#b91c1c' : badge === 'LOW' ? '#0f766e' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
               : <span style={{ color: '#0f172a', fontWeight: 600 }}>{value}</span>}
@@ -890,7 +890,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {/* Location */}
                   {(fields.unit_reference || fields.location_detail) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Location</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>Location</div>
                       {kv('Unit / Opening', fields.unit_reference ? String(fields.unit_reference) : undefined)}
                       {kv('Location Detail', fields.location_detail ? String(fields.location_detail) : undefined)}
                     </div>
@@ -898,7 +898,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {/* Dimensions */}
                   {dim && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Dimensions</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>Dimensions</div>
                       {kv('Size', dim)}
                       {fields.qty && kv('Qty', String(fields.qty))}
                     </div>
@@ -906,7 +906,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {/* Critical enum callout cards */}
                   {CRITICAL_MEASUREMENT_FIELDS.some(k => fields[k]) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Field Specs</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>Field Specs</div>
                       {CRITICAL_MEASUREMENT_FIELDS.map(k => {
                         const val = fields[k];
                         if (!val) return null;
@@ -916,7 +916,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                           <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(8,145,178,0.2)', borderLeft: '3px solid #0891b2', background: 'rgba(8,145,178,0.04)' }}>
                             <span style={{ fontSize: 14 }}>{meta.icon}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>{meta.label}</div>
+                              <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>{meta.label}</div>
                               <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{valStr}</div>
                             </div>
                             <div style={{ fontSize: 11, color: '#0891b2', fontWeight: 600, whiteSpace: 'nowrap' }}>{meta.implication}</div>
@@ -928,10 +928,10 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {/* Capture tool + other details */}
                   {(captureToolStr || fields.glass_type || fields.condition) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Details</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>Details</div>
                       {captureToolStr && (
                         <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
-                          <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>Capture Tool</span>
+                          <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Capture Tool</span>
                           <span style={{ color: '#0f172a', fontWeight: 600 }}>{captureToolStr}</span>
                           {captureBadge && <span style={{ padding: '1px 7px', borderRadius: 999, background: captureBadge.bg, color: captureBadge.color, fontSize: 11, fontWeight: 800 }}>{captureBadge.label}</span>}
                         </div>
@@ -943,7 +943,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {/* Additional fields */}
                   {extra.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>Additional Details</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>Additional Details</div>
                       {extra.map(([k,v]) => kv(k.replace(/_/g,' '), typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)))}
                     </div>
                   )}
@@ -959,7 +959,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 </>
               ) : (
                 // Safe fallback — do not render raw JSON blob
-                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>
                   Measurement data unavailable.{' '}
                   <button
                     onClick={e => { e.stopPropagation(); console.log('[FIELD_MEASUREMENT raw]', event.notes); }}
@@ -1113,11 +1113,11 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                     />
                   </a>
                 ) : (
-                  <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>(no signature on file)</div>
+                  <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>(no signature on file)</div>
                 )}
                 {authorizedBy && (
                   <div style={{ display: 'flex', gap: 8, fontSize: 12 }}>
-                    <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>Authorized By</span>
+                    <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Authorized By</span>
                     <span style={{ color: '#0f172a', fontWeight: 700 }}>
                       {authorizedBy}{authorizedByTitle ? ` · ${authorizedByTitle}` : ''}
                     </span>
@@ -1125,7 +1125,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 )}
                 {authType && (
                   <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
-                    <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: 110 }}>Auth Type</span>
+                    <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Auth Type</span>
                     <span style={{ padding: '1px 7px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.2)', fontSize: 11, fontWeight: 800 }}>{authType}</span>
                   </div>
                 )}
@@ -1286,7 +1286,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               ) : event.notes && !isJson ? (
                 <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
               ) : (
-                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>Site visit notes unavailable.</div>
+                <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>Site visit notes unavailable.</div>
               )}
             </div>
           );
@@ -1302,7 +1302,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(185,28,28,0.05)', borderRadius: 10, border: '1px solid rgba(185,28,28,0.15)' }}>
               {demobLine && <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{demobLine}</div>}
               {issueContext && (
-                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.4, borderTop: '1px solid rgba(185,28,28,0.1)', paddingTop: 6, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, borderTop: '1px solid rgba(185,28,28,0.1)', paddingTop: 6, marginTop: 2 }}>
                   <span style={{ fontWeight: 700 }}>Original issue: </span>{issueContext}
                 </div>
               )}
@@ -1337,7 +1337,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               ) : event.notes && !isJson ? (
                 <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
               ) : (
-                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>Test details unavailable.</div>
+                <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>Test details unavailable.</div>
               )}
             </div>
           );
@@ -1367,7 +1367,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               ) : event.notes && !isJson ? (
                 <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
               ) : (
-                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>Warranty callback details unavailable.</div>
+                <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>Warranty callback details unavailable.</div>
               )}
             </div>
           );
@@ -1413,8 +1413,8 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               {/* Status badge + inspector + date */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ padding: '3px 10px', borderRadius: 999, background: qaStatusStyle.bg, color: qaStatusStyle.color, border: `1px solid ${qaStatusStyle.border}`, fontSize: 11, fontWeight: 800 }}>{qaStatusStyle.label}</span>
-                {event.performed_by && <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Inspected by: {event.performed_by}</span>}
-                {!!parsed.completed_at && <span style={{ fontSize: 10, color: '#94a3b8' }}>{new Date(String(parsed.completed_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                {event.performed_by && <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>Inspected by: {event.performed_by}</span>}
+                {!!parsed.completed_at && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{new Date(String(parsed.completed_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
               </div>
               {/* Legal defense label for FAIL/PARTIAL */}
               {isDefenseMode && lightboxPhotos.length > 0 && (
@@ -1438,7 +1438,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               {/* Checklist summary */}
               {checkEntries.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>QA Checks</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>QA Checks</div>
                   {checkEntries.map(([k, v]) => (
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                       <span style={{ color: v ? '#059669' : '#dc2626', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>{v ? '✓' : '✗'}</span>
@@ -1479,7 +1479,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 </span>
               )}
               {locGroup && (
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>📍 {locGroup}</span>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>📍 {locGroup}</span>
               )}
             </div>
           );
@@ -1527,12 +1527,12 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {lightboxPhotos.length > 1 ? `Photo ${lightboxIndex + 1} of ${lightboxPhotos.length}` : 'Photo'}
               </span>
               <button
                 onClick={() => setLightboxOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b', lineHeight: 1 }}
+                style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--bos-color-ink-disabled)', lineHeight: 1 }}
               >×</button>
             </div>
 
@@ -1562,7 +1562,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                     opacity: lightboxIndex === 0 ? 0.35 : 1, fontWeight: 600,
                   }}
                 >← Prev</button>
-                <span style={{ fontSize: 11, color: '#94a3b8' }}>{lightboxIndex + 1} / {lightboxPhotos.length}</span>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{lightboxIndex + 1} / {lightboxPhotos.length}</span>
                 <button
                   onClick={() => setLightboxIndex(i => Math.min(lightboxPhotos.length - 1, i + 1))}
                   disabled={lightboxIndex === lightboxPhotos.length - 1}
@@ -1700,18 +1700,18 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
             padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer',
             border: selectedTypes.length === 0 ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
             background: selectedTypes.length === 0 ? 'rgba(15,118,110,0.08)' : 'white',
-            color: selectedTypes.length === 0 ? '#0f766e' : '#64748b',
+            color: selectedTypes.length === 0 ? '#0f766e' : 'var(--bos-color-ink-disabled)',
           }}>All ({displayEvents.length})</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ACTIVITY_TIMELINE_TYPE_GROUPS.map(group => (
             <div key={group.label} style={{ border: '1px solid #e2e8f0', borderRadius: 14, padding: 8, background: 'white' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: openGroups[group.label] === true ? 8 : 0 }}>
-                <button onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: prev[group.label] !== true }))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase', minWidth: 112, textAlign: 'left' }}>
+                <button onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: prev[group.label] !== true }))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 900, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', minWidth: 112, textAlign: 'left' }}>
                   {openGroups[group.label] === true ? '▾' : '▸'} {group.label}
                 </button>
                 <button onClick={() => selectGroup(group)} style={{ border: 'none', background: 'transparent', color: '#0f766e', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Select all</button>
-                <button onClick={() => clearGroup(group)} style={{ border: 'none', background: 'transparent', color: '#94a3b8', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>None</button>
+                <button onClick={() => clearGroup(group)} style={{ border: 'none', background: 'transparent', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>None</button>
               </div>
               {openGroups[group.label] === true && <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {group.pills.map(p => {
@@ -1724,7 +1724,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                     padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                     border: active ? `1.5px solid ${cfg?.color || '#0f766e'}` : '1.5px solid #e2e8f0',
                     background: active ? `${cfg?.color || '#0f766e'}12` : 'white',
-                    color: active ? (cfg?.color || '#0f766e') : '#64748b',
+                    color: active ? (cfg?.color || '#0f766e') : 'var(--bos-color-ink-disabled)',
                     transition: 'all 0.1s',
                   }}>
                     {FilterIcon ? <FilterIcon size={12} strokeWidth={2.4} style={{ marginRight: 5, verticalAlign: '-2px' }} /> : filterIconText ? `${filterIconText} ` : ''}{p.label}
@@ -1756,7 +1756,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                 padding: '5px 12px', borderRadius: 999, fontSize: 10, fontWeight: 700, cursor: 'pointer',
                 border: active ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
                 background: active ? 'rgba(15,118,110,0.08)' : 'white',
-                color: active ? '#0f766e' : '#94a3b8',
+                color: active ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
               }}>
                 {p.label}
               </button>
@@ -1775,7 +1775,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
             animation: 'spin 0.8s linear infinite',
           }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Loading field activity…</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Loading field activity…</div>
         </div>
       ) : error ? (
         <div style={{ padding: 32, textAlign: 'center', color: '#dc2626', fontSize: 13 }}>
@@ -1796,7 +1796,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
         />
       ) : (
         <>
-          <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, marginBottom: 10 }}>
             {filtered.length} event{filtered.length !== 1 ? 's' : ''}
             {selectedTypes.length > 0 || dateFilter !== 'all' ? ` (filtered from ${displayEvents.length})` : ''}
           </div>

@@ -151,7 +151,7 @@ export default function OverviewPanel() {
       value: `${utilizationPct}%`,
       subtitle: `${crewDeployed} deployed / ${crewTotal} total`,
       progress: utilizationPct,
-      color: utilizationPct >= 70 ? '#059669' : utilizationPct >= 40 ? '#d97706' : '#94a3b8',
+      color: utilizationPct >= 70 ? '#059669' : utilizationPct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)',
     },
     {
       label: 'Open Submittals',
@@ -214,14 +214,14 @@ export default function OverviewPanel() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: ISLAND_COLOR[island] }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: ISLAND_COLOR[island] }}>{island}</span>
-                  <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>({islandProjects.length})</span>
+                  <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>({islandProjects.length})</span>
                 </div>
                 {islandProjects.map(p => (
                   <div key={p.kID} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0 6px 16px', fontSize: 13 }}>
                     <span style={{ color: '#334155', fontWeight: 500 }}>{p.name}</span>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {p.issues > 0 && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: '#fef2f2', color: '#dc2626' }}>{p.issues} issues</span>}
-                      <span style={{ fontSize: 10, color: '#94a3b8' }}>{p.pm?.split(' ')[0] || ''}</span>
+                      <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{p.pm?.split(' ')[0] || ''}</span>
                     </div>
                   </div>
                 ))}
@@ -236,7 +236,7 @@ export default function OverviewPanel() {
             Recent Activity
           </div>
           {events.length === 0 ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No recent events</div>
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No recent events</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {events.slice(0, 12).map((ev, i) => {
@@ -250,7 +250,7 @@ export default function OverviewPanel() {
                       <div style={{ fontSize: 13, color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {ev.note || ev.projectName}
                       </div>
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                         {ev.projectName} · {displayName(ev.recordedBy)} · {formatTime(ev.occurredAt)}
                       </div>
                     </div>
@@ -279,10 +279,10 @@ export default function OverviewPanel() {
                       {p.name}
                     </div>
                     <div style={{ marginTop: 4, height: 4, borderRadius: 2, background: '#f1f5f9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 2, background: ISLAND_COLOR[p.island] || '#64748b', width: `${barWidth}%` }} />
+                      <div style={{ height: '100%', borderRadius: 2, background: ISLAND_COLOR[p.island] || 'var(--bos-color-ink-disabled)', width: `${barWidth}%` }} />
                     </div>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#64748b', minWidth: 30, textAlign: 'right' }}>{p.eventCount}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', minWidth: 30, textAlign: 'right' }}>{p.eventCount}</span>
                 </div>
               );
             })}

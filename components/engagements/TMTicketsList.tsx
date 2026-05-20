@@ -106,7 +106,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
         <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
           No T&amp;M tickets yet
         </div>
-        <div style={{ fontSize: 13, color: '#94a3b8' }}>
+        <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
           The first ticket will appear here once it&apos;s logged against an active T&amp;M authorization.
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center', gap: 6 }}>
             From
             <input
               type="date"
@@ -166,7 +166,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
               style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
             />
           </label>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center', gap: 6 }}>
             To
             <input
               type="date"
@@ -203,7 +203,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
               );
             })}
           </div>
-          <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>
+          <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             {filtered.length} of {tickets.length}
           </span>
         </div>
@@ -217,7 +217,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
               padding: 24,
               textAlign: 'center',
               fontSize: 12,
-              color: '#94a3b8',
+              color: 'var(--bos-color-ink-tertiary)',
               background: 'white',
               borderRadius: 14,
               border: '1px dashed #e2e8f0',

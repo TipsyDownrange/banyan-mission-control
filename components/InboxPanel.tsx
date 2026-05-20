@@ -28,7 +28,7 @@ const CAT: Record<EmailCategory, { label: string; color: string; bg: string; bor
   payment:      { label: 'Payment',      color: '#1d4ed8', bg: 'rgba(239,246,255,0.98)', border: '1px solid rgba(59,130,246,0.2)',  accent: '#3b82f6' },
   vendor_quote: { label: 'Quote',        color: '#6d28d9', bg: 'rgba(245,243,255,0.98)', border: '1px solid rgba(139,92,246,0.2)', accent: '#8b5cf6' },
   internal:     { label: 'Internal',     color: '#92400e', bg: 'rgba(255,251,235,0.98)', border: '1px solid rgba(245,158,11,0.2)', accent: '#f59e0b' },
-  other:        { label: 'Other',        color: '#475569', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.22)', accent: '#94a3b8' },
+  other:        { label: 'Other',        color: '#475569', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.22)', accent: 'var(--bos-color-ink-tertiary)' },
 };
 
 const PILL = (color: string, bg: string, border?: string): React.CSSProperties => ({
@@ -67,10 +67,10 @@ export default function InboxPanel() {
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Assistant</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Assistant</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Inbox</h1>
-          <div style={{ fontSize: 12, color: '#94a3b8', paddingBottom: 4 }}>Live · Gmail</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', paddingBottom: 4 }}>Live · Gmail</div>
         </div>
       </div>
 
@@ -89,9 +89,9 @@ export default function InboxPanel() {
             { label: 'High priority', value: highCount, helper: 'Needs action soon' },
           ].map(s => (
             <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
               <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a' }}>{s.value}</div>
-              <div style={{ marginTop: 6, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{s.helper}</div>
+              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.5 }}>{s.helper}</div>
             </div>
           ))}
         </div>
@@ -121,7 +121,7 @@ export default function InboxPanel() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 border: isActive ? (cfg?.border || '1px solid rgba(13,148,136,0.3)') : '1px solid rgba(226,232,240,0.9)',
                 background: isActive ? (cfg?.bg || 'rgba(240,253,250,0.96)') : 'white',
-                color: isActive ? (cfg?.color || '#0f766e') : '#64748b',
+                color: isActive ? (cfg?.color || '#0f766e') : 'var(--bos-color-ink-disabled)',
                 cursor: 'pointer',
               }}>
                 {f === 'bid_invite' ? 'Bid Invites' : f === 'change_order' ? 'Change Orders' : f === 'vendor_quote' ? 'Quotes' : f.charAt(0).toUpperCase() + f.slice(1)} · {count}
@@ -135,7 +135,7 @@ export default function InboxPanel() {
       {loading && (
         <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(13,148,136,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Kai is reading your inbox...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Kai is reading your inbox...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       )}
@@ -188,12 +188,12 @@ export default function InboxPanel() {
                     </div>
 
                     {/* From + date */}
-                    <div style={{ fontSize: 13, color: '#64748b' }}>
-                      {item.from} <span style={{ color: '#94a3b8' }}>·</span> {item.date}
+                    <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)' }}>
+                      {item.from} <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>·</span> {item.date}
                     </div>
                   </div>
 
-                  <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</div>
                 </div>
 
                 {/* Kai analysis block */}
@@ -219,7 +219,7 @@ export default function InboxPanel() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
                       <div>
-                        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Delegate to</div>
+                        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Delegate to</div>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {DELEGATES.map(d => (
                             <button key={d} disabled={delegating === item.id} onClick={async e => {
@@ -249,7 +249,7 @@ export default function InboxPanel() {
                               } catch(err) { alert('Error: ' + err); }
                               setDelegating(null);
                             }}
-                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? '#e2e8f0' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? '#94a3b8' : '#334155', cursor: delegating === item.id ? 'default' : 'pointer' }}>
+                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? '#e2e8f0' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? 'var(--bos-color-ink-tertiary)' : '#334155', cursor: delegating === item.id ? 'default' : 'pointer' }}>
                               {delegating === item.id ? '...' : d}
                             </button>
                           ))}
@@ -269,7 +269,7 @@ export default function InboxPanel() {
 
           {filtered.length === 0 && !loading && (
             <div style={{ background: 'white', borderRadius: 24, border: '1px solid rgba(226,232,240,0.9)', padding: 48, textAlign: 'center', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
-              <div style={{ fontSize: 13, color: '#94a3b8' }}>No items in this category</div>
+              <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>No items in this category</div>
             </div>
           )}
         </div>

@@ -59,7 +59,7 @@ const FILTER_ROW: CSSProperties = {
 };
 const FIELD_LABEL: CSSProperties = {
   fontSize: 10, fontWeight: 800, letterSpacing: '0.08em',
-  textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4,
+  textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 4,
 };
 const FIELD_INPUT: CSSProperties = {
   padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1',
@@ -80,7 +80,7 @@ const DANGER_BUTTON: CSSProperties = {
 };
 const HEADER_CELL: CSSProperties = {
   padding: '10px 12px', fontSize: 10, fontWeight: 800,
-  letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8',
+  letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)',
   textAlign: 'left',
 };
 const CELL: CSSProperties = {
@@ -313,7 +313,7 @@ export default function FreightCalendarManager() {
       </div>
 
       {state.kind === 'loading' && (
-        <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+        <div style={{ padding: 32, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
           Loading freight calendar…
         </div>
       )}
@@ -341,7 +341,7 @@ export default function FreightCalendarManager() {
           <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
             No sailings on file
           </div>
-          <div style={{ fontSize: 12, color: '#94a3b8', maxWidth: 420, margin: '0 auto' }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', maxWidth: 420, margin: '0 auto' }}>
             Add Matson sailing schedule entries here. They appear as overlays on
             project Schedule tabs so PMs can align ordering and install dates
             with arrival windows.

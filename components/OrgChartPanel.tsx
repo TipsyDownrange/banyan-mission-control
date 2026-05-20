@@ -26,7 +26,7 @@ const ROLE_COLOR: Record<string, string> = {
   owner: '#0f172a', gm: '#0369a1', pm: '#0f766e', estimator: '#0f766e',
   admin_mgr: '#7c3aed', admin: '#7c3aed', service_pm: '#6d28d9',
   super: '#92400e', sales: '#0f766e', pm_track: '#7c3aed',
-  journeyman: '#334155', apprentice: '#94a3b8', laborer: '#94a3b8',
+  journeyman: '#334155', apprentice: 'var(--bos-color-ink-tertiary)', laborer: 'var(--bos-color-ink-tertiary)',
   glazier: '#334155', field: '#334155',
 };
 
@@ -35,7 +35,7 @@ function getColor(role: string): string {
   for (const [k, v] of Object.entries(ROLE_COLOR)) {
     if (r.includes(k)) return v;
   }
-  return '#64748b';
+  return 'var(--bos-color-ink-disabled)';
 }
 
 function getInitials(name: string): string {
@@ -155,7 +155,7 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
 
 // ── Node card component ──────────────────────────────────────────────────
 function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean }) {
-  const islandColor = ISLAND_COLOR[node.island] || '#64748b';
+  const islandColor = ISLAND_COLOR[node.island] || 'var(--bos-color-ink-disabled)';
   const isLeader = ['owner', 'gm', 'pm', 'estimator', 'admin_mgr', 'service_pm', 'sales', 'super'].some(r =>
     node.title.toLowerCase().includes(r) || node.color === '#0f172a' || node.color === '#0369a1'
   );
@@ -287,11 +287,11 @@ function Legend() {
       {Object.entries(ISLAND_COLOR).slice(0, 4).map(([label, color]) => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{label}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>{label}</span>
         </div>
       ))}
       <div style={{ width: 1, height: 14, background: '#e2e8f0', margin: '0 4px' }} />
-      <span style={{ fontSize: 10, color: '#94a3b8' }}>Live from crew database</span>
+      <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>Live from crew database</span>
     </div>
   );
 }
@@ -337,14 +337,14 @@ export default function OrgChartPanel() {
   return (
     <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>People & Assets</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Org Chart</h1>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>
               {crew.length} people · Live from crew database
               {lastUpdated && (
-                <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 12 }}>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginLeft: 12 }}>
                   Updated: {lastUpdated}
                 </span>
               )}
@@ -358,10 +358,10 @@ export default function OrgChartPanel() {
         <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: 48, textAlign: 'center' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading org chart...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading org chart...</div>
         </div>
       ) : !orgTree ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No crew data available</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>No crew data available</div>
       ) : (
         <div style={{ overflowX: 'auto', paddingBottom: 24 }}>
           <div style={{ minWidth: 900 }}>
@@ -435,7 +435,7 @@ export default function OrgChartPanel() {
             { label: 'Islands', value: [...new Set(crew.map(c => c.island).filter(Boolean))].length },
           ].map(({ label, value }) => (
             <div key={label}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>{label}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 2 }}>{label}</div>
               <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a' }}>{value}</div>
             </div>
           ))}

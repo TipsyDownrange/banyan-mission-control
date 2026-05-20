@@ -61,7 +61,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   IN_PROGRESS: { bg: '#fef3c7', fg: '#92400e' },
   COMPLETED:   { bg: '#f0fdf4', fg: '#15803d' },
   DEFERRED:    { bg: '#f1f5f9', fg: '#475569' },
-  CANCELLED:   { bg: '#f1f5f9', fg: '#64748b' },
+  CANCELLED:   { bg: '#f1f5f9', fg: 'var(--bos-color-ink-disabled)' },
   AUTO_CLOSED: { bg: '#f5f3ff', fg: '#6d28d9' },
 };
 
@@ -190,13 +190,13 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
   }, [newTitle, newPriority, newDueDate, kID, fetchList]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading action items...</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading action items...</div>;
   }
   if (err) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Action Items requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Action Items requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -209,7 +209,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
           ['Auto-closed', data.summary.by_status.AUTO_CLOSED ?? 0],
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: label === 'Overdue' && Number(value) > 0 ? '#b91c1c' : '#0f172a', marginTop: 4 }}>{value}</div>
           </div>
         ))}
@@ -254,7 +254,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>
             No action items match the current filters.
           </div>
         ) : filtered.map((it) => {
@@ -267,7 +267,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 2fr) 120px 110px 130px 200px', gap: 10, alignItems: 'center' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {it.action_required ?? '—'} · {SOURCE_LABELS[it.source_entity_type] ?? it.source_entity_type}
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                 </div>
               </div>
               {(it.description || it.notes || it.auto_closed_reason) && (
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 8, paddingTop: 8, borderTop: '1px dashed #e2e8f0' }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 8, paddingTop: 8, borderTop: '1px dashed #e2e8f0' }}>
                   {it.auto_closed_reason && <div>Auto-closed: {it.auto_closed_reason}</div>}
                   {it.description && <div>{it.description}</div>}
                   {it.notes && <div style={{ fontStyle: 'italic' }}>{it.notes}</div>}

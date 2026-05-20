@@ -26,8 +26,8 @@ type SOVLine = Record<string, string>;
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   APPROVED:     { bg: '#f0fdfa', color: '#0f766e' },
   SUBMITTED:    { bg: '#eff6ff', color: '#1d4ed8' },
-  PENDING:      { bg: '#f8fafc', color: '#64748b' },
-  DRAFT:        { bg: '#f8fafc', color: '#64748b' },
+  PENDING:      { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
+  DRAFT:        { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   IDENTIFIED:   { bg: '#fffbeb', color: '#92400e' },
   REJECTED:     { bg: '#fef2f2', color: '#b91c1c' },
   DISPUTED:     { bg: '#fef2f2', color: '#b91c1c' },
@@ -42,7 +42,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 const TAG = ({ status, label }: { status: string; label?: string }) => {
-  const s = STATUS_COLORS[status] || { bg: '#f8fafc', color: '#64748b' };
+  const s = STATUS_COLORS[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{ padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}33` }}>
       {label || status.replace(/_/g, ' ')}
@@ -178,14 +178,14 @@ export default function PMPanel() {
   }
 
   const INP: React.CSSProperties = { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' };
-  const LBL: React.CSSProperties = { fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 };
+  const LBL: React.CSSProperties = { fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 };
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
       <EngagementCreationForm />
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Project Management</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Project Management</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>PM Command</h1>
           {projectsLoading ? (
@@ -198,7 +198,7 @@ export default function PMPanel() {
             </select>
           )}
           <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
-          {proj && <span style={{ padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, background: `${ISLAND_COLOR[proj.island] || '#64748b'}18`, color: ISLAND_COLOR[proj.island] || '#64748b', border: `1px solid ${ISLAND_COLOR[proj.island] || '#64748b'}33` }}>{proj.island}</span>}
+          {proj && <span style={{ padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, background: `${ISLAND_COLOR[proj.island] || 'var(--bos-color-ink-disabled)'}18`, color: ISLAND_COLOR[proj.island] || 'var(--bos-color-ink-disabled)', border: `1px solid ${ISLAND_COLOR[proj.island] || 'var(--bos-color-ink-disabled)'}33` }}>{proj.island}</span>}
         </div>
       </div>
 
@@ -218,20 +218,20 @@ export default function PMPanel() {
           <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#f1f5f9', borderRadius: 14, padding: 4 }}>
             {TABS.map(t => (
               <button key={t.key} onClick={() => setActiveTab(t.key)}
-                style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, transition: 'all 0.15s', background: activeTab === t.key ? 'white' : 'transparent', color: activeTab === t.key ? '#0f172a' : '#64748b', boxShadow: activeTab === t.key ? '0 1px 4px rgba(15,23,42,0.08)' : 'none' }}>
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, transition: 'all 0.15s', background: activeTab === t.key ? 'white' : 'transparent', color: activeTab === t.key ? '#0f172a' : 'var(--bos-color-ink-disabled)', boxShadow: activeTab === t.key ? '0 1px 4px rgba(15,23,42,0.08)' : 'none' }}>
                 {t.label}
               </button>
             ))}
           </div>
 
-          {loading && <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Loading...</div>}
+          {loading && <div style={{ textAlign: 'center', padding: 40, color: 'var(--bos-color-ink-tertiary)' }}>Loading...</div>}
 
           {/* OVERVIEW */}
           {!loading && activeTab === 'overview' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               {/* RFI summary */}
               <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 12 }}>RFIs</div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 12 }}>RFIs</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{rfiSummary.total || 0}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {(rfiSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {rfiSummary.overdue} overdue response{(rfiSummary.overdue || 0) !== 1 ? 's' : ''}</div>}
@@ -242,7 +242,7 @@ export default function PMPanel() {
               </div>
               {/* Submittals summary */}
               <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 12 }}>Submittals</div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 12 }}>Submittals</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{subSummary.total || 0}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 12, color: '#0f766e', fontWeight: 700 }}>✓ {subSummary.approved || 0} approved</div>
@@ -253,12 +253,12 @@ export default function PMPanel() {
               </div>
               {/* CO summary */}
               <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 12 }}>Change Orders</div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 12 }}>Change Orders</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{cos.length}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 12, color: '#0f766e', fontWeight: 700 }}>✓ {fmtMoney(String(coExposure.approved || 0))} approved</div>
                   {(coExposure.pending || 0) > 0 && <div style={{ fontSize: 12, color: '#92400e' }}>⏳ {fmtMoney(String(coExposure.pending))} pending</div>}
-                  {(coExposure.identified || 0) > 0 && <div style={{ fontSize: 12, color: '#64748b' }}>💡 {fmtMoney(String(coExposure.identified))} identified</div>}
+                  {(coExposure.identified || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>💡 {fmtMoney(String(coExposure.identified))} identified</div>}
                 </div>
                 <button onClick={() => setActiveTab('co')} style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all →</button>
               </div>
@@ -275,34 +275,34 @@ export default function PMPanel() {
                 </div>
                 <button onClick={() => setShowNewRFI(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New RFI</button>
               </div>
-              {rfis.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', color: '#94a3b8' }}>No RFIs logged yet</div>}
+              {rfis.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', color: 'var(--bos-color-ink-tertiary)' }}>No RFIs logged yet</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {rfis.map(rfi => (
                   <div key={rfi.rfi_id} style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '14px 18px', display: 'grid', gridTemplateColumns: '80px 1fr auto auto', gap: 12, alignItems: 'center', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e' }}>{rfi.rfi_number}</div>
-                      <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>{rfi.rfi_type === 'INBOUND' ? '← Inbound' : '→ Outbound'}</div>
+                      <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>{rfi.rfi_type === 'INBOUND' ? '← Inbound' : '→ Outbound'}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{rfi.subject}</div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <TAG status={rfi.status} />
                         {rfi.ball_in_court && <BALL court={rfi.ball_in_court} />}
-                        {rfi.spec_section && <span style={{ fontSize: 10, color: '#64748b' }}>{rfi.spec_section}</span>}
+                        {rfi.spec_section && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{rfi.spec_section}</span>}
                         {rfi.days_open && rfi.status !== 'CLOSED' && parseInt(rfi.days_open) > 0 && (
                           parseInt(rfi.days_open) > 10
                             ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}>⚠️ {rfi.days_open}d open</span>
-                            : <span style={{ fontSize: 10, color: '#64748b' }}>{rfi.days_open}d open</span>
+                            : <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{rfi.days_open}d open</span>
                         )}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', textAlign: 'right' }}>
                       {rfi.submitted_at ? fmtDate(rfi.submitted_at) : fmtDate(rfi.created_at)}
                     </div>
                     <div>
                       {rfi.status === 'DRAFT' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', border: '1px solid rgba(29,78,216,0.2)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
                       {rfi.status === 'SUBMITTED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'RESPONDED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Got Response</button>}
-                      {rfi.status === 'RESPONDED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'CLOSED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Close</button>}
+                      {rfi.status === 'RESPONDED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'CLOSED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Close</button>}
                     </div>
                   </div>
                 ))}
@@ -317,7 +317,7 @@ export default function PMPanel() {
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Submittal Log</div>
                 <button onClick={() => setShowNewSub(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#0369a1,#0ea5e9)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Add Submittal</button>
               </div>
-              {submittals.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', color: '#94a3b8' }}>No submittals logged yet</div>}
+              {submittals.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', color: 'var(--bos-color-ink-tertiary)' }}>No submittals logged yet</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {submittals.map(sub => (
                   <div key={sub.sub_id} style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '14px 18px', display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: 12, alignItems: 'center', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
@@ -327,15 +327,15 @@ export default function PMPanel() {
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <TAG status={sub.status} />
                         {sub.ball_in_court && <BALL court={sub.ball_in_court} />}
-                        <span style={{ fontSize: 10, color: '#64748b' }}>{sub.spec_section}</span>
-                        {sub.submitted_to_gc_date && <span style={{ fontSize: 10, color: '#94a3b8' }}>Submitted {fmtDate(sub.submitted_to_gc_date)}</span>}
-                        {sub.we_received_date && <span style={{ fontSize: 10, color: '#94a3b8' }}>Received {fmtDate(sub.we_received_date)}</span>}
+                        <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{sub.spec_section}</span>
+                        {sub.submitted_to_gc_date && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>Submitted {fmtDate(sub.submitted_to_gc_date)}</span>}
+                        {sub.we_received_date && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>Received {fmtDate(sub.we_received_date)}</span>}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8' }}>Rev {sub.revision_number || '1'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Rev {sub.revision_number || '1'}</div>
                     <div>
                       {sub.status === 'PENDING' && <button onClick={() => updateSubStatus(sub.sub_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', border: '1px solid rgba(29,78,216,0.2)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
-                      {sub.status === 'SUBMITTED' && <button onClick={() => updateSubStatus(sub.sub_id, 'UNDER_REVIEW')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Under Review</button>}
+                      {sub.status === 'SUBMITTED' && <button onClick={() => updateSubStatus(sub.sub_id, 'UNDER_REVIEW')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Under Review</button>}
                       {sub.status === 'UNDER_REVIEW' && (
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button onClick={() => updateSubStatus(sub.sub_id, 'APPROVED')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Approved</button>
@@ -363,7 +363,7 @@ export default function PMPanel() {
                   background: 'linear-gradient(135deg, rgba(15,118,110,0.06), rgba(3,105,161,0.06))',
                   border: '1px solid rgba(15,118,110,0.15)', marginBottom: 12,
                 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b' }}>Total Exposure</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>Total Exposure</div>
                   <div style={{ fontSize: 20, fontWeight: 900, color: '#0f766e' }}>{fmtMoney(String((coExposure.approved || 0) + (coExposure.pending || 0) + (coExposure.identified || 0)))}</div>
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
                     <span style={{ fontSize: 12, color: '#0f766e', fontWeight: 700 }}>✓ {fmtMoney(String(coExposure.approved || 0))} approved</span>
@@ -374,20 +374,20 @@ export default function PMPanel() {
 
               {/* Exposure breakdown */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
-                {[['Approved', coExposure.approved||0, '#0f766e'],['Pending', coExposure.pending||0,'#1d4ed8'],['Drafted', coExposure.drafted||0,'#64748b'],['Identified', coExposure.identified||0,'#92400e'],['Rejected (reserve)', coExposure.rejected||0,'#94a3b8']].map(([label, val, color]) => (
+                {[['Approved', coExposure.approved||0, '#0f766e'],['Pending', coExposure.pending||0,'#1d4ed8'],['Drafted', coExposure.drafted||0,'var(--bos-color-ink-disabled)'],['Identified', coExposure.identified||0,'#92400e'],['Rejected (reserve)', coExposure.rejected||0,'var(--bos-color-ink-tertiary)']].map(([label, val, color]) => (
                   <div key={String(label)} style={{ background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:'12px 14px' }}>
-                    <div style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4 }}>{label}</div>
+                    <div style={{ fontSize:10,fontWeight:800,color:'var(--bos-color-ink-tertiary)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4 }}>{label}</div>
                     <div style={{ fontSize:16,fontWeight:900,color:String(color) }}>{fmtMoney(String(val))}</div>
                   </div>
                 ))}
               </div>
-              {cos.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', color: '#94a3b8' }}>No change orders yet</div>}
+              {cos.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', color: 'var(--bos-color-ink-tertiary)' }}>No change orders yet</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {cos.map(co => (
                   <div key={co.co_id} style={{ background:'white',borderRadius:16,border:'1px solid #e2e8f0',padding:'14px 18px',display:'grid',gridTemplateColumns:'80px 1fr auto auto',gap:12,alignItems:'center',boxShadow:'0 1px 3px rgba(15,23,42,0.04)' }}>
                     <div>
                       <div style={{ fontSize:11,fontWeight:800,color:'#92400e' }}>{co.co_number}</div>
-                      <div style={{ fontSize:10,color:'#94a3b8',marginTop:2 }}>{co.basis?.replace(/_/g,' ') || '—'}</div>
+                      <div style={{ fontSize:10,color:'var(--bos-color-ink-tertiary)',marginTop:2 }}>{co.basis?.replace(/_/g,' ') || '—'}</div>
                     </div>
                     <div>
                       <div style={{ fontSize:14,fontWeight:700,color:'#0f172a',marginBottom:4 }}>{co.title}</div>
@@ -397,9 +397,9 @@ export default function PMPanel() {
                         {co.amount_approved && co.status === 'APPROVED' && <span style={{ fontSize:11,fontWeight:700,color:'#0f766e' }}>Approved: {fmtMoney(co.amount_approved)}</span>}
                       </div>
                     </div>
-                    <div style={{ fontSize:11,color:'#94a3b8' }}>{fmtDate(co.created_at)}</div>
+                    <div style={{ fontSize:11,color:'var(--bos-color-ink-tertiary)' }}>{fmtDate(co.created_at)}</div>
                     <div>
-                      {co.status === 'IDENTIFIED' && <button onClick={() => updateCOStatus(co.co_id, 'DRAFTED')} style={{ padding:'6px 12px',borderRadius:8,background:'#f8fafc',border:'1px solid #e2e8f0',color:'#64748b',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Draft →</button>}
+                      {co.status === 'IDENTIFIED' && <button onClick={() => updateCOStatus(co.co_id, 'DRAFTED')} style={{ padding:'6px 12px',borderRadius:8,background:'#f8fafc',border:'1px solid #e2e8f0',color:'var(--bos-color-ink-disabled)',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Draft →</button>}
                       {co.status === 'DRAFTED' && <button onClick={() => updateCOStatus(co.co_id, 'SUBMITTED')} style={{ padding:'6px 12px',borderRadius:8,background:'#eff6ff',border:'1px solid rgba(29,78,216,0.2)',color:'#1d4ed8',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Submit →</button>}
                       {co.status === 'SUBMITTED' && <button onClick={() => updateCOStatus(co.co_id, 'APPROVED')} style={{ padding:'6px 12px',borderRadius:8,background:'#f0fdfa',border:'1px solid rgba(15,118,110,0.2)',color:'#0f766e',fontSize:11,fontWeight:700,cursor:'pointer' }}>Approve</button>}
                     </div>
@@ -416,7 +416,7 @@ export default function PMPanel() {
               {sovLines.length === 0 ? (
                 <div style={{ padding:'40px 24px',textAlign:'center',background:'white',borderRadius:16,border:'1px solid #e2e8f0' }}>
                   <div style={{ fontSize:14,fontWeight:700,color:'#0f172a',marginBottom:8 }}>No SOV set up yet</div>
-                  <div style={{ fontSize:13,color:'#94a3b8' }}>SOV is created automatically from the winning estimate during handoff, or can be entered manually.</div>
+                  <div style={{ fontSize:13,color:'var(--bos-color-ink-tertiary)' }}>SOV is created automatically from the winning estimate during handoff, or can be entered manually.</div>
                 </div>
               ) : (
                 <div style={{ background:'white',borderRadius:16,border:'1px solid #e2e8f0',overflow:'hidden' }}>
@@ -424,14 +424,14 @@ export default function PMPanel() {
                     <thead>
                       <tr style={{ background:'#f8fafc' }}>
                         {['#','Description','Contract Value','Prev Periods','This Period','% Complete','Balance'].map(h => (
-                          <th key={h} style={{ padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',color:'#94a3b8',borderBottom:'1px solid #f1f5f9' }}>{h}</th>
+                          <th key={h} style={{ padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--bos-color-ink-tertiary)',borderBottom:'1px solid #f1f5f9' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {sovLines.map((line, i) => (
                         <tr key={line.sov_id} style={{ borderBottom:'1px solid #f8fafc' }}>
-                          <td style={{ padding:'10px 14px',fontSize:12,color:'#64748b',fontWeight:700 }}>{line.line_number}</td>
+                          <td style={{ padding:'10px 14px',fontSize:12,color:'var(--bos-color-ink-disabled)',fontWeight:700 }}>{line.line_number}</td>
                           <td style={{ padding:'10px 14px',fontSize:13,fontWeight:700,color:'#0f172a' }}>{line.description}</td>
                           <td style={{ padding:'10px 14px',fontSize:13,color:'#334155' }}>{fmtMoney(line.scheduled_value)}</td>
                           <td style={{ padding:'10px 14px',fontSize:13,color:'#334155' }}>{fmtMoney(line.previous_periods)}</td>
@@ -483,7 +483,7 @@ export default function PMPanel() {
               <div><label style={LBL}>Description</label><textarea style={{...INP,resize:'none'}} rows={3} placeholder="Full question or description" value={newRFIDesc} onChange={e => setNewRFIDesc(e.target.value)} /></div>
             </div>
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
-              <button onClick={() => setShowNewRFI(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
+              <button onClick={() => setShowNewRFI(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
               <button onClick={submitRFI} disabled={!newRFISubject||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,#0f766e,#14b8a6)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Create RFI'}</button>
             </div>
           </div>
@@ -506,7 +506,7 @@ export default function PMPanel() {
               <div><label style={LBL}>Description</label><textarea style={{...INP,resize:'none'}} rows={3} value={newCODesc} onChange={e => setNewCODesc(e.target.value)} /></div>
             </div>
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
-              <button onClick={() => setShowNewCO(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
+              <button onClick={() => setShowNewCO(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
               <button onClick={submitCO} disabled={!newCOTitle||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,#92400e,#d97706)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Create CO'}</button>
             </div>
           </div>
@@ -523,7 +523,7 @@ export default function PMPanel() {
               <div><label style={LBL}>Description</label><input style={INP} placeholder="e.g. Curtain Wall Shop Drawings" value={newSubDesc} onChange={e => setNewSubDesc(e.target.value)} /></div>
             </div>
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
-              <button onClick={() => setShowNewSub(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
+              <button onClick={() => setShowNewSub(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
               <button onClick={submitSub} disabled={!newSubSpec||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,#0369a1,#0ea5e9)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Add Submittal'}</button>
             </div>
           </div>

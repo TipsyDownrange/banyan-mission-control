@@ -61,7 +61,7 @@ const FIELD: CSSProperties = {
 };
 
 const LABEL: CSSProperties = {
-  fontSize: 10, fontWeight: 800, color: '#94a3b8',
+  fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.08em',
 };
 
@@ -77,7 +77,7 @@ const BUTTON: CSSProperties = {
   background: '#0f766e', color: 'white', fontSize: 13, fontWeight: 700,
 };
 
-const BUTTON_DISABLED: CSSProperties = { ...BUTTON, background: '#94a3b8', cursor: 'not-allowed' };
+const BUTTON_DISABLED: CSSProperties = { ...BUTTON, background: 'var(--bos-color-ink-tertiary)', cursor: 'not-allowed' };
 
 const ERROR_BANNER: CSSProperties = {
   padding: '8px 12px', borderRadius: 8, background: '#fef2f2',

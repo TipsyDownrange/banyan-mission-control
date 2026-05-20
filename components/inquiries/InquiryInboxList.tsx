@@ -92,7 +92,7 @@ export default function InquiryInboxList({ fetchInquiries, onSelect, onCreateNew
               padding: '4px 10px',
               borderRadius: 999,
               fontSize: 11,
-              border: '1px solid #94a3b8',
+              border: '1px solid var(--bos-color-ink-tertiary)',
               background: states.has(s) ? '#0d1f2d' : 'white',
               color: states.has(s) ? 'white' : '#0d1f2d',
               cursor: 'pointer',
@@ -128,7 +128,7 @@ export default function InquiryInboxList({ fetchInquiries, onSelect, onCreateNew
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ padding: 12, color: '#64748b', textAlign: 'center' }}>
+                <td colSpan={6} style={{ padding: 12, color: 'var(--bos-color-ink-disabled)', textAlign: 'center' }}>
                   No inquiries match the current filter.
                 </td>
               </tr>

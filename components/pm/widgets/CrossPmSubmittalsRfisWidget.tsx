@@ -24,7 +24,7 @@ function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
       </div>
       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
         {entries.length === 0 && (
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>None.</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>None.</div>
         )}
         {entries.map(([bic, n]) => (
           <div key={bic} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>

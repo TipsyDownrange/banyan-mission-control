@@ -24,8 +24,8 @@ export const C = {
   blueMid:    '#4A8BBF',  // mid blue for gradients
   amber:      '#92400e',  // warnings
   red:        '#b91c1c',  // critical issues
-  slate:      '#64748b',  // labels
-  slateLight: '#94a3b8',  // sub-labels
+  slate:      'var(--bos-color-ink-disabled)',  // labels
+  slateLight: 'var(--bos-color-ink-tertiary)',  // sub-labels
   border:     '#e2e8f0',  // dividers
   bg:         '#f8fafc',  // page tint
   white:      '#ffffff',

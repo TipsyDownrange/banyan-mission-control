@@ -35,7 +35,7 @@ const STATUS_COLOR: Record<string, { color: string; bg: string }> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_COLOR[status?.toUpperCase()] ?? { color: '#64748b', bg: 'rgba(100,116,139,0.1)' };
+  const s = STATUS_COLOR[status?.toUpperCase()] ?? { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.1)' };
   return (
     <span style={{
       display: 'inline-block',
@@ -61,7 +61,7 @@ function DetailField({ label, value, editable = false }: {
 }) {
   return (
     <div style={{ marginBottom: 2 }}>
-      <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>
+      <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>
         {label}:{' '}
       </span>
       <span style={{
@@ -204,7 +204,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
     fontWeight: 700,
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#64748b',
+    color: 'var(--bos-color-ink-disabled)',
     display: 'block',
     marginBottom: 3,
   };
@@ -406,7 +406,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
             background: 'white',
             fontSize: 11,
             fontWeight: 700,
-            color: '#64748b',
+            color: 'var(--bos-color-ink-disabled)',
             cursor: 'pointer',
             fontFamily: FONT,
           }}
@@ -420,7 +420,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
             padding: '7px 20px',
             borderRadius: 8,
             border: 'none',
-            background: saving ? '#94a3b8' : '#0f766e',
+            background: saving ? 'var(--bos-color-ink-tertiary)' : '#0f766e',
             color: 'white',
             fontSize: 11,
             fontWeight: 800,
@@ -508,7 +508,7 @@ function SystemsView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTempla
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: '#64748b' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} assemblies · {num(String(totalSF), 0)} SF · {num(String(totalLF), 0)} LF · {totalEA} EA
         </div>
         <button onClick={() => setAddOpen(v => !v)} style={addBtnStyle}>
@@ -598,7 +598,7 @@ function DoorsView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplate
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: '#64748b' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} doors · {totalEA} EA total
         </div>
         <button onClick={() => setAddOpen(v => !v)} style={addBtnStyle}>
@@ -738,7 +738,7 @@ function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplate
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: '#64748b' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} lite types · {totalQty} EA · {num(String(totalBuySF))} total buy SF
           <span style={{ marginLeft: 8, fontSize: 10, color: '#0f766e', fontWeight: 600 }}>
             Expand rows to verify DLO + bite math
@@ -833,7 +833,7 @@ function SealantView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTempla
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: '#64748b' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} sealant lines · {num(String(totalLF), 0)} LF total
         </div>
         <button onClick={() => setAddOpen(v => !v)} style={addBtnStyle}>
@@ -926,7 +926,7 @@ function FastenersView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemp
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: '#64748b' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} fastener lines · {totalEA} EA total
         </div>
         <button onClick={() => setAddOpen(v => !v)} style={addBtnStyle}>
@@ -1021,7 +1021,7 @@ function FlashingView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTempl
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: '#64748b' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} flashing lines · {num(String(totalLF), 0)} LF · {totalEA} EA
         </div>
         <button onClick={() => setAddOpen(v => !v)} style={addBtnStyle}>
@@ -1163,7 +1163,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
 
   if (loading) {
     return (
-      <div style={{ padding: 48, textAlign: 'center', color: '#64748b', fontSize: 13, fontFamily: FONT }}>
+      <div style={{ padding: 48, textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontFamily: FONT }}>
         Loading takeoff data…
       </div>
     );
@@ -1255,7 +1255,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
         gap: 16,
         marginBottom: 16,
         fontSize: 10,
-        color: '#94a3b8',
+        color: 'var(--bos-color-ink-tertiary)',
         alignItems: 'center',
       }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

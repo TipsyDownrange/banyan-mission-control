@@ -184,7 +184,7 @@ function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
           Gold Data Coverage
         </div>
         {hasData ? (
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)' }}>
             <span style={{ color: '#14b8a6', fontWeight: 800 }}>{summary.templates_with_data}</span>
             {totalTemplates > 0 && <span style={{ color: 'rgba(148,163,184,0.5)' }}> of {totalTemplates}</span>}
             <span style={{ color: 'rgba(148,163,184,0.5)' }}> system types have actuals</span>
@@ -200,7 +200,7 @@ function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(34,197,94,0.5)', marginBottom: 4 }}>
             Most Accurate
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)' }}>
             <span style={{ color: 'rgba(34,197,94,0.8)' }}>{summary.most_accurate.template}</span>
             <span style={{ color: 'rgba(148,163,184,0.5)', marginLeft: 6, fontSize: 11 }}>
               ±{summary.most_accurate.avg_abs_delta.toFixed(1)}h avg
@@ -215,7 +215,7 @@ function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(239,68,68,0.5)', marginBottom: 4 }}>
             Needs Review
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)' }}>
             <span style={{ color: 'rgba(239,68,68,0.8)' }}>{summary.needs_review.template}</span>
             <span style={{ color: 'rgba(148,163,184,0.5)', marginLeft: 6, fontSize: 11 }}>
               avg {summary.needs_review.avg_delta > 0 ? '+' : ''}{summary.needs_review.avg_delta.toFixed(1)}h vs estimate
@@ -335,7 +335,7 @@ function FilterSelect({ label, value, options, onChange }: {
         cursor: 'pointer', outline: 'none',
       }}
     >
-      <option value="" style={{ background: '#0d1f2d', color: '#94a3b8' }}>{label}</option>
+      <option value="" style={{ background: '#0d1f2d', color: 'var(--bos-color-ink-tertiary)' }}>{label}</option>
       {options.map(o => (
         <option key={o} value={o} style={{ background: '#0d1f2d', color: '#e2e8f0' }}>{o}</option>
       ))}

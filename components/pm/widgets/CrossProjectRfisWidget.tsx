@@ -61,7 +61,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
       showHide={showHide}
     >
       {sorted.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
           No open RFIs.
         </div>
       ) : (
@@ -82,7 +82,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {r.rfi_number} — {r.subject}
                 </div>
-                <div style={{ fontSize: 10, color: '#94a3b8' }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>
                   {r.kid ?? '—'} · BIC: {r.ball_in_court ?? '—'} · {r.required_response_by_date ?? 'no due date'}
                 </div>
               </div>

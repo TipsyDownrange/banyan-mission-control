@@ -49,7 +49,7 @@ const SEVERITY_COLORS: Record<string, { bg: string; color: string; border: strin
   CRITICAL: { bg: '#fef2f2', color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
   HIGH:     { bg: '#fef2f2', color: '#b91c1c', border: 'rgba(239,68,68,0.2)' },
   MEDIUM:   { bg: '#fffbeb', color: '#92400e', border: 'rgba(245,158,11,0.2)' },
-  LOW:      { bg: '#f8fafc', color: '#64748b', border: 'rgba(148,163,184,0.2)' },
+  LOW:      { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', border: 'rgba(148,163,184,0.2)' },
 };
 
 interface IssuesPanelProps {
@@ -159,10 +159,10 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
   return (
     <div style={{ padding: '32px', maxWidth: 900, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Operations</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Operations</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Issues</h1>
-          {!loading && <span style={{ fontSize: 13, color: '#94a3b8', paddingBottom: 4 }}>{counts.open} open field issue{counts.open !== 1 ? 's' : ''}</span>}
+          {!loading && <span style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', paddingBottom: 4 }}>{counts.open} open field issue{counts.open !== 1 ? 's' : ''}</span>}
         </div>
       </div>
 
@@ -175,7 +175,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 800, transition: 'all 0.15s',
                 background: filter === t.key ? 'white' : 'transparent',
-                color: filter === t.key ? (t.key === 'blocking' ? '#b91c1c' : '#0f172a') : '#64748b',
+                color: filter === t.key ? (t.key === 'blocking' ? '#b91c1c' : '#0f172a') : 'var(--bos-color-ink-disabled)',
                 boxShadow: filter === t.key ? '0 1px 4px rgba(15,23,42,0.08)' : 'none',
               }}>
               {t.label}
@@ -188,7 +188,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
         <div style={{ textAlign: 'center', padding: 48 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading issues...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading issues...</div>
         </div>
       )}
 
@@ -223,7 +223,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 {/* Header row */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8' }}>{issue.id}</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>{issue.id}</span>
                     <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: sev.bg, color: sev.color, border: `1px solid ${sev.border}` }}>
                       {issue.severity}
                     </span>
@@ -238,7 +238,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>{formatTime(issue.occurredAt || issue.recordedAt)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', flexShrink: 0 }}>{formatTime(issue.occurredAt || issue.recordedAt)}</div>
                 </div>
 
                 {/* Project */}
@@ -248,7 +248,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 {issue.note && <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, marginBottom: 8 }}>{issue.note}</div>}
 
                 {/* Meta row */}
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11, color: '#64748b', marginBottom: 10 }}>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 10 }}>
                   {issue.type && <span>Type: <strong>{issue.type.replace(/_/g, ' ')}</strong></span>}
                   {issue.location && <span>Location: <strong>{issue.location}</strong></span>}
                   {issue.unit && <span>Unit: <strong>{issue.unit}</strong></span>}
@@ -300,8 +300,8 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
             width: '100%', maxWidth: 420, boxShadow: '0 24px 64px rgba(15,23,42,0.15)',
           }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Assign Issue</div>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>{assignModalIssue.id} — {assignModalIssue.projectName}</div>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Assign To</div>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginBottom: 16 }}>{assignModalIssue.id} — {assignModalIssue.projectName}</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Assign To</div>
             <select
               value={assignee}
               onChange={e => setAssignee(e.target.value)}
@@ -317,14 +317,14 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
             </select>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setAssignModalIssue(null)}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={handleAssign} disabled={!assignee || saving}
                 style={{
                   flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                   background: assignee ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-                  color: assignee ? 'white' : '#94a3b8',
+                  color: assignee ? 'white' : 'var(--bos-color-ink-tertiary)',
                 }}>
                 {saving ? 'Saving...' : 'Assign'}
               </button>

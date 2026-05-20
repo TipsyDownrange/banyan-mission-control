@@ -64,7 +64,7 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
       </summary>
       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
         {data.items.length === 0 ? (
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>No required docs configured for this project.</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>No required docs configured for this project.</div>
         ) : (
           data.items.map((item) => (
             <div key={item.key} style={{
@@ -79,11 +79,11 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
                 {item.ready ? '✓' : ''}
               </span>
               <span style={{ fontWeight: 700, color: '#0f172a' }}>{item.label}</span>
-              <span style={{ color: '#64748b', fontSize: 10 }}>{item.detail}</span>
+              <span style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 10 }}>{item.detail}</span>
             </div>
           ))
         )}
-        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 6, fontStyle: 'italic' }}>{data.note}</div>
+        <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 6, fontStyle: 'italic' }}>{data.note}</div>
       </div>
     </details>
   );

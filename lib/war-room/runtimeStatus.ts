@@ -121,7 +121,7 @@ export function mapCostApiDataToWarRoomSnapshot(data: CostApiData | null | undef
       id: 'vercel',
       label: 'Vercel',
       value: money(data?.byProvider?.vercel?.totalToDate ?? 0),
-      color: '#64748b',
+      color: 'var(--bos-color-ink-disabled)',
     },
   ];
 

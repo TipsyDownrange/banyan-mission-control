@@ -116,7 +116,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: '#0f766e', textTransform: 'uppercase' }}>{kID}</div>
             <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '4px 0 0' }}>New Submittal</h2>
           </div>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: '#94a3b8', cursor: 'pointer' }}>×</button>
+          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>×</button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
@@ -198,7 +198,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
             Cancel
           </button>
           <button type="submit" disabled={busy || Object.keys(validationErrors).length > 0}
-            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: busy ? '#94a3b8' : '#0f766e', color: 'white', fontWeight: 800, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: busy ? 'var(--bos-color-ink-tertiary)' : '#0f766e', color: 'white', fontWeight: 800, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
             {busy ? 'Creating…' : 'Create Submittal'}
           </button>
         </div>

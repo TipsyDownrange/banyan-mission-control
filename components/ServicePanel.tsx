@@ -61,7 +61,7 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'completed',          label: 'Completed',          color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
   { key: 'invoiced',           label: 'Invoiced',           color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
   { key: 'paid',               label: 'Paid',               color: '#16a34a', bg: 'rgba(240,253,244,0.96)', border: '1px solid rgba(22,163,74,0.22)' },
-  { key: 'closed',             label: 'Closed',             color: '#64748b', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
+  { key: 'closed',             label: 'Closed',             color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.2)' },
   { key: 'lost',               label: 'Declined',           color: '#dc2626', bg: 'rgba(254,242,242,0.96)', border: '1px solid rgba(220,38,38,0.2)' }, // stored literal 'lost' preserved
 ];
 
@@ -89,10 +89,10 @@ const AREA_COLOR: Record<string, string> = {
   // Maui areas
   lahaina: '#0f766e', kahului: '#0369a1', kihei: '#6d28d9',
   wailea: '#15803d', wailuku: '#92400e', maalaea: '#0369a1',
-  makawao: '#64748b', paia: '#0f766e', kapalua: '#15803d',
+  makawao: 'var(--bos-color-ink-disabled)', paia: '#0f766e', kapalua: '#15803d',
   // Oahu
   honolulu: '#0369a1', kapolei: '#6d28d9', kailua: '#0f766e',
-  kaneohe: '#15803d', 'hawaii kai': '#92400e', aiea: '#64748b',
+  kaneohe: '#15803d', 'hawaii kai': '#92400e', aiea: 'var(--bos-color-ink-disabled)',
   // Kauai
   lihue: '#6d28d9', kapaa: '#0f766e', poipu: '#15803d',
   // Big Island
@@ -100,7 +100,7 @@ const AREA_COLOR: Record<string, string> = {
 };
 
 function areaColor(area: string): string {
-  return AREA_COLOR[area?.toLowerCase()] || '#64748b';
+  return AREA_COLOR[area?.toLowerCase()] || 'var(--bos-color-ink-disabled)';
 }
 
 // Normalize ALL CAPS strings from Smartsheet to Title Case
@@ -135,7 +135,7 @@ function WOCard({
   onDetail: (wo: WorkOrder) => void;
 }) {
   const statusStage = STAGES.find(s => s.key === wo.status) || STAGES.find(s => s.key === 'lead')!;
-  const islandColor = ISLAND_COLORS[wo.island || ''] || '#64748b';
+  const islandColor = ISLAND_COLORS[wo.island || ''] || 'var(--bos-color-ink-disabled)';
 
   return (
     <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 10, background: 'white', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', position: 'relative', overflow: 'hidden', marginBottom: 0, borderLeft: `4px solid ${statusStage.color}` }}>
@@ -144,7 +144,7 @@ function WOCard({
       <div onClick={() => onDetail(wo)} style={{ padding: '10px 12px', cursor: 'pointer' }}>
         {/* Row 1: WO# + island badge */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{wo.id || ''}</span>
+          <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>{wo.id || ''}</span>
           {wo.island && (
             <span style={{ fontSize: 10, color: islandColor, background: `${islandColor}15`, padding: '1px 6px', borderRadius: 999, fontWeight: 700 }}>{wo.island}</span>
           )}
@@ -171,7 +171,7 @@ function WOCard({
 
         {/* Row 3: Assigned to */}
         {wo.assignedTo && (
-          <div style={{ fontSize: 11, color: '#64748b' }}>→ {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>→ {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}</div>
         )}
         {wo.status === 'scheduled' && wo.scheduledDate && (
           <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 700, marginTop: 3 }}>
@@ -475,12 +475,12 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
               + New Lead
             </button>}
             <button onClick={loadData}
-              style={{ padding: '7px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               Refresh
             </button>
             {(['kanban', 'list'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {v === 'kanban' ? 'Board' : 'List'}
               </button>
             ))}
@@ -509,9 +509,9 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
                   cursor: 'pointer', transition: 'all 0.15s',
                   boxShadow: isActive ? '0 2px 12px rgba(15,118,110,0.12)' : 'none',
                 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? '#0f766e' : '#64748b' }}>{s.label}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? '#0f766e' : 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
                 <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: isActive ? '#0f766e' : '#0f172a', lineHeight: 1 }}>{s.value}</div>
-                <div style={{ marginTop: 6, fontSize: 11, color: isActive ? '#0f766e' : '#94a3b8' }}>{s.helper}</div>
+                <div style={{ marginTop: 6, fontSize: 11, color: isActive ? '#0f766e' : 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
               </button>
             );
           })}
@@ -522,7 +522,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
         <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading work orders from Smartsheet...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading work orders from Smartsheet...</div>
         </div>
       )}
 
@@ -542,11 +542,11 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
             padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
             border: showCompleted ? '1px solid rgba(21,128,61,0.4)' : '1px solid #e2e8f0',
             background: showCompleted ? 'rgba(240,253,244,0.9)' : 'white',
-            color: showCompleted ? '#15803d' : '#64748b',
+            color: showCompleted ? '#15803d' : 'var(--bos-color-ink-disabled)',
           }}>
             <span style={{ fontSize: 14 }}>{showCompleted ? '☑' : '☐'}</span>
             Show Completed
-            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
+            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
               {completedStageKeys.reduce((sum, key) => sum + (mergedByStatus[key]?.length || 0), 0)}
             </span>
           </button>
@@ -555,11 +555,11 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
             padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
             border: showDeclined ? '1px solid rgba(220,38,38,0.3)' : '1px solid #e2e8f0',
             background: showDeclined ? 'rgba(254,242,242,0.9)' : 'white',
-            color: showDeclined ? '#dc2626' : '#64748b',
+            color: showDeclined ? '#dc2626' : 'var(--bos-color-ink-disabled)',
           }}>
             <span style={{ fontSize: 14 }}>{showDeclined ? '☑' : '☐'}</span>
             Show Declined
-            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: '#94a3b8' }}>
+            <span style={{ padding: '1px 6px', borderRadius: 999, background: '#f1f5f9', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
               {mergedByStatus['lost']?.length || 0}
             </span>
           </button>
@@ -570,8 +570,8 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
       {!loading && data && (
           <FilterBar
           chips={[
-            { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && !completedStatuses.has(w.status)).length, color: '#64748b' },
-            { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: '#64748b' },
+            { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && !completedStatuses.has(w.status)).length, color: 'var(--bos-color-ink-disabled)' },
+            { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: 'var(--bos-color-ink-disabled)' },
             { id: 'quoted',      label: 'Quoted',         count: mergedByStatus['quoted']?.length || 0,      color: '#7c3aed' },
             { id: 'accepted',    label: 'Accepted',       count: (mergedByStatus['accepted']?.length || 0) + (mergedByStatus['approved']?.length || 0), color: '#0f766e' },
             { id: 'approved',          label: 'Need Schedule',    count: mergedByStatus['approved']?.length || 0,          color: '#92400e' },
@@ -613,8 +613,8 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
               <div key={stage.key} style={{ minWidth: 240, flex: filter === 'all' ? '0 0 240px' : '1 1 auto', opacity: isCompletedStage ? 0.75 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color }} />
-                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{stage.label}</div>
-                  <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{wos.length}</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{stage.label}</div>
+                  <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>{wos.length}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {wos.length === 0 ? (
@@ -639,7 +639,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
         if (completedWOs.length === 0) return null;
         return (
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid #f1f5f9' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Completed Work Orders ({completedWOs.length})</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 }}>Completed Work Orders ({completedWOs.length})</div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {completedWOs.map(wo => (
                 <div key={wo.id} style={{ width: 240, opacity: 0.75 }}>
@@ -682,7 +682,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
                 onDetail={openDetail}
               />
             ))}
-            {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>{search ? `No results for "${search}"` : 'No work orders in this view'}</div>}
+            {filtered.length === 0 && <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>{search ? `No results for "${search}"` : 'No work orders in this view'}</div>}
           </div>
         </>
       )}

@@ -165,7 +165,7 @@ export default function KaiPanel() {
             style={{
               background: voiceMode ? 'rgba(15,118,110,0.1)' : 'white',
               borderColor: voiceMode ? '#0f766e' : '#e2e8f0',
-              color: voiceMode ? '#0f766e' : '#64748b',
+              color: voiceMode ? '#0f766e' : 'var(--bos-color-ink-disabled)',
             }}
           >
             {voiceMode ? '🔊 Voice On' : '🔇 Voice Off'}

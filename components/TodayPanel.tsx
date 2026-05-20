@@ -101,11 +101,11 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
   return (
     <div style={{ padding: '32px', maxWidth: 800, margin: '0 auto' }}>
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Assistant</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Assistant</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Today</h1>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{today}</p>
+            <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>{today}</p>
           </div>
           <button
             onClick={() => setShowLogIssue(true)}
@@ -130,9 +130,9 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
           { label: 'Daily reports', value: 'Due 3:30', helper: 'Field leads to submit' },
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
             <div style={{ marginTop: 6, fontSize: typeof s.value === 'number' && s.value > 0 ? 32 : 22, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
-            <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
+            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
           </div>
         ))}
       </div>
@@ -152,7 +152,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       {loading && (
         <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: 48, textAlign: 'center' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading live data...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading live data...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       )}
@@ -181,7 +181,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                     <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: item.tagColor, background: item.tagBg, padding: '2px 8px', borderRadius: 999 }}>{item.tag}</span>
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 3 }}>{item.title}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{item.detail}</div>
+                  <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{item.detail}</div>
                 </div>
               </div>
             ))}
@@ -192,7 +192,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       {/* Watch — with View in PM buttons */}
       {!loading && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Watch Today</div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 }}>Watch Today</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {watchItems.map(item => (
               <div key={item.id} style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(15,23,42,0.04)', padding: '14px 18px', display: 'flex', gap: 12 }}>
@@ -202,7 +202,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                     <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: item.tagColor, background: item.tagBg, padding: '2px 8px', borderRadius: 999 }}>{item.tag}</span>
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{item.title}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{item.detail}</div>
+                  <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{item.detail}</div>
                 </div>
                 {item.type === 'project' && onNavigate && (
                   <button
@@ -248,7 +248,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>🚨 Log Field Issue</div>
             <div style={{ display: 'grid', gap: 14 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Project *</label>
+                <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Project *</label>
                 <select value={issueProject} onChange={e => setIssueProject(e.target.value)}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}>
                   <option value="">Select project...</option>
@@ -256,13 +256,13 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Description *</label>
+                <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Description *</label>
                 <textarea value={issueDesc} onChange={e => setIssueDesc(e.target.value)}
                   rows={3} placeholder="What happened?"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box', resize: 'none' }} />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Severity</label>
+                <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Severity</label>
                 <select value={issueSeverity} onChange={e => setIssueSeverity(e.target.value)}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}>
                   <option value="LOW">Low</option>
@@ -274,14 +274,14 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={() => setShowLogIssue(false)}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={handleLogIssue} disabled={!issueProject || !issueDesc || submitting}
                 style={{
                   flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                   background: issueProject && issueDesc ? 'linear-gradient(135deg,#ef4444,#f97316)' : '#e2e8f0',
-                  color: issueProject && issueDesc ? 'white' : '#94a3b8',
+                  color: issueProject && issueDesc ? 'white' : 'var(--bos-color-ink-tertiary)',
                 }}>
                 {submitting ? 'Logging...' : 'Log Issue'}
               </button>

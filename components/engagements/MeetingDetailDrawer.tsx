@@ -115,7 +115,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
         </div>
 
         {loading || !meeting ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>{loading ? 'Loading meeting...' : (err ?? 'Meeting not found.')}</div>
+          <div style={{ padding: 32, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>{loading ? 'Loading meeting...' : (err ?? 'Meeting not found.')}</div>
         ) : (
           <div style={{ padding: 22 }}>
             {err && <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', padding: 10, borderRadius: 8, fontSize: 12, marginBottom: 14 }}>{err}</div>}
@@ -145,7 +145,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                 <textarea value={topicsText} onChange={(e) => setTopicsText(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical' }} placeholder="One topic per line" />
               ) : (
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#334155' }}>
-                  {meeting.key_topics.length === 0 ? <li style={{ color: '#94a3b8', listStyle: 'none', marginLeft: -18 }}>—</li> : meeting.key_topics.map((t, i) => <li key={i}>{t}</li>)}
+                  {meeting.key_topics.length === 0 ? <li style={{ color: 'var(--bos-color-ink-tertiary)', listStyle: 'none', marginLeft: -18 }}>—</li> : meeting.key_topics.map((t, i) => <li key={i}>{t}</li>)}
                 </ul>
               )}
             </section>
@@ -156,7 +156,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                 <textarea value={decisionsText} onChange={(e) => setDecisionsText(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical' }} placeholder="One decision per line" />
               ) : (
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#334155' }}>
-                  {meeting.decisions_made.length === 0 ? <li style={{ color: '#94a3b8', listStyle: 'none', marginLeft: -18 }}>—</li> : meeting.decisions_made.map((t, i) => <li key={i}>{t}</li>)}
+                  {meeting.decisions_made.length === 0 ? <li style={{ color: 'var(--bos-color-ink-tertiary)', listStyle: 'none', marginLeft: -18 }}>—</li> : meeting.decisions_made.map((t, i) => <li key={i}>{t}</li>)}
                 </ul>
               )}
             </section>
@@ -164,7 +164,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
             <section style={cardStyle}>
               <div style={sectionHeaderStyle}><span>Attendees ({attendees.length})</span></div>
               {attendees.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#94a3b8' }}>No attendees recorded.</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No attendees recorded.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {attendees.map((a) => (
@@ -172,7 +172,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                       <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : '#475569' }}>{a.is_kula_user ? 'KULA' : 'EXT'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
-                        <div style={{ fontSize: 11, color: '#64748b' }}>{[a.role, a.organization].filter(Boolean).join(' · ') || a.email || '—'}</div>
+                        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{[a.role, a.organization].filter(Boolean).join(' · ') || a.email || '—'}</div>
                       </div>
                       {!a.attended && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>NO-SHOW</span>}
                     </div>
@@ -187,12 +187,12 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                 {meeting.transcript_drive_file_id ? (
                   <a href={`https://drive.google.com/file/d/${meeting.transcript_drive_file_id}/view`} target="_blank" rel="noreferrer" style={chipLinkStyle}>Transcript (Drive)</a>
                 ) : (
-                  <span style={{ ...chipLinkStyle, color: '#94a3b8', background: '#f1f5f9' }}>No transcript</span>
+                  <span style={{ ...chipLinkStyle, color: 'var(--bos-color-ink-tertiary)', background: '#f1f5f9' }}>No transcript</span>
                 )}
                 {meeting.source_recording_url ? (
                   <a href={meeting.source_recording_url} target="_blank" rel="noreferrer" style={chipLinkStyle}>Recording</a>
                 ) : (
-                  <span style={{ ...chipLinkStyle, color: '#94a3b8', background: '#f1f5f9' }}>No recording</span>
+                  <span style={{ ...chipLinkStyle, color: 'var(--bos-color-ink-tertiary)', background: '#f1f5f9' }}>No recording</span>
                 )}
                 <span style={{ ...chipLinkStyle, color: '#475569', background: '#f8fafc' }}>Source: {meeting.source_platform}</span>
               </div>

@@ -216,14 +216,14 @@ export default function TaskResourceAssignmentDialog({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Crew on “{taskName}”</h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: 11, color: '#94a3b8' }}>
+            <p style={{ margin: '4px 0 0 0', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
               Active assignments determine who is on this task. Historical assignments are preserved for audit.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: 22, cursor: 'pointer' }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--bos-color-ink-tertiary)', fontSize: 22, cursor: 'pointer' }}
             aria-label="Close"
           >
             ×
@@ -243,15 +243,15 @@ export default function TaskResourceAssignmentDialog({
         ) : null}
 
         {loading ? (
-          <p style={{ color: '#94a3b8', fontSize: 12 }}>Loading assignments…</p>
+          <p style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>Loading assignments…</p>
         ) : (
           <>
             <section data-bos-resource-active style={{ marginBottom: 16 }}>
-              <h3 style={{ margin: '0 0 8px 0', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Active ({activeRows.length})
               </h3>
               {activeRows.length === 0 ? (
-                <p style={{ color: '#94a3b8', fontSize: 12, fontStyle: 'italic' }}>No crew assigned.</p>
+                <p style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontStyle: 'italic' }}>No crew assigned.</p>
               ) : (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {activeRows.map((r) => (
@@ -267,7 +267,7 @@ export default function TaskResourceAssignmentDialog({
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
                           {r.user_name ?? r.user_email ?? 'Unknown user'}
                         </span>
-                        <span style={{ fontSize: 11, color: '#64748b' }}>
+                        <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                           {r.role_on_task ?? 'crew'} · {r.allocation_percent}%
                           {r.notes ? ` · ${r.notes}` : ''}
                         </span>
@@ -294,14 +294,14 @@ export default function TaskResourceAssignmentDialog({
 
             {historicalRows.length > 0 ? (
               <section data-bos-resource-history style={{ marginBottom: 16 }}>
-                <h3 style={{ margin: '0 0 8px 0', fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   History ({historicalRows.length})
                 </h3>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {historicalRows.map((r) => (
                     <li
                       key={r.task_resource_id}
-                      style={{ fontSize: 11, color: '#94a3b8', padding: '4px 12px' }}
+                      style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', padding: '4px 12px' }}
                     >
                       {r.user_name ?? r.user_email ?? 'Unknown'} · {r.role_on_task ?? 'crew'} · removed {r.removed_at ? r.removed_at.slice(0, 10) : ''}
                     </li>
@@ -317,7 +317,7 @@ export default function TaskResourceAssignmentDialog({
                   style={{ padding: 12, background: '#f8fafc', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 10 }}
                 >
                   <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#0f172a' }}>Add resource</h3>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     User
                     <select
                       data-bos-resource-user-select
@@ -333,7 +333,7 @@ export default function TaskResourceAssignmentDialog({
                       ))}
                     </select>
                   </label>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     Role on task
                     <input
                       data-bos-resource-role-input
@@ -344,7 +344,7 @@ export default function TaskResourceAssignmentDialog({
                       style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}
                     />
                   </label>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     Allocation: {newAllocation}%
                     <input
                       data-bos-resource-allocation-slider
@@ -355,7 +355,7 @@ export default function TaskResourceAssignmentDialog({
                       onChange={(e) => { setNewAllocation(Number(e.target.value)); setPendingConflict(null); }}
                     />
                   </label>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     Notes
                     <textarea
                       data-bos-resource-notes-input

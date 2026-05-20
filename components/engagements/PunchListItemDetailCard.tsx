@@ -107,7 +107,7 @@ const BODY: CSSProperties = {
 };
 
 const ROW_LABEL: CSSProperties = {
-  fontSize: 10, fontWeight: 800, color: '#94a3b8',
+  fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.08em',
 };
 
@@ -161,14 +161,14 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
           }}>
             {item.description}
           </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
             {SOURCE_LABEL[item.source] ?? item.source}
             {item.source_ref ? ` · ${item.source_ref}` : ''}
           </div>
         </div>
         <PunchListStatusBadge status={item.status} />
         <span style={{
-          fontSize: 11, color: '#94a3b8', fontWeight: 700, minWidth: 16, textAlign: 'center',
+          fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, minWidth: 16, textAlign: 'center',
         }}>
           {expanded ? '▾' : '▸'}
         </span>
@@ -224,7 +224,7 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
           <div>
             <div style={ROW_LABEL}>Photo evidence ({item.photo_evidence.length})</div>
             {item.photo_evidence.length === 0 ? (
-              <div style={{ ...ROW_VALUE, color: '#94a3b8', fontStyle: 'italic' }}>
+              <div style={{ ...ROW_VALUE, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
                 No photos uploaded.
               </div>
             ) : (

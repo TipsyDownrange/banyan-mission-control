@@ -52,7 +52,7 @@ const HEADER_ROW: CSSProperties = {
 const ID_LABEL: CSSProperties = {
   fontSize: 10,
   fontWeight: 800,
-  color: '#94a3b8',
+  color: 'var(--bos-color-ink-tertiary)',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
 };
@@ -68,7 +68,7 @@ const ID_VALUE: CSSProperties = {
 const ROW_LABEL: CSSProperties = {
   fontSize: 10,
   fontWeight: 800,
-  color: '#94a3b8',
+  color: 'var(--bos-color-ink-tertiary)',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
 };
@@ -82,12 +82,12 @@ const ROW_VALUE: CSSProperties = {
 const STATUS_STYLE: Record<WarrantyStatus, { bg: string; color: string; label: string }> = {
   ACTIVE: { bg: '#f0fdfa', color: '#0f766e', label: 'Active' },
   PARTIALLY_EXPIRED: { bg: '#fffbeb', color: '#92400e', label: 'Partially expired' },
-  EXPIRED: { bg: '#f8fafc', color: '#64748b', label: 'Expired' },
+  EXPIRED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Expired' },
 };
 
 function statusPill(status: string) {
   const cfg = (STATUS_STYLE as Record<string, { bg: string; color: string; label: string }>)[status]
-    ?? { bg: '#f8fafc', color: '#64748b', label: status };
+    ?? { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: status };
   return (
     <span
       data-testid="warranty-status-pill"

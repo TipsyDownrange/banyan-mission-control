@@ -231,7 +231,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
     <div>
-      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2, fontFamily: FONT }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 2, fontFamily: FONT }}>{label}</div>
       <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 500, fontFamily: FONT }}>{value}</div>
     </div>
   );
@@ -247,7 +247,7 @@ function SummaryRow({ label, value, sub = false, highlight = false }: { label: s
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: sub ? '3px 0' : '6px 0',
       fontSize: sub ? 12 : 13,
-      color: highlight ? '#0f766e' : sub ? '#64748b' : '#0f172a',
+      color: highlight ? '#0f766e' : sub ? 'var(--bos-color-ink-disabled)' : '#0f172a',
       fontFamily: FONT,
     }}>
       <span>{label}</span>
@@ -295,12 +295,12 @@ function SaveConfigModal({
         <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
           {isSaveAs ? 'Save as New Configuration' : 'Save Configuration'}
         </div>
-        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginBottom: 20 }}>
           {isSaveAs ? 'Creates a separate configuration from the current state.' : 'Saves this estimate snapshot as a named version.'}
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Configuration Name</label>
+          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Configuration Name</label>
           <input
             autoFocus
             value={name}
@@ -311,7 +311,7 @@ function SaveConfigModal({
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Breakdown Type</label>
+          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Breakdown Type</label>
           <select
             value={breakdown}
             onChange={e => setBreakdown(e.target.value as BreakdownType)}
@@ -326,7 +326,7 @@ function SaveConfigModal({
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
+          <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
@@ -337,7 +337,7 @@ function SaveConfigModal({
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Cancel
           </button>
           <button
@@ -346,7 +346,7 @@ function SaveConfigModal({
             style={{
               flex: 2, padding: '11px', borderRadius: 12, border: 'none',
               background: name.trim() ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-              color: name.trim() ? 'white' : '#94a3b8', fontSize: 13, fontWeight: 700,
+              color: name.trim() ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize: 13, fontWeight: 700,
               cursor: name.trim() ? 'pointer' : 'default',
               boxShadow: name.trim() ? '0 4px 16px rgba(15,118,110,0.3)' : 'none',
             }}
@@ -374,7 +374,7 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
     const diff = isDiff(leftVal, rightVal);
     return (
       <div style={{ display: 'contents' }}>
-        <div style={{ padding: '8px 10px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #f1f5f9' }}>{label}</div>
+        <div style={{ padding: '8px 10px', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #f1f5f9' }}>{label}</div>
         <div style={{ padding: '8px 10px', fontSize: 13, fontVariantNumeric: 'tabular-nums', borderBottom: '1px solid #f1f5f9', background: diff ? 'rgba(234,179,8,0.08)' : undefined, fontWeight: diff ? 700 : 400 }}>{leftVal}</div>
         <div style={{ padding: '8px 10px', fontSize: 13, fontVariantNumeric: 'tabular-nums', borderBottom: '1px solid #f1f5f9', background: diff ? 'rgba(234,179,8,0.08)' : undefined, fontWeight: diff ? 700 : 400 }}>{rightVal}</div>
       </div>
@@ -390,18 +390,18 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
       <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 680, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.2)', fontFamily: FONT }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Compare Configurations</div>
-          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: '#94a3b8' }}>×</button>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)' }}>×</button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Config A</label>
+            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Config A</label>
             <select value={leftId} onChange={e => setLeftId(e.target.value)} style={{ ...GREEN_INPUT, cursor: 'pointer' }}>
               {configs.map(c => <option key={c.config_id} value={c.config_id}>{c.config_name} (v{c.version})</option>)}
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 }}>Config B</label>
+            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Config B</label>
             <select value={rightId} onChange={e => setRightId(e.target.value)} style={{ ...GREEN_INPUT, cursor: 'pointer' }}>
               {configs.map(c => <option key={c.config_id} value={c.config_id}>{c.config_name} (v{c.version})</option>)}
             </select>
@@ -418,7 +418,7 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
 
         {left && right && (
           <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', borderBottom: '2px solid #e2e8f0' }}>Field</div>
+            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '2px solid #e2e8f0' }}>Field</div>
             <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: '#0f172a', borderBottom: '2px solid #e2e8f0' }}>
               {left.config_name} <VersionBadge version={left.version} />
             </div>
@@ -761,7 +761,7 @@ export default function QuoteBuilder({
     <div style={{ padding: 48, textAlign: 'center' }}>
       <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading WO {woNumber}…</div>
+      <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading WO {woNumber}…</div>
     </div>
   );
 
@@ -808,11 +808,11 @@ export default function QuoteBuilder({
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
       }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8' }}>Service Quote</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>Service Quote</div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
             {woNumber.startsWith('WO-') ? woNumber : 'WO-' + woNumber}{wo?.name ? ` — ${wo.name.substring(0, 45)}` : ''}
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
         </div>
@@ -827,7 +827,7 @@ export default function QuoteBuilder({
           )}
           <button
             onClick={onClose}
-            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 18, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 18, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             ×
           </button>
@@ -941,7 +941,7 @@ export default function QuoteBuilder({
                   style={{
                     padding: '6px 14px', borderRadius: 9, border: 'none',
                     background: t ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-                    color: t ? 'white' : '#94a3b8', fontSize: 12, fontWeight: 700,
+                    color: t ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700,
                     cursor: t ? 'pointer' : 'default',
                     boxShadow: t ? '0 2px 8px rgba(15,118,110,0.25)' : 'none',
                   }}
@@ -976,10 +976,10 @@ export default function QuoteBuilder({
 
               {/* Config list */}
               {configsLoading && (
-                <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>Loading configurations…</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '8px 0' }}>Loading configurations…</div>
               )}
               {!configsLoading && configs.length === 0 && (
-                <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>No saved configurations yet. Save one to track quote versions during negotiations.</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '8px 0' }}>No saved configurations yet. Save one to track quote versions during negotiations.</div>
               )}
               {configs.map(c => {
                 const isActive = c.config_id === activeConfigId;
@@ -998,7 +998,7 @@ export default function QuoteBuilder({
                       <VersionBadge version={c.version} />
                       <span style={{ fontSize: 13, fontWeight: 800, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>{fmt(parseNum(c.total_amount))}</span>
                     </div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                       {fmtDate(c.created_at)} · {c.breakdown_type?.replace('_', ' ') || 'lump sum'}
                       {c.notes ? ` · ${c.notes}` : ''}
                     </div>
@@ -1019,7 +1019,7 @@ export default function QuoteBuilder({
                             <span style={{ fontSize: 11, color: '#0f172a', fontWeight: parseInt(v.version) === parseInt(c.version) ? 800 : 400, flex: 1, fontVariantNumeric: 'tabular-nums' }}>
                               {fmt(parseNum(v.total_amount))}
                             </span>
-                            <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtDate(v.created_at)}</span>
+                            <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{fmtDate(v.created_at)}</span>
                           </div>
                         ))}
                       </div>
@@ -1055,7 +1055,7 @@ export default function QuoteBuilder({
           onClick={onClose}
           style={{
             flex: 1, minWidth: 120, padding: '11px', borderRadius: 12,
-            border: '1px solid #e2e8f0', background: 'white', color: '#64748b',
+            border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)',
             fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
           }}
         >
@@ -1069,7 +1069,7 @@ export default function QuoteBuilder({
           style={{
             flex: 2, minWidth: 140, padding: '11px', borderRadius: 12, border: 'none',
             background: !t ? '#e2e8f0' : downloading || generating ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
-            color: !t || downloading || generating ? '#94a3b8' : 'white',
+            color: !t || downloading || generating ? 'var(--bos-color-ink-tertiary)' : 'white',
             fontSize: 13, fontWeight: 700,
             cursor: !t || downloading || generating ? 'default' : 'pointer',
             boxShadow: t && !downloading && !generating ? '0 4px 16px rgba(15,118,110,0.3)' : 'none',
@@ -1087,7 +1087,7 @@ export default function QuoteBuilder({
           style={{
             flex: 2, minWidth: 140, padding: '11px', borderRadius: 12, border: 'none',
             background: !t || !customerEmail || generating ? '#e2e8f0' : '#4338ca',
-            color: !t || !customerEmail || generating ? '#94a3b8' : 'white',
+            color: !t || !customerEmail || generating ? 'var(--bos-color-ink-tertiary)' : 'white',
             fontSize: 13, fontWeight: 700,
             cursor: !t || !customerEmail || generating ? 'default' : 'pointer',
             fontFamily: FONT,
@@ -1103,7 +1103,7 @@ export default function QuoteBuilder({
           style={{
             padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.3)',
             background: t ? 'rgba(238,242,255,0.7)' : '#e2e8f0',
-            color: t ? '#4338ca' : '#94a3b8',
+            color: t ? '#4338ca' : 'var(--bos-color-ink-tertiary)',
             fontSize: 13, fontWeight: 700,
             cursor: t ? 'pointer' : 'default',
             fontFamily: FONT,

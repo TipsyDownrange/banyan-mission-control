@@ -75,12 +75,12 @@ export interface BidSummary {
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; accentColor: string }> = {
-  draft:      { color: '#64748b', bg: 'rgba(100,116,139,0.1)',  accentColor: '#94a3b8' },
+  draft:      { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.1)',  accentColor: 'var(--bos-color-ink-tertiary)' },
   'in review':{ color: '#2563eb', bg: 'rgba(37,99,235,0.1)',    accentColor: '#3b82f6' },
   submitted:  { color: '#0369a1', bg: 'rgba(3,105,161,0.1)',    accentColor: '#0369a1' },
   active:     { color: '#0f766e', bg: 'rgba(15,118,110,0.1)',   accentColor: '#14b8a6' },
   won:        { color: '#15803d', bg: 'rgba(21,128,61,0.1)',    accentColor: '#16a34a' },
-  lost:       { color: '#64748b', bg: 'rgba(100,116,139,0.08)', accentColor: '#94a3b8' },
+  lost:       { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', accentColor: 'var(--bos-color-ink-tertiary)' },
 };
 
 function getStatusStyle(status: string) {
@@ -100,7 +100,7 @@ const WORKSPACE_TABS: WorkspaceTab[] = [
 ];
 
 const PIPELINE_STAGES: PipelineStage[] = [
-  { id: 'Draft',      label: 'Draft',      color: '#94a3b8' },
+  { id: 'Draft',      label: 'Draft',      color: 'var(--bos-color-ink-tertiary)' },
   { id: 'In Review',  label: 'In Review',  color: '#3b82f6' },
   { id: 'Submitted',  label: 'Submitted',  color: '#0369a1' },
   { id: 'Won',        label: 'Won',        color: '#16a34a', terminal: 'success' },
@@ -108,11 +108,11 @@ const PIPELINE_STAGES: PipelineStage[] = [
 ];
 
 const FILTER_CHIPS: FilterChip[] = [
-  { id: 'all',       label: 'All',       color: '#64748b' },
+  { id: 'all',       label: 'All',       color: 'var(--bos-color-ink-disabled)' },
   { id: 'active',    label: 'Active',    color: '#14b8a6' },
   { id: 'submitted', label: 'Submitted', color: '#0369a1' },
   { id: 'won',       label: 'Won',       color: '#16a34a' },
-  { id: 'lost',      label: 'Lost',      color: '#94a3b8' },
+  { id: 'lost',      label: 'Lost',      color: 'var(--bos-color-ink-tertiary)' },
 ];
 
 const SORT_OPTIONS: SortOption[] = [
@@ -192,7 +192,7 @@ function PlaceholderTab({ tabId }: { tabId: string }) {
       <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
         {WORKSPACE_TABS.find(t => t.id === tabId)?.label ?? tabId}
       </h2>
-      <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>
+      <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.6 }}>
         {tab.desc}
       </p>
     </div>
@@ -382,7 +382,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
           )}
           {bidDate && (
             <span style={{
-              color: overdue ? '#dc2626' : dueSoon ? '#ea580c' : '#94a3b8',
+              color: overdue ? '#dc2626' : dueSoon ? '#ea580c' : 'var(--bos-color-ink-tertiary)',
               fontWeight: (overdue || dueSoon) ? 700 : 400,
             }}>
               {overdue ? 'OVERDUE' : dueSoon ? `${daysUntil}d left` : bidDate}
@@ -396,7 +396,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
             {amount}
           </div>
           {bid.version && (
-            <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600 }}>v{bid.version}</div>
+            <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>v{bid.version}</div>
           )}
         </div>
       ) : undefined,
@@ -538,7 +538,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
             Estimating
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: '4px 0 0' }}>
             {bids.length} bids · {bids.filter(b => {
               const s = (b.status ?? '').toLowerCase();
               return s === 'draft' || s === 'active' || s === 'in review';
@@ -571,34 +571,34 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
             <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>New Bid</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Project Name *</label>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Project Name *</label>
                 <input value={newBidDraft.project_name} onChange={e => setNewBidDraft(p => ({ ...p, project_name: e.target.value }))} placeholder="e.g. Hilton Hawaiian Village Alii Tower" autoFocus style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(20,184,166,0.4)', fontSize: 12, color: '#0f172a', background: 'rgba(240,253,250,0.4)', outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Client / GC</label>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Client / GC</label>
                 <input value={newBidDraft.client_gc_name} onChange={e => setNewBidDraft(p => ({ ...p, client_gc_name: e.target.value }))} placeholder="Hawaiian Dredging, Hensel Phelps..." style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Island</label>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Island</label>
                 <select value={newBidDraft.island} onChange={e => setNewBidDraft(p => ({ ...p, island: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, appearance: 'auto' as const }}>
                   {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(i => <option key={i} value={i}>{i}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Bid Due Date</label>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Bid Due Date</label>
                 <input type="date" value={newBidDraft.bid_due_date} onChange={e => setNewBidDraft(p => ({ ...p, bid_due_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Estimator</label>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Estimator</label>
                 <input value={newBidDraft.estimator} onChange={e => setNewBidDraft(p => ({ ...p, estimator: e.target.value }))} placeholder="Kyle Shimizu" style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', display: 'block', marginBottom: 4 }}>Notes</label>
+                <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Notes</label>
                 <textarea value={newBidDraft.notes} onChange={e => setNewBidDraft(p => ({ ...p, notes: e.target.value }))} placeholder="Products, scope notes..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, resize: 'none' as const }} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setShowNewBidModal(false)} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowNewBidModal(false)} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button
                 disabled={newBidSaving || !newBidDraft.project_name.trim()}
                 onClick={async () => {

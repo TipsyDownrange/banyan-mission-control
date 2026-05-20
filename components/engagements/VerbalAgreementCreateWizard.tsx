@@ -97,11 +97,11 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: '#0f766e', textTransform: 'uppercase' }}>{kID}</div>
             <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '4px 0 0' }}>New Verbal Agreement</h2>
           </div>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: '#94a3b8', cursor: 'pointer' }}>x</button>
+          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>x</button>
         </div>
 
         <label style={fieldStyle}>
-          <span style={labelStyle}>Subject <span style={{ color: subjectInvalid ? '#b91c1c' : '#94a3b8', marginLeft: 6 }}>{subject.length}/{SUBJECT_MAX}</span></span>
+          <span style={labelStyle}>Subject <span style={{ color: subjectInvalid ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>{subject.length}/{SUBJECT_MAX}</span></span>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, borderColor: subjectInvalid ? '#fecaca' : '#e2e8f0' }} maxLength={SUBJECT_MAX + 20} />
         </label>
 
@@ -156,7 +156,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy} style={secondaryButtonStyle}>Cancel</button>
-          <button type="submit" disabled={busy || !canSubmit} style={{ ...primaryButtonStyle, background: (busy || !canSubmit) ? '#94a3b8' : '#0f766e' }}>
+          <button type="submit" disabled={busy || !canSubmit} style={{ ...primaryButtonStyle, background: (busy || !canSubmit) ? 'var(--bos-color-ink-tertiary)' : '#0f766e' }}>
             {busy ? 'Creating...' : 'Create'}
           </button>
         </div>

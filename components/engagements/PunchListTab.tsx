@@ -42,7 +42,7 @@ type ViewState =
 function LoadingState() {
   return (
     <div style={{
-      padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13,
+      padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13,
     }}>
       Loading punch list…
     </div>
@@ -71,12 +71,12 @@ function NotInPostgresState({ kID }: { kID: string }) {
         This project isn&apos;t on the Postgres closeout system yet.
       </div>
       <div style={{
-        fontSize: 13, color: '#64748b', maxWidth: 480, margin: '0 auto', lineHeight: 1.6,
+        fontSize: 13, color: 'var(--bos-color-ink-disabled)', maxWidth: 480, margin: '0 auto', lineHeight: 1.6,
       }}>
         Punch list items will appear here once the project is migrated. Reach
         out to Sean if you expect this project to be live.
       </div>
-      <div style={{ marginTop: 18, fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+      <div style={{ marginTop: 18, fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontFamily: 'monospace' }}>
         kID: {kID}
       </div>
     </div>
@@ -92,7 +92,7 @@ function ZeroItemsState() {
       <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
         No punch list items yet
       </div>
-      <div style={{ fontSize: 13, color: '#94a3b8' }}>
+      <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
         Items will appear here once they are captured from a walkthrough, field
         issue, GC transmittal, or internal QA review.
       </div>

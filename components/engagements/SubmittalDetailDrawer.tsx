@@ -118,16 +118,16 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
         )}
 
         {!s ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
         ) : (
           <div style={{ padding: '20px 24px' }}>
             <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Status</h3>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{s.status.replace(/_/g, ' ')}</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
                 Ball: <strong>{s.ball_in_court || '—'}</strong>{s.submitted_to ? ` · Submitted to ${s.submitted_to}` : ''}
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 6, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                 <div>Submitted: {s.submitted_date || '—'}</div>
                 <div>Reviewed: {s.reviewed_date || '—'}</div>
                 <div>Approved: {s.approved_date || '—'}</div>
@@ -137,8 +137,8 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
             <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Details</h3>
               <div style={{ fontSize: 13, color: '#0f172a', marginBottom: 6 }}>{s.description || '(no description)'}</div>
-              <div style={{ fontSize: 11, color: '#64748b' }}>Type {s.submittal_type} · CSI {s.csi_spec_section}-{s.csi_subsection}-{s.csi_sub_subsection}</div>
-              {s.required_by_date && <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Required by {s.required_by_date}</div>}
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Type {s.submittal_type} · CSI {s.csi_spec_section}-{s.csi_subsection}-{s.csi_sub_subsection}</div>
+              {s.required_by_date && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>Required by {s.required_by_date}</div>}
               {s.requirements_text && (
                 <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', marginTop: 8, whiteSpace: 'pre-wrap' }}>{s.requirements_text}</div>
               )}
@@ -172,7 +172,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
                 {s.status === 'REVISE_RESUBMIT' && (
                   <span style={{ fontSize: 12, color: '#92400e' }}>Edit and resubmit when ready.</span>
                 )}
-                {s.status === 'CLOSED' && <span style={{ fontSize: 12, color: '#64748b' }}>Submittal is closed.</span>}
+                {s.status === 'CLOSED' && <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Submittal is closed.</span>}
               </div>
             </section>
 
@@ -210,7 +210,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
 function DocList({ label, ids }: { label: string; ids: string[] }) {
   return (
     <div style={{ marginBottom: 6 }}>
-      <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 2 }}>{label} ({ids.length})</div>
+      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, marginBottom: 2 }}>{label} ({ids.length})</div>
       {ids.length === 0 ? (
         <div style={{ fontSize: 11, color: '#cbd5e1' }}>None</div>
       ) : (

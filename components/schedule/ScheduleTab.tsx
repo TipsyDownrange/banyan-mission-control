@@ -325,7 +325,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
   };
 
   if (loading) {
-    return <div data-bos-schedule-loading style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading schedule…</div>;
+    return <div data-bos-schedule-loading style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading schedule…</div>;
   }
   if (err) {
     return <div data-bos-schedule-error style={{ padding: 24, color: '#b91c1c' }}>Schedule failed to load: {err}</div>;
@@ -357,7 +357,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
               padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: view === 'list' ? 'white' : 'transparent',
-              color: view === 'list' ? '#0f172a' : '#64748b',
+              color: view === 'list' ? '#0f172a' : 'var(--bos-color-ink-disabled)',
               boxShadow: view === 'list' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -373,7 +373,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
               padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: view === 'gantt' ? 'white' : 'transparent',
-              color: view === 'gantt' ? '#0f172a' : '#64748b',
+              color: view === 'gantt' ? '#0f172a' : 'var(--bos-color-ink-disabled)',
               boxShadow: view === 'gantt' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -389,7 +389,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
               padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: view === 'crew' ? 'white' : 'transparent',
-              color: view === 'crew' ? '#0f172a' : '#64748b',
+              color: view === 'crew' ? '#0f172a' : 'var(--bos-color-ink-disabled)',
               boxShadow: view === 'crew' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -602,17 +602,17 @@ function ListView({
               onClick={() => onToggleCollapse(phase.id)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span data-bos-collapse-icon aria-hidden style={{ color: '#94a3b8', fontSize: 11 }}>
+                <span data-bos-collapse-icon aria-hidden style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11 }}>
                   {isCollapsed ? '▶' : '▼'}
                 </span>
                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{phase.name}</h3>
                 <StatusPill variant={STATUS_VARIANT[phase.status as TaskStatus] ?? 'info'}>
                   {STATUS_LABEL[phase.status as TaskStatus] ?? phase.status}
                 </StatusPill>
-                <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                   {fmtDate(phase.planned_start)} → {fmtDate(phase.planned_end)}
                 </span>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>
                   {tasks.length} task{tasks.length === 1 ? '' : 's'}
                 </span>
               </div>
@@ -639,13 +639,13 @@ function ListView({
             {isCollapsed ? null : (
               <div data-bos-schedule-tasks style={{ padding: '6px 0' }}>
                 {tasks.length === 0 ? (
-                  <p style={{ padding: '14px 18px', margin: 0, fontSize: 12, color: '#94a3b8' }}>
+                  <p style={{ padding: '14px 18px', margin: 0, fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
                     No tasks in this phase yet.
                   </p>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
-                      <tr style={{ color: '#94a3b8', textAlign: 'left', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <tr style={{ color: 'var(--bos-color-ink-tertiary)', textAlign: 'left', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         <th style={{ padding: '6px 18px', fontWeight: 700, width: 32 }}>Done</th>
                         <th style={{ padding: '6px 12px', fontWeight: 700 }}>Task</th>
                         <th style={{ padding: '6px 12px', fontWeight: 700 }}>Status</th>
@@ -688,7 +688,7 @@ function ListView({
                             <td style={{ padding: '8px 12px', color: '#0f172a', fontWeight: 600 }}>
                               {task.name}
                               {task.description ? (
-                                <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400, marginTop: 2 }}>
+                                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 400, marginTop: 2 }}>
                                   {task.description}
                                 </div>
                               ) : null}
@@ -698,21 +698,21 @@ function ListView({
                                 {STATUS_LABEL[task.status]}
                               </StatusPill>
                             </td>
-                            <td style={{ padding: '8px 12px', color: '#64748b' }}>
+                            <td style={{ padding: '8px 12px', color: 'var(--bos-color-ink-disabled)' }}>
                               {fmtDate(task.planned_start)} → {fmtDate(task.planned_end)}
                             </td>
-                            <td style={{ padding: '8px 12px', color: '#64748b' }}>
+                            <td style={{ padding: '8px 12px', color: 'var(--bos-color-ink-disabled)' }}>
                               {fmtDate(task.actual_start)} → {fmtDate(task.actual_end)}
                             </td>
                             <td style={{ padding: '8px 12px', color: '#0f172a', fontWeight: 600 }}>
                               {task.percent_complete}%
                             </td>
-                            <td style={{ padding: '8px 12px', color: '#64748b' }}>
+                            <td style={{ padding: '8px 12px', color: 'var(--bos-color-ink-disabled)' }}>
                               {(depsBySuccessor.get(task.id) ?? []).length}
                             </td>
                             <td
                               data-bos-task-resources={task.id}
-                              style={{ padding: '8px 12px', color: '#64748b', cursor: 'pointer' }}
+                              style={{ padding: '8px 12px', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}
                               onClick={(e) => { e.stopPropagation(); onOpenResources(task.id); }}
                             >
                               <ResourcesCell rows={resourcesByTask.get(task.id) ?? []} />
@@ -723,7 +723,7 @@ function ListView({
                                   data-bos-task-delete
                                   type="button"
                                   onClick={() => onDeleteTask(task.id)}
-                                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                                  style={{ background: 'transparent', border: 'none', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}
                                   aria-label="Delete task"
                                 >
                                   <Trash2 size={12} strokeWidth={2} />
@@ -1187,12 +1187,12 @@ function EditTaskRow({ task, allTasks, currentDeps, canWrite, onSaved, onCancel 
           />
         </div>
         <div style={{ marginTop: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
             Depends on
           </div>
           <div data-bos-dependency-picker style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {dependablePredecessors.length === 0 ? (
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>No other tasks in this project yet.</span>
+              <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>No other tasks in this project yet.</span>
             ) : dependablePredecessors.map((pred) => {
               const checked = selectedDeps.has(pred.id);
               return (
@@ -1261,7 +1261,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: 18, cursor: 'pointer' }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--bos-color-ink-tertiary)', fontSize: 18, cursor: 'pointer' }}
             aria-label="Close"
           >
             ×
@@ -1276,7 +1276,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 function FormRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
         {label}
       </div>
       {children}
@@ -1297,7 +1297,7 @@ const modalFooterStyle: React.CSSProperties = {
 function ResourcesCell({ rows }: { rows: TaskResourceSummary[] }) {
   if (rows.length === 0) {
     return (
-      <span data-bos-resources-cell-empty style={{ color: '#94a3b8', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <span data-bos-resources-cell-empty style={{ color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
         <Users size={11} strokeWidth={2} /> Unassigned
       </span>
     );
@@ -1310,7 +1310,7 @@ function ResourcesCell({ rows }: { rows: TaskResourceSummary[] }) {
       <Users size={11} strokeWidth={2} />
       <span>{visible.join(', ')}</span>
       {overflow > 0 ? (
-        <span data-bos-resources-cell-overflow style={{ color: '#94a3b8' }}>+{overflow} more</span>
+        <span data-bos-resources-cell-overflow style={{ color: 'var(--bos-color-ink-tertiary)' }}>+{overflow} more</span>
       ) : null}
     </span>
   );

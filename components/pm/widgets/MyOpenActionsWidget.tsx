@@ -37,7 +37,7 @@ export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () 
       showHide={showHide}
     >
       {!data || data.items.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
           No open actions assigned to you.
         </div>
       ) : (
@@ -69,7 +69,7 @@ export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () 
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.title}
                 </div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                   {it.kid ?? '—'}
                   {it.due_date && ` · due ${it.due_date}`}
                 </div>

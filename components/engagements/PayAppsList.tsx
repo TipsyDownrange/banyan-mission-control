@@ -18,7 +18,7 @@ export type PayApp = {
 };
 
 const STATE_BADGE: Record<string, { bg: string; color: string; label?: string }> = {
-  PENDING_DRAFT:          { bg: '#f8fafc', color: '#64748b', label: 'Draft' },
+  PENDING_DRAFT:          { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
   READY_FOR_NOTARIZATION: { bg: '#fffbeb', color: '#92400e', label: 'Ready · Notarize' },
   READY_FOR_SUBMISSION:   { bg: '#fffbeb', color: '#92400e', label: 'Ready · Submit' },
   SUBMITTED:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Submitted' },
@@ -59,7 +59,7 @@ function fmtSubmitted(iso: string | null): string {
 }
 
 function StateBadge({ state }: { state: string }) {
-  const s = STATE_BADGE[state] ?? { bg: '#f8fafc', color: '#64748b', label: state.replace(/_/g, ' ') };
+  const s = STATE_BADGE[state] ?? { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: state.replace(/_/g, ' ') };
   return (
     <span style={{
       padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
@@ -89,7 +89,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
         <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
           No pay applications yet
         </div>
-        <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 18 }}>
+        <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', marginBottom: 18 }}>
           The first pay app will appear here once it&apos;s created from the SOV.
         </div>
         <button
@@ -98,7 +98,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
           aria-disabled="true"
           style={{
             padding: '8px 18px', borderRadius: 999, border: '1px solid #e2e8f0',
-            background: '#f8fafc', color: '#94a3b8', fontSize: 12, fontWeight: 800,
+            background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 800,
             cursor: 'not-allowed',
           }}
         >
@@ -113,7 +113,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
           Pay Applications
-          <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>
+          <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             ({payApps.length})
           </span>
         </div>
@@ -123,7 +123,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
           aria-disabled="true"
           style={{
             padding: '6px 14px', borderRadius: 999, border: '1px solid #e2e8f0',
-            background: '#f8fafc', color: '#94a3b8', fontSize: 11, fontWeight: 800,
+            background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 800,
             cursor: 'not-allowed',
           }}
         >
@@ -146,19 +146,19 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
               <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
                 {fmtPeriod(p.period_start, p.period_end)}
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                 {fmtSubmitted(p.submitted_at)}
               </div>
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', textAlign: 'right' }}>
               {fmtMoney(p.current_amount_due)}
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', marginTop: 2 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                 Due this app
               </div>
             </div>
             <div style={{ fontSize: 13, color: '#334155', textAlign: 'right' }}>
               {fmtMoney(p.total_earned_less_retainage)}
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', marginTop: 2 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                 Earned · less retainage
               </div>
             </div>

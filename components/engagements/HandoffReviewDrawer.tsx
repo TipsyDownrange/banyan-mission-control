@@ -141,7 +141,7 @@ export default function HandoffReviewDrawer({
           )}
 
           {!receipt ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#64748b' }}>Loading…</div>
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading…</div>
           ) : (
             <>
               <section style={{ marginBottom: 18 }}>
@@ -230,7 +230,7 @@ const card: React.CSSProperties = {
 const kv: React.CSSProperties = {
   display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: '#0f172a',
 };
-const kLabel: React.CSSProperties = { color: '#64748b', fontWeight: 600 };
+const kLabel: React.CSSProperties = { color: 'var(--bos-color-ink-disabled)', fontWeight: 600 };
 const btnBase: React.CSSProperties = {
   padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 800, cursor: 'pointer', border: 'none',
 };

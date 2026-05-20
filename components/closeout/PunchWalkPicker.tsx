@@ -36,7 +36,7 @@ const WRAP: CSSProperties = {
 };
 
 const LABEL: CSSProperties = {
-  fontSize: 10, fontWeight: 800, color: '#94a3b8',
+  fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.08em',
 };
 

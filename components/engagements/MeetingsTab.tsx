@@ -60,7 +60,7 @@ function formatDate(value: string): string {
 }
 
 function DocChip({ icon, label, active, onClick, href }: { icon: string; label: string; active: boolean; onClick?: () => void; href?: string }) {
-  const color = active ? '#0f766e' : '#94a3b8';
+  const color = active ? '#0f766e' : 'var(--bos-color-ink-tertiary)';
   const style: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999,
     fontSize: 10, fontWeight: 700, background: active ? `${color}12` : '#f1f5f9', color,
@@ -125,13 +125,13 @@ export default function MeetingsTab({ kID }: { kID: string }) {
   }, [items, search, type, platform, transcriptOnly, kulaOnly]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading meetings...</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading meetings...</div>;
   }
   if (err) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load meetings: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Meeting Log requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Meeting Log requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -144,7 +144,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
           ['Design reviews', data.summary.by_type.DESIGN_REVIEW ?? 0],
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
           </div>
         ))}
@@ -167,21 +167,21 @@ export default function MeetingsTab({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No meetings match the current filters.</div>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No meetings match the current filters.</div>
         ) : filtered.map((it) => (
           <div key={it.meeting_id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }} onClick={() => setOpenMeetingId(it.meeting_id)}>
             <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(180px, 1.6fr) 120px 130px 120px', gap: 10, alignItems: 'center' }}>
-              <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>{formatDate(it.meeting_date)}</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.meeting_date)}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.summary || '—'}
                 </div>
               </div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{MEETING_TYPE_LABELS[it.meeting_type ?? ''] ?? '—'}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>
                 {it.attendee_count_total} attendees
-                <div style={{ fontSize: 10, color: '#64748b' }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>
                   <span style={{ color: '#1d4ed8' }}>{it.attendee_count_kula} Kula</span> · <span>{it.attendee_count_external} ext.</span>
                 </div>
               </div>

@@ -19,7 +19,7 @@ const KPI: CSSProperties = {
 };
 
 const KPI_LABEL: CSSProperties = {
-  fontSize: 10, fontWeight: 800, color: '#94a3b8',
+  fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.08em',
 };
 
@@ -28,7 +28,7 @@ const KPI_VALUE: CSSProperties = {
 };
 
 const KPI_SUB: CSSProperties = {
-  fontSize: 11, color: '#64748b', marginTop: 3,
+  fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 3,
 };
 
 const STATUS_LABEL: Record<PunchListItemStatus, string> = {
@@ -73,7 +73,7 @@ export default function PunchListSummaryCard({ items }: { items: PunchListItem[]
         <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>
           Punch List Summary
         </div>
-        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
           Live counts across the 7 lifecycle statuses (Closeout Spec §6.2) plus photo-evidence completeness.
         </div>
       </div>

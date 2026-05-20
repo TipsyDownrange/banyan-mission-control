@@ -255,5 +255,5 @@ function userColor(email: string): string {
     'nate@kulaglass.com':  '#065f46',
     'karl@kulaglass.com':  '#1d4ed8',
   };
-  return map[email] || '#64748b';
+  return map[email] || 'var(--bos-color-ink-disabled)';
 }

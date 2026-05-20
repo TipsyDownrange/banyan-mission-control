@@ -365,7 +365,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
   const statusIcon = (s: ValidationResult['status']) =>
     s === 'pass' ? '✅' : s === 'fail' ? '❌' : s === 'warn' ? '⚠️' : '◯';
   const statusColor = (s: ValidationResult['status']) =>
-    s === 'pass' ? '#059669' : s === 'fail' ? '#dc2626' : s === 'warn' ? '#d97706' : '#94a3b8';
+    s === 'pass' ? '#059669' : s === 'fail' ? '#dc2626' : s === 'warn' ? '#d97706' : 'var(--bos-color-ink-tertiary)';
 
   const totalEstimate = bid.totalEstimate
     ? (bid.totalEstimate.startsWith('$') ? bid.totalEstimate : `$${bid.totalEstimate}`)
@@ -397,7 +397,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             {ctx.title}
           </span>
         </div>
-        <p style={{ fontSize: 11, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', margin: 0, lineHeight: 1.5 }}>
           {ctx.suggestion}
         </p>
       </div>
@@ -408,7 +408,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
         {/* Compliance / Validate Takeoff */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8' }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>
               Compliance
             </div>
             <button
@@ -418,7 +418,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 6,
                 border: '1px solid rgba(20,184,166,0.3)',
                 background: validating ? '#f1f5f9' : 'rgba(240,253,250,0.8)',
-                color: validating ? '#94a3b8' : '#0f766e',
+                color: validating ? 'var(--bos-color-ink-tertiary)' : '#0f766e',
                 cursor: validating ? 'default' : 'pointer',
               }}
             >
@@ -438,7 +438,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   <span style={{ fontSize: 13, flexShrink: 0, lineHeight: 1 }}>{statusIcon(r.status)}</span>
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: statusColor(r.status) }}>{r.label}</div>
-                    {r.note && <div style={{ fontSize: 9, color: '#64748b', marginTop: 1 }}>{r.note}</div>}
+                    {r.note && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{r.note}</div>}
                   </div>
                 </div>
               ))}
@@ -451,8 +451,8 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             }}>
               <span style={{ fontSize: 16 }}>◯</span>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Not assessed</div>
-                <div style={{ fontSize: 10, color: '#94a3b8' }}>Click "Validate Takeoff" to check</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>Not assessed</div>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>Click "Validate Takeoff" to check</div>
               </div>
             </div>
           )}
@@ -461,7 +461,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
         {/* Ask Kai Chat */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8' }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>
               Ask Kai
             </div>
             <button
@@ -486,7 +486,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 background: '#f8fafc', padding: '8px',
               }}>
                 {chatMessages.length === 0 ? (
-                  <div style={{ fontSize: 10, color: '#94a3b8', textAlign: 'center', padding: '16px 0' }}>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center', padding: '16px 0' }}>
                     Ask about DLO calcs, system taxonomy, bid gaps, or any estimating question for this bid.
                   </div>
                 ) : (
@@ -513,7 +513,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   ))
                 )}
                 {chatLoading && (
-                  <div style={{ fontSize: 10, color: '#94a3b8', padding: '4px 8px' }}>Kai is thinking…</div>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', padding: '4px 8px' }}>Kai is thinking…</div>
                 )}
                 <div ref={chatEndRef} />
               </div>
@@ -550,7 +550,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
         {/* GPT Estimating Rules */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8' }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>
               Estimating Rules
             </div>
             <button
@@ -559,7 +559,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 6,
                 border: '1px solid #e2e8f0',
                 background: showInstructions ? '#f1f5f9' : 'white',
-                color: '#64748b', cursor: 'pointer',
+                color: 'var(--bos-color-ink-disabled)', cursor: 'pointer',
               }}
             >
               {showInstructions ? 'Hide' : 'View Rules'}
@@ -593,7 +593,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
 
         {/* Trigger Takeoff */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
             Takeoff Trigger
           </div>
           <button
@@ -612,7 +612,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             <span style={{ fontSize: 16 }}>📄</span>
             <div>
               <div>Generate Takeoff from Documents</div>
-              <div style={{ fontSize: 9, fontWeight: 500, color: '#64748b', marginTop: 1 }}>Select docs → AI generates structured takeoff</div>
+              <div style={{ fontSize: 9, fontWeight: 500, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>Select docs → AI generates structured takeoff</div>
             </div>
           </button>
 
@@ -629,12 +629,12 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 boxShadow: '0 20px 60px rgba(15,23,42,0.25)',
               }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>📄 Generate Takeoff from Documents</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 16 }}>
                   {bid.projectName} · {bid.bidVersionId}
                 </div>
 
                 {driveLoading ? (
-                  <div style={{ fontSize: 12, color: '#94a3b8', padding: '24px 0', textAlign: 'center' }}>Loading documents from Drive…</div>
+                  <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '24px 0', textAlign: 'center' }}>Loading documents from Drive…</div>
                 ) : driveFiles.length > 0 ? (
                   <>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 8 }}>
@@ -661,7 +661,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                             <div style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>{f.name}</div>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                               {f.folder && (
-                                <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600 }}>📁 {f.folder}</span>
+                                <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>📁 {f.folder}</span>
                               )}
                               {f.webViewLink && (
                                 <a href={f.webViewLink} target="_blank" rel="noopener noreferrer"
@@ -683,7 +683,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   }}>
                     {bid.bidFolderUrl ? (
                       <>
-                        <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 8 }}>
                           Could not load documents from Drive folder. The service account may not have access.
                         </div>
                         <a href={bid.bidFolderUrl} target="_blank" rel="noopener noreferrer"
@@ -692,7 +692,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                         </a>
                       </>
                     ) : (
-                      <div style={{ fontSize: 11, color: '#64748b' }}>
+                      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                         No Drive folder linked. Link a folder first to load documents.
                       </div>
                     )}
@@ -702,7 +702,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
                   <button
                     onClick={() => setShowTakeoffTrigger(false)}
-                    style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                   >Cancel</button>
                   <button
                     onClick={handleLaunchTakeoffPrompt}
@@ -720,7 +720,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
         {/* Quick Actions */}
         {/* Drop Zone for document uploads */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
             Upload Documents
           </div>
           <input
@@ -750,7 +750,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>
               {uploading ? `Uploading ${uploading}…` : 'Drop files or click to upload'}
             </div>
-            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>
+            <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
               Plans, specs, quotes, submittals — Kai auto-sorts into the right folder
             </div>
           </div>
@@ -759,7 +759,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               {uploadResults.map((r, i) => (
                 <div key={i} style={{ fontSize: 10, color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   ✓ {r.name}
-                  <span style={{ color: '#94a3b8', fontWeight: 400 }}>→ {r.folder}</span>
+                  <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 400 }}>→ {r.folder}</span>
                   {r.link && <a href={r.link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: 9 }}>View ↗</a>}
                 </div>
               ))}
@@ -770,7 +770,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
         {/* Quick Actions */}
         {ctx.actions && ctx.actions.length > 0 && (
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
               Quick Actions
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -826,7 +826,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
 
         {/* Documents */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
             Linked Documents
           </div>
           {bid.bidFolderUrl ? (
@@ -839,7 +839,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 <div style={{ fontSize: 9, fontWeight: 700, color: '#0f766e' }}>✓ BID FOLDER</div>
                 <button
                   onClick={() => { setFolderUrl(bid.bidFolderUrl ?? ''); setShowLinkModal(true); }}
-                  style={{ background: 'none', border: 'none', fontSize: 10, color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+                  style={{ background: 'none', border: 'none', fontSize: 10, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer', padding: 0 }}
                 >change</button>
               </div>
               <a
@@ -851,7 +851,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             </div>
           ) : (
             <div style={{ padding: '12px', borderRadius: 10, background: '#f8fafc', border: '1px dashed #e2e8f0', textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>No folder linked</div>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>No folder linked</div>
               <button
                 onClick={() => { setFolderUrl(''); setShowLinkModal(true); }}
                 style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(20,184,166,0.3)', background: 'rgba(240,253,250,0.8)', color: '#0f766e', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
@@ -866,7 +866,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             }} onClick={() => setShowLinkModal(false)}>
               <div style={{ background: 'white', borderRadius: 16, padding: 24, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(15,23,42,0.2)' }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Link Bid Folder</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10 }}>Paste the Google Drive folder URL for this bid.</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginBottom: 10 }}>Paste the Google Drive folder URL for this bid.</div>
                 <a href="https://drive.google.com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(37,99,235,0.3)', background: 'rgba(239,246,255,0.7)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, textDecoration: 'none', marginBottom: 12 }}>
                   🗂️ Browse Google Drive →
                   <span style={{ fontSize: 10, fontWeight: 500, color: '#60a5fa', marginLeft: 4 }}>copy the folder URL, paste below</span>
@@ -876,9 +876,9 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   placeholder="Paste URL or folder ID..." autoFocus
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid rgba(20,184,166,0.4)', borderRadius: 9, fontSize: 12, color: '#0f172a', background: 'rgba(240,253,250,0.5)', outline: 'none', boxSizing: 'border-box', marginBottom: 6 }}
                 />
-                <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 14 }}>Full URLs or bare folder IDs both work.</div>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginBottom: 14 }}>Full URLs or bare folder IDs both work.</div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button onClick={() => setShowLinkModal(false)} style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => setShowLinkModal(false)} style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                   <button onClick={handleLinkFolder} disabled={folderSaving || !folderUrl.trim()} style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: folderUrl.trim() ? '#0f766e' : '#e2e8f0', color: 'white', fontSize: 12, fontWeight: 700, cursor: folderUrl.trim() ? 'pointer' : 'default' }}>
                     {folderSaving ? 'Saving…' : 'Link Folder'}
                   </button>
@@ -890,7 +890,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
 
         {/* Bid Summary */}
         <div style={{ padding: '12px 16px' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
             This Bid
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -902,7 +902,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               { label: 'Estimator', value: bid.estimator ?? '—' },
             ].map(({ label, value }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{label}</span>
+                <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>{label}</span>
                 <span style={{ fontSize: 11, color: '#374151', fontWeight: 600, textAlign: 'right', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {value}
                 </span>

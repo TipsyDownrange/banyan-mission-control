@@ -143,7 +143,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
   }
 
   if (resolving) {
-    return <div style={{ color: '#94a3b8', padding: 40, textAlign: 'center' }}>Resolving engagement…</div>;
+    return <div style={{ color: 'var(--bos-color-ink-tertiary)', padding: 40, textAlign: 'center' }}>Resolving engagement…</div>;
   }
 
   if (resolveError || !resolved?.engagement_id) {
@@ -222,7 +222,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
         <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
           Line Items
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '40px 80px 1fr 130px 80px 60px 40px', gap: 8, marginBottom: 6, fontSize: 11, fontWeight: 700, color: '#64748b' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 80px 1fr 130px 80px 60px 40px', gap: 8, marginBottom: 6, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>
           <div>#</div>
           <div>Display #</div>
           <div>Description</div>
@@ -233,7 +233,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
         </div>
         {lines.map((l, i) => (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '40px 80px 1fr 130px 80px 60px 40px', gap: 8, marginBottom: 6, alignItems: 'center' }}>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>{l.line_number}</div>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{l.line_number}</div>
             <input
               value={l.display_item_number ?? ''}
               onChange={(e) => updateLine(i, { display_item_number: e.target.value })}

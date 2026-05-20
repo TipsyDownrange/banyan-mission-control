@@ -30,7 +30,7 @@ export default function AllPmWorkloadWidget({ onHide, showHide }: { onHide?: () 
       showHide={showHide}
     >
       {!data || data.items.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
           No PMs currently assigned.
         </div>
       ) : (

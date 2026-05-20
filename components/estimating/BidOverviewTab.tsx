@@ -12,7 +12,7 @@ interface BidOverviewTabProps {
 }
 
 const PIPELINE_STAGES: PipelineStage[] = [
-  { id: 'Draft',      label: 'Draft',      color: '#94a3b8' },
+  { id: 'Draft',      label: 'Draft',      color: 'var(--bos-color-ink-tertiary)' },
   { id: 'In Review',  label: 'In Review',  color: '#3b82f6' },
   { id: 'Submitted',  label: 'Submitted',  color: '#0369a1' },
   { id: 'Won',        label: 'Won',        color: '#16a34a', terminal: 'success' },
@@ -40,7 +40,7 @@ const READONLY_STYLE: React.CSSProperties = {
   border: '1px solid #e2e8f0',
   borderRadius: 8,
   fontSize: 12,
-  color: '#64748b',
+  color: 'var(--bos-color-ink-disabled)',
   background: '#f8fafc',
   boxSizing: 'border-box',
 };
@@ -66,14 +66,14 @@ function MetricCard({
       padding: '16px 20px',
       boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
     }}>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
         {icon && <span style={{ marginRight: 5 }}>{icon}</span>}{label}
       </div>
       <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color, lineHeight: 1 }}>
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{sub}</div>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 4 }}>{sub}</div>
       )}
     </div>
   );
@@ -83,7 +83,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-      textTransform: 'uppercase', color: '#64748b', marginBottom: 4,
+      textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4,
     }}>
       {children}
     </div>
@@ -234,7 +234,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
         marginBottom: 20,
         boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
       }}>
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 }}>
           Bid Status
         </div>
         <StatusPipeline
@@ -535,15 +535,15 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                         {sys.name}
                       </span>
                       {sys.qty && (
-                        <span style={{ fontSize: 11, color: '#64748b' }}>{sys.qty}</span>
+                        <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{sys.qty}</span>
                       )}
                       {templateHours !== null ? (
                         <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600, marginLeft: 'auto' }}>
                           📋 {templateHours.toFixed(2)}h template
-                          {stepCount ? <span style={{ color: '#94a3b8', fontWeight: 400 }}> ({stepCount} steps)</span> : null}
+                          {stepCount ? <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 400 }}> ({stepCount} steps)</span> : null}
                         </span>
                       ) : (
-                        <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto', fontStyle: 'italic' }}>
+                        <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginLeft: 'auto', fontStyle: 'italic' }}>
                           No template
                         </span>
                       )}
@@ -619,7 +619,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
           </span>
         </div>
         <div style={{ padding: '20px 24px' }}>
-          <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.6, margin: 0 }}>
             Kai&apos;s intelligent bid assessment will appear here in Phase 5, after plans and specs are uploaded.
             It will summarize key compliance risks, labor friction factors, recommended fabrication method,
             and estimated cost range — all in plain language.
@@ -696,7 +696,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               {bid.bidFolderUrl || folderUrl}
             </a>
           ) : (
-            <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
               Link a Google Drive folder to keep plans, specs, and quotes organized.
             </div>
           )}
@@ -720,7 +720,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
             <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
               📁 Link Bid Folder
             </h3>
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.5 }}>
               Link the Google Drive folder for this bid. Plans, specs, quotes, and submittals should live here.
             </p>
 
@@ -747,7 +747,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               </div>
             </a>
 
-            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 6 }}>
+            <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 6 }}>
               Folder URL or ID
             </label>
             <input
@@ -765,7 +765,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               }}
               autoFocus
             />
-            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginBottom: 20 }}>
               Accepts full Drive URLs or bare folder IDs — we&apos;ll detect both automatically.
             </div>
 
@@ -774,7 +774,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                 onClick={() => setShowFolderModal(false)}
                 style={{
                   padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
-                  background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 }}
               >
                 Cancel

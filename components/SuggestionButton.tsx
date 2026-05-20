@@ -59,7 +59,7 @@ export default function SuggestionButton() {
             <div style={{ fontSize: 14, fontWeight: 800 }}>💡 Got an idea?</div>
             <div style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', marginTop: 2 }}>Tell Kai in plain English — Sean will review it</div>
           </div>
-          <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 18, cursor: 'pointer' }}>×</button>
+          <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--bos-color-ink-tertiary)', fontSize: 18, cursor: 'pointer' }}>×</button>
         </div>
       </div>
       <div style={{ padding: '16px 20px' }}>
@@ -78,7 +78,7 @@ export default function SuggestionButton() {
               style={{
                 width: '100%', marginTop: 8, padding: '12px', borderRadius: 12,
                 background: text.trim() ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : '#e2e8f0',
-                border: 'none', color: text.trim() ? 'white' : '#94a3b8',
+                border: 'none', color: text.trim() ? 'white' : 'var(--bos-color-ink-tertiary)',
                 fontSize: 14, fontWeight: 700, cursor: text.trim() ? 'pointer' : 'default',
               }}>
               {submitting ? 'Sending...' : 'Submit Suggestion'}

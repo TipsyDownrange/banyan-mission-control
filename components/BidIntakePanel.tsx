@@ -34,13 +34,13 @@ const LEAD_TYPE_STYLE: Record<string, { color: string; bg: string; label: string
   rfp:        { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', label: 'RFP',        route: 'Assign to Estimator' },
   wo_inquiry: { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', label: 'WO Inquiry', route: 'Send to Joey' },
   addendum:   { color: '#92400e', bg: 'rgba(255,251,235,0.9)', label: 'Addendum',   route: 'Link to Bid' },
-  vendor:     { color: '#64748b', bg: 'rgba(248,250,252,0.9)', label: 'Vendor',     route: 'File' },
+  vendor:     { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', label: 'Vendor',     route: 'File' },
 };
 
 const CONF_STYLE: Record<string, { color: string; bg: string }> = {
   high:   { color: '#15803d', bg: 'rgba(240,253,244,0.9)' },
   medium: { color: '#92400e', bg: 'rgba(255,251,235,0.9)' },
-  low:    { color: '#64748b', bg: 'rgba(248,250,252,0.9)' },
+  low:    { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)' },
 };
 
 function daysUntil(d: string) {
@@ -131,11 +131,11 @@ export default function BidIntakePanel() {
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Estimating</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Estimating</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Bid Intake</h1>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>
               Kai scans {scanned.length > 0 ? scanned.join(', ') : 'estimator inboxes'} for bid opportunities
               {lastScan && ` · Last scan: ${lastScan}`}
             </p>
@@ -143,7 +143,7 @@ export default function BidIntakePanel() {
           <button
             onClick={scan}
             disabled={scanning}
-            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: scanning ? '#94a3b8' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
+            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
             {scanning ? '⟳ Scanning...' : '⟳ Scan Inboxes'}
           </button>
         </div>
@@ -160,7 +160,7 @@ export default function BidIntakePanel() {
           ].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 24, fontWeight: 900, color: s.label === 'Urgent (≤7 days)' && s.value > 0 ? '#b91c1c' : '#0f172a', letterSpacing: '-0.04em' }}>{s.value}</div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -179,7 +179,7 @@ export default function BidIntakePanel() {
           <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
             {opportunities.length === 0 ? 'Scan inboxes to find bid opportunities' : 'All opportunities processed'}
           </div>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
             Kai will read Kyle, Jenny, and Sean's inboxes and identify bid invitations, RFPs, and plan room notifications.
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function BidIntakePanel() {
                         </span>
                       ); })()}
                       {opp.island && opp.island !== 'Unknown' && (
-                        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 999, color: ISLAND_COLOR[opp.island] || '#64748b', background: 'rgba(255,255,255,0.9)', border: '1px solid currentColor' }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 999, color: ISLAND_COLOR[opp.island] || 'var(--bos-color-ink-disabled)', background: 'rgba(255,255,255,0.9)', border: '1px solid currentColor' }}>
                           {opp.island}
                         </span>
                       )}
@@ -241,11 +241,11 @@ export default function BidIntakePanel() {
                     {!isAdded && (
                       <>
                         <button onClick={() => { if (isEditing) { setEditingId(null); setEditDraft({}); } else { setEditingId(opp.email_id); setEditDraft({}); } }}
-                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? '#0f766e' : '#64748b', cursor: 'pointer' }}>
+                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                           {isEditing ? '✓' : '✎'}
                         </button>
                         <button onClick={() => setDismissed(prev => new Set([...prev, opp.email_id]))}
-                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: '1px solid #e2e8f0', background: 'white', color: '#94a3b8', cursor: 'pointer' }}>
+                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
                           ✕
                         </button>
                         {/* Assignment — RFP gets estimator dropdown, WO goes to Joey */}
@@ -259,13 +259,13 @@ export default function BidIntakePanel() {
                             </select>
                             <button onClick={() => { if (assignedTo[opp.email_id]) addToBidQueue({...opp, gc_name: opp.gc_name}); }}
                               disabled={!assignedTo[opp.email_id] || adding === opp.email_id}
-                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : '#e2e8f0', color: assignedTo[opp.email_id] ? 'white' : '#94a3b8', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
+                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : '#e2e8f0', color: assignedTo[opp.email_id] ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
                               {adding === opp.email_id ? '...' : '→ Bid Queue'}
                             </button>
                           </div>
                         ) : (
                           <button onClick={() => addToBidQueue(opp)} disabled={adding === opp.email_id}
-                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: adding === opp.email_id ? '#94a3b8' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
+                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
                             {adding === opp.email_id ? '...' : '→ Joey Queue'}
                           </button>
                         )}
@@ -294,7 +294,7 @@ export default function BidIntakePanel() {
                     ['Received', fmtDate(opp.email_date)],
                   ].map(([label, value]) => (
                     <div key={String(label)}>
-                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 2 }}>{label}</div>
                       <div style={{ fontSize: 12, color: '#334155' }}>{value}</div>
                     </div>
                   ))}
@@ -303,7 +303,7 @@ export default function BidIntakePanel() {
                 {/* Scope summary */}
                 {(opp.scope_summary || isEditing) && (
                   <div style={{ marginTop: 10, padding: '8px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #f1f5f9' }}>
-                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Scope (Kai extracted)</div>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Scope (Kai extracted)</div>
                     {isEditing
                       ? <textarea value={editDraft.scope_summary ?? opp.scope_summary} onChange={e => setEditDraft(p => ({ ...p, scope_summary: e.target.value }))} rows={2} style={{ width: '100%', fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 6px', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
                       : <div style={{ fontSize: 12, color: '#334155', lineHeight: 1.5 }}>{opp.scope_summary}</div>
@@ -322,7 +322,7 @@ export default function BidIntakePanel() {
                 )}
 
                 {/* Email source */}
-                <div style={{ marginTop: 6, fontSize: 10, color: '#94a3b8' }}>
+                <div style={{ marginTop: 6, fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>
                   From: {opp.from_email} · {opp.inbox_owner} inbox · "{opp.raw_subject?.substring(0, 60)}"
                 </div>
               </div>

@@ -94,12 +94,12 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: '#0f766e', textTransform: 'uppercase' }}>{kID}</div>
             <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '4px 0 0' }}>New RFI</h2>
           </div>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: '#94a3b8', cursor: 'pointer' }}>×</button>
+          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>×</button>
         </div>
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
           <span style={labelStyle}>
-            Subject <span style={{ color: subjectInvalid ? '#b91c1c' : '#94a3b8', marginLeft: 6, fontWeight: 600 }}>
+            Subject <span style={{ color: subjectInvalid ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginLeft: 6, fontWeight: 600 }}>
               {subject.length}/{SUBJECT_MAX}
             </span>
           </span>
@@ -187,7 +187,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
             Cancel
           </button>
           <button type="submit" disabled={busy || !canSubmit}
-            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: (busy || !canSubmit) ? '#94a3b8' : '#0f766e', color: 'white', fontWeight: 800, fontSize: 12, cursor: (busy || !canSubmit) ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: (busy || !canSubmit) ? 'var(--bos-color-ink-tertiary)' : '#0f766e', color: 'white', fontWeight: 800, fontSize: 12, cursor: (busy || !canSubmit) ? 'default' : 'pointer' }}>
             {busy ? 'Creating…' : 'Create RFI'}
           </button>
         </div>

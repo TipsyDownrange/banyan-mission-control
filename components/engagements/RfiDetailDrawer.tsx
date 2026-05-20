@@ -113,17 +113,17 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
         )}
 
         {!r ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
         ) : (
           <div style={{ padding: '20px 24px' }}>
             <section style={cardStyle}>
               <h3 style={sectionTitleStyle}>Status</h3>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{r.status.replace(/_/g, ' ')}</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
                 Ball: <strong>{r.ball_in_court || '—'}</strong>
                 {r.submitted_to ? ` · Submitted to ${r.submitted_to}` : ''}
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 6, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                 <div>Submitted: {r.submitted_date || '—'}</div>
                 <div>Required By: {r.required_response_by_date || '—'}</div>
                 <div>Responded: {r.response_received_date || '—'}</div>
@@ -134,7 +134,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
               <h3 style={sectionTitleStyle}>Details</h3>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{r.subject}</div>
               {r.reason_for_rfi && (
-                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 6 }}>
                   Reason: {r.reason_for_rfi.replace(/_/g, ' ')}
                 </div>
               )}
@@ -153,7 +153,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
             {r.response_text && (
               <section style={cardStyle}>
                 <h3 style={sectionTitleStyle}>Response</h3>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{r.response_received_date || ''}</div>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginBottom: 4 }}>{r.response_received_date || ''}</div>
                 <div style={{ fontSize: 12, color: '#0f172a', whiteSpace: 'pre-wrap' }}>{r.response_text}</div>
               </section>
             )}
@@ -235,7 +235,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                   </button>
                 )}
 
-                {r.status === 'CLOSED' && <span style={{ fontSize: 12, color: '#64748b' }}>RFI is closed.</span>}
+                {r.status === 'CLOSED' && <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>RFI is closed.</span>}
                 {r.status === 'VOID' && <span style={{ fontSize: 12, color: '#b91c1c' }}>RFI is voided.</span>}
               </div>
             </section>
@@ -246,7 +246,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
               <DocList label="Attachments" ids={r.submitted_attachments} />
               <DocList label="Response documents" ids={r.response_documents} />
               {r.linked_change_order_id && (
-                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b' }}>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                   Linked CO: <strong>{r.linked_change_order_id}</strong>
                 </div>
               )}
@@ -269,7 +269,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
 function DocList({ label, ids }: { label: string; ids: string[] }) {
   return (
     <div style={{ marginBottom: 6 }}>
-      <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 2 }}>{label} ({ids.length})</div>
+      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, marginBottom: 2 }}>{label} ({ids.length})</div>
       {ids.length === 0 ? (
         <div style={{ fontSize: 11, color: '#cbd5e1' }}>None</div>
       ) : (

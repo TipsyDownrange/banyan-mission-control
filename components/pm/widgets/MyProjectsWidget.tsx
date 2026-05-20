@@ -38,7 +38,7 @@ export default function MyProjectsWidget({ onHide, showHide }: { onHide?: () => 
       showHide={showHide}
     >
       {!data || data.items.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
           No active projects assigned to you.
         </div>
       ) : (
@@ -55,7 +55,7 @@ export default function MyProjectsWidget({ onHide, showHide }: { onHide?: () => 
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{p.kid}</div>
-                <div style={{ fontSize: 10, color: '#64748b' }}>{p.pm_handoff_state}</div>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{p.pm_handoff_state}</div>
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, color: '#475569' }}>
                 <span>{p.open_submittals} submittals</span>
@@ -67,7 +67,7 @@ export default function MyProjectsWidget({ onHide, showHide }: { onHide?: () => 
                 )}
               </div>
               {p.last_activity_at && (
-                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 4 }}>
                   last activity {new Date(p.last_activity_at).toLocaleDateString()}
                 </div>
               )}

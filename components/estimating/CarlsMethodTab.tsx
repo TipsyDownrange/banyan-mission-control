@@ -265,7 +265,7 @@ function SubtotalRow({ label, value }: { label: string; value: number }) {
           <span style={{
             fontSize: 10,
             fontWeight: 700,
-            color: '#64748b',
+            color: 'var(--bos-color-ink-disabled)',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             fontFamily: FONT,
@@ -733,7 +733,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
 
   if (loading) {
     return (
-      <div style={{ padding: 48, textAlign: 'center', color: '#64748b', fontSize: 13, fontFamily: FONT }}>
+      <div style={{ padding: 48, textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontFamily: FONT }}>
         Loading estimate…
       </div>
     );
@@ -767,7 +767,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
           </span>
           {saving ? (
             <span style={{
-              fontSize: 10, color: '#94a3b8', fontWeight: 600,
+              fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600,
               background: '#f8fafc', padding: '2px 8px', borderRadius: 6,
             }}>
               Saving…
@@ -912,7 +912,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <th style={{
                   textAlign: 'left', paddingBottom: 8,
                   fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-                  textTransform: 'uppercase', color: '#94a3b8',
+                  textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)',
                   borderBottom: '1px solid #e2e8f0', width: '40%',
                   fontFamily: FONT,
                 }}>
@@ -921,7 +921,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <th style={{
                   textAlign: 'left', paddingBottom: 8,
                   fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-                  textTransform: 'uppercase', color: '#94a3b8',
+                  textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)',
                   borderBottom: '1px solid #e2e8f0', width: '22%',
                   fontFamily: FONT,
                 }}>
@@ -939,7 +939,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <th style={{
                   textAlign: 'right', paddingBottom: 8,
                   fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-                  textTransform: 'uppercase', color: '#94a3b8',
+                  textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)',
                   borderBottom: '1px solid #e2e8f0', width: 140,
                   fontFamily: FONT,
                 }}>
@@ -980,7 +980,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                   <button
                     onClick={() => update(d => ({ ...d, aluminum: [...d.aluminum, { description: '', amount: '' }] }))}
                     style={{
-                      fontSize: 10, color: '#94a3b8', background: 'none',
+                      fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none',
                       border: 'none', cursor: 'pointer', padding: 0,
                       fontFamily: FONT, fontWeight: 600,
                     }}
@@ -1022,7 +1022,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                   <button
                     onClick={() => update(d => ({ ...d, glass: [...d.glass, { description: '', amount: '' }] }))}
                     style={{
-                      fontSize: 10, color: '#94a3b8', background: 'none',
+                      fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none',
                       border: 'none', cursor: 'pointer', padding: 0,
                       fontFamily: FONT, fontWeight: 600,
                     }}
@@ -1094,7 +1094,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
                   <button
                     onClick={() => update(d => ({ ...d, miscExtra: [...(d.miscExtra ?? []), { description: '', amount: '' }] }))}
-                    style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
+                    style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
                   >+ add misc item</button>
                 </td>
               </tr>
@@ -1157,7 +1157,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
                   <button
                     onClick={() => update(d => ({ ...d, otherExtra: [...(d.otherExtra ?? []), { description: '', amount: '' }] }))}
-                    style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
+                    style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
                   >+ add cost item</button>
                 </td>
               </tr>
@@ -1198,7 +1198,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         {baseline.totalHours > 0 && (
                           <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600 }}>
                             📋 Template: {baseline.totalHours.toFixed(2)}h
-                            <span style={{ fontWeight: 400, color: '#64748b', marginLeft: 4 }}>
+                            <span style={{ fontWeight: 400, color: 'var(--bos-color-ink-disabled)', marginLeft: 4 }}>
                               ({baseline.breakdown.map(b => `${b.systemType} ${b.hours.toFixed(2)}h`).join(' + ')})
                             </span>
                           </span>
@@ -1263,8 +1263,8 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         placeholder="hrs"
                         width={44}
                       />
-                      <span style={{ color: '#94a3b8' }}>@</span>
-                      <span style={{ color: '#64748b' }}>$</span>
+                      <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>@</span>
+                      <span style={{ color: 'var(--bos-color-ink-disabled)' }}>$</span>
                       <SmallInput
                         value={line.rate}
                         onChange={v => update(d => ({
@@ -1273,7 +1273,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         }))}
                         width={52}
                       />
-                      <span style={{ color: '#94a3b8' }}>/hr</span>
+                      <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>/hr</span>
                     </div>
                   </td>
                   <MarketCell />
@@ -1303,7 +1303,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <td colSpan={4} style={{ paddingTop: 2, paddingBottom: 6 }}>
                   <button
                     onClick={() => update(d => ({ ...d, labor: [...d.labor, { description: '', hours: '', rate: DEFAULT_LABOR_RATE, amount: '' }] }))}
-                    style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
+                    style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT, fontWeight: 600 }}
                   >+ add labor line</button>
                 </td>
               </tr>
@@ -1324,7 +1324,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                     )}
                   </div>
                 </td>
-                <td style={{ ...bodyCell, fontSize: 11, color: data.markup.overheadOverride ? '#d97706' : '#94a3b8', fontStyle: 'italic' }}>
+                <td style={{ ...bodyCell, fontSize: 11, color: data.markup.overheadOverride ? '#d97706' : 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
                   {data.markup.overheadOverride
                     ? `overrides $${fmt(laborSubtotal)}`
                     : `= Labor Subtotal ($${fmt(laborSubtotal)})`
@@ -1358,7 +1358,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                       onChange={v => update(d => ({ ...d, markup: { ...d.markup, profitPct: v } }))}
                       width={44}
                     />
-                    <span style={{ color: '#94a3b8' }}>%</span>
+                    <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>%</span>
                   </div>
                 </td>
                 <td style={bodyCell} />
@@ -1383,7 +1383,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                       onChange={v => update(d => ({ ...d, taxRate: v }))}
                       width={44}
                     />
-                    <span style={{ color: '#94a3b8' }}>%</span>
+                    <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>%</span>
                   </div>
                 </td>
                 <td style={bodyCell} />
@@ -1436,7 +1436,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                             <button
                               onClick={() => setXAmount('')}
                               className="no-print"
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 13 }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}
                             >×</button>
                           )}
                         </div>
@@ -1451,7 +1451,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         flexWrap: 'wrap',
                       }}>
                         <div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
                           <div style={{
                             fontSize: 18, fontWeight: 900, fontFamily: FONT,
                             color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a',
@@ -1466,7 +1466,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
                           <div style={{
                             fontSize: 22, fontWeight: 900, fontFamily: FONT,
                             color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a',
@@ -1508,7 +1508,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
             ].map(({ label, value }) => (
               <div key={label} style={{ textAlign: 'right' }}>
                 <div style={{
-                  fontSize: 8, fontWeight: 800, color: '#94a3b8',
+                  fontSize: 8, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
                   textTransform: 'uppercase', letterSpacing: '0.12em',
                   fontFamily: FONT, marginBottom: 2,
                 }}>
@@ -1533,10 +1533,10 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
             paddingTop: 12,
             borderTop: '1px solid #e2e8f0',
           }}>
-            <div style={{ fontSize: 9, color: '#94a3b8', fontFamily: FONT }}>
+            <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontFamily: FONT }}>
               Generated by BanyanOS · {today}
             </div>
-            <div style={{ fontSize: 9, color: '#94a3b8', fontFamily: FONT }}>
+            <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontFamily: FONT }}>
               Kula Glass Co., Inc. — Confidential Estimate
             </div>
           </div>

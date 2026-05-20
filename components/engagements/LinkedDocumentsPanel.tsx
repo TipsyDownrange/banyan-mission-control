@@ -73,11 +73,11 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>Loading…</div>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
       ) : err ? (
         <div style={{ fontSize: 12, color: '#b91c1c' }}>{err}</div>
       ) : items.length === 0 ? (
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>No documents linked yet.</div>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No documents linked yet.</div>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.map((it) => (
@@ -88,7 +88,7 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
                   {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>v{it.version}</span>}
                 </div>
                 {!compact && (
-                  <div style={{ fontSize: 10, color: '#94a3b8' }}>{it.kind}{it.subkind ? ` · ${it.subkind}` : ''} · {new Date(it.uploaded_at).toLocaleDateString()}</div>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{it.kind}{it.subkind ? ` · ${it.subkind}` : ''} · {new Date(it.uploaded_at).toLocaleDateString()}</div>
                 )}
               </div>
               <a href={`https://drive.google.com/file/d/${encodeURIComponent(it.drive_file_id)}/view`} target="_blank" rel="noreferrer" style={openLinkStyle}>Open</a>

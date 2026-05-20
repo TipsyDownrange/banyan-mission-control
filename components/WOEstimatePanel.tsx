@@ -121,7 +121,7 @@ const SEC: React.CSSProperties = {
   fontWeight: 800,
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  color: '#64748b',
+  color: 'var(--bos-color-ink-disabled)',
   borderBottom: '1px solid #f1f5f9',
   paddingBottom: 6,
   marginBottom: 10,
@@ -332,7 +332,7 @@ function FixedRow({ label, value, onChange }: {
 function SubtotalBar({ label, value }: { label: string; value: number }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '5px 10px', marginTop: 6, marginBottom: 4 }}>
-      <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: FONT }}>{label}</span>
+      <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: FONT }}>{label}</span>
       <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
     </div>
   );
@@ -572,7 +572,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
       <>
         <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 500, backdropFilter: 'blur(2px)' }} />
         <div style={{ position: 'fixed', inset: '5vh 5vw', zIndex: 501, background: 'white', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 24px 80px rgba(15,23,42,0.2)' }}>
-          <div style={{ textAlign: 'center', color: '#64748b', fontSize: 13 }}>Loading estimate…</div>
+          <div style={{ textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontSize: 13 }}>Loading estimate…</div>
         </div>
       </>
     );
@@ -650,7 +650,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                       ${Number(o.total_cost || 0).toFixed(2)}{o.vendor_name ? ` (${o.vendor_name})` : ''}
                     </span>
                   ))}
-                  <span style={{ color:'#94a3b8', fontSize:11 }}>— reference for materials estimate</span>
+                  <span style={{ color:'var(--bos-color-ink-tertiary)', fontSize:11 }}>— reference for materials estimate</span>
                 </div>
               )}
 
@@ -665,7 +665,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     onRemove={() => update(d => ({ ...d, aluminum: d.aluminum.filter((_, j) => j !== i) }))}
                   />
                 ))}
-                <button onClick={() => update(d => ({ ...d, aluminum: [...d.aluminum, { description: '', amount: '' }] }))} style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add line</button>
+                <button onClick={() => update(d => ({ ...d, aluminum: [...d.aluminum, { description: '', amount: '' }] }))} style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add line</button>
                 <SubtotalBar label="Metal Subtotal" value={metalSubtotal} />
               </div>
 
@@ -680,7 +680,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     onRemove={() => update(d => ({ ...d, glass: d.glass.filter((_, j) => j !== i) }))}
                   />
                 ))}
-                <button onClick={() => update(d => ({ ...d, glass: [...d.glass, { description: '', amount: '' }] }))} style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add line</button>
+                <button onClick={() => update(d => ({ ...d, glass: [...d.glass, { description: '', amount: '' }] }))} style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add line</button>
                 <SubtotalBar label="Glass Subtotal" value={glassSubtotal} />
               </div>
 
@@ -707,7 +707,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     onRemove={() => update(d => ({ ...d, miscExtra: (d.miscExtra ?? []).filter((_, j) => j !== i) }))}
                   />
                 ))}
-                <button onClick={() => update(d => ({ ...d, miscExtra: [...(d.miscExtra ?? []), { description: '', amount: '' }] }))} style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add misc item</button>
+                <button onClick={() => update(d => ({ ...d, miscExtra: [...(d.miscExtra ?? []), { description: '', amount: '' }] }))} style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add misc item</button>
                 <SubtotalBar label="Misc Subtotal" value={miscSubtotal} />
               </div>
 
@@ -730,7 +730,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     onRemove={() => update(d => ({ ...d, otherExtra: (d.otherExtra ?? []).filter((_, j) => j !== i) }))}
                   />
                 ))}
-                <button onClick={() => update(d => ({ ...d, otherExtra: [...(d.otherExtra ?? []), { description: '', amount: '' }] }))} style={{ fontSize: 10, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add cost item</button>
+                <button onClick={() => update(d => ({ ...d, otherExtra: [...(d.otherExtra ?? []), { description: '', amount: '' }] }))} style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT }}>+ add cost item</button>
                 <SubtotalBar label="Other Subtotal" value={otherSubtotal} />
               </div>
 
@@ -756,7 +756,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: line.custom ? 'rgba(99,102,241,0.04)' : '#f8fafc', borderRadius: 8, border: line.custom ? '1px solid rgba(99,102,241,0.2)' : '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                       {line.custom ? null : (
-                        <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>{i + 1}.</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', flexShrink: 0 }}>{i + 1}.</span>
                       )}
                       {line.custom && (
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)', flexShrink: 0 }}>CUSTOM</span>
@@ -785,8 +785,8 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                           width={52}
                         />
                       )}
-                      <span style={{ fontSize: 11, color: '#94a3b8' }}>hrs @</span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>$</span>
+                      <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>hrs @</span>
+                      <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>$</span>
                       {isLocked ? (
                         <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums', width: 52, textAlign: 'right' }}>{line.rate}</span>
                       ) : (
@@ -796,7 +796,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                           width={52}
                         />
                       )}
-                      <span style={{ fontSize: 11, color: '#94a3b8' }}>/hr</span>
+                      <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>/hr</span>
                       <span style={{ flex: 1 }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>
                         ${fmt(laborAmount(line))}
@@ -821,25 +821,25 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                       placeholder="2"
                       width={40}
                     />
-                    <span style={{ fontSize: 11, color: '#64748b' }}>trips ×</span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>trips ×</span>
                     <SmallNum
                       value={data.driveTime?.hoursPerTrip || '0'}
                       onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', rate: DEFAULT_LABOR_RATE }), hoursPerTrip: v } }))}
                       placeholder="hrs"
                       width={48}
                     />
-                    <span style={{ fontSize: 11, color: '#64748b' }}>h/trip @</span>
-                    <span style={{ fontSize: 11, color: '#64748b' }}>$</span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>h/trip @</span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>$</span>
                     <SmallNum
                       value={data.driveTime?.rate || DEFAULT_LABOR_RATE}
                       onChange={v => update(d => ({ ...d, driveTime: { ...(d.driveTime || { trips: '2', hoursPerTrip: '0' }), rate: v } }))}
                       width={52}
                     />
-                    <span style={{ fontSize: 11, color: '#94a3b8' }}>/hr</span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>/hr</span>
                     <span style={{ flex: 1 }} />
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>${fmt(driveTimeAmt)}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
                     {driveTimeTrips} trips × {driveTimeHoursPerTrip}h = {fmt(driveTimeHours)}h total drive
                   </div>
                 </div>
@@ -854,7 +854,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 {/* Overhead */}
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Overhead {!data.markup.overheadOverride && <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>(= labor)</span>}</span>
+                    <span>Overhead {!data.markup.overheadOverride && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 500 }}>(= labor)</span>}</span>
                     {data.markup.overheadOverride && (
                       <button onClick={() => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: '' } }))} style={{ fontSize: 10, color: '#d97706', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>↺ auto</button>
                     )}
@@ -872,7 +872,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 4 }}>Profit %</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <SmallNum value={data.markup.profitPct} onChange={v => update(d => ({ ...d, markup: { ...d.markup, profitPct: v } }))} width={60} />
-                    <span style={{ fontSize: 11, color: '#64748b' }}>% → <span style={{ fontWeight: 700, color: '#0f766e' }}>${fmt(profit)}</span></span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>% → <span style={{ fontWeight: 700, color: '#0f766e' }}>${fmt(profit)}</span></span>
                   </div>
                 </div>
 
@@ -883,7 +883,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <SmallNum value={data.taxRate} onChange={v => update(d => ({ ...d, taxRate: v }))} width={60} />
-                    <span style={{ fontSize: 11, color: '#64748b' }}>% → <span style={{ fontWeight: 700, color: '#0f766e' }}>${fmt(taxAmt)}</span></span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>% → <span style={{ fontWeight: 700, color: '#0f766e' }}>${fmt(taxAmt)}</span></span>
                   </div>
                 </div>
               </div>
@@ -900,7 +900,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     { label: `GET (${data.taxRate}%)`, value: taxAmt },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, fontFamily: FONT }}>
-                      <span style={{ color: '#64748b' }}>{label}</span>
+                      <span style={{ color: 'var(--bos-color-ink-disabled)' }}>{label}</span>
                       <span style={{ fontWeight: 600, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
                     </div>
                   ))}
@@ -930,13 +930,13 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <AmtInput value={xAmount} onChange={setXAmount} placeholder="-2000" width={120} />
                       {xAmount && (
-                        <button onClick={() => setXAmount('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 13 }}>×</button>
+                        <button onClick={() => setXAmount('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>×</button>
                       )}
                     </div>
                   </div>
                   <div style={{ borderTop: '1px solid rgba(20,184,166,0.2)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
                     <div>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
                       <div style={{ fontSize: 18, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
                         {newMarkupPct.toFixed(2)}%
                         {xVal !== 0 && (
@@ -947,7 +947,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
                       <div style={{ fontSize: 22, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
                         ${fmt(newGrandTotal2)}
                         {xVal !== 0 && (
@@ -976,14 +976,14 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
           alignItems: 'center',
           gap: 12,
         }}>
-          <div style={{ fontSize: 12, color: '#64748b' }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>
             Estimate total: <strong style={{ color: '#0f172a' }}>${fmt(grandTotal)}</strong>
-            <span style={{ marginLeft: 12, fontSize: 11, color: '#94a3b8' }}>
+            <span style={{ marginLeft: 12, fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
               (Materials ${fmt(materialsTotal)} + Labor ${fmt(laborSubtotal)} + OH ${fmt(overhead)} + Profit ${fmt(profit)} + GET ${fmt(taxAmt)})
             </span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               Close
             </button>
             <button
