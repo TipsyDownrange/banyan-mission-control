@@ -275,6 +275,25 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  async function downloadSubmissionBundle(format: 'pdf' | 'zip') {
+    if (!payApp) return;
+    setError(null);
+    const res = await fetch(`/api/pay-apps/${payAppId}/submission-bundle?format=${format}`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? `Submission bundle failed (${res.status})`);
+      return;
+    }
+    const blob = await res.blob();
+    const ext = format;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PayApp-${String(payApp.pay_app_number).padStart(3, '0')}-submission.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
   if (!payApp) return <div style={{ padding: 40, textAlign: 'center', color: '#b91c1c' }}>Pay app not found</div>;
 
@@ -444,12 +463,17 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
         <button onClick={downloadPdf} style={btnSecondary}>
           Generate PDF
         </button>
+        <SubmissionBundleButtons
+          payAppState={payApp.state}
+          onDownload={downloadSubmissionBundle}
+        />
         {payApp.state !== 'PENDING_DRAFT' && payApp.state !== 'PAID_FULL' && (
           <button onClick={reject} disabled={saving} style={btnDanger}>
             Reject → Draft
           </button>
         )}
       </div>
+      <SubmissionBundlePreview payAppState={payApp.state} cfg={cfg} />
 
       {notarizeOpen && (
         <NotarizationUploadModal
@@ -612,3 +636,110 @@ const btnPrimary = { background: '#0c2330', color: '#fff', border: 'none', paddi
 const btnGreen = { background: '#15803d', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnSecondary = { background: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnDanger = { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
+
+// ─── Submission Packet Export (AIA bundle) ──────────────────────────────────
+const SUBMISSION_BUNDLE_ALLOWED_STATES: ReadonlyArray<string> = [
+  'READY_FOR_SUBMISSION',
+  'SUBMITTED',
+  'ARCHITECT_CERTIFIED',
+  'GC_APPROVED',
+];
+
+function submissionBundleTooltip(state: string): string {
+  if (SUBMISSION_BUNDLE_ALLOWED_STATES.includes(state)) {
+    return 'Download a merged PDF with cover letter, pay app, SOV, lien waivers, and manifest — ready to email to your GC.';
+  }
+  if (state === 'PENDING_DRAFT' || state === 'READY_FOR_NOTARIZATION') {
+    return 'Submission bundle becomes available once the pay app is marked ready for submission.';
+  }
+  if (state === 'REJECTED') {
+    return 'Pay app is rejected — return it to draft and re-submit to enable the bundle.';
+  }
+  if (state === 'PAID_PARTIAL' || state === 'PAID_FULL') {
+    return 'Pay app is closed — submission bundle was archived at submission time.';
+  }
+  return 'Submission bundle is not available in this state.';
+}
+
+export function SubmissionBundleButtons({
+  payAppState,
+  onDownload,
+}: {
+  payAppState: string;
+  onDownload: (format: 'pdf' | 'zip') => void | Promise<void>;
+}) {
+  const enabled = SUBMISSION_BUNDLE_ALLOWED_STATES.includes(payAppState);
+  const tip = submissionBundleTooltip(payAppState);
+  const disabledStyle = {
+    ...btnSecondary,
+    background: '#f8fafc', color: '#94a3b8', borderColor: '#e2e8f0',
+    cursor: 'not-allowed' as const,
+  };
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => enabled && onDownload('pdf')}
+        disabled={!enabled}
+        title={tip}
+        aria-label="Generate Submission Packet"
+        style={enabled ? btnPrimary : disabledStyle}
+        data-testid="submission-bundle-pdf"
+      >
+        Generate Submission Packet
+      </button>
+      <button
+        type="button"
+        onClick={() => enabled && onDownload('zip')}
+        disabled={!enabled}
+        title={enabled ? 'Download all bundle documents as a ZIP archive.' : tip}
+        aria-label="Download Submission Packet as ZIP"
+        style={enabled ? btnSecondary : disabledStyle}
+        data-testid="submission-bundle-zip"
+      >
+        Download as ZIP
+      </button>
+    </>
+  );
+}
+
+export function SubmissionBundlePreview({
+  payAppState,
+  cfg,
+}: {
+  payAppState: string;
+  cfg: { gc_certifier_name?: string | null } | null;
+}) {
+  if (!SUBMISSION_BUNDLE_ALLOWED_STATES.includes(payAppState)) return null;
+  const items = [
+    'Cover letter (canonical Kula template)',
+    `Pay app PDF (notarized or generated)`,
+    'Schedule of Values reference (if SOV locked)',
+    'All lien waivers attached to this pay app',
+    'Submission manifest (last page)',
+  ];
+  return (
+    <div style={{
+      marginTop: 14,
+      background: '#fff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 10,
+      padding: '10px 14px',
+      maxWidth: 520,
+    }}
+      data-testid="submission-bundle-preview"
+    >
+      <div style={{ fontSize: 11, fontWeight: 800, color: '#0c2330', marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+        Submission packet contents
+      </div>
+      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
+        {items.map((label) => <li key={label}>{label}</li>)}
+      </ul>
+      <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+        {cfg?.gc_certifier_name
+          ? `Addressed to: ${cfg.gc_certifier_name}`
+          : 'No GC certifier on file — packet will open with "To Whom It May Concern".'}
+      </div>
+    </div>
+  );
+}
