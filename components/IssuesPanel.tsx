@@ -267,7 +267,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                       onClick={() => { setAssignModalIssue(issue); setAssignee(issue.assigned_to || ''); }}
                       style={{
                         padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                        background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1',
+                        background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)',
                       }}>
                       👤 Assign
                     </button>

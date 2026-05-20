@@ -930,14 +930,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 rel="noreferrer"
                 title="Open project files in Drive"
                 onClick={e => e.stopPropagation()}
-                style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 📁 Files
               </a>
             ) : (
               <button
                 onClick={() => setLinkingFolder(p => !p)}
                 title="Link Drive folder"
-                style={{ padding: '7px 14px', borderRadius: 10, background: linkingFolder ? 'rgba(239,246,255,0.96)' : 'var(--color-surface)', border: linkingFolder ? '1px solid rgba(3,105,161,0.4)' : '1px solid var(--color-surface-border)', color: linkingFolder ? '#0369a1' : 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                style={{ padding: '7px 14px', borderRadius: 10, background: linkingFolder ? 'rgba(239,246,255,0.96)' : 'var(--color-surface)', border: linkingFolder ? '1px solid rgba(3,105,161,0.4)' : '1px solid var(--color-surface-border)', color: linkingFolder ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 🔗 Link Folder
               </button>
             )}
@@ -950,7 +950,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <button
               onClick={() => onQuote(wo.id)}
               title="Build quote (skip estimate)"
-              style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: '#0369a1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               $ Quote
             </button>
             <button
@@ -1023,7 +1023,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
         {/* Link Folder input bar */}
         {linkingFolder && (
           <div style={{ padding: '10px 20px 12px', background: 'rgba(239,246,255,0.8)', borderBottom: '1px solid rgba(59,130,246,0.15)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#0369a1', flexShrink: 0 }}>Folder URL:</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-accent-data)', flexShrink: 0 }}>Folder URL:</span>
             <input
               type="url"
               value={linkFolderInput}
@@ -1036,7 +1036,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <button
               onClick={handleLinkFolder}
               disabled={!linkFolderInput || linkFolderSaving}
-              style={{ padding: '8px 16px', borderRadius: 8, background: linkFolderInput && !linkFolderSaving ? '#0369a1' : 'var(--color-surface-border)', color: linkFolderInput && !linkFolderSaving ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 12, fontWeight: 700, cursor: linkFolderInput && !linkFolderSaving ? 'pointer' : 'default', flexShrink: 0 }}>
+              style={{ padding: '8px 16px', borderRadius: 8, background: linkFolderInput && !linkFolderSaving ? 'var(--bos-color-accent-data)' : 'var(--color-surface-border)', color: linkFolderInput && !linkFolderSaving ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 12, fontWeight: 700, cursor: linkFolderInput && !linkFolderSaving ? 'pointer' : 'default', flexShrink: 0 }}>
               {linkFolderSaving ? 'Saving...' : 'Save Link'}
             </button>
             <button
@@ -1818,7 +1818,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     const statusColors: Record<string,{bg:string;color:string}> = {
                       VENDOR_QUOTED: {bg:'#fffbeb',color:'var(--color-amber-800)'},
                       RELEASED: {bg:'#eff6ff',color:'#1d4ed8'},
-                      IN_TRANSIT: {bg:'#f0f9ff',color:'#0369a1'},
+                      IN_TRANSIT: {bg:'#f0f9ff',color:'var(--bos-color-accent-data)'},
                       DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
                       INSPECTED_PASS: {bg:'#f0fdf4',color:'#15803d'},
                       INSPECTED_FAIL: {bg:'var(--color-red-50)',color:'#dc2626'},
@@ -2236,7 +2236,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)' }}>
                           <span style={{ fontSize: 14 }}>{isPDF ? '📄' : isImage ? '🖼' : '📎'}</span>
                           <a href={f.driveUrl} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
-                            style={{ flex: 1, fontSize: 12, color: '#0369a1', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
+                            style={{ flex: 1, fontSize: 12, color: 'var(--bos-color-accent-data)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
                             {f.name}
                           </a>
                           <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', flexShrink: 0 }}>{f.sizeKb} KB</span>

@@ -694,7 +694,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         key: 'install_instructions' as keyof JobDocs,
         label: 'Install Instructions',
         icon: '📋',
-        color: '#0369a1',
+        color: 'var(--bos-color-accent-data)',
         bg: '#eff6ff',
         border: '#bfdbfe',
       },
@@ -725,7 +725,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           {!readOnly && (
             <button
               onClick={() => setEditingDocs(p => !p)}
-              style={{ fontSize: 12, color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 6px' }}
+              style={{ fontSize: 12, color: 'var(--bos-color-accent-data)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '2px 6px' }}
             >
               {editingDocs ? 'Cancel' : 'Edit Links'}
             </button>
@@ -1540,8 +1540,8 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   onClick={() => { setShowTemplateFor(isShowingTemplate ? null : plan.install_plan_id); setAddingStepToPlan(null); }}
                   style={{
                     padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                    background: isShowingTemplate ? '#0369a1' : 'white',
-                    color: isShowingTemplate ? 'white' : '#0369a1',
+                    background: isShowingTemplate ? 'var(--bos-color-accent-data)' : 'white',
+                    color: isShowingTemplate ? 'white' : 'var(--bos-color-accent-data)',
                     border: '1px solid rgba(3,105,161,0.3)',
                   }}
                 >
@@ -1627,7 +1627,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             {/* Template picker */}
             {isShowingTemplate && !readOnly && (
               <div style={{ marginTop: 10, padding: 14, background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#0369a1', marginBottom: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-accent-data)', marginBottom: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   Choose Template
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -1637,7 +1637,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       onClick={() => handleApplyTemplate(plan.install_plan_id, name)}
                       style={{
                         padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                        background: 'white', color: '#0369a1',
+                        background: 'white', color: 'var(--bos-color-accent-data)',
                         border: '1px solid #bfdbfe',
                         transition: 'all 0.1s',
                       }}
@@ -1779,7 +1779,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     return (
       <div style={{ padding: '16px', background: 'var(--color-red-50)', borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
         Failed to load: {error}
-        <button onClick={loadData} style={{ marginLeft: 10, background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', textDecoration: 'underline', fontSize: 12 }}>Retry</button>
+        <button onClick={loadData} style={{ marginLeft: 10, background: 'none', border: 'none', color: 'var(--bos-color-accent-data)', cursor: 'pointer', textDecoration: 'underline', fontSize: 12 }}>Retry</button>
       </div>
     );
   }

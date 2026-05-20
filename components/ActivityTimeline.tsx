@@ -169,7 +169,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   NOTE:              { icon: '📝', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Note' },
   TM_CAPTURE:        { icon: '⏱️', color: 'var(--color-amber-800)', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
   PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
-  SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
+  SITE_VISIT:        { icon: '👁️', color: 'var(--bos-color-accent-data)', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
   WARRANTY_CALLBACK: { icon: '🔁', color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
   STATUS_CHANGED:        { icon: '🔄', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Status Changed' },
@@ -178,13 +178,13 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   WO_DECLINED:           { icon: '🚫', color: '#be123c', bg: 'rgba(190,18,60,0.08)', label: 'WO Declined' },
   VENDOR_QUOTE_ADDED:    { icon: '🏷️', color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Vendor Quote' },
   ESTIMATE_SAVED:        { icon: '💾', color: '#047857', bg: 'rgba(4,120,87,0.08)', label: 'Estimate Saved' },
-  QUOTE_GENERATED:       { icon: '📄', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Quote Generated' },
+  QUOTE_GENERATED:       { icon: '📄', color: 'var(--bos-color-accent-data)', bg: 'rgba(3,105,161,0.08)', label: 'Quote Generated' },
   WORK_BREAKDOWN_ADDED:  { icon: '🧱', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'Work Breakdown' },
   JOB_FILE_UPLOADED:     { icon: '📎', color: 'var(--bos-color-ink-tertiary)', bg: 'rgba(71,85,105,0.08)', label: 'Job File Uploaded' },
   ORG_CREATED:           { icon: Building2, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Org Created', display_label: 'Org Created', color_token: 'teal', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ORG_UPDATED:           { icon: RefreshCcw, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Org Updated', display_label: 'Org Updated', color_token: 'cyan', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ORG_MERGED:            { icon: GitMerge, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Org Merged', display_label: 'Org Merged', color_token: 'violet', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
-  CONTACT_CREATED:       { icon: UserPlus, color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Contact Created', display_label: 'Contact Created', color_token: 'sky', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  CONTACT_CREATED:       { icon: UserPlus, color: 'var(--bos-color-accent-data)', bg: 'rgba(3,105,161,0.08)', label: 'Contact Created', display_label: 'Contact Created', color_token: 'sky', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   SITE_CREATED:          { icon: MapPin, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Address Created', display_label: 'Address Created', color_token: 'blue', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ENGAGEMENT_CREATED:    { icon: Handshake, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Engagement Created', display_label: 'Engagement Created', color_token: 'teal', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
   ENGAGEMENT_STATUS_CHANGED: { icon: Activity, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Engagement Status', display_label: 'Engagement Status Changed', color_token: 'blue', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
@@ -193,7 +193,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   WORK_RECORD_CREATED:   { icon: FileCheck2, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Work Record Created', display_label: 'Work Record Created', color_token: 'teal', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
   WORK_RECORD_STATE_CHANGED: { icon: Repeat2, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Work State Changed', display_label: 'Work Record State Changed', color_token: 'blue', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
   BID_PROMOTED:          { icon: Rocket, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Bid Promoted', display_label: 'Bid Promoted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
-  ESTIMATE_VERSION_FROZEN: { icon: Snowflake, color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Estimate Frozen', display_label: 'Estimate Version Frozen', color_token: 'sky', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
+  ESTIMATE_VERSION_FROZEN: { icon: Snowflake, color: 'var(--bos-color-accent-data)', bg: 'rgba(3,105,161,0.08)', label: 'Estimate Frozen', display_label: 'Estimate Version Frozen', color_token: 'sky', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   ESTIMATE_VERSION_ACCEPTED: { icon: CheckCircle2, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Estimate Accepted', display_label: 'Estimate Version Accepted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   PROPOSAL_VERSION_FROZEN: { icon: Snowflake, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Proposal Frozen', display_label: 'Proposal Version Frozen', color_token: 'violet', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   PROPOSAL_VERSION_ACCEPTED: { icon: CheckCircle2, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Proposal Accepted', display_label: 'Proposal Version Accepted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
@@ -401,7 +401,7 @@ function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
     borderRadius: 8,
     background: 'var(--color-surface)',
     border: '1px solid var(--color-surface-border)',
-    color: href ? '#0369a1' : '#334155',
+    color: href ? 'var(--bos-color-accent-data)' : '#334155',
     fontSize: 12,
     fontWeight: 700,
     textDecoration: 'none',
@@ -692,7 +692,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               borderRadius: 8,
               border: '1px solid rgba(3,105,161,0.22)',
               background: '#f0f9ff',
-              color: '#0369a1',
+              color: 'var(--bos-color-accent-data)',
               fontSize: 11,
               fontWeight: 800,
               textDecoration: 'none',
@@ -794,7 +794,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           {description.length > 120 && (
             <button
               onClick={handleNestedToggle}
-              style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, fontWeight: 700, color: '#0369a1', cursor: 'pointer', marginTop: 2 }}>
+              style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-accent-data)', cursor: 'pointer', marginTop: 2 }}>
               {expanded ? 'Show less' : 'Show more'}
             </button>
           )}
@@ -963,7 +963,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   Measurement data unavailable.{' '}
                   <button
                     onClick={e => { e.stopPropagation(); console.log('[FIELD_MEASUREMENT raw]', event.notes); }}
-                    style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontSize: 12, textDecoration: 'underline', padding: 0 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--bos-color-accent-data)', cursor: 'pointer', fontSize: 12, textDecoration: 'underline', padding: 0 }}
                   >View raw in console</button>
                 </div>
               )}
@@ -1266,7 +1266,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(3,105,161,0.05)', borderRadius: 10, border: '1px solid rgba(3,105,161,0.15)' }}>
               {isJson && parsed.system_type ? (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0369a1' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--bos-color-accent-data)' }}>
                     {String(parsed.system_type)} · {parsed.captured_at ? new Date(String(parsed.captured_at)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                   </div>
                   {Object.entries(fields).length > 0 && (
@@ -1329,7 +1329,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {kv('Witnesses', parsed.witnesses ? String(parsed.witnesses) : undefined)}
                   {event.evidence_ref && (
                     <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer"
-                      style={{ fontSize: 11, color: '#0369a1', marginTop: 4 }} onClick={e => e.stopPropagation()}>
+                      style={{ fontSize: 11, color: 'var(--bos-color-accent-data)', marginTop: 4 }} onClick={e => e.stopPropagation()}>
                       View evidence →
                     </a>
                   )}
@@ -1359,7 +1359,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {kv('Status', event.issue_status || undefined)}
                   {event.evidence_ref && (
                     <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer"
-                      style={{ fontSize: 11, color: '#0369a1', marginTop: 4 }} onClick={e => e.stopPropagation()}>
+                      style={{ fontSize: 11, color: 'var(--bos-color-accent-data)', marginTop: 4 }} onClick={e => e.stopPropagation()}>
                       View evidence →
                     </a>
                   )}
@@ -1780,7 +1780,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
       ) : error ? (
         <div style={{ padding: 32, textAlign: 'center', color: '#dc2626', fontSize: 13 }}>
           ⚠️ {error}
-          <button onClick={loadEvents} style={{ marginLeft: 10, fontSize: 12, color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+          <button onClick={loadEvents} style={{ marginLeft: 10, fontSize: 12, color: 'var(--bos-color-accent-data)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
             Retry
           </button>
         </div>

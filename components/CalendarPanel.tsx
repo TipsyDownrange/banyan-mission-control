@@ -176,12 +176,12 @@ export default function CalendarPanel() {
           {/* Personal / All Staff toggle — All Staff only for non-glazier roles */}
           <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 3 }}>
             <button onClick={() => setCalMode('personal')}
-              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'personal' ? 'white' : 'transparent', color: calMode === 'personal' ? '#0369a1' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', boxShadow: calMode === 'personal' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'personal' ? 'white' : 'transparent', color: calMode === 'personal' ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', boxShadow: calMode === 'personal' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
               My Calendar
             </button>
             {canSeeAllStaff && (
               <button onClick={() => setCalMode('management')}
-                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'management' ? 'white' : 'transparent', color: calMode === 'management' ? '#0369a1' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', boxShadow: calMode === 'management' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'management' ? 'white' : 'transparent', color: calMode === 'management' ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', boxShadow: calMode === 'management' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
                 🏢 All Staff
               </button>
             )}
@@ -189,7 +189,7 @@ export default function CalendarPanel() {
           {/* View toggle */}
           {(['month', 'agenda'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid var(--color-surface-border)', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? '#0369a1' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid var(--color-surface-border)', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               {v}
             </button>
           ))}
@@ -321,13 +321,13 @@ export default function CalendarPanel() {
                 return (
                   <div key={i} onClick={() => setSelectedDate(date)} style={{ minHeight: 90, padding: '6px 4px', borderRight: i % 7 !== 6 ? '1px solid var(--color-surface)' : 'none', borderBottom: '1px solid var(--color-surface)', cursor: 'pointer', background: isSelected ? 'rgba(239,246,255,0.6)' : 'white', transition: 'background 0.1s' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
-                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: isTodayCell ? '#0369a1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: isTodayCell ? 'var(--bos-color-accent-data)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ fontSize: 12, fontWeight: isTodayCell ? 900 : 500, color: isTodayCell ? 'white' : date.getMonth() !== month ? '#cbd5e1' : 'var(--color-ink-primary)' }}>{date.getDate()}</span>
                       </div>
                     </div>
                     {dayEvents.slice(0, 3).map(ev => (
                       <div key={ev.id} onClick={(e) => { e.stopPropagation(); setSelectedEvent(ev); }}
-                        style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, marginBottom: 2, background: ev.color || '#0369a1', color: 'white', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>
+                        style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, marginBottom: 2, background: ev.color || 'var(--bos-color-accent-data)', color: 'white', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>
                         {calMode === 'management' && ev.calendar && (
                           <span style={{ opacity: 0.7 }}>
                             {ev.calendar.split(',').map((n: string) => n.trim().charAt(0).toUpperCase()).slice(0, 3).join('')} ·{' '}
@@ -362,7 +362,7 @@ export default function CalendarPanel() {
                   <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: 'var(--color-surface)', border: `1px solid var(--color-surface-border)`, cursor: 'pointer' }}
                     onClick={() => setSelectedEvent(ev === selectedEvent ? null : ev)}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                      <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
+                      <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || 'var(--bos-color-accent-data)', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 2 }}>{ev.title}</div>
                         <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
@@ -392,17 +392,17 @@ export default function CalendarPanel() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {agendaDays.map(({ date, events: dayEvts }) => (
             <div key={date.toISOString()}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: isToday(date.toISOString()) ? '#0369a1' : 'var(--bos-color-ink-tertiary)', marginTop: 12, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                {isToday(date.toISOString()) && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0369a1', flexShrink: 0 }} />}
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: isToday(date.toISOString()) ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)', marginTop: 12, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                {isToday(date.toISOString()) && <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--bos-color-accent-data)', flexShrink: 0 }} />}
                 {fmtDate(date.toISOString())}
-                {isToday(date.toISOString()) && <span style={{ padding: '1px 6px', borderRadius: 999, background: '#0369a1', color: 'white', fontSize: 9, fontWeight: 800 }}>TODAY</span>}
+                {isToday(date.toISOString()) && <span style={{ padding: '1px 6px', borderRadius: 999, background: 'var(--bos-color-accent-data)', color: 'white', fontSize: 9, fontWeight: 800 }}>TODAY</span>}
               </div>
               {dayEvts.length === 0 ? (
                 <div style={{ padding: '10px 16px', borderRadius: 12, background: '#fafafa', border: '1px dashed var(--color-surface-border)', fontSize: 12, color: '#cbd5e1' }}>No events</div>
               ) : (
                 dayEvts.map(ev => (
                   <div key={ev.id} style={{ padding: '10px 16px', borderRadius: 12, background: 'white', border: '1px solid var(--color-surface-border)', marginBottom: 6, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
+                    <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || 'var(--bos-color-accent-data)', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 2 }}>{ev.title}</div>
                       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>

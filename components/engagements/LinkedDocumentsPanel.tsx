@@ -85,7 +85,7 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.filename}
-                  {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>v{it.version}</span>}
+                  {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-accent-data)', marginLeft: 6 }}>v{it.version}</span>}
                 </div>
                 {!compact && (
                   <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{it.kind}{it.subkind ? ` · ${it.subkind}` : ''} · {new Date(it.uploaded_at).toLocaleDateString()}</div>

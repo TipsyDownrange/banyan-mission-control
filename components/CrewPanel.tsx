@@ -27,7 +27,7 @@ export function buildCrewUpdatePayload(draft: Draft, dirtyFields: Iterable<CrewP
 }
 
 const ISLAND_COLORS: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
+  Oahu: 'var(--bos-color-accent-data)', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 const DEPT_COLORS: Record<string, string> = {
   PM: 'var(--bos-color-brand-primary-deep)', Estimating: 'var(--bos-color-brand-primary-deep)',
@@ -388,9 +388,9 @@ function CrewCard({ member, onClick, travel }: {
         {activeTravel && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
             {isFerry
-              ? <FerryIcon size={11} color={isTodayTravel ? '#0369a1' : 'var(--bos-color-ink-tertiary)'} />
-              : <PlaneIcon size={11} color={isTodayTravel ? '#0369a1' : 'var(--bos-color-ink-tertiary)'} />}
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '-0.01em', color: isTodayTravel ? '#0369a1' : 'var(--bos-color-ink-tertiary)' }}>
+              ? <FerryIcon size={11} color={isTodayTravel ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)'} />
+              : <PlaneIcon size={11} color={isTodayTravel ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)'} />}
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '-0.01em', color: isTodayTravel ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)' }}>
               {isTodayTravel ? 'In transit today' : 'Departing tomorrow'} · {activeTravel.from_code}
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{display:'inline',verticalAlign:'middle',margin:'0 2px'}}><path d="M5 12h14M14 6l6 6-6 6"/></svg>
               {activeTravel.to_code}
@@ -399,7 +399,7 @@ function CrewCard({ member, onClick, travel }: {
         )}
         {!activeTravel && (
           <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-            {member.email && <span style={{ fontSize: 9, color: '#0369a1' }}>{member.email}</span>}
+            {member.email && <span style={{ fontSize: 9, color: 'var(--bos-color-accent-data)' }}>{member.email}</span>}
             {member.phone && <span style={{ fontSize: 9, color: 'var(--bos-color-brand-primary-deep)' }}>{member.phone}</span>}
           </div>
         )}
@@ -414,8 +414,8 @@ function CrewCard({ member, onClick, travel }: {
           flexShrink: 0,
         }}>
           {isFerry
-            ? <FerryIcon size={15} color={isTodayTravel ? '#0369a1' : 'var(--bos-color-ink-tertiary)'} />
-            : <PlaneIcon size={15} color={isTodayTravel ? '#0369a1' : 'var(--bos-color-ink-tertiary)'} />}
+            ? <FerryIcon size={15} color={isTodayTravel ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)'} />
+            : <PlaneIcon size={15} color={isTodayTravel ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)'} />}
         </div>
       )}
       {/* Office badge */}

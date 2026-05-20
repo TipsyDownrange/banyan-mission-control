@@ -18,12 +18,12 @@ type OrgNode = {
 
 // ── Colors ──────────────────────────────────────────────────────────────
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
+  Oahu: 'var(--bos-color-accent-data)', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
   Lanai: '#7c3aed', Molokai: '#a16207',
 };
 
 const ROLE_COLOR: Record<string, string> = {
-  owner: 'var(--color-ink-primary)', gm: '#0369a1', pm: 'var(--bos-color-brand-primary-deep)', estimator: 'var(--bos-color-brand-primary-deep)',
+  owner: 'var(--color-ink-primary)', gm: 'var(--bos-color-accent-data)', pm: 'var(--bos-color-brand-primary-deep)', estimator: 'var(--bos-color-brand-primary-deep)',
   admin_mgr: '#7c3aed', admin: '#7c3aed', service_pm: '#6d28d9',
   super: 'var(--color-amber-800)', sales: 'var(--bos-color-brand-primary-deep)', pm_track: '#7c3aed',
   journeyman: '#334155', apprentice: 'var(--bos-color-ink-tertiary)', laborer: 'var(--bos-color-ink-tertiary)',
@@ -132,7 +132,7 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
 
   // Build Sean/GM node — runs Maui + outer islands
   const gmNode: OrgNode = gm ? toNode(gm) : {
-    id: 'gm', name: 'General Manager', title: 'GM', island: 'Maui', color: '#0369a1', children: [],
+    id: 'gm', name: 'General Manager', title: 'GM', island: 'Maui', color: 'var(--bos-color-accent-data)', children: [],
   };
   if (gm) gmNode.note = 'Maui + Outer Islands';
 
@@ -157,9 +157,9 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
 function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean }) {
   const islandColor = ISLAND_COLOR[node.island] || 'var(--bos-color-ink-disabled)';
   const isLeader = ['owner', 'gm', 'pm', 'estimator', 'admin_mgr', 'service_pm', 'sales', 'super'].some(r =>
-    node.title.toLowerCase().includes(r) || node.color === 'var(--color-ink-primary)' || node.color === '#0369a1'
+    node.title.toLowerCase().includes(r) || node.color === 'var(--color-ink-primary)' || node.color === 'var(--bos-color-accent-data)'
   );
-  const tier = node.children.length > 0 || isLeader ? (node.color === 'var(--color-ink-primary)' ? 0 : node.color === '#0369a1' ? 1 : 2) : 3;
+  const tier = node.children.length > 0 || isLeader ? (node.color === 'var(--color-ink-primary)' ? 0 : node.color === 'var(--bos-color-accent-data)' ? 1 : 2) : 3;
 
   if (compact) {
     return (
@@ -412,7 +412,7 @@ export default function OrgChartPanel() {
                 <div style={{ width: 2, height: 12, background: 'var(--color-surface-border)' }} />
                 <IslandSection
                   label="Oahu Office"
-                  color="#0369a1"
+                  color="var(--bos-color-accent-data)"
                   borderColor="rgba(3,105,161,0.15)"
                   superNode={oahuSuper}
                   officeStaff={oahuStaff}

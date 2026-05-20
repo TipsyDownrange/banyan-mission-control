@@ -5,7 +5,7 @@ type Bid = Record<string, string>;
 
 const DECISION_STYLES: Record<string, { color: string; bg: string; border: string }> = {
   'needs review':    { color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
-  'assign':          { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
+  'assign':          { color: 'var(--bos-color-accent-data)', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'waiting on docs': { color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
   'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
   'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
@@ -190,7 +190,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                       {PILL(ds, dStyle)}
                       {isNew && PILL('New Assignment', { color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)', border: '1px solid rgba(245,158,11,0.3)' })}
                       {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
-                      {bid['Island'] && PILL(bid['Island'], { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.2)' })}
+                      {bid['Island'] && PILL(bid['Island'], { color: 'var(--bos-color-accent-data)', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.2)' })}
                     </div>
                     <h3 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', lineHeight: 1.1 }}>
                       {bid['Job Name']}

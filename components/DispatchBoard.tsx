@@ -19,7 +19,7 @@ const WORK_TYPES = [
 ];
 
 const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  'Site Visit / Assessment': { color: '#0369a1', bg: '#eff6ff', border: '#bfdbfe' },
+  'Site Visit / Assessment': { color: 'var(--bos-color-accent-data)', bg: '#eff6ff', border: '#bfdbfe' },
   'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', border: '#99f6e4' },
   'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
@@ -65,7 +65,7 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }>
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Maui: 'var(--bos-color-brand-primary-deep)', Oahu: '#0369a1', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
+  Maui: 'var(--bos-color-brand-primary-deep)', Oahu: 'var(--bos-color-accent-data)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 function getWeekDates(startDate: Date): Date[] {
@@ -288,10 +288,10 @@ export default function DispatchBoard() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 6 }}>
             {weekDates.map(date => (
               <div key={dateStr(date)} style={{ textAlign: 'center', padding: '6px 4px', borderRadius: 8, background: isToday(date) ? 'rgba(3,105,161,0.08)' : 'transparent', border: isToday(date) ? '1px solid rgba(3,105,161,0.2)' : '1px solid transparent' }}>
-                <div style={{ fontSize: 11, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? '#0369a1' : 'var(--bos-color-ink-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: 11, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                   {date.toLocaleDateString('en-US', { weekday: 'short' })}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: isToday(date) ? '#0369a1' : 'var(--color-ink-primary)' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: isToday(date) ? 'var(--bos-color-accent-data)' : 'var(--color-ink-primary)' }}>
                   {date.getDate()}
                 </div>
                 <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>{date.toLocaleDateString('en-US', { month: 'short' })}</div>

@@ -14,7 +14,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
+  Oahu: 'var(--bos-color-accent-data)', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 type Project = { kID: string; name: string; island: string };
@@ -315,13 +315,13 @@ export default function PMPanel() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Submittal Log</div>
-                <button onClick={() => setShowNewSub(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#0369a1,#0ea5e9)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Add Submittal</button>
+                <button onClick={() => setShowNewSub(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--bos-color-accent-data),#0ea5e9)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Add Submittal</button>
               </div>
               {submittals.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-tertiary)' }}>No submittals logged yet</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {submittals.map(sub => (
                   <div key={sub.sub_id} style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', padding: '14px 18px', display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: 12, alignItems: 'center', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: '#0369a1' }}>#{sub.sub_number}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-accent-data)' }}>#{sub.sub_number}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{sub.description || sub.spec_section}</div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -524,7 +524,7 @@ export default function PMPanel() {
             </div>
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
               <button onClick={() => setShowNewSub(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
-              <button onClick={submitSub} disabled={!newSubSpec||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,#0369a1,#0ea5e9)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Add Submittal'}</button>
+              <button onClick={submitSub} disabled={!newSubSpec||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,var(--bos-color-accent-data),#0ea5e9)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Add Submittal'}</button>
             </div>
           </div>
         </div>

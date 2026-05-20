@@ -149,7 +149,7 @@ function FinancialsPanel() {
               <tbody>
                 {data.recentInvoices.map(inv => (
                   <tr key={inv.id} style={{ borderBottom: '1px solid var(--color-surface)' }}>
-                    <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: '#0369a1' }}>{inv.invoiceNumber || '—'}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: 'var(--bos-color-accent-data)' }}>{inv.invoiceNumber || '—'}</td>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--color-ink-primary)', maxWidth: 200 }}>{inv.customer}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{fmt$(Number(inv.amount))}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, color: Number(inv.balance) > 0 ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(inv.balance))}</td>
@@ -245,7 +245,7 @@ function CompliancePanel() {
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{a.island}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ flex: 1, height: 6, borderRadius: 999, background: '#f1f5f9' }}>
-                <div style={{ width: `${a.pct}%`, height: '100%', borderRadius: 999, background: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : a.pct >= 70 ? '#0369a1' : 'var(--bos-color-ink-tertiary)' }} />
+                <div style={{ width: `${a.pct}%`, height: '100%', borderRadius: 999, background: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : a.pct >= 70 ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)' }} />
               </div>
               <span style={{ fontSize: 11, fontWeight: 700, color: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : '#334155', whiteSpace: 'nowrap' }}>{a.pct}%</span>
             </div>

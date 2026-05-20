@@ -860,7 +860,7 @@ export default function QuoteBuilder({
 
         {/* ── Customer Section ────────────────────────────────────────────── */}
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '14px 18px' }}>
-          <SectionHeader label="Customer" color="#0369a1" />
+          <SectionHeader label="Customer" color="var(--bos-color-accent-data)" />
           <div style={{ paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <ReadField label="Customer Name" value={customerName} />
             <ReadField label="Phone" value={wo?.contactPhone || wo?.phone || wo?.contact?.match(/(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})/)?.[1] || ''} />
@@ -959,7 +959,7 @@ export default function QuoteBuilder({
                 {activeConfigId && (
                   <button
                     onClick={handleDuplicate}
-                    style={{ padding: '6px 12px', borderRadius: 9, border: '1px solid rgba(8,145,178,0.3)', background: 'rgba(224,242,254,0.7)', color: '#0369a1', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '6px 12px', borderRadius: 9, border: '1px solid rgba(8,145,178,0.3)', background: 'rgba(224,242,254,0.7)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                   >
                     ⎘ Duplicate
                   </button>

@@ -8,17 +8,17 @@ type Event = { id: string; kID: string; projectName: string; type: string; occur
 type SubmittalSummary = { total: number; pending: number; approved: number; overdue: number };
 type COSummary = { total: number; pending: number; approved: number; totalExposure: number };
 
-const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)' };
+const ISLAND_COLOR: Record<string, string> = { Oahu: 'var(--bos-color-accent-data)', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)' };
 
 const EVENT_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  DAILY_LOG:         { label: 'Daily Log',   color: '#0369a1', bg: 'rgba(239,246,255,0.9)' },
+  DAILY_LOG:         { label: 'Daily Log',   color: 'var(--bos-color-accent-data)', bg: 'rgba(239,246,255,0.9)' },
   FIELD_ISSUE:       { label: 'Field Issue', color: 'var(--color-red-700)', bg: 'rgba(254,242,242,0.9)' },
   INSTALL_STEP:      { label: 'Install',     color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)' },
   NOTE:              { label: 'Note',        color: 'var(--bos-color-ink-tertiary)', bg: 'rgba(248,250,252,0.9)' },
   FIELD_MEASUREMENT: { label: 'Measurement', color: '#0891b2', bg: 'rgba(236,254,255,0.9)' },
   PUNCH_LIST:        { label: 'Punch List',  color: '#d97706', bg: 'rgba(255,251,235,0.9)' },
   TM_CAPTURE:        { label: 'T&M',         color: 'var(--color-amber-800)', bg: 'rgba(255,247,237,0.9)' },
-  SITE_VISIT:        { label: 'Site Visit',  color: '#0369a1', bg: 'rgba(240,249,255,0.9)' },
+  SITE_VISIT:        { label: 'Site Visit',  color: 'var(--bos-color-accent-data)', bg: 'rgba(240,249,255,0.9)' },
   TESTING:           { label: 'Test',        color: '#7c3aed', bg: 'rgba(245,243,255,0.9)' },
   WARRANTY_CALLBACK: { label: 'Warranty',    color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)' },
   PHOTO_ONLY:        { label: 'Photo',       color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)' },
