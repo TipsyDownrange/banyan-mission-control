@@ -2319,6 +2319,32 @@ export const schedule_milestones = pgTable('schedule_milestones', {
   ),
 ]);
 
+// BAN-374 P5 — Crew / resource assignments on schedule_tasks.  A join table
+// (user × task) with role, allocation %, and soft-remove so historical
+// assignments are preserved.  Partial unique index prevents duplicate
+// ACTIVE assignments while allowing the same user to be re-assigned to a
+// task after a previous removal.
+export const schedule_task_resources = pgTable('schedule_task_resources', {
+  task_resource_id: uuid('task_resource_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  schedule_task_id: uuid('schedule_task_id').notNull().references((): AnyPgColumn => schedule_tasks.id, { onDelete: 'cascade' }),
+  user_id: uuid('user_id').notNull().references(() => users.user_id),
+  role_on_task: text('role_on_task'),
+  allocation_percent: integer('allocation_percent').notNull().default(100),
+  assigned_at: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
+  assigned_by: uuid('assigned_by').notNull().references(() => users.user_id),
+  removed_at: timestamp('removed_at', { withTimezone: true }),
+  removed_by: uuid('removed_by').references(() => users.user_id),
+  notes: text('notes'),
+}, (table) => [
+  index('schedule_task_resources_tenant_task_idx').on(table.tenant_id, table.schedule_task_id, table.removed_at),
+  index('schedule_task_resources_tenant_user_idx').on(table.tenant_id, table.user_id, table.removed_at),
+  check(
+    'schedule_task_resources_allocation_check',
+    sql`${table.allocation_percent} BETWEEN 1 AND 100`,
+  ),
+]);
+
 // BAN-374 P4 — Matson freight calendar (tenant-scoped).  Operators import
 // Matson / Pasha / Young Brothers sailings; the Gantt overlay marks sailing,
 // arrival, and cutoff dates below the task rows.  Soft-delete via deleted_at.
