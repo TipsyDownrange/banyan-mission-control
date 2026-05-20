@@ -2530,3 +2530,26 @@ export const inquiry_state_transitions = pgTable('inquiry_state_transitions', {
   check('inquiry_state_transitions_from_state_check', sql`${table.from_state} IS NULL OR ${table.from_state} IN ('NEW','IN_DISCUSSION','QUOTED','AWARDED','LOST','DEFERRED','CONVERTED')`),
   check('inquiry_state_transitions_to_state_check', sql`${table.to_state} IN ('NEW','IN_DISCUSSION','QUOTED','AWARDED','LOST','DEFERRED','CONVERTED')`),
 ]);
+
+// BAN-376 P2 — per-inquiry attachment registry. Drive remains canon for the
+// bytes; this table stores Drive file ids and basic metadata only. Migration
+// 0041 owns the SQL shape; ON DELETE CASCADE off inquiries(inquiry_id).
+export const INQUIRY_ATTACHMENT_KINDS = ['EMAIL_BODY', 'EMAIL_ATTACHMENT'] as const;
+export type InquiryAttachmentKind = typeof INQUIRY_ATTACHMENT_KINDS[number];
+
+export const inquiry_attachments = pgTable('inquiry_attachments', {
+  attachment_id: uuid('attachment_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  inquiry_id: uuid('inquiry_id').notNull().references(() => inquiries.inquiry_id, { onDelete: 'cascade' }),
+  attachment_kind: text('attachment_kind').notNull(),
+  drive_file_id: text('drive_file_id').notNull(),
+  original_filename: text('original_filename').notNull(),
+  mime_type: text('mime_type'),
+  size_bytes: integer('size_bytes'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('inquiry_attachments_tenant_inquiry_idx').on(table.tenant_id, table.inquiry_id, table.created_at),
+  index('inquiry_attachments_tenant_kind_idx').on(table.tenant_id, table.attachment_kind),
+  check('inquiry_attachments_kind_check', sql`${table.attachment_kind} IN ('EMAIL_BODY','EMAIL_ATTACHMENT')`),
+  check('inquiry_attachments_size_bytes_nonneg_check', sql`${table.size_bytes} IS NULL OR ${table.size_bytes} >= 0`),
+]);
