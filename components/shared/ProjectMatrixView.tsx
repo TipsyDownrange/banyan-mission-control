@@ -342,7 +342,7 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {plan.location}
                         </div>
-                        <div style={{ fontSize: 9, color: '#475569', fontWeight: 600, marginTop: 1 }}>
+                        <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, marginTop: 1 }}>
                           {plan.system_type}
                         </div>
                       </th>
@@ -393,7 +393,7 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
                                   </div>
                                 </>
                               ) : (
-                                <span style={{ fontSize: 9, color: '#475569' }}>—</span>
+                                <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>—</span>
                               )}
                             </button>
                           </td>

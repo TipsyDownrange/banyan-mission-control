@@ -916,7 +916,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 {wo.id && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>{wo.id}</span>}
                 {wo.legacy_wo_ids && <span title="Previous Work Order ID" style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>Legacy: {wo.legacy_wo_ids}</span>}
                 <span style={{ fontSize: 10, fontWeight: 800, color: stage.color, background: STAGE_BG[wo.status] || 'var(--color-surface)', padding: '2px 8px', borderRadius: 999, border: `1px solid ${stage.color}33` }}>{stage.label}</span>
-                {wo.requires_org_assignment && <span style={{ fontSize: 10, fontWeight: 800, color: '#92400e', background: 'rgba(245,158,11,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.28)' }}>Needs Org Assignment</span>}
+                {wo.requires_org_assignment && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-amber-800)', background: 'rgba(245,158,11,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.28)' }}>Needs Org Assignment</span>}
                 {wo.island && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>{wo.island}</span>}
               </div>
             </div>
@@ -1059,7 +1059,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               <button
                 type="button"
                 onClick={() => setStageExpanded(prev => !prev)}
-                style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
               >
                 {stageExpanded ? 'Hide stages' : 'Edit stages'}
               </button>
@@ -1235,14 +1235,14 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   </div>
                 )}
                 {wo.customer_resolved === false && !wo.data_integrity_error && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', fontSize: 12, color: '#92400e', fontWeight: 700 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', fontSize: 12, color: 'var(--color-amber-800)', fontWeight: 700 }}>
                     <span>⚠ Customer link broken — please re-link</span>
                     <button
                       onClick={() => {
                         const id = prompt('Enter Customer_ID to re-link:');
                         if (id) onSave(safeWo.id, { customer_id: id } as Partial<WorkOrder>);
                       }}
-                      style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: '#92400e', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                      style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: 'var(--color-amber-800)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700 }}
                     >
                       Re-link
                     </button>
@@ -1252,10 +1252,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <div style={{ marginBottom: 14, padding: 14, borderRadius: 12, background: 'rgba(255,251,235,0.72)', border: '1px solid rgba(245,158,11,0.28)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
                       <div>
-                        <div style={{ fontSize: 10, fontWeight: 900, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Needs Org Assignment</div>
-                        <div style={{ fontSize: 12, color: '#92400e', fontWeight: 700, marginTop: 3 }}>Identity repair</div>
+                        <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-amber-800)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Needs Org Assignment</div>
+                        <div style={{ fontSize: 12, color: 'var(--color-amber-800)', fontWeight: 700, marginTop: 3 }}>Identity repair</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: '#92400e', background: 'white', padding: '3px 8px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.3)' }}>Safe repair</span>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-amber-800)', background: 'white', padding: '3px 8px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.3)' }}>Safe repair</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: viewport === 'stacked' ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -1272,10 +1272,10 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       ))}
                     </div>
 
-                    <div style={{ fontSize: 10, fontWeight: 900, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Suggested Matches</div>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-amber-800)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Suggested Matches</div>
                     <div style={{ display: 'grid', gap: 8 }}>
                       {orgSuggestions.length === 0 ? (
-                        <div style={{ padding: 10, borderRadius: 8, background: 'white', border: '1px dashed rgba(245,158,11,0.35)', fontSize: 12, color: '#92400e', fontWeight: 700 }}>
+                        <div style={{ padding: 10, borderRadius: 8, background: 'white', border: '1px dashed rgba(245,158,11,0.35)', fontSize: 12, color: 'var(--color-amber-800)', fontWeight: 700 }}>
                           No suggested organizations found.
                         </div>
                       ) : orgSuggestions.map(org => {
@@ -1299,7 +1299,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 3 }}>{org.org_id}</div>
                             {(org.address || org.primary_site?.address_line_1) && (
-                              <div style={{ fontSize: 11, color: '#92400e', marginTop: 3 }}>{org.address || org.primary_site?.address_line_1}</div>
+                              <div style={{ fontSize: 11, color: 'var(--color-amber-800)', marginTop: 3 }}>{org.address || org.primary_site?.address_line_1}</div>
                             )}
                           </button>
                         );
@@ -1329,7 +1329,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <button
                           onClick={() => handleOrgRepair({ requires_org_assignment: true }, 'review')}
                           disabled={!!orgRepairSaving}
-                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(245,158,11,0.35)', background: 'white', color: '#92400e', fontSize: 12, fontWeight: 800, cursor: orgRepairSaving ? 'default' : 'pointer', opacity: orgRepairSaving ? 0.5 : 1 }}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(245,158,11,0.35)', background: 'white', color: 'var(--color-amber-800)', fontSize: 12, fontWeight: 800, cursor: orgRepairSaving ? 'default' : 'pointer', opacity: orgRepairSaving ? 0.5 : 1 }}
                         >
                           {orgRepairSaving === 'review' ? 'Marking...' : 'Mark needs review'}
                         </button>
@@ -1425,7 +1425,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       style={INP}
                     />
                     {legacyAccountAddressSuggestion && legacyAccountAddressSuggestion !== (customerSiteDraft.address ?? wo.address ?? '') && (
-                      <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11, color: '#92400e' }}>
+                      <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11, color: 'var(--color-amber-800)' }}>
                         <span>Account address on file: {legacyAccountAddressSuggestion}</span>
                         <button
                           type="button"
@@ -1433,7 +1433,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             updateCustomerSite('address', legacyAccountAddressSuggestion);
                             setLegacyAccountAddressSuggestion('');
                           }}
-                          style={{ border: '1px solid rgba(146,64,14,0.25)', background: '#fffbeb', color: '#92400e', borderRadius: 6, padding: '3px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                          style={{ border: '1px solid rgba(146,64,14,0.25)', background: '#fffbeb', color: 'var(--color-amber-800)', borderRadius: 6, padding: '3px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
                         >
                           Use as site address
                         </button>
@@ -1585,12 +1585,12 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   {(safeWo as any).quote_total ? (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, color: '#475569' }}>Quote Total</span>
+                        <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Quote Total</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>${Number((safeWo as any).quote_total).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontSize: 12, color: '#475569' }}>Deposit (50%)</span>
-                        <span style={{ fontSize: 12, color: '#475569' }}>${(Number((safeWo as any).quote_total) * 0.5).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                        <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Deposit (50%)</span>
+                        <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>${(Number((safeWo as any).quote_total) * 0.5).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
                       </div>
                       {safeWo.status === 'deposit_received' || safeWo.status === 'materials_ordered' || safeWo.status === 'materials_received' || safeWo.status === 'ready_to_schedule' ? (
                         <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700 }}>✅ Deposit Received</div>
@@ -1598,7 +1598,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <button onClick={async () => {
                           if (!confirm('Mark deposit as received?')) return;
                           await onStageChange(safeWo.id, 'deposit_received');
-                        }} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 7, border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', color: '#475569', fontWeight: 700 }}>
+                        }} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 7, border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>
                           Mark Deposit Received
                         </button>
                       )}
@@ -1767,7 +1767,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           </div>
                         ) : (
                           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                            <label style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'#475569',fontWeight:600,cursor:'pointer',padding:'6px 10px',borderRadius:7,border:'1px dashed #cbd5e1',background:'#fafafa',whiteSpace:'nowrap'}}>
+                            <label style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'var(--bos-color-ink-tertiary)',fontWeight:600,cursor:'pointer',padding:'6px 10px',borderRadius:7,border:'1px dashed #cbd5e1',background:'#fafafa',whiteSpace:'nowrap'}}>
                               📎 Upload File
                               <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{display:'none'}} onChange={async e=>{
                                 const f=e.target.files?.[0]; if(!f) return;
@@ -1816,7 +1816,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   )}
                   {procurementOrders.map(order => {
                     const statusColors: Record<string,{bg:string;color:string}> = {
-                      VENDOR_QUOTED: {bg:'#fffbeb',color:'#92400e'},
+                      VENDOR_QUOTED: {bg:'#fffbeb',color:'var(--color-amber-800)'},
                       RELEASED: {bg:'#eff6ff',color:'#1d4ed8'},
                       IN_TRANSIT: {bg:'#f0f9ff',color:'#0369a1'},
                       DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
@@ -1972,8 +1972,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                     setInspectionMode(null);
                                   } catch(err) { console.error('[WODetailPanel] markReceived', err); }
                                 }} style={{ padding:'6px 12px', borderRadius:7, border:'1.5px solid', cursor:'pointer', fontSize:11, fontWeight:700,
-                                  borderColor: result==='PASS'?'#15803d':result==='DAMAGED'?'#dc2626':'#92400e',
-                                  color: result==='PASS'?'#15803d':result==='DAMAGED'?'#dc2626':'#92400e',
+                                  borderColor: result==='PASS'?'#15803d':result==='DAMAGED'?'#dc2626':'var(--color-amber-800)',
+                                  color: result==='PASS'?'#15803d':result==='DAMAGED'?'#dc2626':'var(--color-amber-800)',
                                   background: 'white' }}>
                                   {result==='PASS'?'✅ Pass':result==='DAMAGED'?'⛔ Damaged':result==='WRONG_ITEM'?'❌ Wrong Item':'⚠️ Short Count'}
                                 </button>
@@ -1993,7 +1993,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid var(--color-surface-border)', padding: '12px 14px' }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Invoice</div>
                   {['completed','work_complete','invoiced','paid','closed'].includes(safeWo.status) ? (
-                    <div style={{ fontSize: 12, color: '#475569' }}>Ready to invoice. Generate in QuickBooks.</div>
+                    <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Ready to invoice. Generate in QuickBooks.</div>
                   ) : (
                     <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Available after field work is complete.</div>
                   )}
@@ -2163,7 +2163,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
                     <div style={{ padding: '8px 10px', background: 'var(--color-surface)', borderRadius: 8, border: '1px solid #f1f5f9' }}>
                       <div style={{ ...LBL, marginBottom: 2 }}>Invoice Date</div>
-                      <div style={{ fontSize: 12, color: '#475569' }}>{wo.invoice_date || '-'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{wo.invoice_date || '-'}</div>
                     </div>
                   </div>
                   </div>{/* ── end qbo-invoice collapse wrapper ── */}
@@ -2297,7 +2297,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               if (invoices.length === 0 && safeWo.final_status) invoices = [{ status: safeWo.final_status }];
               const unpaid = invoices.some(i => i.status === 'Pending' || i.status === 'Sent');
               return unpaid ? (
-                <div style={{ padding:'10px 12px', background:'#fffbeb', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'#92400e', fontWeight:600, marginBottom:16 }}>
+                <div style={{ padding:'10px 12px', background:'#fffbeb', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'var(--color-amber-800)', fontWeight:600, marginBottom:16 }}>
                   ⚠️ One or more invoices have not been marked as paid. Close anyway?
                 </div>
               ) : null;

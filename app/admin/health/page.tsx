@@ -72,7 +72,7 @@ export default function HealthPage() {
               ))}
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search WO ID or name…"
                 style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid #334155', background: '#1e293b', color: 'var(--color-surface-border)', fontSize: 12, outline: 'none', minWidth: 200 }} />
-              <span style={{ fontSize: 12, color: '#475569' }}>{filtered.length} results</span>
+              <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{filtered.length} results</span>
             </div>
 
             {/* Table */}
@@ -120,7 +120,7 @@ export default function HealthPage() {
                         {r.has_mismatch ? (
                           <span style={{ color: '#fbbf24', fontWeight: 700 }}>⚠ kID format mismatch</span>
                         ) : r.plans.count === 0 ? (
-                          <span style={{ color: '#475569' }}>no plans</span>
+                          <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>no plans</span>
                         ) : (
                           <span style={{ color: '#22c55e' }}>✓</span>
                         )}

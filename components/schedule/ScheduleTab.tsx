@@ -1206,7 +1206,7 @@ function EditTaskRow({ task, allTasks, currentDeps, canWrite, onSaved, onCancel 
                     border: '1px solid',
                     borderColor: checked ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
                     background: checked ? '#f0fdfa' : 'white',
-                    color: checked ? 'var(--bos-color-brand-primary-deep)' : '#475569',
+                    color: checked ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                   }}
                 >
                   <input
@@ -1346,7 +1346,7 @@ function HawaiiOverlayToggles({
     <div data-bos-hawaii-overlay-toggles style={{
       display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
       padding: '8px 12px', background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)',
-      fontSize: 11, color: '#475569',
+      fontSize: 11, color: 'var(--bos-color-ink-tertiary)',
     }}>
       <label
         data-bos-overlay-toggle="master"

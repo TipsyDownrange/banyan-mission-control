@@ -294,7 +294,7 @@ export default function CostPanel() {
             </div>
           ))}
           {(data?.openaiDaily||[]).filter(e=>inRange(e.date)).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No OpenAI data for this range.</div>}
-          <div style={{ marginTop:16, padding:'10px 14px', background:'#fffbeb', border:'1px solid rgba(217,119,6,0.2)', borderRadius:10, fontSize:12, color:'#92400e' }}>
+          <div style={{ marginTop:16, padding:'10px 14px', background:'#fffbeb', border:'1px solid rgba(217,119,6,0.2)', borderRadius:10, fontSize:12, color:'var(--color-amber-800)' }}>
             💡 Export updated CSVs from <strong>platform.openai.com</strong> for latest data. API billing endpoint requires a different org — working on it.
           </div>
         </div>

@@ -56,9 +56,9 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
   APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   APPROVED_AS_NOTED: { bg: '#f0fdfa', color: '#15803d' },
-  REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
+  REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   REJECTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
-  CLOSED: { bg: 'var(--color-surface)', color: '#475569' },
+  CLOSED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
 };
 
 const TYPE_STYLE: Record<string, { bg: string; color: string }> = {

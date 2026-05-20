@@ -36,7 +36,7 @@ const TRADE_TAB_LABEL: Record<SubsTrade, string> = {
 const TAB_BASE: CSSProperties = {
   padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 800,
   letterSpacing: '0.05em', cursor: 'pointer', userSelect: 'none',
-  border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: '#475569',
+  border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)',
 };
 const TAB_ACTIVE: CSSProperties = {
   ...TAB_BASE,
@@ -138,10 +138,10 @@ export function SubcontractorsTableView({
                   <td style={CELL}>
                     <div>{row.primary_contact_name || '—'}</div>
                     {row.primary_contact_email && (
-                      <div style={{ fontSize: 11, color: '#475569' }}>{row.primary_contact_email}</div>
+                      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{row.primary_contact_email}</div>
                     )}
                     {row.primary_contact_phone && (
-                      <div style={{ fontSize: 11, color: '#475569' }}>{row.primary_contact_phone}</div>
+                      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{row.primary_contact_phone}</div>
                     )}
                   </td>
                   <td style={CELL}>{row.island ?? '—'}</td>

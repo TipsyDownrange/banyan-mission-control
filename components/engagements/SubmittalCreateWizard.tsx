@@ -121,13 +121,13 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>CSI Division</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>CSI Division</span>
             <select value={csiDivision} onChange={(e) => setCsiDivision(e.target.value)} style={inputStyle}>
               {COMMON_DIVISIONS.map((d) => (<option key={d.code} value={d.code}>{d.label}</option>))}
             </select>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Type</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Type</span>
             <select value={type} onChange={(e) => setType(e.target.value as typeof type)} style={inputStyle}>
               <option value="ACTION">Action (review &amp; approval)</option>
               <option value="PHYSICAL">Physical (sample / mock-up)</option>
@@ -138,17 +138,17 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Spec Section</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Spec Section</span>
             <input value={csiSpec} onChange={(e) => setCsiSpec(e.target.value)} placeholder="08410" style={{ ...inputStyle, borderColor: validationErrors.csi_spec_section ? '#fecaca' : 'var(--color-surface-border)' }} />
             {validationErrors.csi_spec_section && <span style={errStyle}>{validationErrors.csi_spec_section}</span>}
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subsection</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subsection</span>
             <input value={csiSub} onChange={(e) => setCsiSub(e.target.value)} placeholder="1.3" style={{ ...inputStyle, borderColor: validationErrors.csi_subsection ? '#fecaca' : 'var(--color-surface-border)' }} />
             {validationErrors.csi_subsection && <span style={errStyle}>{validationErrors.csi_subsection}</span>}
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-subsection</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-subsection</span>
             <input value={csiSubSub} onChange={(e) => setCsiSubSub(e.target.value.toUpperCase())} placeholder="A" style={{ ...inputStyle, borderColor: validationErrors.csi_sub_subsection ? '#fecaca' : 'var(--color-surface-border)' }} maxLength={1} />
             {validationErrors.csi_sub_subsection && <span style={errStyle}>{validationErrors.csi_sub_subsection}</span>}
           </label>
@@ -161,28 +161,28 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
         )}
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Description</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Description</span>
           <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Storefront door hardware schedule" style={inputStyle} />
         </label>
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Requirements (optional)</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Requirements (optional)</span>
           <textarea value={requirementsText} onChange={(e) => setRequirementsText(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
         </label>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Required Quantity</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Required Quantity</span>
             <input value={requiredQuantity} onChange={(e) => setRequiredQuantity(e.target.value.replace(/[^0-9]/g, ''))} placeholder="(optional)" style={inputStyle} />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Required By Date</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Required By Date</span>
             <input type="date" value={requiredByDate} onChange={(e) => setRequiredByDate(e.target.value)} style={inputStyle} />
           </label>
         </div>
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Spec Drive file ID (optional)</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Spec Drive file ID (optional)</span>
           <input value={specDocRef} onChange={(e) => setSpecDocRef(e.target.value)} placeholder="1AbCdEfG..." style={inputStyle} />
         </label>
 
@@ -194,7 +194,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy}
-            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
             Cancel
           </button>
           <button type="submit" disabled={busy || Object.keys(validationErrors).length > 0}

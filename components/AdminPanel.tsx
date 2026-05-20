@@ -229,7 +229,7 @@ function CompliancePanel() {
         </div>
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid rgba(245,158,11,0.3)', padding: '16px 18px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Apprentice Upgrades</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#92400e', marginBottom: 2 }}>3 near threshold</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-amber-800)', marginBottom: 2 }}>3 near threshold</div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Owen, Ninja, Santia-Jacob at 90%</div>
         </div>
       </div>
@@ -255,7 +255,7 @@ function CompliancePanel() {
       </div>
 
       <div style={{ background: '#fffbeb', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 14, padding: '14px 18px' }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#92400e', marginBottom: 4 }}>⚡ Action Required — Monday</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-amber-800)', marginBottom: 4 }}>⚡ Action Required — Monday</div>
         <div style={{ fontSize: 12, color: '#78350f', lineHeight: 1.5 }}>Owen Nakamura, Ninja Thang, and Santia-Jacob Pascual are at 90% apprentice level. Discuss journeyman promotion timeline with superintendents. Update payroll rate when promoted (100% journeyman rate).</div>
       </div>
     </div>

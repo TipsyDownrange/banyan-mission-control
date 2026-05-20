@@ -174,7 +174,7 @@ function DecisionCard({ decision, onAction }: {
         {/* Context */}
         <div>
           <div style={{
-            fontSize: 13, color: '#475569', lineHeight: 1.5,
+            fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5,
             overflow: contextExpanded ? 'visible' : 'hidden',
             display: contextExpanded ? 'block' : '-webkit-box',
             WebkitLineClamp: contextExpanded ? 'unset' : 2,
@@ -205,7 +205,7 @@ function DecisionCard({ decision, onAction }: {
                   </span>
                   {isRec && <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>XO recommends</span>}
                 </div>
-                <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4 }}>{opt.description}</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.4 }}>{opt.description}</div>
                 {opt.tradeoffs && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>Tradeoffs: {opt.tradeoffs}</div>}
               </div>
             );

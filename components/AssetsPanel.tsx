@@ -15,7 +15,7 @@ type Equipment = {
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 const INP: React.CSSProperties = {
@@ -103,7 +103,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           </div>
           {/* Expiry badges */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? 'var(--color-red-700)' : regSoon ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
+            {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? 'var(--color-red-700)' : regSoon ? 'var(--color-amber-800)' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
             {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid var(--color-surface-border)' }}>Last service: {v.last_service_date}</span>}
             {v.notes && <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>{v.notes}</span>}
           </div>
@@ -194,7 +194,7 @@ export default function AssetsPanel() {
 
       {/* Alerts */}
       {expiringSoon > 0 && tab === 'vehicles' && (
-        <div style={{ padding: '10px 16px', borderRadius: 12, background: '#fffbeb', border: '1px solid rgba(245,158,11,0.3)', fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 16 }}>
+        <div style={{ padding: '10px 16px', borderRadius: 12, background: '#fffbeb', border: '1px solid rgba(245,158,11,0.3)', fontSize: 12, fontWeight: 700, color: 'var(--color-amber-800)', marginBottom: 16 }}>
           {expiringSoon} vehicle{expiringSoon > 1 ? 's' : ''} with expiring or expired registration/safety/insurance — review below
         </div>
       )}
@@ -244,7 +244,7 @@ export default function AssetsPanel() {
                 {eq.assigned_to && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>→ {eq.assigned_to}</div>}
               </div>
               {eq.next_service_due && (
-                <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 999, background: isExpiringSoon(eq.next_service_due) ? '#fffbeb' : '#f0fdfa', color: isExpiringSoon(eq.next_service_due) ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: '1px solid currentColor', flexShrink: 0 }}>
+                <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 999, background: isExpiringSoon(eq.next_service_due) ? '#fffbeb' : '#f0fdfa', color: isExpiringSoon(eq.next_service_due) ? 'var(--color-amber-800)' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: '1px solid currentColor', flexShrink: 0 }}>
                   Service: {eq.next_service_due}
                 </span>
               )}

@@ -338,7 +338,7 @@ function ResourceLegend({
       data-bos-gantt-resource-legend
       style={{
         marginTop: 12, padding: '8px 12px', background: 'var(--color-surface)',
-        borderRadius: 6, fontSize: 11, color: '#475569',
+        borderRadius: 6, fontSize: 11, color: 'var(--bos-color-ink-tertiary)',
       }}
     >
       <strong style={{ display: 'block', marginBottom: 4, color: 'var(--color-ink-primary)' }}>Crew on bars</strong>

@@ -58,9 +58,9 @@ const SOURCE_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   OPEN:        { bg: '#eff6ff', fg: '#1d4ed8' },
-  IN_PROGRESS: { bg: '#fef3c7', fg: '#92400e' },
+  IN_PROGRESS: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   COMPLETED:   { bg: '#f0fdf4', fg: '#15803d' },
-  DEFERRED:    { bg: '#f1f5f9', fg: '#475569' },
+  DEFERRED:    { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },
   CANCELLED:   { bg: '#f1f5f9', fg: 'var(--bos-color-ink-disabled)' },
   AUTO_CLOSED: { bg: '#f5f3ff', fg: '#6d28d9' },
 };
@@ -69,7 +69,7 @@ const PRIORITY_COLORS: Record<string, { bg: string; fg: string }> = {
   URGENT: { bg: '#fee2e2', fg: 'var(--color-red-700)' },
   HIGH:   { bg: '#ffedd5', fg: '#c2410c' },
   MEDIUM: { bg: '#fef9c3', fg: '#854d0e' },
-  LOW:    { bg: '#f1f5f9', fg: '#475569' },
+  LOW:    { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },
 };
 
 function formatDate(value: string | null): string {
@@ -283,7 +283,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                       <button type="button" onClick={() => {
                         const reason = window.prompt('Defer reason:');
                         if (reason) handleAction(it.action_item_id, 'defer', { reason });
-                      }} style={actionBtnStyle('#475569')}>Defer</button>
+                      }} style={actionBtnStyle('var(--bos-color-ink-tertiary)')}>Defer</button>
                       <button type="button" onClick={() => {
                         const reason = window.prompt('Cancel reason:');
                         if (reason) handleAction(it.action_item_id, 'cancel', { reason });
@@ -312,7 +312,7 @@ const inputStyle: React.CSSProperties = {
 };
 const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' };
 const toggleStyle: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#475569', cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer',
 };
 function actionBtnStyle(color: string): React.CSSProperties {
   return {

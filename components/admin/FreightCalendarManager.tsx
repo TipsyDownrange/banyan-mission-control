@@ -515,7 +515,7 @@ export default function FreightCalendarManager() {
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
               Remove sailing?
             </div>
-            <div style={{ fontSize: 13, color: '#475569' }}>
+            <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
               This soft-deletes the entry. It will no longer overlay on project
               Schedule tabs, but its history is preserved in the audit trail.
             </div>

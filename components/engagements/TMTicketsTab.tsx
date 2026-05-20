@@ -131,7 +131,7 @@ export default function TMTicketsTab({ kID }: { kID: string }) {
             data-testid="tm-test-project-pill"
             style={{
               padding: '4px 12px', borderRadius: 999, fontSize: 10, fontWeight: 800,
-              letterSpacing: '0.1em', background: '#fef3c7', color: '#92400e',
+              letterSpacing: '0.1em', background: '#fef3c7', color: 'var(--color-amber-800)',
               border: '1px solid #92400e33',
             }}
           >

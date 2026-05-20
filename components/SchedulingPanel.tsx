@@ -12,7 +12,7 @@ const ISLAND_COLOR: Record<string, string> = {
   Maui: 'var(--bos-color-brand-primary-deep)', MAUI: 'var(--bos-color-brand-primary-deep)',
   Oahu: '#0369a1', OAHU: '#0369a1',
   Kauai: '#6d28d9', KAUAI: '#6d28d9',
-  'Outer Islands': '#92400e', OUTER: '#92400e',
+  'Outer Islands': 'var(--color-amber-800)', OUTER: 'var(--color-amber-800)',
 };
 
 function menColor(men: number): string {
@@ -236,7 +236,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                               </div>
                               <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>{job.job_number}</div>
                             </td>
-                            <td style={{ padding: '8px 8px', color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>{job.pm}</td>
+                            <td style={{ padding: '8px 8px', color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, whiteSpace: 'nowrap' }}>{job.pm}</td>
                             {displayWeeks.map(w => {
                               const week = job.weeks.find(wk => wk.date === w.date);
                               const men = week?.men || 0;

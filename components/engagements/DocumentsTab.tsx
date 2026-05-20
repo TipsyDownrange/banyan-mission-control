@@ -234,4 +234,4 @@ export default function DocumentsTab({ kID }: { kID: string }) {
 
 const toolbarInputStyle: React.CSSProperties = { flex: '1 1 260px', padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white' };
 const toolbarSelectStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 12, background: 'white' };
-const toggleStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 9px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 12, color: '#475569', fontWeight: 700 };
+const toggleStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 9px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 };

@@ -37,7 +37,7 @@ export default function AllPmWorkloadWidget({ onHide, showHide }: { onHide?: () 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {data.items.map((it) => (
             <div key={it.pm_user_id ?? it.email ?? Math.random()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#475569' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                 <span>{it.name ?? it.email ?? '—'}</span>
                 <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{it.active_project_count}</span>
               </div>

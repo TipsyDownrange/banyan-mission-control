@@ -23,7 +23,7 @@ const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: strin
   'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', border: '#99f6e4' },
   'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
-  'Punch List / Warranty':   { color: '#475569', bg: 'var(--color-surface)', border: '#cbd5e1' },
+  'Punch List / Warranty':   { color: 'var(--bos-color-ink-tertiary)', bg: 'var(--color-surface)', border: '#cbd5e1' },
   'Pickup / Delivery':       { color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe' },
   'Other':                   { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', border: 'var(--color-surface-border)' },
 };
@@ -59,13 +59,13 @@ type WorkOrder = { id: string; name: string; island: string; status: string; con
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
   open:      { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Open' },
-  partial:   { color: '#92400e', bg: '#fffbeb', label: 'Partial' },
+  partial:   { color: 'var(--color-amber-800)', bg: '#fffbeb', label: 'Partial' },
   filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'Filled' },
   completed: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', label: 'Done' },
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Maui: 'var(--bos-color-brand-primary-deep)', Oahu: '#0369a1', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Maui: 'var(--bos-color-brand-primary-deep)', Oahu: '#0369a1', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 function getWeekDates(startDate: Date): Date[] {
@@ -376,11 +376,11 @@ export default function DispatchBoard() {
                         {/* Expanded: full name, confirmations, delete */}
                         {isExpanded && (
                           <div style={{ marginTop: 6, paddingTop: 5, borderTop: '1px solid #f1f5f9' }}>
-                            <div style={{ fontSize: 9, color: '#475569', marginBottom: 4 }}>{slot.project_name}</div>
+                            <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 4 }}>{slot.project_name}</div>
                             {slot.work_type && <div style={{ marginBottom: 4 }}><WorkTypeBadge type={slot.work_type} /></div>}
                             {(slot.start_time || slot.end_time) && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>⏰ {slot.start_time}{slot.start_time && slot.end_time ? '–' : ''}{slot.end_time}</div>}
                             {slot.hours_estimated && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
-                            {slot.notes && <div style={{ fontSize: 9, color: '#475569', marginBottom: 4, fontStyle: 'italic', background: 'var(--color-surface)', borderRadius: 6, padding: '4px 6px', border: '1px solid var(--color-surface-border)' }}>📋 {slot.notes}</div>}
+                            {slot.notes && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 4, fontStyle: 'italic', background: 'var(--color-surface)', borderRadius: 6, padding: '4px 6px', border: '1px solid var(--color-surface-border)' }}>📋 {slot.notes}</div>}
                             {/* Confirmation breakdown */}
                             {assignedNames.length > 0 && (
                               <div style={{ marginBottom: 4 }}>
@@ -473,7 +473,7 @@ export default function DispatchBoard() {
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                       <div style={{ display: 'flex', gap: 5, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, color: ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)', background: `${ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'}18`, border: `1px solid ${ISLAND_COLOR[member.island] || 'var(--color-surface-border)'}` }}>{member.island}</span>
-                        <span style={{ fontSize: 10, color: count > 0 ? '#92400e' : 'var(--bos-color-ink-tertiary)', fontWeight: count > 0 ? 700 : 400 }}>
+                        <span style={{ fontSize: 10, color: count > 0 ? 'var(--color-amber-800)' : 'var(--bos-color-ink-tertiary)', fontWeight: count > 0 ? 700 : 400 }}>
                           {count > 0 ? `${count} job${count > 1 ? 's' : ''} this week` : 'Available'}
                         </span>
                       </div>

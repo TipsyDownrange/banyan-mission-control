@@ -250,7 +250,7 @@ function userColor(email: string): string {
     'frank@kulaglass.com': 'var(--bos-color-brand-primary-deep)',
     'kyle@kulaglass.com':  '#4338ca',
     'jenny@kulaglass.com': '#6d28d9',
-    'joey@kulaglass.com':  '#92400e',
+    'joey@kulaglass.com':  'var(--color-amber-800)',
     'tia@kulaglass.com':   '#0891b2',
     'nate@kulaglass.com':  '#065f46',
     'karl@kulaglass.com':  '#1d4ed8',

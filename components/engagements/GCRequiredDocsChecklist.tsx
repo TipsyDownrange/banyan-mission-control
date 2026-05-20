@@ -135,7 +135,7 @@ export default function GCRequiredDocsChecklist({ kID }: { kID: string }) {
 function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>{title}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{title}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>{children}</div>
     </div>
   );
@@ -154,7 +154,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4,
+  fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', display: 'block', marginBottom: 4,
 };
 const selectStyle: React.CSSProperties = {
   padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12,

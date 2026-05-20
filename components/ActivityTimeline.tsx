@@ -167,7 +167,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   FIELD_MEASUREMENT: { icon: '📏', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', label: 'Measurement' },
   PHOTO_ONLY:        { icon: '📸', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Photo' },
   NOTE:              { icon: '📝', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Note' },
-  TM_CAPTURE:        { icon: '⏱️', color: '#92400e', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
+  TM_CAPTURE:        { icon: '⏱️', color: 'var(--color-amber-800)', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
   PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
   SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
@@ -180,7 +180,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   ESTIMATE_SAVED:        { icon: '💾', color: '#047857', bg: 'rgba(4,120,87,0.08)', label: 'Estimate Saved' },
   QUOTE_GENERATED:       { icon: '📄', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Quote Generated' },
   WORK_BREAKDOWN_ADDED:  { icon: '🧱', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'Work Breakdown' },
-  JOB_FILE_UPLOADED:     { icon: '📎', color: '#475569', bg: 'rgba(71,85,105,0.08)', label: 'Job File Uploaded' },
+  JOB_FILE_UPLOADED:     { icon: '📎', color: 'var(--bos-color-ink-tertiary)', bg: 'rgba(71,85,105,0.08)', label: 'Job File Uploaded' },
   ORG_CREATED:           { icon: Building2, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Org Created', display_label: 'Org Created', color_token: 'teal', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ORG_UPDATED:           { icon: RefreshCcw, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Org Updated', display_label: 'Org Updated', color_token: 'cyan', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ORG_MERGED:            { icon: GitMerge, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Org Merged', display_label: 'Org Merged', color_token: 'violet', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
@@ -811,7 +811,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
             <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>{label}</span>
             {badge
-              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
+              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)', fontSize: 11, fontWeight: 800 }}>{value}</span>
               : <span style={{ color: 'var(--color-ink-primary)', fontWeight: 600 }}>{value}</span>}
           </div>
         ) : null;
@@ -857,7 +857,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const captureBadge = (() => {
             if (/flexijet|total station/i.test(captureToolStr)) return { label: 'High accuracy', bg: '#f0fdf4', color: '#15803d' };
             if (/leica|disto/i.test(captureToolStr)) return { label: 'Pro', bg: '#eff6ff', color: '#1d4ed8' };
-            if (/tape measure/i.test(captureToolStr)) return { label: 'Manual', bg: '#fffbeb', color: '#92400e' };
+            if (/tape measure/i.test(captureToolStr)) return { label: 'Manual', bg: '#fffbeb', color: 'var(--color-amber-800)' };
             return null;
           })();
           const calloutMeta: Record<string, { icon: string; label: string; implication: string }> = {
@@ -878,13 +878,13 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {/* Header row: system type + date + measured by */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#0891b2' }}>{String(parsed.system_type || 'Measurement')} · {parsed.captured_at ? new Date(String(parsed.captured_at)).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</div>
-                    {measuredBy && <div style={{ fontSize: 11, color: '#475569', fontWeight: 600 }}>Measured by: {measuredBy}</div>}
+                    {measuredBy && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>Measured by: {measuredBy}</div>}
                   </div>
                   {/* Obstruction pricing gap alert */}
                   {hasObstruction && (
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8 }}>
                       <span style={{ fontSize: 14 }}>⚠️</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>Obstruction flagged: {obstructionVal} — may trigger RFI/CO</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-amber-800)' }}>Obstruction flagged: {obstructionVal} — may trigger RFI/CO</span>
                     </div>
                   )}
                   {/* Location */}
@@ -1086,7 +1086,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             fontWeight: 800,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            color: '#92400e',
+            color: 'var(--color-amber-800)',
             background: 'rgba(146,64,14,0.08)',
             borderBottom: '1px solid rgba(146,64,14,0.12)',
           };
@@ -1101,7 +1101,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'rgba(146,64,14,0.05)', borderRadius: 10, border: '1px solid rgba(146,64,14,0.15)' }}>
               {/* Authorization Block */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Authorization</div>
+                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber-800)' }}>Authorization</div>
                 {signatureRef ? (
                   <a href={`https://drive.google.com/file/d/${signatureRef}/view`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-block' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1126,7 +1126,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 {authType && (
                   <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
                     <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Auth Type</span>
-                    <span style={{ padding: '1px 7px', borderRadius: 999, background: '#fffbeb', color: '#92400e', border: '1px solid rgba(146,64,14,0.2)', fontSize: 11, fontWeight: 800 }}>{authType}</span>
+                    <span style={{ padding: '1px 7px', borderRadius: 999, background: '#fffbeb', color: 'var(--color-amber-800)', border: '1px solid rgba(146,64,14,0.2)', fontSize: 11, fontWeight: 800 }}>{authType}</span>
                   </div>
                 )}
                 {signedAt && kv('Signed', signedAt)}
@@ -1134,14 +1134,14 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               {/* Labor: estimated vs actual delta */}
               {(crewDisplay != null || hoursDisplay != null) ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Labor</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber-800)' }}>Labor</div>
                   {crewDisplay ? kv('Crew', crewDisplay) : null}
                   {hoursDisplay ? kv('Hours', hoursDisplay) : null}
                 </div>
               ) : null}
               {laborRows.length > 0 && (
                 <div style={tmTableWrapStyle}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Labor Details</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber-800)' }}>Labor Details</div>
                   <table style={tmTableStyle}>
                     <thead>
                       <tr>
@@ -1165,10 +1165,10 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               {/* Materials chip list */}
               {materials.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Materials</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber-800)' }}>Materials</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {materials.map((material, i) => (
-                      <span key={i} style={{ padding: '2px 8px', borderRadius: 999, background: 'rgba(146,64,14,0.08)', color: '#92400e', fontSize: 11, fontWeight: 700, border: '1px solid rgba(146,64,14,0.15)' }}>
+                      <span key={i} style={{ padding: '2px 8px', borderRadius: 999, background: 'rgba(146,64,14,0.08)', color: 'var(--color-amber-800)', fontSize: 11, fontWeight: 700, border: '1px solid rgba(146,64,14,0.15)' }}>
                         {formatMaterialChip(material)}
                       </span>
                     ))}
@@ -1177,7 +1177,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               )}
               {equipmentRows.length > 0 && (
                 <div style={tmTableWrapStyle}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Equipment</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber-800)' }}>Equipment</div>
                   <table style={tmTableStyle}>
                     <thead>
                       <tr>
@@ -1200,7 +1200,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               )}
               {subcontractorRows.length > 0 && (
                 <div style={tmTableWrapStyle}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#92400e' }}>Subcontractors</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber-800)' }}>Subcontractors</div>
                   <table style={tmTableStyle}>
                     <thead>
                       <tr>
@@ -1398,7 +1398,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             ? { label: 'PARTIAL', bg: '#fffbeb', color: '#d97706', border: 'rgba(217,119,6,0.2)' }
             : qaStatus === 'FAIL'
             ? { label: 'FAIL',    bg: '#fef2f2', color: '#dc2626', border: 'rgba(220,38,38,0.2)' }
-            : { label: qaStatus,  bg: '#f1f5f9', color: '#475569', border: 'var(--color-surface-border)' };
+            : { label: qaStatus,  bg: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)', border: 'var(--color-surface-border)' };
           const isDefenseMode = qaStatus === 'FAIL' || qaStatus === 'PARTIAL';
           const checkLabels: Record<string, string> = {
             glass_seated:         'Glass seated correctly',
@@ -1449,7 +1449,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               )}
               {/* Free-text notes */}
               {typeof parsed.notes === 'string' && parsed.notes.length > 0 && (
-                <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5, fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>{parsed.notes}</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5, fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>{parsed.notes}</div>
               )}
             </div>
           );
@@ -1463,11 +1463,11 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               before:   { label: 'Before',   bg: '#eff6ff', color: '#1d4ed8' },
               during:   { label: 'During',   bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
               after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
-              progress: { label: 'Progress', bg: '#fffbeb', color: '#92400e' },
+              progress: { label: 'Progress', bg: '#fffbeb', color: 'var(--color-amber-800)' },
               damage:   { label: 'Damage',   bg: '#fef2f2', color: 'var(--color-red-700)' },
               qa:       { label: 'QA',       bg: '#faf5ff', color: '#7e22ce' },
             };
-            return map[t] ?? { label: event.evidence_type.trim(), bg: '#f1f5f9', color: '#475569' };
+            return map[t] ?? { label: event.evidence_type.trim(), bg: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)' };
           })();
           const locGroup = (event.location_group || '').trim();
           if (!evidenceTypeBadge && !locGroup) return null;
@@ -1548,7 +1548,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               {lightboxPhotos[lightboxIndex].filename}
             </div>
 
-            <div style={{ fontSize: 11, color: '#475569', fontStyle: 'italic', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic', lineHeight: 1.6 }}>
               {lightboxPhotos[lightboxIndex].caption}
             </div>
 

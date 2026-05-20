@@ -86,7 +86,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
                   {r.kid ?? '—'} · BIC: {r.ball_in_court ?? '—'} · {r.required_response_by_date ?? 'no due date'}
                 </div>
               </div>
-              <span style={{ fontSize: 10, color: '#475569', alignSelf: 'center' }}>{r.status}</span>
+              <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', alignSelf: 'center' }}>{r.status}</span>
             </div>
           ))}
         </div>

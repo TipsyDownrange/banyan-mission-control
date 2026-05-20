@@ -21,7 +21,7 @@ const PRIORITY_COLOR: Record<string, string> = {
   URGENT: 'var(--color-red-700)',
   HIGH: '#c2410c',
   MEDIUM: 'var(--bos-color-brand-primary-deep)',
-  LOW: '#475569',
+  LOW: 'var(--bos-color-ink-tertiary)',
 };
 
 export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () => void; showHide?: boolean }) {
@@ -58,7 +58,7 @@ export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () 
                 style={{
                   fontSize: 10,
                   fontWeight: 800,
-                  color: PRIORITY_COLOR[it.priority] ?? '#475569',
+                  color: PRIORITY_COLOR[it.priority] ?? 'var(--bos-color-ink-tertiary)',
                   alignSelf: 'center',
                   minWidth: 50,
                 }}

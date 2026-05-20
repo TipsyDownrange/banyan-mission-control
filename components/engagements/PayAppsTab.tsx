@@ -185,7 +185,7 @@ export default function PayAppsTab({ kID }: { kID: string }) {
         <div style={{ display: 'flex' }}>
           <span style={{
             padding: '4px 12px', borderRadius: 999, fontSize: 10, fontWeight: 800,
-            letterSpacing: '0.1em', background: '#fef3c7', color: '#92400e',
+            letterSpacing: '0.1em', background: '#fef3c7', color: 'var(--color-amber-800)',
             border: '1px solid #92400e33',
           }}>
             TEST PROJECT

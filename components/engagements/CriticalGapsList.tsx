@@ -17,9 +17,9 @@ export type CriticalGap = {
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   OPEN:         { bg: '#fef2f2', fg: 'var(--color-red-700)' },
-  ACKNOWLEDGED: { bg: '#fef3c7', fg: '#92400e' },
+  ACKNOWLEDGED: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   RESOLVED:     { bg: '#f0fdf4', fg: '#15803d' },
-  WAIVED:       { bg: '#f1f5f9', fg: '#475569' },
+  WAIVED:       { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },
 };
 
 const STATUS_PILL_VARIANT: Record<CriticalGap['status'], StatusPillVariant> = {
@@ -66,7 +66,7 @@ export default function CriticalGapsList({
           <div key={g.gap_id} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {g.gap_type} <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>· {g.gap_id}</span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', marginTop: 4 }}>{g.description}</div>

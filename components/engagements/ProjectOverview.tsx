@@ -341,7 +341,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           </div>
           <div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Outstanding</div>
-            <div style={{ ...STAT_VALUE, color: submittalKpi.outstanding > 0 ? '#92400e' : 'var(--bos-color-brand-primary-deep)' }}>{submittalKpi.outstanding}</div>
+            <div style={{ ...STAT_VALUE, color: submittalKpi.outstanding > 0 ? 'var(--color-amber-800)' : 'var(--bos-color-brand-primary-deep)' }}>{submittalKpi.outstanding}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
               {submittalKpi.hasTypeField
                 ? `Action ${submittalKpi.outstandingByType.ACTION} · Physical ${submittalKpi.outstandingByType.PHYSICAL} · Closeout ${submittalKpi.outstandingByType.CLOSEOUT}`
@@ -461,7 +461,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           </div>
           <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Outstanding AR</div>
-            <div style={{ ...STAT_VALUE, color: financial.outstandingAr > 0 ? '#92400e' : 'var(--bos-color-brand-primary-deep)' }}>{financial.outstandingAr > 0 ? formatCurrency(financial.outstandingAr) : '$0'}</div>
+            <div style={{ ...STAT_VALUE, color: financial.outstandingAr > 0 ? 'var(--color-amber-800)' : 'var(--bos-color-brand-primary-deep)' }}>{financial.outstandingAr > 0 ? formatCurrency(financial.outstandingAr) : '$0'}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>billed, not yet paid</div>
           </div>
         </div>

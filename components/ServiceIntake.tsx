@@ -370,7 +370,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
             ) && (
               <>
-                <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 11px', marginTop: 6, lineHeight: 1.5 }}>
                   No existing customer matches &quot;{draft.customerName}&quot;. Select an existing customer/account before creating the work order.
                 </div>
                 <button
@@ -419,7 +419,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                       style={{
                         fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
                         border: '1px solid var(--color-surface-border)', background: oc.is_primary ? '#f0fdf4' : 'white',
-                        color: oc.is_primary ? 'var(--bos-color-brand-primary-deep)' : '#475569',
+                        color: oc.is_primary ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
                       }}
                     >
@@ -471,7 +471,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                 background: '#fef3c7',
                 border: '1px solid #fde68a',
                 fontSize: 12,
-                color: '#92400e',
+                color: 'var(--color-amber-800)',
                 lineHeight: 1.5,
               }}>
                 <div style={{ fontWeight: 700, marginBottom: 3 }}>

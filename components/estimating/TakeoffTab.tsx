@@ -1211,7 +1211,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
                 background: active
                   ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))'
                   : 'white',
-                color: active ? 'white' : '#475569',
+                color: active ? 'white' : 'var(--bos-color-ink-tertiary)',
                 fontSize: 11,
                 fontWeight: active ? 800 : 600,
                 cursor: 'pointer',

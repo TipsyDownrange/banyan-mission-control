@@ -42,7 +42,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   FOLLOWED_UP: { bg: '#eff6ff', color: '#1d4ed8' },
   FORMALIZED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   DISPUTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
-  RESOLVED: { bg: 'var(--color-surface)', color: '#475569' },
+  RESOLVED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -181,7 +181,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
                 <div style={{ fontSize: 12, fontWeight: 800, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.external_party_org}</div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{it.external_party_contact_name || '-'}</div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.agreement_type.replace(/_/g, ' ')}</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{it.agreement_type.replace(/_/g, ' ')}</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{formatCurrency(it.cost_impact_estimate)}</div>
               <StatusPill status={it.status} />
             </div>
@@ -212,4 +212,4 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
 
 const toolbarInputStyle: React.CSSProperties = { flex: '1 1 260px', padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white' };
 const toolbarSelectStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 12, background: 'white' };
-const toggleStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 9px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 12, color: '#475569', fontWeight: 700 };
+const toggleStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 9px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 };

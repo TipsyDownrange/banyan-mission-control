@@ -27,7 +27,7 @@ export function buildCrewUpdatePayload(draft: Draft, dirtyFields: Iterable<CrewP
 }
 
 const ISLAND_COLORS: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 const DEPT_COLORS: Record<string, string> = {
   PM: 'var(--bos-color-brand-primary-deep)', Estimating: 'var(--bos-color-brand-primary-deep)',

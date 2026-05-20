@@ -229,7 +229,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
           {/* Inbox actions */}
           {task.source==='feedback' && task.status!=='done' && (
             <div style={{marginBottom:16,padding:'12px',background:'rgba(254,243,199,0.4)',borderRadius:10,border:'1px solid rgba(217,119,6,0.15)'}}>
-              <div style={{fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em',color:'#92400e',marginBottom:8}}>Inbox Actions</div>
+              <div style={{fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em',color:'var(--color-amber-800)',marginBottom:8}}>Inbox Actions</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'#f0fdfa',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
                 <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'#fef2f2',color:'var(--color-red-700)',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>

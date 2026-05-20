@@ -126,7 +126,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
         <button
           type="button"
           onClick={() => setShowOptional((v) => !v)}
-          style={{ marginBottom: 12, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+          style={{ marginBottom: 12, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
         >
           {showOptional ? 'Hide optional fields' : 'Optional fields'}
         </button>
@@ -167,6 +167,6 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
 
 const fieldStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 };
 const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit' };
-const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' };
-const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
+const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' };
+const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 18px', borderRadius: 10, border: 'none', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' };

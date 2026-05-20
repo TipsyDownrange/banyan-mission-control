@@ -25,10 +25,10 @@ interface AgreementRow {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  PROPOSED: { bg: '#fef3c7', fg: '#92400e' },
+  PROPOSED: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   EXECUTED: { bg: '#dbeafe', fg: '#1e40af' },
   ACTIVE: { bg: '#dcfce7', fg: '#166534' },
-  CLOSED: { bg: '#f1f5f9', fg: '#475569' },
+  CLOSED: { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },
   DISPUTED: { bg: '#fee2e2', fg: 'var(--color-red-700)' },
 };
 
@@ -119,7 +119,7 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
                 </span>
                 <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{r.trigger_source}</span>
               </div>
-              {r.scope && <div style={{ fontSize: 12, color: '#475569' }}>{r.scope}</div>}
+              {r.scope && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{r.scope}</div>}
               {r.manufacturer_contact_name && (
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                   {r.manufacturer_contact_name}{r.manufacturer_contact_email ? ` · ${r.manufacturer_contact_email}` : ''}

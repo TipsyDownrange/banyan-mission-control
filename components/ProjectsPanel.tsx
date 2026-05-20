@@ -33,7 +33,7 @@ type CO = Record<string, string>;
 type SOVLine = Record<string, string>;
 type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
 
-const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e' };
+const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)' };
 
 interface Props { onNavigate?: (view: string, params?: Record<string, string>) => void; }
 
@@ -104,7 +104,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
         {/* CO exposure if any */}
         {coExposure > 0 && (
-          <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', padding: '4px 10px', borderRadius: 8, display: 'inline-block' }}>
+          <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--color-amber-800)', background: '#fffbeb', padding: '4px 10px', borderRadius: 8, display: 'inline-block' }}>
             ${(coExposure / 1000).toFixed(0)}K CO exposure
           </div>
         )}
@@ -190,10 +190,10 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
     PENDING: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
     REJECTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
-    REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
+    REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
     UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
-    IDENTIFIED: { bg: '#fffbeb', color: '#92400e' },
-    IN_NEGOTIATION: { bg: '#fffbeb', color: '#92400e' },
+    IDENTIFIED: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
+    IN_NEGOTIATION: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   };
 
   const statusTag = (status: string) => {

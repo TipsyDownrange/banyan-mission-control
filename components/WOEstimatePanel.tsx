@@ -914,7 +914,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               {/* Markup info pill */}
               <div style={{ padding: '10px 14px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.15)', borderRadius: 10, fontSize: 11, color: 'var(--bos-color-brand-primary-deep)' }}>
                 <div style={{ fontWeight: 700, marginBottom: 2 }}>Overhead = Labor (Kula Glass standard)</div>
-                <div style={{ color: '#475569' }}>Customer quote will hide overhead &amp; profit breakdown. Quote total = ${fmt(grandTotal)}</div>
+                <div style={{ color: 'var(--bos-color-ink-tertiary)' }}>Customer quote will hide overhead &amp; profit breakdown. Quote total = ${fmt(grandTotal)}</div>
               </div>
 
               {/* X Modifier / What-If */}
@@ -922,11 +922,11 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)', marginBottom: 10 }}>🧠 What-If / Negotiation Tool</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#475569', fontFamily: FONT }}>Current Mark-Up = (OH + Profit) / Gross Cost</span>
+                    <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontFamily: FONT }}>Current Mark-Up = (OH + Profit) / Gross Cost</span>
                     <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>{currentMarkupPct.toFixed(2)}%</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                    <label style={{ fontSize: 12, color: '#475569', fontFamily: FONT, flexShrink: 0 }}>If profit adjusted by X =</label>
+                    <label style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontFamily: FONT, flexShrink: 0 }}>If profit adjusted by X =</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <AmtInput value={xAmount} onChange={setXAmount} placeholder="-2000" width={120} />
                       {xAmount && (

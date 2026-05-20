@@ -27,8 +27,8 @@ const CAT: Record<EmailCategory, { label: string; color: string; bg: string; bor
   change_order: { label: 'Change Order', color: '#c2410c', bg: 'rgba(255,247,237,0.98)', border: '1px solid rgba(249,115,22,0.22)', accent: '#f97316' },
   payment:      { label: 'Payment',      color: '#1d4ed8', bg: 'rgba(239,246,255,0.98)', border: '1px solid rgba(59,130,246,0.2)',  accent: '#3b82f6' },
   vendor_quote: { label: 'Quote',        color: '#6d28d9', bg: 'rgba(245,243,255,0.98)', border: '1px solid rgba(139,92,246,0.2)', accent: '#8b5cf6' },
-  internal:     { label: 'Internal',     color: '#92400e', bg: 'rgba(255,251,235,0.98)', border: '1px solid rgba(245,158,11,0.2)', accent: '#f59e0b' },
-  other:        { label: 'Other',        color: '#475569', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.22)', accent: 'var(--bos-color-ink-tertiary)' },
+  internal:     { label: 'Internal',     color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.98)', border: '1px solid rgba(245,158,11,0.2)', accent: '#f59e0b' },
+  other:        { label: 'Other',        color: 'var(--bos-color-ink-tertiary)', bg: 'rgba(248,250,252,0.96)', border: '1px solid rgba(148,163,184,0.22)', accent: 'var(--bos-color-ink-tertiary)' },
 };
 
 const PILL = (color: string, bg: string, border?: string): React.CSSProperties => ({
@@ -101,7 +101,7 @@ export default function InboxPanel() {
       {!loading && !error && items.length > 0 && (
         <div style={{ marginBottom: 20, padding: '12px 16px 12px 14px', borderRadius: 18, background: 'rgba(255,255,255,0.8)', border: '1px dashed rgba(148,163,184,0.42)', display: 'flex', gap: 10 }}>
           <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', flexShrink: 0, marginTop: 2 }}>KAI</span>
-          <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.6 }}>
             Intake first, merge never by accident. Review bid invites, action change orders that need pricing, hold items missing docs. Delegate — don&apos;t let these age in inbox.
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function InboxPanel() {
       {error && (
         <div style={{ background: 'rgba(254,242,242,0.98)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 18, padding: '16px 20px' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-red-700)', marginBottom: 4 }}>Connection error</div>
-          <div style={{ fontSize: 12, color: '#475569' }}>{error}</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{error}</div>
         </div>
       )}
 
@@ -177,9 +177,9 @@ export default function InboxPanel() {
                           {item.island}
                         </span>
                       )}
-                      {item.dueDate && <span style={PILL('#92400e', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Due {item.dueDate}</span>}
+                      {item.dueDate && <span style={PILL('var(--color-amber-800)', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Due {item.dueDate}</span>}
                       {item.bidMatch && <span style={PILL('var(--bos-color-brand-primary-deep)', 'rgba(240,253,250,0.9)', '1px solid rgba(13,148,136,0.2)')}>✓ In bid log</span>}
-                      {!item.bidMatch && item.category === 'bid_invite' && <span style={PILL('#92400e', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Not logged</span>}
+                      {!item.bidMatch && item.category === 'bid_invite' && <span style={PILL('var(--color-amber-800)', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Not logged</span>}
                     </div>
 
                     {/* Project name */}

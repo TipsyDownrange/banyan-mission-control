@@ -569,7 +569,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                         borderTop: '1px solid var(--color-surface-border)',
                         marginTop: 4,
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                           Total Baseline
                         </span>
                         <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--bos-color-brand-primary-deep)' }}>

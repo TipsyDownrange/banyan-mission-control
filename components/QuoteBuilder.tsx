@@ -409,7 +409,7 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
         </div>
 
         {left && right && diff !== 0 && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', fontSize: 12, color: '#92400e', fontWeight: 700, marginBottom: 16 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', fontSize: 12, color: 'var(--color-amber-800)', fontWeight: 700, marginBottom: 16 }}>
             {diff > 0
               ? `Config A is ${fmt(Math.abs(diff))} more expensive.`
               : `Config B is ${fmt(Math.abs(diff))} more expensive.`}
@@ -820,7 +820,7 @@ export default function QuoteBuilder({
           {onReturnToWO && (
             <button
               onClick={onReturnToWO}
-              style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
               ← Return to WO
             </button>
@@ -853,7 +853,7 @@ export default function QuoteBuilder({
 
         {/* ── No estimate warning ─────────────────────────────────────────── */}
         {!est && (
-          <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.3)', fontSize: 13, color: '#92400e', fontWeight: 600 }}>
+          <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.3)', fontSize: 13, color: 'var(--color-amber-800)', fontWeight: 600 }}>
             ⚠️ No estimate found for {woNumber.startsWith('WO-') ? woNumber : 'WO-' + woNumber}. Go back to the estimate form to build pricing first.
           </div>
         )}

@@ -151,7 +151,7 @@ function HoursDelta({ quoted, planned, actual }: { quoted?: number; planned: num
           {quoted}h quoted
         </span>
       )}
-      <span style={{ fontSize: 10, color: '#475569', fontWeight: 700 }}>
+      <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>
         {planned.toFixed(1)}h planned
       </span>
       {actual > 0 && (
@@ -1223,7 +1223,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                           return next;
                         });
                       }}
-                      style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid #d97706', background: 'transparent', color: '#92400e', cursor: 'pointer' }}
+                      style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid #d97706', background: 'transparent', color: 'var(--color-amber-800)', cursor: 'pointer' }}
                     >
                       Leave crew board as-is
                     </button>
@@ -2026,7 +2026,7 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
       style={{
         width: '100%', padding: '6px 10px', borderRadius: 6, fontSize: 11,
         border: `1px solid ${focused ? 'var(--bos-color-brand-primary)' : 'var(--color-surface-border)'}`,
-        background: 'var(--color-surface)', color: '#475569', resize: 'none',
+        background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)', resize: 'none',
         outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
         transition: 'border-color 0.15s',
       }}

@@ -732,7 +732,7 @@ export function SubmissionBundlePreview({
       <div style={{ fontSize: 11, fontWeight: 800, color: '#0c2330', marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase' }}>
         Submission packet contents
       </div>
-      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
+      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.6 }}>
         {items.map((label) => <li key={label}>{label}</li>)}
       </ul>
       <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 6 }}>
