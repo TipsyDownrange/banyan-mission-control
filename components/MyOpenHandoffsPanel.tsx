@@ -24,7 +24,7 @@ type Receipt = {
 };
 
 const STATE_LABELS: Record<string, { fg: string; bg: string; label: string; variant: StatusPillVariant }> = {
-  pending_review:    { fg: '#1d4ed8', bg: '#eff6ff', label: 'Pending Review', variant: 'info' },
+  pending_review:    { fg: 'var(--bos-color-accent-data-bright)', bg: 'var(--color-blue-50)', label: 'Pending Review', variant: 'info' },
   reviewed_complete: { fg: 'var(--color-amber-800)', bg: '#fef3c7', label: 'Reviewed',       variant: 'warn' },
 };
 

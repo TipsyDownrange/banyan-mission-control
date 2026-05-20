@@ -29,7 +29,7 @@ function fmtDate(d: string | null) {
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     paid:    { bg: '#f0fdf4', color: '#15803d', label: 'Paid' },
-    unpaid:  { bg: '#eff6ff', color: '#1d4ed8', label: 'Unpaid' },
+    unpaid:  { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)', label: 'Unpaid' },
     overdue: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Overdue' },
   };
   const s = map[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: status };

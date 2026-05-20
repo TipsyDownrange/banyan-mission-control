@@ -73,7 +73,7 @@ const STAGE_BG: Record<string, string> = {
   lead: 'var(--color-surface)', quoted: '#f5f3ff',
   approved: 'var(--color-amber-50)', scheduled: '#eef2ff', in_progress: 'var(--color-teal-50)',
   work_complete: '#ecfdf5', closed: '#f0fdf4',
-  deposit_received: 'var(--color-amber-50)', materials_ordered: '#fff7ed', materials_received: '#f0fdf4', ready_to_schedule: '#eff6ff',
+  deposit_received: 'var(--color-amber-50)', materials_ordered: '#fff7ed', materials_received: '#f0fdf4', ready_to_schedule: 'var(--color-blue-50)',
 };
 
 function toTitleCase(str: string): string {
@@ -930,7 +930,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 rel="noreferrer"
                 title="Open project files in Drive"
                 onClick={e => e.stopPropagation()}
-                style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                style={{ padding: '7px 14px', borderRadius: 10, background: 'var(--color-blue-50)', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 800, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 📁 Files
               </a>
             ) : (
@@ -950,7 +950,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <button
               onClick={() => onQuote(wo.id)}
               title="Build quote (skip estimate)"
-              style={{ padding: '7px 14px', borderRadius: 10, background: '#eff6ff', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 10, background: 'var(--color-blue-50)', border: '1px solid rgba(3,105,161,0.2)', color: 'var(--bos-color-accent-data)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               $ Quote
             </button>
             <button
@@ -1817,7 +1817,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   {procurementOrders.map(order => {
                     const statusColors: Record<string,{bg:string;color:string}> = {
                       VENDOR_QUOTED: {bg:'var(--color-amber-50)',color:'var(--color-amber-800)'},
-                      RELEASED: {bg:'#eff6ff',color:'#1d4ed8'},
+                      RELEASED: {bg:'var(--color-blue-50)',color:'var(--bos-color-accent-data-bright)'},
                       IN_TRANSIT: {bg:'#f0f9ff',color:'var(--bos-color-accent-data)'},
                       DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
                       INSPECTED_PASS: {bg:'#f0fdf4',color:'#15803d'},

@@ -86,7 +86,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
   ];
 
   const watchItems = [
-    { id: 'dr-today', type: 'report', title: 'Daily reports due at 3:30 PM', detail: 'Field leads on active jobs — check submissions by end of day', tag: 'Daily Report', tagColor: '#1d4ed8', tagBg: '#eff6ff' },
+    { id: 'dr-today', type: 'report', title: 'Daily reports due at 3:30 PM', detail: 'Field leads on active jobs — check submissions by end of day', tag: 'Daily Report', tagColor: 'var(--bos-color-accent-data-bright)', tagBg: 'var(--color-blue-50)' },
     ...(data?.active_projects || []).slice(0, 3).map((p, i) => ({
       id: p.kID || `proj-${i}`, type: 'project',
       title: p.name,

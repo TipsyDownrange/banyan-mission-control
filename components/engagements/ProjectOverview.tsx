@@ -321,7 +321,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                     {it.due_date ? ` · due ${formatRelativeDate(it.due_date)}` : ''}
                   </div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: it.priority === 'URGENT' ? '#fee2e2' : '#eff6ff', color: it.priority === 'URGENT' ? 'var(--color-red-700)' : '#1d4ed8' }}>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: it.priority === 'URGENT' ? '#fee2e2' : 'var(--color-blue-50)', color: it.priority === 'URGENT' ? 'var(--color-red-700)' : 'var(--bos-color-accent-data-bright)' }}>
                   {it.priority || 'MEDIUM'}
                 </span>
               </button>
@@ -428,7 +428,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.filename}</div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{d.kind.replace(/_/g, ' ')} · {formatRelativeDate(d.uploaded_at)}</div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: '#eff6ff', color: '#1d4ed8' }}>{d.kind}</span>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' }}>{d.kind}</span>
               </button>
             ))}
           </div>

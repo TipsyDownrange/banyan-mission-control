@@ -57,7 +57,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  OPEN:        { bg: '#eff6ff', fg: '#1d4ed8' },
+  OPEN:        { bg: 'var(--color-blue-50)', fg: 'var(--bos-color-accent-data-bright)' },
   IN_PROGRESS: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   COMPLETED:   { bg: '#f0fdf4', fg: '#15803d' },
   DEFERRED:    { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },

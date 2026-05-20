@@ -305,7 +305,7 @@ export default function CostPanel() {
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
-              <div style={{ padding:'10px 14px', background:'#eff6ff', borderRadius:10, border:'1px solid rgba(37,99,235,0.2)' }}>
+              <div style={{ padding:'10px 14px', background:'var(--color-blue-50)', borderRadius:10, border:'1px solid rgba(37,99,235,0.2)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#2563eb', marginBottom:2 }}>Monthly Burn</div>
                 <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(subs?.monthly)}/mo</div>
               </div>

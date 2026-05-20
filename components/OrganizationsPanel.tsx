@@ -122,7 +122,7 @@ const FILTER_LABELS = ORGANIZATION_TYPE_LABELS;
 
 const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   OPEN:          { bg: 'var(--color-red-50)', color: '#dc2626' },
-  SCHEDULED:     { bg: '#eff6ff', color: '#1d4ed8' },
+  SCHEDULED:     { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
   IN_PROGRESS:   { bg: 'var(--color-amber-50)', color: 'var(--color-amber-500)' },
   ON_HOLD:       { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   COMPLETED:     { bg: '#f0fdf4', color: '#15803d' },
@@ -435,7 +435,7 @@ function OrganizationPicker({
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.name || 'Unnamed org'}</div>
             <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{org.org_id}</div>
           </div>
-          <span style={{ fontSize: 10, fontWeight: 800, color: '#1d4ed8', background: '#eff6ff', borderRadius: 999, padding: '2px 7px', height: 18, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-accent-data-bright)', background: 'var(--color-blue-50)', borderRadius: 999, padding: '2px 7px', height: 18, whiteSpace: 'nowrap' }}>
             {org.woCount || 0} WO{org.woCount === 1 ? '' : 's'}
           </span>
         </div>
@@ -1730,7 +1730,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                       {o.name}
                     </div>
                     {o.woCount > 0 && (
-                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: '#eff6ff', color: '#1d4ed8', flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)', flexShrink: 0 }}>
                         {o.woCount} WO{o.woCount !== 1 ? 's' : ''}
                       </span>
                     )}

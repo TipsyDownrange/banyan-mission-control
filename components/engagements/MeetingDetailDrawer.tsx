@@ -169,7 +169,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {attendees.map((a) => (
                     <div key={a.meeting_attendee_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)' }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : 'var(--bos-color-ink-tertiary)' }}>{a.is_kula_user ? 'KULA' : 'EXT'}</span>
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? 'var(--bos-color-accent-data-bright)' : 'var(--bos-color-ink-tertiary)' }}>{a.is_kula_user ? 'KULA' : 'EXT'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{[a.role, a.organization].filter(Boolean).join(' · ') || a.email || '—'}</div>

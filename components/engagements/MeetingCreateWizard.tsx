@@ -233,7 +233,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
           {attendees.map((a) => (
             <div key={a.key} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: 10, marginTop: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : 'var(--bos-color-ink-tertiary)' }}>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? 'var(--bos-color-accent-data-bright)' : 'var(--bos-color-ink-tertiary)' }}>
                   {a.is_kula_user ? 'KULA' : 'EXTERNAL'}
                 </span>
                 <div style={{ display: 'flex', gap: 8 }}>

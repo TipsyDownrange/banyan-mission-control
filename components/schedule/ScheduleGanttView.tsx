@@ -506,7 +506,7 @@ function TravelFactorLegend({ enriched }: { enriched: TravelEnrichedTask<Schedul
   const outerIslandTasks = enriched.filter((e) => e.isOuterIsland);
   if (outerIslandTasks.length === 0) return null;
   return (
-    <div data-bos-travel-factor-legend style={{ marginTop: 12, padding: 10, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, fontSize: 11, color: '#1e3a8a' }}>
+    <div data-bos-travel-factor-legend style={{ marginTop: 12, padding: 10, background: 'var(--color-blue-50)', border: '1px solid #bfdbfe', borderRadius: 8, fontSize: 11, color: '#1e3a8a' }}>
       <div style={{ fontWeight: 700, marginBottom: 4 }}>
         Inter-island travel factor applied to {outerIslandTasks.length} task{outerIslandTasks.length === 1 ? '' : 's'}
       </div>

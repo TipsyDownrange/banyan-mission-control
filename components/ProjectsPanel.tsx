@@ -187,11 +187,11 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
   const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
     APPROVED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
-    SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
+    SUBMITTED: { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
     PENDING: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
     REJECTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
     REVISE_RESUBMIT: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
-    UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
+    UNDER_REVIEW: { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
     IDENTIFIED: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
     IN_NEGOTIATION: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
   };
