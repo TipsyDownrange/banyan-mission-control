@@ -12,6 +12,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import RequiredDocsStatus from './RequiredDocsStatus';
+import SubmissionPacketButton from './SubmissionPacketButton';
 
 type PayApp = {
   pay_app_id: string;
@@ -444,6 +445,11 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
         <button onClick={downloadPdf} style={btnSecondary}>
           Generate PDF
         </button>
+        <SubmissionPacketButton
+          payAppId={payAppId}
+          payAppNumber={payApp.pay_app_number}
+          state={payApp.state}
+        />
         {payApp.state !== 'PENDING_DRAFT' && payApp.state !== 'PAID_FULL' && (
           <button onClick={reject} disabled={saving} style={btnDanger}>
             Reject → Draft

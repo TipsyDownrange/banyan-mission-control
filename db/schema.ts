@@ -748,6 +748,9 @@ export const billing_format_config = pgTable('billing_format_config', {
   tm_authorizations_permitted: boolean('tm_authorizations_permitted').notNull().default(true),
   tm_billing_doc: text('tm_billing_doc').notNull().default('SAME_AS_PAY_APP'),
   pay_app_sequence_numbering: text('pay_app_sequence_numbering').notNull().default('CONTINUOUS'),
+  // AIA Submission Packet Export — optional per-GC cover letter override. NULL
+  // falls back to the canonical Kula template baked into lib/aia/submission-bundle.ts.
+  submission_cover_letter_template: text('submission_cover_letter_template'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
