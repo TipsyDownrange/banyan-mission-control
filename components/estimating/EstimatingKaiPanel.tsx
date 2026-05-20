@@ -867,7 +867,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               <div style={{ background: 'white', borderRadius: 16, padding: 24, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(15,23,42,0.2)' }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 8 }}>Link Bid Folder</div>
                 <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginBottom: 10 }}>Paste the Google Drive folder URL for this bid.</div>
-                <a href="https://drive.google.com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(37,99,235,0.3)', background: 'rgba(239,246,255,0.7)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, textDecoration: 'none', marginBottom: 12 }}>
+                <a href="https://drive.google.com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(37,99,235,0.3)', background: 'rgba(239,246,255,0.7)', color: 'var(--bos-color-accent-data-bright)', fontSize: 11, fontWeight: 700, textDecoration: 'none', marginBottom: 12 }}>
                   🗂️ Browse Google Drive →
                   <span style={{ fontSize: 10, fontWeight: 500, color: '#60a5fa', marginLeft: 4 }}>copy the folder URL, paste below</span>
                 </a>

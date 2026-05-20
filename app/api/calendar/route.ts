@@ -253,7 +253,7 @@ function userColor(email: string): string {
     'joey@kulaglass.com':  'var(--color-amber-800)',
     'tia@kulaglass.com':   '#0891b2',
     'nate@kulaglass.com':  '#065f46',
-    'karl@kulaglass.com':  '#1d4ed8',
+    'karl@kulaglass.com':  'var(--bos-color-accent-data-bright)',
   };
   return map[email] || 'var(--bos-color-ink-disabled)';
 }

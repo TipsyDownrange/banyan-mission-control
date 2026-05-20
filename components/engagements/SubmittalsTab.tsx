@@ -52,8 +52,8 @@ type ApiResponse = {
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   REQUIRED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   IN_PROGRESS: { bg: '#fff7ed', color: '#9a3412' },
-  SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
-  UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
+  SUBMITTED: { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
+  UNDER_REVIEW: { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
   APPROVED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
   APPROVED_AS_NOTED: { bg: 'var(--color-teal-50)', color: '#15803d' },
   REVISE_RESUBMIT: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
@@ -368,7 +368,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                     icon="📋"
                     label="Spec"
                     count={it.spec_document_ref ? 1 : 0}
-                    accent="#1d4ed8"
+                    accent="var(--bos-color-accent-data-bright)"
                     onClick={() => { if (it.spec_document_ref) window.open(`https://drive.google.com/file/d/${it.spec_document_ref}/view`, '_blank'); }}
                   />
                   <DocChip

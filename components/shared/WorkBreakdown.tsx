@@ -695,7 +695,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         label: 'Install Instructions',
         icon: '📋',
         color: 'var(--bos-color-accent-data)',
-        bg: '#eff6ff',
+        bg: 'var(--color-blue-50)',
         border: '#bfdbfe',
       },
       {
@@ -1065,7 +1065,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 </span>
               )}
               {step.bid_hours != null && !readOnly && !isLocked ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, background: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)', border: '1px solid #bfdbfe' }}>
                   Plan:
                   <input
                     type="number"
@@ -1083,7 +1083,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     onBlur={() => loadData()}
                     onClick={e => e.stopPropagation()}
                     style={{
-                      width: 36, fontSize: 10, fontWeight: 700, color: '#1d4ed8',
+                      width: 36, fontSize: 10, fontWeight: 700, color: 'var(--bos-color-accent-data-bright)',
                       background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
                       borderRadius: 4, padding: '1px 3px', textAlign: 'center', outline: 'none',
                     }}
@@ -1094,7 +1094,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   h
                 </span>
               ) : step.planned_hours != null ? (
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)', border: '1px solid #bfdbfe' }}>
                   Plan: {step.planned_hours}h
                 </span>
               ) : null}
@@ -1626,7 +1626,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
             {/* Template picker */}
             {isShowingTemplate && !readOnly && (
-              <div style={{ marginTop: 10, padding: 14, background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
+              <div style={{ marginTop: 10, padding: 14, background: 'var(--color-blue-50)', borderRadius: 10, border: '1px solid #bfdbfe' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-accent-data)', marginBottom: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   Choose Template
                 </div>

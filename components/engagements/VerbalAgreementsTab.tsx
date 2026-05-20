@@ -39,7 +39,7 @@ type ApiResponse = {
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   LOGGED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
-  FOLLOWED_UP: { bg: '#eff6ff', color: '#1d4ed8' },
+  FOLLOWED_UP: { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
   FORMALIZED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
   DISPUTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   RESOLVED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },

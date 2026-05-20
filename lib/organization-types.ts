@@ -1,6 +1,6 @@
 export const ORGANIZATION_TYPE_COLORS: Record<string, { color: string; bg: string }> = {
   CUSTOMER:      { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)' },
-  GC:            { color: '#1d4ed8', bg: '#eff6ff' },
+  GC:            { color: 'var(--bos-color-accent-data-bright)', bg: 'var(--color-blue-50)' },
   COMMERCIAL:    { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)' },
   RESIDENTIAL:   { color: '#15803d', bg: '#f0fdf4' },
   VENDOR:        { color: '#c2410c', bg: '#fff7ed' },

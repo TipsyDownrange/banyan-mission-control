@@ -34,7 +34,7 @@ type ApiResponse = {
 };
 
 const STATE_COLORS: Record<string, { bg: string; fg: string; label: string }> = {
-  pending_review:     { bg: '#eff6ff', fg: '#1d4ed8', label: 'Pending Review' },
+  pending_review:     { bg: 'var(--color-blue-50)', fg: 'var(--bos-color-accent-data-bright)', label: 'Pending Review' },
   reviewed_complete:  { bg: '#fef3c7', fg: 'var(--color-amber-800)', label: 'Reviewed' },
   accepted:           { bg: '#f0fdf4', fg: '#15803d', label: 'Accepted' },
   accepted_with_gaps: { bg: 'var(--color-amber-50)', fg: '#a16207', label: 'Accepted (with gaps)' },

@@ -31,7 +31,7 @@ const ISLAND_COLOR: Record<string, string> = {
 };
 
 const LEAD_TYPE_STYLE: Record<string, { color: string; bg: string; label: string; route: string }> = {
-  rfp:        { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', label: 'RFP',        route: 'Assign to Estimator' },
+  rfp:        { color: 'var(--bos-color-accent-data-bright)', bg: 'rgba(239,246,255,0.9)', label: 'RFP',        route: 'Assign to Estimator' },
   wo_inquiry: { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', label: 'WO Inquiry', route: 'Send to Joey' },
   addendum:   { color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)', label: 'Addendum',   route: 'Link to Bid' },
   vendor:     { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', label: 'Vendor',     route: 'File' },
@@ -259,7 +259,7 @@ export default function BidIntakePanel() {
                             </select>
                             <button onClick={() => { if (assignedTo[opp.email_id]) addToBidQueue({...opp, gc_name: opp.gc_name}); }}
                               disabled={!assignedTo[opp.email_id] || adding === opp.email_id}
-                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : 'var(--color-surface-border)', color: assignedTo[opp.email_id] ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
+                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,var(--bos-color-accent-data-bright),#3b82f6)' : 'var(--color-surface-border)', color: assignedTo[opp.email_id] ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
                               {adding === opp.email_id ? '...' : '→ Bid Queue'}
                             </button>
                           </div>

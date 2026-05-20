@@ -734,7 +734,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                 padding: '10px 14px', borderRadius: 10,
                 border: '1.5px solid rgba(37,99,235,0.35)',
                 background: 'rgba(239,246,255,0.7)',
-                color: '#1d4ed8', fontSize: 12, fontWeight: 700,
+                color: 'var(--bos-color-accent-data-bright)', fontSize: 12, fontWeight: 700,
                 textDecoration: 'none', marginBottom: 12,
               }}
             >

@@ -8,7 +8,7 @@ const DECISION_STYLES: Record<string, { color: string; bg: string; border: strin
   'assign':          { color: 'var(--bos-color-accent-data)', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'waiting on docs': { color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
   'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
-  'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
+  'submitted':       { color: 'var(--bos-color-accent-data-bright)', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
   'lost':            { color: 'var(--color-red-700)', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
   'no bid':          { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },

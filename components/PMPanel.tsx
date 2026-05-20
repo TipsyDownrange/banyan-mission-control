@@ -25,14 +25,14 @@ type SOVLine = Record<string, string>;
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   APPROVED:     { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
-  SUBMITTED:    { bg: '#eff6ff', color: '#1d4ed8' },
+  SUBMITTED:    { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
   PENDING:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   DRAFT:        { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   IDENTIFIED:   { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
   REJECTED:     { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   DISPUTED:     { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   IN_NEGOTIATION: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
-  UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
+  UNDER_REVIEW: { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
   REVISE_RESUBMIT: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
   CLEAR_DIRECTIVE: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
   AMBIGUOUS:    { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
@@ -51,7 +51,7 @@ const TAG = ({ status, label }: { status: string; label?: string }) => {
 };
 
 const BALL = ({ court }: { court: string }) => (
-  <span style={{ fontSize: 10, fontWeight: 700, color: court === 'KULA_GLASS' ? 'var(--bos-color-brand-primary-deep)' : court === 'GC' ? '#1d4ed8' : 'var(--color-amber-800)' }}>
+  <span style={{ fontSize: 10, fontWeight: 700, color: court === 'KULA_GLASS' ? 'var(--bos-color-brand-primary-deep)' : court === 'GC' ? 'var(--bos-color-accent-data-bright)' : 'var(--color-amber-800)' }}>
     ⚡ {court === 'KULA_GLASS' ? 'Our court' : court === 'GC' ? 'GC court' : court}
   </span>
 );
@@ -235,7 +235,7 @@ export default function PMPanel() {
                 <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{rfiSummary.total || 0}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {(rfiSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {rfiSummary.overdue} overdue response{(rfiSummary.overdue || 0) !== 1 ? 's' : ''}</div>}
-                  {(rfiSummary.ballInCourtGC || 0) > 0 && <div style={{ fontSize: 12, color: '#1d4ed8' }}>⚡ {rfiSummary.ballInCourtGC} in GC court</div>}
+                  {(rfiSummary.ballInCourtGC || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-accent-data-bright)' }}>⚡ {rfiSummary.ballInCourtGC} in GC court</div>}
                   {(rfiSummary.ballInCourtUs || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)' }}>⚡ {rfiSummary.ballInCourtUs} in our court</div>}
                 </div>
                 <button onClick={() => setActiveTab('rfi')} style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all RFIs →</button>
@@ -246,7 +246,7 @@ export default function PMPanel() {
                 <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{subSummary.total || 0}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>✓ {subSummary.approved || 0} approved</div>
-                  {(subSummary.pending || 0) > 0 && <div style={{ fontSize: 12, color: '#1d4ed8' }}>⏳ {subSummary.pending} pending</div>}
+                  {(subSummary.pending || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-accent-data-bright)' }}>⏳ {subSummary.pending} pending</div>}
                   {(subSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {subSummary.overdue} overdue</div>}
                 </div>
                 <button onClick={() => setActiveTab('submittals')} style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all →</button>
@@ -300,7 +300,7 @@ export default function PMPanel() {
                       {rfi.submitted_at ? fmtDate(rfi.submitted_at) : fmtDate(rfi.created_at)}
                     </div>
                     <div>
-                      {rfi.status === 'DRAFT' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', border: '1px solid rgba(29,78,216,0.2)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
+                      {rfi.status === 'DRAFT' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--color-blue-50)', border: '1px solid rgba(29,78,216,0.2)', color: 'var(--bos-color-accent-data-bright)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
                       {rfi.status === 'SUBMITTED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'RESPONDED')} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Got Response</button>}
                       {rfi.status === 'RESPONDED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'CLOSED')} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Close</button>}
                     </div>
@@ -334,7 +334,7 @@ export default function PMPanel() {
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Rev {sub.revision_number || '1'}</div>
                     <div>
-                      {sub.status === 'PENDING' && <button onClick={() => updateSubStatus(sub.sub_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', border: '1px solid rgba(29,78,216,0.2)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
+                      {sub.status === 'PENDING' && <button onClick={() => updateSubStatus(sub.sub_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--color-blue-50)', border: '1px solid rgba(29,78,216,0.2)', color: 'var(--bos-color-accent-data-bright)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
                       {sub.status === 'SUBMITTED' && <button onClick={() => updateSubStatus(sub.sub_id, 'UNDER_REVIEW')} style={{ padding: '6px 10px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Under Review</button>}
                       {sub.status === 'UNDER_REVIEW' && (
                         <div style={{ display: 'flex', gap: 4 }}>
@@ -367,14 +367,14 @@ export default function PMPanel() {
                   <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--bos-color-brand-primary-deep)' }}>{fmtMoney(String((coExposure.approved || 0) + (coExposure.pending || 0) + (coExposure.identified || 0)))}</div>
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
                     <span style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>✓ {fmtMoney(String(coExposure.approved || 0))} approved</span>
-                    <span style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 700 }}>⏳ {fmtMoney(String(coExposure.pending || 0))} pending</span>
+                    <span style={{ fontSize: 12, color: 'var(--bos-color-accent-data-bright)', fontWeight: 700 }}>⏳ {fmtMoney(String(coExposure.pending || 0))} pending</span>
                   </div>
                 </div>
               )}
 
               {/* Exposure breakdown */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
-                {[['Approved', coExposure.approved||0, 'var(--bos-color-brand-primary-deep)'],['Pending', coExposure.pending||0,'#1d4ed8'],['Drafted', coExposure.drafted||0,'var(--bos-color-ink-disabled)'],['Identified', coExposure.identified||0,'var(--color-amber-800)'],['Rejected (reserve)', coExposure.rejected||0,'var(--bos-color-ink-tertiary)']].map(([label, val, color]) => (
+                {[['Approved', coExposure.approved||0, 'var(--bos-color-brand-primary-deep)'],['Pending', coExposure.pending||0,'var(--bos-color-accent-data-bright)'],['Drafted', coExposure.drafted||0,'var(--bos-color-ink-disabled)'],['Identified', coExposure.identified||0,'var(--color-amber-800)'],['Rejected (reserve)', coExposure.rejected||0,'var(--bos-color-ink-tertiary)']].map(([label, val, color]) => (
                   <div key={String(label)} style={{ background:'white',borderRadius:12,border:'1px solid var(--color-surface-border)',padding:'12px 14px' }}>
                     <div style={{ fontSize:10,fontWeight:800,color:'var(--bos-color-ink-tertiary)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4 }}>{label}</div>
                     <div style={{ fontSize:16,fontWeight:900,color:String(color) }}>{fmtMoney(String(val))}</div>
@@ -400,7 +400,7 @@ export default function PMPanel() {
                     <div style={{ fontSize:11,color:'var(--bos-color-ink-tertiary)' }}>{fmtDate(co.created_at)}</div>
                     <div>
                       {co.status === 'IDENTIFIED' && <button onClick={() => updateCOStatus(co.co_id, 'DRAFTED')} style={{ padding:'6px 12px',borderRadius:8,background:'var(--color-surface)',border:'1px solid var(--color-surface-border)',color:'var(--bos-color-ink-disabled)',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Draft →</button>}
-                      {co.status === 'DRAFTED' && <button onClick={() => updateCOStatus(co.co_id, 'SUBMITTED')} style={{ padding:'6px 12px',borderRadius:8,background:'#eff6ff',border:'1px solid rgba(29,78,216,0.2)',color:'#1d4ed8',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Submit →</button>}
+                      {co.status === 'DRAFTED' && <button onClick={() => updateCOStatus(co.co_id, 'SUBMITTED')} style={{ padding:'6px 12px',borderRadius:8,background:'var(--color-blue-50)',border:'1px solid rgba(29,78,216,0.2)',color:'var(--bos-color-accent-data-bright)',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Submit →</button>}
                       {co.status === 'SUBMITTED' && <button onClick={() => updateCOStatus(co.co_id, 'APPROVED')} style={{ padding:'6px 12px',borderRadius:8,background:'var(--color-teal-50)',border:'1px solid rgba(15,118,110,0.2)',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer' }}>Approve</button>}
                     </div>
                   </div>

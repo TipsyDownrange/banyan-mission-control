@@ -182,7 +182,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-secondary)' }}>
                 {it.attendee_count_total} attendees
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>
-                  <span style={{ color: '#1d4ed8' }}>{it.attendee_count_kula} Kula</span> · <span>{it.attendee_count_external} ext.</span>
+                  <span style={{ color: 'var(--bos-color-accent-data-bright)' }}>{it.attendee_count_kula} Kula</span> · <span>{it.attendee_count_external} ext.</span>
                 </div>
               </div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', padding: '3px 8px', borderRadius: 999, background: '#f1f5f9', justifySelf: 'start' }}>{it.source_platform.replace(/_/g, ' ')}</div>

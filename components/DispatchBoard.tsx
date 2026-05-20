@@ -19,7 +19,7 @@ const WORK_TYPES = [
 ];
 
 const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  'Site Visit / Assessment': { color: 'var(--bos-color-accent-data)', bg: '#eff6ff', border: '#bfdbfe' },
+  'Site Visit / Assessment': { color: 'var(--bos-color-accent-data)', bg: 'var(--color-blue-50)', border: '#bfdbfe' },
   'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)', border: '#99f6e4' },
   'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },

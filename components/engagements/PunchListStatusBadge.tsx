@@ -22,7 +22,7 @@ export type PunchListItemStatus =
 
 const STATUS_BADGE: Record<PunchListItemStatus, { bg: string; color: string; label: string }> = {
   NEW:                  { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'New' },
-  ASSIGNED:             { bg: '#eff6ff', color: '#1d4ed8', label: 'Assigned' },
+  ASSIGNED:             { bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)', label: 'Assigned' },
   IN_PROGRESS:          { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)', label: 'In Progress' },
   COMPLETED:            { bg: '#f0fdf4', color: '#15803d', label: 'Completed' },
   SIGNED_OFF:           { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)', label: 'Signed Off' },

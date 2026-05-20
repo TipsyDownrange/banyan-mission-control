@@ -161,7 +161,7 @@ type EventConfig = {
 };
 
 export const EVENT_CONFIG: Record<string, EventConfig> = {
-  INSTALL_STEP:      { icon: '✅', color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)',  label: 'Step Complete' },
+  INSTALL_STEP:      { icon: '✅', color: 'var(--bos-color-accent-data-bright)', bg: 'rgba(29,78,216,0.08)',  label: 'Step Complete' },
   FIELD_ISSUE:       { icon: '🚨', color: '#dc2626', bg: 'rgba(220,38,38,0.08)',  label: 'Issue' },
   DAILY_LOG:         { icon: '📋', color: '#15803d', bg: 'rgba(21,128,61,0.08)',  label: 'Daily Report' },
   FIELD_MEASUREMENT: { icon: '📏', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', label: 'Measurement' },
@@ -856,7 +856,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const captureToolStr = String(fields.capture_tool || parsed.capture_tool || '').trim();
           const captureBadge = (() => {
             if (/flexijet|total station/i.test(captureToolStr)) return { label: 'High accuracy', bg: '#f0fdf4', color: '#15803d' };
-            if (/leica|disto/i.test(captureToolStr)) return { label: 'Pro', bg: '#eff6ff', color: '#1d4ed8' };
+            if (/leica|disto/i.test(captureToolStr)) return { label: 'Pro', bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' };
             if (/tape measure/i.test(captureToolStr)) return { label: 'Manual', bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' };
             return null;
           })();
@@ -1460,7 +1460,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             const t = (event.evidence_type || '').trim().toLowerCase();
             if (!t) return null;
             const map: Record<string, { label: string; bg: string; color: string }> = {
-              before:   { label: 'Before',   bg: '#eff6ff', color: '#1d4ed8' },
+              before:   { label: 'Before',   bg: 'var(--color-blue-50)', color: 'var(--bos-color-accent-data-bright)' },
               during:   { label: 'During',   bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
               after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
               progress: { label: 'Progress', bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
