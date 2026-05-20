@@ -1,0 +1,110 @@
+/**
+ * BAN-375 Closeout v1.1.1 Phase 1 — DELETE /api/closeout/punch-list-items/[id]/hard
+ *
+ * Sean delta 3: hard delete for multi-trade pollution cleanup. business:admin
+ * only (super_admin via admin:all also passes). Writes a punch_list_item_history
+ * row with action='hard_deleted' BEFORE the actual DELETE (so the audit trail
+ * is preserved when ON DELETE CASCADE wipes other history rows for the item).
+ *
+ * No Activity Spine event_type is emitted — per BAN-293 isolation, new
+ * event_type values require their own ratification cycle, and this dispatch
+ * does not introduce them. The history row is the auditable record.
+ *
+ * Distinct from the WAIVED soft-delete path (transition to status=WAIVED with
+ * a waived_reason): hard delete is for truly accidental items that pollute
+ * cross-trade reporting; WAIVED preserves the row for historical context.
+ */
+
+import { NextResponse } from 'next/server';
+import { and, eq } from 'drizzle-orm';
+import { db, punch_list_items, punch_list_item_history } from '@/db';
+import { passAiaApiGate } from '@/lib/aia/api-gate';
+
+const ROUTE_PATH = '/api/closeout/punch-list-items/[id]/hard';
+
+interface DeleteBody {
+  reason?: string;
+}
+
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const gate = await passAiaApiGate(req, ROUTE_PATH, 'business:admin');
+  if (!gate.ok) return gate.response;
+  const { id } = await context.params;
+
+  // Body is optional but if present capture the reason for the audit row.
+  let body: DeleteBody = {};
+  try {
+    const text = await req.text();
+    if (text) body = JSON.parse(text);
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  const reason = (body.reason ?? '').trim() || null;
+
+  // Confirm the item exists in this tenant before any writes.
+  const existing = await db
+    .select({
+      punch_item_id: punch_list_items.punch_item_id,
+      status: punch_list_items.status,
+    })
+    .from(punch_list_items)
+    .where(
+      and(
+        eq(punch_list_items.punch_item_id, id),
+        eq(punch_list_items.tenant_id, gate.tenantId),
+      ),
+    )
+    .limit(1);
+  if (existing.length === 0) {
+    return NextResponse.json({ error: `punch_list_item ${id} not found` }, { status: 404 });
+  }
+  const previousStatus = existing[0].status as
+    'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'SIGNED_OFF' |
+    'DISPUTED' | 'DEFERRED_TO_WARRANTY' | 'WAIVED';
+
+  try {
+    await db.transaction(async (tx) => {
+      // Write the 'hard_deleted' audit row BEFORE the DELETE. The
+      // punch_list_item_history.punch_item_id FK is ON DELETE SET NULL
+      // (migration 0029), so this row survives the cascade and persists as
+      // a durable hard-delete record. The orphaned punch_item_id column
+      // becomes NULL post-delete; the audit row still carries the original
+      // id and previous_status via the note + previous_status columns so
+      // forensic queries can reconstruct what was removed.
+      await tx
+        .insert(punch_list_item_history)
+        .values({
+          tenant_id: gate.tenantId,
+          punch_item_id: id,
+          action: 'hard_deleted',
+          previous_status: previousStatus,
+          new_status: null,
+          note: reason ? `id=${id}; reason=${reason}` : `id=${id}`,
+        });
+
+      await tx
+        .delete(punch_list_items)
+        .where(
+          and(
+            eq(punch_list_items.punch_item_id, id),
+            eq(punch_list_items.tenant_id, gate.tenantId),
+          ),
+        );
+    });
+
+    return NextResponse.json({
+      ok: true,
+      punch_item_id: id,
+      deleted: true,
+      previous_status: previousStatus,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err), code: 'INTERNAL' },
+      { status: 500 },
+    );
+  }
+}

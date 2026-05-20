@@ -143,12 +143,9 @@ describe('BAN-374 migration sequence integrity', () => {
   const dir = path.join(process.cwd(), 'db/migrations');
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
 
-  it('0029 is the highest numbered migration', () => {
-    const numbered = files
-      .map((f) => /^(\d{4})_/.exec(f)?.[1])
-      .filter((m): m is string => !!m)
-      .sort();
-    expect(numbered[numbered.length - 1]).toBe('0029');
+  it('0029 ban374 migration file is present in the sequence', () => {
+    const ban374Files = files.filter((f) => f.startsWith('0029_') && f.includes('ban374'));
+    expect(ban374Files.length).toBe(1);
   });
 
   it('does not collide with another migration prefix', () => {

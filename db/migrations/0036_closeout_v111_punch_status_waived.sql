@@ -1,0 +1,24 @@
+-- BAN-375 Closeout v1.1.1 Phase 1 — punch_list_item_status += 'WAIVED' (Sean delta 3)
+-- Source: Closeout v1.1.1 Phase 1 dispatch
+--
+-- ISOLATED PER BAN-293 rule: ALTER TYPE ADD VALUE cannot run in the same
+-- transaction as DDL that consumes the type. Lives in its own migration so
+-- callers don't trip on Postgres' tx restriction.
+--
+-- WAIVED is the soft-delete terminal state. The transition route requires
+-- a waived_reason text whenever to_state='WAIVED' (waived_reason column added
+-- in 0031). UI uses WAIVED for "remove this item from the closeout list"
+-- (multi-trade pollution, owner cancellation, etc.) while preserving the
+-- audit trail. Hard delete is a separate DELETE endpoint gated by
+-- business:admin.
+--
+-- Allowed transitions to WAIVED are defined in lib/closeout/state-transitions.ts.
+-- WAIVED is a terminal state (no outbound transitions) and does NOT count
+-- toward the §6.5 PUNCH_LIST_CLEARED terminal-set (COMPLETED / SIGNED_OFF /
+-- DEFERRED_TO_WARRANTY).
+--
+-- DOWN SQL: PostgreSQL does not support removing values from an enum without
+-- a full type rebuild. Manual remediation only if Sean directs.
+
+ALTER TYPE public.punch_list_item_status ADD VALUE IF NOT EXISTS 'WAIVED';
+--> statement-breakpoint

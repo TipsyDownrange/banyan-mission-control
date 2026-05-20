@@ -90,7 +90,12 @@ export function isProjectLifecycleReopen(
   return PROJECT_LIFECYCLE_ORDINAL[toState] < PROJECT_LIFECYCLE_ORDINAL[fromState];
 }
 
-// ── punch_list_items.status (7 states; native pgEnum punch_list_item_status)
+// ── punch_list_items.status (8 states; native pgEnum punch_list_item_status)
+// v1.1.1 added WAIVED (migration 0032) for soft-delete with audit trail per
+// Sean delta 3. WAIVED is a terminal state (no outbound transitions). It is
+// NOT part of the §6.5 PUNCH_LIST_CLEARED terminal-set — items moved to
+// WAIVED drop out of the clearance count entirely (treated as "removed from
+// scope" rather than "satisfied"). Reachable from every non-terminal state.
 
 export const PUNCH_LIST_ITEM_STATES = [
   'NEW',
@@ -100,17 +105,19 @@ export const PUNCH_LIST_ITEM_STATES = [
   'SIGNED_OFF',
   'DISPUTED',
   'DEFERRED_TO_WARRANTY',
+  'WAIVED',
 ] as const;
 export type PunchListItemState = typeof PUNCH_LIST_ITEM_STATES[number];
 
 export const PUNCH_LIST_ITEM_ALLOWED_TRANSITIONS: Record<PunchListItemState, PunchListItemState[]> = {
-  NEW: ['ASSIGNED', 'IN_PROGRESS', 'DEFERRED_TO_WARRANTY', 'DISPUTED'],
-  ASSIGNED: ['IN_PROGRESS', 'DISPUTED', 'DEFERRED_TO_WARRANTY'],
-  IN_PROGRESS: ['COMPLETED', 'DISPUTED', 'DEFERRED_TO_WARRANTY'],
-  COMPLETED: ['SIGNED_OFF', 'IN_PROGRESS', 'DISPUTED'],
+  NEW: ['ASSIGNED', 'IN_PROGRESS', 'DEFERRED_TO_WARRANTY', 'DISPUTED', 'WAIVED'],
+  ASSIGNED: ['IN_PROGRESS', 'DISPUTED', 'DEFERRED_TO_WARRANTY', 'WAIVED'],
+  IN_PROGRESS: ['COMPLETED', 'DISPUTED', 'DEFERRED_TO_WARRANTY', 'WAIVED'],
+  COMPLETED: ['SIGNED_OFF', 'IN_PROGRESS', 'DISPUTED', 'WAIVED'],
   SIGNED_OFF: [],
-  DISPUTED: ['IN_PROGRESS', 'DEFERRED_TO_WARRANTY', 'SIGNED_OFF'],
+  DISPUTED: ['IN_PROGRESS', 'DEFERRED_TO_WARRANTY', 'SIGNED_OFF', 'WAIVED'],
   DEFERRED_TO_WARRANTY: [],
+  WAIVED: [],
 };
 
 // ── warranties.status (3 states; native pgEnum warranty_status)
