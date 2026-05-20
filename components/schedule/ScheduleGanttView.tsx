@@ -1,36 +1,36 @@
 'use client';
 /**
- * BAN-374 Scheduling Spine — Gantt view (Packet 3).
+ * BAN-374 Scheduling Spine — Gantt view.
  *
- * Wraps gantt-task-react with our schedule data model:
- *   - one task bar per schedule_tasks row
- *   - dependency arrows derived from schedule_dependencies (FS/SS/FF/SF)
- *   - color-coded by task status (planned/in_progress/complete/blocked/on_hold)
- *   - drag-to-reschedule fires onTaskReschedule (PATCH planned_start + planned_end)
- *   - drag the progress handle fires onTaskProgress (PATCH percent_complete)
- *   - Week / Month / Quarter zoom toggle, today marker visible
+ * P3 wired one bar per schedule_tasks row with dependency arrows; P4 layers
+ * the three Hawaii overlays previously stubbed in HAWAII_OVERLAY_HOOKS:
  *
- * Hawaii-specific overlay hooks (deferred to P4–P6):
- *   - Matson freight calendar overlay (P6)
- *   - Permit timeline highlighting (already supported via schedule_milestones)
- *   - Inter-island travel factor (P4)
+ *   1. Inter-island travel factor (lib/schedule/hawaii-overlays.ts) inflates
+ *      outer-island task durations by 1.15× (configurable per tenant) and
+ *      decorates the bar with a "+travel" suffix + lighter shade.
+ *   2. Permit timeline overlay — translucent band rendered ABOVE the Gantt
+ *      from schedule_milestones rows where milestone_kind = 'permit'.  Band
+ *      color encodes status: yellow (pending), green (approved), red (overdue).
+ *   3. Matson freight calendar overlay — SVG markers rendered BELOW the
+ *      Gantt: hash at sailing_date, container icon at arrival_date, dashed
+ *      vertical at cutoff_date.
  *
- * These overlays are intentionally not implemented yet; the hook points are
- * called out in HAWAII_OVERLAY_HOOKS below so a future packet can layer
- * them in without restructuring the component.
+ * Each overlay is gated by its own boolean prop; ScheduleTab owns the
+ * sub-toggle UI.  When all three are off the component degrades back to
+ * the P3 baseline render.
  */
 
 import { useMemo, useState } from 'react';
 import { Gantt, ViewMode, type Task } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
-import type { SchedulePhase, ScheduleTask, ScheduleDependency } from './ScheduleTab';
-
-// HAWAII_OVERLAY_HOOKS (BAN-374 P3 → P4-P6):
-//   - matsonFreightOverlay     (P6) — Matson sailing dates as colored bands
-//   - permitTimelineOverlay    (P4) — milestone bars from schedule_milestones
-//   - interIslandTravelFactor  (P4) — inflate task durations for off-Oahu work
-// Each will receive (phases, tasks, milestones, dependencies) and return a
-// transformed Task[] array.  None implemented in P3.
+import type { SchedulePhase, ScheduleTask, ScheduleDependency, ScheduleMilestone, FreightCalendarEntry } from './ScheduleTab';
+import {
+  applyTravelFactorToTasks,
+  type TenantOverlayConfig,
+  type TravelEnrichedTask,
+  formatTravelTooltip,
+} from '@/lib/schedule/hawaii-overlays';
+import type { ScheduleTaskIsland } from '@/db';
 
 const STATUS_COLORS: Record<ScheduleTask['status'], string> = {
   planned: '#1e3a8a',       // navy
@@ -48,13 +48,21 @@ const STATUS_PROGRESS_COLORS: Record<ScheduleTask['status'], string> = {
   on_hold: '#94a3b8',
 };
 
+// Outer-island bars are rendered with a chevron-suggestive lighter shade so
+// the reader can spot at a glance that the bar's duration has been inflated.
+const OUTER_ISLAND_COLORS: Record<ScheduleTask['status'], string> = {
+  planned: '#3b5cb8',
+  in_progress: '#f59e0b',
+  complete: '#10b981',
+  blocked: '#ef4444',
+  on_hold: '#94a3b8',
+};
+
 type ZoomMode = 'Week' | 'Month' | 'Quarter';
 
 function zoomToViewMode(z: ZoomMode): ViewMode {
   if (z === 'Week') return ViewMode.Week;
   if (z === 'Month') return ViewMode.Month;
-  // gantt-task-react has no "Quarter" view; Month with wider columns is the
-  // closest approximation.  The columnWidth styling option compensates.
   return ViewMode.Month;
 }
 
@@ -72,6 +80,10 @@ function isoDateFromDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function todayISO(): string {
+  return isoDateFromDate(new Date());
+}
+
 interface Props {
   phases: SchedulePhase[];
   tasks: ScheduleTask[];
@@ -79,6 +91,14 @@ interface Props {
   canWrite: boolean;
   onTaskReschedule: (taskId: string, plannedStart: string, plannedEnd: string) => Promise<void> | void;
   onTaskProgress: (taskId: string, percent: number) => Promise<void> | void;
+  // BAN-374 P4 Hawaii overlays
+  milestones?: ScheduleMilestone[];
+  freightCalendar?: FreightCalendarEntry[];
+  projectIsland?: ScheduleTaskIsland | null;
+  tenantOverlayConfig?: TenantOverlayConfig;
+  showTravelFactor?: boolean;
+  showPermits?: boolean;
+  showFreight?: boolean;
 }
 
 export default function ScheduleGanttView({
@@ -88,8 +108,20 @@ export default function ScheduleGanttView({
   canWrite,
   onTaskReschedule,
   onTaskProgress,
+  milestones = [],
+  freightCalendar = [],
+  projectIsland = null,
+  tenantOverlayConfig,
+  showTravelFactor = false,
+  showPermits = false,
+  showFreight = false,
 }: Props) {
   const [zoom, setZoom] = useState<ZoomMode>('Month');
+
+  const enrichedTasks = useMemo<TravelEnrichedTask<ScheduleTask>[]>(
+    () => applyTravelFactorToTasks(tasks, projectIsland, tenantOverlayConfig),
+    [tasks, projectIsland, tenantOverlayConfig],
+  );
 
   const ganttTasks = useMemo<Task[]>(() => {
     if (tasks.length === 0 && phases.length === 0) return [];
@@ -100,7 +132,6 @@ export default function ScheduleGanttView({
 
     const out: Task[] = [];
 
-    // Phase bars (project-type) — these render above their child tasks.
     for (const phase of phases) {
       const start = parseISODate(phase.planned_start, fallbackStart);
       const end = parseISODate(phase.planned_end, fallbackEnd);
@@ -122,7 +153,6 @@ export default function ScheduleGanttView({
       });
     }
 
-    // Task bars
     const depsByTaskId = new Map<string, ScheduleDependency[]>();
     for (const d of dependencies) {
       const arr = depsByTaskId.get(d.successor_task_id) ?? [];
@@ -130,22 +160,33 @@ export default function ScheduleGanttView({
       depsByTaskId.set(d.successor_task_id, arr);
     }
 
-    for (const t of tasks) {
+    for (const enriched of enrichedTasks) {
+      const t: ScheduleTask = enriched.task;
       const start = parseISODate(t.planned_start, fallbackStart);
-      const end = parseISODate(t.planned_end, fallbackEnd);
+      let end = parseISODate(t.planned_end, fallbackEnd);
+      if (showTravelFactor && enriched.isOuterIsland && enriched.adjustedDurationDays != null && enriched.baseDurationDays != null) {
+        const extraDays = Math.ceil(enriched.adjustedDurationDays - enriched.baseDurationDays);
+        if (extraDays > 0) {
+          end = new Date(end.getFullYear(), end.getMonth(), end.getDate() + extraDays);
+        }
+      }
       const taskDeps = (depsByTaskId.get(t.id) ?? []).map((d) => `task:${d.predecessor_task_id}`);
+      const useTravelStyle = showTravelFactor && enriched.isOuterIsland;
+      const barColor = useTravelStyle ? OUTER_ISLAND_COLORS[t.status] : STATUS_COLORS[t.status];
+      const progressColor = STATUS_PROGRESS_COLORS[t.status];
+      const displayName = useTravelStyle ? `${t.name} +travel` : t.name;
       out.push({
         id: `task:${t.id}`,
         type: 'task',
-        name: t.name,
+        name: displayName,
         start,
         end,
         progress: t.percent_complete,
         styles: {
-          backgroundColor: STATUS_COLORS[t.status],
-          backgroundSelectedColor: STATUS_COLORS[t.status],
-          progressColor: STATUS_PROGRESS_COLORS[t.status],
-          progressSelectedColor: STATUS_PROGRESS_COLORS[t.status],
+          backgroundColor: barColor,
+          backgroundSelectedColor: barColor,
+          progressColor,
+          progressSelectedColor: progressColor,
         },
         isDisabled: !canWrite,
         project: `phase:${t.phase_id}`,
@@ -154,7 +195,19 @@ export default function ScheduleGanttView({
     }
 
     return out;
-  }, [phases, tasks, dependencies, canWrite]);
+  }, [phases, enrichedTasks, dependencies, canWrite, showTravelFactor, tasks.length]);
+
+  const dateRange = useMemo(() => computeDateRange(phases, tasks), [phases, tasks]);
+
+  const permitMilestones = useMemo(
+    () => milestones.filter((m) => m.milestone_kind === 'permit'),
+    [milestones],
+  );
+
+  const activeFreight = useMemo(
+    () => (freightCalendar ?? []).filter((f) => !f.deleted_at),
+    [freightCalendar],
+  );
 
   if (ganttTasks.length === 0) {
     return (
@@ -187,7 +240,12 @@ export default function ScheduleGanttView({
           </button>
         ))}
       </div>
+
       <div data-bos-gantt-chart style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 12, overflow: 'auto' }}>
+        {showPermits && permitMilestones.length > 0 && dateRange ? (
+          <PermitBand permits={permitMilestones} range={dateRange} />
+        ) : null}
+
         <Gantt
           tasks={ganttTasks}
           viewMode={zoomToViewMode(zoom)}
@@ -216,7 +274,183 @@ export default function ScheduleGanttView({
             return true;
           }}
         />
+
+        {showFreight && activeFreight.length > 0 && dateRange ? (
+          <FreightStrip entries={activeFreight} range={dateRange} />
+        ) : null}
+
+        {showTravelFactor ? (
+          <TravelFactorLegend enriched={enrichedTasks} />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+// ─── Date-range helpers ─────────────────────────────────────────────────────
+
+interface DateRange {
+  startMs: number;
+  endMs: number;
+}
+
+function computeDateRange(phases: SchedulePhase[], tasks: ScheduleTask[]): DateRange | null {
+  let earliest: number | null = null;
+  let latest: number | null = null;
+  const consider = (iso: string | null) => {
+    if (!iso) return;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!m) return;
+    const ms = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    if (earliest == null || ms < earliest) earliest = ms;
+    if (latest == null || ms > latest) latest = ms;
+  };
+  for (const p of phases) { consider(p.planned_start); consider(p.planned_end); }
+  for (const t of tasks) { consider(t.planned_start); consider(t.planned_end); }
+  if (earliest == null || latest == null) return null;
+  if (latest <= earliest) latest = earliest + 86400000;
+  return { startMs: earliest, endMs: latest };
+}
+
+function isoToMs(iso: string | null): number | null {
+  if (!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return null;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+function posFraction(ms: number, range: DateRange): number {
+  return Math.max(0, Math.min(1, (ms - range.startMs) / (range.endMs - range.startMs)));
+}
+
+// ─── Permit timeline band (ABOVE Gantt) ─────────────────────────────────────
+
+function PermitBand({ permits, range }: { permits: ScheduleMilestone[]; range: DateRange }) {
+  const todayMs = isoToMs(todayISO()) ?? Date.now();
+  return (
+    <div data-bos-permit-band style={{ position: 'relative', marginBottom: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+        Permit Timeline
+      </div>
+      <svg width="100%" height={26} style={{ display: 'block' }} role="img" aria-label="Permit timeline">
+        {permits.map((p) => {
+          const appMs = isoToMs(p.permit_application_date);
+          const estMs = isoToMs(p.permit_estimated_approval_date);
+          const actMs = isoToMs(p.permit_actual_approval_date);
+          if (appMs == null || estMs == null) return null;
+          const x1 = posFraction(appMs, range) * 100;
+          const x2 = posFraction(actMs ?? estMs, range) * 100;
+          const w = Math.max(0.5, x2 - x1);
+          const overdue = actMs == null && estMs < todayMs;
+          const fill = actMs != null ? '#bbf7d0' : overdue ? '#fecaca' : '#fef9c3';
+          const stroke = actMs != null ? '#15803d' : overdue ? '#b91c1c' : '#a16207';
+          const titleText = `${p.permit_authority ?? 'Permit'} — applied ${p.permit_application_date}, ` +
+            `est ${p.permit_estimated_approval_date}` +
+            (actMs != null ? `, approved ${p.permit_actual_approval_date}` : overdue ? ' (overdue)' : '');
+          return (
+            <g key={p.id} data-bos-permit-band-entry={p.id} data-bos-permit-status={actMs != null ? 'approved' : overdue ? 'overdue' : 'pending'}>
+              <rect
+                x={`${x1}%`}
+                y={4}
+                width={`${w}%`}
+                height={18}
+                rx={3}
+                ry={3}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={1}
+              >
+                <title>{titleText}</title>
+              </rect>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Matson freight strip (BELOW Gantt) ─────────────────────────────────────
+
+function FreightStrip({ entries, range }: { entries: FreightCalendarEntry[]; range: DateRange }) {
+  return (
+    <div data-bos-freight-strip style={{ position: 'relative', marginTop: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+        Matson Schedule
+      </div>
+      <svg width="100%" height={28} style={{ display: 'block' }} role="img" aria-label="Matson freight schedule">
+        {entries.map((entry) => {
+          const sailMs = isoToMs(entry.sailing_date);
+          const arrMs = isoToMs(entry.arrival_date);
+          const cutMs = isoToMs(entry.cutoff_date);
+          if (sailMs == null || arrMs == null || cutMs == null) return null;
+          const xSail = posFraction(sailMs, range) * 100;
+          const xArr = posFraction(arrMs, range) * 100;
+          const xCut = posFraction(cutMs, range) * 100;
+          const titleText = `${entry.carrier} ${entry.route}: cutoff ${entry.cutoff_date}, sail ${entry.sailing_date}, arrive ${entry.arrival_date}`;
+          return (
+            <g key={entry.freight_calendar_id} data-bos-freight-strip-entry={entry.freight_calendar_id}>
+              <line
+                x1={`${xCut}%`}
+                y1={2}
+                x2={`${xCut}%`}
+                y2={24}
+                stroke="#7c3aed"
+                strokeWidth={1.5}
+                strokeDasharray="3 2"
+                data-bos-freight-cutoff
+              >
+                <title>{titleText}</title>
+              </line>
+              <line
+                x1={`${xSail}%`}
+                y1={4}
+                x2={`${xSail}%`}
+                y2={22}
+                stroke="#0891b2"
+                strokeWidth={2}
+                data-bos-freight-sailing
+              >
+                <title>{titleText}</title>
+              </line>
+              <g data-bos-freight-arrival transform={`translate(0,12)`}>
+                <circle cx={`${xArr}%`} cy={0} r={5} fill="#0891b2" />
+                <text x={`${xArr}%`} y={2} fill="white" fontSize={8} textAnchor="middle" fontWeight={700}>
+                  □
+                  <title>{titleText}</title>
+                </text>
+              </g>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Travel factor legend (BELOW Gantt) ─────────────────────────────────────
+
+function TravelFactorLegend({ enriched }: { enriched: TravelEnrichedTask<ScheduleTask>[] }) {
+  const outerIslandTasks = enriched.filter((e) => e.isOuterIsland);
+  if (outerIslandTasks.length === 0) return null;
+  return (
+    <div data-bos-travel-factor-legend style={{ marginTop: 12, padding: 10, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, fontSize: 11, color: '#1e3a8a' }}>
+      <div style={{ fontWeight: 700, marginBottom: 4 }}>
+        Inter-island travel factor applied to {outerIslandTasks.length} task{outerIslandTasks.length === 1 ? '' : 's'}
+      </div>
+      <ul style={{ margin: 0, paddingLeft: 16, listStyle: 'disc' }}>
+        {outerIslandTasks.slice(0, 6).map((e) => {
+          const tooltip = formatTravelTooltip(e);
+          return (
+            <li key={e.task.id} data-bos-travel-task={e.task.id}>
+              {e.task.name} ({e.task.task_island ?? '—'}) — {tooltip ?? `factor ${e.travelFactor}`}
+            </li>
+          );
+        })}
+        {outerIslandTasks.length > 6 ? (
+          <li>… and {outerIslandTasks.length - 6} more</li>
+        ) : null}
+      </ul>
     </div>
   );
 }

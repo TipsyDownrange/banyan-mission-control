@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusPill, type StatusPillVariant, EmptyState, Button } from '@/components/design-system';
 import { CalendarDays, Plus, Trash2 } from 'lucide-react';
 import ScheduleGanttView from './ScheduleGanttView';
+import type { ScheduleTaskIsland } from '@/db';
 
 type PhaseStatus = 'planned' | 'in_progress' | 'complete' | 'on_hold';
 type TaskStatus = 'planned' | 'in_progress' | 'complete' | 'blocked' | 'on_hold';
@@ -51,6 +52,8 @@ export interface ScheduleTask {
   percent_complete: number;
   status: TaskStatus;
   assigned_to_user_id: string | null;
+  task_island?: ScheduleTaskIsland | null;
+  duration_with_travel_factor?: string | number | null;
 }
 
 export interface ScheduleDependency {
@@ -59,6 +62,32 @@ export interface ScheduleDependency {
   successor_task_id: string;
   type: string;
   lag_days: number;
+}
+
+export interface ScheduleMilestone {
+  id: string;
+  engagement_id: string;
+  name: string;
+  type: string;
+  planned_date: string | null;
+  actual_date: string | null;
+  status: string;
+  milestone_kind: 'standard' | 'permit' | 'inspection' | 'gc_clearance' | 'matson_freight';
+  permit_authority: string | null;
+  permit_application_date: string | null;
+  permit_estimated_approval_date: string | null;
+  permit_actual_approval_date: string | null;
+}
+
+export interface FreightCalendarEntry {
+  freight_calendar_id: string;
+  carrier: string;
+  route: string;
+  sailing_date: string;
+  arrival_date: string;
+  cutoff_date: string;
+  notes: string | null;
+  deleted_at: string | null;
 }
 
 const STATUS_VARIANT: Record<TaskStatus, StatusPillVariant> = {
@@ -97,16 +126,30 @@ function todayISO(): string {
 interface Props {
   kID: string;
   canWrite: boolean;
+  projectIsland?: ScheduleTaskIsland | null;
 }
 
-export default function ScheduleTab({ kID, canWrite }: Props) {
+export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Props) {
   const [view, setView] = useState<'list' | 'gantt'>('list');
   const [phases, setPhases] = useState<SchedulePhase[]>([]);
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
   const [deps, setDeps] = useState<ScheduleDependency[]>([]);
+  const [milestones, setMilestones] = useState<ScheduleMilestone[]>([]);
+  const [freight, setFreight] = useState<FreightCalendarEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [kIDFound, setKIDFound] = useState<boolean>(true);
+
+  // BAN-374 P4 — Hawaii overlay toggles.  Default ON for the master toggle
+  // (Kula Glass is a Hawaii tenant); freight defaults OFF for non-Hawaii
+  // projects per spec §D2.
+  const [showHawaiiOverlays, setShowHawaiiOverlays] = useState(true);
+  const [showTravelFactor, setShowTravelFactor] = useState(true);
+  const [showPermits, setShowPermits] = useState(true);
+  const [showFreight, setShowFreight] = useState<boolean>(() => {
+    if (!projectIsland) return false;
+    return projectIsland !== 'unknown';
+  });
 
   // Modal/edit state
   const [showAddPhase, setShowAddPhase] = useState(false);
@@ -118,19 +161,25 @@ export default function ScheduleTab({ kID, canWrite }: Props) {
     setLoading(true);
     setErr(null);
     try {
-      const [phRes, tkRes, dpRes] = await Promise.all([
+      const [phRes, tkRes, dpRes, msRes, frRes] = await Promise.all([
         fetch(`/api/schedule/phases?engagement_kid=${encodeURIComponent(kID)}`),
         fetch(`/api/schedule/tasks?engagement_kid=${encodeURIComponent(kID)}`),
         fetch(`/api/schedule/dependencies?engagement_kid=${encodeURIComponent(kID)}`),
+        fetch(`/api/schedule/milestones?engagement_kid=${encodeURIComponent(kID)}`),
+        fetch(`/api/schedule/freight-calendar`),
       ]);
       const phJ = await phRes.json();
       const tkJ = await tkRes.json();
       const dpJ = await dpRes.json();
+      const msJ = msRes.ok ? await msRes.json() : { items: [] };
+      const frJ = frRes.ok ? await frRes.json() : { items: [] };
       if (!phRes.ok) throw new Error(phJ.error || `HTTP ${phRes.status}`);
       setKIDFound(phJ.kIDFound !== false);
       setPhases(phJ.items || []);
       setTasks(tkJ.items || []);
       setDeps(dpJ.items || []);
+      setMilestones(msJ.items || []);
+      setFreight(frJ.items || []);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -261,30 +310,48 @@ export default function ScheduleTab({ kID, canWrite }: Props) {
       </div>
 
       {view === 'gantt' ? (
-        <ScheduleGanttView
-          phases={phases}
-          tasks={tasks}
-          dependencies={deps}
-          canWrite={canWrite}
-          onTaskReschedule={async (taskId, start, end) => {
-            if (!canWrite) return;
-            const res = await fetch(`/api/schedule/tasks/${taskId}`, {
-              method: 'PATCH',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ planned_start: start, planned_end: end }),
-            });
-            if (res.ok) fetchAll();
-          }}
-          onTaskProgress={async (taskId, percent) => {
-            if (!canWrite) return;
-            const res = await fetch(`/api/schedule/tasks/${taskId}`, {
-              method: 'PATCH',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ percent_complete: percent }),
-            });
-            if (res.ok) fetchAll();
-          }}
-        />
+        <>
+          <HawaiiOverlayToggles
+            showMaster={showHawaiiOverlays}
+            onChangeMaster={setShowHawaiiOverlays}
+            showTravelFactor={showTravelFactor}
+            onChangeTravelFactor={setShowTravelFactor}
+            showPermits={showPermits}
+            onChangePermits={setShowPermits}
+            showFreight={showFreight}
+            onChangeFreight={setShowFreight}
+          />
+          <ScheduleGanttView
+            phases={phases}
+            tasks={tasks}
+            dependencies={deps}
+            canWrite={canWrite}
+            milestones={milestones}
+            freightCalendar={freight}
+            projectIsland={projectIsland}
+            showTravelFactor={showHawaiiOverlays && showTravelFactor}
+            showPermits={showHawaiiOverlays && showPermits}
+            showFreight={showHawaiiOverlays && showFreight}
+            onTaskReschedule={async (taskId, start, end) => {
+              if (!canWrite) return;
+              const res = await fetch(`/api/schedule/tasks/${taskId}`, {
+                method: 'PATCH',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ planned_start: start, planned_end: end }),
+              });
+              if (res.ok) fetchAll();
+            }}
+            onTaskProgress={async (taskId, percent) => {
+              if (!canWrite) return;
+              const res = await fetch(`/api/schedule/tasks/${taskId}`, {
+                method: 'PATCH',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ percent_complete: percent }),
+              });
+              if (res.ok) fetchAll();
+            }}
+          />
+        </>
       ) : (
         <ListView
           phases={phases}
@@ -955,3 +1022,92 @@ const modalFooterStyle: React.CSSProperties = {
 
 // Reference today's date to keep ESM tree-shake happy + ready for milestone work.
 export { todayISO };
+
+// ─── Hawaii Overlay Toggles (BAN-374 P4) ────────────────────────────────────
+
+interface HawaiiOverlayTogglesProps {
+  showMaster: boolean;
+  onChangeMaster: (v: boolean) => void;
+  showTravelFactor: boolean;
+  onChangeTravelFactor: (v: boolean) => void;
+  showPermits: boolean;
+  onChangePermits: (v: boolean) => void;
+  showFreight: boolean;
+  onChangeFreight: (v: boolean) => void;
+}
+
+function HawaiiOverlayToggles({
+  showMaster,
+  onChangeMaster,
+  showTravelFactor,
+  onChangeTravelFactor,
+  showPermits,
+  onChangePermits,
+  showFreight,
+  onChangeFreight,
+}: HawaiiOverlayTogglesProps) {
+  return (
+    <div data-bos-hawaii-overlay-toggles style={{
+      display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
+      padding: '8px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0',
+      fontSize: 11, color: '#475569',
+    }}>
+      <label
+        data-bos-overlay-toggle="master"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#0f172a' }}
+        title="Toggle the Hawaii overlay group (inter-island travel, permits, Matson schedule)"
+      >
+        <input
+          type="checkbox"
+          checked={showMaster}
+          onChange={(e) => onChangeMaster(e.target.checked)}
+          data-bos-overlay-toggle-input="master"
+        />
+        Show Hawaii overlays
+      </label>
+      <span style={{ color: '#cbd5e1' }}>|</span>
+      <label
+        data-bos-overlay-toggle="travel-factor"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, opacity: showMaster ? 1 : 0.5 }}
+        title="Inflate outer-island task durations by the tenant's travel factor (default 1.15×)"
+      >
+        <input
+          type="checkbox"
+          checked={showTravelFactor}
+          disabled={!showMaster}
+          onChange={(e) => onChangeTravelFactor(e.target.checked)}
+          data-bos-overlay-toggle-input="travel-factor"
+        />
+        Inter-island travel
+      </label>
+      <label
+        data-bos-overlay-toggle="permits"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, opacity: showMaster ? 1 : 0.5 }}
+        title="Show permit milestones as a colored band above the Gantt"
+      >
+        <input
+          type="checkbox"
+          checked={showPermits}
+          disabled={!showMaster}
+          onChange={(e) => onChangePermits(e.target.checked)}
+          data-bos-overlay-toggle-input="permits"
+        />
+        Permit timeline
+      </label>
+      <label
+        data-bos-overlay-toggle="freight"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, opacity: showMaster ? 1 : 0.5 }}
+        title="Show Matson sailing / arrival / cutoff dates below the Gantt"
+      >
+        <input
+          type="checkbox"
+          checked={showFreight}
+          disabled={!showMaster}
+          onChange={(e) => onChangeFreight(e.target.checked)}
+          data-bos-overlay-toggle-input="freight"
+        />
+        Matson schedule
+      </label>
+    </div>
+  );
+}

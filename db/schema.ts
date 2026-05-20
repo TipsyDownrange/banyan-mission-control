@@ -2239,6 +2239,8 @@ export const schedule_tasks = pgTable('schedule_tasks', {
   percent_complete: integer('percent_complete').notNull().default(0),
   status: text('status').notNull().default('planned'),
   assigned_to_user_id: uuid('assigned_to_user_id').references(() => users.user_id),
+  task_island: text('task_island'),
+  duration_with_travel_factor: numeric('duration_with_travel_factor', { precision: 6, scale: 2 }),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   created_by: uuid('created_by').references(() => users.user_id),
@@ -2246,6 +2248,7 @@ export const schedule_tasks = pgTable('schedule_tasks', {
 }, (table) => [
   index('schedule_tasks_tenant_phase_idx').on(table.tenant_id, table.phase_id, table.sort_order),
   index('schedule_tasks_tenant_engagement_idx').on(table.tenant_id, table.engagement_id),
+  index('schedule_tasks_tenant_task_island_idx').on(table.tenant_id, table.task_island),
   check(
     'schedule_tasks_percent_complete_check',
     sql`${table.percent_complete} BETWEEN 0 AND 100`,
@@ -2253,6 +2256,10 @@ export const schedule_tasks = pgTable('schedule_tasks', {
   check(
     'schedule_tasks_status_check',
     sql`${table.status} IN ('planned','in_progress','complete','blocked','on_hold')`,
+  ),
+  check(
+    'schedule_tasks_task_island_check',
+    sql`${table.task_island} IS NULL OR ${table.task_island} IN ('maui','kauai','oahu','big_island','lanai','molokai','unknown')`,
   ),
 ]);
 
@@ -2286,12 +2293,18 @@ export const schedule_milestones = pgTable('schedule_milestones', {
   planned_date: date('planned_date'),
   actual_date: date('actual_date'),
   status: text('status').notNull().default('pending'),
+  milestone_kind: text('milestone_kind').notNull().default('standard'),
+  permit_authority: text('permit_authority'),
+  permit_application_date: date('permit_application_date'),
+  permit_estimated_approval_date: date('permit_estimated_approval_date'),
+  permit_actual_approval_date: date('permit_actual_approval_date'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   created_by: uuid('created_by').references(() => users.user_id),
   updated_by: uuid('updated_by').references(() => users.user_id),
 }, (table) => [
   index('schedule_milestones_tenant_engagement_idx').on(table.tenant_id, table.engagement_id, table.planned_date),
+  index('schedule_milestones_tenant_kind_idx').on(table.tenant_id, table.milestone_kind),
   check(
     'schedule_milestones_type_check',
     sql`${table.type} IN ('substantial_completion','permit','inspection','owner_walkthrough','retainage_release','custom')`,
@@ -2300,6 +2313,32 @@ export const schedule_milestones = pgTable('schedule_milestones', {
     'schedule_milestones_status_check',
     sql`${table.status} IN ('pending','met','missed','waived')`,
   ),
+  check(
+    'schedule_milestones_kind_check',
+    sql`${table.milestone_kind} IN ('standard','permit','inspection','gc_clearance','matson_freight')`,
+  ),
+]);
+
+// BAN-374 P4 — Matson freight calendar (tenant-scoped).  Operators import
+// Matson / Pasha / Young Brothers sailings; the Gantt overlay marks sailing,
+// arrival, and cutoff dates below the task rows.  Soft-delete via deleted_at.
+export const tenant_freight_calendar = pgTable('tenant_freight_calendar', {
+  freight_calendar_id: uuid('freight_calendar_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  carrier: text('carrier').notNull().default('Matson'),
+  route: text('route').notNull(),
+  sailing_date: date('sailing_date').notNull(),
+  arrival_date: date('arrival_date').notNull(),
+  cutoff_date: date('cutoff_date').notNull(),
+  notes: text('notes'),
+  deleted_at: timestamp('deleted_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+}, (table) => [
+  index('tenant_freight_calendar_tenant_route_idx').on(table.tenant_id, table.route, table.sailing_date),
+  index('tenant_freight_calendar_tenant_sailing_idx').on(table.tenant_id, table.sailing_date),
 ]);
 
 export const SCHEDULE_PHASE_STATUSES = ['planned', 'in_progress', 'complete', 'on_hold'] as const;
@@ -2316,3 +2355,10 @@ export type ScheduleMilestoneType = typeof SCHEDULE_MILESTONE_TYPES[number];
 
 export const SCHEDULE_MILESTONE_STATUSES = ['pending', 'met', 'missed', 'waived'] as const;
 export type ScheduleMilestoneStatus = typeof SCHEDULE_MILESTONE_STATUSES[number];
+
+// BAN-374 P4 — Hawaii overlays
+export const SCHEDULE_MILESTONE_KINDS = ['standard', 'permit', 'inspection', 'gc_clearance', 'matson_freight'] as const;
+export type ScheduleMilestoneKind = typeof SCHEDULE_MILESTONE_KINDS[number];
+
+export const SCHEDULE_TASK_ISLANDS = ['maui', 'kauai', 'oahu', 'big_island', 'lanai', 'molokai', 'unknown'] as const;
+export type ScheduleTaskIsland = typeof SCHEDULE_TASK_ISLANDS[number];
