@@ -18,8 +18,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusPill, type StatusPillVariant, EmptyState, Button } from '@/components/design-system';
-import { CalendarDays, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, Plus, Trash2, Users } from 'lucide-react';
 import ScheduleGanttView from './ScheduleGanttView';
+import TaskResourceAssignmentDialog, {
+  type ResourceUserOption,
+} from './TaskResourceAssignmentDialog';
+import UserScheduleView, { type UserScheduleAssignment } from './UserScheduleView';
 import type { ScheduleTaskIsland } from '@/db';
 
 type PhaseStatus = 'planned' | 'in_progress' | 'complete' | 'on_hold';
@@ -129,13 +133,26 @@ interface Props {
   projectIsland?: ScheduleTaskIsland | null;
 }
 
+export interface TaskResourceSummary {
+  task_resource_id: string;
+  schedule_task_id: string;
+  user_id: string;
+  user_name: string | null;
+  user_email: string | null;
+  role_on_task: string | null;
+  allocation_percent: number;
+}
+
 export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Props) {
-  const [view, setView] = useState<'list' | 'gantt'>('list');
+  const [view, setView] = useState<'list' | 'gantt' | 'crew'>('list');
   const [phases, setPhases] = useState<SchedulePhase[]>([]);
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
   const [deps, setDeps] = useState<ScheduleDependency[]>([]);
   const [milestones, setMilestones] = useState<ScheduleMilestone[]>([]);
   const [freight, setFreight] = useState<FreightCalendarEntry[]>([]);
+  const [resourcesByTask, setResourcesByTask] = useState<Map<string, TaskResourceSummary[]>>(new Map());
+  const [userPool, setUserPool] = useState<ResourceUserOption[]>([]);
+  const [resourceDialogTaskId, setResourceDialogTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [kIDFound, setKIDFound] = useState<boolean>(true);
@@ -156,6 +173,42 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
   const [addTaskForPhase, setAddTaskForPhase] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const fetchResourcesForTasks = useCallback(async (taskIds: string[]) => {
+    if (taskIds.length === 0) {
+      setResourcesByTask(new Map());
+      return;
+    }
+    const results = await Promise.all(
+      taskIds.map(async (id): Promise<[string, TaskResourceSummary[]]> => {
+        try {
+          const res = await fetch(`/api/schedule/tasks/${id}/resources`);
+          if (!res.ok) return [id, []];
+          const j = await res.json();
+          const active = ((j.items as TaskResourceSummary[] | undefined) ?? []).filter(
+            (r) => !(r as unknown as { removed_at?: string | null }).removed_at,
+          );
+          return [id, active];
+        } catch {
+          return [id, []];
+        }
+      }),
+    );
+    const map = new Map<string, TaskResourceSummary[]>();
+    for (const [id, rows] of results) map.set(id, rows);
+    setResourcesByTask(map);
+  }, []);
+
+  const fetchUserPool = useCallback(async () => {
+    try {
+      const res = await fetch('/api/schedule/resources/users-pool');
+      if (!res.ok) return;
+      const j = await res.json();
+      setUserPool(j.items || []);
+    } catch {
+      /* non-fatal — dialog will show empty dropdown */
+    }
+  }, []);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -180,12 +233,14 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
       setDeps(dpJ.items || []);
       setMilestones(msJ.items || []);
       setFreight(frJ.items || []);
+      const taskIds = (tkJ.items as ScheduleTask[] | undefined ?? []).map((t) => t.id);
+      await Promise.all([fetchResourcesForTasks(taskIds), fetchUserPool()]);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
-  }, [kID]);
+  }, [kID, fetchResourcesForTasks, fetchUserPool]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -211,6 +266,29 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
     }
     return m;
   }, [deps]);
+
+  const crewAssignments = useMemo<UserScheduleAssignment[]>(() => {
+    const out: UserScheduleAssignment[] = [];
+    for (const [, rows] of resourcesByTask) {
+      for (const r of rows) {
+        out.push({
+          task_resource_id: r.task_resource_id,
+          schedule_task_id: r.schedule_task_id,
+          user_id: r.user_id,
+          user_name: r.user_name,
+          user_email: r.user_email,
+          role_on_task: r.role_on_task,
+          allocation_percent: r.allocation_percent,
+        });
+      }
+    }
+    return out;
+  }, [resourcesByTask]);
+
+  const dialogTask = useMemo(
+    () => (resourceDialogTaskId ? tasks.find((t) => t.id === resourceDialogTaskId) ?? null : null),
+    [resourceDialogTaskId, tasks],
+  );
 
   const toggleCollapse = (phaseId: string) => {
     setCollapsed((prev) => {
@@ -301,6 +379,22 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
           >
             Gantt
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'crew'}
+            data-bos-schedule-view="crew"
+            onClick={() => setView('crew')}
+            style={{
+              padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              fontSize: 12, fontWeight: 700,
+              background: view === 'crew' ? 'white' : 'transparent',
+              color: view === 'crew' ? '#0f172a' : '#64748b',
+              boxShadow: view === 'crew' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
+            }}
+          >
+            Crew
+          </button>
         </div>
         {canWrite ? (
           <Button data-bos-schedule-add-phase variant="primary" onClick={() => setShowAddPhase(true)}>
@@ -328,6 +422,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
             canWrite={canWrite}
             milestones={milestones}
             freightCalendar={freight}
+            resourcesByTask={resourcesByTask}
             projectIsland={projectIsland}
             showTravelFactor={showHawaiiOverlays && showTravelFactor}
             showPermits={showHawaiiOverlays && showPermits}
@@ -352,6 +447,15 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
             }}
           />
         </>
+      ) : view === 'crew' ? (
+        <UserScheduleView
+          tasks={tasks}
+          assignments={crewAssignments}
+          onDrillToTask={(taskId) => {
+            setView('list');
+            setResourceDialogTaskId(taskId);
+          }}
+        />
       ) : (
         <ListView
           phases={phases}
@@ -361,12 +465,14 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
           canWrite={canWrite}
           collapsed={collapsed}
           editingTaskId={editingTaskId}
+          resourcesByTask={resourcesByTask}
           onToggleCollapse={toggleCollapse}
           onAddTask={(phaseId) => setAddTaskForPhase(phaseId)}
           onMarkComplete={markTaskComplete}
           onDeleteTask={deleteTask}
           onDeletePhase={deletePhase}
           onEditTask={(taskId) => setEditingTaskId(taskId)}
+          onOpenResources={(taskId) => setResourceDialogTaskId(taskId)}
           onSavedTask={() => { setEditingTaskId(null); fetchAll(); }}
           onCancelEdit={() => setEditingTaskId(null)}
         />
@@ -389,6 +495,17 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
           onCreated={() => { setAddTaskForPhase(null); fetchAll(); }}
         />
       ) : null}
+
+      {dialogTask ? (
+        <TaskResourceAssignmentDialog
+          taskId={dialogTask.id}
+          taskName={dialogTask.name}
+          users={userPool}
+          canWrite={canWrite}
+          onClose={() => setResourceDialogTaskId(null)}
+          onChanged={() => { void fetchResourcesForTasks(tasks.map((t) => t.id)); }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -403,12 +520,14 @@ interface ListViewProps {
   canWrite: boolean;
   collapsed: Set<string>;
   editingTaskId: string | null;
+  resourcesByTask: Map<string, TaskResourceSummary[]>;
   onToggleCollapse: (phaseId: string) => void;
   onAddTask: (phaseId: string) => void;
   onMarkComplete: (taskId: string, complete: boolean) => void;
   onDeleteTask: (taskId: string) => void;
   onDeletePhase: (phaseId: string) => void;
   onEditTask: (taskId: string) => void;
+  onOpenResources: (taskId: string) => void;
   onSavedTask: () => void;
   onCancelEdit: () => void;
 }
@@ -421,12 +540,14 @@ function ListView({
   canWrite,
   collapsed,
   editingTaskId,
+  resourcesByTask,
   onToggleCollapse,
   onAddTask,
   onMarkComplete,
   onDeleteTask,
   onDeletePhase,
   onEditTask,
+  onOpenResources,
   onSavedTask,
   onCancelEdit,
 }: ListViewProps) {
@@ -513,6 +634,7 @@ function ListView({
                         <th style={{ padding: '6px 12px', fontWeight: 700 }}>Actual</th>
                         <th style={{ padding: '6px 12px', fontWeight: 700 }}>% Complete</th>
                         <th style={{ padding: '6px 12px', fontWeight: 700 }}>Deps</th>
+                        <th style={{ padding: '6px 12px', fontWeight: 700 }}>Resources</th>
                         {canWrite ? <th style={{ padding: '6px 12px', width: 40 }} /> : null}
                       </tr>
                     </thead>
@@ -568,6 +690,13 @@ function ListView({
                             </td>
                             <td style={{ padding: '8px 12px', color: '#64748b' }}>
                               {(depsBySuccessor.get(task.id) ?? []).length}
+                            </td>
+                            <td
+                              data-bos-task-resources={task.id}
+                              style={{ padding: '8px 12px', color: '#64748b', cursor: 'pointer' }}
+                              onClick={(e) => { e.stopPropagation(); onOpenResources(task.id); }}
+                            >
+                              <ResourcesCell rows={resourcesByTask.get(task.id) ?? []} />
                             </td>
                             {canWrite ? (
                               <td style={{ padding: '8px 12px' }} onClick={(e) => e.stopPropagation()}>
@@ -1019,6 +1148,28 @@ const modalFooterStyle: React.CSSProperties = {
   display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16,
   paddingTop: 12, borderTop: '1px solid #f1f5f9',
 };
+
+function ResourcesCell({ rows }: { rows: TaskResourceSummary[] }) {
+  if (rows.length === 0) {
+    return (
+      <span data-bos-resources-cell-empty style={{ color: '#94a3b8', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <Users size={11} strokeWidth={2} /> Unassigned
+      </span>
+    );
+  }
+  const names = rows.map((r) => r.user_name ?? r.user_email ?? 'Unknown');
+  const visible = names.slice(0, 3);
+  const overflow = names.length - visible.length;
+  return (
+    <span data-bos-resources-cell style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <Users size={11} strokeWidth={2} />
+      <span>{visible.join(', ')}</span>
+      {overflow > 0 ? (
+        <span data-bos-resources-cell-overflow style={{ color: '#94a3b8' }}>+{overflow} more</span>
+      ) : null}
+    </span>
+  );
+}
 
 // Reference today's date to keep ESM tree-shake happy + ready for milestone work.
 export { todayISO };

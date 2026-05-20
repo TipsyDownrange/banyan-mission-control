@@ -23,7 +23,14 @@
 import { useMemo, useState } from 'react';
 import { Gantt, ViewMode, type Task } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
-import type { SchedulePhase, ScheduleTask, ScheduleDependency, ScheduleMilestone, FreightCalendarEntry } from './ScheduleTab';
+import type {
+  SchedulePhase,
+  ScheduleTask,
+  ScheduleDependency,
+  ScheduleMilestone,
+  FreightCalendarEntry,
+  TaskResourceSummary,
+} from './ScheduleTab';
 import {
   applyTravelFactorToTasks,
   type TenantOverlayConfig,
@@ -99,6 +106,8 @@ interface Props {
   showTravelFactor?: boolean;
   showPermits?: boolean;
   showFreight?: boolean;
+  // BAN-374 P5 — Crew assignments shown as initials beside each task bar.
+  resourcesByTask?: Map<string, TaskResourceSummary[]>;
 }
 
 export default function ScheduleGanttView({
@@ -115,6 +124,7 @@ export default function ScheduleGanttView({
   showTravelFactor = false,
   showPermits = false,
   showFreight = false,
+  resourcesByTask,
 }: Props) {
   const [zoom, setZoom] = useState<ZoomMode>('Month');
 
@@ -174,7 +184,10 @@ export default function ScheduleGanttView({
       const useTravelStyle = showTravelFactor && enriched.isOuterIsland;
       const barColor = useTravelStyle ? OUTER_ISLAND_COLORS[t.status] : STATUS_COLORS[t.status];
       const progressColor = STATUS_PROGRESS_COLORS[t.status];
-      const displayName = useTravelStyle ? `${t.name} +travel` : t.name;
+      const resourceRows = resourcesByTask?.get(t.id) ?? [];
+      const initials = resourceInitialsFromRows(resourceRows);
+      const baseName = useTravelStyle ? `${t.name} +travel` : t.name;
+      const displayName = initials ? `${baseName}  ${initials}` : baseName;
       out.push({
         id: `task:${t.id}`,
         type: 'task',
@@ -282,7 +295,66 @@ export default function ScheduleGanttView({
         {showTravelFactor ? (
           <TravelFactorLegend enriched={enrichedTasks} />
         ) : null}
+
+        {resourcesByTask && resourcesByTask.size > 0 ? (
+          <ResourceLegend tasks={tasks} resourcesByTask={resourcesByTask} />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+// ─── BAN-374 P5 — Resource initials / tooltip helpers ───────────────────────
+
+function initialsForName(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return '?';
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function resourceInitialsFromRows(rows: TaskResourceSummary[]): string {
+  if (rows.length === 0) return '';
+  const visible = rows
+    .slice(0, 3)
+    .map((r) => initialsForName(r.user_name ?? r.user_email ?? ''))
+    .join('·');
+  const overflow = rows.length - 3;
+  return overflow > 0 ? `[${visible}+${overflow}]` : `[${visible}]`;
+}
+
+function ResourceLegend({
+  tasks,
+  resourcesByTask,
+}: {
+  tasks: ScheduleTask[];
+  resourcesByTask: Map<string, TaskResourceSummary[]>;
+}) {
+  const tasksWithResources = tasks.filter((t) => (resourcesByTask.get(t.id) ?? []).length > 0);
+  if (tasksWithResources.length === 0) return null;
+  return (
+    <div
+      data-bos-gantt-resource-legend
+      style={{
+        marginTop: 12, padding: '8px 12px', background: '#f8fafc',
+        borderRadius: 6, fontSize: 11, color: '#475569',
+      }}
+    >
+      <strong style={{ display: 'block', marginBottom: 4, color: '#0f172a' }}>Crew on bars</strong>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        {tasksWithResources.map((t) => {
+          const rows = resourcesByTask.get(t.id) ?? [];
+          return (
+            <li key={t.id} data-bos-gantt-resource-legend-row={t.id}>
+              <strong>{t.name}</strong>:{' '}
+              {rows
+                .map((r) => `${r.user_name ?? r.user_email ?? 'Unknown'} (${r.role_on_task ?? 'crew'} · ${r.allocation_percent}%)`)
+                .join(', ')}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
