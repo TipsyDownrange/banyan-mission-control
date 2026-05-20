@@ -60,22 +60,22 @@ export interface PayAppPdfInput {
 }
 
 const S = StyleSheet.create({
-  page: { padding: 28, fontSize: 8, fontFamily: 'Helvetica', color: 'var(--color-ink-primary)' },
+  page: { padding: 28, fontSize: 8, fontFamily: 'Helvetica', color: '#0f172a' },
   pageTitle: { fontSize: 14, fontWeight: 700, marginBottom: 6, color: '#0c2330' },
-  subTitle: { fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 },
+  subTitle: { fontSize: 9, color: '#475569', marginBottom: 10 },
   hdrRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  hdrCell: { fontSize: 8, color: 'var(--color-ink-secondary)' },
-  hdrLabel: { fontWeight: 700, color: 'var(--color-ink-primary)' },
-  table: { borderWidth: 0.5, borderColor: 'var(--color-ink-primary)', marginTop: 8 },
+  hdrCell: { fontSize: 8, color: '#334155' },
+  hdrLabel: { fontWeight: 700, color: '#0f172a' },
+  table: { borderWidth: 0.5, borderColor: '#0f172a', marginTop: 8 },
   tr: { flexDirection: 'row', borderBottomWidth: 0.5, borderColor: '#cbd5e1' },
   th: { padding: 4, backgroundColor: '#0c2330', color: '#fff', fontSize: 7, fontWeight: 700 },
   td: { padding: 3, fontSize: 7 },
   tdRight: { padding: 3, fontSize: 7, textAlign: 'right' },
   parentRow: { backgroundColor: '#f1f5f9' },
   summaryRow: { backgroundColor: '#fef3c7' },
-  footnote: { fontSize: 7, color: 'var(--bos-color-ink-disabled)', marginTop: 6, fontStyle: 'italic' },
+  footnote: { fontSize: 7, color: '#64748b', marginTop: 6, fontStyle: 'italic' },
   signatureBlock: { marginTop: 24, flexDirection: 'row', justifyContent: 'space-between' },
-  signatureBox: { width: '45%', borderTopWidth: 0.5, borderColor: 'var(--color-ink-primary)', paddingTop: 4 },
+  signatureBox: { width: '45%', borderTopWidth: 0.5, borderColor: '#0f172a', paddingTop: 4 },
 });
 
 // ── Shared header block ────────────────────────────────────────────────────
@@ -159,8 +159,8 @@ function G702SummaryBlock({ s, includeArchitectCert, footnote, geTaxSummary }: {
         </View>
       )}
       {includeArchitectCert && (
-        <View style={{ padding: 6, borderTopWidth: 0.5, borderColor: 'var(--color-ink-primary)' }}>
-          <Text style={{ fontSize: 7, color: 'var(--color-ink-primary)' }}>
+        <View style={{ padding: 6, borderTopWidth: 0.5, borderColor: '#0f172a' }}>
+          <Text style={{ fontSize: 7, color: '#0f172a' }}>
             ARCHITECT&apos;S CERTIFICATE FOR PAYMENT — In accordance with the Contract
             Documents, based on on-site observations and the data comprising this
             application, the Architect certifies to the Owner that to the best of

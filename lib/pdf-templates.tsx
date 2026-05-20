@@ -22,18 +22,18 @@ export const C = {
   blue:       '#2E6DA4',  // KG steel blue (letterhead band, section accents)
   blueBg:     '#EEF4FB',  // light blue wash
   blueMid:    '#4A8BBF',  // mid blue for gradients
-  amber:      'var(--color-amber-800)',  // warnings
-  red:        'var(--color-red-700)',  // critical issues
-  slate:      'var(--bos-color-ink-disabled)',  // labels
-  slateLight: 'var(--bos-color-ink-tertiary)',  // sub-labels
-  border:     'var(--color-surface-border)',  // dividers
-  bg:         'var(--color-surface)',  // page tint
+  amber:      '#92400e',  // warnings
+  red:        '#b91c1c',  // critical issues
+  slate:      '#64748b',  // labels
+  slateLight: '#94a3b8',  // sub-labels
+  border:     '#e2e8f0',  // dividers
+  bg:         '#f8fafc',  // page tint
   white:      '#ffffff',
-  text:       'var(--color-ink-primary)',
-  subtext:    'var(--bos-color-ink-tertiary)',
+  text:       '#0f172a',
+  subtext:    '#475569',
   // Keep teal only for status indicators
-  teal:       'var(--bos-color-brand-primary-deep)',
-  tealBg:     'var(--color-teal-50)',
+  teal:       '#0f766e',
+  tealBg:     '#f0fdfa',
   // Orange accent — for highlighted info blocks
   orange:     '#ea580c',
   orangeBg:   '#fff7ed',
