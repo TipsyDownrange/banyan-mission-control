@@ -14,7 +14,7 @@ import { PUNCH_LIST_STATUS_VALUES, type PunchListItemStatus } from './PunchListS
 import type { PunchListItem } from './PunchListItemDetailCard';
 
 const KPI: CSSProperties = {
-  background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0',
+  background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)',
   padding: '12px 14px',
 };
 
@@ -65,7 +65,7 @@ export default function PunchListSummaryCard({ items }: { items: PunchListItem[]
 
   return (
     <div style={{
-      background: 'white', borderRadius: 18, border: '1px solid #e2e8f0',
+      background: 'white', borderRadius: 18, border: '1px solid var(--color-surface-border)',
       padding: '18px 20px', boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
       display: 'flex', flexDirection: 'column', gap: 14,
     }}>
@@ -109,7 +109,7 @@ export default function PunchListSummaryCard({ items }: { items: PunchListItem[]
           <div key={s} style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '6px 10px', borderRadius: 999,
-            background: '#f8fafc', border: '1px solid #e2e8f0',
+            background: '#f8fafc', border: '1px solid var(--color-surface-border)',
             fontSize: 11, fontWeight: 700, color: '#334155',
           }}>
             <span>{STATUS_LABEL[s]}</span>

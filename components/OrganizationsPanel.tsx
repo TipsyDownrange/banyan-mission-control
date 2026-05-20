@@ -393,7 +393,7 @@ function OrganizationPicker({
     fontWeight: 800,
     padding: '4px 8px',
     borderRadius: 999,
-    border: active ? '1px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
+    border: active ? '1px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
     background: active ? '#f0fdfa' : 'white',
     color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
     cursor: 'pointer',
@@ -425,7 +425,7 @@ function OrganizationPicker({
           width: '100%',
           padding: 9,
           borderRadius: 9,
-          border: selected ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
+          border: selected ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
           background: selected ? '#f0fdfa' : 'white',
           cursor: 'pointer',
         }}
@@ -456,7 +456,7 @@ function OrganizationPicker({
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search by organization name, address, org ID, or contact."
-        style={{ fontSize: 13, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', background: 'white', width: '100%', boxSizing: 'border-box' }}
+        style={{ fontSize: 13, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', outline: 'none', background: 'white', width: '100%', boxSizing: 'border-box' }}
       />
       <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4 }}>
         {helperText}
@@ -490,7 +490,7 @@ function OrganizationPicker({
         </div>
       )}
       {canShowSearchResults && bestMatches.length === 0 && (
-        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 8, padding: '8px 10px' }}>
           No matching organizations.
         </div>
       )}
@@ -774,7 +774,7 @@ function OrgDetailPanel({
 
   const INP: React.CSSProperties = {
     fontSize: 13, padding: '6px 10px', borderRadius: 8,
-    border: '1px solid #e2e8f0', outline: 'none', background: 'white',
+    border: '1px solid var(--color-surface-border)', outline: 'none', background: 'white',
     width: '100%', boxSizing: 'border-box' as const,
   };
   const LBL: React.CSSProperties = {
@@ -870,17 +870,17 @@ function OrgDetailPanel({
                     <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                       <button
                         onClick={() => editingContactId === c.contact_id ? setEditingContactId(null) : startEdit(c)}
-                        style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: editingContactId === c.contact_id ? '#f1f5f9' : 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}
+                        style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--color-surface-border)', background: editingContactId === c.contact_id ? '#f1f5f9' : 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}
                       >
                         {editingContactId === c.contact_id ? 'Cancel' : 'Edit'}
                       </button>
                       <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setMenuOpenId(menuOpenId === c.contact_id ? null : c.contact_id)}
-                          style={{ fontSize: 14, fontWeight: 700, padding: '2px 7px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', lineHeight: 1.2 }}
+                          style={{ fontSize: 14, fontWeight: 700, padding: '2px 7px', borderRadius: 6, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', lineHeight: 1.2 }}
                         >···</button>
                         {menuOpenId === c.contact_id && (
-                          <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10, minWidth: 150, overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10, minWidth: 150, overflow: 'hidden' }}>
                             <button
                               onClick={() => setAsPrimary(c.contact_id)}
                               style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
@@ -919,7 +919,7 @@ function OrgDetailPanel({
                         <div><label style={LBL}>Email</label><input style={INP} type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} /></div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                         <button onClick={() => saveContactEdit(c.contact_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                       </div>
                     </div>
@@ -957,7 +957,7 @@ function OrgDetailPanel({
                   </label>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                   <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
                 </div>
               </div>
@@ -995,7 +995,7 @@ function OrgDetailPanel({
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                         <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Address</button>
                       </div>
                     </div>
@@ -1011,7 +1011,7 @@ function OrgDetailPanel({
                         </div>
                         <button
                           onClick={() => startSiteEdit(s)}
-                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', flexShrink: 0 }}
                         >
                           Edit
                         </button>
@@ -1039,7 +1039,7 @@ function OrgDetailPanel({
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                   <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Address</button>
                 </div>
               </div>
@@ -1111,7 +1111,7 @@ function OrgDetailPanel({
               <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
                 Admin identity fields. Changes affect filtering, reporting, and linked records.
               </div>
-              <div style={{ padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--color-surface-border)', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Name + Save button row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <div><label style={LBL}>Name</label><input style={INP} value={orgEditForm.name} onChange={e => setOrgEditForm(p => ({ ...p, name: e.target.value }))} /></div>
@@ -1147,7 +1147,7 @@ function OrgDetailPanel({
                           }))}
                           style={{
                             fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                            border: selected ? `1.5px solid ${c.color}` : '1.5px solid #e2e8f0',
+                            border: selected ? `1.5px solid ${c.color}` : '1.5px solid var(--color-surface-border)',
                             background: selected ? c.bg : 'white',
                             color: selected ? c.color : 'var(--bos-color-ink-disabled)',
                             letterSpacing: '0.04em', textTransform: 'uppercase' as const,
@@ -1214,7 +1214,7 @@ function OrgDetailPanel({
               </div>
               <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={mergeForm.notes} onChange={e => setMergeForm(p => ({ ...p, notes: e.target.value }))} placeholder="Merge note for audit log" />
               {mergePreview && (
-                <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: 'white', border: '1px solid #e2e8f0' }}>
+                <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: 'white', border: '1px solid var(--color-surface-border)' }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? 'var(--bos-color-brand-primary-deep)' : '#b91c1c', marginBottom: 6 }}>
                     {mergePreview.can_execute ? 'Preview ready' : 'Preview blocked'} · {countTotal} affected references
                   </div>
@@ -1281,7 +1281,7 @@ function OrgDetailPanel({
                   {relationships.map(rel => {
                     const otherOrgId = rel.source_org_id === orgId ? rel.target_org_id : rel.source_org_id;
                     return (
-                      <div key={rel.relationship_id} style={{ padding: '7px 9px', borderRadius: 8, background: 'white', border: '1px solid #e2e8f0', fontSize: 12 }}>
+                      <div key={rel.relationship_id} style={{ padding: '7px 9px', borderRadius: 8, background: 'white', border: '1px solid var(--color-surface-border)', fontSize: 12 }}>
                         <div style={{ fontWeight: 800, color: 'var(--color-ink-primary)' }}>{rel.relationship_type.replace(/_/g, ' ')} · {orgNameById.get(otherOrgId) || otherOrgId}</div>
                         {rel.notes && <div style={{ color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{rel.notes}</div>}
                       </div>
@@ -1397,7 +1397,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
   const INP: React.CSSProperties = {
     fontSize: 13, padding: '8px 12px', borderRadius: 9,
-    border: '1px solid #e2e8f0', outline: 'none', background: 'white',
+    border: '1px solid var(--color-surface-border)', outline: 'none', background: 'white',
     width: '100%', boxSizing: 'border-box' as const,
   };
   const LBL: React.CSSProperties = {
@@ -1429,11 +1429,11 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     gap: 6, padding: '20px 12px', borderRadius: 14, cursor: 'pointer',
-                    border: '1.5px solid #e2e8f0', background: '#fafafa',
+                    border: '1.5px solid var(--color-surface-border)', background: '#fafafa',
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--bos-color-brand-primary-deep)'; (e.currentTarget as HTMLButtonElement).style.background = '#f0fdfa'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLButtonElement).style.background = '#fafafa'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-surface-border)'; (e.currentTarget as HTMLButtonElement).style.background = '#fafafa'; }}
                 >
                   <span style={{ fontSize: 28 }}>{c.emoji}</span>
                   <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{c.label}</span>
@@ -1441,7 +1441,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                 </button>
               ))}
             </div>
-            <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </>
         )}
 
@@ -1573,7 +1573,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={create} disabled={!orgName || (isPersonal && !phone.trim()) || creating}
                 style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
                 {creating ? 'Creating…' : isPersonal ? 'Create Customer' : `Create ${cat.label}`}
@@ -1666,7 +1666,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
             placeholder="Search by name or contact…"
             style={{
               fontSize: 13, padding: '8px 12px', borderRadius: 10,
-              border: '1px solid #e2e8f0', outline: 'none', background: 'white',
+              border: '1px solid var(--color-surface-border)', outline: 'none', background: 'white',
               width: '100%', boxSizing: 'border-box', marginBottom: 10,
             }}
           />
@@ -1678,7 +1678,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
               style={{
                 fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
                 textTransform: 'uppercase', letterSpacing: '0.04em',
-                border: typeFilter === 'ALL' ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
+                border: typeFilter === 'ALL' ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
                 background: typeFilter === 'ALL' ? '#f0fdfa' : 'white',
                 color: typeFilter === 'ALL' ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
               }}>All</button>
@@ -1691,7 +1691,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                   style={{
                     fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
                     textTransform: 'uppercase' as const, letterSpacing: '0.04em',
-                    border: active ? `1.5px solid ${c.color}` : '1px solid #e2e8f0',
+                    border: active ? `1.5px solid ${c.color}` : '1px solid var(--color-surface-border)',
                     background: active ? c.bg : 'white', color: active ? c.color : 'var(--bos-color-ink-tertiary)',
                   }}>
                   {FILTER_LABELS[t]}

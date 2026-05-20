@@ -27,7 +27,7 @@ const STATE_BADGE: Record<string, { bg: string; color: string; label: string }> 
 
 const ROW: CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-  background: 'white', borderRadius: 12, border: '1px solid #e2e8f0',
+  background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)',
 };
 
 export default function NotarizationStatusIndicator({

@@ -50,7 +50,7 @@ export default function SuggestionButton() {
     <div style={{
       position: 'fixed', bottom: 24, right: 24, zIndex: 50,
       width: 340, background: 'white', borderRadius: 20,
-      border: '1px solid #e2e8f0', boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
+      border: '1px solid var(--color-surface-border)', boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
       overflow: 'hidden',
     }}>
       <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #071722, #0c2330)', color: 'white' }}>
@@ -72,12 +72,12 @@ export default function SuggestionButton() {
             <textarea
               value={text} onChange={e => setText(e.target.value)}
               placeholder="It would be nice if..."
-              style={{ width: '100%', height: 80, padding: 12, borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+              style={{ width: '100%', height: 80, padding: 12, borderRadius: 12, border: '1.5px solid var(--color-surface-border)', fontSize: 14, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
             />
             <button onClick={submit} disabled={submitting || !text.trim()}
               style={{
                 width: '100%', marginTop: 8, padding: '12px', borderRadius: 12,
-                background: text.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#e2e8f0',
+                background: text.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'var(--color-surface-border)',
                 border: 'none', color: text.trim() ? 'white' : 'var(--bos-color-ink-tertiary)',
                 fontSize: 14, fontWeight: 700, cursor: text.trim() ? 'pointer' : 'default',
               }}>

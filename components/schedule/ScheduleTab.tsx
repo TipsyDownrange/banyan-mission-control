@@ -591,7 +591,7 @@ function ListView({
           <section
             key={phase.id}
             data-bos-schedule-phase={phase.id}
-            style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}
+            style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', overflow: 'hidden' }}
           >
             <header
               style={{
@@ -1204,7 +1204,7 @@ function EditTaskRow({ task, allTasks, currentDeps, canWrite, onSaved, onCancel 
                     display: 'inline-flex', alignItems: 'center', gap: 4,
                     padding: '3px 8px', borderRadius: 999, fontSize: 11, cursor: 'pointer',
                     border: '1px solid',
-                    borderColor: checked ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0',
+                    borderColor: checked ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
                     background: checked ? '#f0fdfa' : 'white',
                     color: checked ? 'var(--bos-color-brand-primary-deep)' : '#475569',
                   }}
@@ -1285,7 +1285,7 @@ function FormRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0',
+  width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-surface-border)',
   fontSize: 13, color: 'var(--color-ink-primary)', background: 'white',
 };
 
@@ -1345,7 +1345,7 @@ function HawaiiOverlayToggles({
   return (
     <div data-bos-hawaii-overlay-toggles style={{
       display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
-      padding: '8px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0',
+      padding: '8px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)',
       fontSize: 11, color: '#475569',
     }}>
       <label

@@ -102,7 +102,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
 
   return (
     <div style={{
-      background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18,
+      background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 18,
       display: 'flex', flexDirection: 'column', gap: 14,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -117,7 +117,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
           const c = data.counts[type] ?? { total: 0, generated: 0, notarized: 0, filed: 0, superseded: 0 };
           return (
             <div key={type} style={{
-              padding: 12, borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0',
+              padding: 12, borderRadius: 10, background: '#f8fafc', border: '1px solid var(--color-surface-border)',
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 4 }}>{c.total}</div>

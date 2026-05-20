@@ -249,7 +249,7 @@ export default function InboxPanel() {
                               } catch(err) { alert('Error: ' + err); }
                               setDelegating(null);
                             }}
-                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? '#e2e8f0' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? 'var(--bos-color-ink-tertiary)' : '#334155', cursor: delegating === item.id ? 'default' : 'pointer' }}>
+                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? 'var(--color-surface-border)' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? 'var(--bos-color-ink-tertiary)' : '#334155', cursor: delegating === item.id ? 'default' : 'pointer' }}>
                               {delegating === item.id ? '...' : d}
                             </button>
                           ))}

@@ -151,7 +151,7 @@ function ForecastSection({ slots }: { slots: DispatchSlot[] }) {
                 padding: '7px 10px', borderRadius: 8,
                 background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
               }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0', minWidth: 110 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-surface-border)', minWidth: 110 }}>
                   {formatDate(date)}
                 </span>
                 <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)' }}>
@@ -192,7 +192,7 @@ function CommittedDispatchSection({ slots }: { slots: DispatchSlot[] }) {
               <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)', whiteSpace: 'nowrap' }}>
                 {formatDate(slot.date)}
               </span>
-              <span style={{ fontSize: 12, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 12, color: 'var(--color-surface-border)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {slot.project_name}
               </span>
               <IslandBadge island={slot.island} />
@@ -240,7 +240,7 @@ function IslandLogisticsSection({ movements, travelRecords }: { movements: Islan
               <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)', whiteSpace: 'nowrap' }}>
                 {formatDate(m.date)}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-surface-border)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {m.crew_name}
               </span>
               <IslandBadge island={m.home_island} />
@@ -275,7 +275,7 @@ function IslandLogisticsSection({ movements, travelRecords }: { movements: Islan
                 <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)', minWidth: 80, whiteSpace: 'nowrap' }}>
                   {formatDate(t.travel_date)}
                 </span>
-                <span style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 600 }}>{t.crew_name}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-surface-border)', fontWeight: 600 }}>{t.crew_name}</span>
                 <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.5)' }}>
                   {t.from_code || '?'} → {t.to_code || '?'}
                 </span>
@@ -310,7 +310,7 @@ function ReadinessSummarySection({ blockers, covered, meta }: { blockers: Island
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
           minWidth: 100, textAlign: 'center',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#e2e8f0' }}>{meta.slotCount}</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-surface-border)' }}>{meta.slotCount}</div>
           <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Slots</div>
         </div>
         <div style={{
@@ -410,7 +410,7 @@ export default function LogisticsPanel() {
       minHeight: '100vh',
       background: 'linear-gradient(180deg, #071722 0%, #0c2330 100%)',
       padding: '28px 28px 60px',
-      color: '#e2e8f0',
+      color: 'var(--color-surface-border)',
       fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif',
     }}>
       {/* Header */}

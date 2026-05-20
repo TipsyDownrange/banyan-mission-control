@@ -113,7 +113,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
 
   return (
     <div style={{
-      background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18,
+      background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 18,
       display: 'flex', flexDirection: 'column', gap: 10,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -127,7 +127,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
         const o = overdue[r.external_waiver_id];
         return (
           <div key={r.external_waiver_id} style={{
-            padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0',
+            padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)',
             display: 'flex', flexDirection: 'column', gap: 6,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

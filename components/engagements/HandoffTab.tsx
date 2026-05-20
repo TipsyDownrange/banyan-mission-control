@@ -81,7 +81,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
   }
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
         Handoff tracking requires this project to be migrated to Postgres.
       </div>
     );
@@ -92,7 +92,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12 }}>
         No handoff packet has been submitted for this engagement yet.  Estimating will create one to initiate PM acceptance.
       </div>
     );
@@ -101,7 +101,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
   return (
     <div>
       {current && (
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: '18px 20px', marginBottom: 14 }}>
+        <div style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 14, padding: '18px 20px', marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>Current Handoff</div>
@@ -133,7 +133,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
           </div>
 
           {current.reviewer_notes && (
-            <div style={{ marginTop: 14, padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155' }}>
+            <div style={{ marginTop: 14, padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155' }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Reviewer notes</div>
               {current.reviewer_notes}
             </div>
@@ -152,7 +152,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
                 key={r.id}
                 type="button"
                 onClick={() => setOpenReceiptId(r.id)}
-                style={{ textAlign: 'left', background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                style={{ textAlign: 'left', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>

@@ -377,7 +377,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
       {/* Kai Header */}
       <div style={{
         padding: '16px',
-        borderBottom: '1px solid #e2e8f0',
+        borderBottom: '1px solid var(--color-surface-border)',
         background: 'linear-gradient(135deg, rgba(15,118,110,0.04), rgba(20,184,166,0.02))',
         flexShrink: 0,
       }}>
@@ -433,7 +433,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   display: 'flex', alignItems: 'flex-start', gap: 7,
                   padding: '7px 10px', borderRadius: 8,
                   background: 'rgba(248,250,252,0.8)',
-                  border: `1px solid ${r.status === 'pass' ? 'rgba(5,150,105,0.15)' : r.status === 'fail' ? 'rgba(220,38,38,0.15)' : '#e2e8f0'}`,
+                  border: `1px solid ${r.status === 'pass' ? 'rgba(5,150,105,0.15)' : r.status === 'fail' ? 'rgba(220,38,38,0.15)' : 'var(--color-surface-border)'}`,
                 }}>
                   <span style={{ fontSize: 13, flexShrink: 0, lineHeight: 1 }}>{statusIcon(r.status)}</span>
                   <div>
@@ -447,7 +447,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 12px', borderRadius: 10,
-              background: 'rgba(248,250,252,0.8)', border: '1px solid #e2e8f0',
+              background: 'rgba(248,250,252,0.8)', border: '1px solid var(--color-surface-border)',
             }}>
               <span style={{ fontSize: 16 }}>◯</span>
               <div>
@@ -482,7 +482,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               {/* Chat history */}
               <div style={{
                 maxHeight: 240, overflowY: 'auto', marginBottom: 8,
-                border: '1px solid #e2e8f0', borderRadius: 10,
+                border: '1px solid var(--color-surface-border)', borderRadius: 10,
                 background: '#f8fafc', padding: '8px',
               }}>
                 {chatMessages.length === 0 ? (
@@ -504,7 +504,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                         background: msg.role === 'user' ? 'var(--bos-color-brand-primary-deep)' : 'white',
                         color: msg.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                         fontSize: 11, lineHeight: 1.5,
-                        border: msg.role === 'assistant' ? '1px solid #e2e8f0' : 'none',
+                        border: msg.role === 'assistant' ? '1px solid var(--color-surface-border)' : 'none',
                         whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                       }}>
                         {msg.content}
@@ -536,7 +536,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   disabled={chatLoading || !chatInput.trim()}
                   style={{
                     padding: '8px 12px', borderRadius: 9, border: 'none',
-                    background: chatInput.trim() && !chatLoading ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0',
+                    background: chatInput.trim() && !chatLoading ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
                     color: 'white', fontSize: 11, fontWeight: 700,
                     cursor: chatInput.trim() && !chatLoading ? 'pointer' : 'default',
                     flexShrink: 0,
@@ -557,7 +557,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               onClick={() => setShowInstructions(v => !v)}
               style={{
                 fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 6,
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
                 background: showInstructions ? '#f1f5f9' : 'white',
                 color: 'var(--bos-color-ink-disabled)', cursor: 'pointer',
               }}
@@ -568,7 +568,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
 
           {showInstructions && (
             <div style={{
-              background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10,
+              background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 10,
               padding: '10px 12px', maxHeight: 220, overflowY: 'auto',
             }}>
               {/* Key rules summary */}
@@ -640,7 +640,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 8 }}>
                       Select documents to include ({selectedDocs.length > 0 ? selectedDocs.length + ' selected' : 'all will be used if none selected'}):
                     </div>
-                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 10, padding: 8, marginBottom: 16 }}>
+                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: 8, marginBottom: 16 }}>
                       {driveFiles.map(f => (
                         <label key={f.id} style={{
                           display: 'flex', alignItems: 'center', gap: 8,
@@ -679,7 +679,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 ) : (
                   <div style={{
                     padding: '16px', borderRadius: 10, background: '#f8fafc',
-                    border: '1px solid #e2e8f0', marginBottom: 16, textAlign: 'center',
+                    border: '1px solid var(--color-surface-border)', marginBottom: 16, textAlign: 'center',
                   }}>
                     {bid.bidFolderUrl ? (
                       <>
@@ -702,7 +702,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
                   <button
                     onClick={() => setShowTakeoffTrigger(false)}
-                    style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                   >Cancel</button>
                   <button
                     onClick={handleLaunchTakeoffPrompt}
@@ -850,7 +850,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               </a>
             </div>
           ) : (
-            <div style={{ padding: '12px', borderRadius: 10, background: '#f8fafc', border: '1px dashed #e2e8f0', textAlign: 'center' }}>
+            <div style={{ padding: '12px', borderRadius: 10, background: '#f8fafc', border: '1px dashed var(--color-surface-border)', textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>No folder linked</div>
               <button
                 onClick={() => { setFolderUrl(''); setShowLinkModal(true); }}
@@ -878,8 +878,8 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                 />
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginBottom: 14 }}>Full URLs or bare folder IDs both work.</div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button onClick={() => setShowLinkModal(false)} style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={handleLinkFolder} disabled={folderSaving || !folderUrl.trim()} style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: folderUrl.trim() ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0', color: 'white', fontSize: 12, fontWeight: 700, cursor: folderUrl.trim() ? 'pointer' : 'default' }}>
+                  <button onClick={() => setShowLinkModal(false)} style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={handleLinkFolder} disabled={folderSaving || !folderUrl.trim()} style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: folderUrl.trim() ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)', color: 'white', fontSize: 12, fontWeight: 700, cursor: folderUrl.trim() ? 'pointer' : 'default' }}>
                     {folderSaving ? 'Saving…' : 'Link Folder'}
                   </button>
                 </div>

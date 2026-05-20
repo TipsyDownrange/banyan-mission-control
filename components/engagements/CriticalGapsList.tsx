@@ -40,7 +40,7 @@ export default function CriticalGapsList({
 }) {
   if (!gaps || gaps.length === 0) {
     return (
-      <div style={{ background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+      <div style={{ background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)' }}>
         <EmptyState
           icon={<span style={{ fontSize: 20 }}>✓</span>}
           heading="No critical gaps reported."
@@ -63,7 +63,7 @@ export default function CriticalGapsList({
       {gaps.map((g, idx) => {
         const s = STATUS_COLORS[g.status] ?? STATUS_COLORS.OPEN;
         return (
-          <div key={g.gap_id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+          <div key={g.gap_id} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

@@ -189,7 +189,7 @@ export default function CalendarPanel() {
           {/* View toggle */}
           {(['month', 'agenda'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid #e2e8f0', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? '#0369a1' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid var(--color-surface-border)', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? '#0369a1' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               {v}
             </button>
           ))}
@@ -197,12 +197,12 @@ export default function CalendarPanel() {
           {view === 'month' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
               <button onClick={() => setCurrentMonth(new Date(year, month - 1))}
-                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>‹</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>‹</button>
               <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', minWidth: 140, textAlign: 'center' }}>{monthName}</span>
               <button onClick={() => setCurrentMonth(new Date(year, month + 1))}
-                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>›</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>›</button>
               <button onClick={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
-                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>Today</button>
+                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>Today</button>
               {calMode === 'personal' && (
                 <button onClick={() => setShowNewEvent(true)}
                   style={{ padding: '5px 14px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
@@ -220,12 +220,12 @@ export default function CalendarPanel() {
       {calMode === 'management' && canSeeAllStaff && (
         <div style={{ marginBottom: 16 }}>
           {flightsLoading && (
-            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
+            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
               Scanning emails for travel…
             </div>
           )}
           {!flightsLoading && flights.length === 0 && (
-            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed var(--color-surface-border)', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--bos-color-ink-tertiary)"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
               No upcoming travel found. Booking confirmations sent to Tia or Jenna appear here automatically.
             </div>
@@ -304,7 +304,7 @@ export default function CalendarPanel() {
       {!loading && view === 'month' && (
         <div style={{ display: 'grid', gridTemplateColumns: selectedDate ? '1fr 320px' : '1fr', gap: 16 }}>
           {/* Month grid */}
-          <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', overflow: 'hidden' }}>
             {/* Day headers */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: '1px solid #f1f5f9' }}>
               {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
@@ -347,19 +347,19 @@ export default function CalendarPanel() {
 
           {/* Day detail panel */}
           {selectedDate && (
-            <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: '16px', maxHeight: 600, overflowY: 'auto' }}>
+            <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', padding: '16px', maxHeight: 600, overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}</div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</div>
                 </div>
-                <button onClick={() => setSelectedDate(null)} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                <button onClick={() => setSelectedDate(null)} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
               </div>
               {selectedDayEvents().length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No events</div>
               ) : (
                 selectedDayEvents().map(ev => (
-                  <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: '#f8fafc', border: `1px solid #e2e8f0`, cursor: 'pointer' }}
+                  <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: '#f8fafc', border: `1px solid var(--color-surface-border)`, cursor: 'pointer' }}
                     onClick={() => setSelectedEvent(ev === selectedEvent ? null : ev)}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
@@ -398,10 +398,10 @@ export default function CalendarPanel() {
                 {isToday(date.toISOString()) && <span style={{ padding: '1px 6px', borderRadius: 999, background: '#0369a1', color: 'white', fontSize: 9, fontWeight: 800 }}>TODAY</span>}
               </div>
               {dayEvts.length === 0 ? (
-                <div style={{ padding: '10px 16px', borderRadius: 12, background: '#fafafa', border: '1px dashed #e2e8f0', fontSize: 12, color: '#cbd5e1' }}>No events</div>
+                <div style={{ padding: '10px 16px', borderRadius: 12, background: '#fafafa', border: '1px dashed var(--color-surface-border)', fontSize: 12, color: '#cbd5e1' }}>No events</div>
               ) : (
                 dayEvts.map(ev => (
-                  <div key={ev.id} style={{ padding: '10px 16px', borderRadius: 12, background: 'white', border: '1px solid #e2e8f0', marginBottom: 6, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div key={ev.id} style={{ padding: '10px 16px', borderRadius: 12, background: 'white', border: '1px solid var(--color-surface-border)', marginBottom: 6, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                     <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 2 }}>{ev.title}</div>
@@ -421,7 +421,7 @@ export default function CalendarPanel() {
             </div>
           ))}
           {agendaDays.filter(d => d.events.length > 0).length === 0 && (
-            <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
+            <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)', fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
               No upcoming events in the next 30 days
             </div>
           )}
@@ -436,32 +436,32 @@ export default function CalendarPanel() {
               <div>
                 <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>Title *</label>
                 <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Event title..." autoFocus
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const }} />
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
                 <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>Date *</label>
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>Start Time</label>
                   <input type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>End Time</label>
                   <input type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
               </div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Leave time blank to create an all-day event</div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={() => { setShowNewEvent(false); setNewTitle(''); setNewDate(''); }}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={createEvent} disabled={!newTitle || !newDate || savingEvent}
-                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0', color: newTitle && newDate ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
+                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)', color: newTitle && newDate ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
                 {savingEvent ? 'Creating...' : 'Create Event'}
               </button>
             </div>

@@ -43,7 +43,7 @@ export default function CardList({
             height: 100,
             borderRadius: 16,
             background: '#f1f5f9',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--color-surface-border)',
             animation: 'pulse 1.5s ease-in-out infinite',
           }} />
         ))}
@@ -61,7 +61,7 @@ export default function CardList({
         fontSize: 13,
         background: 'white',
         borderRadius: 16,
-        border: '1px dashed #e2e8f0',
+        border: '1px dashed var(--color-surface-border)',
       }}>
         {emptyMessage}
       </div>
@@ -84,7 +84,7 @@ export default function CardList({
             onClick={item.onClick}
             style={{
               background: 'white',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--color-surface-border)',
               borderRadius: 16,
               padding: '14px 16px',
               paddingLeft: 20,
@@ -102,7 +102,7 @@ export default function CardList({
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(15,23,42,0.04)';
-              (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0';
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-surface-border)';
             }}
           >
             {/* Accent bar */}

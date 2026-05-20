@@ -196,7 +196,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Action Items requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Action Items requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -208,7 +208,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
           ['Overdue', data.summary.overdue_count],
           ['Auto-closed', data.summary.by_status.AUTO_CLOSED ?? 0],
         ].map(([label, value]) => (
-          <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+          <div key={label} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: label === 'Overdue' && Number(value) > 0 ? '#b91c1c' : 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
@@ -240,7 +240,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14, marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 120px 160px auto', gap: 8 }}>
+        <form onSubmit={handleAdd} style={{ background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 14, marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 120px 160px auto', gap: 8 }}>
           <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="What needs to happen?" style={inputStyle} required maxLength={300} />
           <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)} style={selectStyle}>
             {['URGENT', 'HIGH', 'MEDIUM', 'LOW'].map((p) => <option key={p} value={p}>{p}</option>)}
@@ -254,7 +254,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12 }}>
             No action items match the current filters.
           </div>
         ) : filtered.map((it) => {
@@ -263,7 +263,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
           const overdue = isOverdue(it);
           const actionable = it.status === 'OPEN' || it.status === 'IN_PROGRESS';
           return (
-            <div key={it.action_item_id} style={{ background: 'white', border: overdue ? '1px solid #fca5a5' : '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+            <div key={it.action_item_id} style={{ background: 'white', border: overdue ? '1px solid #fca5a5' : '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 2fr) 120px 110px 130px 200px', gap: 10, alignItems: 'center' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
@@ -293,7 +293,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                 </div>
               </div>
               {(it.description || it.notes || it.auto_closed_reason) && (
-                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 8, paddingTop: 8, borderTop: '1px dashed #e2e8f0' }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--color-surface-border)' }}>
                   {it.auto_closed_reason && <div>Auto-closed: {it.auto_closed_reason}</div>}
                   {it.description && <div>{it.description}</div>}
                   {it.notes && <div style={{ fontStyle: 'italic' }}>{it.notes}</div>}

@@ -279,7 +279,7 @@ export default function TaskResourceAssignmentDialog({
                           onClick={() => removeRow(r.task_resource_id)}
                           disabled={saving}
                           style={{
-                            background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 6,
+                            background: 'transparent', border: '1px solid var(--color-surface-border)', borderRadius: 6,
                             padding: '4px 10px', fontSize: 11, color: '#b91c1c', cursor: 'pointer',
                           }}
                         >
@@ -323,7 +323,7 @@ export default function TaskResourceAssignmentDialog({
                       data-bos-resource-user-select
                       value={newUserId}
                       onChange={(e) => { setNewUserId(e.target.value); setPendingConflict(null); setAcknowledged(false); }}
-                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}
+                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--color-surface-border)', fontSize: 12 }}
                     >
                       <option value="">— Select crew member —</option>
                       {userOptions.map((u) => (
@@ -341,7 +341,7 @@ export default function TaskResourceAssignmentDialog({
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value)}
                       placeholder="lead / crew / apprentice (optional)"
-                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}
+                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--color-surface-border)', fontSize: 12 }}
                     />
                   </label>
                   <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -362,7 +362,7 @@ export default function TaskResourceAssignmentDialog({
                       value={newNotes}
                       onChange={(e) => setNewNotes(e.target.value)}
                       placeholder="Optional — required when overriding a conflict"
-                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: 'inherit', minHeight: 48 }}
+                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--color-surface-border)', fontSize: 12, fontFamily: 'inherit', minHeight: 48 }}
                     />
                   </label>
 
@@ -401,7 +401,7 @@ export default function TaskResourceAssignmentDialog({
                       type="button"
                       onClick={resetAddForm}
                       disabled={saving}
-                      style={{ background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}
+                      style={{ background: 'transparent', border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}
                     >
                       Cancel
                     </button>

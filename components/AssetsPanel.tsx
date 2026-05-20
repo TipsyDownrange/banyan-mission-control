@@ -20,7 +20,7 @@ const ISLAND_COLOR: Record<string, string> = {
 
 const INP: React.CSSProperties = {
   width: '100%', padding: '6px 9px', borderRadius: 8,
-  border: '1px solid #e2e8f0', background: 'white',
+  border: '1px solid var(--color-surface-border)', background: 'white',
   fontSize: 12, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box',
 };
 
@@ -50,7 +50,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
   const regSoon = !regExp && isExpiringSoon(d.registration_exp);
 
   return (
-    <div style={{ background: 'white', borderRadius: 16, border: `1px solid ${isEditing ? 'rgba(15,118,110,0.2)' : '#e2e8f0'}`, padding: '12px 14px', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+    <div style={{ background: 'white', borderRadius: 16, border: `1px solid ${isEditing ? 'rgba(15,118,110,0.2)' : 'var(--color-surface-border)'}`, padding: '12px 14px', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
       {isEditing ? (
         <div style={{ display: 'grid', gap: 6 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
@@ -83,8 +83,8 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           </div>
           <div><div style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Notes</div><input value={draft.notes ?? v.notes} onChange={e => onDraftChange('notes', e.target.value)} style={INP} placeholder="Notes..." /></div>
           <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-            <button onClick={() => onSave(v.asset_id)} disabled={saving} style={{ padding: '4px 12px', borderRadius: 8, background: saving ? '#e2e8f0' : 'var(--bos-color-brand-primary-deep)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 10, fontWeight: 800, cursor: saving ? 'default' : 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
-            <button onClick={onCancel} style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => onSave(v.asset_id)} disabled={saving} style={{ padding: '4px 12px', borderRadius: 8, background: saving ? 'var(--color-surface-border)' : 'var(--bos-color-brand-primary-deep)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 10, fontWeight: 800, cursor: saving ? 'default' : 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
+            <button onClick={onCancel} style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
       ) : (
@@ -104,7 +104,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           {/* Expiry badges */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? '#b91c1c' : regSoon ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
-            {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: '#f8fafc', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid #e2e8f0' }}>Last service: {v.last_service_date}</span>}
+            {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: '#f8fafc', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid var(--color-surface-border)' }}>Last service: {v.last_service_date}</span>}
             {v.notes && <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>{v.notes}</span>}
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function AssetsPanel() {
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Assets</h1>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['vehicles', 'equipment'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: tab === t ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: tab === t ? 'rgba(240,253,250,0.96)' : 'white', color: tab === t ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: tab === t ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: tab === t ? 'rgba(240,253,250,0.96)' : 'white', color: tab === t ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {t === 'vehicles' ? `Vehicles (${vehicles.length})` : `Equipment (${equipment.length})`}
               </button>
             ))}
@@ -203,7 +203,7 @@ export default function AssetsPanel() {
       {tab === 'vehicles' && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
           {islands.map(isl => (
-            <button key={isl} onClick={() => setIslandFilter(isl)} style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+            <button key={isl} onClick={() => setIslandFilter(isl)} style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid var(--color-surface-border)', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               {isl} {isl !== 'All' ? `(${vehicles.filter(v => v.island === isl).length})` : `(${vehicles.length})`}
             </button>
           ))}
@@ -234,7 +234,7 @@ export default function AssetsPanel() {
       {!loading && tab === 'equipment' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {equipment.map(eq => (
-            <div key={eq.asset_id} style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div key={eq.asset_id} style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 2 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{eq.name || '—'}</span>
@@ -298,7 +298,7 @@ export default function AssetsPanel() {
               )}
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={() => { setShowAdd(false); setNewItem({}); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowAdd(false); setNewItem({}); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addItem} disabled={saving} style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : `Add ${tab === 'vehicles' ? 'Vehicle' : 'Equipment'}`}
               </button>

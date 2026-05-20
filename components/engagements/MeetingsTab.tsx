@@ -131,7 +131,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load meetings: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Meeting Log requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Meeting Log requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -143,7 +143,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
           ['OAC', data.summary.by_type.OAC ?? 0],
           ['Design reviews', data.summary.by_type.DESIGN_REVIEW ?? 0],
         ].map(([label, value]) => (
-          <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+          <div key={label} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
@@ -167,9 +167,9 @@ export default function MeetingsTab({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No meetings match the current filters.</div>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12 }}>No meetings match the current filters.</div>
         ) : filtered.map((it) => (
-          <div key={it.meeting_id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }} onClick={() => setOpenMeetingId(it.meeting_id)}>
+          <div key={it.meeting_id} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }} onClick={() => setOpenMeetingId(it.meeting_id)}>
             <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(180px, 1.6fr) 120px 130px 120px', gap: 10, alignItems: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.meeting_date)}</div>
               <div style={{ minWidth: 0 }}>
@@ -217,6 +217,6 @@ export default function MeetingsTab({ kID }: { kID: string }) {
   );
 }
 
-const toolbarInputStyle: React.CSSProperties = { flex: '1 1 260px', padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white' };
-const toolbarSelectStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 12, background: 'white' };
-const toggleStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 9px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 12, color: '#475569', fontWeight: 700 };
+const toolbarInputStyle: React.CSSProperties = { flex: '1 1 260px', padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white' };
+const toolbarSelectStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 12, background: 'white' };
+const toggleStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 9px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 12, color: '#475569', fontWeight: 700 };

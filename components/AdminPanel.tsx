@@ -92,7 +92,7 @@ function FinancialsPanel() {
           {/* Summary KPI row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
             {/* AR */}
-            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+            <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '16px 18px' }}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>AR Outstanding</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{fmt$(data.ar.total)}</div>
               <div style={{ fontSize: 12, color: data.ar.overdue > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>
@@ -113,7 +113,7 @@ function FinancialsPanel() {
               </div>
             </div>
             {/* AP */}
-            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+            <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '16px 18px' }}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>AP Outstanding</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{fmt$(data.ap.total)}</div>
               <div style={{ fontSize: 12, color: data.ap.upcomingDue > 0 ? '#d97706' : 'var(--bos-color-ink-disabled)' }}>
@@ -133,7 +133,7 @@ function FinancialsPanel() {
           </div>
 
           {/* Recent Invoices */}
-          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: 16 }}>
+          <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', overflow: 'hidden', marginBottom: 16 }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Recent Invoices (AR)</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Last 10 · last 90 days</div>
@@ -162,7 +162,7 @@ function FinancialsPanel() {
           </div>
 
           {/* Recent Bills */}
-          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Recent Bills (AP)</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Last 10 · last 90 days</div>
@@ -217,12 +217,12 @@ function CompliancePanel() {
 
       {/* Key alerts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '16px 18px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Next Wage Increase</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 2 }}>July 1, 2026</div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>87 days · 5-Trade Raise Average</div>
         </div>
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '16px 18px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Trust Fund Due</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 2 }}>April 25</div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>March contributions · 21 days</div>
@@ -235,7 +235,7 @@ function CompliancePanel() {
       </div>
 
       {/* Apprentice tracker */}
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: 16 }}>
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', overflow: 'hidden', marginBottom: 16 }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Apprentice Progression Tracker</div>
         </div>

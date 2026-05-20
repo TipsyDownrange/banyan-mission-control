@@ -41,7 +41,7 @@ const LABEL: CSSProperties = {
 };
 
 const SELECT: CSSProperties = {
-  padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
+  padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)',
   background: 'white', fontSize: 12, color: 'var(--color-ink-primary)', maxWidth: 360,
 };
 

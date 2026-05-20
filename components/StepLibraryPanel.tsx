@@ -337,7 +337,7 @@ function FilterSelect({ label, value, options, onChange }: {
     >
       <option value="" style={{ background: '#0d1f2d', color: 'var(--bos-color-ink-tertiary)' }}>{label}</option>
       {options.map(o => (
-        <option key={o} value={o} style={{ background: '#0d1f2d', color: '#e2e8f0' }}>{o}</option>
+        <option key={o} value={o} style={{ background: '#0d1f2d', color: 'var(--color-surface-border)' }}>{o}</option>
       ))}
     </select>
   );
@@ -765,7 +765,7 @@ export default function StepLibraryPanel() {
             style={{
               width: '100%', boxSizing: 'border-box',
               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 8, padding: '8px 12px', color: '#e2e8f0', fontSize: 13,
+              borderRadius: 8, padding: '8px 12px', color: 'var(--color-surface-border)', fontSize: 13,
               outline: 'none', marginBottom: 8,
             }}
           />
@@ -1159,7 +1159,7 @@ function inputStyle(): React.CSSProperties {
   return {
     width: '100%', boxSizing: 'border-box',
     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 7, padding: '7px 10px', color: '#e2e8f0', fontSize: 13,
+    borderRadius: 7, padding: '7px 10px', color: 'var(--color-surface-border)', fontSize: 13,
     outline: 'none', transition: 'border-color 0.12s',
   };
 }

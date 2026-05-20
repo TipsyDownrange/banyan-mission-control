@@ -98,7 +98,7 @@ export default function UserScheduleView({ tasks, assignments, onDrillToTask }: 
   const totalWidth = totalDays * pxPerDay;
 
   return (
-    <div data-bos-user-schedule-view style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, overflowX: 'auto' }}>
+    <div data-bos-user-schedule-view style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 16, overflowX: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
         <span>{dateLabel(range.startMs)}</span>
         <span>{dateLabel(range.endMs)}</span>

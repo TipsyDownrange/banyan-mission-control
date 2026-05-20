@@ -150,7 +150,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       )}
 
       {loading && (
-        <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: 48, textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', padding: 48, textAlign: 'center' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading live data...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -159,7 +159,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
 
       {/* Empty state */}
       {hasNoEvents && (
-        <div style={{ borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', marginBottom: 20 }}>
+        <div style={{ borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)', marginBottom: 20 }}>
           <EmptyState
             icon={<span style={{ fontSize: 32, color: '#14b8a6' }}>✓</span>}
             heading="Nothing logged today"
@@ -195,7 +195,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 }}>Watch Today</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {watchItems.map(item => (
-              <div key={item.id} style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(15,23,42,0.04)', padding: '14px 18px', display: 'flex', gap: 12 }}>
+              <div key={item.id} style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', boxShadow: '0 1px 4px rgba(15,23,42,0.04)', padding: '14px 18px', display: 'flex', gap: 12 }}>
                 <div style={{ width: 3, borderRadius: 4, background: '#f59e0b', flexShrink: 0, alignSelf: 'stretch', minHeight: 28 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', gap: 8, marginBottom: 5, alignItems: 'center' }}>
@@ -250,7 +250,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
               <div>
                 <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Project *</label>
                 <select value={issueProject} onChange={e => setIssueProject(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}>
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}>
                   <option value="">Select project...</option>
                   {projects.map(p => <option key={p.kID} value={p.kID}>{p.name} ({p.island})</option>)}
                 </select>
@@ -259,12 +259,12 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                 <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Description *</label>
                 <textarea value={issueDesc} onChange={e => setIssueDesc(e.target.value)}
                   rows={3} placeholder="What happened?"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box', resize: 'none' }} />
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box', resize: 'none' }} />
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Severity</label>
                 <select value={issueSeverity} onChange={e => setIssueSeverity(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}>
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}>
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HIGH">High</option>
@@ -274,13 +274,13 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={() => setShowLogIssue(false)}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={handleLogIssue} disabled={!issueProject || !issueDesc || submitting}
                 style={{
                   flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  background: issueProject && issueDesc ? 'linear-gradient(135deg,#ef4444,#f97316)' : '#e2e8f0',
+                  background: issueProject && issueDesc ? 'linear-gradient(135deg,#ef4444,#f97316)' : 'var(--color-surface-border)',
                   color: issueProject && issueDesc ? 'white' : 'var(--bos-color-ink-tertiary)',
                 }}>
                 {submitting ? 'Logging...' : 'Log Issue'}

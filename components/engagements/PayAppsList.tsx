@@ -72,7 +72,7 @@ function StateBadge({ state }: { state: string }) {
 }
 
 const ROW: CSSProperties = {
-  background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+  background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
   padding: '14px 18px', display: 'grid',
   gridTemplateColumns: '70px 1fr 130px 140px 110px',
   gap: 12, alignItems: 'center',
@@ -83,7 +83,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
   if (payApps.length === 0) {
     return (
       <div style={{
-        background: 'white', borderRadius: 16, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)',
         padding: '40px 24px', textAlign: 'center',
       }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 8 }}>
@@ -97,7 +97,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
           disabled
           aria-disabled="true"
           style={{
-            padding: '8px 18px', borderRadius: 999, border: '1px solid #e2e8f0',
+            padding: '8px 18px', borderRadius: 999, border: '1px solid var(--color-surface-border)',
             background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 800,
             cursor: 'not-allowed',
           }}
@@ -122,7 +122,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
           disabled
           aria-disabled="true"
           style={{
-            padding: '6px 14px', borderRadius: 999, border: '1px solid #e2e8f0',
+            padding: '6px 14px', borderRadius: 999, border: '1px solid var(--color-surface-border)',
             background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 800,
             cursor: 'not-allowed',
           }}

@@ -37,7 +37,7 @@ export default function HealthPage() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-ink-primary)', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--color-ink-primary)', color: 'var(--color-surface-border)', fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6 }}>System Health Check</h1>
         <p style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 13, marginBottom: 24 }}>Cross-table kID consistency audit. First 100 WOs. Green = consistent, Red = missing/mismatched.</p>
@@ -71,7 +71,7 @@ export default function HealthPage() {
                 </button>
               ))}
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search WO ID or name…"
-                style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid #334155', background: '#1e293b', color: '#e2e8f0', fontSize: 12, outline: 'none', minWidth: 200 }} />
+                style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid #334155', background: '#1e293b', color: 'var(--color-surface-border)', fontSize: 12, outline: 'none', minWidth: 200 }} />
               <span style={{ fontSize: 12, color: '#475569' }}>{filtered.length} results</span>
             </div>
 

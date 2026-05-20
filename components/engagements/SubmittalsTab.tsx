@@ -216,7 +216,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
 
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
         Submittal Log v1.0 requires this project to be migrated to Postgres. The legacy Sheets-based submittals list is still shown elsewhere; new entries via this surface require an engagement row.
       </div>
     );
@@ -226,20 +226,20 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
     <div>
       {/* KPI bar */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+        <div style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Outstanding</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.outstanding > 0 ? '#d97706' : '#059669', marginTop: 4 }}>
             {data.summary.outstanding}
           </div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>per §5.4 logic</div>
         </div>
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+        <div style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{data.summary.total}</div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>all statuses</div>
         </div>
         {(['SUBMITTED', 'UNDER_REVIEW', 'APPROVED'] as const).map((k) => (
-          <div key={k} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+          <div key={k} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.replace(/_/g, ' ')}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{data.summary.by_status[k] ?? 0}</div>
           </div>
@@ -251,17 +251,17 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
         <input
           type="text" placeholder="Search by #, description, CSI..." value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: '1 1 260px', padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white' }}
+          style={{ flex: '1 1 260px', padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white' }}
         />
         <select value={filterType} onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-          style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 12, background: 'white' }}>
+          style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 12, background: 'white' }}>
           <option value="ALL">All types</option>
           <option value="ACTION">Action</option>
           <option value="PHYSICAL">Physical</option>
           <option value="CLOSEOUT">Closeout</option>
         </select>
         <select value={filterBic} onChange={(e) => setFilterBic(e.target.value)}
-          style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 12, background: 'white' }}>
+          style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 12, background: 'white' }}>
           <option value="ALL">All courts</option>
           <option value="SUBCONTRACTOR">Subcontractor</option>
           <option value="GC">GC</option>
@@ -270,7 +270,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
           <option value="OWNER">Owner</option>
         </select>
         <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}
-          style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 12, background: 'white' }}>
+          style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 12, background: 'white' }}>
           <option value="due_asc">Due date ↑</option>
           <option value="due_desc">Due date ↓</option>
           <option value="csi">Number / CSI</option>
@@ -300,7 +300,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
               padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
               border: filterStatuses.has(s)
                 ? `1.5px solid ${STATUS_STYLE[s].color}`
-                : '1.5px solid #e2e8f0',
+                : '1.5px solid var(--color-surface-border)',
               background: filterStatuses.has(s) ? STATUS_STYLE[s].bg : 'white',
               color: filterStatuses.has(s) ? STATUS_STYLE[s].color : 'var(--bos-color-ink-disabled)',
               cursor: 'pointer',
@@ -326,7 +326,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                 onClick={() => setSelectedSubmittalId(it.submittal_id)}
                 style={{
                   background: 'white', borderRadius: 12,
-                  border: overdue ? '1.5px solid #fecaca' : '1px solid #e2e8f0',
+                  border: overdue ? '1.5px solid #fecaca' : '1px solid var(--color-surface-border)',
                   padding: '12px 16px', cursor: 'pointer',
                 }}
               >
@@ -363,7 +363,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                   </div>
                 </div>
                 {/* Contextual Document Surfacing chip strip */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, paddingTop: 8, borderTop: '1px dashed #e2e8f0' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--color-surface-border)' }}>
                   <DocChip
                     icon="📋"
                     label="Spec"

@@ -24,7 +24,7 @@ const FL = (label: string, auto?: boolean, places?: boolean) => (
   </div>
 );
 
-const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box' };
+const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box' };
 const SEL: React.CSSProperties = { ...INP, cursor: 'pointer', WebkitAppearance: 'none' };
 
 // Hardcoded fallback — remains active when BANYAN_FF_MASTER_LIBRARY_API is OFF
@@ -301,7 +301,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       {createdWO && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginBottom: 20 }}>WO# {createdWO}</div>}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
         <button onClick={() => { setStep('form'); setDraft({ ...BLANK }); setSelectedTypes([]); setCreatedWO(''); }}
-          style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           + Another
         </button>
         <button onClick={onClose}
@@ -320,7 +320,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Service — New Lead</div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', margin: 0, letterSpacing: '-0.02em' }}>Create Work Order</h2>
         </div>
-        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px', display: 'grid', gap: 14 }}>
@@ -334,8 +334,8 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         </div>
 
         {/* Customer & Site Information */}
-        <div style={{ background: 'rgba(248,250,252,0.8)', borderRadius: 12, border: '1px solid #e2e8f0', padding: '14px 16px', display: 'grid', gap: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>Customer &amp; Site Information</div>
+        <div style={{ background: 'rgba(248,250,252,0.8)', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: '14px 16px', display: 'grid', gap: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', borderBottom: '1px solid var(--color-surface-border)', paddingBottom: 8 }}>Customer &amp; Site Information</div>
 
           <div>
             {FL('Business / Property Name', true)}
@@ -418,7 +418,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                       }))}
                       style={{
                         fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
-                        border: '1px solid #e2e8f0', background: oc.is_primary ? '#f0fdf4' : 'white',
+                        border: '1px solid var(--color-surface-border)', background: oc.is_primary ? '#f0fdf4' : 'white',
                         color: oc.is_primary ? 'var(--bos-color-brand-primary-deep)' : '#475569',
                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
                       }}
@@ -613,9 +613,9 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
       {/* Footer */}
       <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10, flexShrink: 0 }}>
-        <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
         <button onClick={submit} disabled={!canSubmit}
-          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
+          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
           {saving ? 'Creating...' : 'Create Work Order'}
         </button>
       </div>

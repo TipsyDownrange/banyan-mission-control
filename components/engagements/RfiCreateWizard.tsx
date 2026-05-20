@@ -107,7 +107,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Conflict between A3.2 and S2.1 storefront opening"
-            style={{ ...inputStyle, borderColor: subjectInvalid ? '#fecaca' : '#e2e8f0' }}
+            style={{ ...inputStyle, borderColor: subjectInvalid ? '#fecaca' : 'var(--color-surface-border)' }}
             maxLength={SUBJECT_MAX + 20}
           />
           {subjectInvalid && <span style={errStyle}>Subject must be {SUBJECT_MAX} characters or fewer</span>}
@@ -183,7 +183,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy}
-            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
             Cancel
           </button>
           <button type="submit" disabled={busy || !canSubmit}
@@ -197,7 +197,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+  padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-surface-border)',
   fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit',
 };
 

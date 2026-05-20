@@ -140,11 +140,11 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search my bids..."
-          style={{ flex: '1 1 200px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }} />
+          style={{ flex: '1 1 200px', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }} />
         {(['active','submitted','closed'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{
             padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-            border: filter === f ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
+            border: filter === f ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)',
             background: filter === f ? 'rgba(240,253,250,0.96)' : 'white',
             color: filter === f ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
           }}>{f}</button>
@@ -215,7 +215,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                           style={{
                             padding: '5px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
                             letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                            border: ds === val ? `1px solid ${DECISION_STYLES[val]?.color}44` : '1px solid #e2e8f0',
+                            border: ds === val ? `1px solid ${DECISION_STYLES[val]?.color}44` : '1px solid var(--color-surface-border)',
                             background: ds === val ? DECISION_STYLES[val]?.bg : 'white',
                             color: ds === val ? DECISION_STYLES[val]?.color : 'var(--bos-color-ink-tertiary)',
                           }}>
@@ -251,7 +251,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                       </a>
                     ) : <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No bid platform link on file</div>}
                     {/* Upload button */}
-                    <label onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                    <label onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: 'white', border: '1px solid var(--color-surface-border)', cursor: 'pointer' }}>
                       <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Upload document — Kai routes automatically</span>
                       <span style={{ padding: '4px 12px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Upload</span>
                       <input type="file" style={{ display: 'none' }} onChange={async e => {
@@ -273,7 +273,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                     </label>
                     {/* Notes */}
                     <textarea placeholder="Add estimating notes, assumptions, risk items..."
-                      style={{ fontSize: 12, padding: '8px 10px', borderRadius: 10, border: '1px solid #e2e8f0', resize: 'none', outline: 'none', color: 'var(--color-ink-primary)', lineHeight: 1.5, background: 'white' }}
+                      style={{ fontSize: 12, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', resize: 'none', outline: 'none', color: 'var(--color-ink-primary)', lineHeight: 1.5, background: 'white' }}
                       rows={3} onClick={e => e.stopPropagation()} />
                   </div>
                 </div>

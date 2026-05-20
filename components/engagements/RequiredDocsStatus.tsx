@@ -49,7 +49,7 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
 
   return (
     <details style={{
-      background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 10,
+      background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: 10,
     }}>
       <summary style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
         Required Docs Status — {data.summary.ready} of {data.summary.required} ready

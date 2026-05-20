@@ -137,7 +137,7 @@ export default function InquiryInboxList({ fetchInquiries, onSelect, onCreateNew
               <tr
                 key={r.inquiry_id}
                 onClick={() => onSelect?.(r)}
-                style={{ cursor: onSelect ? 'pointer' : 'default', borderBottom: '1px solid #e2e8f0' }}
+                style={{ cursor: onSelect ? 'pointer' : 'default', borderBottom: '1px solid var(--color-surface-border)' }}
               >
                 <td style={{ padding: 6, fontFamily: 'monospace' }}>{r.inquiry_number}</td>
                 <td style={{ padding: 6 }}>{r.customer_name}</td>

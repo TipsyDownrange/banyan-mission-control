@@ -346,7 +346,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                             background: isActive
                               ? 'linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(234,88,12,0.08) 100%)'
                               : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
-                            color: isActive ? '#ffedd5' : isHov ? '#e2e8f0' : 'rgba(203,213,225,0.6)',
+                            color: isActive ? '#ffedd5' : isHov ? 'var(--color-surface-border)' : 'rgba(203,213,225,0.6)',
                             fontSize: 13,
                             fontWeight: isActive ? 700 : 450,
                             cursor: 'pointer',
@@ -358,7 +358,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                           <NavIcon
                             path={iconPath}
                             size={15}
-                            color={isActive ? '#fdba74' : isHov ? '#e2e8f0' : 'rgba(148,163,184,0.6)'}
+                            color={isActive ? '#fdba74' : isHov ? 'var(--color-surface-border)' : 'rgba(148,163,184,0.6)'}
                           />
                           {/* Label */}
                           {!collapsed && label}

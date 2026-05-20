@@ -201,14 +201,14 @@ function DetailPanel({ task, onClose, onUpdate }: {
               <div style={{flex:1}}>
                 <div style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--bos-color-ink-tertiary)',marginBottom:3}}>Priority</div>
                 <select value={editPriority} onChange={e=>{setEditPriority(e.target.value as TaskPriority);save({priority:e.target.value as TaskPriority});}}
-                  style={{width:'100%',padding:'5px 8px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:12,outline:'none',background:'white',cursor:'pointer'}}>
+                  style={{width:'100%',padding:'5px 8px',borderRadius:7,border:'1px solid var(--color-surface-border)',fontSize:12,outline:'none',background:'white',cursor:'pointer'}}>
                   {['critical','high','medium','low'].map(p=><option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--bos-color-ink-tertiary)',marginBottom:3}}>Phase</div>
                 <select value={editPhase} onChange={e=>{setEditPhase(e.target.value);save({phase:e.target.value});}}
-                  style={{width:'100%',padding:'5px 8px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:12,outline:'none',background:'white',cursor:'pointer'}}>
+                  style={{width:'100%',padding:'5px 8px',borderRadius:7,border:'1px solid var(--color-surface-border)',fontSize:12,outline:'none',background:'white',cursor:'pointer'}}>
                   <option value=''>Unassigned</option>
                   {PHASE_ORDER.map(p=><option key={p} value={p}>{p}</option>)}
                 </select>
@@ -222,7 +222,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             <div style={{height:1,background:'#f1f5f9',marginBottom:8}}/>
             <textarea value={editDetail} onChange={e=>setEditDetail(e.target.value)}
               onBlur={()=>editDetail!==task.detail&&save({detail:editDetail})}
-              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,lineHeight:1.6,outline:'none',resize:'vertical',minHeight:80,boxSizing:'border-box'}}
+              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid var(--color-surface-border)',fontSize:13,lineHeight:1.6,outline:'none',resize:'vertical',minHeight:80,boxSizing:'border-box'}}
             />
           </div>
 
@@ -237,7 +237,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
               {showPromote && (
                 <div style={{display:'flex',gap:6,marginTop:8}}>
                   <select value={promotingPhase} onChange={e=>setPromotingPhase(e.target.value)}
-                    style={{flex:1,padding:'6px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:12,outline:'none'}}>
+                    style={{flex:1,padding:'6px',borderRadius:7,border:'1px solid var(--color-surface-border)',fontSize:12,outline:'none'}}>
                     <option value=''>Pick phase…</option>
                     {PHASE_ORDER.filter(p=>p!=='Inbox').map(p=><option key={p} value={p}>{p}</option>)}
                   </select>
@@ -262,11 +262,11 @@ function DetailPanel({ task, onClose, onUpdate }: {
             {addingNote ? (
               <div style={{display:'flex',gap:6,marginTop:8}}>
                 <input value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder='Add a note…' autoFocus
-                  style={{flex:1,padding:'7px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:12,outline:'none'}}
+                  style={{flex:1,padding:'7px 10px',borderRadius:8,border:'1px solid var(--color-surface-border)',fontSize:12,outline:'none'}}
                   onKeyDown={e=>{if(e.key==='Enter')addNote();if(e.key==='Escape'){setAddingNote(false);setNoteText('');}}}
                 />
                 <button onClick={addNote} style={{padding:'7px 12px',borderRadius:8,border:'none',background:'var(--bos-color-brand-primary-deep)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer'}}>Add</button>
-                <button onClick={()=>{setAddingNote(false);setNoteText('');}} style={{padding:'7px 10px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:12,cursor:'pointer'}}>Cancel</button>
+                <button onClick={()=>{setAddingNote(false);setNoteText('');}} style={{padding:'7px 10px',borderRadius:8,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:12,cursor:'pointer'}}>Cancel</button>
               </div>
             ) : (
               <button onClick={()=>setAddingNote(true)} style={{marginTop:6,fontSize:11,fontWeight:700,color:'#0369a1',background:'none',border:'none',cursor:'pointer',padding:0}}>+ Add Note</button>
@@ -285,7 +285,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             )}
             {task.status==='in_progress' && (<>
               <button onClick={()=>save({status:'waiting'})} disabled={saving}
-                style={{flex:1,padding:'11px',borderRadius:10,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                style={{flex:1,padding:'11px',borderRadius:10,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>
                 ⏸ Pause
               </button>
               <button onClick={()=>save({status:'done'})} disabled={saving}
@@ -433,7 +433,7 @@ export default function TaskBoardPanel() {
     return true;
   }).sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
 
-  const INP: React.CSSProperties = {width:'100%',padding:'8px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,outline:'none',boxSizing:'border-box',background:'white'};
+  const INP: React.CSSProperties = {width:'100%',padding:'8px 10px',borderRadius:8,border:'1px solid var(--color-surface-border)',fontSize:13,outline:'none',boxSizing:'border-box',background:'white'};
 
   return (
     <div style={{padding:'24px',maxWidth:860,margin:'0 auto'}}>
@@ -444,13 +444,13 @@ export default function TaskBoardPanel() {
         <div style={{fontSize:13,color:'var(--bos-color-ink-disabled)',marginBottom:12}}>{roadmapTasks.length} active · {inboxTasks.length} inbox · {archiveTasks.length} completed</div>
         <div style={{display:'flex',gap:8}}>
           <button onClick={()=>setShowNewTask(p=>!p)} style={{padding:'8px 16px',borderRadius:10,background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer'}}>+ New Task</button>
-          <button onClick={fetchTasks} style={{padding:'8px 14px',borderRadius:10,background:'white',border:'1px solid #e2e8f0',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>↻</button>
+          <button onClick={fetchTasks} style={{padding:'8px 14px',borderRadius:10,background:'white',border:'1px solid var(--color-surface-border)',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>↻</button>
         </div>
       </div>
 
       {/* New Task */}
       {showNewTask && (
-        <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:16,marginBottom:20,display:'flex',flexDirection:'column',gap:10}}>
+        <div style={{background:'white',borderRadius:12,border:'1px solid var(--color-surface-border)',padding:16,marginBottom:20,display:'flex',flexDirection:'column',gap:10}}>
           <input style={INP} placeholder='Task title *' value={newTitle} onChange={e=>setNewTitle(e.target.value)} autoFocus />
           <textarea style={{...INP,resize:'none'}} rows={2} placeholder='Detail (optional)' value={newDetail} onChange={e=>setNewDetail(e.target.value)} />
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
@@ -464,7 +464,7 @@ export default function TaskBoardPanel() {
             <input style={INP} placeholder='Category' value={newCategory} onChange={e=>setNewCategory(e.target.value)} />
           </div>
           <div style={{display:'flex',gap:8}}>
-            <button onClick={()=>setShowNewTask(false)} style={{flex:1,padding:'9px',borderRadius:10,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>Cancel</button>
+            <button onClick={()=>setShowNewTask(false)} style={{flex:1,padding:'9px',borderRadius:10,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>Cancel</button>
             <button onClick={createTask} disabled={!newTitle.trim()||creating} style={{flex:2,padding:'9px',borderRadius:10,border:'none',background:'var(--bos-color-brand-primary-deep)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer'}}>{creating?'Creating…':'Create Task'}</button>
           </div>
         </div>
@@ -474,7 +474,7 @@ export default function TaskBoardPanel() {
       <div style={{display:'flex',gap:4,marginBottom:20,background:'#f1f5f9',borderRadius:12,padding:3}}>
         {([['roadmap','📋 Roadmap',roadmapTasks.length],['inbox','📥 Kai Inbox',inboxTasks.length],['archive','✓ Archive',archiveTasks.length]] as const).map(([k,label,count])=>(
           <button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:'8px',borderRadius:10,fontSize:12,fontWeight:700,cursor:'pointer',border:'none',background:tab===k?'var(--bos-color-brand-primary-deep)':'transparent',color:tab===k?'white':'var(--bos-color-ink-disabled)'}}>
-            {label} {count>0&&<span style={{marginLeft:5,padding:'1px 6px',borderRadius:999,background:tab===k?'rgba(255,255,255,0.25)':'#e2e8f0',fontSize:10}}>{count}</span>}
+            {label} {count>0&&<span style={{marginLeft:5,padding:'1px 6px',borderRadius:999,background:tab===k?'rgba(255,255,255,0.25)':'var(--color-surface-border)',fontSize:10}}>{count}</span>}
           </button>
         ))}
       </div>
@@ -485,7 +485,7 @@ export default function TaskBoardPanel() {
       {!loading && tab==='roadmap' && (<>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
           {([['all',`All · ${roadmapTasks.length}`],['critical',`Critical/High · ${roadmapTasks.filter(t=>t.priority==='critical'||t.priority==='high').length}`],['in_progress',`In Progress · ${roadmapTasks.filter(t=>t.status==='in_progress').length}`],['waiting',`Waiting · ${roadmapTasks.filter(t=>t.status==='waiting'||t.status==='blocked').length}`]] as const).map(([k,label])=>(
-            <button key={k} onClick={()=>setFilterPill(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:filterPill===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid #e2e8f0',background:filterPill===k?'#f0fdfa':'white',color:filterPill===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
+            <button key={k} onClick={()=>setFilterPill(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:filterPill===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid var(--color-surface-border)',background:filterPill===k?'#f0fdfa':'white',color:filterPill===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
           ))}
         </div>
         {sortedPhases.length===0 && <div style={{textAlign:'center',color:'var(--bos-color-ink-tertiary)',padding:'40px 0',fontSize:13}}>No tasks yet. Add one to get started.</div>}
@@ -541,7 +541,7 @@ export default function TaskBoardPanel() {
       {!loading && tab==='archive' && (<>
         <div style={{display:'flex',gap:6,marginBottom:16}}>
           {([['all',`All · ${archiveTasks.length}`],['roadmap',`Roadmap · ${archiveTasks.filter(t=>t.source!=='feedback').length}`],['feedback',`Feedback · ${archiveTasks.filter(t=>t.source==='feedback').length}`]] as const).map(([k,label])=>(
-            <button key={k} onClick={()=>setArchiveFilter(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:archiveFilter===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid #e2e8f0',background:archiveFilter===k?'#f0fdfa':'white',color:archiveFilter===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
+            <button key={k} onClick={()=>setArchiveFilter(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:archiveFilter===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid var(--color-surface-border)',background:archiveFilter===k?'#f0fdfa':'white',color:archiveFilter===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
           ))}
         </div>
         {filteredArchive.length===0

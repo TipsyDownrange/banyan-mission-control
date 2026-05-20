@@ -92,7 +92,7 @@ const RESPONSIBLE_LABEL: Record<string, string> = {
 };
 
 const CARD: CSSProperties = {
-  background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+  background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
   boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
 };
 

@@ -38,7 +38,7 @@ export default function WidgetShell({
     <div
       style={{
         background: 'white',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-surface-border)',
         borderRadius: 14,
         height: '100%',
         display: 'flex',
@@ -85,7 +85,7 @@ export default function WidgetShell({
               title="Hide widget"
               style={{
                 background: 'transparent',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
                 borderRadius: 6,
                 padding: '2px 8px',
                 fontSize: 11,

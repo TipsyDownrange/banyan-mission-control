@@ -498,7 +498,7 @@ export default function PermissionsPage() {
                   }}
                 >
                   {/* Name */}
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-surface-border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: 8 }}>
                     {user.name || '—'}
                   </div>
 

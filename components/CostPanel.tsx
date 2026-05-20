@@ -53,20 +53,20 @@ function AddInvoiceForm({ onAdded }: { onAdded: () => void }) {
   }
   if (!open) return <button onClick={() => setOpen(true)} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid var(--bos-color-brand-primary-deep)', background:'transparent', color:'var(--bos-color-brand-primary-deep)', fontSize:12, fontWeight:700, cursor:'pointer' }}>+ Add Invoice</button>;
   return (
-    <div style={{ background:'#f8fafc', borderRadius:12, border:'1px solid #e2e8f0', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
+    <div style={{ background:'#f8fafc', borderRadius:12, border:'1px solid var(--color-surface-border)', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
         <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Date</label>
-          <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
+          <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid var(--color-surface-border)', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
         <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Amount ($)</label>
-          <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="257.83" style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
+          <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="257.83" style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid var(--color-surface-border)', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
         <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Type</label>
-          <select value={type} onChange={e=>setType(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const, cursor:'pointer' }}>
+          <select value={type} onChange={e=>setType(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid var(--color-surface-border)', fontSize:12, outline:'none', boxSizing:'border-box' as const, cursor:'pointer' }}>
             <option value="invoice">Invoice</option>
             <option value="credit_grant">Credit Grant</option>
           </select></div>
       </div>
       <div style={{ display:'flex', gap:8 }}>
-        <button onClick={() => setOpen(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Cancel</button>
+        <button onClick={() => setOpen(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid var(--color-surface-border)', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Cancel</button>
         <button onClick={submit} disabled={!amount||saving} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'var(--bos-color-brand-primary-deep)', color:'white', fontSize:12, fontWeight:800, cursor:'pointer', opacity:saving?0.7:1 }}>{saving?'Saving…':'Save Invoice'}</button>
       </div>
     </div>
@@ -172,7 +172,7 @@ export default function CostPanel() {
       {tab==='overview' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {/* Provider bars */}
-          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Provider Breakdown</div>
             {[
               { label:'Anthropic Invoices', value:ant?.invoicesPaid||0, color:'#4f46e5', total: allIn },
@@ -199,7 +199,7 @@ export default function CostPanel() {
           </div>
 
           {/* Daily chart */}
-          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Daily API Costs</div>
             {filteredDays.length === 0 ? <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No data for this range.</div> : (() => {
               const maxCost = Math.max(...filteredDays.map(([,d])=>d.cost||0), 1);
@@ -233,7 +233,7 @@ export default function CostPanel() {
       {/* ── ANTHROPIC TAB ─────────────────────────────────── */}
       {tab==='anthropic' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
               <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)' }}>Invoices & Credits</div>
               <AddInvoiceForm onAdded={load} />
@@ -267,7 +267,7 @@ export default function CostPanel() {
             ) : <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No invoices yet.</div>}
           </div>
 
-          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Daily API Costs (Live from Admin API)</div>
             {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).slice(0,20).map(([date,d])=>(
               <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid #f8fafc' }}>
@@ -282,7 +282,7 @@ export default function CostPanel() {
 
       {/* ── OPENAI TAB ─────────────────────────────────── */}
       {tab==='openai' && (
-        <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+        <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
           <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>OpenAI Daily Costs</div>
           <div style={{ padding:'10px 14px', background:'#f0fdf4', borderRadius:10, border:'1px solid rgba(5,150,105,0.2)', marginBottom:14 }}>
             <div style={{ fontSize:12, fontWeight:700, color:'#059669' }}>Total from CSV imports: {fmtUsd(oai?.apiCostToDate)}</div>
@@ -303,7 +303,7 @@ export default function CostPanel() {
       {/* ── SUBSCRIPTIONS TAB ─────────────────────────────────── */}
       {tab==='subscriptions' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
+          <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
               <div style={{ padding:'10px 14px', background:'#eff6ff', borderRadius:10, border:'1px solid rgba(37,99,235,0.2)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#2563eb', marginBottom:2 }}>Monthly Burn</div>

@@ -35,7 +35,7 @@ function fmtDate(iso: string | null): string {
 }
 
 const ROW: CSSProperties = {
-  background: 'white', borderRadius: 12, border: '1px solid #e2e8f0',
+  background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)',
   padding: '12px 16px', display: 'grid',
   gridTemplateColumns: '1fr 130px 140px 110px',
   gap: 12, alignItems: 'center',
@@ -45,7 +45,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
   if (retainage.length === 0) {
     return (
       <div style={{
-        background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
         padding: '24px 18px', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)',
         fontSize: 13,
       }}>

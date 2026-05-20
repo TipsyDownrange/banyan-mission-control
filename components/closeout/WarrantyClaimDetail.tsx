@@ -57,7 +57,7 @@ export const EMPTY_RESOLUTION: ResolutionValues = {
 };
 
 const CARD: CSSProperties = {
-  background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+  background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
   padding: 18, display: 'flex', flexDirection: 'column', gap: 14,
 };
 
@@ -86,7 +86,7 @@ const VALUE: CSSProperties = {
 const MONO: CSSProperties = { ...VALUE, fontFamily: 'monospace' };
 
 const INPUT: CSSProperties = {
-  padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
+  padding: '8px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)',
   background: 'white', fontSize: 13, color: 'var(--color-ink-primary)',
 };
 

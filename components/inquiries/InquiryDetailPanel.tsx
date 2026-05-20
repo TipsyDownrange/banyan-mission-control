@@ -137,7 +137,7 @@ export default function InquiryDetailPanel({ inquiry, onClose, actions }: Props)
       {error && <div role="alert" style={{ color: '#b91c1c', fontSize: 12 }}>{error}</div>}
 
       {!isTerminal && (
-        <section aria-label="Transition state" style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+        <section aria-label="Transition state" style={{ borderTop: '1px solid var(--color-surface-border)', paddingTop: 8 }}>
           <h4 style={{ fontSize: 13, margin: 0, marginBottom: 6 }}>Transition state</h4>
           <select aria-label="Target state" value={transitionTo} onChange={e => setTransitionTo(e.target.value)} style={{ padding: 4 }}>
             {TRANSITION_TARGETS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -162,7 +162,7 @@ export default function InquiryDetailPanel({ inquiry, onClose, actions }: Props)
       )}
 
       {!isTerminal && (
-        <section aria-label="Assign" style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+        <section aria-label="Assign" style={{ borderTop: '1px solid var(--color-surface-border)', paddingTop: 8 }}>
           <h4 style={{ fontSize: 13, margin: 0, marginBottom: 6 }}>Assign</h4>
           <input aria-label="Assignee user id" placeholder="user id" value={assignedToUserId} onChange={e => setAssignedToUserId(e.target.value)} style={{ padding: 4 }} />
           <select aria-label="Assignee role" value={assignedRole} onChange={e => setAssignedRole(e.target.value)} style={{ padding: 4, marginLeft: 6 }}>
@@ -184,7 +184,7 @@ export default function InquiryDetailPanel({ inquiry, onClose, actions }: Props)
       )}
 
       {!isTerminal && (
-        <section aria-label="Promote" style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+        <section aria-label="Promote" style={{ borderTop: '1px solid var(--color-surface-border)', paddingTop: 8 }}>
           <h4 style={{ fontSize: 13, margin: 0, marginBottom: 6 }}>Promote</h4>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
             <input aria-label="Engagement id" placeholder="engagement uuid" value={engagementId} onChange={e => setEngagementId(e.target.value)} style={{ padding: 4 }} />

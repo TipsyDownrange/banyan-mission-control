@@ -76,7 +76,7 @@ function phaseColors(status: BuildPhaseStatus, isCurrent: boolean) {
   if (status === 'complete') return { bg: '#059669', text: '#fff', border: '#059669' };
   if (status === 'blocked')  return { bg: '#dc2626', text: '#fff', border: '#dc2626' };
   if (isCurrent || status === 'in_progress') return { bg: 'var(--bos-color-brand-primary-deep)', text: '#fff', border: '#14b8a6' };
-  return { bg: '#f1f5f9', text: 'var(--bos-color-ink-disabled)', border: '#e2e8f0' };
+  return { bg: '#f1f5f9', text: 'var(--bos-color-ink-disabled)', border: 'var(--color-surface-border)' };
 }
 
 // ── PhaseChip ──────────────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
       {existingLog.length > 0 && (
         <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {existingLog.map((entry, i) => (
-            <div key={i} style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: '#f8fafc', borderLeft: '2px solid #e2e8f0' }}>
+            <div key={i} style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: '#f8fafc', borderLeft: '2px solid var(--color-surface-border)' }}>
               <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontFamily: 'monospace', marginRight: 6 }}>
                 {new Date(entry.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
@@ -219,7 +219,7 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
         style={{
           width: '100%', boxSizing: 'border-box' as const,
           fontSize: 13, padding: '8px 10px', borderRadius: 7,
-          border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
+          border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid var(--color-surface-border)',
           outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
           color: 'var(--color-ink-primary)', background: 'white', lineHeight: 1.5,
         }} />
@@ -229,13 +229,13 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={() => { setOpen(false); setText(''); setFlash(null); }}
-            style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+            style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={!hasText || submitting}
             style={{
               padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, border: 'none',
-              background: hasText && !submitting ? '#14b8a6' : '#e2e8f0',
+              background: hasText && !submitting ? '#14b8a6' : 'var(--color-surface-border)',
               color: hasText && !submitting ? 'white' : 'var(--bos-color-ink-tertiary)',
               cursor: hasText && !submitting ? 'pointer' : 'default',
             }}>
@@ -307,7 +307,7 @@ function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
       {task.status === 'done' && (
         <button disabled={isSaving}
           onClick={() => onStatusChange(task.id, 'queued')}
-          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid #e2e8f0', background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
+          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid var(--color-surface-border)', background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
           ↩ Reopen
         </button>
       )}
@@ -403,7 +403,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
         style={{
           width: '100%', boxSizing: 'border-box' as const,
           fontSize: 14, padding: '10px 12px', borderRadius: 9,
-          border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
+          border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid var(--color-surface-border)',
           outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
           color: 'var(--color-ink-primary)', background: 'white', lineHeight: 1.5,
         }}
@@ -418,7 +418,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
           style={{
             padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
             border: 'none', cursor: hasText && !submitting ? 'pointer' : 'default',
-            background: hasText && !submitting ? '#14b8a6' : '#e2e8f0',
+            background: hasText && !submitting ? '#14b8a6' : 'var(--color-surface-border)',
             color: hasText && !submitting ? 'white' : 'var(--bos-color-ink-tertiary)',
             transition: 'background 0.15s',
           }}>
@@ -450,7 +450,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
   return (
     <div style={{
       marginTop: 10, borderRadius: 12,
-      background: 'white', border: '1px solid #e2e8f0',
+      background: 'white', border: '1px solid var(--color-surface-border)',
       boxShadow: '0 2px 8px rgba(0,0,0,0.04)', overflow: 'hidden',
     }}>
       {/* Panel header */}
@@ -620,7 +620,7 @@ export default function BuildLifecycleTimeline() {
 
   if (loading) {
     return (
-      <div style={{ padding: '20px 24px', borderRadius: 12, background: 'white', border: '1px solid #e2e8f0', marginBottom: 20 }}>
+      <div style={{ padding: '20px 24px', borderRadius: 12, background: 'white', border: '1px solid var(--color-surface-border)', marginBottom: 20 }}>
         <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Loading War Room…</div>
       </div>
     );
@@ -657,7 +657,7 @@ export default function BuildLifecycleTimeline() {
 
       {/* Header card */}
       <div style={{
-        background: 'white', borderRadius: 12, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)',
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '16px 20px', marginBottom: 12,
         display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
       }}>
@@ -701,7 +701,7 @@ export default function BuildLifecycleTimeline() {
       <div style={{
         display: 'flex', gap: 6, flexWrap: 'wrap',
         padding: '12px 16px', background: 'white', borderRadius: 12,
-        border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        border: '1px solid var(--color-surface-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}>
         {data.phases.map((phase) => (
           <PhaseChip

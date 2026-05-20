@@ -37,7 +37,7 @@ const SYSTEM_COLOR: Record<string, string> = {
 
 const CARD: React.CSSProperties = {
   background: 'white', borderRadius: 18, padding: '20px 24px',
-  border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+  border: '1px solid var(--color-surface-border)', boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
 };
 
 export default function InstallTrackingPanel({ projects }: { projects: Project[] }) {
@@ -113,14 +113,14 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
           <select
             value={selectedProject}
             onChange={e => { setSelectedProject(e.target.value); setLoading(true); }}
-            style={{ padding: '10px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, fontWeight: 600, background: 'white', color: 'var(--color-ink-primary)', cursor: 'pointer' }}
+            style={{ padding: '10px 16px', borderRadius: 12, border: '1.5px solid var(--color-surface-border)', fontSize: 14, fontWeight: 600, background: 'white', color: 'var(--color-ink-primary)', cursor: 'pointer' }}
           >
             <option value="ALL">All Projects</option>
             {projects.filter(p => summary.some(s => s.kID === p.kID)).map(p => (
               <option key={p.kID} value={p.kID}>{p.name}</option>
             ))}
           </select>
-          <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', overflow: 'hidden' }}>
             {(['overview', 'detail'] as const).map(mode => (
               <button key={mode} onClick={() => setViewMode(mode)}
                 style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
@@ -176,7 +176,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
             </div>
           ) : summary.sort((a, b) => b.totalSteps - a.totalSteps).map(proj => (
             <button key={proj.kID} onClick={() => { setSelectedProject(proj.kID); setViewMode('detail'); setLoading(true); }}
-              style={{ ...CARD, cursor: 'pointer', textAlign: 'left', display: 'block', width: '100%', transition: 'box-shadow 0.15s', border: '1.5px solid #e2e8f0' }}>
+              style={{ ...CARD, cursor: 'pointer', textAlign: 'left', display: 'block', width: '100%', transition: 'box-shadow 0.15s', border: '1.5px solid var(--color-surface-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{projectName(proj.kID)}</div>
@@ -208,7 +208,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {selectedProject !== 'ALL' && (
             <button onClick={() => { setSelectedProject('ALL'); setViewMode('overview'); setLoading(true); }}
-              style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', marginBottom: 8 }}>
+              style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', background: 'white', fontSize: 13, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', marginBottom: 8 }}>
               ← All Projects
             </button>
           )}

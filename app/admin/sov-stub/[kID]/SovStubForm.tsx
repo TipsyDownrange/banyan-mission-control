@@ -216,7 +216,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
       )}
 
       <div style={{
-        background: 'white', borderRadius: 16, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)',
         padding: 18, marginBottom: 16,
       }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 12 }}>

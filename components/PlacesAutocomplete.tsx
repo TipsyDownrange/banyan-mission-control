@@ -141,7 +141,7 @@ export default function PlacesAutocomplete({
 
   const INP: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: 10,
-    border: '1px solid #e2e8f0', background: 'white',
+    border: '1px solid var(--color-surface-border)', background: 'white',
     fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none',
     boxSizing: 'border-box', ...style,
   };
@@ -164,7 +164,7 @@ export default function PlacesAutocomplete({
       {open && suggestions.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
-          background: 'white', border: '1px solid #e2e8f0', borderRadius: 10,
+          background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10,
           boxShadow: '0 8px 24px rgba(15,23,42,0.12)', marginTop: 4, overflow: 'hidden',
         }}>
           {suggestions.map((s, i) => (

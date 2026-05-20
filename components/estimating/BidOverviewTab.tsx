@@ -37,7 +37,7 @@ const FIELD_STYLE: React.CSSProperties = {
 const READONLY_STYLE: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--color-surface-border)',
   borderRadius: 8,
   fontSize: 12,
   color: 'var(--bos-color-ink-disabled)',
@@ -61,7 +61,7 @@ function MetricCard({
   return (
     <div style={{
       background: 'white',
-      border: '1px solid #e2e8f0',
+      border: '1px solid var(--color-surface-border)',
       borderRadius: 16,
       padding: '16px 20px',
       boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
@@ -228,7 +228,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
       {/* Pipeline */}
       <div style={{
         background: 'white',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-surface-border)',
         borderRadius: 16,
         padding: '16px 24px',
         marginBottom: 20,
@@ -284,7 +284,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
       {/* Bid Header */}
       <div style={{
         background: 'white',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-surface-border)',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
@@ -458,7 +458,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
       {takeoffSystemTypes.length > 0 && (
         <div style={{
           background: 'white',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-surface-border)',
           borderRadius: 16,
           overflow: 'hidden',
           boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
@@ -527,7 +527,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                       gap: 12,
                       padding: '8px 12px',
                       background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid var(--color-surface-border)',
                       borderRadius: 10,
                       flexWrap: 'wrap',
                     }}>
@@ -566,7 +566,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                         alignItems: 'center',
                         gap: 8,
                         paddingTop: 8,
-                        borderTop: '1px solid #e2e8f0',
+                        borderTop: '1px solid var(--color-surface-border)',
                         marginTop: 4,
                       }}>
                         <span style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -643,7 +643,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
       {/* Bid Folder Card */}
       <div style={{
         background: 'white',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-surface-border)',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
@@ -773,7 +773,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               <button
                 onClick={() => setShowFolderModal(false)}
                 style={{
-                  padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
+                  padding: '9px 18px', borderRadius: 10, border: '1px solid var(--color-surface-border)',
                   background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 }}
               >

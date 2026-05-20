@@ -38,7 +38,7 @@ function parseNum(v: string | number | null | undefined): number {
 }
 
 const KPI: CSSProperties = {
-  background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0',
+  background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)',
   padding: '12px 14px',
 };
 
@@ -96,7 +96,7 @@ export default function SOVSummaryCard({
 
   return (
     <div style={{
-      background: 'white', borderRadius: 18, border: '1px solid #e2e8f0',
+      background: 'white', borderRadius: 18, border: '1px solid var(--color-surface-border)',
       padding: '18px 20px', boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 }}>

@@ -98,7 +98,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
         style={{
           background: 'white',
           borderRadius: 16,
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-surface-border)',
           padding: '40px 24px',
           textAlign: 'center',
         }}
@@ -120,7 +120,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
         style={{
           background: 'white',
           borderRadius: 14,
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-surface-border)',
           padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',
@@ -146,7 +146,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
                   cursor: 'pointer',
                   background: active ? 'var(--color-ink-primary)' : '#f8fafc',
                   color: active ? '#f8fafc' : '#475569',
-                  border: `1px solid ${active ? 'var(--color-ink-primary)' : '#e2e8f0'}`,
+                  border: `1px solid ${active ? 'var(--color-ink-primary)' : 'var(--color-surface-border)'}`,
                 }}
               >
                 {st.replace(/_/g, ' ')}
@@ -163,7 +163,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
               data-testid="tm-filter-from"
-              style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
+              style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid var(--color-surface-border)', fontSize: 12 }}
             />
           </label>
           <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -173,7 +173,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
               data-testid="tm-filter-to"
-              style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
+              style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid var(--color-surface-border)', fontSize: 12 }}
             />
           </label>
           <div style={{ display: 'flex', gap: 4 }}>
@@ -194,7 +194,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
                     cursor: 'pointer',
                     background: active ? 'var(--bos-color-brand-primary-deep)' : '#f8fafc',
                     color: active ? '#f8fafc' : '#475569',
-                    border: `1px solid ${active ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0'}`,
+                    border: `1px solid ${active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)'}`,
                     textTransform: 'capitalize',
                   }}
                 >
@@ -220,7 +220,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
               color: 'var(--bos-color-ink-tertiary)',
               background: 'white',
               borderRadius: 14,
-              border: '1px dashed #e2e8f0',
+              border: '1px dashed var(--color-surface-border)',
             }}
           >
             No tickets match the current filters.

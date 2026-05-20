@@ -200,7 +200,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                   background: m.role === 'user' ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#f8fafc',
                   color: m.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                   fontSize: 13, lineHeight: 1.5,
-                  border: m.role === 'kai' ? '1px solid #e2e8f0' : 'none',
+                  border: m.role === 'kai' ? '1px solid var(--color-surface-border)' : 'none',
                 }}>
                   {m.role === 'kai' && <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(15,118,110,0.6)', marginBottom: 4 }}>KAI</div>}
                   {m.text}
@@ -209,7 +209,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             ))}
             {loading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 4, alignItems: 'center' }}>
+                <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: '#f8fafc', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 4, alignItems: 'center' }}>
                   {[0,1,2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#14b8a6', animation: 'bounce 1s ease infinite', animationDelay: `${i*150}ms`, display: 'inline-block' }} />)}
                 </div>
               </div>
@@ -227,7 +227,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                 'Summarize my day',
                 'What should I prioritize?',
               ].filter(Boolean).slice(0,3).map((s, i) => (
-                <button key={i} onClick={() => send(s!)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 999, border: '1px solid #e2e8f0', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
+                <button key={i} onClick={() => send(s!)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 999, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
                   {s}
                 </button>
               ))}
@@ -236,7 +236,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
 
           {/* Input — chat only */}
           {kaiTab === 'chat' && <div style={{ padding: '8px 12px 14px', borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', padding: '8px 14px' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#f8fafc', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '8px 14px' }}>
               <input
                 ref={inputRef}
                 value={input}
@@ -246,7 +246,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                 style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 13, color: 'var(--color-ink-primary)' }}
               />
               <button onClick={() => send()} disabled={!input.trim() || loading}
-                style={{ width: 28, height: 28, borderRadius: '50%', background: input.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#e2e8f0', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
+                style={{ width: 28, height: 28, borderRadius: '50%', background: input.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'var(--color-surface-border)', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </div>

@@ -195,7 +195,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
       {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 20 }}>{error}</div>}
 
       {!loading && filteredIssues.length === 0 && !error && (
-        <div style={{ borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
+        <div style={{ borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)' }}>
           <EmptyState
             icon={<span style={{ fontSize: 20, color: '#14b8a6' }}>✓</span>}
             heading={filter === 'all' ? 'No issues found' : `No ${filter} issues`}
@@ -307,7 +307,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
               onChange={e => setAssignee(e.target.value)}
               style={{
                 width: '100%', padding: '10px 14px', borderRadius: 12,
-                border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                border: '1px solid var(--color-surface-border)', fontSize: 13, outline: 'none', boxSizing: 'border-box',
                 marginBottom: 20,
               }}>
               <option value="">Select crew member...</option>
@@ -317,13 +317,13 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
             </select>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setAssignModalIssue(null)}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={handleAssign} disabled={!assignee || saving}
                 style={{
                   flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  background: assignee ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0',
+                  background: assignee ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)',
                   color: assignee ? 'white' : 'var(--bos-color-ink-tertiary)',
                 }}>
                 {saving ? 'Saving...' : 'Assign'}

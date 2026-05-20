@@ -72,7 +72,7 @@ function Chip({
         ...CHIP_BASE,
         background: active ? 'var(--bos-color-brand-primary-deep)' : '#f8fafc',
         color: active ? 'white' : '#475569',
-        borderColor: active ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0',
+        borderColor: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
       }}
     >
       {children}
@@ -134,7 +134,7 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{
-        background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
         padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12,
       }} data-testid="punch-list-filters">
         <FilterGroup
@@ -166,7 +166,7 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
             value={assignee ?? ''}
             onChange={(e) => setAssignee(e.target.value === '' ? null : e.target.value)}
             style={{
-              padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
+              padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)',
               background: 'white', fontSize: 12, color: 'var(--color-ink-primary)', maxWidth: 320,
             }}
           >
@@ -186,7 +186,7 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)' }}>
           <EmptyState
             icon={<span style={{ fontSize: 24 }}>📋</span>}
             heading="No items match the current filters."

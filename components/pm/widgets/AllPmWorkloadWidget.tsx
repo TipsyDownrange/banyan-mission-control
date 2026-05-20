@@ -41,7 +41,7 @@ export default function AllPmWorkloadWidget({ onHide, showHide }: { onHide?: () 
                 <span>{it.name ?? it.email ?? '—'}</span>
                 <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{it.active_project_count}</span>
               </div>
-              <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden', marginTop: 2 }}>
+              <div style={{ height: 6, background: 'var(--color-surface-border)', borderRadius: 3, overflow: 'hidden', marginTop: 2 }}>
                 <div
                   style={{
                     width: `${(it.active_project_count / max) * 100}%`,

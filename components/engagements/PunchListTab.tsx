@@ -65,7 +65,7 @@ function NotInPostgresState({ kID }: { kID: string }) {
   return (
     <div style={{
       padding: '48px 28px', textAlign: 'center', background: 'white',
-      borderRadius: 18, border: '1px solid #e2e8f0',
+      borderRadius: 18, border: '1px solid var(--color-surface-border)',
     }}>
       <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 10 }}>
         This project isn&apos;t on the Postgres closeout system yet.
@@ -86,7 +86,7 @@ function NotInPostgresState({ kID }: { kID: string }) {
 function ZeroItemsState() {
   return (
     <div style={{
-      background: 'white', borderRadius: 16, border: '1px solid #e2e8f0',
+      background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)',
       padding: '40px 24px', textAlign: 'center',
     }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 8 }}>

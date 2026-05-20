@@ -192,7 +192,7 @@ export default function BidQueuePanel() {
           {(['table','cards'] as const).map(v => (
             <button key={v} onClick={() => setViewMode(v)} style={{
               padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-              border: viewMode === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
+              border: viewMode === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)',
               background: viewMode === v ? 'rgba(240,253,250,0.96)' : 'white',
               color: viewMode === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
             }}>{v === 'table' ? '≡ Table' : '⊞ Cards'}</button>
@@ -225,10 +225,10 @@ export default function BidQueuePanel() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search job name, ID, or estimator..."
-          style={{ flex: '1 1 220px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }}
+          style={{ flex: '1 1 220px', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }}
         />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
           <option value="active">Active pipeline</option>
           <option value="submitted">Submitted</option>
           <option value="won">Won</option>
@@ -236,7 +236,7 @@ export default function BidQueuePanel() {
           <option value="all">All bids</option>
         </select>
         <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}
-          style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
           <option value="All">All estimators</option>
           <option value="Kyle Shimizu">Kyle Shimizu</option>
           <option value="Jenny Shimabukuro">Jenny Shimabukuro</option>
@@ -245,7 +245,7 @@ export default function BidQueuePanel() {
           <option value="unassigned">Unassigned</option>
         </select>
         <select value={filterIsland} onChange={e => setFilterIsland(e.target.value)}
-          style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
           {ISLANDS.map(i => <option key={i}>{i}</option>)}
         </select>
         {(search || filterAssignee !== 'All' || filterIsland !== 'All Islands') && (
@@ -323,7 +323,7 @@ export default function BidQueuePanel() {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
                         <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Assign to</div>
                           <select value={getEff(bid,'Assigned To') || 'Unassigned'} onChange={e => setEff(bid['kID'],'Assigned To',e.target.value)}
-                            style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
+                            style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
                             {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
                           </select>
                         </div>
@@ -332,7 +332,7 @@ export default function BidQueuePanel() {
                             {(['needs review','in estimating','submitted','won','lost','no bid'] as DecisionState[]).map(s => (
                               <button key={s} onClick={() => setEff(bid['kID'],'decisionState',s)}
                                 style={{ padding: '4px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                                  border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid #e2e8f0',
+                                  border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid var(--color-surface-border)',
                                   background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : 'var(--bos-color-ink-tertiary)' }}>
                                 {s}
                               </button>
@@ -401,7 +401,7 @@ export default function BidQueuePanel() {
                   <div style={{ display: 'grid', gap: 8, minWidth: 180, padding: '12px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.92)' }}>
                     {FL('Assign')}
                     <select value={getEff(bid,'Assigned To') || 'Unassigned'} onChange={e => setEff(bid['kID'],'Assigned To',e.target.value)}
-                      style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
+                      style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
                       {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
                     </select>
                     <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{bid['Due Date'] ? `Due ${bid['Due Date']}` : 'No due date'}</div>
@@ -431,7 +431,7 @@ export default function BidQueuePanel() {
                         {(['needs review','in estimating','submitted','won','lost','no bid'] as DecisionState[]).map(s => (
                           <button key={s} onClick={() => setEff(bid['kID'],'decisionState',s)}
                             style={{ padding: '4px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                              border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid #e2e8f0',
+                              border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid var(--color-surface-border)',
                               background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : 'var(--bos-color-ink-tertiary)' }}>
                             {s}
                           </button>
@@ -448,7 +448,7 @@ export default function BidQueuePanel() {
             );
           })}
           {filtered.length > 20 && (
-            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '14px 20px', textAlign: 'center', fontSize: 13, color: 'var(--bos-color-ink-disabled)' }}>
+            <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', padding: '14px 20px', textAlign: 'center', fontSize: 13, color: 'var(--bos-color-ink-disabled)' }}>
               Showing 20 of {filtered.length} bids in card view. Use filters to narrow results or switch to Table view to see all.
             </div>
           )}

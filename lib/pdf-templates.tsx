@@ -26,7 +26,7 @@ export const C = {
   red:        '#b91c1c',  // critical issues
   slate:      'var(--bos-color-ink-disabled)',  // labels
   slateLight: 'var(--bos-color-ink-tertiary)',  // sub-labels
-  border:     '#e2e8f0',  // dividers
+  border:     'var(--color-surface-border)',  // dividers
   bg:         '#f8fafc',  // page tint
   white:      '#ffffff',
   text:       'var(--color-ink-primary)',

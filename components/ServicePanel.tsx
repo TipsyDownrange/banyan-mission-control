@@ -475,12 +475,12 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
               + New Lead
             </button>}
             <button onClick={loadData}
-              style={{ padding: '7px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               Refresh
             </button>
             {(['kanban', 'list'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {v === 'kanban' ? 'Board' : 'List'}
               </button>
             ))}
@@ -519,7 +519,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
       )}
 
       {loading && (
-        <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid var(--color-surface-border)' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading work orders from Smartsheet...</div>
@@ -540,7 +540,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           <button onClick={() => setShowCompleted(v => !v)} style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            border: showCompleted ? '1px solid rgba(21,128,61,0.4)' : '1px solid #e2e8f0',
+            border: showCompleted ? '1px solid rgba(21,128,61,0.4)' : '1px solid var(--color-surface-border)',
             background: showCompleted ? 'rgba(240,253,244,0.9)' : 'white',
             color: showCompleted ? '#15803d' : 'var(--bos-color-ink-disabled)',
           }}>
@@ -553,7 +553,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           <button onClick={() => setShowDeclined(v => !v)} style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            border: showDeclined ? '1px solid rgba(220,38,38,0.3)' : '1px solid #e2e8f0',
+            border: showDeclined ? '1px solid rgba(220,38,38,0.3)' : '1px solid var(--color-surface-border)',
             background: showDeclined ? 'rgba(254,242,242,0.9)' : 'white',
             color: showDeclined ? '#dc2626' : 'var(--bos-color-ink-disabled)',
           }}>

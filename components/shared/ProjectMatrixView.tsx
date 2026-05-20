@@ -117,7 +117,7 @@ function ScheduleSlide({ steps, completionsByStep }: {
             const delta = deltaLabel(step.planned_start_date, actualDate);
             return (
               <tr key={step.install_step_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <td style={{ padding: '8px 12px', color: '#e2e8f0' }}>{step.step_name}</td>
+                <td style={{ padding: '8px 12px', color: 'var(--color-surface-border)' }}>{step.step_name}</td>
                 <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>{step.planned_start_date || '—'}</td>
                 <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>{actualDate || '—'}</td>
                 <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: delta.color }}>{delta.label}</td>
@@ -183,7 +183,7 @@ function CellDetail({
                   border: '1px solid rgba(255,255,255,0.08)',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{step.step_name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-surface-border)' }}>{step.step_name}</div>
                     <span style={{
                       fontSize: 10, fontWeight: 800,
                       color: isBlocked ? '#fca5a5' : maxPct >= 100 ? '#86efac' : maxPct > 0 ? '#93c5fd' : 'var(--bos-color-ink-disabled)',
@@ -352,7 +352,7 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
                 <tbody>
                   {stepTypes.map(stepType => (
                     <tr key={stepType}>
-                      <td style={{ padding: '4px 12px', fontSize: 12, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '4px 12px', fontSize: 12, fontWeight: 600, color: 'var(--color-surface-border)', whiteSpace: 'nowrap' }}>
                         {stepType}
                       </td>
                       {plans.map(plan => {

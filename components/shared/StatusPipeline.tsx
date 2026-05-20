@@ -70,7 +70,7 @@ export default function StatusPipeline({
         // Color logic
         let dotColor = '#cbd5e1'; // future
         let textColor = 'var(--bos-color-ink-tertiary)';
-        let lineColor = '#e2e8f0';
+        let lineColor = 'var(--color-surface-border)';
         let dotBg = '#f1f5f9';
 
         if (isPast) {
@@ -152,7 +152,7 @@ export default function StatusPipeline({
               <div style={{
                 height: 2,
                 width: sm ? 20 : 32,
-                background: isPast || isActive ? lineColor : '#e2e8f0',
+                background: isPast || isActive ? lineColor : 'var(--color-surface-border)',
                 marginBottom: sm ? 16 : 20,
                 flexShrink: 0,
                 transition: 'background 0.2s',
