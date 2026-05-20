@@ -119,7 +119,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
             <div key={type} style={{
               padding: 12, borderRadius: 10, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)',
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 4 }}>{c.total}</div>
               <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <span>Generated: {c.generated}</span>

@@ -69,7 +69,7 @@ export default function EngagementCreationForm() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
-        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
           Address / Site
           <input value={siteSearch} onChange={e => setSiteSearch(e.target.value)} placeholder="Search address, site, or org..." style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)' }} />
           <select value={siteId} onChange={e => setSiteId(e.target.value)} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
@@ -77,31 +77,31 @@ export default function EngagementCreationForm() {
             {filteredSites.map(s => <option key={s.site_id} value={s.site_id}>{s.site_name} · {s.org_name}</option>)}
           </select>
         </label>
-        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
           Primary org
           <input readOnly value={selectedSite?.org_name || ''} placeholder="Auto-filled from selected address" style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)' }} />
         </label>
-        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
           Engagement type
           <select value={engagementType} onChange={e => setEngagementType(e.target.value)} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
             {ENGAGEMENT_TYPES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
           </select>
         </label>
-        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
           Routing decision
           <select value={routingDecision} onChange={e => setRoutingDecision(e.target.value as 'service_wo' | 'project')} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
             <option value="project">Project</option>
             <option value="service_wo">Service WO</option>
           </select>
         </label>
-        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
           PM / Service PM
           <select value={pmAssignedUserId} onChange={e => setPmAssignedUserId(e.target.value)} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
             <option value="">Awaiting handoff</option>
             {pmUsers.map(u => <option key={u.user_id} value={u.user_id}>{u.name || u.email} · {u.role}</option>)}
           </select>
         </label>
-        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+        <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
           Drive template
           <select value={driveTemplate} onChange={e => setDriveTemplate(e.target.value)} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
             {DRIVE_TEMPLATES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
@@ -109,7 +109,7 @@ export default function EngagementCreationForm() {
         </label>
       </div>
 
-      <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
+      <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>
         Routing rationale <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>required when routing is set</span>
         <textarea value={routingRationale} onChange={e => setRoutingRationale(e.target.value)} rows={3} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)', resize: 'vertical' }} />
       </label>

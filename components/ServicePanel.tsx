@@ -88,15 +88,15 @@ function normalizeStatus(raw: string): string {
 const AREA_COLOR: Record<string, string> = {
   // Maui areas
   lahaina: 'var(--bos-color-brand-primary-deep)', kahului: '#0369a1', kihei: '#6d28d9',
-  wailea: '#15803d', wailuku: '#92400e', maalaea: '#0369a1',
+  wailea: '#15803d', wailuku: 'var(--color-amber-800)', maalaea: '#0369a1',
   makawao: 'var(--bos-color-ink-disabled)', paia: 'var(--bos-color-brand-primary-deep)', kapalua: '#15803d',
   // Oahu
   honolulu: '#0369a1', kapolei: '#6d28d9', kailua: 'var(--bos-color-brand-primary-deep)',
-  kaneohe: '#15803d', 'hawaii kai': '#92400e', aiea: 'var(--bos-color-ink-disabled)',
+  kaneohe: '#15803d', 'hawaii kai': 'var(--color-amber-800)', aiea: 'var(--bos-color-ink-disabled)',
   // Kauai
   lihue: '#6d28d9', kapaa: 'var(--bos-color-brand-primary-deep)', poipu: '#15803d',
   // Big Island
-  hilo: '#92400e', kona: '#0369a1', waimea: '#6d28d9',
+  hilo: 'var(--color-amber-800)', kona: '#0369a1', waimea: '#6d28d9',
 };
 
 function areaColor(area: string): string {
@@ -166,7 +166,7 @@ function WOCard({
           <div style={{ fontSize: 10, fontWeight: 700, color: '#991b1b', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ Customer ID missing</div>
         )}
         {wo.requires_org_assignment && (
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#92400e', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.28)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>Needs Org Assignment</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-amber-800)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.28)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>Needs Org Assignment</div>
         )}
 
         {/* Row 3: Assigned to */}
@@ -191,7 +191,7 @@ function WOCard({
 }
 
 const READ_ONLY_BANNER = (
-  <div style={{ margin: '0 32px 16px', padding: '10px 16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, fontSize: 12, color: '#92400e', fontWeight: 600 }}>
+  <div style={{ margin: '0 32px 16px', padding: '10px 16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, fontSize: 12, color: 'var(--color-amber-800)', fontWeight: 600 }}>
     👁 View only — contact Joey or Sean to make changes
   </div>
 );
@@ -529,7 +529,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
       {data?.error && (
         <div style={{ background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '14px 20px', marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-red-700)' }}>Error loading work orders</div>
-          <div style={{ fontSize: 12, color: '#475569' }}>{data.error}</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{data.error}</div>
         </div>
       )}
 
@@ -574,7 +574,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
             { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: 'var(--bos-color-ink-disabled)' },
             { id: 'quoted',      label: 'Quoted',         count: mergedByStatus['quoted']?.length || 0,      color: '#7c3aed' },
             { id: 'accepted',    label: 'Accepted',       count: (mergedByStatus['accepted']?.length || 0) + (mergedByStatus['approved']?.length || 0), color: 'var(--bos-color-brand-primary-deep)' },
-            { id: 'approved',          label: 'Need Schedule',    count: mergedByStatus['approved']?.length || 0,          color: '#92400e' },
+            { id: 'approved',          label: 'Need Schedule',    count: mergedByStatus['approved']?.length || 0,          color: 'var(--color-amber-800)' },
             { id: 'deposit_received',   label: 'Deposit Received', count: mergedByStatus['deposit_received']?.length || 0,   color: '#b45309' },
             { id: 'materials_ordered',  label: 'Materials Ordered', count: mergedByStatus['materials_ordered']?.length || 0,  color: '#9a3412' },
             { id: 'materials_received', label: 'Materials In',      count: mergedByStatus['materials_received']?.length || 0, color: '#166534' },

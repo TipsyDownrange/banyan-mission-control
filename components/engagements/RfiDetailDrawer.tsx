@@ -138,11 +138,11 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                   Reason: {r.reason_for_rfi.replace(/_/g, ' ')}
                 </div>
               )}
-              <div style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', whiteSpace: 'pre-wrap' }}>
+              <div style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', whiteSpace: 'pre-wrap' }}>
                 {r.question}
               </div>
               {r.cost_or_schedule_impact_anticipated && (
-                <div style={{ marginTop: 8, padding: '8px 10px', background: '#fffbeb', borderRadius: 8, fontSize: 11, color: '#92400e', border: '1px solid #fde68a' }}>
+                <div style={{ marginTop: 8, padding: '8px 10px', background: '#fffbeb', borderRadius: 8, fontSize: 11, color: 'var(--color-amber-800)', border: '1px solid #fde68a' }}>
                   <div style={{ fontWeight: 800, marginBottom: 2 }}>Cost / schedule impact anticipated</div>
                   {r.cost_impact_estimate && <div>Cost: ${Number(r.cost_impact_estimate).toLocaleString()}</div>}
                   {r.schedule_impact_days !== null && <div>Schedule: {r.schedule_impact_days} days</div>}
@@ -197,7 +197,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
 
                 {r.status === 'ANSWERED' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#475569', fontWeight: 700 }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>
                       <input type="checkbox" checked={generatesCo} onChange={(e) => setGeneratesCo(e.target.checked)} />
                       This RFI generates a Change Order
                     </label>
@@ -224,7 +224,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                 )}
 
                 {r.status === 'RESOLVED' && (
-                  <button type="button" disabled={busy} onClick={() => callRoute('/close', {})} style={actionBtn('#475569')}>
+                  <button type="button" disabled={busy} onClick={() => callRoute('/close', {})} style={actionBtn('var(--bos-color-ink-tertiary)')}>
                     Close
                   </button>
                 )}
@@ -291,7 +291,7 @@ const cardStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px',
+  fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px',
 };
 
 const selectStyle: React.CSSProperties = {

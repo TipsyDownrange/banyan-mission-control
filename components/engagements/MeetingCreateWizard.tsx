@@ -233,11 +233,11 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
           {attendees.map((a) => (
             <div key={a.key} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: 10, marginTop: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : '#475569' }}>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : 'var(--bos-color-ink-tertiary)' }}>
                   {a.is_kula_user ? 'KULA' : 'EXTERNAL'}
                 </span>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <label style={{ fontSize: 11, color: '#475569', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <label style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <input type="checkbox" checked={a.attended} onChange={(e) => updateAttendee(a.key, { attended: e.target.checked })} /> Attended
                   </label>
                   <button type="button" onClick={() => setAttendees((p) => p.filter((x) => x.key !== a.key))} style={{ ...smallButtonStyle, background: '#fef2f2', color: 'var(--color-red-700)', borderColor: '#fecaca' }}>Remove</button>
@@ -288,7 +288,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
 
 const fieldStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 };
 const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit' };
-const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' };
-const smallButtonStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 11, cursor: 'pointer' };
-const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
+const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' };
+const smallButtonStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, fontSize: 11, cursor: 'pointer' };
+const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 18px', borderRadius: 10, border: 'none', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' };

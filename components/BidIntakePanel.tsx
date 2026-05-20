@@ -27,19 +27,19 @@ type BidOpportunity = {
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 const LEAD_TYPE_STYLE: Record<string, { color: string; bg: string; label: string; route: string }> = {
   rfp:        { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', label: 'RFP',        route: 'Assign to Estimator' },
   wo_inquiry: { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', label: 'WO Inquiry', route: 'Send to Joey' },
-  addendum:   { color: '#92400e', bg: 'rgba(255,251,235,0.9)', label: 'Addendum',   route: 'Link to Bid' },
+  addendum:   { color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)', label: 'Addendum',   route: 'Link to Bid' },
   vendor:     { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', label: 'Vendor',     route: 'File' },
 };
 
 const CONF_STYLE: Record<string, { color: string; bg: string }> = {
   high:   { color: '#15803d', bg: 'rgba(240,253,244,0.9)' },
-  medium: { color: '#92400e', bg: 'rgba(255,251,235,0.9)' },
+  medium: { color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)' },
   low:    { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)' },
 };
 

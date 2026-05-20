@@ -122,7 +122,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
         ) : (
           <div style={{ padding: '20px 24px' }}>
             <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Status</h3>
+              <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Status</h3>
               <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{s.status.replace(/_/g, ' ')}</div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
                 Ball: <strong>{s.ball_in_court || '—'}</strong>{s.submitted_to ? ` · Submitted to ${s.submitted_to}` : ''}
@@ -135,17 +135,17 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
             </section>
 
             <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Details</h3>
+              <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Details</h3>
               <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', marginBottom: 6 }}>{s.description || '(no description)'}</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Type {s.submittal_type} · CSI {s.csi_spec_section}-{s.csi_subsection}-{s.csi_sub_subsection}</div>
               {s.required_by_date && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>Required by {s.required_by_date}</div>}
               {s.requirements_text && (
-                <div style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', marginTop: 8, whiteSpace: 'pre-wrap' }}>{s.requirements_text}</div>
+                <div style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 8, whiteSpace: 'pre-wrap' }}>{s.requirements_text}</div>
               )}
             </section>
 
             <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Lifecycle</h3>
+              <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Lifecycle</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {(s.status === 'REQUIRED' || s.status === 'IN_PROGRESS') && (
                   <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', background: '#f0fdfa', padding: '4px 8px', borderRadius: 8 }}>
@@ -162,22 +162,22 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
                   <>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED' })} style={actionBtn('var(--bos-color-brand-primary-deep)')}>Approve</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED_AS_NOTED' })} style={actionBtn('#15803d')}>Approve as Noted</button>
-                    <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REVISE_RESUBMIT' })} style={actionBtn('#92400e')}>Revise &amp; Resubmit</button>
+                    <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REVISE_RESUBMIT' })} style={actionBtn('var(--color-amber-800)')}>Revise &amp; Resubmit</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REJECTED' })} style={actionBtn('var(--color-red-700)')}>Reject</button>
                   </>
                 )}
                 {(s.status === 'APPROVED' || s.status === 'APPROVED_AS_NOTED' || s.status === 'REJECTED') && (
-                  <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'CLOSED' })} style={actionBtn('#475569')}>Close</button>
+                  <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'CLOSED' })} style={actionBtn('var(--bos-color-ink-tertiary)')}>Close</button>
                 )}
                 {s.status === 'REVISE_RESUBMIT' && (
-                  <span style={{ fontSize: 12, color: '#92400e' }}>Edit and resubmit when ready.</span>
+                  <span style={{ fontSize: 12, color: 'var(--color-amber-800)' }}>Edit and resubmit when ready.</span>
                 )}
                 {s.status === 'CLOSED' && <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Submittal is closed.</span>}
               </div>
             </section>
 
             <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Documents</h3>
+              <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Documents</h3>
               <DocList label="Spec" ids={s.spec_document_ref ? [s.spec_document_ref] : []} />
               <DocList label="Submitted" ids={s.submitted_documents} />
               <DocList label="Markup / Review" ids={s.review_comments_documents} />

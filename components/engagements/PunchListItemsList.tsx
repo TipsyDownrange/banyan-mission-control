@@ -71,7 +71,7 @@ function Chip({
       style={{
         ...CHIP_BASE,
         background: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface)',
-        color: active ? 'white' : '#475569',
+        color: active ? 'white' : 'var(--bos-color-ink-tertiary)',
         borderColor: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
       }}
     >

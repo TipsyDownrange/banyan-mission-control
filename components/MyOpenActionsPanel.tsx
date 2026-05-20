@@ -109,9 +109,9 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
             const overdue = isOverdue(it);
             return (
               <div key={it.action_item_id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 110px 110px', gap: 10, alignItems: 'center', padding: '10px 12px', background: overdue ? '#fef2f2' : 'var(--color-surface)', borderRadius: 10, border: overdue ? '1px solid #fca5a5' : '1px solid var(--color-surface-border)' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.kid ?? '—'}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{it.kid ?? '—'}</div>
                 <div style={{ minWidth: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#475569' }}>{it.priority}</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{it.priority}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : '#334155' }}>{it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due'}</div>
               </div>
             );

@@ -14,7 +14,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 type Project = { kID: string; name: string; island: string };
@@ -28,14 +28,14 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   SUBMITTED:    { bg: '#eff6ff', color: '#1d4ed8' },
   PENDING:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   DRAFT:        { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
-  IDENTIFIED:   { bg: '#fffbeb', color: '#92400e' },
+  IDENTIFIED:   { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   REJECTED:     { bg: '#fef2f2', color: 'var(--color-red-700)' },
   DISPUTED:     { bg: '#fef2f2', color: 'var(--color-red-700)' },
-  IN_NEGOTIATION: { bg: '#fffbeb', color: '#92400e' },
+  IN_NEGOTIATION: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
-  REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
+  REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   CLEAR_DIRECTIVE: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
-  AMBIGUOUS:    { bg: '#fffbeb', color: '#92400e' },
+  AMBIGUOUS:    { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   PUNTED:       { bg: '#fef2f2', color: 'var(--color-red-700)' },
   CLOSED:       { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   RESPONDED:    { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
@@ -51,7 +51,7 @@ const TAG = ({ status, label }: { status: string; label?: string }) => {
 };
 
 const BALL = ({ court }: { court: string }) => (
-  <span style={{ fontSize: 10, fontWeight: 700, color: court === 'KULA_GLASS' ? 'var(--bos-color-brand-primary-deep)' : court === 'GC' ? '#1d4ed8' : '#92400e' }}>
+  <span style={{ fontSize: 10, fontWeight: 700, color: court === 'KULA_GLASS' ? 'var(--bos-color-brand-primary-deep)' : court === 'GC' ? '#1d4ed8' : 'var(--color-amber-800)' }}>
     ⚡ {court === 'KULA_GLASS' ? 'Our court' : court === 'GC' ? 'GC court' : court}
   </span>
 );
@@ -257,7 +257,7 @@ export default function PMPanel() {
                 <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{cos.length}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>✓ {fmtMoney(String(coExposure.approved || 0))} approved</div>
-                  {(coExposure.pending || 0) > 0 && <div style={{ fontSize: 12, color: '#92400e' }}>⏳ {fmtMoney(String(coExposure.pending))} pending</div>}
+                  {(coExposure.pending || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--color-amber-800)' }}>⏳ {fmtMoney(String(coExposure.pending))} pending</div>}
                   {(coExposure.identified || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>💡 {fmtMoney(String(coExposure.identified))} identified</div>}
                 </div>
                 <button onClick={() => setActiveTab('co')} style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all →</button>
@@ -339,7 +339,7 @@ export default function PMPanel() {
                       {sub.status === 'UNDER_REVIEW' && (
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button onClick={() => updateSubStatus(sub.sub_id, 'APPROVED')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Approved</button>
-                          <button onClick={() => updateSubStatus(sub.sub_id, 'REVISE_RESUBMIT')} style={{ padding: '6px 10px', borderRadius: 8, background: '#fffbeb', border: '1px solid rgba(146,64,14,0.2)', color: '#92400e', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>R&R</button>
+                          <button onClick={() => updateSubStatus(sub.sub_id, 'REVISE_RESUBMIT')} style={{ padding: '6px 10px', borderRadius: 8, background: '#fffbeb', border: '1px solid rgba(146,64,14,0.2)', color: 'var(--color-amber-800)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>R&R</button>
                         </div>
                       )}
                     </div>
@@ -354,7 +354,7 @@ export default function PMPanel() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Change Orders</div>
-                <button onClick={() => setShowNewCO(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#92400e,#d97706)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New CO</button>
+                <button onClick={() => setShowNewCO(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--color-amber-800),#d97706)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New CO</button>
               </div>
               {/* Total exposure banner */}
               {((coExposure.approved || 0) > 0 || (coExposure.pending || 0) > 0) && (
@@ -374,7 +374,7 @@ export default function PMPanel() {
 
               {/* Exposure breakdown */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
-                {[['Approved', coExposure.approved||0, 'var(--bos-color-brand-primary-deep)'],['Pending', coExposure.pending||0,'#1d4ed8'],['Drafted', coExposure.drafted||0,'var(--bos-color-ink-disabled)'],['Identified', coExposure.identified||0,'#92400e'],['Rejected (reserve)', coExposure.rejected||0,'var(--bos-color-ink-tertiary)']].map(([label, val, color]) => (
+                {[['Approved', coExposure.approved||0, 'var(--bos-color-brand-primary-deep)'],['Pending', coExposure.pending||0,'#1d4ed8'],['Drafted', coExposure.drafted||0,'var(--bos-color-ink-disabled)'],['Identified', coExposure.identified||0,'var(--color-amber-800)'],['Rejected (reserve)', coExposure.rejected||0,'var(--bos-color-ink-tertiary)']].map(([label, val, color]) => (
                   <div key={String(label)} style={{ background:'white',borderRadius:12,border:'1px solid var(--color-surface-border)',padding:'12px 14px' }}>
                     <div style={{ fontSize:10,fontWeight:800,color:'var(--bos-color-ink-tertiary)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4 }}>{label}</div>
                     <div style={{ fontSize:16,fontWeight:900,color:String(color) }}>{fmtMoney(String(val))}</div>
@@ -386,7 +386,7 @@ export default function PMPanel() {
                 {cos.map(co => (
                   <div key={co.co_id} style={{ background:'white',borderRadius:16,border:'1px solid var(--color-surface-border)',padding:'14px 18px',display:'grid',gridTemplateColumns:'80px 1fr auto auto',gap:12,alignItems:'center',boxShadow:'0 1px 3px rgba(15,23,42,0.04)' }}>
                     <div>
-                      <div style={{ fontSize:11,fontWeight:800,color:'#92400e' }}>{co.co_number}</div>
+                      <div style={{ fontSize:11,fontWeight:800,color:'var(--color-amber-800)' }}>{co.co_number}</div>
                       <div style={{ fontSize:10,color:'var(--bos-color-ink-tertiary)',marginTop:2 }}>{co.basis?.replace(/_/g,' ') || '—'}</div>
                     </div>
                     <div>
@@ -507,7 +507,7 @@ export default function PMPanel() {
             </div>
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
               <button onClick={() => setShowNewCO(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
-              <button onClick={submitCO} disabled={!newCOTitle||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,#92400e,#d97706)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Create CO'}</button>
+              <button onClick={submitCO} disabled={!newCOTitle||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,var(--color-amber-800),#d97706)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Create CO'}</button>
             </div>
           </div>
         </div>

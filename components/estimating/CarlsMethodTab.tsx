@@ -236,7 +236,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
             fontWeight: 800,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#475569',
+            color: 'var(--bos-color-ink-tertiary)',
             fontFamily: FONT,
           }}>
             {children}
@@ -1413,7 +1413,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {/* Current markup */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, color: '#475569', fontFamily: FONT }}>
+                        <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontFamily: FONT }}>
                           Mark-Up = (Overhead + Profit) / Gross Cost
                         </span>
                         <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>
@@ -1422,7 +1422,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                       </div>
                       {/* X field */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                        <label style={{ fontSize: 12, color: '#475569', fontFamily: FONT, flexShrink: 0 }}>
+                        <label style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontFamily: FONT, flexShrink: 0 }}>
                           If Profit is adjusted by X =
                         </label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

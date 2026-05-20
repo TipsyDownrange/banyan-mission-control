@@ -18,14 +18,14 @@ type OrgNode = {
 
 // ── Colors ──────────────────────────────────────────────────────────────
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
   Lanai: '#7c3aed', Molokai: '#a16207',
 };
 
 const ROLE_COLOR: Record<string, string> = {
   owner: 'var(--color-ink-primary)', gm: '#0369a1', pm: 'var(--bos-color-brand-primary-deep)', estimator: 'var(--bos-color-brand-primary-deep)',
   admin_mgr: '#7c3aed', admin: '#7c3aed', service_pm: '#6d28d9',
-  super: '#92400e', sales: 'var(--bos-color-brand-primary-deep)', pm_track: '#7c3aed',
+  super: 'var(--color-amber-800)', sales: 'var(--bos-color-brand-primary-deep)', pm_track: '#7c3aed',
   journeyman: '#334155', apprentice: 'var(--bos-color-ink-tertiary)', laborer: 'var(--bos-color-ink-tertiary)',
   glazier: '#334155', field: '#334155',
 };
@@ -221,7 +221,7 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
       {node.note && (
         <div style={{
           fontSize: 8, fontWeight: 700, borderRadius: 4, padding: '1px 6px', marginTop: 4,
-          color: node.note.includes('Management') ? 'var(--bos-color-brand-primary-deep)' : '#92400e',
+          color: node.note.includes('Management') ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)',
           background: node.note.includes('Management') ? '#f0fdfa' : '#fffbeb',
         }}>
           {node.note.includes('Management') ? '★ Management Team' : node.note}

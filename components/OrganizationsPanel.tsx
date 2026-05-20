@@ -189,7 +189,7 @@ function CollapsibleSection({
         }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--bos-color-ink-tertiary)' }}>
             {title}
           </span>
           {count !== undefined && (
@@ -443,7 +443,7 @@ function OrganizationPicker({
           {org.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
           {orgIsland(org) && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{orgIsland(org)}</span>}
           {matchBadge && <span style={{ fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
-          {status && status !== 'active' && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
+          {status && status !== 'active' && <span style={{ fontSize: 10, color: 'var(--color-amber-800)', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
         </div>
       </button>
     );
@@ -845,7 +845,7 @@ function OrgDetailPanel({
               </div>
             )}
             {detail.org.status === 'merged' && (
-              <div style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--color-amber-800)', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
                 This organization is marked merged into {detail.org.merged_into_org_id || 'another organization'}.
               </div>
             )}
@@ -951,7 +951,7 @@ function OrgDetailPanel({
                   <div><label style={LBL}>Email</label><input style={INP} type="email" value={newContact.email} onChange={e => setNewContact(p => ({ ...p, email: e.target.value }))} /></div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
                     <input type="checkbox" checked={newContact.is_primary} onChange={e => setNewContact(p => ({ ...p, is_primary: e.target.checked }))} />
                     Set as primary contact
                   </label>
@@ -1108,7 +1108,7 @@ function OrgDetailPanel({
             </div>
 
             <CollapsibleSection title="Edit Organization" open={!!openSections['edit']} onToggle={() => toggleSection('edit')}>
-              <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
                 Admin identity fields. Changes affect filtering, reporting, and linked records.
               </div>
               <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1163,7 +1163,7 @@ function OrgDetailPanel({
                 <div>
                   <label style={LBL}>Status</label>
                   {detail.org.status === 'merged' ? (
-                    <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '6px 10px' }}>
+                    <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '6px 10px' }}>
                       Status is <strong>merged</strong> — controlled by the merge workflow and cannot be manually changed.
                     </div>
                   ) : (
@@ -1190,7 +1190,7 @@ function OrgDetailPanel({
 
             <CollapsibleSection title="Merge Duplicate Org" open={!!openSections['merge']} onToggle={() => toggleSection('merge')}>
               <div style={{ padding: 10, borderRadius: 8, border: '1px solid #fde68a', background: '#fffbeb', marginBottom: 10 }}>
-                <div style={{ fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-amber-800)', lineHeight: 1.5 }}>
                   <strong>Use only when two org records are the same entity.</strong> This moves all references — work orders, contacts, sites, crosswalk — to the survivor org and marks this record as merged. Preview is required before confirming.
                 </div>
               </div>
@@ -1553,11 +1553,11 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                 </div>
                 {category === 'business' && (
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6, paddingBottom: 2 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
                       <input type="checkbox" checked={isPropMgmt} onChange={e => setIsPropMgmt(e.target.checked)} />
                       Property Mgmt
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#475569' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
                       <input type="checkbox" checked={isGovt} onChange={e => setIsGovt(e.target.checked)} />
                       Government
                     </label>

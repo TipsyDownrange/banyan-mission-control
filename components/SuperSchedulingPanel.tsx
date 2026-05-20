@@ -543,7 +543,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 200, overflowY: 'auto' }}>
             {orderedCrewGroups.map(([islandName, members]) => (
               <div key={islandName}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 0 3px' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 0 3px' }}>
                   {islandName}
                 </div>
                 {members.map(m => {
@@ -829,7 +829,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
             {Object.entries(crewByIsland).map(([islandName, members]) => (
               <div key={islandName}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 0 3px' }}>{islandName}</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 0 3px' }}>{islandName}</div>
                 {members.map(m => {
                   const checked = selectedCrew.includes(m.name);
                   return (
@@ -876,7 +876,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                       <input type="checkbox" checked={checked} onChange={() => setSelectedStepIds(prev => checked ? prev.filter(id => id !== step.install_step_id) : [...prev, step.install_step_id])} style={{ display: 'none' }} />
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, color: checked ? 'var(--color-surface-border)' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{step.step_name}</div>
-                        {step.allotted_hours > 0 && <div style={{ fontSize: 11, color: '#475569' }}>{step.allotted_hours}h allotted</div>}
+                        {step.allotted_hours > 0 && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{step.allotted_hours}h allotted</div>}
                       </div>
                     </label>
                   );
@@ -1049,7 +1049,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
                         {allScheduled ? `✓ all ${job.total_steps}` : `${job.unscheduled_steps}/${job.total_steps} unsched`}
                       </span>
                     ) : (
-                      <span style={{ fontSize: 10, color: '#475569' }}>—</span>
+                      <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>—</span>
                     )}
                   </td>
                   <td style={{ padding: '6px 8px', textAlign: 'right' }}>

@@ -35,14 +35,14 @@ type ApiResponse = {
 
 const STATE_COLORS: Record<string, { bg: string; fg: string; label: string }> = {
   pending_review:     { bg: '#eff6ff', fg: '#1d4ed8', label: 'Pending Review' },
-  reviewed_complete:  { bg: '#fef3c7', fg: '#92400e', label: 'Reviewed' },
+  reviewed_complete:  { bg: '#fef3c7', fg: 'var(--color-amber-800)', label: 'Reviewed' },
   accepted:           { bg: '#f0fdf4', fg: '#15803d', label: 'Accepted' },
   accepted_with_gaps: { bg: '#fffbeb', fg: '#a16207', label: 'Accepted (with gaps)' },
   rejected_with_gaps: { bg: '#fef2f2', fg: 'var(--color-red-700)', label: 'Rejected' },
 };
 
 function StateBadge({ state }: { state: string }) {
-  const s = STATE_COLORS[state] ?? { bg: '#f1f5f9', fg: '#475569', label: state };
+  const s = STATE_COLORS[state] ?? { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)', label: state };
   return (
     <span style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 800, color: s.fg, background: s.bg, border: `1px solid ${s.fg}22` }}>
       {s.label}

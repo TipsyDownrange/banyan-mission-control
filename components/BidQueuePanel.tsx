@@ -6,7 +6,7 @@ type Bid = Record<string, string>;
 type DecisionState = 'needs review' | 'assign' | 'waiting on docs' | 'in estimating' | 'submitted' | 'won' | 'lost' | 'no bid';
 
 const DECISION_STYLES: Record<string, { color: string; bg: string; border: string }> = {
-  'needs review':    { color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
+  'needs review':    { color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
   'assign':          { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'waiting on docs': { color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
   'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
@@ -340,7 +340,7 @@ export default function BidQueuePanel() {
                           </div>
                         </div>
                         {bid['Notes'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Notes</div>
-                          <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>{bid['Notes']}</div>
+                          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>{bid['Notes']}</div>
                         </div>}
                         {bid['Products / Specs'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Products</div>
                           <div style={{ fontSize: 13, color: '#334155' }}>{bid['Products / Specs']}</div>

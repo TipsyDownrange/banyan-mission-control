@@ -99,7 +99,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
                   padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
                   letterSpacing: '0.04em', whiteSpace: 'nowrap',
                   background: isReleased ? '#f0fdfa' : '#fffbeb',
-                  color: isReleased ? 'var(--bos-color-brand-primary-deep)' : '#92400e',
+                  color: isReleased ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)',
                   border: isReleased ? '1px solid #0f766e33' : '1px solid #92400e33',
                 }}>
                   {isReleased ? 'Released' : 'Held'}

@@ -56,7 +56,7 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
         {data.summary.missing > 0 && (
           <span style={{
             marginLeft: 8, fontSize: 10, padding: '2px 8px', borderRadius: 999,
-            background: '#fef3c7', color: '#92400e',
+            background: '#fef3c7', color: 'var(--color-amber-800)',
           }}>
             {data.summary.missing} missing (informational)
           </span>

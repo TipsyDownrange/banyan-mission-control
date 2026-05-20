@@ -176,7 +176,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
     return (
       <div style={{
         padding: 20, borderRadius: 14, background: '#fef3c7',
-        border: '1px solid #fde68a', color: '#92400e', fontSize: 13,
+        border: '1px solid #fde68a', color: 'var(--color-amber-800)', fontSize: 13,
       }}>
         <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 8 }}>
           SOV created — {createdVersion.line_count} lines (state: APPROVED_INTERNAL)
@@ -206,7 +206,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
       {resolved.sovVersions.length > 0 && (
         <div style={{
           padding: '12px 16px', borderRadius: 12, background: '#fef3c7',
-          border: '1px solid #fde68a', color: '#92400e', fontSize: 12, marginBottom: 14,
+          border: '1px solid #fde68a', color: 'var(--color-amber-800)', fontSize: 12, marginBottom: 14,
         }}>
           This engagement already has {resolved.sovVersions.length} SOV version
           {resolved.sovVersions.length === 1 ? '' : 's'}

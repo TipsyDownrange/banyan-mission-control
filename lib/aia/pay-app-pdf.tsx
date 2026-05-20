@@ -62,7 +62,7 @@ export interface PayAppPdfInput {
 const S = StyleSheet.create({
   page: { padding: 28, fontSize: 8, fontFamily: 'Helvetica', color: 'var(--color-ink-primary)' },
   pageTitle: { fontSize: 14, fontWeight: 700, marginBottom: 6, color: '#0c2330' },
-  subTitle: { fontSize: 9, color: '#475569', marginBottom: 10 },
+  subTitle: { fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 },
   hdrRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   hdrCell: { fontSize: 8, color: '#334155' },
   hdrLabel: { fontWeight: 700, color: 'var(--color-ink-primary)' },

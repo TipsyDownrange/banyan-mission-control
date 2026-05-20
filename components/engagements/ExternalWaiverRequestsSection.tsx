@@ -32,16 +32,16 @@ interface OverdueRow {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  REQUESTED: { bg: '#fef3c7', fg: '#92400e' },
+  REQUESTED: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   RECEIVED: { bg: '#dbeafe', fg: '#1e40af' },
   UPLOADED: { bg: '#e0e7ff', fg: '#3730a3' },
   DELIVERED_TO_GC: { bg: '#dcfce7', fg: '#166534' },
-  VOIDED: { bg: '#f1f5f9', fg: '#475569' },
+  VOIDED: { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },
 };
 
 const BADGE_COLORS: Record<string, { bg: string; fg: string }> = {
   GREEN: { bg: '#dcfce7', fg: '#166534' },
-  YELLOW: { bg: '#fef3c7', fg: '#92400e' },
+  YELLOW: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   RED: { bg: '#fee2e2', fg: 'var(--color-red-700)' },
 };
 
@@ -132,7 +132,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontWeight: 700, fontSize: 13 }}>{r.manufacturer_name ?? r.manufacturer_org_id}</span>
-              <span style={{ fontSize: 11, color: '#475569' }}>{r.waiver_type}</span>
+              <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{r.waiver_type}</span>
               <span style={{
                 padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700,
                 background: sColor.bg, color: sColor.fg,

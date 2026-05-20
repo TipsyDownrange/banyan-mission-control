@@ -147,7 +147,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
           <input type="date" value={requiredResponseBy} onChange={(e) => setRequiredResponseBy(e.target.value)} style={inputStyle} />
         </label>
 
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 12, color: '#475569', fontWeight: 700 }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>
           <input type="checkbox" checked={impactAnticipated} onChange={(e) => setImpactAnticipated(e.target.checked)} />
           Cost or schedule impact anticipated
         </label>
@@ -183,7 +183,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy}
-            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
             Cancel
           </button>
           <button type="submit" disabled={busy || !canSubmit}
@@ -202,7 +202,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#475569',
+  fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.06em',
 };
 

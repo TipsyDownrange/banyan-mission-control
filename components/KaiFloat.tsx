@@ -227,7 +227,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                 'Summarize my day',
                 'What should I prioritize?',
               ].filter(Boolean).slice(0,3).map((s, i) => (
-                <button key={i} onClick={() => send(s!)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 999, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
+                <button key={i} onClick={() => send(s!)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 999, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer', fontWeight: 600 }}>
                   {s}
                 </button>
               ))}

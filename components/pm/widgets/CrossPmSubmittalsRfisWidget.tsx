@@ -18,7 +18,7 @@ function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
         <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {label}
         </div>
-        <div style={{ fontSize: 12, color: '#475569' }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
           {p.total} open · <span style={{ color: 'var(--color-red-700)', fontWeight: 700 }}>{p.overdue} overdue</span>
         </div>
       </div>
@@ -28,7 +28,7 @@ function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
         )}
         {entries.map(([bic, n]) => (
           <div key={bic} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-            <span style={{ color: '#475569' }}>{bic}</span>
+            <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>{bic}</span>
             <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{n}</span>
           </div>
         ))}

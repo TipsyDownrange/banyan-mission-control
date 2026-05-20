@@ -33,7 +33,7 @@ export type ActionItem = {
 const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string; dot: string }> = {
   critical: { bg: '#fef2f2', border: '#fecaca', color: '#991b1b', dot: '#dc2626' },
   high:     { bg: '#fff7ed', border: '#fed7aa', color: '#9a3412', dot: '#ea580c' },
-  medium:   { bg: '#fffbeb', border: '#fde68a', color: '#92400e', dot: '#d97706' },
+  medium:   { bg: '#fffbeb', border: '#fde68a', color: 'var(--color-amber-800)', dot: '#d97706' },
   low:      { bg: '#f0fdfa', border: '#99f6e4', color: '#115e59', dot: 'var(--bos-color-brand-primary)' },
   info:     { bg: '#f0f9ff', border: '#bae6fd', color: '#075985', dot: '#0284c7' },
 };

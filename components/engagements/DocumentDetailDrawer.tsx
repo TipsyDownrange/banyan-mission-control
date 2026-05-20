@@ -205,7 +205,7 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
                     <input value={editLinkId} onChange={(e) => setEditLinkId(e.target.value)} disabled={!editLinkType} style={{ ...inputStyle, opacity: editLinkType ? 1 : 0.5 }} />
                   </Field>
                 </div>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#475569', fontWeight: 700 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>
                   <input type="checkbox" checked={editExternal} onChange={(e) => setEditExternal(e.target.checked)} />
                   Visible to Collaboration Portal
                 </label>
@@ -315,4 +315,4 @@ const cardStyle: React.CSSProperties = { background: 'var(--color-surface)', bor
 const cardHeaderStyle: React.CSSProperties = { fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
 const secondaryButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
-const cancelButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
+const cancelButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 800, cursor: 'pointer' };

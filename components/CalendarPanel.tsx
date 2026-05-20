@@ -375,7 +375,7 @@ export default function CalendarPanel() {
                         </div>
                         {ev.location && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>​{ev.location}</div>}
                         {selectedEvent?.id === ev.id && ev.description && (
-                          <div style={{ marginTop: 6, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>{ev.description}</div>
+                          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>{ev.description}</div>
                         )}
                       </div>
                     </div>

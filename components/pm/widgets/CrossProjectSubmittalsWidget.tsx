@@ -86,7 +86,7 @@ export default function CrossProjectSubmittalsWidget({ onHide, showHide }: { onH
                   {s.kid ?? '—'} · BIC: {s.ball_in_court ?? '—'} · {s.required_by_date ?? 'no due date'}
                 </div>
               </div>
-              <span style={{ fontSize: 10, color: '#475569', alignSelf: 'center' }}>{s.status}</span>
+              <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', alignSelf: 'center' }}>{s.status}</span>
             </div>
           ))}
         </div>

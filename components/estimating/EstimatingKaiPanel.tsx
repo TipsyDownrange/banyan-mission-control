@@ -584,7 +584,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 2 }}>
                     {rule.icon} {rule.title}
                   </div>
-                  <div style={{ fontSize: 10, color: '#475569', lineHeight: 1.5 }}>{rule.body}</div>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>{rule.body}</div>
                 </div>
               ))}
             </div>

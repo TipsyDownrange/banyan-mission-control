@@ -371,7 +371,7 @@ export default function TaskResourceAssignmentDialog({
                       data-bos-resource-conflict-panel
                       style={{
                         background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 6,
-                        padding: '8px 10px', fontSize: 11, color: '#92400e',
+                        padding: '8px 10px', fontSize: 11, color: 'var(--color-amber-800)',
                       }}
                     >
                       <strong style={{ display: 'block', marginBottom: 4 }}>

@@ -15,8 +15,8 @@ type Palette = { bg: string; color: string; label: string };
 
 const STATE_PALETTE: Record<TmTicketState, Palette> = {
   DRAFT:                 { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
-  LOGGED:                { bg: '#f1f5f9', color: '#475569', label: 'Logged' },
-  READY_FOR_GC_APPROVAL: { bg: '#fffbeb', color: '#92400e', label: 'Ready · GC Approval' },
+  LOGGED:                { bg: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)', label: 'Logged' },
+  READY_FOR_GC_APPROVAL: { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'Ready · GC Approval' },
   GC_APPROVED:           { bg: '#eff6ff', color: '#1d4ed8', label: 'GC Approved' },
   DISPUTED:              { bg: '#fff7ed', color: '#c2410c', label: 'Disputed' },
   BILLABLE:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Billable' },

@@ -19,8 +19,8 @@ export type PayApp = {
 
 const STATE_BADGE: Record<string, { bg: string; color: string; label?: string }> = {
   PENDING_DRAFT:          { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
-  READY_FOR_NOTARIZATION: { bg: '#fffbeb', color: '#92400e', label: 'Ready · Notarize' },
-  READY_FOR_SUBMISSION:   { bg: '#fffbeb', color: '#92400e', label: 'Ready · Submit' },
+  READY_FOR_NOTARIZATION: { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'Ready · Notarize' },
+  READY_FOR_SUBMISSION:   { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'Ready · Submit' },
   SUBMITTED:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Submitted' },
   ARCHITECT_CERTIFIED:    { bg: '#eff6ff', color: '#1d4ed8', label: 'Architect Cert.' },
   GC_APPROVED:            { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'GC Approved' },

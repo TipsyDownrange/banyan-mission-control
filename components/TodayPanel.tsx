@@ -81,7 +81,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       id: b.kID, type: 'bid',
       title: `Bid due — ${b.name}`,
       detail: `Assigned to ${b.assigned || 'Unassigned'} · Due ${b.due ? new Date(b.due + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}`,
-      tag: 'Bid Deadline', tagColor: '#92400e', tagBg: '#fffbeb',
+      tag: 'Bid Deadline', tagColor: 'var(--color-amber-800)', tagBg: '#fffbeb',
     })),
   ];
 
@@ -141,7 +141,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       {!loading && (
         <div style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 16, background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(148,163,184,0.35)', display: 'flex', gap: 10 }}>
           <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(15,118,110,0.7)', flexShrink: 0, marginTop: 2 }}>KAI</span>
-          <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.6 }}>
             {highItems.length > 0 
               ? `${highItems.length} bid${highItems.length > 1 ? 's' : ''} due in the next 3 days. Review and make sure estimators are on track. Daily reports due at 3:30 PM.`
               : 'No bids due in the next 3 days. Daily reports due at 3:30 PM — field leads to submit before end of day.'}

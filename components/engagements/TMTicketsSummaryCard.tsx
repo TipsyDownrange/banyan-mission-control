@@ -124,8 +124,8 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
           </div>
         </div>
         <div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#92400e', letterSpacing: '0.06em' }}>UNBILLED</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#92400e', marginTop: 4 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-amber-800)', letterSpacing: '0.06em' }}>UNBILLED</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-amber-800)', marginTop: 4 }}>
             {fmtMoney(s.unbilled_value_usd)}
           </div>
         </div>
