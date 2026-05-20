@@ -75,31 +75,31 @@ async function renderAndFlush(node: React.ReactNode) {
 
 describe('<ScheduleTab canWrite={false}> read-only mode', () => {
   it('hides the "Add Phase" button', async () => {
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} projectIsland="unknown" />);
     expect(container.querySelector('[data-bos-schedule-add-phase]')).toBeNull();
   });
 
   it('hides the per-phase "Add Task" + delete buttons', async () => {
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} projectIsland="unknown" />);
     expect(container.querySelector('[data-bos-schedule-add-task]')).toBeNull();
     expect(container.querySelector('[data-bos-schedule-delete-phase]')).toBeNull();
   });
 
   it('renders the task list without delete buttons', async () => {
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} projectIsland="unknown" />);
     expect(container.querySelector(`[data-bos-schedule-task="${TASK_1}"]`)).not.toBeNull();
     expect(container.querySelector('[data-bos-task-delete]')).toBeNull();
   });
 
   it('disables the mark-complete checkbox', async () => {
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} projectIsland="unknown" />);
     const checkbox = container.querySelector('[data-bos-task-complete-checkbox]') as HTMLInputElement;
     expect(checkbox).not.toBeNull();
     expect(checkbox.disabled).toBe(true);
   });
 
   it('still shows the List/Gantt view toggle (read access is allowed)', async () => {
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={false} projectIsland="unknown" />);
     expect(container.querySelector('[data-bos-schedule-view-toggle]')).not.toBeNull();
   });
 });

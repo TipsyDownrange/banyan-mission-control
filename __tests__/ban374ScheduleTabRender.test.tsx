@@ -102,13 +102,13 @@ async function renderAndFlush(node: React.ReactNode) {
 describe('<ScheduleTab> render', () => {
   it('shows the loading state initially', () => {
     setupFetch();
-    act(() => root.render(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />));
+    act(() => root.render(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />));
     expect(container.querySelector('[data-bos-schedule-loading]')).not.toBeNull();
   });
 
   it('renders phase sections after fetch resolves', async () => {
     setupFetch();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     const phases = container.querySelectorAll('[data-bos-schedule-phase]');
     expect(phases.length).toBe(2);
     expect(container.textContent).toContain('Mobilization');
@@ -117,7 +117,7 @@ describe('<ScheduleTab> render', () => {
 
   it('renders task rows under their phase', async () => {
     setupFetch();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     const taskRows = container.querySelectorAll('[data-bos-schedule-task]');
     expect(taskRows.length).toBe(3);
     expect(container.textContent).toContain('Stage trailer');
@@ -127,7 +127,7 @@ describe('<ScheduleTab> render', () => {
 
   it('shows the empty state when the kID is not in Postgres', async () => {
     setupFetch({ kIDFound: false });
-    await renderAndFlush(<ScheduleTab kID="PRJ-99-9999" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-99-9999" canWrite={true} projectIsland="unknown" />);
     expect(container.querySelector('[data-bos-schedule-empty]')).not.toBeNull();
     expect(container.textContent).toContain('No schedule data');
   });
@@ -140,13 +140,13 @@ describe('<ScheduleTab> render', () => {
       }
       return jsonResponse({}, 404);
     });
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     expect(container.textContent).toContain('No phases yet');
   });
 
   it('exposes the List/Gantt view toggle', async () => {
     setupFetch();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     const toggle = container.querySelector('[data-bos-schedule-view-toggle]');
     expect(toggle).not.toBeNull();
     expect(container.querySelector('[data-bos-schedule-view="list"]')).not.toBeNull();
@@ -155,7 +155,7 @@ describe('<ScheduleTab> render', () => {
 
   it('renders the % complete column for each task', async () => {
     setupFetch();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     const text = container.textContent || '';
     expect(text).toContain('100%');
     expect(text).toContain('40%');

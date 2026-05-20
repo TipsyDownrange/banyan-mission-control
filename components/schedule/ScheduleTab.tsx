@@ -130,7 +130,7 @@ function todayISO(): string {
 interface Props {
   kID: string;
   canWrite: boolean;
-  projectIsland?: ScheduleTaskIsland | null;
+  projectIsland: ScheduleTaskIsland;
 }
 
 export interface TaskResourceSummary {
@@ -143,7 +143,7 @@ export interface TaskResourceSummary {
   allocation_percent: number;
 }
 
-export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Props) {
+export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
   const [view, setView] = useState<'list' | 'gantt' | 'crew'>('list');
   const [phases, setPhases] = useState<SchedulePhase[]>([]);
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
@@ -163,16 +163,16 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
   const [showHawaiiOverlays, setShowHawaiiOverlays] = useState(true);
   const [showTravelFactor, setShowTravelFactor] = useState(true);
   const [showPermits, setShowPermits] = useState(true);
-  const [showFreight, setShowFreight] = useState<boolean>(() => {
-    if (!projectIsland) return false;
-    return projectIsland !== 'unknown';
-  });
+  const [showFreight, setShowFreight] = useState<boolean>(() => projectIsland !== 'unknown');
 
   // Modal/edit state
   const [showAddPhase, setShowAddPhase] = useState(false);
   const [addTaskForPhase, setAddTaskForPhase] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // BAN-374 P6 — Permit milestone add (Hawaii overlay; requires canWrite +
+  // master Hawaii toggle + permits sub-toggle).
+  const [showAddPermit, setShowAddPermit] = useState(false);
 
   const fetchResourcesForTasks = useCallback(async (taskIds: string[]) => {
     if (taskIds.length === 0) {
@@ -415,6 +415,17 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
             showFreight={showFreight}
             onChangeFreight={setShowFreight}
           />
+          {canWrite && showHawaiiOverlays && showPermits ? (
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                data-bos-add-permit-milestone
+                variant="secondary"
+                onClick={() => setShowAddPermit(true)}
+              >
+                <Plus size={14} strokeWidth={2} /> Add Permit Milestone
+              </Button>
+            </div>
+          ) : null}
           <ScheduleGanttView
             phases={phases}
             tasks={tasks}
@@ -504,6 +515,14 @@ export default function ScheduleTab({ kID, canWrite, projectIsland = null }: Pro
           canWrite={canWrite}
           onClose={() => setResourceDialogTaskId(null)}
           onChanged={() => { void fetchResourcesForTasks(tasks.map((t) => t.id)); }}
+        />
+      ) : null}
+
+      {showAddPermit && canWrite ? (
+        <AddPermitMilestoneModal
+          kID={kID}
+          onClose={() => setShowAddPermit(false)}
+          onCreated={() => { setShowAddPermit(false); fetchAll(); }}
         />
       ) : null}
     </div>
@@ -923,6 +942,132 @@ function AddTaskModal({
           onClick={submit}
         >
           {submitting ? 'Saving…' : 'Add Task'}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── Add Permit Milestone Modal (BAN-374 P6) ────────────────────────────────
+// Surfaces the Hawaii permit overlay's write-side once milestone POST accepts
+// milestone_kind + permit_* fields.  Kind is locked to 'permit'; type is also
+// 'permit' so the milestone is included in any type-filtered downstream view
+// alongside the kind-filtered Hawaii overlay.
+
+function AddPermitMilestoneModal({
+  kID,
+  onClose,
+  onCreated,
+}: {
+  kID: string;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [plannedDate, setPlannedDate] = useState('');
+  const [authority, setAuthority] = useState('');
+  const [applicationDate, setApplicationDate] = useState('');
+  const [estimatedDate, setEstimatedDate] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!name.trim()) {
+      setErr('Name is required');
+      return;
+    }
+    if (!plannedDate) {
+      setErr('Planned date is required');
+      return;
+    }
+    setSubmitting(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/schedule/milestones', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          engagement_kid: kID,
+          name: name.trim(),
+          type: 'permit',
+          milestone_kind: 'permit',
+          planned_date: plannedDate,
+          permit_authority: authority.trim() || null,
+          permit_application_date: applicationDate || null,
+          permit_estimated_approval_date: estimatedDate || null,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `HTTP ${res.status}`);
+      }
+      onCreated();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal title="Add Permit Milestone" onClose={onClose}>
+      <FormRow label="Name">
+        <input
+          data-bos-add-permit-name
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+          style={inputStyle}
+        />
+      </FormRow>
+      <FormRow label="Planned date">
+        <input
+          data-bos-add-permit-planned
+          type="date"
+          value={plannedDate}
+          onChange={(e) => setPlannedDate(e.target.value)}
+          style={inputStyle}
+        />
+      </FormRow>
+      <FormRow label="Permit authority">
+        <input
+          data-bos-add-permit-authority
+          type="text"
+          placeholder="e.g. County of Maui DPW"
+          value={authority}
+          onChange={(e) => setAuthority(e.target.value)}
+          style={inputStyle}
+        />
+      </FormRow>
+      <FormRow label="Application date">
+        <input
+          data-bos-add-permit-application
+          type="date"
+          value={applicationDate}
+          onChange={(e) => setApplicationDate(e.target.value)}
+          style={inputStyle}
+        />
+      </FormRow>
+      <FormRow label="Estimated approval date">
+        <input
+          data-bos-add-permit-estimated
+          type="date"
+          value={estimatedDate}
+          onChange={(e) => setEstimatedDate(e.target.value)}
+          style={inputStyle}
+        />
+      </FormRow>
+      {err ? <p style={{ color: '#b91c1c', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
+      <div style={modalFooterStyle}>
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button
+          data-bos-add-permit-submit
+          variant="primary"
+          disabled={submitting}
+          onClick={submit}
+        >
+          {submitting ? 'Saving…' : 'Add Permit Milestone'}
         </Button>
       </div>
     </Modal>

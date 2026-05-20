@@ -125,7 +125,11 @@ describe('GET /api/schedule/milestones — permit-kind read-through', () => {
 });
 
 describe('POST /api/schedule/milestones — milestone_kind default behavior', () => {
-  it('does not accept milestone_kind in the request body in P4 (deferred to P5/P6)', async () => {
+  // BAN-374 P6 — POST now accepts milestone_kind in the request body.  The
+  // P4-era contract (kind ignored, DB default 'standard' applied) shifted in
+  // P6 to land permit-field CRUD; backward compatibility is preserved because
+  // callers that omit milestone_kind still get 'standard' written explicitly.
+  it('defaults milestone_kind to standard when caller omits the field', async () => {
     selectResultQueue.push([{ engagement_id: ENG_ID }]);
     const { POST } = await import('@/app/api/schedule/milestones/route');
     const res = await POST(new Request('http://localhost/api/schedule/milestones', {
@@ -133,16 +137,13 @@ describe('POST /api/schedule/milestones — milestone_kind default behavior', ()
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         engagement_kid: 'PRJ-26-0001',
-        name: 'Permit',
-        type: 'permit',
-        milestone_kind: 'permit', // ignored by route handler in P4
+        name: 'Substantial Completion',
+        type: 'substantial_completion',
       }),
     }));
     expect(res.status).toBe(201);
-    // The route handler is unchanged (per dispatch protect-list); milestone_kind is
-    // not present in the insert payload so the DB default ('standard') applies.
     expect(insertValuesSpy).toHaveBeenCalled();
     const payload = insertValuesSpy.mock.calls[0][1];
-    expect(payload).not.toHaveProperty('milestone_kind');
+    expect(payload).toMatchObject({ milestone_kind: 'standard' });
   });
 });

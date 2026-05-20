@@ -17,6 +17,7 @@ import DocumentsTab from '@/components/engagements/DocumentsTab';
 import HandoffTab from '@/components/engagements/HandoffTab';
 import ProjectOverview from '@/components/engagements/ProjectOverview';
 import ScheduleTab from '@/components/schedule/ScheduleTab';
+import { normalizeProjectIsland } from '@/lib/schedule/normalize-project-island';
 import WarrantyClaimCaptureForm from '@/components/closeout/WarrantyClaimCaptureForm';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 import { useSession } from 'next-auth/react';
@@ -314,7 +315,11 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               )}
 
               {activeTab === 'schedule' && (
-                <ScheduleTab kID={project.kID} canWrite={canWriteSchedule} />
+                <ScheduleTab
+                  kID={project.kID}
+                  canWrite={canWriteSchedule}
+                  projectIsland={normalizeProjectIsland(project.island)}
+                />
               )}
 
               {activeTab === 'budget' && (
