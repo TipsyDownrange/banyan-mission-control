@@ -10,6 +10,7 @@ import { and, eq } from 'drizzle-orm';
 import {
   db,
   schedule_milestones,
+  SCHEDULE_MILESTONE_KINDS,
   SCHEDULE_MILESTONE_STATUSES,
   SCHEDULE_MILESTONE_TYPES,
 } from '@/db';
@@ -17,6 +18,10 @@ import { passScheduleWriteGate } from '@/lib/schedule/api-gate';
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
+function isISODate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
 export async function PATCH(
@@ -61,6 +66,36 @@ export async function PATCH(
     updates.actual_date = typeof body.actual_date === 'string' && body.actual_date
       ? body.actual_date
       : null;
+  }
+
+  // BAN-374 P6 — milestone_kind + permit_* fields editable; enum-validated.
+  if (typeof body.milestone_kind === 'string') {
+    if (!SCHEDULE_MILESTONE_KINDS.includes(body.milestone_kind as typeof SCHEDULE_MILESTONE_KINDS[number])) {
+      return NextResponse.json({ error: `invalid milestone_kind: ${body.milestone_kind}` }, { status: 400 });
+    }
+    updates.milestone_kind = body.milestone_kind;
+  }
+  if ('permit_authority' in body) {
+    updates.permit_authority = typeof body.permit_authority === 'string' && body.permit_authority.trim()
+      ? body.permit_authority.trim()
+      : null;
+  }
+  const permitDateFields = [
+    'permit_application_date',
+    'permit_estimated_approval_date',
+    'permit_actual_approval_date',
+  ] as const;
+  for (const field of permitDateFields) {
+    if (!(field in body)) continue;
+    const raw = body[field];
+    if (raw == null || raw === '') {
+      updates[field] = null;
+      continue;
+    }
+    if (typeof raw !== 'string' || !isISODate(raw)) {
+      return NextResponse.json({ error: `${field} must be ISO YYYY-MM-DD` }, { status: 400 });
+    }
+    updates[field] = raw;
   }
 
   const updated = await db

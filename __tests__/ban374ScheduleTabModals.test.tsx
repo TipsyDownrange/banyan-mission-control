@@ -145,7 +145,7 @@ function findPatchCalls(urlPrefix: string): Array<{ url: string; body: unknown }
 describe('Add Phase flow', () => {
   it('opens the modal when Add Phase is clicked', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
 
     expect(container.querySelector('[data-bos-schedule-modal]')).toBeNull();
     await click(container.querySelector('[data-bos-schedule-add-phase]'));
@@ -154,7 +154,7 @@ describe('Add Phase flow', () => {
 
   it('submits a phase POST with the engagement_kid + name', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     await click(container.querySelector('[data-bos-schedule-add-phase]'));
 
     const nameInput = container.querySelector('[data-bos-add-phase-name]') as HTMLInputElement;
@@ -174,7 +174,7 @@ describe('Add Phase flow', () => {
 describe('Add Task flow', () => {
   it('opens the task modal scoped to the right phase', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
 
     await click(container.querySelector('[data-bos-schedule-add-task]'));
     expect(container.querySelector('[data-bos-schedule-modal]')).not.toBeNull();
@@ -183,7 +183,7 @@ describe('Add Task flow', () => {
 
   it('submits a task POST with phase_id + name', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
     await click(container.querySelector('[data-bos-schedule-add-task]'));
 
     const nameInput = container.querySelector('[data-bos-add-task-name]') as HTMLInputElement;
@@ -202,7 +202,7 @@ describe('Add Task flow', () => {
 describe('Inline edit + dependency picker', () => {
   it('clicking a task row opens the edit row with the dependency picker showing other tasks', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
 
     const row = container.querySelector(`[data-bos-schedule-task="${TASK_2}"]`);
     await click(row);
@@ -217,7 +217,7 @@ describe('Inline edit + dependency picker', () => {
 
   it('saving the edit row POSTs a dependency when one is checked', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
 
     await click(container.querySelector(`[data-bos-schedule-task="${TASK_2}"]`));
 
@@ -240,7 +240,7 @@ describe('Inline edit + dependency picker', () => {
 describe('Mark-complete checkbox', () => {
   it('PATCHes status=complete when ticked', async () => {
     setupListFetches();
-    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} />);
+    await renderAndFlush(<ScheduleTab kID="PRJ-26-0001" canWrite={true} projectIsland="unknown" />);
 
     const taskRow = container.querySelector(`[data-bos-schedule-task="${TASK_1}"]`);
     const checkbox = taskRow?.querySelector('[data-bos-task-complete-checkbox]') as HTMLInputElement;

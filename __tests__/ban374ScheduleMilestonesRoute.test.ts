@@ -70,6 +70,7 @@ jest.mock('@/db', () => ({
   engagements: tbl('engagements'),
   SCHEDULE_MILESTONE_TYPES: ['substantial_completion', 'permit', 'inspection', 'owner_walkthrough', 'retainage_release', 'custom'],
   SCHEDULE_MILESTONE_STATUSES: ['pending', 'met', 'missed', 'waived'],
+  SCHEDULE_MILESTONE_KINDS: ['standard', 'permit', 'inspection', 'gc_clearance', 'matson_freight'],
 }));
 
 const mockGetServerSession = jest.fn();

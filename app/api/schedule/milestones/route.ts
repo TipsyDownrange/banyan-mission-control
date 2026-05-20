@@ -11,10 +11,15 @@ import {
   db,
   engagements,
   schedule_milestones,
+  SCHEDULE_MILESTONE_KINDS,
   SCHEDULE_MILESTONE_STATUSES,
   SCHEDULE_MILESTONE_TYPES,
 } from '@/db';
 import { passScheduleReadGate, passScheduleWriteGate } from '@/lib/schedule/api-gate';
+
+function isISODate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
 
 export async function GET(req: Request) {
   const gate = await passScheduleReadGate();
@@ -83,6 +88,40 @@ export async function POST(req: Request) {
     ? body.planned_date
     : null;
 
+  // BAN-374 P6 — Permit-field body extension.  milestone_kind defaults to
+  // 'standard' for backward compatibility; permit_* fields are optional
+  // ISO-date strings only validated when milestone_kind = 'permit'.
+  const milestoneKindRaw = typeof body.milestone_kind === 'string' && body.milestone_kind
+    ? body.milestone_kind
+    : 'standard';
+  if (!SCHEDULE_MILESTONE_KINDS.includes(milestoneKindRaw as typeof SCHEDULE_MILESTONE_KINDS[number])) {
+    return NextResponse.json({ error: `invalid milestone_kind: ${milestoneKindRaw}` }, { status: 400 });
+  }
+  const milestoneKind = milestoneKindRaw as typeof SCHEDULE_MILESTONE_KINDS[number];
+
+  const permitAuthority = typeof body.permit_authority === 'string' && body.permit_authority.trim()
+    ? body.permit_authority.trim()
+    : null;
+
+  const permitDateFields = [
+    'permit_application_date',
+    'permit_estimated_approval_date',
+    'permit_actual_approval_date',
+  ] as const;
+  const permitDates: Record<typeof permitDateFields[number], string | null> = {
+    permit_application_date: null,
+    permit_estimated_approval_date: null,
+    permit_actual_approval_date: null,
+  };
+  for (const field of permitDateFields) {
+    const raw = body[field];
+    if (raw == null || raw === '') continue;
+    if (typeof raw !== 'string' || !isISODate(raw)) {
+      return NextResponse.json({ error: `${field} must be ISO YYYY-MM-DD` }, { status: 400 });
+    }
+    permitDates[field] = raw;
+  }
+
   const eng = await db
     .select({ engagement_id: engagements.engagement_id })
     .from(engagements)
@@ -105,6 +144,11 @@ export async function POST(req: Request) {
       type: type as typeof SCHEDULE_MILESTONE_TYPES[number],
       planned_date: plannedDate,
       status: status as typeof SCHEDULE_MILESTONE_STATUSES[number],
+      milestone_kind: milestoneKind,
+      permit_authority: permitAuthority,
+      permit_application_date: permitDates.permit_application_date,
+      permit_estimated_approval_date: permitDates.permit_estimated_approval_date,
+      permit_actual_approval_date: permitDates.permit_actual_approval_date,
     })
     .returning();
 
