@@ -80,6 +80,7 @@
   /* Accent */
   --bos-color-accent-action: #f97316;
   --bos-color-accent-action-deep: #c2410c;
+  --bos-color-accent-data: #0369a1;
   --bos-color-accent-data-bright: #60a5fa;
   --bos-color-accent-data-glow: rgba(3, 105, 161, 0.18);
 
@@ -94,7 +95,7 @@
   --bos-color-border-strong: #234668;
 
   /* Gradient */
-  --bos-color-gradient-hero: linear-gradient(90deg, #14b8a6 0%, #0369a1 50%, #f97316 100%);
+  --bos-color-gradient-hero: linear-gradient(90deg, #14b8a6 0%, var(--bos-color-accent-data) 50%, #f97316 100%);
 
   /* Radius */
   --bos-radius-md: 8px;
