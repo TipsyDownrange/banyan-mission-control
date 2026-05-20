@@ -9,6 +9,10 @@
  * BAN-374 Scheduling Spine Mega adds the 'schedule' tab between 'tm-tickets'
  * and 'budget' (17 tabs total).  Prior 16-tab order preserved; new entry is
  * additive per ADR-026.
+ *
+ * BAN-375 Closeout Phase 2 adds the 'warranty' tab between 'punch-list' and
+ * 'activity' (18 tabs total). Prior 17-tab order preserved; new entry is
+ * additive per the dispatch wire-in rule.
  */
 
 import fs from 'node:fs';
@@ -36,6 +40,7 @@ const CANONICAL_TABS = [
   'work-breakdown',
   'matrix',
   'punch-list',
+  'warranty',
   'activity',
 ];
 

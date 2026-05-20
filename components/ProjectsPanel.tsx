@@ -17,6 +17,7 @@ import DocumentsTab from '@/components/engagements/DocumentsTab';
 import HandoffTab from '@/components/engagements/HandoffTab';
 import ProjectOverview from '@/components/engagements/ProjectOverview';
 import ScheduleTab from '@/components/schedule/ScheduleTab';
+import WarrantyClaimCaptureForm from '@/components/closeout/WarrantyClaimCaptureForm';
 import { formatCurrency, summarizeSOV } from '@/lib/pm/sov-summary';
 import { useSession } from 'next-auth/react';
 
@@ -113,7 +114,8 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
 // ─── Project Workspace (full detail) ─────────────────────────
 function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'schedule'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'schedule'|'budget'|'work-breakdown'|'matrix'|'warranty'|'activity'>('overview');
+  const [showNewClaimModal, setShowNewClaimModal] = useState(false);
   const { data: session } = useSession();
   const role = (session?.user as { role?: string } | undefined)?.role ?? 'none';
   const SCHEDULE_WRITE_ROLES = new Set(['pm', 'business_admin', 'super_admin']);
@@ -178,6 +180,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     { key: 'work-breakdown', label: `Work Breakdown (${install.items?.length || 0})` },
     { key: 'matrix', label: 'Matrix View' },
     { key: 'punch-list', label: 'Punch List' },
+    { key: 'warranty', label: 'Warranty' },
     { key: 'activity', label: `Activity (${project.eventCount})` },
   ] as const;
 
@@ -329,12 +332,90 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                 <ProjectMatrixView jobId={project.kID} />
               )}
 
+              {activeTab === 'warranty' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{
+                    background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+                    padding: '14px 18px', display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', gap: 12,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+                        Warranty registry
+                      </div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                        Inbound claim capture, triage, and resolution per Closeout v1.1 §8.x.
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowNewClaimModal(true)}
+                      data-testid="new-warranty-claim-trigger"
+                      style={{
+                        padding: '8px 16px', borderRadius: 10, border: 'none',
+                        background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      + New warranty claim
+                    </button>
+                  </div>
+                  <div style={{
+                    padding: '16px 20px', borderRadius: 12, background: '#f8fafc',
+                    border: '1px solid #e2e8f0', color: '#64748b', fontSize: 13,
+                  }}>
+                    Warranty record + claim listing for this engagement will populate once the
+                    listing endpoint ships. Use <strong>+ New warranty claim</strong> above to
+                    capture inbound claims against a known warranty_id.
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'activity' && (
                 <ActivityTimeline kID={project.kID} />
               )}
             </>
           )}
         </div>
+
+        {showNewClaimModal && (
+          <div
+            data-testid="new-warranty-claim-modal"
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 200, padding: 16,
+            }}
+            onClick={() => setShowNewClaimModal(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#f8fafc', borderRadius: 16, padding: 20,
+                maxWidth: 720, width: '100%', maxHeight: '90vh', overflowY: 'auto',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                  New warranty claim
+                </div>
+                <button
+                  onClick={() => setShowNewClaimModal(false)}
+                  style={{
+                    background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 8,
+                    padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#64748b',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+              <WarrantyClaimCaptureForm
+                warranties={[]}
+                onCreated={() => setShowNewClaimModal(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
