@@ -753,9 +753,22 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
 
       {/* Intake modal */}
       {showIntake && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: 28, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
+        <div
+          key={`service-intake-modal-${showIntake ? 'open' : 'closed'}`}
+          className="notranslate"
+          translate="no"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            className="notranslate"
+            translate="no"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create Work Order"
+            style={{ background: 'white', borderRadius: 28, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}
+          >
             <ServiceIntake
+              key={`service-intake-${showIntake ? 'open' : 'closed'}`}
               onClose={() => setShowIntake(false)}
               onCreated={() => { setShowIntake(false); loadData(); }}
             />
