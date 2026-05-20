@@ -55,6 +55,62 @@
   /* Shadows */
   --shadow-card: 0 1px 3px rgba(15,23,42,0.07), 0 4px 12px rgba(15,23,42,0.04);
   --shadow-card-hover: 0 4px 16px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06);
+
+  /* ──────────── BanyanOS Design System v1 — --bos-* canonical tokens ──────────── */
+  /* Sourced from Tokens v1 spec (Drive 1wlKmf4NvLe7vu-v-243x2F8SgQNTUQm7).         */
+  /* Dark theme is the canonical default per spec §02; light theme override         */
+  /* is the responsibility of a later BAN-171 packet (ThemeProvider / Phase 6.1).   */
+
+  /* Surface */
+  --bos-color-surface-base: #0a1924;
+  --bos-color-surface-card: #0f2235;
+  --bos-color-surface-elevated: #142b41;
+
+  /* Ink */
+  --bos-color-ink-primary: #f4f6f9;
+  --bos-color-ink-secondary: #cfd8e3;
+  --bos-color-ink-tertiary: #94a3b8;
+  --bos-color-ink-disabled: #64748b;
+
+  /* Brand */
+  --bos-color-brand-primary: #14b8a6;
+  --bos-color-brand-primary-deep: #0f766e;
+  --bos-color-brand-primary-glow: rgba(20, 184, 166, 0.18);
+
+  /* Accent */
+  --bos-color-accent-action: #f97316;
+  --bos-color-accent-action-deep: #c2410c;
+  --bos-color-accent-data-bright: #60a5fa;
+  --bos-color-accent-data-glow: rgba(3, 105, 161, 0.18);
+
+  /* Semantic */
+  --bos-color-semantic-warning: #f59e0b;
+  --bos-color-semantic-warning-glow: rgba(245, 158, 11, 0.15);
+  --bos-color-semantic-error: #ef4444;
+  --bos-color-semantic-error-glow: rgba(239, 68, 68, 0.15);
+
+  /* Border */
+  --bos-color-border-subtle: #1c3a55;
+  --bos-color-border-strong: #234668;
+
+  /* Gradient */
+  --bos-color-gradient-hero: linear-gradient(90deg, #14b8a6 0%, #0369a1 50%, #f97316 100%);
+
+  /* Radius */
+  --bos-radius-md: 8px;
+  --bos-radius-lg: 12px;
+  --bos-radius-xl: 16px;
+  --bos-radius-pill: 999px;
+
+  /* Shadow */
+  --bos-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* Space */
+  --bos-space-5: 20px;
+
+  /* Motion */
+  --bos-motion-duration-fast: 120ms;
+  --bos-motion-easing-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
