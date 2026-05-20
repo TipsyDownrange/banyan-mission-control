@@ -79,12 +79,9 @@ describe('BAN-348 migration sequence integrity', () => {
   const dir = path.join(process.cwd(), 'db/migrations');
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
 
-  it('0028 is the highest numbered migration', () => {
-    const numbered = files
-      .map((f) => /^(\d{4})_/.exec(f)?.[1])
-      .filter((m): m is string => !!m)
-      .sort();
-    expect(numbered[numbered.length - 1]).toBe('0028');
+  it('0028 ban348 migration file is present in the sequence', () => {
+    const ban348Files = files.filter((f) => f.startsWith('0028_') && f.includes('ban348'));
+    expect(ban348Files.length).toBe(1);
   });
 
   it('does not collide with another migration prefix', () => {

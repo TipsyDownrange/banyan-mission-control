@@ -316,6 +316,42 @@ describe('ROLE_PERMISSIONS_DEFAULTS', () => {
       );
     }
   });
+
+  // BAN-374 Scheduling Spine — SCHEDULE_WRITE granted to PM + business_admin +
+  // super_admin per Sean 2026-05-19 decision.  SCHEDULE_VIEW granted broadly so
+  // every documented role can read the Schedule tab; field_super matches the
+  // PM_DOCUMENT_* pattern (Document Hub roles + Schedule reads aligned).
+  it('grants SCHEDULE_WRITE to pm, business_admin, super_admin', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SCHEDULE_WRITE']),
+      );
+    }
+  });
+
+  it('denies SCHEDULE_WRITE for read-only roles', () => {
+    for (const role of ['service_pm', 'super', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales', 'gm', 'owner']) {
+      const perms = ROLE_PERMISSIONS_DEFAULTS[role];
+      expect(perms).not.toEqual(expect.arrayContaining(['SCHEDULE_WRITE']));
+    }
+  });
+
+  it('grants SCHEDULE_VIEW to every documented role except none', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin', 'service_pm', 'super', 'estimator', 'admin_mgr', 'admin', 'field', 'pm_track', 'sales', 'gm', 'owner']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SCHEDULE_VIEW']),
+      );
+    }
+    expect(ROLE_PERMISSIONS_DEFAULTS.none).not.toEqual(expect.arrayContaining(['SCHEDULE_VIEW']));
+  });
+
+  it('SCHEDULE_WRITE implies SCHEDULE_VIEW for every write role', () => {
+    for (const role of ['pm', 'business_admin', 'super_admin']) {
+      expect(ROLE_PERMISSIONS_DEFAULTS[role]).toEqual(
+        expect.arrayContaining(['SCHEDULE_VIEW', 'SCHEDULE_WRITE']),
+      );
+    }
+  });
 });
 
 describe('ALL_ROLE_PERMISSIONS', () => {
@@ -342,6 +378,8 @@ describe('ALL_ROLE_PERMISSIONS', () => {
       'WORK_BREAKDOWN_WRITE',
       'PM_DOCUMENT_VIEW',
       'PM_DOCUMENT_WRITE',
+      'SCHEDULE_VIEW',
+      'SCHEDULE_WRITE',
     ];
     expect([...ALL_ROLE_PERMISSIONS].sort()).toEqual(expected.sort());
   });
