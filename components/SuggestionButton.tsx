@@ -35,7 +35,7 @@ export default function SuggestionButton() {
         style={{
           position: 'fixed', bottom: 80, right: 24, zIndex: 999,
           width: 44, height: 44, borderRadius: 999,
-          background: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+          background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)',
           border: 'none', cursor: 'pointer',
           boxShadow: '0 4px 16px rgba(15,118,110,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -77,7 +77,7 @@ export default function SuggestionButton() {
             <button onClick={submit} disabled={submitting || !text.trim()}
               style={{
                 width: '100%', marginTop: 8, padding: '12px', borderRadius: 12,
-                background: text.trim() ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : '#e2e8f0',
+                background: text.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#e2e8f0',
                 border: 'none', color: text.trim() ? 'white' : 'var(--bos-color-ink-tertiary)',
                 fontSize: 14, fontWeight: 700, cursor: text.trim() ? 'pointer' : 'default',
               }}>

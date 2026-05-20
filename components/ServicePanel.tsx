@@ -49,9 +49,9 @@ type StageChangeOptions = {
 const STAGES: { key: string; label: string; color: string; bg: string; border: string }[] = [
   { key: 'lead',               label: 'New Lead',           color: '#3b82f6', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.2)' },
   { key: 'quoted',             label: 'Quoted',             color: '#3b82f6', bg: 'rgba(239,246,255,0.96)', border: '1px solid rgba(59,130,246,0.2)' },
-  { key: 'accepted',           label: 'Accepted',           color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
-  { key: 'approved',           label: 'Accepted',           color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
-  { key: 'deposit_received',   label: 'Deposit Received',   color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
+  { key: 'accepted',           label: 'Accepted',           color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
+  { key: 'approved',           label: 'Accepted',           color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
+  { key: 'deposit_received',   label: 'Deposit Received',   color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
   { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#d97706', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
   { key: 'materials_received', label: 'Materials In',       color: '#d97706', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
   { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
@@ -67,7 +67,7 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
 
 const ISLAND_COLORS: Record<string, string> = {
   'Maui': '#3b82f6',
-  'Oahu': '#0f766e',
+  'Oahu': 'var(--bos-color-brand-primary-deep)',
   'Kauai': '#7c3aed',
   'Hawaii': '#16a34a',
   'Molokai': '#ea580c',
@@ -87,14 +87,14 @@ function normalizeStatus(raw: string): string {
 
 const AREA_COLOR: Record<string, string> = {
   // Maui areas
-  lahaina: '#0f766e', kahului: '#0369a1', kihei: '#6d28d9',
+  lahaina: 'var(--bos-color-brand-primary-deep)', kahului: '#0369a1', kihei: '#6d28d9',
   wailea: '#15803d', wailuku: '#92400e', maalaea: '#0369a1',
-  makawao: 'var(--bos-color-ink-disabled)', paia: '#0f766e', kapalua: '#15803d',
+  makawao: 'var(--bos-color-ink-disabled)', paia: 'var(--bos-color-brand-primary-deep)', kapalua: '#15803d',
   // Oahu
-  honolulu: '#0369a1', kapolei: '#6d28d9', kailua: '#0f766e',
+  honolulu: '#0369a1', kapolei: '#6d28d9', kailua: 'var(--bos-color-brand-primary-deep)',
   kaneohe: '#15803d', 'hawaii kai': '#92400e', aiea: 'var(--bos-color-ink-disabled)',
   // Kauai
-  lihue: '#6d28d9', kapaa: '#0f766e', poipu: '#15803d',
+  lihue: '#6d28d9', kapaa: 'var(--bos-color-brand-primary-deep)', poipu: '#15803d',
   // Big Island
   hilo: '#92400e', kona: '#0369a1', waimea: '#6d28d9',
 };
@@ -151,13 +151,13 @@ function WOCard({
         </div>
 
         {/* Row 2: WO name — bold, 2 lines max */}
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {toTitleCase(wo.name) || wo.id}
         </div>
 
         {/* Customer resolution badge — GC-D053 */}
         {wo.customer_resolved === true && wo.resolved_customer_name && (
-          <div style={{ fontSize: 11, color: '#0f766e', marginBottom: 3 }}>{wo.resolved_customer_name}</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 3 }}>{wo.resolved_customer_name}</div>
         )}
         {wo.customer_resolved === false && (
           <div style={{ fontSize: 10, fontWeight: 700, color: '#b45309', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ No customer</div>
@@ -468,10 +468,10 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
       })()}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Work Orders</h1>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Work Orders</h1>
           <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
             {(!readOnly && canCreateLeads) && <button onClick={() => setShowIntake(true)}
-              style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
+              style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
               + New Lead
             </button>}
             <button onClick={loadData}
@@ -480,7 +480,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
             </button>
             {(['kanban', 'list'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {v === 'kanban' ? 'Board' : 'List'}
               </button>
             ))}
@@ -509,9 +509,9 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
                   cursor: 'pointer', transition: 'all 0.15s',
                   boxShadow: isActive ? '0 2px 12px rgba(15,118,110,0.12)' : 'none',
                 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? '#0f766e' : 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
-                <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: isActive ? '#0f766e' : '#0f172a', lineHeight: 1 }}>{s.value}</div>
-                <div style={{ marginTop: 6, fontSize: 11, color: isActive ? '#0f766e' : 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
+                <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: isActive ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-ink-primary)', lineHeight: 1 }}>{s.value}</div>
+                <div style={{ marginTop: 6, fontSize: 11, color: isActive ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
               </button>
             );
           })}
@@ -573,14 +573,14 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
             { id: 'all',         label: 'All Active',     count: mergedWorkOrders.filter(w => w.status !== 'lost' && !completedStatuses.has(w.status)).length, color: 'var(--bos-color-ink-disabled)' },
             { id: 'lead',        label: 'New Leads',      count: mergedByStatus['lead']?.length || 0,        color: 'var(--bos-color-ink-disabled)' },
             { id: 'quoted',      label: 'Quoted',         count: mergedByStatus['quoted']?.length || 0,      color: '#7c3aed' },
-            { id: 'accepted',    label: 'Accepted',       count: (mergedByStatus['accepted']?.length || 0) + (mergedByStatus['approved']?.length || 0), color: '#0f766e' },
+            { id: 'accepted',    label: 'Accepted',       count: (mergedByStatus['accepted']?.length || 0) + (mergedByStatus['approved']?.length || 0), color: 'var(--bos-color-brand-primary-deep)' },
             { id: 'approved',          label: 'Need Schedule',    count: mergedByStatus['approved']?.length || 0,          color: '#92400e' },
             { id: 'deposit_received',   label: 'Deposit Received', count: mergedByStatus['deposit_received']?.length || 0,   color: '#b45309' },
             { id: 'materials_ordered',  label: 'Materials Ordered', count: mergedByStatus['materials_ordered']?.length || 0,  color: '#9a3412' },
             { id: 'materials_received', label: 'Materials In',      count: mergedByStatus['materials_received']?.length || 0, color: '#166534' },
             { id: 'ready_to_schedule',  label: 'Ready to Schedule', count: mergedByStatus['ready_to_schedule']?.length || 0,  color: '#0369a1' },
             { id: 'scheduled',          label: 'Scheduled',         count: mergedByStatus['scheduled']?.length || 0,          color: '#4338ca' },
-            { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: '#0f766e' },
+            { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: 'var(--bos-color-brand-primary-deep)' },
             { id: 'closed',      label: 'Completed',      count: completedStageKeys.reduce((sum, key) => sum + (mergedByStatus[key]?.length || 0), 0), color: '#15803d' },
           ] as FilterChip[]}
           activeChip={filter}

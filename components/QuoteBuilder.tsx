@@ -192,7 +192,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   return (
     <div style={{
       position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
-      background: '#0f172a', color: 'white', borderRadius: 12, padding: '10px 20px',
+      background: 'var(--color-ink-primary)', color: 'white', borderRadius: 12, padding: '10px 20px',
       fontSize: 13, fontWeight: 700, fontFamily: FONT, zIndex: 9999,
       boxShadow: '0 8px 32px rgba(0,0,0,0.25)', whiteSpace: 'nowrap',
     }}>
@@ -213,7 +213,7 @@ function VersionBadge({ version }: { version: string | number }) {
   );
 }
 
-function SectionHeader({ label, color = '#0f766e', accent }: { label: string; color?: string; accent?: string }) {
+function SectionHeader({ label, color = 'var(--bos-color-brand-primary-deep)', accent }: { label: string; color?: string; accent?: string }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
@@ -232,7 +232,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 2, fontFamily: FONT }}>{label}</div>
-      <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 500, fontFamily: FONT }}>{value}</div>
+      <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', fontWeight: 500, fontFamily: FONT }}>{value}</div>
     </div>
   );
 }
@@ -247,7 +247,7 @@ function SummaryRow({ label, value, sub = false, highlight = false }: { label: s
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: sub ? '3px 0' : '6px 0',
       fontSize: sub ? 12 : 13,
-      color: highlight ? '#0f766e' : sub ? 'var(--bos-color-ink-disabled)' : '#0f172a',
+      color: highlight ? 'var(--bos-color-brand-primary-deep)' : sub ? 'var(--bos-color-ink-disabled)' : 'var(--color-ink-primary)',
       fontFamily: FONT,
     }}>
       <span>{label}</span>
@@ -264,7 +264,7 @@ const GREEN_INPUT: React.CSSProperties = {
   borderRadius: 8,
   fontSize: 13,
   fontFamily: FONT,
-  color: '#0f172a',
+  color: 'var(--color-ink-primary)',
   background: 'rgba(240,253,244,0.75)',
   outline: 'none',
   boxSizing: 'border-box',
@@ -292,7 +292,7 @@ function SaveConfigModal({
         background: 'white', borderRadius: 20, padding: 28, width: 420,
         boxShadow: '0 24px 64px rgba(0,0,0,0.18)', fontFamily: FONT,
       }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 4 }}>
           {isSaveAs ? 'Save as New Configuration' : 'Save Configuration'}
         </div>
         <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginBottom: 20 }}>
@@ -345,7 +345,7 @@ function SaveConfigModal({
             disabled={!name.trim()}
             style={{
               flex: 2, padding: '11px', borderRadius: 12, border: 'none',
-              background: name.trim() ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+              background: name.trim() ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0',
               color: name.trim() ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize: 13, fontWeight: 700,
               cursor: name.trim() ? 'pointer' : 'default',
               boxShadow: name.trim() ? '0 4px 16px rgba(15,118,110,0.3)' : 'none',
@@ -389,7 +389,7 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 680, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.2)', fontFamily: FONT }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Compare Configurations</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Compare Configurations</div>
           <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)' }}>×</button>
         </div>
 
@@ -419,10 +419,10 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
         {left && right && (
           <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '2px solid #e2e8f0' }}>Field</div>
-            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: '#0f172a', borderBottom: '2px solid #e2e8f0' }}>
+            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: 'var(--color-ink-primary)', borderBottom: '2px solid #e2e8f0' }}>
               {left.config_name} <VersionBadge version={left.version} />
             </div>
-            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: '#0f172a', borderBottom: '2px solid #e2e8f0' }}>
+            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: 'var(--color-ink-primary)', borderBottom: '2px solid #e2e8f0' }}>
               {right.config_name} <VersionBadge version={right.version} />
             </div>
             <CompareCell label="Grand Total" leftVal={fmt(parseNum(left.total_amount))} rightVal={fmt(parseNum(right.total_amount))} />
@@ -809,7 +809,7 @@ export default function QuoteBuilder({
       }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>Service Quote</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
             {woNumber.startsWith('WO-') ? woNumber : 'WO-' + woNumber}{wo?.name ? ` — ${wo.name.substring(0, 45)}` : ''}
           </div>
           <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
@@ -874,7 +874,7 @@ export default function QuoteBuilder({
 
         {/* ── Scope of Work ────────────────────────────────────────────────── */}
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
-          <SectionHeader label="Scope of Work" color="#0f766e" />
+          <SectionHeader label="Scope of Work" color="var(--bos-color-brand-primary-deep)" />
           <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {wo?.systemType && (
               <ReadField label="System Type" value={wo.systemType} />
@@ -890,7 +890,7 @@ export default function QuoteBuilder({
         {/* ── Pricing Summary ──────────────────────────────────────────────── */}
         {t && (
           <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '14px 18px' }}>
-            <SectionHeader label="Pricing Summary" color="#0f172a" />
+            <SectionHeader label="Pricing Summary" color="var(--color-ink-primary)" />
             <div style={{ paddingTop: 12 }}>
 
               {/* Customer-facing: Materials + Labor + GET = Total (markup distributed proportionally) */}
@@ -901,12 +901,12 @@ export default function QuoteBuilder({
               {/* Grand total */}
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '12px 16px', borderRadius: 10, background: '#0f172a', marginTop: 6,
+                padding: '12px 16px', borderRadius: 10, background: 'var(--color-ink-primary)', marginTop: 6,
               }}>
                 <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: FONT }}>Grand Total</span>
                 <span style={{ fontSize: 22, fontWeight: 900, color: 'white', fontVariantNumeric: 'tabular-nums', fontFamily: FONT }}>{fmt(t.grandTotal)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 4px 0', fontSize: 12, fontWeight: 700, color: '#0f766e', fontFamily: FONT }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 4px 0', fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', fontFamily: FONT }}>
                 <span>50% Deposit Required</span>
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(t.grandTotal * 0.5)}</span>
               </div>
@@ -940,7 +940,7 @@ export default function QuoteBuilder({
                   disabled={configSaving || !t}
                   style={{
                     padding: '6px 14px', borderRadius: 9, border: 'none',
-                    background: t ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+                    background: t ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0',
                     color: t ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700,
                     cursor: t ? 'pointer' : 'default',
                     boxShadow: t ? '0 2px 8px rgba(15,118,110,0.25)' : 'none',
@@ -994,9 +994,9 @@ export default function QuoteBuilder({
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', flex: 1 }}>{c.config_name}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', flex: 1 }}>{c.config_name}</span>
                       <VersionBadge version={c.version} />
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>{fmt(parseNum(c.total_amount))}</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', fontVariantNumeric: 'tabular-nums' }}>{fmt(parseNum(c.total_amount))}</span>
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                       {fmtDate(c.created_at)} · {c.breakdown_type?.replace('_', ' ') || 'lump sum'}
@@ -1016,7 +1016,7 @@ export default function QuoteBuilder({
                         {[...versions].sort((a, b) => parseInt(b.version) - parseInt(a.version)).map((v, idx) => (
                           <div key={v.version} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: idx < versions.length - 1 ? '1px solid #f8fafc' : undefined }}>
                             <VersionBadge version={v.version} />
-                            <span style={{ fontSize: 11, color: '#0f172a', fontWeight: parseInt(v.version) === parseInt(c.version) ? 800 : 400, flex: 1, fontVariantNumeric: 'tabular-nums' }}>
+                            <span style={{ fontSize: 11, color: 'var(--color-ink-primary)', fontWeight: parseInt(v.version) === parseInt(c.version) ? 800 : 400, flex: 1, fontVariantNumeric: 'tabular-nums' }}>
                               {fmt(parseNum(v.total_amount))}
                             </span>
                             <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{fmtDate(v.created_at)}</span>
@@ -1068,7 +1068,7 @@ export default function QuoteBuilder({
           disabled={downloading || generating || !t}
           style={{
             flex: 2, minWidth: 140, padding: '11px', borderRadius: 12, border: 'none',
-            background: !t ? '#e2e8f0' : downloading || generating ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+            background: !t ? '#e2e8f0' : downloading || generating ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
             color: !t || downloading || generating ? 'var(--bos-color-ink-tertiary)' : 'white',
             fontSize: 13, fontWeight: 700,
             cursor: !t || downloading || generating ? 'default' : 'pointer',

@@ -108,7 +108,7 @@ export default function UserScheduleView({ tasks, assignments, onDrillToTask }: 
         <tbody>
           {byUser.map((u) => (
             <tr key={u.user_id} data-bos-user-schedule-row={u.user_id}>
-              <td style={{ padding: '8px 12px', width: 180, color: '#0f172a', fontWeight: 600 }}>
+              <td style={{ padding: '8px 12px', width: 180, color: 'var(--color-ink-primary)', fontWeight: 600 }}>
                 {u.name}
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 400 }}>
                   {u.rows.length} task{u.rows.length === 1 ? '' : 's'}

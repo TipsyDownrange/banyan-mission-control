@@ -81,7 +81,7 @@ export default function ForecastingPanel() {
             ].map(([label, value, sub]) => (
               <div key={String(label)} style={{ background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(226,232,240,0.14)', borderRadius: 16, padding: 18 }}>
                 <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{label}</div>
-                <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, color: '#0f172a' }}>{value}</div>
+                <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, color: 'var(--color-ink-primary)' }}>{value}</div>
                 <div style={{ marginTop: 4, fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{sub}</div>
               </div>
             ))}

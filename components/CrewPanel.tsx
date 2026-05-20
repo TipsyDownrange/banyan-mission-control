@@ -27,10 +27,10 @@ export function buildCrewUpdatePayload(draft: Draft, dirtyFields: Iterable<CrewP
 }
 
 const ISLAND_COLORS: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
 };
 const DEPT_COLORS: Record<string, string> = {
-  PM: '#0f766e', Estimating: '#0f766e',
+  PM: 'var(--bos-color-brand-primary-deep)', Estimating: 'var(--bos-color-brand-primary-deep)',
   Service: '#6d28d9', Admin: 'var(--bos-color-ink-disabled)', Superintendent: '#4338ca', Field: '#334155',
 };
 
@@ -44,7 +44,7 @@ function avatarColor(dept: string, island: string): string {
 const INP: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 10,
   border: '1px solid #e2e8f0', background: 'white',
-  fontSize: 13, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+  fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box',
 };
 const LBL: React.CSSProperties = {
   fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
@@ -138,7 +138,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               {initials(draft.name || member.name)}
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>{draft.name || member.name}</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.02em' }}>{draft.name || member.name}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center' }}>
                 <span style={{ fontSize: 10, fontWeight: 700, color: islandColor, background: `${islandColor}18`, padding: '1px 7px', borderRadius: 999 }}>{draft.island || member.island}</span>
                 {(draft.department || member.department) && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>{draft.department || member.department}</span>}
@@ -159,7 +159,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -199,9 +199,9 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                               update('department', next[0] || '');
                             }} style={{
                               padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer',
-                              border: active ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
+                              border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
                               background: active ? '#f0fdfa' : 'white',
-                              color: active ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
+                              color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                             }}>{d}</button>
                           );
                         })}
@@ -323,7 +323,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
+              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -380,7 +380,7 @@ function CrewCard({ member, onClick, travel }: {
       </div>
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</div>
         <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {member.title || member.role}
         </div>
@@ -400,7 +400,7 @@ function CrewCard({ member, onClick, travel }: {
         {!activeTravel && (
           <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
             {member.email && <span style={{ fontSize: 9, color: '#0369a1' }}>{member.email}</span>}
-            {member.phone && <span style={{ fontSize: 9, color: '#0f766e' }}>{member.phone}</span>}
+            {member.phone && <span style={{ fontSize: 9, color: 'var(--bos-color-brand-primary-deep)' }}>{member.phone}</span>}
           </div>
         )}
       </div>
@@ -440,7 +440,7 @@ function AddCrewModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: 
     <div style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:600, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }} onClick={onClose}>
       <div style={{ background:'white', borderRadius:18, padding:28, width:'100%', maxWidth:520, boxShadow:'0 24px 64px rgba(0,0,0,0.18)', maxHeight:'90vh', overflowY:'auto' }} onClick={e=>e.stopPropagation()}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-          <h2 style={{ fontSize:18, fontWeight:800, color:'#0f172a', margin:0 }}>Add Crew Member</h2>
+          <h2 style={{ fontSize:18, fontWeight:800, color:'var(--color-ink-primary)', margin:0 }}>Add Crew Member</h2>
           <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:18, cursor:'pointer' }}>×</button>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
@@ -482,7 +482,7 @@ function AddCrewModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: 
             }
           } catch(err) { console.error('[AddCrewModal] save', err); }
           setSaving(false);
-        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: canSave ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
+        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0', color: canSave ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
           {saving ? 'Saving…' : 'Add Crew Member'}
         </button>
       </div>
@@ -597,10 +597,10 @@ export default function CrewPanel() {
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>
             Crew <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)', letterSpacing: 0 }}>{crew.length} people</span>
           </h1>
-          <button onClick={() => setShowAddModal(true)} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#0f766e,#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,118,110,0.25)', whiteSpace:'nowrap' as const }}>+ Add Crew Member</button>
+          <button onClick={() => setShowAddModal(true)} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,118,110,0.25)', whiteSpace:'nowrap' as const }}>+ Add Crew Member</button>
         </div>
       </div>
 
@@ -614,7 +614,7 @@ export default function CrewPanel() {
         <div style={{ display: 'flex', gap: 4 }}>
           {islands.map(isl => (
             <button key={isl} onClick={() => setFilterIsland(isl)}
-              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterIsland === isl ? `1px solid ${ISLAND_COLORS[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: filterIsland === isl ? `${ISLAND_COLORS[isl] || '#0f766e'}12` : 'white', color: filterIsland === isl ? (ISLAND_COLORS[isl] || '#0f766e') : 'var(--bos-color-ink-disabled)' }}>
+              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterIsland === isl ? `1px solid ${ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: filterIsland === isl ? `${ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: filterIsland === isl ? (ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)' }}>
               {isl}
             </button>
           ))}
@@ -622,7 +622,7 @@ export default function CrewPanel() {
         <div style={{ display: 'flex', gap: 4 }}>
           {depts.map(d => (
             <button key={d} onClick={() => setFilterDept(d)}
-              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterDept === d ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: filterDept === d ? 'rgba(15,118,110,0.08)' : 'white', color: filterDept === d ? '#0f766e' : 'var(--bos-color-ink-disabled)' }}>
+              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterDept === d ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: filterDept === d ? 'rgba(15,118,110,0.08)' : 'white', color: filterDept === d ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)' }}>
               {d}
             </button>
           ))}

@@ -118,7 +118,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
           <div style={{ padding: '20px 24px' }}>
             <section style={cardStyle}>
               <h3 style={sectionTitleStyle}>Status</h3>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{r.status.replace(/_/g, ' ')}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{r.status.replace(/_/g, ' ')}</div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
                 Ball: <strong>{r.ball_in_court || '—'}</strong>
                 {r.submitted_to ? ` · Submitted to ${r.submitted_to}` : ''}
@@ -132,7 +132,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
 
             <section style={cardStyle}>
               <h3 style={sectionTitleStyle}>Details</h3>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{r.subject}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>{r.subject}</div>
               {r.reason_for_rfi && (
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 6 }}>
                   Reason: {r.reason_for_rfi.replace(/_/g, ' ')}
@@ -154,7 +154,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
               <section style={cardStyle}>
                 <h3 style={sectionTitleStyle}>Response</h3>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginBottom: 4 }}>{r.response_received_date || ''}</div>
-                <div style={{ fontSize: 12, color: '#0f172a', whiteSpace: 'pre-wrap' }}>{r.response_text}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-ink-primary)', whiteSpace: 'pre-wrap' }}>{r.response_text}</div>
               </section>
             )}
 
@@ -169,7 +169,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                       <option value="ENGINEER">Engineer</option>
                       <option value="OWNER">Owner</option>
                     </select>
-                    <button type="button" disabled={busy} onClick={() => callRoute('/submit', { submitted_to: submittedTo })} style={actionBtn('#0f766e')}>
+                    <button type="button" disabled={busy} onClick={() => callRoute('/submit', { submitted_to: submittedTo })} style={actionBtn('var(--bos-color-brand-primary-deep)')}>
                       {r.status === 'DRAFT' ? 'Submit →' : 'Re-submit (follow-up) →'}
                     </button>
                   </div>
@@ -188,7 +188,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                       type="button"
                       disabled={busy || !responseText.trim()}
                       onClick={() => callRoute('/log-response', { response_text: responseText.trim() })}
-                      style={actionBtn('#0f766e')}
+                      style={actionBtn('var(--bos-color-brand-primary-deep)')}
                     >
                       Log Response →
                     </button>
@@ -216,7 +216,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                         generates_change_order: generatesCo,
                         linked_change_order_id: generatesCo && linkedCoId.trim() ? linkedCoId.trim() : null,
                       })}
-                      style={actionBtn('#0f766e')}
+                      style={actionBtn('var(--bos-color-brand-primary-deep)')}
                     >
                       {generatesCo ? 'Resolve & Link CO →' : 'Resolve →'}
                     </button>
@@ -276,7 +276,7 @@ function DocList({ label, ids }: { label: string; ids: string[] }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {ids.map((id) => (
             <a key={id} href={`https://drive.google.com/file/d/${id}/view`} target="_blank" rel="noreferrer"
-              style={{ fontSize: 11, color: '#0f766e', background: '#f0fdfa', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
+              style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
               {id.length > 14 ? `${id.slice(0, 10)}…` : id}
             </a>
           ))}

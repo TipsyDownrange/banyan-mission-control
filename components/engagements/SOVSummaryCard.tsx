@@ -48,7 +48,7 @@ const KPI_LABEL: CSSProperties = {
 };
 
 const KPI_VALUE: CSSProperties = {
-  fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 5,
+  fontSize: 20, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 5,
 };
 
 const KPI_SUB: CSSProperties = {
@@ -101,7 +101,7 @@ export default function SOVSummaryCard({
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>
+          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>
             SOV Summary
           </div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>

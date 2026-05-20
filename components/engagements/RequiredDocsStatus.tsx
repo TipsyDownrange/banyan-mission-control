@@ -51,7 +51,7 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
     <details style={{
       background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 10,
     }}>
-      <summary style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+      <summary style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
         Required Docs Status — {data.summary.ready} of {data.summary.required} ready
         {data.summary.missing > 0 && (
           <span style={{
@@ -78,7 +78,7 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
               }}>
                 {item.ready ? '✓' : ''}
               </span>
-              <span style={{ fontWeight: 700, color: '#0f172a' }}>{item.label}</span>
+              <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{item.label}</span>
               <span style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 10 }}>{item.detail}</span>
             </div>
           ))

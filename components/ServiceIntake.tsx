@@ -24,7 +24,7 @@ const FL = (label: string, auto?: boolean, places?: boolean) => (
   </div>
 );
 
-const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, color: '#0f172a', outline: 'none', boxSizing: 'border-box' };
+const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box' };
 const SEL: React.CSSProperties = { ...INP, cursor: 'pointer', WebkitAppearance: 'none' };
 
 // Hardcoded fallback — remains active when BANYAN_FF_MASTER_LIBRARY_API is OFF
@@ -296,7 +296,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdfa', border: '2px solid rgba(15,118,110,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Work Order Created</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 6 }}>Work Order Created</div>
       <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>{draft.businessName || draft.customerName} · {draft.island}</div>
       {createdWO && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginBottom: 20 }}>WO# {createdWO}</div>}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -305,7 +305,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           + Another
         </button>
         <button onClick={onClose}
-          style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           Done
         </button>
       </div>
@@ -318,7 +318,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Service — New Lead</div>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Create Work Order</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', margin: 0, letterSpacing: '-0.02em' }}>Create Work Order</h2>
         </div>
         <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
       </div>
@@ -419,7 +419,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                       style={{
                         fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
                         border: '1px solid #e2e8f0', background: oc.is_primary ? '#f0fdf4' : 'white',
-                        color: oc.is_primary ? '#0f766e' : '#475569',
+                        color: oc.is_primary ? 'var(--bos-color-brand-primary-deep)' : '#475569',
                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
                       }}
                     >
@@ -571,15 +571,15 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                 {selectedTypes.map(t => {
                   const hasTemplate = templateNames.has(t);
                   return (
-                    <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: 'rgba(15,118,110,0.1)', color: '#0f766e', border: '1px solid rgba(15,118,110,0.25)' }}>
+                    <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: 'rgba(15,118,110,0.1)', color: 'var(--bos-color-brand-primary-deep)', border: '1px solid rgba(15,118,110,0.25)' }}>
                       {t}
                       {hasTemplate && (
-                        <span style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.12)', padding: '1px 4px', borderRadius: 4, border: '1px solid rgba(15,118,110,0.2)' }}>✓</span>
+                        <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', background: 'rgba(15,118,110,0.12)', padding: '1px 4px', borderRadius: 4, border: '1px solid rgba(15,118,110,0.2)' }}>✓</span>
                       )}
                       <button
                         type="button"
                         onClick={() => toggleSystemType(t)}
-                        style={{ background: 'none', border: 'none', color: '#0f766e', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, fontWeight: 900, display: 'flex', alignItems: 'center' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--bos-color-brand-primary-deep)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, fontWeight: 900, display: 'flex', alignItems: 'center' }}
                         aria-label={`Remove ${t}`}
                       >×</button>
                     </span>
@@ -615,7 +615,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10, flexShrink: 0 }}>
         <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
         <button onClick={submit} disabled={!canSubmit}
-          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
+          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
           {saving ? 'Creating...' : 'Create Work Order'}
         </button>
       </div>

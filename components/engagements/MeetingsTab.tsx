@@ -60,7 +60,7 @@ function formatDate(value: string): string {
 }
 
 function DocChip({ icon, label, active, onClick, href }: { icon: string; label: string; active: boolean; onClick?: () => void; href?: string }) {
-  const color = active ? '#0f766e' : 'var(--bos-color-ink-tertiary)';
+  const color = active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)';
   const style: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999,
     fontSize: 10, fontWeight: 700, background: active ? `${color}12` : '#f1f5f9', color,
@@ -145,7 +145,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
         ))}
       </div>
@@ -162,7 +162,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
         </select>
         <label style={toggleStyle}><input type="checkbox" checked={transcriptOnly} onChange={(e) => setTranscriptOnly(e.target.checked)} /> Has transcript</label>
         <label style={toggleStyle}><input type="checkbox" checked={kulaOnly} onChange={(e) => setKulaOnly(e.target.checked)} /> Kula attended</label>
-        <button type="button" onClick={() => setShowWizard(true)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New Meeting</button>
+        <button type="button" onClick={() => setShowWizard(true)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New Meeting</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -173,7 +173,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
             <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(180px, 1.6fr) 120px 130px 120px', gap: 10, alignItems: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.meeting_date)}</div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.summary || '—'}
                 </div>

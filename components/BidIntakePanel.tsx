@@ -27,12 +27,12 @@ type BidOpportunity = {
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
 };
 
 const LEAD_TYPE_STYLE: Record<string, { color: string; bg: string; label: string; route: string }> = {
   rfp:        { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', label: 'RFP',        route: 'Assign to Estimator' },
-  wo_inquiry: { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', label: 'WO Inquiry', route: 'Send to Joey' },
+  wo_inquiry: { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', label: 'WO Inquiry', route: 'Send to Joey' },
   addendum:   { color: '#92400e', bg: 'rgba(255,251,235,0.9)', label: 'Addendum',   route: 'Link to Bid' },
   vendor:     { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', label: 'Vendor',     route: 'File' },
 };
@@ -134,7 +134,7 @@ export default function BidIntakePanel() {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Estimating</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Bid Intake</h1>
+            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0, marginBottom: 4 }}>Bid Intake</h1>
             <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>
               Kai scans {scanned.length > 0 ? scanned.join(', ') : 'estimator inboxes'} for bid opportunities
               {lastScan && ` · Last scan: ${lastScan}`}
@@ -143,7 +143,7 @@ export default function BidIntakePanel() {
           <button
             onClick={scan}
             disabled={scanning}
-            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
+            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
             {scanning ? '⟳ Scanning...' : '⟳ Scan Inboxes'}
           </button>
         </div>
@@ -159,7 +159,7 @@ export default function BidIntakePanel() {
             { label: 'Urgent', value: urgentCount },
           ].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 900, color: s.label === 'Urgent (≤7 days)' && s.value > 0 ? '#b91c1c' : '#0f172a', letterSpacing: '-0.04em' }}>{s.value}</div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: s.label === 'Urgent (≤7 days)' && s.value > 0 ? '#b91c1c' : 'var(--color-ink-primary)', letterSpacing: '-0.04em' }}>{s.value}</div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
@@ -176,7 +176,7 @@ export default function BidIntakePanel() {
       {!scanning && visibleOpps.length === 0 && !error && (
         <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>
             {opportunities.length === 0 ? 'Scan inboxes to find bid opportunities' : 'All opportunities processed'}
           </div>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
@@ -205,9 +205,9 @@ export default function BidIntakePanel() {
                     {isEditing ? (
                       <input value={editDraft.project_name ?? opp.project_name}
                         onChange={e => setEditDraft(p => ({ ...p, project_name: e.target.value }))}
-                        style={{ width: '100%', fontSize: 15, fontWeight: 800, color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 8px', outline: 'none', boxSizing: 'border-box' }} />
+                        style={{ width: '100%', fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 8px', outline: 'none', boxSizing: 'border-box' }} />
                     ) : (
-                      <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 2 }}>{opp.project_name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 2 }}>{opp.project_name}</div>
                     )}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
                       {/* Lead type — most prominent */}
@@ -241,7 +241,7 @@ export default function BidIntakePanel() {
                     {!isAdded && (
                       <>
                         <button onClick={() => { if (isEditing) { setEditingId(null); setEditDraft({}); } else { setEditingId(opp.email_id); setEditDraft({}); } }}
-                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                           {isEditing ? '✓' : '✎'}
                         </button>
                         <button onClick={() => setDismissed(prev => new Set([...prev, opp.email_id]))}
@@ -265,7 +265,7 @@ export default function BidIntakePanel() {
                           </div>
                         ) : (
                           <button onClick={() => addToBidQueue(opp)} disabled={adding === opp.email_id}
-                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
+                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
                             {adding === opp.email_id ? '...' : '→ Joey Queue'}
                           </button>
                         )}

@@ -215,7 +215,7 @@ export default function TaskResourceAssignmentDialog({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Crew on “{taskName}”</h2>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--color-ink-primary)' }}>Crew on “{taskName}”</h2>
             <p style={{ margin: '4px 0 0 0', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
               Active assignments determine who is on this task. Historical assignments are preserved for audit.
             </p>
@@ -264,7 +264,7 @@ export default function TaskResourceAssignmentDialog({
                       }}
                     >
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-primary)' }}>
                           {r.user_name ?? r.user_email ?? 'Unknown user'}
                         </span>
                         <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
@@ -316,7 +316,7 @@ export default function TaskResourceAssignmentDialog({
                   data-bos-resource-add-form
                   style={{ padding: 12, background: '#f8fafc', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 10 }}
                 >
-                  <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#0f172a' }}>Add resource</h3>
+                  <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>Add resource</h3>
                   <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     User
                     <select
@@ -421,7 +421,7 @@ export default function TaskResourceAssignmentDialog({
                         data-bos-resource-add-submit
                         onClick={() => submitAdd(false)}
                         disabled={saving}
-                        style={{ background: '#0f172a', color: 'white', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                        style={{ background: 'var(--color-ink-primary)', color: 'white', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                       >
                         Assign
                       </button>
@@ -435,7 +435,7 @@ export default function TaskResourceAssignmentDialog({
                   onClick={() => setShowAdd(true)}
                   style={{
                     background: 'transparent', border: '1px dashed #cbd5e1', borderRadius: 8,
-                    padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#0f172a',
+                    padding: '10px 12px', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-primary)',
                     cursor: 'pointer', width: '100%',
                   }}
                 >

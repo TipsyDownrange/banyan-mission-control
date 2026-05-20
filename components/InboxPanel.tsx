@@ -23,7 +23,7 @@ type InboxItem = {
 };
 
 const CAT: Record<EmailCategory, { label: string; color: string; bg: string; border: string; accent: string }> = {
-  bid_invite:   { label: 'Bid Invite',   color: '#0f766e', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.22)', accent: '#0d9488' },
+  bid_invite:   { label: 'Bid Invite',   color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.22)', accent: '#0d9488' },
   change_order: { label: 'Change Order', color: '#c2410c', bg: 'rgba(255,247,237,0.98)', border: '1px solid rgba(249,115,22,0.22)', accent: '#f97316' },
   payment:      { label: 'Payment',      color: '#1d4ed8', bg: 'rgba(239,246,255,0.98)', border: '1px solid rgba(59,130,246,0.2)',  accent: '#3b82f6' },
   vendor_quote: { label: 'Quote',        color: '#6d28d9', bg: 'rgba(245,243,255,0.98)', border: '1px solid rgba(139,92,246,0.2)', accent: '#8b5cf6' },
@@ -69,7 +69,7 @@ export default function InboxPanel() {
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Assistant</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Inbox</h1>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Inbox</h1>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', paddingBottom: 4 }}>Live · Gmail</div>
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function InboxPanel() {
           ].map(s => (
             <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
-              <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a' }}>{s.value}</div>
+              <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--color-ink-primary)' }}>{s.value}</div>
               <div style={{ marginTop: 6, fontSize: 12, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.5 }}>{s.helper}</div>
             </div>
           ))}
@@ -121,7 +121,7 @@ export default function InboxPanel() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 border: isActive ? (cfg?.border || '1px solid rgba(13,148,136,0.3)') : '1px solid rgba(226,232,240,0.9)',
                 background: isActive ? (cfg?.bg || 'rgba(240,253,250,0.96)') : 'white',
-                color: isActive ? (cfg?.color || '#0f766e') : 'var(--bos-color-ink-disabled)',
+                color: isActive ? (cfg?.color || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
                 cursor: 'pointer',
               }}>
                 {f === 'bid_invite' ? 'Bid Invites' : f === 'change_order' ? 'Change Orders' : f === 'vendor_quote' ? 'Quotes' : f.charAt(0).toUpperCase() + f.slice(1)} · {count}
@@ -178,12 +178,12 @@ export default function InboxPanel() {
                         </span>
                       )}
                       {item.dueDate && <span style={PILL('#92400e', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Due {item.dueDate}</span>}
-                      {item.bidMatch && <span style={PILL('#0f766e', 'rgba(240,253,250,0.9)', '1px solid rgba(13,148,136,0.2)')}>✓ In bid log</span>}
+                      {item.bidMatch && <span style={PILL('var(--bos-color-brand-primary-deep)', 'rgba(240,253,250,0.9)', '1px solid rgba(13,148,136,0.2)')}>✓ In bid log</span>}
                       {!item.bidMatch && item.category === 'bid_invite' && <span style={PILL('#92400e', 'rgba(255,251,235,0.9)', '1px solid rgba(245,158,11,0.2)')}>Not logged</span>}
                     </div>
 
                     {/* Project name */}
-                    <div style={{ fontSize: 15, fontWeight: item.unread ? 800 : 700, color: '#0f172a', letterSpacing: '-0.015em', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 15, fontWeight: item.unread ? 800 : 700, color: 'var(--color-ink-primary)', letterSpacing: '-0.015em', lineHeight: 1.3 }}>
                       {item.project}
                     </div>
 
@@ -204,7 +204,7 @@ export default function InboxPanel() {
                       <span style={{ fontSize: 13, color: '#334155', lineHeight: 1.55 }}>{item.kaiNote}</span>
                     </div>
                     {item.bidMatch && (
-                      <div style={{ fontSize: 12, color: '#0f766e', borderTop: '1px solid rgba(226,232,240,0.7)', paddingTop: 6, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', borderTop: '1px solid rgba(226,232,240,0.7)', paddingTop: 6, marginTop: 2 }}>
                         Matched: <strong>{item.bidMatch.name}</strong> · {item.bidMatch.assignedTo} · {item.bidMatch.status}
                       </div>
                     )}
@@ -257,7 +257,7 @@ export default function InboxPanel() {
                       </div>
                       <a href={`https://mail.google.com/mail/u/0/#inbox/${item.id}`} target="_blank" rel="noopener"
                         onClick={e => e.stopPropagation()}
-                        style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', textDecoration: 'none', padding: '6px 16px', borderRadius: 12, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.2)' }}>
+                        style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none', padding: '6px 16px', borderRadius: 12, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(13,148,136,0.2)' }}>
                         Open in Gmail ↗
                       </a>
                     </div>

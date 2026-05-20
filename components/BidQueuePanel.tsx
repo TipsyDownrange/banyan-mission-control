@@ -9,7 +9,7 @@ const DECISION_STYLES: Record<string, { color: string; bg: string; border: strin
   'needs review':    { color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
   'assign':          { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'waiting on docs': { color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
-  'in estimating':   { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
+  'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
   'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
   'lost':            { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
@@ -186,7 +186,7 @@ export default function BidQueuePanel() {
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>Bid Queue</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--color-ink-primary)', margin: 0 }}>Bid Queue</h2>
         </div>
         <div style={{ display: 'flex', gap: 6, paddingBottom: 4 }}>
           {(['table','cards'] as const).map(v => (
@@ -194,7 +194,7 @@ export default function BidQueuePanel() {
               padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
               border: viewMode === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
               background: viewMode === v ? 'rgba(240,253,250,0.96)' : 'white',
-              color: viewMode === v ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
+              color: viewMode === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
             }}>{v === 'table' ? '≡ Table' : '⊞ Cards'}</button>
           ))}
         </div>
@@ -213,7 +213,7 @@ export default function BidQueuePanel() {
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
-            <div style={{ marginTop: 6, fontSize: 26, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
+            <div style={{ marginTop: 6, fontSize: 26, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--color-ink-primary)', lineHeight: 1 }}>{s.value}</div>
             <div style={{ marginTop: 4, fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
           </div>
         ))}
@@ -225,7 +225,7 @@ export default function BidQueuePanel() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search job name, ID, or estimator..."
-          style={{ flex: '1 1 220px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#0f172a', outline: 'none' }}
+          style={{ flex: '1 1 220px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }}
         />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
           style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
@@ -263,7 +263,7 @@ export default function BidQueuePanel() {
       )}
 
       {toast && (
-        <div style={{ background: toast.includes('failed') || toast.includes('required') ? 'rgba(254,242,242,0.98)' : 'rgba(240,253,250,0.98)', border: '1px solid rgba(20,184,166,0.22)', borderRadius: 16, padding: '12px 16px', fontSize: 13, fontWeight: 700, color: toast.includes('failed') ? '#b91c1c' : '#0f766e' }}>
+        <div style={{ background: toast.includes('failed') || toast.includes('required') ? 'rgba(254,242,242,0.98)' : 'rgba(240,253,250,0.98)', border: '1px solid rgba(20,184,166,0.22)', borderRadius: 16, padding: '12px 16px', fontSize: 13, fontWeight: 700, color: toast.includes('failed') ? '#b91c1c' : 'var(--bos-color-brand-primary-deep)' }}>
           {toast}
         </div>
       )}
@@ -301,7 +301,7 @@ export default function BidQueuePanel() {
                     }}
                   >
                     <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center' }}>{bid['kID']}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{bid['Job Name']}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{bid['Job Name']}</div>
                     <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center' }}>{bid['Island'] || '—'}</div>
                     <div style={{ fontSize: 12, color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{bid['Assigned To'] || <span style={{ color: '#f59e0b', fontWeight: 700 }}>Unassigned</span>}</div>
                     <div style={{ fontSize: 12, color: urgent ? '#c2410c' : 'var(--bos-color-ink-disabled)', fontWeight: urgent ? 700 : 400, display: 'flex', alignItems: 'center' }}>
@@ -348,7 +348,7 @@ export default function BidQueuePanel() {
                       </div>
                       <div>
                         <button onClick={() => promoteBid(bid)} disabled={Boolean(promoting[bid['kID']])}
-                          style={{ padding: '8px 14px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: promoting[bid['kID']] ? 'not-allowed' : 'pointer' }}>
+                          style={{ padding: '8px 14px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: promoting[bid['kID']] ? 'not-allowed' : 'pointer' }}>
                           {promoting[bid['kID']] ? 'Promoting…' : 'Promote to Work Record'}
                         </button>
                       </div>
@@ -392,7 +392,7 @@ export default function BidQueuePanel() {
                       {PILL(ds, dStyle)}
                       {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
                     </div>
-                    <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a', lineHeight: 1.1 }}>{bid['Job Name']}</h3>
+                    <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', lineHeight: 1.1 }}>{bid['Job Name']}</h3>
                     <div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>
                       {bid['Island'] && <span>{bid['Island']} · </span>}
                       {bid['Assigned To'] || 'Unassigned'}
@@ -410,12 +410,12 @@ export default function BidQueuePanel() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, paddingLeft: 4 }}>
                   {[['Received', bid['Received Date'] || '—'], ['Due', bid['Due Date'] || '—'], ['GCs', bid['GC Count'] || '1'], ['Est. Value', bid['Est Value (High)'] || '—'], ['Products', bid['Products / Specs'] || '—']].map(([l,v]) => (
-                    <div key={l}>{FL(l)}<div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{v}</div></div>
+                    <div key={l}>{FL(l)}<div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{v}</div></div>
                   ))}
                 </div>
 
                 <button onClick={() => setExpandedCard(isExpanded ? null : bid['kID'])}
-                  style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', paddingLeft: 4 }}>
+                  style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', paddingLeft: 4 }}>
                   {isExpanded ? '↑ Less detail' : '↓ More detail'}
                 </button>
 
@@ -438,7 +438,7 @@ export default function BidQueuePanel() {
                         ))}
                       </div>
                       <button onClick={() => promoteBid(bid)} disabled={Boolean(promoting[bid['kID']])}
-                        style={{ marginTop: 8, padding: '8px 12px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: promoting[bid['kID']] ? 'not-allowed' : 'pointer' }}>
+                        style={{ marginTop: 8, padding: '8px 12px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: promoting[bid['kID']] ? 'not-allowed' : 'pointer' }}>
                         {promoting[bid['kID']] ? 'Promoting…' : 'Promote to Work Record'}
                       </button>
                     </div>

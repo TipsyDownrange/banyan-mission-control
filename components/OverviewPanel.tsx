@@ -8,19 +8,19 @@ type Event = { id: string; kID: string; projectName: string; type: string; occur
 type SubmittalSummary = { total: number; pending: number; approved: number; overdue: number };
 type COSummary = { total: number; pending: number; approved: number; totalExposure: number };
 
-const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e' };
+const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e' };
 
 const EVENT_STYLE: Record<string, { label: string; color: string; bg: string }> = {
   DAILY_LOG:         { label: 'Daily Log',   color: '#0369a1', bg: 'rgba(239,246,255,0.9)' },
   FIELD_ISSUE:       { label: 'Field Issue', color: '#b91c1c', bg: 'rgba(254,242,242,0.9)' },
-  INSTALL_STEP:      { label: 'Install',     color: '#0f766e', bg: 'rgba(240,253,250,0.9)' },
+  INSTALL_STEP:      { label: 'Install',     color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)' },
   NOTE:              { label: 'Note',        color: '#475569', bg: 'rgba(248,250,252,0.9)' },
   FIELD_MEASUREMENT: { label: 'Measurement', color: '#0891b2', bg: 'rgba(236,254,255,0.9)' },
   PUNCH_LIST:        { label: 'Punch List',  color: '#d97706', bg: 'rgba(255,251,235,0.9)' },
   TM_CAPTURE:        { label: 'T&M',         color: '#92400e', bg: 'rgba(255,247,237,0.9)' },
   SITE_VISIT:        { label: 'Site Visit',  color: '#0369a1', bg: 'rgba(240,249,255,0.9)' },
   TESTING:           { label: 'Test',        color: '#7c3aed', bg: 'rgba(245,243,255,0.9)' },
-  WARRANTY_CALLBACK: { label: 'Warranty',    color: '#0f766e', bg: 'rgba(240,253,250,0.9)' },
+  WARRANTY_CALLBACK: { label: 'Warranty',    color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)' },
   PHOTO_ONLY:        { label: 'Photo',       color: '#92400e', bg: 'rgba(255,251,235,0.9)' },
 };
 
@@ -117,19 +117,19 @@ export default function OverviewPanel() {
       label: 'Revenue This Month',
       value: fmtKpi(qboKpis.revenueThisMonth),
       subtitle: 'From QuickBooks',
-      color: '#0f766e',
+      color: 'var(--bos-color-brand-primary-deep)',
     },
     {
       label: 'AR Outstanding',
       value: fmtKpi(qboKpis.arOutstanding),
       subtitle: 'Unpaid invoices',
-      color: qboKpis.arOutstanding > 200000 ? '#d97706' : '#0f172a',
+      color: qboKpis.arOutstanding > 200000 ? '#d97706' : 'var(--color-ink-primary)',
     },
     {
       label: 'AP Outstanding',
       value: fmtKpi(qboKpis.apOutstanding),
       subtitle: 'Unpaid bills',
-      color: qboKpis.apOutstanding > 100000 ? '#d97706' : '#0f172a',
+      color: qboKpis.apOutstanding > 100000 ? '#d97706' : 'var(--color-ink-primary)',
     },
     {
       label: 'Net Income YTD',
@@ -157,13 +157,13 @@ export default function OverviewPanel() {
       label: 'Open Submittals',
       value: submittals.pending,
       subtitle: `${submittals.approved} approved · ${submittals.total} total`,
-      color: submittals.pending > 20 ? '#dc2626' : submittals.pending > 10 ? '#d97706' : '#0f172a',
+      color: submittals.pending > 20 ? '#dc2626' : submittals.pending > 10 ? '#d97706' : 'var(--color-ink-primary)',
     },
     {
       label: 'Pending Change Orders',
       value: cos.pending,
       subtitle: cos.totalExposure > 0 ? `$${(cos.totalExposure / 1000).toFixed(0)}K exposure` : `${cos.total} total`,
-      color: cos.pending > 5 ? '#dc2626' : cos.pending > 2 ? '#d97706' : '#0f172a',
+      color: cos.pending > 5 ? '#dc2626' : cos.pending > 2 ? '#d97706' : 'var(--color-ink-primary)',
     },
     {
       label: 'Open Issues',
@@ -203,7 +203,7 @@ export default function OverviewPanel() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 8 }}>
         {/* Projects by Island */}
         <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 16 }}>
             Projects by Island
           </div>
           {['Oahu', 'Maui', 'Kauai', 'Hawaii'].map(island => {
@@ -232,7 +232,7 @@ export default function OverviewPanel() {
 
         {/* Recent Activity */}
         <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 16 }}>
             Recent Activity
           </div>
           {events.length === 0 ? (
@@ -265,7 +265,7 @@ export default function OverviewPanel() {
       {/* Most Active Projects */}
       {topProjects.length > 0 && (
         <div style={{ marginTop: 20, background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 16 }}>
             Project Activity (Last 30 Days)
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 10 }}>

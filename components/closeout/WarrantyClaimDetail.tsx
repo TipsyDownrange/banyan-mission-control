@@ -66,7 +66,7 @@ const SECTION: CSSProperties = {
 };
 
 const SECTION_HEAD: CSSProperties = {
-  fontSize: 11, fontWeight: 800, color: '#0f766e',
+  fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)',
   textTransform: 'uppercase', letterSpacing: '0.1em',
 };
 
@@ -80,26 +80,26 @@ const LABEL: CSSProperties = {
 };
 
 const VALUE: CSSProperties = {
-  fontSize: 13, color: '#0f172a', marginTop: 2,
+  fontSize: 13, color: 'var(--color-ink-primary)', marginTop: 2,
 };
 
 const MONO: CSSProperties = { ...VALUE, fontFamily: 'monospace' };
 
 const INPUT: CSSProperties = {
   padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
-  background: 'white', fontSize: 13, color: '#0f172a',
+  background: 'white', fontSize: 13, color: 'var(--color-ink-primary)',
 };
 
 const BUTTON: CSSProperties = {
   padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer',
-  background: '#0f766e', color: 'white', fontSize: 13, fontWeight: 700,
+  background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 13, fontWeight: 700,
 };
 
 const BUTTON_DISABLED: CSSProperties = { ...BUTTON, background: 'var(--bos-color-ink-tertiary)', cursor: 'not-allowed' };
 
 const BUTTON_SECONDARY: CSSProperties = {
-  padding: '10px 18px', borderRadius: 10, border: '1px solid #0f766e',
-  background: 'white', color: '#0f766e', fontSize: 13, fontWeight: 700,
+  padding: '10px 18px', borderRadius: 10, border: '1px solid var(--bos-color-brand-primary-deep)',
+  background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 13, fontWeight: 700,
   textDecoration: 'none', display: 'inline-block',
 };
 

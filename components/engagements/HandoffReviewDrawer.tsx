@@ -114,7 +114,7 @@ export default function HandoffReviewDrawer({
         onClick={(e) => e.stopPropagation()}
         style={{ width: '100%', maxWidth: 640, background: '#f8fafc', height: '100%', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}
       >
-        <div style={{ background: 'linear-gradient(135deg, #064e3b, #0f766e)', padding: '20px 24px', position: 'sticky', top: 0, zIndex: 5 }}>
+        <div style={{ background: 'linear-gradient(135deg, #064e3b, var(--bos-color-brand-primary-deep))', padding: '20px 24px', position: 'sticky', top: 0, zIndex: 5 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(94,234,212,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
@@ -222,19 +222,19 @@ export default function HandoffReviewDrawer({
 }
 
 const sectionTitle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px',
+  fontSize: 12, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px',
 };
 const card: React.CSSProperties = {
   background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px',
 };
 const kv: React.CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: '#0f172a',
+  display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'var(--color-ink-primary)',
 };
 const kLabel: React.CSSProperties = { color: 'var(--bos-color-ink-disabled)', fontWeight: 600 };
 const btnBase: React.CSSProperties = {
   padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 800, cursor: 'pointer', border: 'none',
 };
-const btnPrimary: React.CSSProperties = { ...btnBase, background: '#0f766e', color: 'white' };
+const btnPrimary: React.CSSProperties = { ...btnBase, background: 'var(--bos-color-brand-primary-deep)', color: 'white' };
 const btnTeal: React.CSSProperties = { ...btnBase, background: '#0e7490', color: 'white' };
-const btnSecondary: React.CSSProperties = { ...btnBase, background: 'white', color: '#0f172a', border: '1px solid #cbd5e1' };
+const btnSecondary: React.CSSProperties = { ...btnBase, background: 'white', color: 'var(--color-ink-primary)', border: '1px solid #cbd5e1' };
 const btnDanger: React.CSSProperties = { ...btnBase, background: '#b91c1c', color: 'white' };

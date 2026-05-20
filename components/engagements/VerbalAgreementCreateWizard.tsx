@@ -94,8 +94,8 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: '#0f766e', textTransform: 'uppercase' }}>{kID}</div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '4px 0 0' }}>New Verbal Agreement</h2>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase' }}>{kID}</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-ink-primary)', margin: '4px 0 0' }}>New Verbal Agreement</h2>
           </div>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>x</button>
         </div>
@@ -156,7 +156,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy} style={secondaryButtonStyle}>Cancel</button>
-          <button type="submit" disabled={busy || !canSubmit} style={{ ...primaryButtonStyle, background: (busy || !canSubmit) ? 'var(--bos-color-ink-tertiary)' : '#0f766e' }}>
+          <button type="submit" disabled={busy || !canSubmit} style={{ ...primaryButtonStyle, background: (busy || !canSubmit) ? 'var(--bos-color-ink-tertiary)' : 'var(--bos-color-brand-primary-deep)' }}>
             {busy ? 'Creating...' : 'Create'}
           </button>
         </div>

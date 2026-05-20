@@ -10,7 +10,7 @@ type Event = {
 const TYPE_STYLE: Record<string, { label: string; color: string; bg: string; border: string }> = {
   DAILY_LOG:         { label: 'Daily Log',    color: '#0369a1', bg: 'rgba(239,246,255,0.9)',  border: 'rgba(59,130,246,0.2)' },
   FIELD_ISSUE:       { label: 'Field Issue',  color: '#b91c1c', bg: 'rgba(254,242,242,0.9)',  border: 'rgba(239,68,68,0.2)' },
-  INSTALL_STEP:      { label: 'Install',      color: '#0f766e', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(13,148,136,0.2)' },
+  INSTALL_STEP:      { label: 'Install',      color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(13,148,136,0.2)' },
   QA_CHECK:          { label: 'QA Check',     color: '#6d28d9', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(139,92,246,0.2)' },
   PHOTO_ONLY:        { label: 'Photo',        color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(245,158,11,0.2)' },
   NOTE:              { label: 'Note',         color: '#475569', bg: 'rgba(248,250,252,0.9)',  border: 'rgba(148,163,184,0.2)' },
@@ -19,7 +19,7 @@ const TYPE_STYLE: Record<string, { label: string; color: string; bg: string; bor
   TM_CAPTURE:        { label: 'T&M',          color: '#92400e', bg: 'rgba(255,247,237,0.9)',  border: 'rgba(146,64,14,0.2)' },
   SITE_VISIT:        { label: 'Site Visit',   color: '#0369a1', bg: 'rgba(240,249,255,0.9)',  border: 'rgba(3,105,161,0.2)' },
   TESTING:           { label: 'Test',         color: '#7c3aed', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(124,58,237,0.2)' },
-  WARRANTY_CALLBACK: { label: 'Warranty',     color: '#0f766e', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(15,118,110,0.2)' },
+  WARRANTY_CALLBACK: { label: 'Warranty',     color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(15,118,110,0.2)' },
 };
 
 function formatTime(raw: string): string {
@@ -61,13 +61,13 @@ export default function EventFeedPanel() {
     <div style={{ padding: '32px', maxWidth: 800, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Operations</div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Event Feed</h1>
+        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Event Feed</h1>
       </div>
 
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
         <button onClick={() => setFilter('ALL')}
-          style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === 'ALL' ? '1px solid rgba(15,23,42,0.2)' : '1px solid #e2e8f0', background: filter === 'ALL' ? '#0f172a' : 'white', color: filter === 'ALL' ? 'white' : 'var(--bos-color-ink-disabled)' }}>
+          style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === 'ALL' ? '1px solid rgba(15,23,42,0.2)' : '1px solid #e2e8f0', background: filter === 'ALL' ? 'var(--color-ink-primary)' : 'white', color: filter === 'ALL' ? 'white' : 'var(--bos-color-ink-disabled)' }}>
           All · {events.length}
         </button>
         {Object.entries(TYPE_STYLE).map(([key, s]) => counts[key] > 0 && (

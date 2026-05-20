@@ -357,7 +357,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
               padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: view === 'list' ? 'white' : 'transparent',
-              color: view === 'list' ? '#0f172a' : 'var(--bos-color-ink-disabled)',
+              color: view === 'list' ? 'var(--color-ink-primary)' : 'var(--bos-color-ink-disabled)',
               boxShadow: view === 'list' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -373,7 +373,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
               padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: view === 'gantt' ? 'white' : 'transparent',
-              color: view === 'gantt' ? '#0f172a' : 'var(--bos-color-ink-disabled)',
+              color: view === 'gantt' ? 'var(--color-ink-primary)' : 'var(--bos-color-ink-disabled)',
               boxShadow: view === 'gantt' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -389,7 +389,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
               padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: view === 'crew' ? 'white' : 'transparent',
-              color: view === 'crew' ? '#0f172a' : 'var(--bos-color-ink-disabled)',
+              color: view === 'crew' ? 'var(--color-ink-primary)' : 'var(--bos-color-ink-disabled)',
               boxShadow: view === 'crew' ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -605,7 +605,7 @@ function ListView({
                 <span data-bos-collapse-icon aria-hidden style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11 }}>
                   {isCollapsed ? '▶' : '▼'}
                 </span>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{phase.name}</h3>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{phase.name}</h3>
                 <StatusPill variant={STATUS_VARIANT[phase.status as TaskStatus] ?? 'info'}>
                   {STATUS_LABEL[phase.status as TaskStatus] ?? phase.status}
                 </StatusPill>
@@ -685,7 +685,7 @@ function ListView({
                                 onChange={(e) => onMarkComplete(task.id, e.target.checked)}
                               />
                             </td>
-                            <td style={{ padding: '8px 12px', color: '#0f172a', fontWeight: 600 }}>
+                            <td style={{ padding: '8px 12px', color: 'var(--color-ink-primary)', fontWeight: 600 }}>
                               {task.name}
                               {task.description ? (
                                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 400, marginTop: 2 }}>
@@ -704,7 +704,7 @@ function ListView({
                             <td style={{ padding: '8px 12px', color: 'var(--bos-color-ink-disabled)' }}>
                               {fmtDate(task.actual_start)} → {fmtDate(task.actual_end)}
                             </td>
-                            <td style={{ padding: '8px 12px', color: '#0f172a', fontWeight: 600 }}>
+                            <td style={{ padding: '8px 12px', color: 'var(--color-ink-primary)', fontWeight: 600 }}>
                               {task.percent_complete}%
                             </td>
                             <td style={{ padding: '8px 12px', color: 'var(--bos-color-ink-disabled)' }}>
@@ -1204,9 +1204,9 @@ function EditTaskRow({ task, allTasks, currentDeps, canWrite, onSaved, onCancel 
                     display: 'inline-flex', alignItems: 'center', gap: 4,
                     padding: '3px 8px', borderRadius: 999, fontSize: 11, cursor: 'pointer',
                     border: '1px solid',
-                    borderColor: checked ? '#0f766e' : '#e2e8f0',
+                    borderColor: checked ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0',
                     background: checked ? '#f0fdfa' : 'white',
-                    color: checked ? '#0f766e' : '#475569',
+                    color: checked ? 'var(--bos-color-brand-primary-deep)' : '#475569',
                   }}
                 >
                   <input
@@ -1257,7 +1257,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{title}</h2>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -1286,7 +1286,7 @@ function FormRow({ label, children }: { label: string; children: React.ReactNode
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0',
-  fontSize: 13, color: '#0f172a', background: 'white',
+  fontSize: 13, color: 'var(--color-ink-primary)', background: 'white',
 };
 
 const modalFooterStyle: React.CSSProperties = {
@@ -1350,7 +1350,7 @@ function HawaiiOverlayToggles({
     }}>
       <label
         data-bos-overlay-toggle="master"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#0f172a' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, color: 'var(--color-ink-primary)' }}
         title="Toggle the Hawaii overlay group (inter-island travel, permits, Matson schedule)"
       >
         <input

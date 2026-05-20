@@ -219,7 +219,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
         background: 'white', borderRadius: 16, border: '1px solid #e2e8f0',
         padding: 18, marginBottom: 16,
       }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 12 }}>
           Line Items
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '40px 80px 1fr 130px 80px 60px 40px', gap: 8, marginBottom: 6, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>
@@ -279,7 +279,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
         <button
           onClick={addLine}
           style={{
-            marginTop: 10, background: '#f1f5f9', color: '#0f172a',
+            marginTop: 10, background: '#f1f5f9', color: 'var(--color-ink-primary)',
             border: '1px solid #cbd5e1', padding: '8px 16px',
             borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
           }}

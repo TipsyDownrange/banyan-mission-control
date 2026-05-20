@@ -69,7 +69,7 @@ export default function CriticalGapsList({
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {g.gap_type} <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>· {g.gap_id}</span>
                 </div>
-                <div style={{ fontSize: 13, color: '#0f172a', marginTop: 4 }}>{g.description}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', marginTop: 4 }}>{g.description}</div>
               </div>
               {editable && onChange ? (
                 <select

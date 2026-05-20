@@ -93,7 +93,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             position: 'fixed', bottom: 24, right: 24,
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '12px 20px', borderRadius: 999,
-            background: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
+            background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep) 0%, #14b8a6 100%)',
             color: 'white',
             fontSize: 14, fontWeight: 700,
             border: 'none',
@@ -182,7 +182,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                     setFbSubmitting(false);
                   }} disabled={!fbDesc.trim()||fbSubmitting} style={{
                     width:'100%', padding:'11px', borderRadius:10, border:'none',
-                    background: !fbDesc.trim()||fbSubmitting ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+                    background: !fbDesc.trim()||fbSubmitting ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
                     color: !fbDesc.trim()||fbSubmitting ? 'rgba(148,163,184,0.4)' : 'white',
                     fontSize:13, fontWeight:700, cursor: !fbDesc.trim() ? 'default' : 'pointer',
                   }}>{fbSubmitting ? 'Sending…' : 'Send to Kai →'}</button>
@@ -197,8 +197,8 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
                   maxWidth: '85%', padding: '10px 14px', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  background: m.role === 'user' ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : '#f8fafc',
-                  color: m.role === 'user' ? 'white' : '#0f172a',
+                  background: m.role === 'user' ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#f8fafc',
+                  color: m.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                   fontSize: 13, lineHeight: 1.5,
                   border: m.role === 'kai' ? '1px solid #e2e8f0' : 'none',
                 }}>
@@ -243,10 +243,10 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
                 placeholder={`Ask about ${context}...`}
-                style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 13, color: '#0f172a' }}
+                style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 13, color: 'var(--color-ink-primary)' }}
               />
               <button onClick={() => send()} disabled={!input.trim() || loading}
-                style={{ width: 28, height: 28, borderRadius: '50%', background: input.trim() ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : '#e2e8f0', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
+                style={{ width: 28, height: 28, borderRadius: '50%', background: input.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#e2e8f0', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </div>

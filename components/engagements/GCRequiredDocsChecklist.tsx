@@ -85,7 +85,7 @@ export default function GCRequiredDocsChecklist({ kID }: { kID: string }) {
       display: 'flex', flexDirection: 'column', gap: 12,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>GC-Required Docs Checklist</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>GC-Required Docs Checklist</div>
         <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>INFORMATIONAL ONLY — does not block submission</div>
       </div>
       <div>

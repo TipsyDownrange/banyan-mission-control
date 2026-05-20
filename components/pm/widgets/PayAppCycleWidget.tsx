@@ -54,7 +54,7 @@ export default function PayAppCycleWidget({ onHide, showHide }: { onHide?: () =>
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink-primary)' }}>
                   {p.kid ?? '—'} · Pay App #{p.pay_app_number}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>
@@ -62,7 +62,7 @@ export default function PayAppCycleWidget({ onHide, showHide }: { onHide?: () =>
                 </div>
               </div>
               {p.current_amount_due && (
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', alignSelf: 'center' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', alignSelf: 'center' }}>
                   ${p.current_amount_due}
                 </div>
               )}

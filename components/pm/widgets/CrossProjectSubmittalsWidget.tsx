@@ -79,7 +79,7 @@ export default function CrossProjectSubmittalsWidget({ onHide, showHide }: { onH
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink-primary)' }}>
                   {s.submittal_number} {s.display_label && `— ${s.display_label}`}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>

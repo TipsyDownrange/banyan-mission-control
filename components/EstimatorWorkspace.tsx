@@ -7,7 +7,7 @@ const DECISION_STYLES: Record<string, { color: string; bg: string; border: strin
   'needs review':    { color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: '1px solid rgba(245,158,11,0.25)' },
   'assign':          { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'waiting on docs': { color: '#6d28d9', bg: 'rgba(245,243,255,0.9)', border: '1px solid rgba(139,92,246,0.25)' },
-  'in estimating':   { color: '#0f766e', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
+  'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
   'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
   'lost':            { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
@@ -99,7 +99,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
       {/* Personal header */}
       <div style={{ display: 'grid', gap: 4 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>My Estimating Workspace</div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>{currentUser}</h1>
+        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>{currentUser}</h1>
         {newAssignments > 0 && (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 12, background: 'rgba(255,251,235,0.98)', border: '1px solid rgba(245,158,11,0.3)', marginTop: 6, width: 'fit-content' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
@@ -120,7 +120,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
-            <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a' }}>{s.value}</div>
+            <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--color-ink-primary)' }}>{s.value}</div>
             <div style={{ marginTop: 6, fontSize: 12, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.5 }}>{s.helper}</div>
           </div>
         ))}
@@ -140,13 +140,13 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search my bids..."
-          style={{ flex: '1 1 200px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#0f172a', outline: 'none' }} />
+          style={{ flex: '1 1 200px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }} />
         {(['active','submitted','closed'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{
             padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
             border: filter === f ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
             background: filter === f ? 'rgba(240,253,250,0.96)' : 'white',
-            color: filter === f ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
+            color: filter === f ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
           }}>{f}</button>
         ))}
       </div>
@@ -192,7 +192,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                       {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
                       {bid['Island'] && PILL(bid['Island'], { color: '#0369a1', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.2)' })}
                     </div>
-                    <h3 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a', lineHeight: 1.1 }}>
+                    <h3 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', lineHeight: 1.1 }}>
                       {bid['Job Name']}
                     </h3>
                     <div style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
@@ -228,9 +228,9 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
 
                 {/* Fields row */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, paddingLeft: 4 }}>
-                  <div>{FL('Received')}<div style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>{bid['Received Date'] || '—'}</div></div>
-                  <div>{FL('GC Count')}<div style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>{bid['GC Count'] || '1'} GC{parseInt(bid['GC Count']||'1') > 1 ? 's' : ''}</div></div>
-                  <div>{FL('Est. Value')}<div style={{ fontSize: 14, color: '#0f766e', fontWeight: 700 }}>{bid['Est Value (High)'] || '—'}</div></div>
+                  <div>{FL('Received')}<div style={{ fontSize: 14, color: 'var(--color-ink-primary)', fontWeight: 700 }}>{bid['Received Date'] || '—'}</div></div>
+                  <div>{FL('GC Count')}<div style={{ fontSize: 14, color: 'var(--color-ink-primary)', fontWeight: 700 }}>{bid['GC Count'] || '1'} GC{parseInt(bid['GC Count']||'1') > 1 ? 's' : ''}</div></div>
+                  <div>{FL('Est. Value')}<div style={{ fontSize: 14, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>{bid['Est Value (High)'] || '—'}</div></div>
                   <div>{FL('Products / Specs')}<div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>{bid['Products / Specs'] || '—'}</div></div>
                 </div>
 
@@ -246,14 +246,14 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                     {FL('Documents & Notes')}
                     {bid['Bid Platform URL'] ? (
                       <a href={bid['Bid Platform URL']} target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
-                        style={{ fontSize: 13, fontWeight: 700, color: '#0f766e', textDecoration: 'none', padding: '7px 12px', borderRadius: 10, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)', display: 'block' }}>
+                        style={{ fontSize: 13, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none', padding: '7px 12px', borderRadius: 10, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)', display: 'block' }}>
                         Open Bid Platform ↗
                       </a>
                     ) : <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No bid platform link on file</div>}
                     {/* Upload button */}
                     <label onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
                       <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Upload document — Kai routes automatically</span>
-                      <span style={{ padding: '4px 12px', borderRadius: 8, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Upload</span>
+                      <span style={{ padding: '4px 12px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Upload</span>
                       <input type="file" style={{ display: 'none' }} onChange={async e => {
                         const file = e.target.files?.[0];
                         if (!file) return;
@@ -273,7 +273,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                     </label>
                     {/* Notes */}
                     <textarea placeholder="Add estimating notes, assumptions, risk items..."
-                      style={{ fontSize: 12, padding: '8px 10px', borderRadius: 10, border: '1px solid #e2e8f0', resize: 'none', outline: 'none', color: '#0f172a', lineHeight: 1.5, background: 'white' }}
+                      style={{ fontSize: 12, padding: '8px 10px', borderRadius: 10, border: '1px solid #e2e8f0', resize: 'none', outline: 'none', color: 'var(--color-ink-primary)', lineHeight: 1.5, background: 'white' }}
                       rows={3} onClick={e => e.stopPropagation()} />
                   </div>
                 </div>
@@ -283,7 +283,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                   <div style={{ padding: '12px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(226,232,240,0.94)' }}>
                     {FL('Bid log entry')}
                     <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
-                      <span style={{ fontWeight: 700, color: '#0f172a' }}>{kID}</span>
+                      <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{kID}</span>
                       {' · '}{ds}
                       {bid['Win / Loss'] ? ` · ${bid['Win / Loss']}` : ''}
                       {' · '}Assigned to {bid['Assigned To'] || 'Unassigned'}
@@ -296,7 +296,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
 
           {!loading && filtered.length === 0 && (
             <div style={{ background: 'white', borderRadius: 24, border: '1px solid rgba(226,232,240,0.9)', padding: 48, textAlign: 'center', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>
                 {filter === 'active' ? 'No active bids' : filter === 'submitted' ? 'No submitted bids' : 'No closed bids'}
               </div>
               <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>

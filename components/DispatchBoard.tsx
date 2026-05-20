@@ -20,7 +20,7 @@ const WORK_TYPES = [
 
 const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   'Site Visit / Assessment': { color: '#0369a1', bg: '#eff6ff', border: '#bfdbfe' },
-  'Measurement':             { color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
+  'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', border: '#99f6e4' },
   'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
   'Punch List / Warranty':   { color: '#475569', bg: '#f8fafc', border: '#cbd5e1' },
@@ -49,7 +49,7 @@ function parseConfirmations(raw: string): Record<string, string> {
 }
 
 const CONF_STYLE: Record<string, { icon: string; color: string }> = {
-  confirmed: { icon: '✓', color: '#0f766e' },
+  confirmed: { icon: '✓', color: 'var(--bos-color-brand-primary-deep)' },
   declined:  { icon: '✗', color: '#b91c1c' },
   pending:   { icon: '?', color: 'var(--bos-color-ink-tertiary)' },
 };
@@ -60,12 +60,12 @@ type WorkOrder = { id: string; name: string; island: string; status: string; con
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
   open:      { color: '#b91c1c', bg: '#fef2f2', label: 'Open' },
   partial:   { color: '#92400e', bg: '#fffbeb', label: 'Partial' },
-  filled:    { color: '#0f766e', bg: '#f0fdfa', label: 'Filled' },
+  filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'Filled' },
   completed: { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc', label: 'Done' },
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Maui: '#0f766e', Oahu: '#0369a1', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Maui: 'var(--bos-color-brand-primary-deep)', Oahu: '#0369a1', Kauai: '#6d28d9', Hawaii: '#92400e',
 };
 
 function getWeekDates(startDate: Date): Date[] {
@@ -253,14 +253,14 @@ export default function DispatchBoard() {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 3 }}>Dispatch Board</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0, marginBottom: 3 }}>Dispatch Board</h1>
             <p style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>Tap a slot to expand · Use Assign Crew to add glaziers</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Island filter */}
             {['All','Maui','Oahu','Kauai'].map(isl => (
               <button key={isl} onClick={() => setIslandFilter(isl)}
-                style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {isl}
               </button>
             ))}
@@ -274,7 +274,7 @@ export default function DispatchBoard() {
                 style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>›</button>
             </div>
             <button onClick={() => setShowAddSlot(true)}
-              style={{ padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
               + Add Slot
             </button>
           </div>
@@ -291,7 +291,7 @@ export default function DispatchBoard() {
                 <div style={{ fontSize: 11, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? '#0369a1' : 'var(--bos-color-ink-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                   {date.toLocaleDateString('en-US', { weekday: 'short' })}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: isToday(date) ? '#0369a1' : '#0f172a' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: isToday(date) ? '#0369a1' : 'var(--color-ink-primary)' }}>
                   {date.getDate()}
                 </div>
                 <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>{date.toLocaleDateString('en-US', { month: 'short' })}</div>
@@ -323,7 +323,7 @@ export default function DispatchBoard() {
                         onClick={() => setExpandedSlot(isExpanded ? null : slot.slot_id)}
                         style={{ borderRadius: 8, border: `1px solid ${ss.color}33`, background: ss.bg, padding: '6px 8px', cursor: 'pointer', boxShadow: 'none' }}>
                         {/* Slot header */}
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-ink-primary)', lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {slot.project_name.length > 20 ? slot.project_name.substring(0, 20) + '...' : slot.project_name}
                         </div>
                         {/* Work type badge — compact */}
@@ -370,7 +370,7 @@ export default function DispatchBoard() {
                         {/* Assign Crew button — always visible */}
                         <button
                           onClick={e => { e.stopPropagation(); openCrewPicker(slot.slot_id); }}
-                          style={{ marginTop: 5, width: '100%', padding: '5px 6px', borderRadius: 6, background: 'rgba(15,118,110,0.06)', border: '1px dashed #14b8a6', color: '#0f766e', fontSize: 8, fontWeight: 800, cursor: 'pointer', minHeight: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                          style={{ marginTop: 5, width: '100%', padding: '5px 6px', borderRadius: 6, background: 'rgba(15,118,110,0.06)', border: '1px dashed #14b8a6', color: 'var(--bos-color-brand-primary-deep)', fontSize: 8, fontWeight: 800, cursor: 'pointer', minHeight: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
                           <span style={{ fontSize: 10 }}>+</span> Assign Crew
                         </button>
                         {/* Expanded: full name, confirmations, delete */}
@@ -426,7 +426,7 @@ export default function DispatchBoard() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Assign Crew</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Assign Crew</div>
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {crewPickerSlot.project_name.length > 36 ? crewPickerSlot.project_name.substring(0, 36) + '…' : crewPickerSlot.project_name}
                   {crewPickerSlot.island && <span style={{ marginLeft: 6, fontWeight: 700, color: ISLAND_COLOR[crewPickerSlot.island] || 'var(--bos-color-ink-disabled)' }}>· {crewPickerSlot.island}</span>}
@@ -439,7 +439,7 @@ export default function DispatchBoard() {
             <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
               {['All', 'Maui', 'Oahu', 'Kauai', 'Hawaii'].map(isl => (
                 <button key={isl} onClick={() => setCrewPickerIsland(isl)}
-                  style={{ padding: '7px 13px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: crewPickerIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: crewPickerIsland === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: crewPickerIsland === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', minHeight: 36, touchAction: 'manipulation' }}>
+                  style={{ padding: '7px 13px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: crewPickerIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: crewPickerIsland === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}15` : 'white', color: crewPickerIsland === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', minHeight: 36, touchAction: 'manipulation' }}>
                   {isl}
                 </button>
               ))}
@@ -465,12 +465,12 @@ export default function DispatchBoard() {
                     onClick={() => isAssigned
                       ? removeCrewFromSlot(crewPickerSlotId, member.name)
                       : onAssignCrewToSlot(crewPickerSlotId, member.name)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: isAssigned ? 'rgba(15,118,110,0.07)' : 'white', border: isAssigned ? '1.5px solid #0f766e' : '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', minHeight: 56, width: '100%', touchAction: 'manipulation' }}>
-                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: isAssigned ? '#0f766e22' : `${ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: isAssigned ? '#0f766e' : (ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'), flexShrink: 0 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: isAssigned ? 'rgba(15,118,110,0.07)' : 'white', border: isAssigned ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', minHeight: 56, width: '100%', touchAction: 'manipulation' }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: isAssigned ? '#0f766e22' : `${ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: isAssigned ? 'var(--bos-color-brand-primary-deep)' : (ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'), flexShrink: 0 }}>
                       {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                       <div style={{ display: 'flex', gap: 5, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, color: ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)', background: `${ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'}18`, border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}` }}>{member.island}</span>
                         <span style={{ fontSize: 10, color: count > 0 ? '#92400e' : 'var(--bos-color-ink-tertiary)', fontWeight: count > 0 ? 700 : 400 }}>
@@ -478,7 +478,7 @@ export default function DispatchBoard() {
                         </span>
                       </div>
                     </div>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: isAssigned ? '#0f766e' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: isAssigned ? 'white' : '#cbd5e1', fontWeight: 800 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: isAssigned ? 'var(--bos-color-brand-primary-deep)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: isAssigned ? 'white' : '#cbd5e1', fontWeight: 800 }}>
                       {isAssigned ? '✓' : '+'}
                     </div>
                   </button>
@@ -487,7 +487,7 @@ export default function DispatchBoard() {
             </div>
             {/* Done button */}
             <button onClick={() => setCrewPickerSlotId(null)}
-              style={{ marginTop: 12, width: '100%', padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
+              style={{ marginTop: 12, width: '100%', padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
               Done
             </button>
           </div>
@@ -498,13 +498,13 @@ export default function DispatchBoard() {
       {showAddSlot && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 500, padding: 28, boxShadow: '0 24px 64px rgba(15,23,42,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>Add Job Slot</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 18 }}>Add Job Slot</div>
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Project *</label>
                 {addProject.startsWith('[WO]') ? (
                   <div style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #0f766e44', background: '#f0fdfa', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#0f766e', fontWeight: 700 }}>{addProject}</span>
+                    <span style={{ color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>{addProject}</span>
                     <button type="button" onClick={() => { setAddProject(''); setAddKID(''); }} style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
                   </div>
                 ) : (
@@ -546,7 +546,7 @@ export default function DispatchBoard() {
               {/* Secondary WO Picker */}
               {showWOPicker && (
                 <div style={{ border: '1px solid #ccfbf1', borderRadius: 12, padding: 12, background: '#f0fdfa' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
                     Select Work Order
                   </div>
                   {/* Island filter pills */}
@@ -556,7 +556,7 @@ export default function DispatchBoard() {
                         key={isl}
                         type="button"
                         onClick={() => setWoIslandFilter(isl)}
-                        style={{ padding: '5px 11px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: woIslandFilter === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: woIslandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: woIslandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', minHeight: 30, touchAction: 'manipulation' }}
+                        style={{ padding: '5px 11px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: woIslandFilter === isl ? `1.5px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: woIslandFilter === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}15` : 'white', color: woIslandFilter === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', minHeight: 30, touchAction: 'manipulation' }}
                       >
                         {isl}
                       </button>
@@ -596,7 +596,7 @@ export default function DispatchBoard() {
                               setWoSearchQuery('');
                               setWoIslandFilter('All');
                             }}
-                            style={{ textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 12, color: '#0f172a', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
+                            style={{ textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 12, color: 'var(--color-ink-primary)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
                           >
                             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wo.name}</span>
                             <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
@@ -609,9 +609,9 @@ export default function DispatchBoard() {
                     </div>
                   )}
                   {addProject.startsWith('[WO]') && (
-                    <div style={{ marginTop: 8, fontSize: 11, color: '#0f766e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ marginTop: 8, fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span>✓ {addProject}</span>
-                      <button type="button" onClick={() => { setAddProject(''); setAddKID(''); setShowWOPicker(true); }} style={{ fontSize: 9, color: '#0f766e', background: 'none', border: '1px solid #0f766e44', borderRadius: 6, padding: '1px 6px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
+                      <button type="button" onClick={() => { setAddProject(''); setAddKID(''); setShowWOPicker(true); }} style={{ fontSize: 9, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: '1px solid #0f766e44', borderRadius: 6, padding: '1px 6px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
                     </div>
                   )}
                 </div>
@@ -669,7 +669,7 @@ export default function DispatchBoard() {
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); setAddWorkType(''); setAddNotes(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || !addWorkType || saving}
-                style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : 'Add Slot'}
               </button>
             </div>

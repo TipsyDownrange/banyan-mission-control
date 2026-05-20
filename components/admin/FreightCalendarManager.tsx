@@ -63,16 +63,16 @@ const FIELD_LABEL: CSSProperties = {
 };
 const FIELD_INPUT: CSSProperties = {
   padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1',
-  fontSize: 13, color: '#0f172a', background: 'white', minWidth: 140,
+  fontSize: 13, color: 'var(--color-ink-primary)', background: 'white', minWidth: 140,
 };
 const PRIMARY_BUTTON: CSSProperties = {
   padding: '9px 14px', borderRadius: 10, border: 'none',
-  background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800,
+  background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800,
   letterSpacing: '0.05em', cursor: 'pointer',
 };
 const GHOST_BUTTON: CSSProperties = {
   padding: '7px 10px', borderRadius: 8, border: '1px solid #cbd5e1',
-  background: 'white', color: '#0f172a', fontSize: 11, fontWeight: 700,
+  background: 'white', color: 'var(--color-ink-primary)', fontSize: 11, fontWeight: 700,
   cursor: 'pointer',
 };
 const DANGER_BUTTON: CSSProperties = {
@@ -84,7 +84,7 @@ const HEADER_CELL: CSSProperties = {
   textAlign: 'left',
 };
 const CELL: CSSProperties = {
-  padding: '10px 12px', fontSize: 13, color: '#0f172a',
+  padding: '10px 12px', fontSize: 13, color: 'var(--color-ink-primary)',
   borderBottom: '1px solid #f1f5f9', verticalAlign: 'top',
 };
 const MODAL_BACKDROP: CSSProperties = {
@@ -338,7 +338,7 @@ export default function FreightCalendarManager() {
             background: 'white', textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>
             No sailings on file
           </div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', maxWidth: 420, margin: '0 auto' }}>
@@ -408,7 +408,7 @@ export default function FreightCalendarManager() {
       {formOpen ? (
         <div style={MODAL_BACKDROP} data-testid="freight-form-modal">
           <div style={MODAL_PANEL}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
               {form.freight_calendar_id ? 'Edit sailing' : 'Add sailing'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -512,7 +512,7 @@ export default function FreightCalendarManager() {
       {pendingDeleteId ? (
         <div style={MODAL_BACKDROP} data-testid="freight-delete-modal">
           <div style={MODAL_PANEL}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
               Remove sailing?
             </div>
             <div style={{ fontSize: 13, color: '#475569' }}>

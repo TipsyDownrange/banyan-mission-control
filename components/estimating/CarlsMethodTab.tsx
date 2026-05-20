@@ -134,7 +134,7 @@ function DollarInput({ value, onChange, placeholder = '0.00', width = 130 }: Dol
         fontSize: 13,
         fontFamily: FONT,
         fontVariantNumeric: 'tabular-nums',
-        color: '#0f172a',
+        color: 'var(--color-ink-primary)',
         background: focused ? '#f0fdf4' : 'rgba(240,253,244,0.7)',
         outline: 'none',
         textAlign: 'right',
@@ -176,7 +176,7 @@ function SmallInput({
         fontSize: 12,
         fontFamily: FONT,
         fontVariantNumeric: 'tabular-nums',
-        color: '#0f172a',
+        color: 'var(--color-ink-primary)',
         background: focused ? '#f0fdf4' : 'rgba(240,253,244,0.7)',
         outline: 'none',
         textAlign: align,
@@ -205,7 +205,7 @@ function DescriptionInput({ value, onChange }: { value: string; onChange: (v: st
         fontFamily: FONT,
         background: 'transparent',
         outline: 'none',
-        color: '#0f172a',
+        color: 'var(--color-ink-primary)',
         padding: '3px 0',
         transition: 'border-color 0.15s',
       }}
@@ -228,7 +228,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
             width: 3,
             height: 14,
             borderRadius: 2,
-            background: 'linear-gradient(180deg, #14b8a6, #0f766e)',
+            background: 'linear-gradient(180deg, #14b8a6, var(--bos-color-brand-primary-deep))',
             flexShrink: 0,
           }} />
           <span style={{
@@ -275,7 +275,7 @@ function SubtotalRow({ label, value }: { label: string; value: number }) {
           <span style={{
             fontSize: 13,
             fontWeight: 800,
-            color: '#0f172a',
+            color: 'var(--color-ink-primary)',
             fontFamily: FONT,
             fontVariantNumeric: 'tabular-nums',
             minWidth: 110,
@@ -302,7 +302,7 @@ function GrandTotalRow({ label, value, prominent = false }: {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: '#0f172a',
+            background: 'var(--color-ink-primary)',
             borderRadius: 12,
             padding: '14px 20px',
           }}>
@@ -391,7 +391,7 @@ function AmountDisplay({ value }: { value: number }) {
       fontSize: 13,
       fontFamily: FONT,
       fontVariantNumeric: 'tabular-nums',
-      color: '#0f766e',
+      color: 'var(--bos-color-brand-primary-deep)',
       fontWeight: 600,
     }}>
       ${fmt(value)}
@@ -416,7 +416,7 @@ const PRINT_STYLES = `
 
   body {
     background: white !important;
-    color: #0f172a !important;
+    color: var(--color-ink-primary) !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -435,7 +435,7 @@ const PRINT_STYLES = `
   #carls-print-area {
     font-family: -apple-system, "SF Pro Display", Inter, system-ui, sans-serif !important;
     font-size: 11pt;
-    color: #0f172a;
+    color: var(--color-ink-primary);
     max-width: 100%;
     border: none !important;
     box-shadow: none !important;
@@ -762,7 +762,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em' }}>
             Simple Estimate
           </span>
           {saving ? (
@@ -788,7 +788,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
           style={{
             padding: '8px 20px',
             borderRadius: 10,
-            background: '#0f172a',
+            background: 'var(--color-ink-primary)',
             color: 'white',
             border: 'none',
             fontSize: 11,
@@ -822,7 +822,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
         <div
           className="print-grand-total"
           style={{
-            background: '#0f172a',
+            background: 'var(--color-ink-primary)',
             padding: '20px 28px 18px',
           }}
         >
@@ -1196,7 +1196,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         alignItems: 'center',
                       }}>
                         {baseline.totalHours > 0 && (
-                          <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600 }}>
+                          <span style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>
                             📋 Template: {baseline.totalHours.toFixed(2)}h
                             <span style={{ fontWeight: 400, color: 'var(--bos-color-ink-disabled)', marginLeft: 4 }}>
                               ({baseline.breakdown.map(b => `${b.systemType} ${b.hours.toFixed(2)}h`).join(' + ')})
@@ -1224,7 +1224,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                           style={{
                             marginLeft: 'auto',
                             fontSize: 10,
-                            color: '#0f766e',
+                            color: 'var(--bos-color-brand-primary-deep)',
                             background: 'none',
                             border: '1px solid rgba(20,184,166,0.35)',
                             borderRadius: 6,
@@ -1407,7 +1407,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                     borderRadius: 12,
                     padding: '14px 18px',
                   }}>
-                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)', marginBottom: 10 }}>
                       🧠 What-If / Negotiation Tool
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1416,7 +1416,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         <span style={{ fontSize: 12, color: '#475569', fontFamily: FONT }}>
                           Mark-Up = (Overhead + Profit) / Gross Cost
                         </span>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>
                           {currentMarkupPct.toFixed(2)}%
                         </span>
                       </div>
@@ -1454,7 +1454,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
                           <div style={{
                             fontSize: 18, fontWeight: 900, fontFamily: FONT,
-                            color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a',
+                            color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : 'var(--color-ink-primary)',
                             fontVariantNumeric: 'tabular-nums',
                           }}>
                             {newMarkupPct.toFixed(2)}%
@@ -1469,7 +1469,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
                           <div style={{
                             fontSize: 22, fontWeight: 900, fontFamily: FONT,
-                            color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a',
+                            color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : 'var(--color-ink-primary)',
                             fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
                           }}>
                             ${fmt(newGrandTotal2)}

@@ -45,7 +45,7 @@ export default function WorkspaceShell({
 
       {/* Tab Bar */}
       <div style={{
-        background: '#0f172a',
+        background: 'var(--color-ink-primary)',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         flexShrink: 0,
       }}>
@@ -88,7 +88,7 @@ export default function WorkspaceShell({
                 {tab.badge !== undefined && tab.badge !== null && (
                   <span style={{
                     background: isActive ? '#14b8a6' : 'rgba(148,163,184,0.3)',
-                    color: isActive ? '#0f172a' : 'rgba(148,163,184,0.9)',
+                    color: isActive ? 'var(--color-ink-primary)' : 'rgba(148,163,184,0.9)',
                     fontSize: 9,
                     fontWeight: 800,
                     padding: '1px 6px',
@@ -174,7 +174,7 @@ export default function WorkspaceShell({
                   padding: '14px 16px',
                   borderBottom: '1px solid #e2e8f0',
                 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>✦ Kai</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>✦ Kai</span>
                   <button
                     onClick={() => setRightPanelOpen(false)}
                     style={{
@@ -204,7 +204,7 @@ export default function WorkspaceShell({
               justifyContent: 'center',
               width: 20,
               height: 48,
-              background: '#0f172a',
+              background: 'var(--color-ink-primary)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRight: 'none',
               borderRadius: '8px 0 0 8px',

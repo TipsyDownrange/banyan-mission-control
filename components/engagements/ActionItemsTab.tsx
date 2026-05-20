@@ -210,7 +210,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: label === 'Overdue' && Number(value) > 0 ? '#b91c1c' : '#0f172a', marginTop: 4 }}>{value}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: label === 'Overdue' && Number(value) > 0 ? '#b91c1c' : 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
         ))}
       </div>
@@ -236,7 +236,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
           {Object.entries(SOURCE_LABELS).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
         </select>
         <label style={toggleStyle}><input type="checkbox" checked={overdueOnly} onChange={(e) => setOverdueOnly(e.target.checked)} /> Overdue only</label>
-        <button type="button" onClick={() => setShowAdd((s) => !s)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Add Action Item</button>
+        <button type="button" onClick={() => setShowAdd((s) => !s)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Add Action Item</button>
       </div>
 
       {showAdd && (
@@ -246,7 +246,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
             {['URGENT', 'HIGH', 'MEDIUM', 'LOW'].map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
           <input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} style={inputStyle} />
-          <button type="submit" disabled={submitting || !newTitle.trim()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer', opacity: submitting ? 0.5 : 1 }}>
+          <button type="submit" disabled={submitting || !newTitle.trim()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer', opacity: submitting ? 0.5 : 1 }}>
             {submitting ? 'Adding…' : 'Add'}
           </button>
         </form>
@@ -266,7 +266,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
             <div key={it.action_item_id} style={{ background: 'white', border: overdue ? '1px solid #fca5a5' : '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 2fr) 120px 110px 130px 200px', gap: 10, alignItems: 'center' }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {it.action_required ?? '—'} · {SOURCE_LABELS[it.source_entity_type] ?? it.source_entity_type}
                   </div>
@@ -279,7 +279,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
                   {actionable && (
                     <>
-                      <button type="button" onClick={() => handleAction(it.action_item_id, 'complete')} style={actionBtnStyle('#0f766e')}>Complete</button>
+                      <button type="button" onClick={() => handleAction(it.action_item_id, 'complete')} style={actionBtnStyle('var(--bos-color-brand-primary-deep)')}>Complete</button>
                       <button type="button" onClick={() => {
                         const reason = window.prompt('Defer reason:');
                         if (reason) handleAction(it.action_item_id, 'defer', { reason });
@@ -308,7 +308,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 12, color: '#0f172a', background: 'white',
+  padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 12, color: 'var(--color-ink-primary)', background: 'white',
 };
 const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' };
 const toggleStyle: React.CSSProperties = {

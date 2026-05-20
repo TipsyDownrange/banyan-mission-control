@@ -128,7 +128,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                 ) : (
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={() => { setEditing(false); setSummary(meeting.summary ?? ''); setTopicsText(meeting.key_topics.join('\n')); setDecisionsText(meeting.decisions_made.join('\n')); }} disabled={busy} style={smallButtonStyle}>Cancel</button>
-                    <button type="button" onClick={saveEdits} disabled={busy} style={{ ...smallButtonStyle, background: '#0f766e', color: 'white', borderColor: '#0f766e' }}>{busy ? 'Saving…' : 'Save'}</button>
+                    <button type="button" onClick={saveEdits} disabled={busy} style={{ ...smallButtonStyle, background: 'var(--bos-color-brand-primary-deep)', color: 'white', borderColor: 'var(--bos-color-brand-primary-deep)' }}>{busy ? 'Saving…' : 'Save'}</button>
                   </div>
                 )}
               </div>
@@ -171,7 +171,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                     <div key={a.meeting_attendee_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                       <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : '#475569' }}>{a.is_kula_user ? 'KULA' : 'EXT'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{[a.role, a.organization].filter(Boolean).join(' · ') || a.email || '—'}</div>
                       </div>
                       {!a.attended && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>NO-SHOW</span>}
@@ -213,7 +213,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
 }
 
 const cardStyle: React.CSSProperties = { background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14, marginBottom: 12 };
-const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em' };
+const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em' };
 const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' };
 const smallButtonStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: 700, fontSize: 11, cursor: 'pointer' };
 const chipLinkStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: '#ecfeff', color: '#0e7490', textDecoration: 'none', fontWeight: 700 };

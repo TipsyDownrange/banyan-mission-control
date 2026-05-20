@@ -78,7 +78,7 @@ const STATUS_STYLES: Record<string, { color: string; bg: string; accentColor: st
   draft:      { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.1)',  accentColor: 'var(--bos-color-ink-tertiary)' },
   'in review':{ color: '#2563eb', bg: 'rgba(37,99,235,0.1)',    accentColor: '#3b82f6' },
   submitted:  { color: '#0369a1', bg: 'rgba(3,105,161,0.1)',    accentColor: '#0369a1' },
-  active:     { color: '#0f766e', bg: 'rgba(15,118,110,0.1)',   accentColor: '#14b8a6' },
+  active:     { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.1)',   accentColor: '#14b8a6' },
   won:        { color: '#15803d', bg: 'rgba(21,128,61,0.1)',    accentColor: '#16a34a' },
   lost:       { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', accentColor: 'var(--bos-color-ink-tertiary)' },
 };
@@ -183,13 +183,13 @@ function PlaceholderTab({ tabId }: { tabId: string }) {
         fontSize: 10,
         fontWeight: 800,
         letterSpacing: '0.1em',
-        color: '#0f766e',
+        color: 'var(--bos-color-brand-primary-deep)',
         marginBottom: 16,
         textTransform: 'uppercase',
       }}>
         Coming in {tab.phase}
       </div>
-      <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 12 }}>
         {WORKSPACE_TABS.find(t => t.id === tabId)?.label ?? tabId}
       </h2>
       <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.6 }}>
@@ -392,7 +392,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
       ),
       rightContent: amount ? (
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.02em' }}>
             {amount}
           </div>
           {bid.version && (
@@ -422,7 +422,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Back bar */}
         <div style={{
-          background: '#0f172a',
+          background: 'var(--color-ink-primary)',
           padding: '10px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -535,7 +535,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>
             Estimating
           </h1>
           <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: '4px 0 0' }}>
@@ -550,7 +550,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
           style={{
             padding: '9px 20px',
             borderRadius: 999,
-            background: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+            background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)',
             color: 'white',
             border: 'none',
             fontSize: 12,
@@ -568,11 +568,11 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
       {showNewBidModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowNewBidModal(false)}>
           <div style={{ background: 'white', borderRadius: 20, padding: 32, width: '90%', maxWidth: 520, boxShadow: '0 24px 64px rgba(15,23,42,0.3)' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>New Bid</h3>
+            <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)' }}>New Bid</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Project Name *</label>
-                <input value={newBidDraft.project_name} onChange={e => setNewBidDraft(p => ({ ...p, project_name: e.target.value }))} placeholder="e.g. Hilton Hawaiian Village Alii Tower" autoFocus style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(20,184,166,0.4)', fontSize: 12, color: '#0f172a', background: 'rgba(240,253,250,0.4)', outline: 'none', boxSizing: 'border-box' as const }} />
+                <input value={newBidDraft.project_name} onChange={e => setNewBidDraft(p => ({ ...p, project_name: e.target.value }))} placeholder="e.g. Hilton Hawaiian Village Alii Tower" autoFocus style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(20,184,166,0.4)', fontSize: 12, color: 'var(--color-ink-primary)', background: 'rgba(240,253,250,0.4)', outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
                 <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Client / GC</label>
@@ -621,7 +621,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
                   } catch (err) { console.error('Create bid failed', err); }
                   finally { setNewBidSaving(false); }
                 }}
-                style={{ padding: '9px 24px', borderRadius: 10, border: 'none', background: newBidDraft.project_name.trim() ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : '#e2e8f0', color: 'white', fontSize: 12, fontWeight: 800, cursor: newBidDraft.project_name.trim() ? 'pointer' : 'default' }}
+                style={{ padding: '9px 24px', borderRadius: 10, border: 'none', background: newBidDraft.project_name.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#e2e8f0', color: 'white', fontSize: 12, fontWeight: 800, cursor: newBidDraft.project_name.trim() ? 'pointer' : 'default' }}
               >
                 {newBidSaving ? 'Creating...' : 'Create Bid'}
               </button>

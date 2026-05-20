@@ -67,14 +67,14 @@ const LABEL: CSSProperties = {
 
 const INPUT: CSSProperties = {
   padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
-  background: 'white', fontSize: 13, color: '#0f172a',
+  background: 'white', fontSize: 13, color: 'var(--color-ink-primary)',
 };
 
 const TEXTAREA: CSSProperties = { ...INPUT, minHeight: 70, resize: 'vertical' };
 
 const BUTTON: CSSProperties = {
   padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer',
-  background: '#0f766e', color: 'white', fontSize: 13, fontWeight: 700,
+  background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 13, fontWeight: 700,
 };
 
 const BUTTON_DISABLED: CSSProperties = { ...BUTTON, background: 'var(--bos-color-ink-tertiary)', cursor: 'not-allowed' };

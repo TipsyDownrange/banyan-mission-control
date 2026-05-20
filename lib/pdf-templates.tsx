@@ -29,10 +29,10 @@ export const C = {
   border:     '#e2e8f0',  // dividers
   bg:         '#f8fafc',  // page tint
   white:      '#ffffff',
-  text:       '#0f172a',
+  text:       'var(--color-ink-primary)',
   subtext:    '#475569',
   // Keep teal only for status indicators
-  teal:       '#0f766e',
+  teal:       'var(--bos-color-brand-primary-deep)',
   tealBg:     '#f0fdfa',
   // Orange accent — for highlighted info blocks
   orange:     '#ea580c',

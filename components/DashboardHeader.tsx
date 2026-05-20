@@ -93,7 +93,7 @@ export default function DashboardHeader({
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <div style={{
                   fontSize: 28, fontWeight: 900, letterSpacing: '-0.03em',
-                  color: kpi.color || '#0f172a',
+                  color: kpi.color || 'var(--color-ink-primary)',
                 }}>
                   {kpi.value}
                 </div>

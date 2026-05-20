@@ -107,11 +107,11 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
           alignItems: 'center',
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#0f766e', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.05em' }}>
           #{ticket.ticket_number}
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
             {ticket.description || 'T&M ticket'}
           </div>
           <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -245,7 +245,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
 
           {billing && (
             <Section label="BILLED IN">
-              <div data-testid={`tm-ticket-billing-${ticket.ticket_id}`} style={{ fontSize: 12, color: '#0f766e', fontWeight: 700 }}>
+              <div data-testid={`tm-ticket-billing-${ticket.ticket_id}`} style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>
                 Pay App #{billing.pay_app_number}
                 {billing.period_end ? ` (period ending ${fmtDate(billing.period_end)})` : ''}
               </div>

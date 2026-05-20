@@ -23,9 +23,9 @@ const STATE_BADGE: Record<string, { bg: string; color: string; label?: string }>
   READY_FOR_SUBMISSION:   { bg: '#fffbeb', color: '#92400e', label: 'Ready · Submit' },
   SUBMITTED:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Submitted' },
   ARCHITECT_CERTIFIED:    { bg: '#eff6ff', color: '#1d4ed8', label: 'Architect Cert.' },
-  GC_APPROVED:            { bg: '#f0fdfa', color: '#0f766e', label: 'GC Approved' },
-  PAID_PARTIAL:           { bg: '#f0fdfa', color: '#0f766e', label: 'Paid · Partial' },
-  PAID_FULL:              { bg: '#f0fdfa', color: '#0f766e', label: 'Paid · Full' },
+  GC_APPROVED:            { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'GC Approved' },
+  PAID_PARTIAL:           { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Partial' },
+  PAID_FULL:              { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Full' },
   REJECTED:               { bg: '#fef2f2', color: '#b91c1c', label: 'Rejected' },
 };
 
@@ -86,7 +86,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
         background: 'white', borderRadius: 16, border: '1px solid #e2e8f0',
         padding: '40px 24px', textAlign: 'center',
       }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 8 }}>
           No pay applications yet
         </div>
         <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', marginBottom: 18 }}>
@@ -111,7 +111,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
           Pay Applications
           <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             ({payApps.length})
@@ -139,11 +139,11 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
             role={onOpen ? 'button' : undefined}
             tabIndex={onOpen ? 0 : undefined}
           >
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.05em' }}>
               #{p.pay_app_number}
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
                 {fmtPeriod(p.period_start, p.period_end)}
               </div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>

@@ -28,7 +28,7 @@ const ML_API_ENABLED = process.env.NEXT_PUBLIC_BANYAN_FF_MASTER_LIBRARY_API === 
 const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
 
 const STATUS_COLOR: Record<string, { color: string; bg: string }> = {
-  HARD:      { color: '#0f766e', bg: 'rgba(20,184,166,0.12)' },
+  HARD:      { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(20,184,166,0.12)' },
   ALLOWANCE: { color: '#b45309', bg: 'rgba(245,158,11,0.12)' },
   TBD:       { color: '#dc2626', bg: 'rgba(220,38,38,0.12)' },
   KAI:       { color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
@@ -66,7 +66,7 @@ function DetailField({ label, value, editable = false }: {
       </span>
       <span style={{
         fontSize: 11,
-        color: editable ? '#0f766e' : '#374151',
+        color: editable ? 'var(--bos-color-brand-primary-deep)' : '#374151',
         fontWeight: editable ? 600 : 400,
       }}>
         {value || '—'}
@@ -93,7 +93,7 @@ function CalcBox({ children }: { children: React.ReactNode }) {
       marginTop: 8,
       fontSize: 11,
       fontFamily: 'monospace',
-      color: '#0f172a',
+      color: 'var(--color-ink-primary)',
       lineHeight: 1.8,
     }}>
       {children}
@@ -185,7 +185,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
     borderRadius: 6,
     fontSize: 11,
     fontFamily: FONT,
-    color: '#0f172a',
+    color: 'var(--color-ink-primary)',
     background: 'rgba(240,253,250,0.6)',
     outline: 'none',
     boxSizing: 'border-box',
@@ -249,7 +249,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
           })}
         </select>
         {isSystemType && templateHours !== null && (
-          <div style={{ fontSize: 10, color: '#0f766e', marginTop: 3, fontWeight: 600 }}>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', marginTop: 3, fontWeight: 600 }}>
             📋 Template: {templateSteps!.length} steps, {templateHours.toFixed(2)}h total
           </div>
         )}
@@ -275,7 +275,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
       padding: '16px 18px',
       marginBottom: 16,
     }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', marginBottom: 12, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 12, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
         New {subView === 'systems' ? 'System' : subView.charAt(0).toUpperCase() + subView.slice(1)} Entry
       </div>
 
@@ -334,7 +334,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
           </div>
           {(fields['DLO_Width_in'] && fields['DLO_Height_in']) && (
             <CalcBox>
-              <div style={{ fontWeight: 700, marginBottom: 4, fontFamily: FONT, fontSize: 10, color: '#0f766e', letterSpacing: '0.08em', textTransform: 'uppercase' }}>DLO + Bite Calculation</div>
+              <div style={{ fontWeight: 700, marginBottom: 4, fontFamily: FONT, fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>DLO + Bite Calculation</div>
               Glass Width = {fields['DLO_Width_in'] || '?'}" + (2 × {fields['Bite_Per_Side'] || '0'}") = <strong>{fields['Glass_Width_in'] || '?'}"</strong>{'\n'}
               Glass Height = {fields['DLO_Height_in'] || '?'}" + (2 × {fields['Bite_Per_Side'] || '0'}") = <strong>{fields['Glass_Height_in'] || '?'}"</strong>{'\n'}
               DLO SF = ({fields['DLO_Width_in']}" × {fields['DLO_Height_in']}") / 144 = <strong>{fields['DLO_SF'] || '?'} SF</strong>{'\n'}
@@ -420,7 +420,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
             padding: '7px 20px',
             borderRadius: 8,
             border: 'none',
-            background: saving ? 'var(--bos-color-ink-tertiary)' : '#0f766e',
+            background: saving ? 'var(--bos-color-ink-tertiary)' : 'var(--bos-color-brand-primary-deep)',
             color: 'white',
             fontSize: 11,
             fontWeight: 800,
@@ -671,7 +671,7 @@ function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplate
         <div>
           {/* DLO + Bite Calculation — the critical math */}
           <CalcBox>
-            <div style={{ fontWeight: 700, marginBottom: 6, fontFamily: FONT, fontSize: 10, color: '#0f766e', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
+            <div style={{ fontWeight: 700, marginBottom: 6, fontFamily: FONT, fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
               DLO + Bite Calculation
             </div>
             <div>Glass Width  = {dloW}" + (2 × {bite}") = <strong>{num(String(glassW), 3)}"</strong></div>
@@ -740,7 +740,7 @@ function GlassView({ rows, bidVersionId, onUpdate, onDelete, onAdd, stepTemplate
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
           {rows.length} lite types · {totalQty} EA · {num(String(totalBuySF))} total buy SF
-          <span style={{ marginLeft: 8, fontSize: 10, color: '#0f766e', fontWeight: 600 }}>
+          <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>
             Expand rows to verify DLO + bite math
           </span>
         </div>
@@ -1055,7 +1055,7 @@ const addBtnStyle: React.CSSProperties = {
   borderRadius: 8,
   border: '1px solid rgba(20,184,166,0.4)',
   background: 'rgba(240,253,250,0.8)',
-  color: '#0f766e',
+  color: 'var(--bos-color-brand-primary-deep)',
   fontSize: 11,
   fontWeight: 800,
   cursor: 'pointer',
@@ -1209,7 +1209,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
                 borderRadius: 999,
                 border: active ? 'none' : '1px solid #e2e8f0',
                 background: active
-                  ? 'linear-gradient(135deg, #0f766e, #14b8a6)'
+                  ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)'
                   : 'white',
                 color: active ? 'white' : '#475569',
                 fontSize: 11,
@@ -1236,7 +1236,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
                   height: 18,
                   borderRadius: 999,
                   background: active ? 'rgba(255,255,255,0.25)' : 'rgba(20,184,166,0.12)',
-                  color: active ? 'white' : '#0f766e',
+                  color: active ? 'white' : 'var(--bos-color-brand-primary-deep)',
                   fontSize: 9,
                   fontWeight: 800,
                   padding: '0 4px',
@@ -1266,7 +1266,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
           <span style={{ width: 8, height: 8, borderRadius: 2, background: '#f97316', display: 'inline-block' }} />
           Kai-generated (orange)
         </span>
-        <span style={{ color: '#0f766e', fontWeight: 600 }}>
+        <span style={{ color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>
           Click rows to expand detail
         </span>
       </div>

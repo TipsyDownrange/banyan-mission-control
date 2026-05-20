@@ -142,7 +142,7 @@ export default function PlacesAutocomplete({
   const INP: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: 10,
     border: '1px solid #e2e8f0', background: 'white',
-    fontSize: 13, color: '#0f172a', outline: 'none',
+    fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none',
     boxSizing: 'border-box', ...style,
   };
 
@@ -178,7 +178,7 @@ export default function PlacesAutocomplete({
                 borderBottom: i < suggestions.length - 1 ? '1px solid #f1f5f9' : 'none',
               }}
             >
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{s.mainText}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-primary)' }}>{s.mainText}</div>
               {s.secondaryText && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{s.secondaryText}</div>}
             </div>
           ))}

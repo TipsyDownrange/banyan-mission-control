@@ -64,8 +64,8 @@ export default function EngagementCreationForm() {
   return (
     <section style={{ padding: 18, borderRadius: 20, background: 'white', border: '1px solid rgba(226,232,240,0.92)', boxShadow: '0 10px 26px rgba(15,23,42,0.05)', display: 'grid', gap: 14, marginBottom: 18 }}>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>PM Handoff</div>
-        <h2 style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>Create Engagement</h2>
+        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>PM Handoff</div>
+        <h2 style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 900, color: 'var(--color-ink-primary)', letterSpacing: '-0.03em' }}>Create Engagement</h2>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
@@ -115,10 +115,10 @@ export default function EngagementCreationForm() {
       </label>
 
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button onClick={submit} disabled={saving || !siteId || !routingRationale.trim()} style={{ padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 12, fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer' }}>
+        <button onClick={submit} disabled={saving || !siteId || !routingRationale.trim()} style={{ padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer' }}>
           {saving ? 'Creating…' : 'Create Engagement'}
         </button>
-        {message && <span style={{ fontSize: 13, fontWeight: 700, color: message.includes('Created') ? '#0f766e' : '#b91c1c' }}>{message}</span>}
+        {message && <span style={{ fontSize: 13, fontWeight: 700, color: message.includes('Created') ? 'var(--bos-color-brand-primary-deep)' : '#b91c1c' }}>{message}</span>}
       </div>
     </section>
   );

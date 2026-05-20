@@ -37,7 +37,7 @@ export default function HealthPage() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--color-ink-primary)', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6 }}>System Health Check</h1>
         <p style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 13, marginBottom: 24 }}>Cross-table kID consistency audit. First 100 WOs. Green = consistent, Red = missing/mismatched.</p>
@@ -66,7 +66,7 @@ export default function HealthPage() {
             {/* Filters */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
               {(['all', 'mismatch', 'no_plans'] as const).map(f => (
-                <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === f ? '#0f766e' : '#1e293b', color: filter === f ? '#fff' : 'var(--bos-color-ink-disabled)' }}>
+                <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === f ? 'var(--bos-color-brand-primary-deep)' : '#1e293b', color: filter === f ? '#fff' : 'var(--bos-color-ink-disabled)' }}>
                   {f === 'all' ? 'All WOs' : f === 'mismatch' ? '⚠ Mismatches Only' : '❌ No Plans'}
                 </button>
               ))}
@@ -87,7 +87,7 @@ export default function HealthPage() {
                 </thead>
                 <tbody>
                   {filtered.map((r, i) => (
-                    <tr key={r.wo_id} style={{ background: i % 2 === 0 ? '#0f172a' : '#111827', borderBottom: '1px solid #1e293b' }}>
+                    <tr key={r.wo_id} style={{ background: i % 2 === 0 ? 'var(--color-ink-primary)' : '#111827', borderBottom: '1px solid #1e293b' }}>
                       <td style={{ padding: '7px 10px', fontFamily: 'monospace', color: '#7dd3fc', whiteSpace: 'nowrap' }}>{r.wo_number || r.wo_id}</td>
                       <td style={{ padding: '7px 10px', color: 'var(--bos-color-ink-tertiary)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</td>
                       <td style={{ padding: '7px 10px', color: 'var(--bos-color-ink-disabled)' }}>{r.status}</td>

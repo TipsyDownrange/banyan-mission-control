@@ -107,7 +107,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
       <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
         <thead>
           <tr style={{
-            background: '#0f172a',
+            background: 'var(--color-ink-primary)',
             position: stickyHeader ? 'sticky' : undefined,
             top: stickyHeader ? 0 : undefined,
             zIndex: stickyHeader ? 1 : undefined,
@@ -167,7 +167,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                   <td style={{
                     padding: '10px 8px',
                     textAlign: 'center',
-                    color: isExpanded ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
+                    color: isExpanded ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                     fontSize: 12,
                     userSelect: 'none',
                     verticalAlign: 'middle',
@@ -185,7 +185,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
 
                     let cellBg = 'transparent';
                     let cellColor = '#1e293b';
-                    if (col.type === 'currency') { cellColor = '#0f172a'; }
+                    if (col.type === 'currency') { cellColor = 'var(--color-ink-primary)'; }
                     if (col.type === 'status') { cellColor = 'var(--bos-color-ink-disabled)'; }
                     if (col.editable && row.rowStyle === 'editable') cellBg = 'rgba(20,184,166,0.06)';
                     if (col.editable && row.rowStyle === 'generated') cellBg = 'rgba(249,115,22,0.06)';
@@ -222,7 +222,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                               border: '1px solid #14b8a6',
                               borderRadius: 4,
                               fontSize: 12,
-                              color: '#0f172a',
+                              color: 'var(--color-ink-primary)',
                               background: 'white',
                               outline: 'none',
                               boxSizing: 'border-box',
@@ -233,7 +233,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                         ) : (
                           <span style={{
                             color: isCellEditable
-                              ? (row.rowStyle === 'generated' ? '#b45309' : '#0f766e')
+                              ? (row.rowStyle === 'generated' ? '#b45309' : 'var(--bos-color-brand-primary-deep)')
                               : cellColor,
                           }}>
                             {formatValue(val, col.type)}
@@ -265,7 +265,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
           {/* Totals Row */}
           {totals && (
             <tr style={{
-              background: '#0f172a',
+              background: 'var(--color-ink-primary)',
               borderTop: '2px solid #e2e8f0',
             }}>
               <td />

@@ -60,7 +60,7 @@ const ID_LABEL: CSSProperties = {
 const ID_VALUE: CSSProperties = {
   fontSize: 13,
   fontFamily: 'monospace',
-  color: '#0f172a',
+  color: 'var(--color-ink-primary)',
   marginTop: 2,
   wordBreak: 'break-all',
 };
@@ -75,12 +75,12 @@ const ROW_LABEL: CSSProperties = {
 
 const ROW_VALUE: CSSProperties = {
   fontSize: 13,
-  color: '#0f172a',
+  color: 'var(--color-ink-primary)',
   marginTop: 2,
 };
 
 const STATUS_STYLE: Record<WarrantyStatus, { bg: string; color: string; label: string }> = {
-  ACTIVE: { bg: '#f0fdfa', color: '#0f766e', label: 'Active' },
+  ACTIVE: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Active' },
   PARTIALLY_EXPIRED: { bg: '#fffbeb', color: '#92400e', label: 'Partially expired' },
   EXPIRED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Expired' },
 };

@@ -102,7 +102,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
       {/* Header + Controls */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-ink-primary)', margin: 0, letterSpacing: '-0.03em' }}>
             QA / Install Tracking
           </h2>
           <p style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)', margin: '4px 0 0' }}>
@@ -113,7 +113,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
           <select
             value={selectedProject}
             onChange={e => { setSelectedProject(e.target.value); setLoading(true); }}
-            style={{ padding: '10px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, fontWeight: 600, background: 'white', color: '#0f172a', cursor: 'pointer' }}
+            style={{ padding: '10px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, fontWeight: 600, background: 'white', color: 'var(--color-ink-primary)', cursor: 'pointer' }}
           >
             <option value="ALL">All Projects</option>
             {projects.filter(p => summary.some(s => s.kID === p.kID)).map(p => (
@@ -124,7 +124,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
             {(['overview', 'detail'] as const).map(mode => (
               <button key={mode} onClick={() => setViewMode(mode)}
                 style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
-                  background: viewMode === mode ? '#0f172a' : 'white',
+                  background: viewMode === mode ? 'var(--color-ink-primary)' : 'white',
                   color: viewMode === mode ? 'white' : 'var(--bos-color-ink-disabled)',
                 }}>
                 {mode === 'overview' ? 'Overview' : 'Detail'}
@@ -138,7 +138,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
         <div style={CARD}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Overall Progress</div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>{overallPct}%</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--color-ink-primary)', letterSpacing: '-0.03em' }}>{overallPct}%</div>
           <div style={{ marginTop: 8, height: 6, borderRadius: 3, background: '#f1f5f9', overflow: 'hidden' }}>
             <div style={{ height: '100%', borderRadius: 3, background: overallPct >= 75 ? '#059669' : overallPct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', width: `${overallPct}%`, transition: 'width 0.5s' }} />
           </div>
@@ -157,7 +157,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
         </div>
         <div style={CARD}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Hours Tracked</div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>
+          <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--color-ink-primary)', letterSpacing: '-0.03em' }}>
             {totalHoursCompleted > 0 ? totalHoursCompleted.toFixed(0) : '—'}
           </div>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
@@ -179,7 +179,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
               style={{ ...CARD, cursor: 'pointer', textAlign: 'left', display: 'block', width: '100%', transition: 'box-shadow 0.15s', border: '1.5px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{projectName(proj.kID)}</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{projectName(proj.kID)}</div>
                   <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                     {proj.kID} · {proj.locationCount} locations · {proj.systems.join(', ')}
                   </div>
@@ -223,7 +223,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                 <button onClick={() => toggleLocation(group.location)}
                   style={{ width: '100%', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{group.location}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{group.location}</div>
                     <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                       {projectName(group.kID)} · {[...new Set(group.items.map(i => i.system_type))].filter(Boolean).join(', ')} · {total} steps
                     </div>
@@ -250,7 +250,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                             background: STATUS_COLOR[item.status] || 'var(--bos-color-ink-tertiary)',
                           }} />
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {item.step_name}
                             </div>
                             {item.system_type && (

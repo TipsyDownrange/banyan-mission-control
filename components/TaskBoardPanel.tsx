@@ -29,7 +29,7 @@ const PRIORITY_DOT: Record<string, string> = {
 };
 const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
-  in_progress: { color: '#0f766e', bg: '#f0fdfa', label: 'In Progress' },
+  in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
   blocked:     { color: '#b91c1c', bg: '#fef2f2', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
@@ -81,7 +81,7 @@ function TaskRow({ task, onClick, onDragStart, onDragOver, onDragLeave, onDrop, 
         display:'flex', alignItems:'center', gap:10, padding:'9px 12px',
         borderRadius:8, background:'white',
         border: '1px solid #f1f5f9',
-        borderTop: isDropTarget ? '3px solid #0f766e' : '1px solid #f1f5f9',
+        borderTop: isDropTarget ? '3px solid var(--bos-color-brand-primary-deep)' : '1px solid #f1f5f9',
         cursor: isDragging ? 'grabbing' : 'grab', userSelect:'none',
         transition:'opacity 0.15s ease',
         opacity: isDragging ? 0.4 : 1,
@@ -95,7 +95,7 @@ function TaskRow({ task, onClick, onDragStart, onDragOver, onDragLeave, onDrop, 
         : <div style={{width:8,height:8,borderRadius:'50%',background:dotColor,flexShrink:0}}/>
       }
       {/* Title */}
-      <div style={{flex:1,fontSize:13,fontWeight:600,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+      <div style={{flex:1,fontSize:13,fontWeight:600,color:'var(--color-ink-primary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
         {task.title}
       </div>
       {/* Assigned */}
@@ -176,7 +176,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
           {/* Title */}
           <input value={editTitle} onChange={e=>setEditTitle(e.target.value)}
             onBlur={()=>editTitle!==task.title&&save({title:editTitle})}
-            style={{width:'100%',fontSize:18,fontWeight:800,color:'#0f172a',border:'none',outline:'none',background:'transparent',marginBottom:8,padding:0,boxSizing:'border-box'}}
+            style={{width:'100%',fontSize:18,fontWeight:800,color:'var(--color-ink-primary)',border:'none',outline:'none',background:'transparent',marginBottom:8,padding:0,boxSizing:'border-box'}}
           />
           <div style={{fontSize:11,color:'var(--bos-color-ink-tertiary)',marginBottom:16}}>Created {fmtTs(task.createdAt)} · Updated {relTime(task.updatedAt)}</div>
 
@@ -189,7 +189,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
                 return (
                   <button key={s.key} onClick={()=>task.status!==s.key&&save({status:s.key as TaskStatus})} disabled={isDone}
                     style={{flex:1,padding:'7px',borderRadius:8,fontSize:11,fontWeight:700,cursor:isDone?'default':'pointer',border:'none',
-                      background:task.status===s.key?'#0f766e':isActive&&s.key==='in_progress'?'rgba(15,118,110,0.12)':'#f1f5f9',
+                      background:task.status===s.key?'var(--bos-color-brand-primary-deep)':isActive&&s.key==='in_progress'?'rgba(15,118,110,0.12)':'#f1f5f9',
                       color:task.status===s.key?'white':'var(--bos-color-ink-disabled)',transition:'all 0.1s',
                     }}>
                     {i===0?'●':i===1?'→':''} {s.label}
@@ -231,7 +231,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             <div style={{marginBottom:16,padding:'12px',background:'rgba(254,243,199,0.4)',borderRadius:10,border:'1px solid rgba(217,119,6,0.15)'}}>
               <div style={{fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em',color:'#92400e',marginBottom:8}}>Inbox Actions</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'#f0fdfa',color:'#0f766e',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
+                <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'#f0fdfa',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
                 <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'#fef2f2',color:'#b91c1c',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>
               </div>
               {showPromote && (
@@ -241,7 +241,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
                     <option value=''>Pick phase…</option>
                     {PHASE_ORDER.filter(p=>p!=='Inbox').map(p=><option key={p} value={p}>{p}</option>)}
                   </select>
-                  {promotingPhase && <button onClick={()=>{save({source:'manual',phase:promotingPhase});setShowPromote(false);}} style={{padding:'6px 14px',borderRadius:7,border:'none',background:'#0f766e',color:'white',fontSize:12,fontWeight:700,cursor:'pointer'}}>Move</button>}
+                  {promotingPhase && <button onClick={()=>{save({source:'manual',phase:promotingPhase});setShowPromote(false);}} style={{padding:'6px 14px',borderRadius:7,border:'none',background:'var(--bos-color-brand-primary-deep)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer'}}>Move</button>}
                 </div>
               )}
             </div>
@@ -265,7 +265,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
                   style={{flex:1,padding:'7px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:12,outline:'none'}}
                   onKeyDown={e=>{if(e.key==='Enter')addNote();if(e.key==='Escape'){setAddingNote(false);setNoteText('');}}}
                 />
-                <button onClick={addNote} style={{padding:'7px 12px',borderRadius:8,border:'none',background:'#0f766e',color:'white',fontSize:12,fontWeight:700,cursor:'pointer'}}>Add</button>
+                <button onClick={addNote} style={{padding:'7px 12px',borderRadius:8,border:'none',background:'var(--bos-color-brand-primary-deep)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer'}}>Add</button>
                 <button onClick={()=>{setAddingNote(false);setNoteText('');}} style={{padding:'7px 10px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:12,cursor:'pointer'}}>Cancel</button>
               </div>
             ) : (
@@ -279,7 +279,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
           <div style={{padding:'12px 20px',borderTop:'1px solid #f1f5f9',display:'flex',gap:8}}>
             {(task.status==='queued'||task.status==='waiting') && (
               <button onClick={()=>save({status:'in_progress'})} disabled={saving}
-                style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#0f766e,#14b8a6)',color:'white',fontSize:13,fontWeight:800,cursor:'pointer'}}>
+                style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',color:'white',fontSize:13,fontWeight:800,cursor:'pointer'}}>
                 🚀 Start
               </button>
             )}
@@ -440,10 +440,10 @@ export default function TaskBoardPanel() {
       {/* Header */}
       <div style={{marginBottom:20}}>
         <div style={{fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'var(--bos-color-ink-tertiary)',marginBottom:4}}>AI Command</div>
-        <div style={{fontSize:26,fontWeight:900,color:'#0f172a',letterSpacing:'-0.03em',marginBottom:4}}>Command Center</div>
+        <div style={{fontSize:26,fontWeight:900,color:'var(--color-ink-primary)',letterSpacing:'-0.03em',marginBottom:4}}>Command Center</div>
         <div style={{fontSize:13,color:'var(--bos-color-ink-disabled)',marginBottom:12}}>{roadmapTasks.length} active · {inboxTasks.length} inbox · {archiveTasks.length} completed</div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>setShowNewTask(p=>!p)} style={{padding:'8px 16px',borderRadius:10,background:'linear-gradient(135deg,#0f766e,#14b8a6)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer'}}>+ New Task</button>
+          <button onClick={()=>setShowNewTask(p=>!p)} style={{padding:'8px 16px',borderRadius:10,background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer'}}>+ New Task</button>
           <button onClick={fetchTasks} style={{padding:'8px 14px',borderRadius:10,background:'white',border:'1px solid #e2e8f0',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>↻</button>
         </div>
       </div>
@@ -465,7 +465,7 @@ export default function TaskBoardPanel() {
           </div>
           <div style={{display:'flex',gap:8}}>
             <button onClick={()=>setShowNewTask(false)} style={{flex:1,padding:'9px',borderRadius:10,border:'1px solid #e2e8f0',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>Cancel</button>
-            <button onClick={createTask} disabled={!newTitle.trim()||creating} style={{flex:2,padding:'9px',borderRadius:10,border:'none',background:'#0f766e',color:'white',fontSize:13,fontWeight:700,cursor:'pointer'}}>{creating?'Creating…':'Create Task'}</button>
+            <button onClick={createTask} disabled={!newTitle.trim()||creating} style={{flex:2,padding:'9px',borderRadius:10,border:'none',background:'var(--bos-color-brand-primary-deep)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer'}}>{creating?'Creating…':'Create Task'}</button>
           </div>
         </div>
       )}
@@ -473,7 +473,7 @@ export default function TaskBoardPanel() {
       {/* Tabs */}
       <div style={{display:'flex',gap:4,marginBottom:20,background:'#f1f5f9',borderRadius:12,padding:3}}>
         {([['roadmap','📋 Roadmap',roadmapTasks.length],['inbox','📥 Kai Inbox',inboxTasks.length],['archive','✓ Archive',archiveTasks.length]] as const).map(([k,label,count])=>(
-          <button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:'8px',borderRadius:10,fontSize:12,fontWeight:700,cursor:'pointer',border:'none',background:tab===k?'#0f766e':'transparent',color:tab===k?'white':'var(--bos-color-ink-disabled)'}}>
+          <button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:'8px',borderRadius:10,fontSize:12,fontWeight:700,cursor:'pointer',border:'none',background:tab===k?'var(--bos-color-brand-primary-deep)':'transparent',color:tab===k?'white':'var(--bos-color-ink-disabled)'}}>
             {label} {count>0&&<span style={{marginLeft:5,padding:'1px 6px',borderRadius:999,background:tab===k?'rgba(255,255,255,0.25)':'#e2e8f0',fontSize:10}}>{count}</span>}
           </button>
         ))}
@@ -485,7 +485,7 @@ export default function TaskBoardPanel() {
       {!loading && tab==='roadmap' && (<>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
           {([['all',`All · ${roadmapTasks.length}`],['critical',`Critical/High · ${roadmapTasks.filter(t=>t.priority==='critical'||t.priority==='high').length}`],['in_progress',`In Progress · ${roadmapTasks.filter(t=>t.status==='in_progress').length}`],['waiting',`Waiting · ${roadmapTasks.filter(t=>t.status==='waiting'||t.status==='blocked').length}`]] as const).map(([k,label])=>(
-            <button key={k} onClick={()=>setFilterPill(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:filterPill===k?'1.5px solid #0f766e':'1px solid #e2e8f0',background:filterPill===k?'#f0fdfa':'white',color:filterPill===k?'#0f766e':'var(--bos-color-ink-disabled)'}}>{label}</button>
+            <button key={k} onClick={()=>setFilterPill(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:filterPill===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid #e2e8f0',background:filterPill===k?'#f0fdfa':'white',color:filterPill===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
           ))}
         </div>
         {sortedPhases.length===0 && <div style={{textAlign:'center',color:'var(--bos-color-ink-tertiary)',padding:'40px 0',fontSize:13}}>No tasks yet. Add one to get started.</div>}
@@ -541,7 +541,7 @@ export default function TaskBoardPanel() {
       {!loading && tab==='archive' && (<>
         <div style={{display:'flex',gap:6,marginBottom:16}}>
           {([['all',`All · ${archiveTasks.length}`],['roadmap',`Roadmap · ${archiveTasks.filter(t=>t.source!=='feedback').length}`],['feedback',`Feedback · ${archiveTasks.filter(t=>t.source==='feedback').length}`]] as const).map(([k,label])=>(
-            <button key={k} onClick={()=>setArchiveFilter(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:archiveFilter===k?'1.5px solid #0f766e':'1px solid #e2e8f0',background:archiveFilter===k?'#f0fdfa':'white',color:archiveFilter===k?'#0f766e':'var(--bos-color-ink-disabled)'}}>{label}</button>
+            <button key={k} onClick={()=>setArchiveFilter(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:archiveFilter===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid #e2e8f0',background:archiveFilter===k?'#f0fdfa':'white',color:archiveFilter===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
           ))}
         </div>
         {filteredArchive.length===0

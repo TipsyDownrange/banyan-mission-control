@@ -70,9 +70,9 @@ function Chip({
       onClick={onClick}
       style={{
         ...CHIP_BASE,
-        background: active ? '#0f766e' : '#f8fafc',
+        background: active ? 'var(--bos-color-brand-primary-deep)' : '#f8fafc',
         color: active ? 'white' : '#475569',
-        borderColor: active ? '#0f766e' : '#e2e8f0',
+        borderColor: active ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0',
       }}
     >
       {children}
@@ -167,7 +167,7 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
             onChange={(e) => setAssignee(e.target.value === '' ? null : e.target.value)}
             style={{
               padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
-              background: 'white', fontSize: 12, color: '#0f172a', maxWidth: 320,
+              background: 'white', fontSize: 12, color: 'var(--color-ink-primary)', maxWidth: 320,
             }}
           >
             <option value="">All assignees</option>

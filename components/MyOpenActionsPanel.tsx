@@ -96,7 +96,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>My Open Actions</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a' }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-ink-primary)' }}>
             {userName ? `${userName.split(' ')[0]}'s ` : ''}{total} open {total === 1 ? 'action' : 'actions'} {projects > 0 && <span style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>across {projects} {projects === 1 ? 'project' : 'projects'}</span>}
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
             return (
               <div key={it.action_item_id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 110px 110px', gap: 10, alignItems: 'center', padding: '10px 12px', background: overdue ? '#fef2f2' : '#f8fafc', borderRadius: 10, border: overdue ? '1px solid #fca5a5' : '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.kid ?? '—'}</div>
-                <div style={{ minWidth: 0, fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
+                <div style={{ minWidth: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
                 <div style={{ fontSize: 10, fontWeight: 800, color: '#475569' }}>{it.priority}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? '#b91c1c' : '#334155' }}>{it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due'}</div>
               </div>

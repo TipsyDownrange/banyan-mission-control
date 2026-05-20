@@ -110,7 +110,7 @@ const INP: React.CSSProperties = {
   borderRadius: 8,
   fontSize: 13,
   fontFamily: FONT,
-  color: '#0f172a',
+  color: 'var(--color-ink-primary)',
   background: 'rgba(240,253,244,0.7)',
   outline: 'none',
   boxSizing: 'border-box',
@@ -227,7 +227,7 @@ function AmtInput({ value, onChange, placeholder = '0.00', width = 110 }: {
         fontSize: 12,
         fontFamily: FONT,
         fontVariantNumeric: 'tabular-nums',
-        color: '#0f172a',
+        color: 'var(--color-ink-primary)',
         background: focused ? '#f0fdf4' : 'rgba(240,253,244,0.7)',
         outline: 'none',
         textAlign: 'right',
@@ -258,7 +258,7 @@ function SmallNum({ value, onChange, placeholder, width = 44 }: {
         fontSize: 12,
         fontFamily: FONT,
         fontVariantNumeric: 'tabular-nums',
-        color: '#0f172a',
+        color: 'var(--color-ink-primary)',
         background: focused ? '#f0fdf4' : 'rgba(240,253,244,0.7)',
         outline: 'none',
         textAlign: 'right',
@@ -288,7 +288,7 @@ function DescInput({ value, onChange, placeholder = 'Description…' }: {
         fontFamily: FONT,
         background: 'transparent',
         outline: 'none',
-        color: '#0f172a',
+        color: 'var(--color-ink-primary)',
         padding: '3px 0',
         minWidth: 0,
       }}
@@ -333,7 +333,7 @@ function SubtotalBar({ label, value }: { label: string; value: number }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '5px 10px', marginTop: 6, marginBottom: 4 }}>
       <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: FONT }}>{label}</span>
-      <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
+      <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
     </div>
   );
 }
@@ -604,7 +604,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
         {/* Header */}
         <div data-estimate-print-header style={{
           padding: '14px 20px 12px',
-          background: '#0f172a',
+          background: 'var(--color-ink-primary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -748,7 +748,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   </div>
                 )}
                 {stepLibraryLabel && !isLocked && (
-                  <div style={{ marginBottom: 8, padding: '6px 10px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, fontSize: 11, color: '#0f766e', fontWeight: 600 }}>
+                  <div style={{ marginBottom: 8, padding: '6px 10px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>
                     {stepLibraryLabel}
                   </div>
                 )}
@@ -798,7 +798,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                       )}
                       <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>/hr</span>
                       <span style={{ flex: 1 }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', fontVariantNumeric: 'tabular-nums' }}>
                         ${fmt(laborAmount(line))}
                       </span>
                     </div>
@@ -813,7 +813,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
 
                 {/* Drive Time */}
                 <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(20,184,166,0.05)', borderRadius: 8, border: '1px solid rgba(20,184,166,0.2)' }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 6 }}>Drive Time</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)', marginBottom: 6 }}>Drive Time</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <SmallNum
                       value={data.driveTime?.trips || '2'}
@@ -837,7 +837,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     />
                     <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>/hr</span>
                     <span style={{ flex: 1 }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', fontVariantNumeric: 'tabular-nums' }}>${fmt(driveTimeAmt)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', fontVariantNumeric: 'tabular-nums' }}>${fmt(driveTimeAmt)}</span>
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
                     {driveTimeTrips} trips × {driveTimeHoursPerTrip}h = {fmt(driveTimeHours)}h total drive
@@ -872,7 +872,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 4 }}>Profit %</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <SmallNum value={data.markup.profitPct} onChange={v => update(d => ({ ...d, markup: { ...d.markup, profitPct: v } }))} width={60} />
-                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>% → <span style={{ fontWeight: 700, color: '#0f766e' }}>${fmt(profit)}</span></span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>% → <span style={{ fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)' }}>${fmt(profit)}</span></span>
                   </div>
                 </div>
 
@@ -883,7 +883,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <SmallNum value={data.taxRate} onChange={v => update(d => ({ ...d, taxRate: v }))} width={60} />
-                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>% → <span style={{ fontWeight: 700, color: '#0f766e' }}>${fmt(taxAmt)}</span></span>
+                    <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>% → <span style={{ fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)' }}>${fmt(taxAmt)}</span></span>
                   </div>
                 </div>
               </div>
@@ -901,29 +901,29 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, fontFamily: FONT }}>
                       <span style={{ color: 'var(--bos-color-ink-disabled)' }}>{label}</span>
-                      <span style={{ fontWeight: 600, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--color-ink-primary)', fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
                     </div>
                   ))}
                   <div style={{ borderTop: '1px solid #e2e8f0', marginTop: 6, paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', fontFamily: FONT }}>Grand Total</span>
-                    <span style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>${fmt(grandTotal)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT }}>Grand Total</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>${fmt(grandTotal)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Markup info pill */}
-              <div style={{ padding: '10px 14px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.15)', borderRadius: 10, fontSize: 11, color: '#0f766e' }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.15)', borderRadius: 10, fontSize: 11, color: 'var(--bos-color-brand-primary-deep)' }}>
                 <div style={{ fontWeight: 700, marginBottom: 2 }}>Overhead = Labor (Kula Glass standard)</div>
                 <div style={{ color: '#475569' }}>Customer quote will hide overhead &amp; profit breakdown. Quote total = ${fmt(grandTotal)}</div>
               </div>
 
               {/* X Modifier / What-If */}
               <div style={{ background: 'white', borderRadius: 12, border: '1px solid rgba(20,184,166,0.25)', padding: 14 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f766e', marginBottom: 10 }}>🧠 What-If / Negotiation Tool</div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)', marginBottom: 10 }}>🧠 What-If / Negotiation Tool</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 12, color: '#475569', fontFamily: FONT }}>Current Mark-Up = (OH + Profit) / Gross Cost</span>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>{currentMarkupPct.toFixed(2)}%</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>{currentMarkupPct.toFixed(2)}%</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                     <label style={{ fontSize: 12, color: '#475569', fontFamily: FONT, flexShrink: 0 }}>If profit adjusted by X =</label>
@@ -937,7 +937,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   <div style={{ borderTop: '1px solid rgba(20,184,166,0.2)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
                     <div>
                       <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Mark-Up %</div>
-                      <div style={{ fontSize: 18, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : 'var(--color-ink-primary)', fontVariantNumeric: 'tabular-nums' }}>
                         {newMarkupPct.toFixed(2)}%
                         {xVal !== 0 && (
                           <span style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, color: xVal < 0 ? '#dc2626' : '#16a34a' }}>
@@ -948,7 +948,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                     </div>
                     <div>
                       <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>New Total</div>
-                      <div style={{ fontSize: 22, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : '#0f172a', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, fontFamily: FONT, color: xVal < 0 ? '#dc2626' : xVal > 0 ? '#16a34a' : 'var(--color-ink-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
                         ${fmt(newGrandTotal2)}
                         {xVal !== 0 && (
                           <span style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, color: xVal < 0 ? '#dc2626' : '#16a34a' }}>
@@ -977,7 +977,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
           gap: 12,
         }}>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>
-            Estimate total: <strong style={{ color: '#0f172a' }}>${fmt(grandTotal)}</strong>
+            Estimate total: <strong style={{ color: 'var(--color-ink-primary)' }}>${fmt(grandTotal)}</strong>
             <span style={{ marginLeft: 12, fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
               (Materials ${fmt(materialsTotal)} + Labor ${fmt(laborSubtotal)} + OH ${fmt(overhead)} + Profit ${fmt(profit)} + GET ${fmt(taxAmt)})
             </span>
@@ -1006,7 +1006,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#0f172a', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+              style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--color-ink-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
             >
               🖨 Print PDF
             </button>
@@ -1032,7 +1032,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 borderRadius: 10,
                 background: isLocked
                   ? 'linear-gradient(135deg,#b45309,#d97706)'
-                  : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+                  : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
                 color: 'white',
                 border: 'none',
                 fontSize: 12,

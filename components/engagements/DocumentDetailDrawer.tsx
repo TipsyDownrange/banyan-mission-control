@@ -181,7 +181,7 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
             <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12 }}>{err}</div>
           ) : doc ? (
             <>
-              <a href={`https://drive.google.com/file/d/${encodeURIComponent(doc.drive_file_id)}/view`} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 12, fontWeight: 800, textDecoration: 'none', alignSelf: 'flex-start' }}>Open in Drive →</a>
+              <a href={`https://drive.google.com/file/d/${encodeURIComponent(doc.drive_file_id)}/view`} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, textDecoration: 'none', alignSelf: 'flex-start' }}>Open in Drive →</a>
 
               <section style={cardStyle}>
                 <div style={cardHeaderStyle}>Metadata</div>
@@ -223,10 +223,10 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
                     {versions.map((v) => (
                       <li key={v.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: v.document_id === doc.document_id ? 'rgba(240,253,250,0.96)' : '#f8fafc', border: '1px solid #e2e8f0' }}>
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>v{v.version} — {v.filename}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)' }}>v{v.version} — {v.filename}</div>
                           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{new Date(v.uploaded_at).toLocaleString()}</div>
                         </div>
-                        {v.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: '#0f766e' }}>CURRENT</span>}
+                        {v.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)' }}>CURRENT</span>}
                       </li>
                     ))}
                   </ul>
@@ -300,7 +300,7 @@ function buildVersionChain(current: DocumentRow, all: DocumentRow[]): VersionEnt
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0f766e' }}>{label}</span>
+      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>{label}</span>
       {children}
     </label>
   );
@@ -312,7 +312,7 @@ const headerStyle: React.CSSProperties = { background: 'linear-gradient(135deg, 
 const closeButtonStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '4px 12px', color: 'var(--bos-color-ink-tertiary)', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 };
 const inputStyle: React.CSSProperties = { padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white' };
 const cardStyle: React.CSSProperties = { background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 };
-const cardHeaderStyle: React.CSSProperties = { fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' };
-const primaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
-const secondaryButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
+const cardHeaderStyle: React.CSSProperties = { fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' };
+const primaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
+const secondaryButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
 const cancelButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' };

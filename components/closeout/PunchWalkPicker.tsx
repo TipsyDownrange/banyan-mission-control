@@ -42,7 +42,7 @@ const LABEL: CSSProperties = {
 
 const SELECT: CSSProperties = {
   padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0',
-  background: 'white', fontSize: 12, color: '#0f172a', maxWidth: 360,
+  background: 'white', fontSize: 12, color: 'var(--color-ink-primary)', maxWidth: 360,
 };
 
 export default function PunchWalkPicker({

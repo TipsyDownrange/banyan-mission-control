@@ -69,7 +69,7 @@ export default function FilterBar({
                   background: isActive
                     ? `color-mix(in srgb, ${chip.color ?? '#14b8a6'} 12%, transparent)`
                     : 'white',
-                  color: isActive ? (chip.color ?? '#0f766e') : 'var(--bos-color-ink-disabled)',
+                  color: isActive ? (chip.color ?? 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
                   fontSize: 11,
                   fontWeight: isActive ? 800 : 600,
                   cursor: 'pointer',

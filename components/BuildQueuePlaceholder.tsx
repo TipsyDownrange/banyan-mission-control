@@ -20,7 +20,7 @@ export default function BuildQueuePlaceholder({
   return (
     <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: '60px 40px', textAlign: 'center' }}>
       {icon && <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>}
-      <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{surfaceName} — In Build Queue</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 8 }}>{surfaceName} — In Build Queue</div>
       {description && (
         <div style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>{description}.</div>
       )}

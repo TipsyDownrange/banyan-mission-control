@@ -127,7 +127,7 @@ const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   ON_HOLD:       { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   COMPLETED:     { bg: '#f0fdf4', color: '#15803d' },
   CANCELLED:     { bg: '#f8fafc', color: 'var(--bos-color-ink-tertiary)' },
-  INVOICED:      { bg: '#f0fdfa', color: '#0f766e' },
+  INVOICED:      { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   PAID:          { bg: '#f0fdf4', color: '#15803d' },
 };
 
@@ -393,9 +393,9 @@ function OrganizationPicker({
     fontWeight: 800,
     padding: '4px 8px',
     borderRadius: 999,
-    border: active ? '1px solid #0f766e' : '1px solid #e2e8f0',
+    border: active ? '1px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
     background: active ? '#f0fdfa' : 'white',
-    color: active ? '#0f766e' : 'var(--bos-color-ink-disabled)',
+    color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
     cursor: 'pointer',
   });
 
@@ -425,14 +425,14 @@ function OrganizationPicker({
           width: '100%',
           padding: 9,
           borderRadius: 9,
-          border: selected ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
+          border: selected ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
           background: selected ? '#f0fdfa' : 'white',
           cursor: 'pointer',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.name || 'Unnamed org'}</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.name || 'Unnamed org'}</div>
             <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{org.org_id}</div>
           </div>
           <span style={{ fontSize: 10, fontWeight: 800, color: '#1d4ed8', background: '#eff6ff', borderRadius: 999, padding: '2px 7px', height: 18, whiteSpace: 'nowrap' }}>
@@ -442,7 +442,7 @@ function OrganizationPicker({
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
           {org.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
           {orgIsland(org) && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{orgIsland(org)}</span>}
-          {matchBadge && <span style={{ fontSize: 10, color: '#0f766e', background: '#f0fdfa', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
+          {matchBadge && <span style={{ fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
           {status && status !== 'active' && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
         </div>
       </button>
@@ -470,7 +470,7 @@ function OrganizationPicker({
         <button type="button" onClick={() => toggleFilter('showInactive')} style={chipStyle(filters.showInactive)}>Show merged/inactive</button>
       </div>
       {selectedOrg && (
-        <div style={{ fontSize: 12, color: '#0f766e', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '7px 9px' }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '7px 9px' }}>
           Selected: <strong>{selectedOrg.name}</strong> · {selectedOrg.org_id}
         </div>
       )}
@@ -811,7 +811,7 @@ function OrgDetailPanel({
             {loading || !detail ? (
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
             ) : (
-              <span style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {detail.org.name}
               </span>
             )}
@@ -835,7 +835,7 @@ function OrgDetailPanel({
             </div>
 
             {governanceMessage && (
-              <div style={{ fontSize: 12, color: '#0f766e', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
                 {governanceMessage}
               </div>
             )}
@@ -863,7 +863,7 @@ function OrgDetailPanel({
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
                         {c.is_primary && <span style={{ fontSize: 13 }}>⭐</span>}
-                        <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{c.name}</span>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--color-ink-primary)' }}>{c.name}</span>
                       </div>
                       {c.title && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{c.title}</div>}
                     </div>
@@ -883,7 +883,7 @@ function OrgDetailPanel({
                           <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10, minWidth: 150, overflow: 'hidden' }}>
                             <button
                               onClick={() => setAsPrimary(c.contact_id)}
-                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 12, fontWeight: 600, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
                             >⭐ Set as Primary</button>
                             <button
                               onClick={() => deleteContact(c.contact_id)}
@@ -899,12 +899,12 @@ function OrgDetailPanel({
                     <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {c.phone && (
                         <div style={{ fontSize: 12, color: '#334155' }}>
-                          📞 <a href={`tel:${c.phone}`} style={{ color: '#0f766e', textDecoration: 'none' }}>{c.phone}</a>
+                          📞 <a href={`tel:${c.phone}`} style={{ color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none' }}>{c.phone}</a>
                         </div>
                       )}
                       {c.email && (
                         <div style={{ fontSize: 12, color: '#334155' }}>
-                          ✉️ <a href={`mailto:${c.email}`} style={{ color: '#0f766e', textDecoration: 'none' }}>{c.email}</a>
+                          ✉️ <a href={`mailto:${c.email}`} style={{ color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none' }}>{c.email}</a>
                         </div>
                       )}
                     </div>
@@ -920,7 +920,7 @@ function OrgDetailPanel({
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                        <button onClick={() => saveContactEdit(c.contact_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                        <button onClick={() => saveContactEdit(c.contact_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                       </div>
                     </div>
                   )}
@@ -928,7 +928,7 @@ function OrgDetailPanel({
               ))}
             </div>
             {addingContact ? (
-              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
+              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed var(--bos-color-brand-primary-deep)', marginTop: 8, marginBottom: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div><label style={LBL}>Name *</label><ContactAutocomplete
                     value={newContact.name}
@@ -958,11 +958,11 @@ function OrgDetailPanel({
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
+                  <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setAddingContact(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Contact</button>
+              <button onClick={() => setAddingContact(true)} style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Contact</button>
             )}
             </CollapsibleSection>
 
@@ -996,14 +996,14 @@ function OrgDetailPanel({
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Address</button>
+                        <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Address</button>
                       </div>
                     </div>
                   ) : (
                     <>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ minWidth: 0 }}>
-                          {s.name && <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', marginBottom: 2 }}>{s.name}</div>}
+                          {s.name && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 2 }}>{s.name}</div>}
                           <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
                           <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                             {[s.state, s.zip, s.island, s.site_type].filter(Boolean).join(' · ')}
@@ -1022,7 +1022,7 @@ function OrgDetailPanel({
               ))}
             </div>
             {addingSite ? (
-              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed #0f766e', marginTop: 8, marginBottom: 8 }}>
+              <div style={{ padding: '12px', borderRadius: 10, border: '1.5px dashed var(--bos-color-brand-primary-deep)', marginTop: 8, marginBottom: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div><label style={LBL}>Address</label><PlacesAutocomplete value={newSite.address_line_1} onChange={v => setNewSite(p => ({...p, address_line_1: v}))} onSelect={(place: ParsedPlace) => setNewSite(p => ({ ...p, address_line_1: place.formatted_address || '', city: place.city || p.city }))} style={INP} placeholder="Street address" /></div>
                   <div><label style={LBL}>City</label><input style={INP} value={newSite.city} onChange={e => setNewSite(p => ({ ...p, city: e.target.value }))} /></div>
@@ -1040,11 +1040,11 @@ function OrgDetailPanel({
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Address</button>
+                  <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Address</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Address</button>
+              <button onClick={() => setAddingSite(true)} style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>+ Add Address</button>
             )}
             </CollapsibleSection>
 
@@ -1069,7 +1069,7 @@ function OrgDetailPanel({
                       onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
                     >
                       <div>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{wo.name || wo.woNumber}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{wo.name || wo.woNumber}</span>
                         <span style={{ color: 'var(--bos-color-ink-tertiary)', marginLeft: 8 }}>{wo.woNumber}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -1091,7 +1091,7 @@ function OrgDetailPanel({
                   {detail.linkedProjects.map(p => (
                     <div key={p.kID} style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
                       <div>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{p.name}</span>
                         <span style={{ fontSize: 10, color: '#0891b2', marginLeft: 6 }}>{p.role}</span>
                       </div>
                       <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>{p.kID}</span>
@@ -1116,7 +1116,7 @@ function OrgDetailPanel({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <div><label style={LBL}>Name</label><input style={INP} value={orgEditForm.name} onChange={e => setOrgEditForm(p => ({ ...p, name: e.target.value }))} /></div>
                   <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <button onClick={saveOrgDetails} disabled={governanceSaving || !orgEditForm.name.trim()} style={{ width: '100%', padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: governanceSaving ? 'default' : 'pointer', opacity: governanceSaving ? 0.6 : 1 }}>
+                    <button onClick={saveOrgDetails} disabled={governanceSaving || !orgEditForm.name.trim()} style={{ width: '100%', padding: '7px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: governanceSaving ? 'default' : 'pointer', opacity: governanceSaving ? 0.6 : 1 }}>
                       Save Organization
                     </button>
                   </div>
@@ -1205,7 +1205,7 @@ function OrgDetailPanel({
                 }}
               />
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #0f766e', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
+                <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--bos-color-brand-primary-deep)', background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
                   Preview
                 </button>
                 <button onClick={executeMerge} disabled={governanceSaving || !mergeForm.survivor_org_id || !mergePreview?.can_execute} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none', background: '#b91c1c', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id && mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id && mergePreview?.can_execute ? 1 : 0.45 }}>
@@ -1215,7 +1215,7 @@ function OrgDetailPanel({
               <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={mergeForm.notes} onChange={e => setMergeForm(p => ({ ...p, notes: e.target.value }))} placeholder="Merge note for audit log" />
               {mergePreview && (
                 <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: 'white', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? '#0f766e' : '#b91c1c', marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? 'var(--bos-color-brand-primary-deep)' : '#b91c1c', marginBottom: 6 }}>
                     {mergePreview.can_execute ? 'Preview ready' : 'Preview blocked'} · {countTotal} affected references
                   </div>
                   {mergePreview.blockers.length > 0 && (
@@ -1271,7 +1271,7 @@ function OrgDetailPanel({
                     {RELATIONSHIP_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
                   </select>
                 </div>
-                <button onClick={saveRelationship} disabled={governanceSaving || !relationshipForm.target_org_id} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: relationshipForm.target_org_id ? 'pointer' : 'default', opacity: relationshipForm.target_org_id ? 1 : 0.5 }}>
+                <button onClick={saveRelationship} disabled={governanceSaving || !relationshipForm.target_org_id} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: relationshipForm.target_org_id ? 'pointer' : 'default', opacity: relationshipForm.target_org_id ? 1 : 0.5 }}>
                   Save
                 </button>
               </div>
@@ -1282,7 +1282,7 @@ function OrgDetailPanel({
                     const otherOrgId = rel.source_org_id === orgId ? rel.target_org_id : rel.source_org_id;
                     return (
                       <div key={rel.relationship_id} style={{ padding: '7px 9px', borderRadius: 8, background: 'white', border: '1px solid #e2e8f0', fontSize: 12 }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a' }}>{rel.relationship_type.replace(/_/g, ' ')} · {orgNameById.get(otherOrgId) || otherOrgId}</div>
+                        <div style={{ fontWeight: 800, color: 'var(--color-ink-primary)' }}>{rel.relationship_type.replace(/_/g, ' ')} · {orgNameById.get(otherOrgId) || otherOrgId}</div>
                         {rel.notes && <div style={{ color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{rel.notes}</div>}
                       </div>
                     );
@@ -1420,7 +1420,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
         {step === 'category' && (
           <>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>New Customer</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 4 }}>New Customer</div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>What type of customer is this?</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1432,11 +1432,11 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                     border: '1.5px solid #e2e8f0', background: '#fafafa',
                     transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#0f766e'; (e.currentTarget as HTMLButtonElement).style.background = '#f0fdfa'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--bos-color-brand-primary-deep)'; (e.currentTarget as HTMLButtonElement).style.background = '#f0fdfa'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLButtonElement).style.background = '#fafafa'; }}
                 >
                   <span style={{ fontSize: 28 }}>{c.emoji}</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>{c.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{c.label}</span>
                   <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center', lineHeight: 1.3 }}>{c.sublabel}</span>
                 </button>
               ))}
@@ -1449,8 +1449,8 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
         {step === 'form' && cat && (
           <>
             <div style={{ marginBottom: 18 }}>
-              <button onClick={() => setStep('category')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0f766e', fontSize: 12, fontWeight: 700, padding: 0, marginBottom: 8 }}>← Back</button>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+              <button onClick={() => setStep('category')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 700, padding: 0, marginBottom: 8 }}>← Back</button>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 2 }}>
                 {cat.emoji} New {cat.label}
               </div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{cat.sublabel}</div>
@@ -1575,7 +1575,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={create} disabled={!orgName || (isPersonal && !phone.trim()) || creating}
-                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
+                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
                 {creating ? 'Creating…' : isPersonal ? 'Create Customer' : `Create ${cat.label}`}
               </button>
             </div>
@@ -1648,10 +1648,10 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
         <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>People</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>Organizations</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-ink-primary)', letterSpacing: '-0.03em' }}>Organizations</div>
             <button
               onClick={() => setShowNewOrg(true)}
-              style={{ padding: '7px 14px', borderRadius: 9, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              style={{ padding: '7px 14px', borderRadius: 9, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               + New Org
             </button>
           </div>
@@ -1678,9 +1678,9 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
               style={{
                 fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
                 textTransform: 'uppercase', letterSpacing: '0.04em',
-                border: typeFilter === 'ALL' ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
+                border: typeFilter === 'ALL' ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
                 background: typeFilter === 'ALL' ? '#f0fdfa' : 'white',
-                color: typeFilter === 'ALL' ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
+                color: typeFilter === 'ALL' ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
               }}>All</button>
             {ALL_TYPES.map(t => {
               const active = typeFilter === t;
@@ -1717,7 +1717,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                   onClick={() => setSelectedOrgId(isSelected ? null : o.org_id)}
                   style={{
                     padding: '10px 12px', borderRadius: 10, marginBottom: 3, cursor: 'pointer',
-                    border: isSelected ? '1.5px solid #0f766e' : '1px solid transparent',
+                    border: isSelected ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid transparent',
                     background: isSelected ? '#f0fdfa' : 'white',
                     transition: 'background 0.1s, border 0.1s',
                   }}
@@ -1726,7 +1726,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                 >
                   {/* Row top: name + WO count */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 5 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', lineHeight: 1.3, flex: 1, minWidth: 0, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--color-ink-primary)', lineHeight: 1.3, flex: 1, minWidth: 0, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {o.name}
                     </div>
                     {o.woCount > 0 && (

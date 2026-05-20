@@ -14,7 +14,7 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark style={{ background: 'rgba(20,184,166,0.18)', color: '#0f766e', padding: 0, borderRadius: 2 }}>
+      <mark style={{ background: 'rgba(20,184,166,0.18)', color: 'var(--bos-color-brand-primary-deep)', padding: 0, borderRadius: 2 }}>
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -84,11 +84,11 @@ export default function AutocompleteInput({
               onMouseLeave={e => (e.currentTarget.style.background = 'white')}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {highlightMatch(fieldVal(c), value)}
                 </span>
                 {c.island && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, color: '#0f766e', background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.15)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, color: 'var(--bos-color-brand-primary-deep)', background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.15)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
                     {c.island}
                   </span>
                 )}

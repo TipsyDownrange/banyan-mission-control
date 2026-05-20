@@ -112,7 +112,7 @@ export function RadialQuotaGauge({
         >
           <line x1={cx} y1={cy} x2={cx} y2={cy - (r - 8)} stroke={zone} strokeWidth={3} strokeLinecap="round" />
         </g>
-        <circle cx={cx} cy={cy} r={6} fill={`url(#brass-${label})`} stroke="#0f172a" strokeWidth={1.5} />
+        <circle cx={cx} cy={cy} r={6} fill={`url(#brass-${label})`} stroke="var(--color-ink-primary)" strokeWidth={1.5} />
         <text x={cx} y={cy + r * 0.55} textAnchor="middle" fill="#f8fafc" fontSize={size * 0.18} fontWeight={900} style={{ fontVariantNumeric: 'tabular-nums' }}>
           {pct.toFixed(0)}%
         </text>

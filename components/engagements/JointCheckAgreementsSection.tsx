@@ -96,7 +96,7 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
       display: 'flex', flexDirection: 'column', gap: 12,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>Joint Check Agreements</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Joint Check Agreements</div>
         {engagementId && <CreateForm engagementId={engagementId} onCreated={refresh} />}
       </div>
       {(!rows || rows.length === 0) ? (

@@ -92,7 +92,7 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
           T&amp;M Tickets
           <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             ({s.total_count})
@@ -113,13 +113,13 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
       >
         <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', letterSpacing: '0.06em' }}>TOTAL VALUE</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 4 }}>
             {fmtMoney(s.total_value_usd)}
           </div>
         </div>
         <div style={{ background: '#f0fdfa', borderRadius: 10, padding: '10px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#0f766e', letterSpacing: '0.06em' }}>BILLED</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f766e', marginTop: 4 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.06em' }}>BILLED</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', marginTop: 4 }}>
             {fmtMoney(s.billed_value_usd)}
           </div>
         </div>

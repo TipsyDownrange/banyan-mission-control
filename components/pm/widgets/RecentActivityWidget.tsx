@@ -43,7 +43,7 @@ export default function RecentActivityWidget({ onHide, showHide }: { onHide?: ()
                 border: '1px solid #e2e8f0',
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>{e.event_type ?? '—'}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{e.event_type ?? '—'}</div>
               {e.description && (
                 <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{e.description}</div>
               )}
