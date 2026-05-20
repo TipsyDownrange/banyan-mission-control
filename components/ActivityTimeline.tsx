@@ -136,7 +136,7 @@ type ActivityEventRenderBranchProps = {
 function Bg1RenderBranch({ event, description }: ActivityEventRenderBranchProps): React.ReactElement {
   const summary = description || event.notes || 'No additional event detail recorded.';
   return (
-    <div style={{ padding: '10px 12px', borderRadius: 10, background: '#f8fafc', border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
+    <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
       {summary}
     </div>
   );
@@ -399,7 +399,7 @@ function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
     maxWidth: 460,
     padding: '7px 10px',
     borderRadius: 8,
-    background: '#f8fafc',
+    background: 'var(--color-surface)',
     border: '1px solid var(--color-surface-border)',
     color: href ? '#0369a1' : '#334155',
     fontSize: 12,

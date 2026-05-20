@@ -56,7 +56,7 @@ export default function ForecastingPanel() {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(20,184,166,0.5)', marginBottom: 4 }}>Operations</div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.03em', color: '#f8fafc', margin: 0 }}>Forecasting</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--color-surface)', margin: 0 }}>Forecasting</h1>
             <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 5, maxWidth: 760, lineHeight: 1.5 }}>
               Long-range capacity and pipeline view. Work inside the next three weeks belongs in Scheduling Matrix; later demand stays here until it is close enough to schedule.
             </div>
@@ -88,17 +88,17 @@ export default function ForecastingPanel() {
           </div>
 
           <section style={{ background: 'rgba(15,23,42,0.54)', border: '1px solid rgba(148,163,184,0.16)', borderRadius: 18, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(148,163,184,0.12)', fontSize: 13, fontWeight: 900, color: '#f8fafc' }}>Capacity horizon</div>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(148,163,184,0.12)', fontSize: 13, fontWeight: 900, color: 'var(--color-surface)' }}>Capacity horizon</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, padding: 14 }}>
               {weeks.map((week, index) => (
                 <div key={week.week_start} style={{ border: '1px solid rgba(148,163,184,0.18)', borderRadius: 14, padding: 14, background: index <= 2 ? 'rgba(14,165,233,0.08)' : 'rgba(20,184,166,0.08)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
-                    <div style={{ fontSize: 12, fontWeight: 900, color: '#f8fafc' }}>{fmtDate(week.week_start)} – {fmtDate(week.week_end)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--color-surface)' }}>{fmtDate(week.week_start)} – {fmtDate(week.week_end)}</div>
                     <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: index <= 2 ? '#7dd3fc' : '#5eead4' }}>{horizonLabel(index)}</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginTop: 12 }}>
-                    <div><div style={{ fontSize: 9, color: 'var(--bos-color-ink-disabled)', fontWeight: 800 }}>Needed</div><div style={{ color: '#f8fafc', fontWeight: 900 }}>{week.needed}</div></div>
-                    <div><div style={{ fontSize: 9, color: 'var(--bos-color-ink-disabled)', fontWeight: 800 }}>Avail.</div><div style={{ color: '#f8fafc', fontWeight: 900 }}>{week.available}</div></div>
+                    <div><div style={{ fontSize: 9, color: 'var(--bos-color-ink-disabled)', fontWeight: 800 }}>Needed</div><div style={{ color: 'var(--color-surface)', fontWeight: 900 }}>{week.needed}</div></div>
+                    <div><div style={{ fontSize: 9, color: 'var(--bos-color-ink-disabled)', fontWeight: 800 }}>Avail.</div><div style={{ color: 'var(--color-surface)', fontWeight: 900 }}>{week.available}</div></div>
                     <div><div style={{ fontSize: 9, color: 'var(--bos-color-ink-disabled)', fontWeight: 800 }}>Buffer</div><div style={{ color: bufferColor(Number(week.buffer)), fontWeight: 900 }}>{week.buffer}</div></div>
                   </div>
                 </div>
@@ -108,7 +108,7 @@ export default function ForecastingPanel() {
 
           <section style={{ background: 'rgba(15,23,42,0.54)', border: '1px solid rgba(148,163,184,0.16)', borderRadius: 18, overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(148,163,184,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#f8fafc' }}>Pipeline work not yet scheduled</div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--color-surface)' }}>Pipeline work not yet scheduled</div>
               {lastRefresh && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Updated {lastRefresh.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>}
             </div>
             <div style={{ display: 'grid', gap: 8, padding: 14 }}>
@@ -117,7 +117,7 @@ export default function ForecastingPanel() {
                 <div key={`${job.id}-${job.kID}`} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 90px 120px', gap: 12, alignItems: 'center', padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(148,163,184,0.12)' }}>
                   <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{job.kID}</div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{[job.customer, job.island].filter(Boolean).join(' · ') || '—'}</div>
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 900, color: '#fbbf24', textAlign: 'right' }}>{job.hours_est || '—'}h</div>

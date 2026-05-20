@@ -181,7 +181,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
           <div style={{fontSize:11,color:'var(--bos-color-ink-tertiary)',marginBottom:16}}>Created {fmtTs(task.createdAt)} · Updated {relTime(task.updatedAt)}</div>
 
           {/* Status stepper */}
-          <div style={{background:'#f8fafc',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
+          <div style={{background:'var(--color-surface)',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
             <div style={{display:'flex',gap:6,marginBottom:10}}>
               {statusFlow.map((s,i) => {
                 const isActive = task.status === s.key || (s.key==='in_progress' && (task.status==='in_progress'||task.status==='waiting'||task.status==='blocked'));

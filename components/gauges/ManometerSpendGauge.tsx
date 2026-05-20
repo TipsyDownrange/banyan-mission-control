@@ -75,7 +75,7 @@ export function ManometerSpendGauge({
           <line key={t} x1={10} x2={width - 10} y1={height - 8 - (height - 16) * t} y2={height - 8 - (height - 16) * t} stroke="var(--bos-color-ink-tertiary)" strokeWidth={0.6} opacity={0.5} />
         ))}
       </svg>
-      <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>{formatUsd(amountUsd)}</div>
+      <div style={{ color: 'var(--color-surface)', fontSize: 14, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>{formatUsd(amountUsd)}</div>
       <div style={{ color: '#cbd5e1', fontSize: 10, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</div>
       <div style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 9 }}>of {formatUsd(safeMax, 0)}</div>
     </div>

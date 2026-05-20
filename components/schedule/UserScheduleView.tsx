@@ -115,7 +115,7 @@ export default function UserScheduleView({ tasks, assignments, onDrillToTask }: 
                 </div>
               </td>
               <td style={{ padding: '8px 0' }}>
-                <div style={{ position: 'relative', height: 28, minWidth: totalWidth, background: '#f8fafc', borderRadius: 4 }}>
+                <div style={{ position: 'relative', height: 28, minWidth: totalWidth, background: 'var(--color-surface)', borderRadius: 4 }}>
                   {u.rows.map(({ assignment, task }) => {
                     const s = isoToMs(task.planned_start);
                     const e = isoToMs(task.planned_end);

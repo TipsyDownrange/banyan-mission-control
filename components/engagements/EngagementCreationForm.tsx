@@ -79,7 +79,7 @@ export default function EngagementCreationForm() {
         </label>
         <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
           Primary org
-          <input readOnly value={selectedSite?.org_name || ''} placeholder="Auto-filled from selected address" style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: '#f8fafc' }} />
+          <input readOnly value={selectedSite?.org_name || ''} placeholder="Auto-filled from selected address" style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)' }} />
         </label>
         <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
           Engagement type

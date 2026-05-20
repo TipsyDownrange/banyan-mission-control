@@ -82,12 +82,12 @@ const ROW_VALUE: CSSProperties = {
 const STATUS_STYLE: Record<WarrantyStatus, { bg: string; color: string; label: string }> = {
   ACTIVE: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Active' },
   PARTIALLY_EXPIRED: { bg: '#fffbeb', color: '#92400e', label: 'Partially expired' },
-  EXPIRED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Expired' },
+  EXPIRED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Expired' },
 };
 
 function statusPill(status: string) {
   const cfg = (STATUS_STYLE as Record<string, { bg: string; color: string; label: string }>)[status]
-    ?? { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: status };
+    ?? { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: status };
   return (
     <span
       data-testid="warranty-status-pill"

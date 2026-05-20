@@ -86,7 +86,7 @@ export default function ContactAutocomplete({ value, onChange, onSelect, style, 
               padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
               display: 'flex', flexDirection: 'column', gap: 1,
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{c.name}{c.is_primary ? ' ⭐' : ''}</span>
               <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>

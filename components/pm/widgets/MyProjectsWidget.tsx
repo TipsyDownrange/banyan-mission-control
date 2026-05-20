@@ -48,7 +48,7 @@ export default function MyProjectsWidget({ onHide, showHide }: { onHide?: () => 
               key={p.engagement_id}
               style={{
                 padding: '10px 12px',
-                background: '#f8fafc',
+                background: 'var(--color-surface)',
                 borderRadius: 8,
                 border: '1px solid var(--color-surface-border)',
               }}

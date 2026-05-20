@@ -73,7 +73,7 @@ export default function CrossProjectSubmittalsWidget({ onHide, showHide }: { onH
                 display: 'flex',
                 gap: 10,
                 padding: '6px 10px',
-                background: s.is_overdue ? '#fef2f2' : '#f8fafc',
+                background: s.is_overdue ? '#fef2f2' : 'var(--color-surface)',
                 borderRadius: 6,
                 border: `1px solid ${s.is_overdue ? '#fecaca' : 'var(--color-surface-border)'}`,
               }}

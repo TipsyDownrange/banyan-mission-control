@@ -355,7 +355,7 @@ export default function FreightCalendarManager() {
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
+              <tr style={{ background: 'var(--color-surface)' }}>
                 <th style={HEADER_CELL}>Carrier</th>
                 <th style={HEADER_CELL}>Route</th>
                 <th style={HEADER_CELL}>Cutoff</th>

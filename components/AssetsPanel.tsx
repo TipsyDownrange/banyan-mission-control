@@ -104,7 +104,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           {/* Expiry badges */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? '#b91c1c' : regSoon ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
-            {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: '#f8fafc', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid var(--color-surface-border)' }}>Last service: {v.last_service_date}</span>}
+            {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid var(--color-surface-border)' }}>Last service: {v.last_service_date}</span>}
             {v.notes && <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>{v.notes}</span>}
           </div>
         </div>

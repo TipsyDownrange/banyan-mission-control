@@ -149,7 +149,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', background: '#f8fafc', overflow: 'hidden', fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', height: '100dvh', background: 'var(--color-surface)', overflow: 'hidden', fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif' }}>
 
       {/* Onboarding overlay */}
       {showOnboarding && (
@@ -187,7 +187,7 @@ export default function Home() {
             <button onClick={() => setMobileOpen(true)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: 'rgba(148,163,184,0.7)', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>
               ☰
             </button>
-            <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: '#f8fafc' }}>
+            <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--color-surface)' }}>
               Banyan<span style={{ color: '#14b8a6' }}>OS</span>
             </div>
             <button

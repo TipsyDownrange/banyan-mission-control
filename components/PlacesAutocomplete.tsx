@@ -182,7 +182,7 @@ export default function PlacesAutocomplete({
               {s.secondaryText && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{s.secondaryText}</div>}
             </div>
           ))}
-          <div style={{ padding: '5px 12px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'right' }}>
+          <div style={{ padding: '5px 12px', background: 'var(--color-surface)', borderTop: '1px solid #f1f5f9', textAlign: 'right' }}>
             <img src="https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3.png" alt="Powered by Google" style={{ height: 14, opacity: 0.7 }} />
           </div>
         </div>

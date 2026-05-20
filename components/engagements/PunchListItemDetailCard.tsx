@@ -253,7 +253,7 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
             <div>
               <div style={ROW_LABEL}>Completion evidence</div>
               <pre style={{
-                ...ROW_VALUE, background: '#f8fafc', padding: '8px 10px', borderRadius: 8,
+                ...ROW_VALUE, background: 'var(--color-surface)', padding: '8px 10px', borderRadius: 8,
                 fontSize: 11, overflowX: 'auto', margin: '4px 0 0 0',
               }}>
                 {JSON.stringify(item.completion_evidence, null, 2)}
@@ -265,7 +265,7 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
             <div>
               <div style={ROW_LABEL}>Signoff evidence</div>
               <pre style={{
-                ...ROW_VALUE, background: '#f8fafc', padding: '8px 10px', borderRadius: 8,
+                ...ROW_VALUE, background: 'var(--color-surface)', padding: '8px 10px', borderRadius: 8,
                 fontSize: 11, overflowX: 'auto', margin: '4px 0 0 0',
               }}>
                 {JSON.stringify(item.signoff_evidence, null, 2)}

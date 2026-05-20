@@ -49,7 +49,7 @@ export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () 
                 display: 'flex',
                 gap: 10,
                 padding: '8px 10px',
-                background: '#f8fafc',
+                background: 'var(--color-surface)',
                 borderRadius: 8,
                 border: '1px solid var(--color-surface-border)',
               }}

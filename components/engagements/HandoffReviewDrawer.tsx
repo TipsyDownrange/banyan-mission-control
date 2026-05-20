@@ -112,7 +112,7 @@ export default function HandoffReviewDrawer({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 640, background: '#f8fafc', height: '100%', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}
+        style={{ width: '100%', maxWidth: 640, background: 'var(--color-surface)', height: '100%', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}
       >
         <div style={{ background: 'linear-gradient(135deg, #064e3b, var(--bos-color-brand-primary-deep))', padding: '20px 24px', position: 'sticky', top: 0, zIndex: 5 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -120,14 +120,14 @@ export default function HandoffReviewDrawer({
               <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(94,234,212,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 PM Handoff Receipt
               </div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#f8fafc', marginTop: 4 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-surface)', marginTop: 4 }}>
                 {receipt?.kid ?? '—'}
               </div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
                 State: <span style={{ fontWeight: 700 }}>{receipt?.state ?? '…'}</span>
               </div>
             </div>
-            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '6px 12px', color: '#f8fafc', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '6px 12px', color: 'var(--color-surface)', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
               Close
             </button>
           </div>

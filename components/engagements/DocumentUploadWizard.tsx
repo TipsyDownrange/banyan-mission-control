@@ -122,7 +122,7 @@ export default function DocumentUploadWizard({ kID, onClose, onCreated, presetLi
         <div style={headerStyle}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(20,184,166,0.6)' }}>Document Hub</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#f8fafc', marginTop: 4 }}>Upload Document</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-surface)', marginTop: 4 }}>Upload Document</div>
             <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.75)', marginTop: 4 }}>{kID}</div>
           </div>
           <button type="button" onClick={onClose} style={closeButtonStyle}>×</button>

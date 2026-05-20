@@ -82,19 +82,19 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
         {/* KPI grid on the card */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: openSubs > 0 ? '#d97706' : '#059669' }}>{openSubs}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Submittals</div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: pendingCOs > 0 ? '#d97706' : '#059669' }}>{pendingCOs}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Chg Orders</div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: project.issues > 0 ? '#dc2626' : '#059669' }}>{project.issues}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Issues</div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: installPct !== null ? (installPct >= 75 ? '#059669' : '#d97706') : 'var(--bos-color-ink-tertiary)' }}>
               {installPct !== null ? `${installPct}%` : '—'}
             </div>
@@ -188,7 +188,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
   const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
     APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
     SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
-    PENDING: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
+    PENDING: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
     REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
     REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
     UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
@@ -197,7 +197,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
   };
 
   const statusTag = (status: string) => {
-    const s = STATUS_COLOR[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
+    const s = STATUS_COLOR[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' };
     return <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}22` }}>{(status || 'PENDING').replace(/_/g, ' ')}</span>;
   };
 
@@ -205,13 +205,13 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(15,23,42,0.5)', display: 'flex', justifyContent: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 1100, height: '100%', background: '#f8fafc', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}>
+      <div style={{ width: '100%', maxWidth: 1100, height: '100%', background: 'var(--color-surface)', overflowY: 'auto', boxShadow: '0 0 40px rgba(0,0,0,0.2)' }}>
         {/* Header */}
         <div style={{ background: 'linear-gradient(135deg, #071722, #0c2330)', padding: '20px 28px', position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(20,184,166,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{project.kID}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.03em', marginTop: 4 }}>{project.name}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-surface)', letterSpacing: '-0.03em', marginTop: 4 }}>{project.name}</div>
               <div style={{ fontSize: 13, color: 'rgba(148,163,184,0.7)', marginTop: 4 }}>
                 PM: {project.pm || '—'} · {project.island} · {project.eventCount} events
               </div>
@@ -365,7 +365,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                     </button>
                   </div>
                   <div style={{
-                    padding: '16px 20px', borderRadius: 12, background: '#f8fafc',
+                    padding: '16px 20px', borderRadius: 12, background: 'var(--color-surface)',
                     border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 13,
                   }}>
                     Warranty record + claim listing for this engagement will populate once the
@@ -395,7 +395,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#f8fafc', borderRadius: 16, padding: 20,
+                background: 'var(--color-surface)', borderRadius: 16, padding: 20,
                 maxWidth: 720, width: '100%', maxHeight: '90vh', overflowY: 'auto',
               }}
             >
@@ -548,7 +548,7 @@ export default function ProjectsPanel({ onNavigate }: Props) {
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {workRecordProjects.slice(0, 12).map(wr => (
-              <div key={wr.work_record_id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px', gap: 12, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: '#f8fafc', border: '1px solid #eef2f7' }}>
+              <div key={wr.work_record_id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px', gap: 12, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: 'var(--color-surface)', border: '1px solid #eef2f7' }}>
                 <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{wr.kid}</div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{wr.name}</div>
                 <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>{wr.status}</div>

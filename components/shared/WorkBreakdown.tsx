@@ -806,7 +806,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   style={{
                     display: 'flex', flexDirection: 'column', gap: 4,
                     padding: '12px 10px', borderRadius: 10,
-                    background: '#f8fafc', border: '1px dashed var(--color-surface-border)',
+                    background: 'var(--color-surface)', border: '1px dashed var(--color-surface-border)',
                     cursor: readOnly ? 'default' : 'pointer', opacity: 0.55,
                   }}
                 >
@@ -1511,7 +1511,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               /* Complex mode: area > mark > steps */
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
-                  <div style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ padding: '10px 14px', background: 'var(--color-surface)', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{plan.location || 'Default Area'}</span>
                     <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{plan.estimated_qty} mark{plan.estimated_qty !== 1 ? 's' : ''}</span>
                   </div>
@@ -1552,7 +1552,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
             {/* Add Step form */}
             {isAddingStep && !readOnly && (
-              <div style={{ marginTop: 10, padding: 14, background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ marginTop: 10, padding: 14, background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10 }}>
                   <div>
                     <label style={LBL}>Step Name</label>
@@ -2026,7 +2026,7 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
       style={{
         width: '100%', padding: '6px 10px', borderRadius: 6, fontSize: 11,
         border: `1px solid ${focused ? '#14b8a6' : 'var(--color-surface-border)'}`,
-        background: '#f8fafc', color: '#475569', resize: 'none',
+        background: 'var(--color-surface)', color: '#475569', resize: 'none',
         outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
         transition: 'border-color 0.15s',
       }}

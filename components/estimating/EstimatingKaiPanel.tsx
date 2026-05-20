@@ -483,7 +483,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               <div style={{
                 maxHeight: 240, overflowY: 'auto', marginBottom: 8,
                 border: '1px solid var(--color-surface-border)', borderRadius: 10,
-                background: '#f8fafc', padding: '8px',
+                background: 'var(--color-surface)', padding: '8px',
               }}>
                 {chatMessages.length === 0 ? (
                   <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center', padding: '16px 0' }}>
@@ -568,7 +568,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
 
           {showInstructions && (
             <div style={{
-              background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 10,
+              background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', borderRadius: 10,
               padding: '10px 12px', maxHeight: 220, overflowY: 'auto',
             }}>
               {/* Key rules summary */}
@@ -678,7 +678,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
                   </>
                 ) : (
                   <div style={{
-                    padding: '16px', borderRadius: 10, background: '#f8fafc',
+                    padding: '16px', borderRadius: 10, background: 'var(--color-surface)',
                     border: '1px solid var(--color-surface-border)', marginBottom: 16, textAlign: 'center',
                   }}>
                     {bid.bidFolderUrl ? (
@@ -850,7 +850,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
               </a>
             </div>
           ) : (
-            <div style={{ padding: '12px', borderRadius: 10, background: '#f8fafc', border: '1px dashed var(--color-surface-border)', textAlign: 'center' }}>
+            <div style={{ padding: '12px', borderRadius: 10, background: 'var(--color-surface)', border: '1px dashed var(--color-surface-border)', textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>No folder linked</div>
               <button
                 onClick={() => { setFolderUrl(''); setShowLinkModal(true); }}

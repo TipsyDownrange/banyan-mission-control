@@ -224,7 +224,7 @@ export default function PermissionsPage() {
   const { matrix, allPermissions, allRoles, users } = data;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#071722', color: '#f8fafc', fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#071722', color: 'var(--color-surface)', fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif' }}>
       <Toast message={toast} visible={toastVisible} />
 
       {/* Header */}

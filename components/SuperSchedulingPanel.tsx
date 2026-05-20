@@ -254,7 +254,7 @@ function SchedulerIdentityBand({
       <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0, marginBottom: 6 }}>
         Verifying
       </div>
-      <div style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', lineHeight: 1.25, marginBottom: 10 }}>
+      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-surface)', lineHeight: 1.25, marginBottom: 10 }}>
         {projectName}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -1567,7 +1567,7 @@ export default function SuperSchedulingPanel() {
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(20,184,166,0.5)', marginBottom: 4 }}>
               Operations
             </div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.03em', color: '#f8fafc', margin: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--color-surface)', margin: 0 }}>
               Scheduling Matrix
             </h1>
             {data && (

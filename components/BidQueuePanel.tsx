@@ -294,7 +294,7 @@ export default function BidQueuePanel() {
                     style={{
                       display: 'grid', gridTemplateColumns: '120px 1fr 90px 110px 90px 100px 32px',
                       gap: 0, padding: '10px 16px',
-                      borderBottom: '1px solid #f8fafc',
+                      borderBottom: '1px solid var(--color-surface)',
                       background: isExpanded ? 'rgba(240,253,250,0.4)' : 'white',
                       cursor: 'pointer',
                       transition: 'background 0.1s',

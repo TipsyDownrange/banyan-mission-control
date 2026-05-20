@@ -302,7 +302,7 @@ export default function BidIntakePanel() {
 
                 {/* Scope summary */}
                 {(opp.scope_summary || isEditing) && (
-                  <div style={{ marginTop: 10, padding: '8px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                  <div style={{ marginTop: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid #f1f5f9' }}>
                     <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Scope (Kai extracted)</div>
                     {isEditing
                       ? <textarea value={editDraft.scope_summary ?? opp.scope_summary} onChange={e => setEditDraft(p => ({ ...p, scope_summary: e.target.value }))} rows={2} style={{ width: '100%', fontSize: 12, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '4px 6px', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />

@@ -242,7 +242,7 @@ export default function OverviewPanel() {
               {events.slice(0, 12).map((ev, i) => {
                 const style = EVENT_STYLE[ev.type] || EVENT_STYLE.NOTE;
                 return (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: i < 11 ? '1px solid #f8fafc' : 'none' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: i < 11 ? '1px solid var(--color-surface)' : 'none' }}>
                     <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 6, background: style.bg, color: style.color, whiteSpace: 'nowrap', marginTop: 1 }}>
                       {style.label}
                     </span>

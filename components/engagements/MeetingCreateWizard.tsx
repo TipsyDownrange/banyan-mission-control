@@ -221,7 +221,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
           </label>
         </div>
 
-        <div style={{ border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 12, marginBottom: 12, background: '#f8fafc' }}>
+        <div style={{ border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 12, marginBottom: 12, background: 'var(--color-surface)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ ...labelStyle, marginBottom: 0 }}>Attendees ({attendees.length})</span>
             <div style={{ display: 'flex', gap: 6 }}>

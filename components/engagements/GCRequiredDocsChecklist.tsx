@@ -145,7 +145,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return (
     <label style={{
       display: 'flex', alignItems: 'center', gap: 8, padding: 8,
-      background: '#f8fafc', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+      background: 'var(--color-surface)', borderRadius: 6, fontSize: 12, cursor: 'pointer',
     }}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}

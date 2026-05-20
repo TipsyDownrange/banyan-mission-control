@@ -62,7 +62,7 @@ const WRAP: CSSProperties = {
 };
 
 const SUMMARY: CSSProperties = {
-  background: '#f8fafc', borderRadius: 10, padding: '10px 12px',
+  background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px',
   display: 'flex', flexDirection: 'column', gap: 6,
   border: '1px solid #eef2f7',
 };

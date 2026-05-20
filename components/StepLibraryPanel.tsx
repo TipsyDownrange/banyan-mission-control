@@ -740,7 +740,7 @@ export default function StepLibraryPanel() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(20,184,166,0.5)', marginBottom: 2 }}>Operations</div>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em' }}>Step Library</h1>
+              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--color-surface)', letterSpacing: '-0.02em' }}>Step Library</h1>
             </div>
             <button
               onClick={handleNewTemplate}
@@ -908,7 +908,7 @@ export default function StepLibraryPanel() {
                         style={{
                           fontSize: 22, fontWeight: 800, background: 'rgba(255,255,255,0.07)',
                           border: '1px solid rgba(20,184,166,0.5)', borderRadius: 8,
-                          padding: '4px 10px', color: '#f8fafc', outline: 'none', letterSpacing: '-0.02em',
+                          padding: '4px 10px', color: 'var(--color-surface)', outline: 'none', letterSpacing: '-0.02em',
                           minWidth: 240,
                         }}
                       />
@@ -917,7 +917,7 @@ export default function StepLibraryPanel() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--color-surface)', letterSpacing: '-0.02em' }}>
                         {selected.name}
                       </h2>
                       <button

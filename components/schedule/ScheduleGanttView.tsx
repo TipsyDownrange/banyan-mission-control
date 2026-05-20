@@ -337,7 +337,7 @@ function ResourceLegend({
     <div
       data-bos-gantt-resource-legend
       style={{
-        marginTop: 12, padding: '8px 12px', background: '#f8fafc',
+        marginTop: 12, padding: '8px 12px', background: 'var(--color-surface)',
         borderRadius: 6, fontSize: 11, color: '#475569',
       }}
     >

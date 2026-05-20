@@ -81,7 +81,7 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.map((it) => (
-            <li key={it.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid var(--color-surface-border)' }}>
+            <li key={it.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.filename}

@@ -80,7 +80,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
             const s = STATE_LABELS[r.state] ?? { fg: '#475569', bg: '#f1f5f9', label: r.state, variant: 'info' as StatusPillVariant };
             const unresolved = (r.critical_gaps ?? []).filter((g) => g.status !== 'RESOLVED' && g.status !== 'WAIVED').length;
             return (
-              <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)', gap: 12 }}>
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)', gap: 12 }}>
                 <button
                   type="button"
                   onClick={() => {

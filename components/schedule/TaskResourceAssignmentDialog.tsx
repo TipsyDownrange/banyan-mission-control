@@ -260,7 +260,7 @@ export default function TaskResourceAssignmentDialog({
                       data-bos-resource-row={r.task_resource_id}
                       style={{
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '8px 12px', background: '#f8fafc', borderRadius: 8,
+                        padding: '8px 12px', background: 'var(--color-surface)', borderRadius: 8,
                       }}
                     >
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -314,7 +314,7 @@ export default function TaskResourceAssignmentDialog({
               showAdd ? (
                 <section
                   data-bos-resource-add-form
-                  style={{ padding: 12, background: '#f8fafc', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 10 }}
+                  style={{ padding: 12, background: 'var(--color-surface)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 10 }}
                 >
                   <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>Add resource</h3>
                   <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-disabled)', display: 'flex', flexDirection: 'column', gap: 4 }}>

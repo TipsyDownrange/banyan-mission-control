@@ -111,7 +111,7 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
           marginBottom: 16,
         }}
       >
-        <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+        <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', letterSpacing: '0.06em' }}>TOTAL VALUE</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 4 }}>
             {fmtMoney(s.total_value_usd)}

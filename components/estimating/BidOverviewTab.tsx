@@ -41,7 +41,7 @@ const READONLY_STYLE: React.CSSProperties = {
   borderRadius: 8,
   fontSize: 12,
   color: 'var(--bos-color-ink-disabled)',
-  background: '#f8fafc',
+  background: 'var(--color-surface)',
   boxSizing: 'border-box',
 };
 
@@ -526,7 +526,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                       alignItems: 'center',
                       gap: 12,
                       padding: '8px 12px',
-                      background: '#f8fafc',
+                      background: 'var(--color-surface)',
                       border: '1px solid var(--color-surface-border)',
                       borderRadius: 10,
                       flexWrap: 'wrap',

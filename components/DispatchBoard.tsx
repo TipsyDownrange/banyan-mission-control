@@ -23,9 +23,9 @@ const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: strin
   'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', border: '#99f6e4' },
   'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
-  'Punch List / Warranty':   { color: '#475569', bg: '#f8fafc', border: '#cbd5e1' },
+  'Punch List / Warranty':   { color: '#475569', bg: 'var(--color-surface)', border: '#cbd5e1' },
   'Pickup / Delivery':       { color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe' },
-  'Other':                   { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc', border: 'var(--color-surface-border)' },
+  'Other':                   { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', border: 'var(--color-surface-border)' },
 };
 
 function WorkTypeBadge({ type, compact }: { type: string; compact?: boolean }) {
@@ -61,7 +61,7 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }>
   open:      { color: '#b91c1c', bg: '#fef2f2', label: 'Open' },
   partial:   { color: '#92400e', bg: '#fffbeb', label: 'Partial' },
   filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'Filled' },
-  completed: { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc', label: 'Done' },
+  completed: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', label: 'Done' },
 };
 
 const ISLAND_COLOR: Record<string, string> = {
@@ -380,7 +380,7 @@ export default function DispatchBoard() {
                             {slot.work_type && <div style={{ marginBottom: 4 }}><WorkTypeBadge type={slot.work_type} /></div>}
                             {(slot.start_time || slot.end_time) && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>⏰ {slot.start_time}{slot.start_time && slot.end_time ? '–' : ''}{slot.end_time}</div>}
                             {slot.hours_estimated && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
-                            {slot.notes && <div style={{ fontSize: 9, color: '#475569', marginBottom: 4, fontStyle: 'italic', background: '#f8fafc', borderRadius: 6, padding: '4px 6px', border: '1px solid var(--color-surface-border)' }}>📋 {slot.notes}</div>}
+                            {slot.notes && <div style={{ fontSize: 9, color: '#475569', marginBottom: 4, fontStyle: 'italic', background: 'var(--color-surface)', borderRadius: 6, padding: '4px 6px', border: '1px solid var(--color-surface-border)' }}>📋 {slot.notes}</div>}
                             {/* Confirmation breakdown */}
                             {assignedNames.length > 0 && (
                               <div style={{ marginBottom: 4 }}>

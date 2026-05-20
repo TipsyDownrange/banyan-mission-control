@@ -144,8 +144,8 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
                   fontWeight: 800,
                   letterSpacing: '0.04em',
                   cursor: 'pointer',
-                  background: active ? 'var(--color-ink-primary)' : '#f8fafc',
-                  color: active ? '#f8fafc' : '#475569',
+                  background: active ? 'var(--color-ink-primary)' : 'var(--color-surface)',
+                  color: active ? 'var(--color-surface)' : '#475569',
                   border: `1px solid ${active ? 'var(--color-ink-primary)' : 'var(--color-surface-border)'}`,
                 }}
               >
@@ -192,8 +192,8 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
                     fontSize: 11,
                     fontWeight: 800,
                     cursor: 'pointer',
-                    background: active ? 'var(--bos-color-brand-primary-deep)' : '#f8fafc',
-                    color: active ? '#f8fafc' : '#475569',
+                    background: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface)',
+                    color: active ? 'var(--color-surface)' : '#475569',
                     border: `1px solid ${active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)'}`,
                     textTransform: 'capitalize',
                   }}

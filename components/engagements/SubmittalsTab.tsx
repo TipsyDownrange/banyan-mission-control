@@ -50,7 +50,7 @@ type ApiResponse = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  REQUIRED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
+  REQUIRED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   IN_PROGRESS: { bg: '#fff7ed', color: '#9a3412' },
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
@@ -58,7 +58,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   APPROVED_AS_NOTED: { bg: '#f0fdfa', color: '#15803d' },
   REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
   REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
-  CLOSED: { bg: '#f8fafc', color: '#475569' },
+  CLOSED: { bg: 'var(--color-surface)', color: '#475569' },
 };
 
 const TYPE_STYLE: Record<string, { bg: string; color: string }> = {
@@ -68,7 +68,7 @@ const TYPE_STYLE: Record<string, { bg: string; color: string }> = {
 };
 
 function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
+  const s = STATUS_STYLE[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -79,7 +79,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function TypePill({ type }: { type: string }) {
-  const s = TYPE_STYLE[type] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
+  const s = TYPE_STYLE[type] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       padding: '2px 7px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -216,7 +216,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
 
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
         Submittal Log v1.0 requires this project to be migrated to Postgres. The legacy Sheets-based submittals list is still shown elsewhere; new entries via this surface require an engagement row.
       </div>
     );

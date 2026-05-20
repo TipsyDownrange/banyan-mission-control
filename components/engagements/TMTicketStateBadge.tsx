@@ -14,7 +14,7 @@ import type { TmTicketState } from '@/lib/aia/state-transitions';
 type Palette = { bg: string; color: string; label: string };
 
 const STATE_PALETTE: Record<TmTicketState, Palette> = {
-  DRAFT:                 { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
+  DRAFT:                 { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
   LOGGED:                { bg: '#f1f5f9', color: '#475569', label: 'Logged' },
   READY_FOR_GC_APPROVAL: { bg: '#fffbeb', color: '#92400e', label: 'Ready · GC Approval' },
   GC_APPROVED:           { bg: '#eff6ff', color: '#1d4ed8', label: 'GC Approved' },
@@ -26,7 +26,7 @@ const STATE_PALETTE: Record<TmTicketState, Palette> = {
 };
 
 export default function TMTicketStateBadge({ state }: { state: string }) {
-  const fallback: Palette = { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: state.replace(/_/g, ' ') };
+  const fallback: Palette = { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: state.replace(/_/g, ' ') };
   const palette = (STATE_PALETTE as Record<string, Palette>)[state] ?? fallback;
   return (
     <span

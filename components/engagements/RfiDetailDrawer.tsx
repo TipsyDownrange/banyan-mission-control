@@ -94,7 +94,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '92%', maxWidth: 560, background: '#f8fafc', height: '100%', overflowY: 'auto', boxShadow: '-4px 0 16px rgba(0,0,0,0.15)' }}
+        style={{ width: '92%', maxWidth: 560, background: 'var(--color-surface)', height: '100%', overflowY: 'auto', boxShadow: '-4px 0 16px rgba(0,0,0,0.15)' }}
       >
         <div style={{ background: '#0c2330', color: 'white', padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -138,7 +138,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                   Reason: {r.reason_for_rfi.replace(/_/g, ' ')}
                 </div>
               )}
-              <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', whiteSpace: 'pre-wrap' }}>
+              <div style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', whiteSpace: 'pre-wrap' }}>
                 {r.question}
               </div>
               {r.cost_or_schedule_impact_anticipated && (

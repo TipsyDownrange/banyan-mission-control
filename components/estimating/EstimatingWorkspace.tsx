@@ -453,7 +453,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
             <div style={{
               fontSize: 14,
               fontWeight: 800,
-              color: '#f8fafc',
+              color: 'var(--color-surface)',
               letterSpacing: '-0.01em',
               whiteSpace: 'nowrap',
               overflow: 'hidden',

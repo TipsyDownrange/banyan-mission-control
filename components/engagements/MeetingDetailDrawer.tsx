@@ -99,7 +99,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 210, display: 'flex', justifyContent: 'flex-end' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, background: '#f8fafc', height: '100%', overflowY: 'auto', boxShadow: '-12px 0 32px rgba(15,23,42,0.18)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 640, background: 'var(--color-surface)', height: '100%', overflowY: 'auto', boxShadow: '-12px 0 32px rgba(15,23,42,0.18)' }}>
         <div style={{ background: 'linear-gradient(135deg, #0c2330, #134e4a)', padding: '18px 22px', color: 'white' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: '#5eead4', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Meeting</div>
@@ -168,7 +168,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {attendees.map((a) => (
-                    <div key={a.meeting_attendee_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 8, background: '#f8fafc', border: '1px solid var(--color-surface-border)' }}>
+                    <div key={a.meeting_attendee_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)' }}>
                       <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : '#475569' }}>{a.is_kula_user ? 'KULA' : 'EXT'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
@@ -194,7 +194,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                 ) : (
                   <span style={{ ...chipLinkStyle, color: 'var(--bos-color-ink-tertiary)', background: '#f1f5f9' }}>No recording</span>
                 )}
-                <span style={{ ...chipLinkStyle, color: '#475569', background: '#f8fafc' }}>Source: {meeting.source_platform}</span>
+                <span style={{ ...chipLinkStyle, color: '#475569', background: 'var(--color-surface)' }}>Source: {meeting.source_platform}</span>
               </div>
             </section>
 
