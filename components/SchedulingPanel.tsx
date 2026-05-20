@@ -123,7 +123,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           </div>
           {view === 'forecast' && (
               <select value={weeksAhead} onChange={e => setWeeksAhead(parseInt(e.target.value))}
-                style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 11, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+                style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 11, color: 'var(--color-ink-secondary)', cursor: 'pointer', outline: 'none' }}>
                 <option value={8}>8 weeks</option>
                 <option value={12}>12 weeks</option>
                 <option value={24}>24 weeks</option>

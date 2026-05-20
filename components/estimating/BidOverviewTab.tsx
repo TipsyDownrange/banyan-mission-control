@@ -517,7 +517,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                   if (goldTotal && templateHours) {
                     const diff = Math.abs(goldTotal - templateHours) / templateHours;
                     if (diff > 0.20) goldColor = '#dc2626';
-                    else if (diff > 0.10) goldColor = '#d97706';
+                    else if (diff > 0.10) goldColor = 'var(--color-amber-500)';
                   }
 
                   return (

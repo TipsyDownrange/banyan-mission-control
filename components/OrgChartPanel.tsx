@@ -26,8 +26,8 @@ const ROLE_COLOR: Record<string, string> = {
   owner: 'var(--color-ink-primary)', gm: 'var(--bos-color-accent-data)', pm: 'var(--bos-color-brand-primary-deep)', estimator: 'var(--bos-color-brand-primary-deep)',
   admin_mgr: '#7c3aed', admin: '#7c3aed', service_pm: '#6d28d9',
   super: 'var(--color-amber-800)', sales: 'var(--bos-color-brand-primary-deep)', pm_track: '#7c3aed',
-  journeyman: '#334155', apprentice: 'var(--bos-color-ink-tertiary)', laborer: 'var(--bos-color-ink-tertiary)',
-  glazier: '#334155', field: '#334155',
+  journeyman: 'var(--color-ink-secondary)', apprentice: 'var(--bos-color-ink-tertiary)', laborer: 'var(--bos-color-ink-tertiary)',
+  glazier: 'var(--color-ink-secondary)', field: 'var(--color-ink-secondary)',
 };
 
 function getColor(role: string): string {
@@ -222,7 +222,7 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
         <div style={{
           fontSize: 8, fontWeight: 700, borderRadius: 4, padding: '1px 6px', marginTop: 4,
           color: node.note.includes('Management') ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)',
-          background: node.note.includes('Management') ? '#f0fdfa' : '#fffbeb',
+          background: node.note.includes('Management') ? 'var(--color-teal-50)' : 'var(--color-amber-50)',
         }}>
           {node.note.includes('Management') ? '★ Management Team' : node.note}
         </div>

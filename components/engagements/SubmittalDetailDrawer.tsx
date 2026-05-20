@@ -148,7 +148,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
               <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Lifecycle</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {(s.status === 'REQUIRED' || s.status === 'IN_PROGRESS') && (
-                  <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', background: '#f0fdfa', padding: '4px 8px', borderRadius: 8 }}>
+                  <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', background: 'var(--color-teal-50)', padding: '4px 8px', borderRadius: 8 }}>
                     <select value={submittedTo} onChange={(e) => setSubmittedTo(e.target.value as typeof submittedTo)} style={selectStyle}>
                       <option value="GC">GC</option>
                       <option value="ARCHITECT">Architect</option>
@@ -217,7 +217,7 @@ function DocList({ label, ids }: { label: string; ids: string[] }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {ids.map((id) => (
             <a key={id} href={`https://drive.google.com/file/d/${id}/view`} target="_blank" rel="noreferrer"
-              style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
+              style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: 'var(--color-teal-50)', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
               {id.length > 14 ? `${id.slice(0, 10)}…` : id}
             </a>
           ))}

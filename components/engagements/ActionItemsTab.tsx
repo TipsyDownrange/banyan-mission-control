@@ -273,7 +273,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                 </div>
                 <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800, color: priority.fg, background: priority.bg, justifySelf: 'start' }}>{it.priority}</span>
                 <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800, color: status.fg, background: status.bg, justifySelf: 'start' }}>{it.status.replace(/_/g, ' ')}</span>
-                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : '#334155' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : 'var(--color-ink-secondary)' }}>
                   {it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due date'}
                 </div>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>

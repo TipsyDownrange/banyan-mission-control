@@ -293,7 +293,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
   if (step === 'done') return (
     <div style={{ padding: 40, textAlign: 'center' }}>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdfa', border: '2px solid rgba(15,118,110,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+      <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--color-teal-50)', border: '2px solid rgba(15,118,110,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-brand-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 6 }}>Work Order Created</div>
@@ -379,7 +379,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                   disabled={creatingCustomer}
                   style={{
                     fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
-                    border: '1px solid #d97706', background: 'white', color: '#b45309',
+                    border: '1px solid var(--color-amber-500)', background: 'white', color: '#b45309',
                     cursor: creatingCustomer ? 'default' : 'pointer', marginTop: 6,
                     opacity: creatingCustomer ? 0.7 : 1,
                   }}
@@ -485,7 +485,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
                   onClick={() => setDraft(prev => confirmLegacyAccountAddress(prev))}
                   style={{
                     fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
-                    border: '1px solid #d97706', background: 'white', color: '#b45309', cursor: 'pointer',
+                    border: '1px solid var(--color-amber-500)', background: 'white', color: '#b45309', cursor: 'pointer',
                   }}
                 >
                   Use legacy address as jobsite

@@ -339,7 +339,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
             <div style={STAT_LABEL}>Total</div>
             <div style={STAT_VALUE}>{submittalKpi.total}</div>
           </div>
-          <div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-amber-50)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Outstanding</div>
             <div style={{ ...STAT_VALUE, color: submittalKpi.outstanding > 0 ? 'var(--color-amber-800)' : 'var(--bos-color-brand-primary-deep)' }}>{submittalKpi.outstanding}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>

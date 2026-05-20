@@ -1205,7 +1205,7 @@ function EditTaskRow({ task, allTasks, currentDeps, canWrite, onSaved, onCancel 
                     padding: '3px 8px', borderRadius: 999, fontSize: 11, cursor: 'pointer',
                     border: '1px solid',
                     borderColor: checked ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
-                    background: checked ? '#f0fdfa' : 'white',
+                    background: checked ? 'var(--color-teal-50)' : 'white',
                     color: checked ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                   }}
                 >

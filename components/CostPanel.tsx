@@ -177,7 +177,7 @@ export default function CostPanel() {
             {[
               { label:'Anthropic Invoices', value:ant?.invoicesPaid||0, color:'#4f46e5', total: allIn },
               { label:'OpenAI API',         value:oai?.apiCostToDate||0, color:'#059669', total: allIn },
-              { label:'Subscriptions',      value:subs?.totalToDate||0, color:'#d97706', total: allIn },
+              { label:'Subscriptions',      value:subs?.totalToDate||0, color:'var(--color-amber-500)', total: allIn },
               { label:'Vercel',             value:verc?.totalToDate||0, color:'var(--bos-color-ink-disabled)', total: allIn },
             ].map(({label,value,color,total})=>{
               const pct = total>0 ? (value/total)*100 : 0;
@@ -185,7 +185,7 @@ export default function CostPanel() {
                 <div key={label} style={{ marginBottom:12 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                     <span style={{ fontSize:13, fontWeight:600, color:'var(--color-ink-primary)' }}>{label}</span>
-                    <span style={{ fontSize:13, fontWeight:700, color:'#334155' }}>{fmtUsd(value)} <span style={{ fontSize:10, color:'var(--bos-color-ink-tertiary)' }}>({pct.toFixed(0)}%)</span></span>
+                    <span style={{ fontSize:13, fontWeight:700, color:'var(--color-ink-secondary)' }}>{fmtUsd(value)} <span style={{ fontSize:10, color:'var(--bos-color-ink-tertiary)' }}>({pct.toFixed(0)}%)</span></span>
                   </div>
                   <div style={{ height:6, background:'#f1f5f9', borderRadius:999, overflow:'hidden' }}>
                     <div style={{ height:'100%', width:`${pct}%`, background:color, borderRadius:999 }}/>
@@ -256,7 +256,7 @@ export default function CostPanel() {
                 <tbody>
                   {[...(data?.anthropicInvoices||[])].sort((a,b)=>b.date.localeCompare(a.date)).map((inv,i)=>(
                     <tr key={i} style={{ borderBottom:'1px solid var(--color-surface)' }}>
-                      <td style={{ padding:'7px 8px', color:'#334155' }}>{inv.date}</td>
+                      <td style={{ padding:'7px 8px', color:'var(--color-ink-secondary)' }}>{inv.date}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'var(--color-red-50)':'#f0fdf4', color:inv.type==='invoice'?'var(--color-red-700)':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
                       <td style={{ padding:'7px 8px', fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(inv.amount)}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>{inv.status||'paid'}</span></td>
@@ -271,7 +271,7 @@ export default function CostPanel() {
             <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Daily API Costs (Live from Admin API)</div>
             {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).slice(0,20).map(([date,d])=>(
               <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid var(--color-surface)' }}>
-                <span style={{ fontSize:13, color:'#334155' }}>{date}</span>
+                <span style={{ fontSize:13, color:'var(--color-ink-secondary)' }}>{date}</span>
                 <span style={{ fontSize:13, fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(d.anthropic||d.cost||0,4)}</span>
               </div>
             ))}
@@ -289,12 +289,12 @@ export default function CostPanel() {
           </div>
           {[...(data?.openaiDaily||[])].filter(e=>inRange(e.date)).sort((a,b)=>b.date.localeCompare(a.date)).map((e,i)=>(
             <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid var(--color-surface)', fontSize:13 }}>
-              <span style={{ color:'#334155' }}>{e.date}</span>
+              <span style={{ color:'var(--color-ink-secondary)' }}>{e.date}</span>
               <span style={{ fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(e.costUsd,2)}</span>
             </div>
           ))}
           {(data?.openaiDaily||[]).filter(e=>inRange(e.date)).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No OpenAI data for this range.</div>}
-          <div style={{ marginTop:16, padding:'10px 14px', background:'#fffbeb', border:'1px solid rgba(217,119,6,0.2)', borderRadius:10, fontSize:12, color:'var(--color-amber-800)' }}>
+          <div style={{ marginTop:16, padding:'10px 14px', background:'var(--color-amber-50)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:10, fontSize:12, color:'var(--color-amber-800)' }}>
             💡 Export updated CSVs from <strong>platform.openai.com</strong> for latest data. API billing endpoint requires a different org — working on it.
           </div>
         </div>

@@ -112,7 +112,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{it.kid ?? '—'}</div>
                 <div style={{ minWidth: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
                 <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{it.priority}</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : '#334155' }}>{it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due'}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : 'var(--color-ink-secondary)' }}>{it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due'}</div>
               </div>
             );
           })}

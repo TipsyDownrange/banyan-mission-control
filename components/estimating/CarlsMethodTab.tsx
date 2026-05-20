@@ -1179,7 +1179,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 if (gold && baseline.totalHours > 0) {
                   const diff = Math.abs(gold.totalHours - baseline.totalHours) / baseline.totalHours;
                   if (diff > 0.20) goldColor = '#dc2626';
-                  else if (diff > 0.10) goldColor = '#d97706';
+                  else if (diff > 0.10) goldColor = 'var(--color-amber-500)';
                 }
 
                 return (
@@ -1319,12 +1319,12 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                       <span style={{
                         fontSize: 9, fontWeight: 700, padding: '1px 6px',
                         borderRadius: 999, background: 'rgba(245,158,11,0.1)',
-                        color: '#d97706', border: '1px solid rgba(245,158,11,0.25)',
+                        color: 'var(--color-amber-500)', border: '1px solid rgba(245,158,11,0.25)',
                       }}>MANUAL</span>
                     )}
                   </div>
                 </td>
-                <td style={{ ...bodyCell, fontSize: 11, color: data.markup.overheadOverride ? '#d97706' : 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
+                <td style={{ ...bodyCell, fontSize: 11, color: data.markup.overheadOverride ? 'var(--color-amber-500)' : 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
                   {data.markup.overheadOverride
                     ? `overrides $${fmt(laborSubtotal)}`
                     : `= Labor Subtotal ($${fmt(laborSubtotal)})`
@@ -1343,7 +1343,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                         onClick={() => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: '' } }))}
                         className="no-print"
                         title="Reset to auto (= labor)"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d97706', fontSize: 11, padding: '0 2px', fontWeight: 700 }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-amber-500)', fontSize: 11, padding: '0 2px', fontWeight: 700 }}
                       >↺</button>
                     )}
                   </div>
@@ -1515,7 +1515,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                   {label}
                 </div>
                 <div style={{
-                  fontSize: 12, fontWeight: 700, color: '#334155',
+                  fontSize: 12, fontWeight: 700, color: 'var(--color-ink-secondary)',
                   fontFamily: FONT, fontVariantNumeric: 'tabular-nums',
                 }}>
                   ${fmt(value)}

@@ -135,7 +135,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
               {editing ? (
                 <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
               ) : (
-                <p style={{ fontSize: 13, color: '#334155', whiteSpace: 'pre-wrap', margin: 0 }}>{meeting.summary || '—'}</p>
+                <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', whiteSpace: 'pre-wrap', margin: 0 }}>{meeting.summary || '—'}</p>
               )}
             </section>
 
@@ -144,7 +144,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
               {editing ? (
                 <textarea value={topicsText} onChange={(e) => setTopicsText(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical' }} placeholder="One topic per line" />
               ) : (
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#334155' }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--color-ink-secondary)' }}>
                   {meeting.key_topics.length === 0 ? <li style={{ color: 'var(--bos-color-ink-tertiary)', listStyle: 'none', marginLeft: -18 }}>—</li> : meeting.key_topics.map((t, i) => <li key={i}>{t}</li>)}
                 </ul>
               )}
@@ -155,7 +155,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
               {editing ? (
                 <textarea value={decisionsText} onChange={(e) => setDecisionsText(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical' }} placeholder="One decision per line" />
               ) : (
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#334155' }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--color-ink-secondary)' }}>
                   {meeting.decisions_made.length === 0 ? <li style={{ color: 'var(--bos-color-ink-tertiary)', listStyle: 'none', marginLeft: -18 }}>—</li> : meeting.decisions_made.map((t, i) => <li key={i}>{t}</li>)}
                 </ul>
               )}
@@ -174,7 +174,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{[a.role, a.organization].filter(Boolean).join(' · ') || a.email || '—'}</div>
                       </div>
-                      {!a.attended && <span style={{ fontSize: 10, color: 'var(--color-amber-800)', background: '#fffbeb', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>NO-SHOW</span>}
+                      {!a.attended && <span style={{ fontSize: 10, color: 'var(--color-amber-800)', background: 'var(--color-amber-50)', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>NO-SHOW</span>}
                     </div>
                   ))}
                 </div>

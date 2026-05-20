@@ -88,7 +88,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
                   Trigger: {h.release_trigger.replace(/_/g, ' ')}
                 </div>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', textAlign: 'right' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-secondary)', textAlign: 'right' }}>
                 {fmtMoney(h.amount_held)}
               </div>
               <div style={{ fontSize: 11, color: isReleased ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)', textAlign: 'right' }}>
@@ -98,7 +98,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
                 <span style={{
                   padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
                   letterSpacing: '0.04em', whiteSpace: 'nowrap',
-                  background: isReleased ? '#f0fdfa' : '#fffbeb',
+                  background: isReleased ? 'var(--color-teal-50)' : 'var(--color-amber-50)',
                   color: isReleased ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)',
                   border: isReleased ? '1px solid #0f766e33' : '1px solid #92400e33',
                 }}>

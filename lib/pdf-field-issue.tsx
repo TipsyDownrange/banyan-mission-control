@@ -17,7 +17,7 @@ export type FieldIssueData = {
 
 function FieldIssuePDF({ data }: { data: FieldIssueData }) {
   const sevColor = { CRITICAL: '#7f1d1d', HIGH: C.red, MEDIUM: C.amber, LOW: C.slate }[data.severity] || C.slate;
-  const sevBg    = { CRITICAL: 'var(--color-red-50)', HIGH: 'var(--color-red-50)', MEDIUM: '#fffbeb', LOW: C.bg }[data.severity] || C.bg;
+  const sevBg    = { CRITICAL: 'var(--color-red-50)', HIGH: 'var(--color-red-50)', MEDIUM: 'var(--color-amber-50)', LOW: C.bg }[data.severity] || C.bg;
   const laborCost = data.affected_count * data.hours_lost * 89.10;
 
   function fmtTime(iso: string) {

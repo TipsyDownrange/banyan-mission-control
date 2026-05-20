@@ -58,8 +58,8 @@ const STAGES = [
   { key: 'quoted',             label: 'Quoted',       color: '#3b82f6' },
   { key: 'accepted',           label: 'Accepted',     color: 'var(--bos-color-brand-primary-deep)' },
   { key: 'deposit_received',   label: 'Deposit',      color: 'var(--bos-color-brand-primary-deep)' },
-  { key: 'materials_ordered',  label: 'Mat Ordered',  color: '#d97706' },
-  { key: 'materials_received', label: 'Mat In',       color: '#d97706' },
+  { key: 'materials_ordered',  label: 'Mat Ordered',  color: 'var(--color-amber-500)' },
+  { key: 'materials_received', label: 'Mat In',       color: 'var(--color-amber-500)' },
   { key: 'ready_to_schedule',  label: 'Ready',        color: '#7c3aed' },
   { key: 'scheduled',          label: 'Scheduled',    color: '#7c3aed' },
   { key: 'in_progress',        label: 'In Progress',  color: '#7c3aed' },
@@ -71,9 +71,9 @@ const STAGES = [
 
 const STAGE_BG: Record<string, string> = {
   lead: 'var(--color-surface)', quoted: '#f5f3ff',
-  approved: '#fffbeb', scheduled: '#eef2ff', in_progress: '#f0fdfa',
+  approved: 'var(--color-amber-50)', scheduled: '#eef2ff', in_progress: 'var(--color-teal-50)',
   work_complete: '#ecfdf5', closed: '#f0fdf4',
-  deposit_received: '#fffbeb', materials_ordered: '#fff7ed', materials_received: '#f0fdf4', ready_to_schedule: '#eff6ff',
+  deposit_received: 'var(--color-amber-50)', materials_ordered: '#fff7ed', materials_received: '#f0fdf4', ready_to_schedule: '#eff6ff',
 };
 
 function toTitleCase(str: string): string {
@@ -1131,7 +1131,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       if (val === safeWo.status) return;
                       handleStageChange(val);
                     }}
-                    style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155', background: 'white', cursor: stageSaving ? 'default' : 'pointer', outline: 'none', flexShrink: 0 }}
+                    style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', fontSize: 12, color: 'var(--color-ink-secondary)', background: 'white', cursor: stageSaving ? 'default' : 'pointer', outline: 'none', flexShrink: 0 }}
                   >
                     {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                   </select>
@@ -1433,7 +1433,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             updateCustomerSite('address', legacyAccountAddressSuggestion);
                             setLegacyAccountAddressSuggestion('');
                           }}
-                          style={{ border: '1px solid rgba(146,64,14,0.25)', background: '#fffbeb', color: 'var(--color-amber-800)', borderRadius: 6, padding: '3px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                          style={{ border: '1px solid rgba(146,64,14,0.25)', background: 'var(--color-amber-50)', color: 'var(--color-amber-800)', borderRadius: 6, padding: '3px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
                         >
                           Use as site address
                         </button>
@@ -1816,7 +1816,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   )}
                   {procurementOrders.map(order => {
                     const statusColors: Record<string,{bg:string;color:string}> = {
-                      VENDOR_QUOTED: {bg:'#fffbeb',color:'var(--color-amber-800)'},
+                      VENDOR_QUOTED: {bg:'var(--color-amber-50)',color:'var(--color-amber-800)'},
                       RELEASED: {bg:'#eff6ff',color:'#1d4ed8'},
                       IN_TRANSIT: {bg:'#f0f9ff',color:'var(--bos-color-accent-data)'},
                       DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
@@ -2042,7 +2042,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     {invoices.map((inv, idx) => (
                       <div key={inv.id} style={{ marginBottom:12, padding:'12px', borderRadius:12, background:'var(--color-surface)', border:'1px solid #f1f5f9' }}>
                         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-                          <span style={{ fontSize:12, fontWeight:800, color:'#334155' }}>{TYPE_ICONS[inv.type]||'💰'} {inv.type} #{idx+1}</span>
+                          <span style={{ fontSize:12, fontWeight:800, color:'var(--color-ink-secondary)' }}>{TYPE_ICONS[inv.type]||'💰'} {inv.type} #{idx+1}</span>
                           <button onClick={() => deleteRow(inv.id)} style={{ background:'none', border:'none', color:'var(--bos-color-ink-tertiary)', cursor:'pointer', fontSize:16, padding:'0 4px' }} title="Delete">🗑️</button>
                         </div>
                         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
@@ -2222,7 +2222,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>Images, PDFs, documents — max 25 MB</div>
                 </div>
                 {uploadingCount > 0 && (
-                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.15)' }}>
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.15)' }}>
                     <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
                     <span style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>Uploading {uploadingCount} file{uploadingCount > 1 ? 's' : ''}...</span>
                   </div>
@@ -2297,7 +2297,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               if (invoices.length === 0 && safeWo.final_status) invoices = [{ status: safeWo.final_status }];
               const unpaid = invoices.some(i => i.status === 'Pending' || i.status === 'Sent');
               return unpaid ? (
-                <div style={{ padding:'10px 12px', background:'#fffbeb', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'var(--color-amber-800)', fontWeight:600, marginBottom:16 }}>
+                <div style={{ padding:'10px 12px', background:'var(--color-amber-50)', borderRadius:10, border:'1px solid rgba(217,119,6,0.3)', fontSize:12, color:'var(--color-amber-800)', fontWeight:600, marginBottom:16 }}>
                   ⚠️ One or more invoices have not been marked as paid. Close anyway?
                 </div>
               ) : null;

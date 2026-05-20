@@ -41,7 +41,7 @@ import type { ScheduleTaskIsland } from '@/db';
 
 const STATUS_COLORS: Record<ScheduleTask['status'], string> = {
   planned: '#1e3a8a',       // navy
-  in_progress: '#d97706',   // amber
+  in_progress: 'var(--color-amber-500)',   // amber
   complete: '#059669',      // green
   blocked: '#dc2626',       // red
   on_hold: 'var(--bos-color-ink-disabled)',       // gray

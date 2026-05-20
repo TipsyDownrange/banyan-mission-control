@@ -117,13 +117,13 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
             {fmtMoney(s.total_value_usd)}
           </div>
         </div>
-        <div style={{ background: '#f0fdfa', borderRadius: 10, padding: '10px 12px' }}>
+        <div style={{ background: 'var(--color-teal-50)', borderRadius: 10, padding: '10px 12px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.06em' }}>BILLED</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', marginTop: 4 }}>
             {fmtMoney(s.billed_value_usd)}
           </div>
         </div>
-        <div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 12px' }}>
+        <div style={{ background: 'var(--color-amber-50)', borderRadius: 10, padding: '10px 12px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-amber-800)', letterSpacing: '0.06em' }}>UNBILLED</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-amber-800)', marginTop: 4 }}>
             {fmtMoney(s.unbilled_value_usd)}
@@ -144,7 +144,7 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
                 fontWeight: 800,
                 letterSpacing: '0.04em',
                 background: '#f1f5f9',
-                color: '#334155',
+                color: 'var(--color-ink-secondary)',
                 border: '1px solid var(--color-surface-border)',
               }}
             >

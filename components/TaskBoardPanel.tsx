@@ -25,12 +25,12 @@ type Task = {
 };
 
 const PRIORITY_DOT: Record<string, string> = {
-  critical: 'var(--color-red-700)', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
+  critical: 'var(--color-red-700)', high: 'var(--color-amber-500)', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
 };
 const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
-  in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
-  waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
+  in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)', label: 'In Progress' },
+  waiting:     { color: 'var(--color-amber-500)', bg: 'var(--color-amber-50)', label: 'Waiting' },
   blocked:     { color: 'var(--color-red-700)', bg: 'var(--color-red-50)', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
 };
@@ -231,7 +231,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             <div style={{marginBottom:16,padding:'12px',background:'rgba(254,243,199,0.4)',borderRadius:10,border:'1px solid rgba(217,119,6,0.15)'}}>
               <div style={{fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em',color:'var(--color-amber-800)',marginBottom:8}}>Inbox Actions</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'#f0fdfa',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
+                <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'var(--color-teal-50)',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
                 <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'var(--color-red-50)',color:'var(--color-red-700)',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>
               </div>
               {showPromote && (
@@ -255,7 +255,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             {(task.actionLog||[]).map((entry,i) => (
               <div key={i} style={{display:'flex',gap:8,marginBottom:6,fontSize:12}}>
                 <span style={{color:'var(--bos-color-ink-tertiary)',flexShrink:0,fontFamily:'monospace'}}>{fmtTs(entry.ts)}</span>
-                <span style={{color:'#334155'}}>{entry.action}</span>
+                <span style={{color:'var(--color-ink-secondary)'}}>{entry.action}</span>
                 {entry.by && <span style={{color:'var(--bos-color-ink-tertiary)'}}>— {entry.by}</span>}
               </div>
             ))}
@@ -485,7 +485,7 @@ export default function TaskBoardPanel() {
       {!loading && tab==='roadmap' && (<>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
           {([['all',`All · ${roadmapTasks.length}`],['critical',`Critical/High · ${roadmapTasks.filter(t=>t.priority==='critical'||t.priority==='high').length}`],['in_progress',`In Progress · ${roadmapTasks.filter(t=>t.status==='in_progress').length}`],['waiting',`Waiting · ${roadmapTasks.filter(t=>t.status==='waiting'||t.status==='blocked').length}`]] as const).map(([k,label])=>(
-            <button key={k} onClick={()=>setFilterPill(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:filterPill===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid var(--color-surface-border)',background:filterPill===k?'#f0fdfa':'white',color:filterPill===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
+            <button key={k} onClick={()=>setFilterPill(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:filterPill===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid var(--color-surface-border)',background:filterPill===k?'var(--color-teal-50)':'white',color:filterPill===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
           ))}
         </div>
         {sortedPhases.length===0 && <div style={{textAlign:'center',color:'var(--bos-color-ink-tertiary)',padding:'40px 0',fontSize:13}}>No tasks yet. Add one to get started.</div>}
@@ -498,7 +498,7 @@ export default function TaskBoardPanel() {
             <div key={ph} style={{marginBottom:20}}>
               <button onClick={()=>setCollapsedPhases(prev=>{const n=new Set(prev);n.has(ph)?n.delete(ph):n.add(ph);return n;})}
                 style={{width:'100%',display:'flex',alignItems:'center',gap:8,background:'none',border:'none',cursor:'pointer',padding:'4px 0',textAlign:'left',marginBottom:4}}>
-                <span style={{fontSize:10,color:'#334155',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.12em'}}>{collapsed?'▶':'▼'} {ph}</span>
+                <span style={{fontSize:10,color:'var(--color-ink-secondary)',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.12em'}}>{collapsed?'▶':'▼'} {ph}</span>
                 <span style={{fontSize:11,color:'var(--bos-color-ink-tertiary)'}}>{done}/{total}</span>
                 <span style={{fontSize:11,color:'var(--bos-color-ink-tertiary)',marginLeft:'auto'}}>{phaseTasks.length} showing</span>
               </button>
@@ -541,7 +541,7 @@ export default function TaskBoardPanel() {
       {!loading && tab==='archive' && (<>
         <div style={{display:'flex',gap:6,marginBottom:16}}>
           {([['all',`All · ${archiveTasks.length}`],['roadmap',`Roadmap · ${archiveTasks.filter(t=>t.source!=='feedback').length}`],['feedback',`Feedback · ${archiveTasks.filter(t=>t.source==='feedback').length}`]] as const).map(([k,label])=>(
-            <button key={k} onClick={()=>setArchiveFilter(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:archiveFilter===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid var(--color-surface-border)',background:archiveFilter===k?'#f0fdfa':'white',color:archiveFilter===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
+            <button key={k} onClick={()=>setArchiveFilter(k)} style={{padding:'4px 12px',borderRadius:999,fontSize:11,fontWeight:700,cursor:'pointer',border:archiveFilter===k?'1.5px solid var(--bos-color-brand-primary-deep)':'1px solid var(--color-surface-border)',background:archiveFilter===k?'var(--color-teal-50)':'white',color:archiveFilter===k?'var(--bos-color-brand-primary-deep)':'var(--bos-color-ink-disabled)'}}>{label}</button>
           ))}
         </div>
         {filteredArchive.length===0

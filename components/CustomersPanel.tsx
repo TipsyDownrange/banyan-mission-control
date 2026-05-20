@@ -168,7 +168,7 @@ export default function CustomersPanel() {
                   <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 150px 150px 60px 80px', padding: '10px 20px', borderBottom: '1px solid var(--color-surface)', background: isExpanded ? 'rgba(240,253,250,0.3)' : 'white' }}>
                     <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center' }}>{id}</div>
                     <div onClick={() => !isEditing && setExpanded(isExpanded ? null : id)} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>{r[nameKey]}</div>
-                    <div style={{ fontSize: 12, color: '#334155', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{r[contactKey] || '—'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{r[contactKey] || '—'}</div>
                     <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{r[emailKey] || r['Island'] || '—'}</div>
                     <div style={{ fontSize: 12, fontWeight: count > 5 ? 700 : 400, color: count > 10 ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center' }}>{count || '—'}</div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -200,7 +200,7 @@ export default function CustomersPanel() {
                           {Object.entries(r).filter(([k,v]) => v && k !== idKey).map(([k,v]) => (
                             <div key={k}>
                               <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>{k}</div>
-                              <div style={{ fontSize: 12, color: '#334155' }}>{v}</div>
+                              <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>{v}</div>
                             </div>
                           ))}
                         </div>

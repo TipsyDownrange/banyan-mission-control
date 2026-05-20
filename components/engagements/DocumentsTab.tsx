@@ -205,7 +205,7 @@ export default function DocumentsTab({ kID }: { kID: string }) {
                 </div>
               </div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', padding: '3px 8px', borderRadius: 999, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.22)', justifySelf: 'start' }}>{KIND_LABEL[it.kind]}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-secondary)' }}>
                 {it.linked_entity_type ? <span>→ {LINKED_LABEL[it.linked_entity_type]}</span> : <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>unlinked</span>}
               </div>
               <a href={`https://drive.google.com/file/d/${encodeURIComponent(it.drive_file_id)}/view`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.22)', background: 'white', textDecoration: 'none', justifySelf: 'end' }}>Open</a>

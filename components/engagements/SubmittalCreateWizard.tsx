@@ -155,7 +155,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
         </div>
 
         {previewNumber && (
-          <div style={{ background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 10, padding: '8px 12px', fontFamily: 'monospace', fontSize: 13, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700, marginBottom: 12 }}>
+          <div style={{ background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 10, padding: '8px 12px', fontFamily: 'monospace', fontSize: 13, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700, marginBottom: 12 }}>
             {previewNumber}
           </div>
         )}

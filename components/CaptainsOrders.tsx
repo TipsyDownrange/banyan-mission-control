@@ -47,7 +47,7 @@ interface DecisionQueueData {
 const STATUS_CONFIG: Record<DecisionStatus, { label: string; color: string; bg: string }> = {
   open:       { label: 'Open',       color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(20,184,166,0.1)' },
   deferred:   { label: 'Deferred',   color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9' },
-  discussing: { label: 'Discussing', color: '#d97706', bg: '#fffbeb' },
+  discussing: { label: 'Discussing', color: 'var(--color-amber-500)', bg: 'var(--color-amber-50)' },
   resolved:   { label: 'Resolved',   color: '#15803d', bg: '#f0fdf4' },
 };
 
@@ -89,7 +89,7 @@ function ResolvedDecisionCard({ decision }: { decision: DecisionItem }) {
       </div>
       {expanded && (
         <div style={{ marginTop: 10, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-          <div style={{ fontSize: 12, color: '#334155', marginBottom: 6 }}>{decision.question}</div>
+          <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)', marginBottom: 6 }}>{decision.question}</div>
           {decision.rationale && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}><strong>Rationale:</strong> {decision.rationale}</div>}
           {decision.direct_order_text && <div style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', padding: '6px 10px', borderRadius: 7, background: 'rgba(15,118,110,0.05)', border: '1px solid rgba(15,118,110,0.15)', marginTop: 4 }}><strong>Direct Order:</strong> {decision.direct_order_text}</div>}
         </div>
@@ -156,7 +156,7 @@ function DecisionCard({ decision, onAction }: {
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>Phase {decision.affects_phase}</span>
               )}
               {decision.deadline && (
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706' }}>⚑ {fmtDeadline(decision.deadline)}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-amber-500)' }}>⚑ {fmtDeadline(decision.deadline)}</span>
               )}
               <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{decision.decision_id} · {decision.created_by}</span>
             </div>
@@ -200,7 +200,7 @@ function DecisionCard({ decision, onAction }: {
                 border: isRec ? '1.5px solid rgba(15,118,110,0.2)' : '1px solid #f1f5f9',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: isRec ? 'var(--bos-color-brand-primary-deep)' : '#334155' }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: isRec ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-ink-secondary)' }}>
                     {i + 1}. {opt.label}
                   </span>
                   {isRec && <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>XO recommends</span>}
@@ -216,7 +216,7 @@ function DecisionCard({ decision, onAction }: {
         {decision.recommendation_rationale && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(15,118,110,0.04)', border: '1px solid rgba(15,118,110,0.15)' }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)' }}>XO: </span>
-            <span style={{ fontSize: 11, color: '#334155' }}>{decision.recommendation_rationale}</span>
+            <span style={{ fontSize: 11, color: 'var(--color-ink-secondary)' }}>{decision.recommendation_rationale}</span>
           </div>
         )}
 
@@ -410,7 +410,7 @@ export default function CaptainsOrders() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
           {openCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(20,184,166,0.1)', color: 'var(--bos-color-brand-primary-deep)' }}>{openCount} open</span>}
-          {discussingCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: '#fffbeb', color: '#d97706' }}>{discussingCount} discussing</span>}
+          {discussingCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'var(--color-amber-50)', color: 'var(--color-amber-500)' }}>{discussingCount} discussing</span>}
           {deferredCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: '#f1f5f9', color: 'var(--bos-color-ink-disabled)' }}>{deferredCount} deferred</span>}
           {openCount === 0 && discussingCount === 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: '#f0fdf4', color: '#15803d' }}>All clear ✓</span>}
         </div>

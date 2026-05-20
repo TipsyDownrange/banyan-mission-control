@@ -48,7 +48,7 @@ function deriveBlocking(note: string): boolean {
 const SEVERITY_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   CRITICAL: { bg: 'var(--color-red-50)', color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
   HIGH:     { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', border: 'rgba(239,68,68,0.2)' },
-  MEDIUM:   { bg: '#fffbeb', color: 'var(--color-amber-800)', border: 'rgba(245,158,11,0.2)' },
+  MEDIUM:   { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)', border: 'rgba(245,158,11,0.2)' },
   LOW:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', border: 'rgba(148,163,184,0.2)' },
 };
 
@@ -245,7 +245,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 4 }}>{issue.projectName}</div>
 
                 {/* Note / description */}
-                {issue.note && <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, marginBottom: 8 }}>{issue.note}</div>}
+                {issue.note && <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5, marginBottom: 8 }}>{issue.note}</div>}
 
                 {/* Meta row */}
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 10 }}>
@@ -276,7 +276,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                       disabled={saving}
                       style={{
                         padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
-                        background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)',
+                        background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)',
                         opacity: saving ? 0.5 : 1,
                       }}>
                       ✓ Close

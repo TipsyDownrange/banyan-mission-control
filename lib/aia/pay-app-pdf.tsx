@@ -64,7 +64,7 @@ const S = StyleSheet.create({
   pageTitle: { fontSize: 14, fontWeight: 700, marginBottom: 6, color: '#0c2330' },
   subTitle: { fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 10 },
   hdrRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  hdrCell: { fontSize: 8, color: '#334155' },
+  hdrCell: { fontSize: 8, color: 'var(--color-ink-secondary)' },
   hdrLabel: { fontWeight: 700, color: 'var(--color-ink-primary)' },
   table: { borderWidth: 0.5, borderColor: 'var(--color-ink-primary)', marginTop: 8 },
   tr: { flexDirection: 'row', borderBottomWidth: 0.5, borderColor: '#cbd5e1' },

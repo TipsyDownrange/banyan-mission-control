@@ -253,7 +253,7 @@ export default function BidIntakePanel() {
                           <div style={{ display: 'flex', gap: 4 }}>
                             <select value={assignedTo[opp.email_id] || ''}
                               onChange={e => setAssignedTo(prev => ({ ...prev, [opp.email_id]: e.target.value }))}
-                              style={{ padding: '6px 8px', borderRadius: 10, fontSize: 11, border: '1px solid var(--color-surface-border)', background: 'white', color: '#334155', cursor: 'pointer', outline: 'none' }}>
+                              style={{ padding: '6px 8px', borderRadius: 10, fontSize: 11, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--color-ink-secondary)', cursor: 'pointer', outline: 'none' }}>
                               <option value="">Assign to...</option>
                               {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
                             </select>
@@ -295,7 +295,7 @@ export default function BidIntakePanel() {
                   ].map(([label, value]) => (
                     <div key={String(label)}>
                       <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 2 }}>{label}</div>
-                      <div style={{ fontSize: 12, color: '#334155' }}>{value}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>{value}</div>
                     </div>
                   ))}
                 </div>
@@ -306,7 +306,7 @@ export default function BidIntakePanel() {
                     <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Scope (Kai extracted)</div>
                     {isEditing
                       ? <textarea value={editDraft.scope_summary ?? opp.scope_summary} onChange={e => setEditDraft(p => ({ ...p, scope_summary: e.target.value }))} rows={2} style={{ width: '100%', fontSize: 12, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '4px 6px', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
-                      : <div style={{ fontSize: 12, color: '#334155', lineHeight: 1.5 }}>{opp.scope_summary}</div>
+                      : <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{opp.scope_summary}</div>
                     }
                   </div>
                 )}

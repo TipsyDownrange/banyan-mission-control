@@ -115,7 +115,7 @@ export function mapCostApiDataToWarRoomSnapshot(data: CostApiData | null | undef
       id: 'subscriptions',
       label: 'Subscriptions',
       value: money(data?.byProvider?.subscriptions?.totalToDate ?? 0),
-      color: '#d97706',
+      color: 'var(--color-amber-500)',
     },
     {
       id: 'vercel',

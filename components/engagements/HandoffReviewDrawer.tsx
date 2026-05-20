@@ -185,7 +185,7 @@ export default function HandoffReviewDrawer({
               {!isTerminal && (
                 <>
                   {unresolvedCount > 0 && (
-                    <div style={{ padding: 10, borderRadius: 10, background: '#fffbeb', border: '1px solid #fcd34d', color: 'var(--color-amber-800)', fontSize: 12, marginBottom: 12 }}>
+                    <div style={{ padding: 10, borderRadius: 10, background: 'var(--color-amber-50)', border: '1px solid #fcd34d', color: 'var(--color-amber-800)', fontSize: 12, marginBottom: 12 }}>
                       <strong>{unresolvedCount}</strong> unresolved {unresolvedCount === 1 ? 'gap' : 'gaps'}. You may still accept — acceptance will be recorded as <strong>accepted_with_gaps</strong>.
                     </div>
                   )}

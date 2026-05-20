@@ -856,7 +856,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>Overhead {!data.markup.overheadOverride && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 500 }}>(= labor)</span>}</span>
                     {data.markup.overheadOverride && (
-                      <button onClick={() => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: '' } }))} style={{ fontSize: 10, color: '#d97706', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>↺ auto</button>
+                      <button onClick={() => update(d => ({ ...d, markup: { ...d.markup, overheadOverride: '' } }))} style={{ fontSize: 10, color: 'var(--color-amber-500)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>↺ auto</button>
                     )}
                   </div>
                   <AmtInput
@@ -1031,7 +1031,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 padding: '9px 22px',
                 borderRadius: 10,
                 background: isLocked
-                  ? 'linear-gradient(135deg,#b45309,#d97706)'
+                  ? 'linear-gradient(135deg,#b45309,var(--color-amber-500))'
                   : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
                 color: 'white',
                 border: 'none',

@@ -123,11 +123,11 @@ const FILTER_LABELS = ORGANIZATION_TYPE_LABELS;
 const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   OPEN:          { bg: 'var(--color-red-50)', color: '#dc2626' },
   SCHEDULED:     { bg: '#eff6ff', color: '#1d4ed8' },
-  IN_PROGRESS:   { bg: '#fffbeb', color: '#d97706' },
+  IN_PROGRESS:   { bg: 'var(--color-amber-50)', color: 'var(--color-amber-500)' },
   ON_HOLD:       { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   COMPLETED:     { bg: '#f0fdf4', color: '#15803d' },
   CANCELLED:     { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
-  INVOICED:      { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
+  INVOICED:      { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
   PAID:          { bg: '#f0fdf4', color: '#15803d' },
 };
 
@@ -394,7 +394,7 @@ function OrganizationPicker({
     padding: '4px 8px',
     borderRadius: 999,
     border: active ? '1px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
-    background: active ? '#f0fdfa' : 'white',
+    background: active ? 'var(--color-teal-50)' : 'white',
     color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
     cursor: 'pointer',
   });
@@ -426,7 +426,7 @@ function OrganizationPicker({
           padding: 9,
           borderRadius: 9,
           border: selected ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
-          background: selected ? '#f0fdfa' : 'white',
+          background: selected ? 'var(--color-teal-50)' : 'white',
           cursor: 'pointer',
         }}
       >
@@ -442,8 +442,8 @@ function OrganizationPicker({
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
           {org.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
           {orgIsland(org) && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{orgIsland(org)}</span>}
-          {matchBadge && <span style={{ fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
-          {status && status !== 'active' && <span style={{ fontSize: 10, color: 'var(--color-amber-800)', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
+          {matchBadge && <span style={{ fontSize: 10, color: 'var(--bos-color-brand-primary-deep)', background: 'var(--color-teal-50)', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
+          {status && status !== 'active' && <span style={{ fontSize: 10, color: 'var(--color-amber-800)', background: 'var(--color-amber-50)', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
         </div>
       </button>
     );
@@ -470,7 +470,7 @@ function OrganizationPicker({
         <button type="button" onClick={() => toggleFilter('showInactive')} style={chipStyle(filters.showInactive)}>Show merged/inactive</button>
       </div>
       {selectedOrg && (
-        <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '7px 9px' }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '7px 9px' }}>
           Selected: <strong>{selectedOrg.name}</strong> · {selectedOrg.org_id}
         </div>
       )}
@@ -835,7 +835,7 @@ function OrgDetailPanel({
             </div>
 
             {governanceMessage && (
-              <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
                 {governanceMessage}
               </div>
             )}
@@ -845,7 +845,7 @@ function OrgDetailPanel({
               </div>
             )}
             {detail.org.status === 'merged' && (
-              <div style={{ fontSize: 12, color: 'var(--color-amber-800)', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--color-amber-800)', background: 'var(--color-amber-50)', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
                 This organization is marked merged into {detail.org.merged_into_org_id || 'another organization'}.
               </div>
             )}
@@ -898,12 +898,12 @@ function OrgDetailPanel({
                   {editingContactId !== c.contact_id && (
                     <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {c.phone && (
-                        <div style={{ fontSize: 12, color: '#334155' }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>
                           📞 <a href={`tel:${c.phone}`} style={{ color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none' }}>{c.phone}</a>
                         </div>
                       )}
                       {c.email && (
-                        <div style={{ fontSize: 12, color: '#334155' }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>
                           ✉️ <a href={`mailto:${c.email}`} style={{ color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none' }}>{c.email}</a>
                         </div>
                       )}
@@ -973,7 +973,7 @@ function OrgDetailPanel({
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
               {detail.sites.map(s => (
-                <div key={s.site_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: 13, color: '#334155' }}>
+                <div key={s.site_id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: 13, color: 'var(--color-ink-secondary)' }}>
                   {editingSiteId === s.site_id ? (
                     <div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
@@ -1065,7 +1065,7 @@ function OrgDetailPanel({
                         background: 'white',
                         transition: 'background 0.1s',
                       }}
-                      onMouseEnter={e => { if (onNavigate) e.currentTarget.style.background = '#f0fdfa'; }}
+                      onMouseEnter={e => { if (onNavigate) e.currentTarget.style.background = 'var(--color-teal-50)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
                     >
                       <div>
@@ -1108,7 +1108,7 @@ function OrgDetailPanel({
             </div>
 
             <CollapsibleSection title="Edit Organization" open={!!openSections['edit']} onToggle={() => toggleSection('edit')}>
-              <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: 'var(--color-amber-50)', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
                 Admin identity fields. Changes affect filtering, reporting, and linked records.
               </div>
               <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1163,7 +1163,7 @@ function OrgDetailPanel({
                 <div>
                   <label style={LBL}>Status</label>
                   {detail.org.status === 'merged' ? (
-                    <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '6px 10px' }}>
+                    <div style={{ fontSize: 11, color: 'var(--color-amber-800)', background: 'var(--color-amber-50)', border: '1px solid #fde68a', borderRadius: 8, padding: '6px 10px' }}>
                       Status is <strong>merged</strong> — controlled by the merge workflow and cannot be manually changed.
                     </div>
                   ) : (
@@ -1189,7 +1189,7 @@ function OrgDetailPanel({
             </CollapsibleSection>
 
             <CollapsibleSection title="Merge Duplicate Org" open={!!openSections['merge']} onToggle={() => toggleSection('merge')}>
-              <div style={{ padding: 10, borderRadius: 8, border: '1px solid #fde68a', background: '#fffbeb', marginBottom: 10 }}>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid #fde68a', background: 'var(--color-amber-50)', marginBottom: 10 }}>
                 <div style={{ fontSize: 12, color: 'var(--color-amber-800)', lineHeight: 1.5 }}>
                   <strong>Use only when two org records are the same entity.</strong> This moves all references — work orders, contacts, sites, crosswalk — to the survivor org and marks this record as merged. Preview is required before confirming.
                 </div>
@@ -1432,7 +1432,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                     border: '1.5px solid var(--color-surface-border)', background: '#fafafa',
                     transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--bos-color-brand-primary-deep)'; (e.currentTarget as HTMLButtonElement).style.background = '#f0fdfa'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--bos-color-brand-primary-deep)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--color-teal-50)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-surface-border)'; (e.currentTarget as HTMLButtonElement).style.background = '#fafafa'; }}
                 >
                   <span style={{ fontSize: 28 }}>{c.emoji}</span>
@@ -1489,7 +1489,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
               {/* Duplicate warning */}
               {dupWarning && (
-                <div style={{ fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px' }}>
+                <div style={{ fontSize: 12, color: '#b45309', background: 'var(--color-amber-50)', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px' }}>
                   ⚠️ {dupWarning}
                 </div>
               )}
@@ -1679,7 +1679,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                 fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
                 textTransform: 'uppercase', letterSpacing: '0.04em',
                 border: typeFilter === 'ALL' ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
-                background: typeFilter === 'ALL' ? '#f0fdfa' : 'white',
+                background: typeFilter === 'ALL' ? 'var(--color-teal-50)' : 'white',
                 color: typeFilter === 'ALL' ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
               }}>All</button>
             {ALL_TYPES.map(t => {
@@ -1718,7 +1718,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                   style={{
                     padding: '10px 12px', borderRadius: 10, marginBottom: 3, cursor: 'pointer',
                     border: isSelected ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid transparent',
-                    background: isSelected ? '#f0fdfa' : 'white',
+                    background: isSelected ? 'var(--color-teal-50)' : 'white',
                     transition: 'background 0.1s, border 0.1s',
                   }}
                   onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--color-surface)'; }}

@@ -37,7 +37,7 @@ const STATE_COLORS: Record<string, { bg: string; fg: string; label: string }> = 
   pending_review:     { bg: '#eff6ff', fg: '#1d4ed8', label: 'Pending Review' },
   reviewed_complete:  { bg: '#fef3c7', fg: 'var(--color-amber-800)', label: 'Reviewed' },
   accepted:           { bg: '#f0fdf4', fg: '#15803d', label: 'Accepted' },
-  accepted_with_gaps: { bg: '#fffbeb', fg: '#a16207', label: 'Accepted (with gaps)' },
+  accepted_with_gaps: { bg: 'var(--color-amber-50)', fg: '#a16207', label: 'Accepted (with gaps)' },
   rejected_with_gaps: { bg: 'var(--color-red-50)', fg: 'var(--color-red-700)', label: 'Rejected' },
 };
 
@@ -133,7 +133,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
           </div>
 
           {current.reviewer_notes && (
-            <div style={{ marginTop: 14, padding: 12, background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155' }}>
+            <div style={{ marginTop: 14, padding: 12, background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, color: 'var(--color-ink-secondary)' }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Reviewer notes</div>
               {current.reviewer_notes}
             </div>

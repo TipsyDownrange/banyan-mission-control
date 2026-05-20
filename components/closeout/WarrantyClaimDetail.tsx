@@ -319,7 +319,7 @@ export function DetailView({
       {claim.resolution && (
         <div style={{
           padding: '10px 12px', borderRadius: 10,
-          background: '#f0fdfa', border: '1px solid #0f766e22',
+          background: 'var(--color-teal-50)', border: '1px solid #0f766e22',
         }} data-testid="warranty-claim-existing-resolution">
           <div style={LABEL}>Existing resolution</div>
           <div style={VALUE}>
