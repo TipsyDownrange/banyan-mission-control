@@ -328,7 +328,7 @@ export default function ScheduleTab({ kID, canWrite, projectIsland }: Props) {
     return <div data-bos-schedule-loading style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading schedule…</div>;
   }
   if (err) {
-    return <div data-bos-schedule-error style={{ padding: 24, color: '#b91c1c' }}>Schedule failed to load: {err}</div>;
+    return <div data-bos-schedule-error style={{ padding: 24, color: 'var(--color-red-700)' }}>Schedule failed to load: {err}</div>;
   }
   if (!kIDFound) {
     return (
@@ -825,7 +825,7 @@ function AddPhaseModal({
           style={inputStyle}
         />
       </FormRow>
-      {err ? <p style={{ color: '#b91c1c', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
+      {err ? <p style={{ color: 'var(--color-red-700)', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
       <div style={modalFooterStyle}>
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button
@@ -932,7 +932,7 @@ function AddTaskModal({
           style={inputStyle}
         />
       </FormRow>
-      {err ? <p style={{ color: '#b91c1c', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
+      {err ? <p style={{ color: 'var(--color-red-700)', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
       <div style={modalFooterStyle}>
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button
@@ -1058,7 +1058,7 @@ function AddPermitMilestoneModal({
           style={inputStyle}
         />
       </FormRow>
-      {err ? <p style={{ color: '#b91c1c', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
+      {err ? <p style={{ color: 'var(--color-red-700)', fontSize: 12, margin: '8px 0 0' }}>{err}</p> : null}
       <div style={modalFooterStyle}>
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button

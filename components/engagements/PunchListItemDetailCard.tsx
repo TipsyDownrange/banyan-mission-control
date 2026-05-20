@@ -278,7 +278,7 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
               padding: '10px 12px', borderRadius: 10,
               background: '#fef2f2', border: '1px solid #b91c1c33',
             }}>
-              <div style={{ ...ROW_LABEL, color: '#b91c1c' }}>Dispute</div>
+              <div style={{ ...ROW_LABEL, color: 'var(--color-red-700)' }}>Dispute</div>
               <div style={ROW_VALUE}>
                 {item.dispute_reason || '— no reason provided —'}
               </div>

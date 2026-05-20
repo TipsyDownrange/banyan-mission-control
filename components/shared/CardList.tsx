@@ -76,7 +76,7 @@ export default function CardList({
     }}>
       {items.map((item) => {
         const accentColor = item.accentColor
-          ?? (item.priority ? PRIORITY_COLORS[item.priority] : '#14b8a6');
+          ?? (item.priority ? PRIORITY_COLORS[item.priority] : 'var(--bos-color-brand-primary)');
 
         return (
           <article

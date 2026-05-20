@@ -5,7 +5,7 @@ export const ORGANIZATION_TYPE_COLORS: Record<string, { color: string; bg: strin
   RESIDENTIAL:   { color: '#15803d', bg: '#f0fdf4' },
   VENDOR:        { color: '#c2410c', bg: '#fff7ed' },
   ARCHITECT:     { color: '#7c3aed', bg: '#f5f3ff' },
-  OWNER:         { color: '#b91c1c', bg: '#fef2f2' },
+  OWNER:         { color: 'var(--color-red-700)', bg: '#fef2f2' },
   BUILDER:       { color: '#d97706', bg: '#fffbeb' },
   GOVERNMENT:    { color: '#0369a1', bg: '#f0f9ff' },
   PROPERTY_MGMT: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)' },

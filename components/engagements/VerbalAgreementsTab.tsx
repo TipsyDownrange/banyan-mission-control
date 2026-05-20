@@ -41,7 +41,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   LOGGED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   FOLLOWED_UP: { bg: '#eff6ff', color: '#1d4ed8' },
   FORMALIZED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
-  DISPUTED: { bg: '#fef2f2', color: '#b91c1c' },
+  DISPUTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
   RESOLVED: { bg: 'var(--color-surface)', color: '#475569' },
 };
 
@@ -129,7 +129,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading verbal agreements...</div>;
   }
   if (err) {
-    return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load verbal agreements: {err}</div>;
+    return <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load verbal agreements: {err}</div>;
   }
   if (!data?.kIDFound) {
     return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Verbal Agreement Log requires this project to be migrated to Postgres.</div>;

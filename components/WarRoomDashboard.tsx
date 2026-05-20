@@ -539,7 +539,7 @@ function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
         </div>
       </div>
       <div style={{ height: 7, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)', marginBottom: 12 }}>
-        <div style={{ height: '100%', width: `${Math.min(cost.budgetPct, 100)}%`, background: cost.overBudget ? '#ef4444' : '#14b8a6', borderRadius: 999 }} />
+        <div style={{ height: '100%', width: `${Math.min(cost.budgetPct, 100)}%`, background: cost.overBudget ? '#ef4444' : 'var(--bos-color-brand-primary)', borderRadius: 999 }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px, 1fr) minmax(160px, 1fr)', gap: 12 }}>
         <div style={{ display: 'grid', gap: 8 }}>

@@ -82,7 +82,7 @@ export default function CustomersPanel() {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Admin</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Customer Database</h1>
-          <button onClick={() => setShowNew(true)} style={{ padding: '9px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
+          <button onClick={() => setShowNew(true)} style={{ padding: '9px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
             + Add {tab === 'gc' ? 'GC' : 'Customer'}
           </button>
         </div>
@@ -134,14 +134,14 @@ export default function CustomersPanel() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => { setShowNew(false); setNewDraft({}); }} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={addNew} disabled={saving} style={{ padding: '8px 20px', borderRadius: 10, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
+            <button onClick={addNew} disabled={saving} style={{ padding: '8px 20px', borderRadius: 10, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
           </div>
         </div>
       )}
 
       {loading && (
         <div style={{ background: 'white', borderRadius: 20, padding: 48, textAlign: 'center', border: '1px solid var(--color-surface-border)' }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading...</div>
         </div>

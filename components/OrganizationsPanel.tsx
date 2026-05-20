@@ -840,7 +840,7 @@ function OrgDetailPanel({
               </div>
             )}
             {governanceError && (
-              <div style={{ fontSize: 12, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
                 {governanceError}
               </div>
             )}
@@ -1208,18 +1208,18 @@ function OrgDetailPanel({
                 <button onClick={previewMerge} disabled={governanceSaving || !mergeForm.survivor_org_id} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--bos-color-brand-primary-deep)', background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id ? 1 : 0.5 }}>
                   Preview
                 </button>
-                <button onClick={executeMerge} disabled={governanceSaving || !mergeForm.survivor_org_id || !mergePreview?.can_execute} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none', background: '#b91c1c', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id && mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id && mergePreview?.can_execute ? 1 : 0.45 }}>
+                <button onClick={executeMerge} disabled={governanceSaving || !mergeForm.survivor_org_id || !mergePreview?.can_execute} style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none', background: 'var(--color-red-700)', color: 'white', fontSize: 12, fontWeight: 800, cursor: mergeForm.survivor_org_id && mergePreview?.can_execute ? 'pointer' : 'default', opacity: mergeForm.survivor_org_id && mergePreview?.can_execute ? 1 : 0.45 }}>
                   Confirm Merge
                 </button>
               </div>
               <textarea style={{ ...INP, resize: 'vertical', minHeight: 44, marginTop: 8 }} value={mergeForm.notes} onChange={e => setMergeForm(p => ({ ...p, notes: e.target.value }))} placeholder="Merge note for audit log" />
               {mergePreview && (
                 <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: 'white', border: '1px solid var(--color-surface-border)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? 'var(--bos-color-brand-primary-deep)' : '#b91c1c', marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: mergePreview.can_execute ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-red-700)', marginBottom: 6 }}>
                     {mergePreview.can_execute ? 'Preview ready' : 'Preview blocked'} · {countTotal} affected references
                   </div>
                   {mergePreview.blockers.length > 0 && (
-                    <div style={{ fontSize: 12, color: '#b91c1c', marginBottom: 6 }}>{mergePreview.blockers.join(' ')}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-red-700)', marginBottom: 6 }}>{mergePreview.blockers.join(' ')}</div>
                   )}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, fontSize: 11 }}>
                     {([
@@ -1494,7 +1494,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                 </div>
               )}
               {error && (
-                <div style={{ fontSize: 12, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>
                   {error}
                 </div>
               )}
@@ -1575,7 +1575,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={create} disabled={!orgName || (isPersonal && !phone.trim()) || creating}
-                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
+                style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
                 {creating ? 'Creating…' : isPersonal ? 'Create Customer' : `Create ${cat.label}`}
               </button>
             </div>
@@ -1651,7 +1651,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
             <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-ink-primary)', letterSpacing: '-0.03em' }}>Organizations</div>
             <button
               onClick={() => setShowNewOrg(true)}
-              style={{ padding: '7px 14px', borderRadius: 9, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              style={{ padding: '7px 14px', borderRadius: 9, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               + New Org
             </button>
           </div>

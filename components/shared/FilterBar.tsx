@@ -64,10 +64,10 @@ export default function FilterBar({
                   padding: '5px 12px',
                   borderRadius: 999,
                   border: isActive
-                    ? `1px solid ${chip.color ?? '#14b8a6'}`
+                    ? `1px solid ${chip.color ?? 'var(--bos-color-brand-primary)'}`
                     : '1px solid var(--color-surface-border)',
                   background: isActive
-                    ? `color-mix(in srgb, ${chip.color ?? '#14b8a6'} 12%, transparent)`
+                    ? `color-mix(in srgb, ${chip.color ?? 'var(--bos-color-brand-primary)'} 12%, transparent)`
                     : 'white',
                   color: isActive ? (chip.color ?? 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
                   fontSize: 11,
@@ -81,7 +81,7 @@ export default function FilterBar({
                 {chip.label}
                 {chip.count !== undefined && (
                   <span style={{
-                    background: isActive ? (chip.color ?? '#14b8a6') : 'var(--color-surface-border)',
+                    background: isActive ? (chip.color ?? 'var(--bos-color-brand-primary)') : 'var(--color-surface-border)',
                     color: isActive ? 'white' : 'var(--bos-color-ink-disabled)',
                     fontSize: 9,
                     fontWeight: 800,

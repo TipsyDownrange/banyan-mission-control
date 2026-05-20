@@ -111,7 +111,7 @@ export default function InquiryInboxList({ fetchInquiries, onSelect, onCreateNew
       </label>
 
       {loading && <div role="status">Loading…</div>}
-      {error && <div role="alert" style={{ color: '#b91c1c' }}>{error}</div>}
+      {error && <div role="alert" style={{ color: 'var(--color-red-700)' }}>{error}</div>}
 
       {!loading && !error && (
         <table aria-label="Inquiry list" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>

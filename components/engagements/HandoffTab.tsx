@@ -38,7 +38,7 @@ const STATE_COLORS: Record<string, { bg: string; fg: string; label: string }> = 
   reviewed_complete:  { bg: '#fef3c7', fg: '#92400e', label: 'Reviewed' },
   accepted:           { bg: '#f0fdf4', fg: '#15803d', label: 'Accepted' },
   accepted_with_gaps: { bg: '#fffbeb', fg: '#a16207', label: 'Accepted (with gaps)' },
-  rejected_with_gaps: { bg: '#fef2f2', fg: '#b91c1c', label: 'Rejected' },
+  rejected_with_gaps: { bg: '#fef2f2', fg: 'var(--color-red-700)', label: 'Rejected' },
 };
 
 function StateBadge({ state }: { state: string }) {
@@ -77,7 +77,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading handoff…</div>;
   }
   if (err) {
-    return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load handoff: {err}</div>;
+    return <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load handoff: {err}</div>;
   }
   if (!data?.kIDFound) {
     return (

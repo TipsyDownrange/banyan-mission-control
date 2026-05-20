@@ -23,7 +23,7 @@ export const C = {
   blueBg:     '#EEF4FB',  // light blue wash
   blueMid:    '#4A8BBF',  // mid blue for gradients
   amber:      '#92400e',  // warnings
-  red:        '#b91c1c',  // critical issues
+  red:        'var(--color-red-700)',  // critical issues
   slate:      'var(--bos-color-ink-disabled)',  // labels
   slateLight: 'var(--bos-color-ink-tertiary)',  // sub-labels
   border:     'var(--color-surface-border)',  // dividers

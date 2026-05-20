@@ -345,7 +345,7 @@ function SaveConfigModal({
             disabled={!name.trim()}
             style={{
               flex: 2, padding: '11px', borderRadius: 12, border: 'none',
-              background: name.trim() ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)',
+              background: name.trim() ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)',
               color: name.trim() ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize: 13, fontWeight: 700,
               cursor: name.trim() ? 'pointer' : 'default',
               boxShadow: name.trim() ? '0 4px 16px rgba(15,118,110,0.3)' : 'none',
@@ -759,7 +759,7 @@ export default function QuoteBuilder({
 
   if (loading) return (
     <div style={{ padding: 48, textAlign: 'center' }}>
-      <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+      <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.2)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading WO {woNumber}…</div>
     </div>
@@ -838,9 +838,9 @@ export default function QuoteBuilder({
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
         {error && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c' }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
             {error}
-            <button onClick={() => setError('')} style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontSize: 14 }}>×</button>
+            <button onClick={() => setError('')} style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-red-700)', fontSize: 14 }}>×</button>
           </div>
         )}
 
@@ -940,7 +940,7 @@ export default function QuoteBuilder({
                   disabled={configSaving || !t}
                   style={{
                     padding: '6px 14px', borderRadius: 9, border: 'none',
-                    background: t ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)',
+                    background: t ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)',
                     color: t ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700,
                     cursor: t ? 'pointer' : 'default',
                     boxShadow: t ? '0 2px 8px rgba(15,118,110,0.25)' : 'none',
@@ -1068,7 +1068,7 @@ export default function QuoteBuilder({
           disabled={downloading || generating || !t}
           style={{
             flex: 2, minWidth: 140, padding: '11px', borderRadius: 12, border: 'none',
-            background: !t ? 'var(--color-surface-border)' : downloading || generating ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
+            background: !t ? 'var(--color-surface-border)' : downloading || generating ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
             color: !t || downloading || generating ? 'var(--bos-color-ink-tertiary)' : 'white',
             fontSize: 13, fontWeight: 700,
             cursor: !t || downloading || generating ? 'default' : 'pointer',

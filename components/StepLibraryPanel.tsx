@@ -142,7 +142,7 @@ function GoldCell({ entry, defaultHours, onUpdateFromActuals }: {
           }}
           onMouseEnter={e => {
             e.currentTarget.style.borderColor = 'rgba(20,184,166,0.4)';
-            e.currentTarget.style.color = '#14b8a6';
+            e.currentTarget.style.color = 'var(--bos-color-brand-primary)';
           }}
           onMouseLeave={e => {
             e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)';
@@ -185,7 +185,7 @@ function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
         </div>
         {hasData ? (
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)' }}>
-            <span style={{ color: '#14b8a6', fontWeight: 800 }}>{summary.templates_with_data}</span>
+            <span style={{ color: 'var(--bos-color-brand-primary)', fontWeight: 800 }}>{summary.templates_with_data}</span>
             {totalTemplates > 0 && <span style={{ color: 'rgba(148,163,184,0.5)' }}> of {totalTemplates}</span>}
             <span style={{ color: 'rgba(148,163,184,0.5)' }}> system types have actuals</span>
           </div>
@@ -241,7 +241,7 @@ function GoldSummaryCard({ summary, totalTemplates, onRefresh, refreshing }: {
             background: 'rgba(20,184,166,0.1)',
             border: '1px solid rgba(20,184,166,0.25)',
             borderRadius: 7, padding: '5px 12px',
-            color: refreshing ? 'rgba(148,163,184,0.4)' : '#14b8a6',
+            color: refreshing ? 'rgba(148,163,184,0.4)' : 'var(--bos-color-brand-primary)',
             fontSize: 11, fontWeight: 700, cursor: refreshing ? 'default' : 'pointer',
             transition: 'all 0.12s',
           }}
@@ -330,7 +330,7 @@ function FilterSelect({ label, value, options, onChange }: {
         background: value ? 'rgba(20,184,166,0.12)' : 'rgba(255,255,255,0.05)',
         border: value ? '1px solid rgba(20,184,166,0.35)' : '1px solid rgba(255,255,255,0.08)',
         borderRadius: 7, padding: '6px 8px',
-        color: value ? '#14b8a6' : 'rgba(148,163,184,0.5)',
+        color: value ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.5)',
         fontSize: 12, fontWeight: value ? 600 : 400,
         cursor: 'pointer', outline: 'none',
       }}
@@ -749,7 +749,7 @@ export default function StepLibraryPanel() {
                 background: 'linear-gradient(135deg, rgba(20,184,166,0.25) 0%, rgba(13,148,136,0.15) 100%)',
                 border: '1px solid rgba(20,184,166,0.4)',
                 borderRadius: 8, padding: '6px 12px',
-                color: '#14b8a6', fontSize: 12, fontWeight: 700,
+                color: 'var(--bos-color-brand-primary)', fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
@@ -845,13 +845,13 @@ export default function StepLibraryPanel() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: hasBadges ? 4 : 0 }}>
-                    <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? '#14b8a6' : '#cbd5e1', letterSpacing: '-0.01em' }}>
+                    <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? 'var(--bos-color-brand-primary)' : '#cbd5e1', letterSpacing: '-0.01em' }}>
                       {t.name}
                     </span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
                       background: isActive ? 'rgba(20,184,166,0.2)' : 'rgba(255,255,255,0.07)',
-                      color: isActive ? '#14b8a6' : 'rgba(148,163,184,0.6)',
+                      color: isActive ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.6)',
                     }}>
                       {t.steps.length}
                     </span>
@@ -912,7 +912,7 @@ export default function StepLibraryPanel() {
                           minWidth: 240,
                         }}
                       />
-                      <button onClick={handleRename} disabled={saving} style={btnStyle('#14b8a6')}>Save</button>
+                      <button onClick={handleRename} disabled={saving} style={btnStyle('var(--bos-color-brand-primary)')}>Save</button>
                       <button onClick={() => setEditingName(false)} style={btnStyle('rgba(148,163,184,0.6)')}>Cancel</button>
                     </div>
                   ) : (
@@ -953,7 +953,7 @@ export default function StepLibraryPanel() {
                   <button
                     onClick={() => handleSaveSteps(selected)}
                     disabled={saving}
-                    style={btnStyle('#14b8a6', true)}
+                    style={btnStyle('var(--bos-color-brand-primary)', true)}
                   >
                     {saving ? 'Saving…' : 'Save Steps'}
                   </button>
@@ -1133,7 +1133,7 @@ export default function StepLibraryPanel() {
                   onClick={handleAddStep}
                   style={{
                     background: 'rgba(20,184,166,0.1)', border: '1px dashed rgba(20,184,166,0.35)',
-                    borderRadius: 8, padding: '9px 18px', color: '#14b8a6',
+                    borderRadius: 8, padding: '9px 18px', color: 'var(--bos-color-brand-primary)',
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     transition: 'all 0.12s ease',
                   }}

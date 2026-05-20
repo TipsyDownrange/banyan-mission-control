@@ -91,7 +91,7 @@ export function SubcontractorsTableView({
       {state.kind === 'error' && (
         <div style={{
           padding: '14px 16px', borderRadius: 12, background: '#fef2f2',
-          color: '#b91c1c', fontSize: 13, fontWeight: 700,
+          color: 'var(--color-red-700)', fontSize: 13, fontWeight: 700,
         }}>
           Could not load subcontractors: {state.message}
         </div>
@@ -149,7 +149,7 @@ export function SubcontractorsTableView({
                     <span style={{
                       padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800,
                       background: row.active ? '#dcfce7' : '#fee2e2',
-                      color: row.active ? '#166534' : '#b91c1c',
+                      color: row.active ? '#166534' : 'var(--color-red-700)',
                     }}>
                       {row.active ? 'ACTIVE' : 'INACTIVE'}
                     </span>

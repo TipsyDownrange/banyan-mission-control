@@ -356,7 +356,7 @@ export default function OrgChartPanel() {
 
       {loading ? (
         <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', padding: 48, textAlign: 'center' }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading org chart...</div>
         </div>

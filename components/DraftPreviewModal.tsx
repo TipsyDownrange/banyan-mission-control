@@ -192,7 +192,7 @@ export default function DraftPreviewModal({
 
           {/* Missing vars warning */}
           {missingVars.length > 0 && (
-            <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
+            <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600 }}>
               Fill before sending: {missingVars.join(', ')} — edit the body below.
             </div>
           )}
@@ -233,7 +233,7 @@ export default function DraftPreviewModal({
 
           {/* Error */}
           {error && (
-            <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
+            <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600 }}>
               {error}
             </div>
           )}

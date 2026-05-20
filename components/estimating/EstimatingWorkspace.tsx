@@ -78,7 +78,7 @@ const STATUS_STYLES: Record<string, { color: string; bg: string; accentColor: st
   draft:      { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.1)',  accentColor: 'var(--bos-color-ink-tertiary)' },
   'in review':{ color: '#2563eb', bg: 'rgba(37,99,235,0.1)',    accentColor: '#3b82f6' },
   submitted:  { color: '#0369a1', bg: 'rgba(3,105,161,0.1)',    accentColor: '#0369a1' },
-  active:     { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.1)',   accentColor: '#14b8a6' },
+  active:     { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.1)',   accentColor: 'var(--bos-color-brand-primary)' },
   won:        { color: '#15803d', bg: 'rgba(21,128,61,0.1)',    accentColor: '#16a34a' },
   lost:       { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', accentColor: 'var(--bos-color-ink-tertiary)' },
 };
@@ -109,7 +109,7 @@ const PIPELINE_STAGES: PipelineStage[] = [
 
 const FILTER_CHIPS: FilterChip[] = [
   { id: 'all',       label: 'All',       color: 'var(--bos-color-ink-disabled)' },
-  { id: 'active',    label: 'Active',    color: '#14b8a6' },
+  { id: 'active',    label: 'Active',    color: 'var(--bos-color-brand-primary)' },
   { id: 'submitted', label: 'Submitted', color: '#0369a1' },
   { id: 'won',       label: 'Won',       color: '#16a34a' },
   { id: 'lost',      label: 'Lost',      color: 'var(--bos-color-ink-tertiary)' },
@@ -550,7 +550,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
           style={{
             padding: '9px 20px',
             borderRadius: 999,
-            background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)',
+            background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))',
             color: 'white',
             border: 'none',
             fontSize: 12,
@@ -621,7 +621,7 @@ export default function EstimatingWorkspace({ initialBidId }: EstimatingWorkspac
                   } catch (err) { console.error('Create bid failed', err); }
                   finally { setNewBidSaving(false); }
                 }}
-                style={{ padding: '9px 24px', borderRadius: 10, border: 'none', background: newBidDraft.project_name.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'var(--color-surface-border)', color: 'white', fontSize: 12, fontWeight: 800, cursor: newBidDraft.project_name.trim() ? 'pointer' : 'default' }}
+                style={{ padding: '9px 24px', borderRadius: 10, border: 'none', background: newBidDraft.project_name.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))' : 'var(--color-surface-border)', color: 'white', fontSize: 12, fontWeight: 800, cursor: newBidDraft.project_name.trim() ? 'pointer' : 'default' }}
               >
                 {newBidSaving ? 'Creating...' : 'Create Bid'}
               </button>

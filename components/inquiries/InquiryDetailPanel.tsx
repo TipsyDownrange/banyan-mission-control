@@ -134,7 +134,7 @@ export default function InquiryDetailPanel({ inquiry, onClose, actions }: Props)
         {inquiry.converted_to_work_order_id && (<><dt>→ WO</dt><dd>{inquiry.converted_to_work_order_id}</dd></>)}
       </dl>
 
-      {error && <div role="alert" style={{ color: '#b91c1c', fontSize: 12 }}>{error}</div>}
+      {error && <div role="alert" style={{ color: 'var(--color-red-700)', fontSize: 12 }}>{error}</div>}
 
       {!isTerminal && (
         <section aria-label="Transition state" style={{ borderTop: '1px solid var(--color-surface-border)', paddingTop: 8 }}>

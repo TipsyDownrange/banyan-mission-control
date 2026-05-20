@@ -192,7 +192,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
   if (data.loading) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -321,7 +321,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                     {it.due_date ? ` · due ${formatRelativeDate(it.due_date)}` : ''}
                   </div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: it.priority === 'URGENT' ? '#fee2e2' : '#eff6ff', color: it.priority === 'URGENT' ? '#b91c1c' : '#1d4ed8' }}>
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: it.priority === 'URGENT' ? '#fee2e2' : '#eff6ff', color: it.priority === 'URGENT' ? 'var(--color-red-700)' : '#1d4ed8' }}>
                   {it.priority || 'MEDIUM'}
                 </span>
               </button>
@@ -375,7 +375,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           </div>
           <div style={{ background: '#fef2f2', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Overdue</div>
-            <div style={{ ...STAT_VALUE, color: rfiKpi.overdue > 0 ? '#b91c1c' : 'var(--bos-color-brand-primary-deep)' }}>{rfiKpi.overdue}</div>
+            <div style={{ ...STAT_VALUE, color: rfiKpi.overdue > 0 ? 'var(--color-red-700)' : 'var(--bos-color-brand-primary-deep)' }}>{rfiKpi.overdue}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>past required_response_by</div>
           </div>
           <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '10px 12px' }}>
@@ -511,7 +511,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
       </section>
 
       {data.error && (
-        <div style={{ padding: 12, borderRadius: 8, background: '#fef2f2', color: '#b91c1c', fontSize: 12 }}>
+        <div style={{ padding: 12, borderRadius: 8, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
           {data.error}
         </div>
       )}

@@ -187,7 +187,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
         </label>
 
         {err && (
-          <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
+          <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
             {err}
           </div>
         )}
@@ -213,5 +213,5 @@ const inputStyle: React.CSSProperties = {
 };
 
 const errStyle: React.CSSProperties = {
-  fontSize: 10, color: '#b91c1c', fontWeight: 700,
+  fontSize: 10, color: 'var(--color-red-700)', fontWeight: 700,
 };

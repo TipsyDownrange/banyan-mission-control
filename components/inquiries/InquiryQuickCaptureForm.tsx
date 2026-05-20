@@ -207,7 +207,7 @@ export default function InquiryQuickCaptureForm({ onSubmit, onSubmitted, default
       </label>
 
       {error && (
-        <div role="alert" style={{ color: '#b91c1c', fontSize: 12 }}>{error}</div>
+        <div role="alert" style={{ color: 'var(--color-red-700)', fontSize: 12 }}>{error}</div>
       )}
 
       <button type="submit" disabled={submitting} style={{ padding: '8px 14px', alignSelf: 'flex-start', background: '#0d1f2d', color: 'white', border: 0, borderRadius: 6, cursor: 'pointer' }}>

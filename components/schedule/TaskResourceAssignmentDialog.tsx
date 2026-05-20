@@ -234,7 +234,7 @@ export default function TaskResourceAssignmentDialog({
           <div
             data-bos-resource-dialog-error
             style={{
-              background: '#fef2f2', color: '#b91c1c', padding: '8px 12px',
+              background: '#fef2f2', color: 'var(--color-red-700)', padding: '8px 12px',
               borderRadius: 8, fontSize: 12, marginBottom: 12,
             }}
           >
@@ -280,7 +280,7 @@ export default function TaskResourceAssignmentDialog({
                           disabled={saving}
                           style={{
                             background: 'transparent', border: '1px solid var(--color-surface-border)', borderRadius: 6,
-                            padding: '4px 10px', fontSize: 11, color: '#b91c1c', cursor: 'pointer',
+                            padding: '4px 10px', fontSize: 11, color: 'var(--color-red-700)', cursor: 'pointer',
                           }}
                         >
                           Remove

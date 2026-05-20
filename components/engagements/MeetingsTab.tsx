@@ -128,7 +128,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading meetings...</div>;
   }
   if (err) {
-    return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load meetings: {err}</div>;
+    return <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load meetings: {err}</div>;
   }
   if (!data?.kIDFound) {
     return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Meeting Log requires this project to be migrated to Postgres.</div>;

@@ -42,7 +42,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
 const BADGE_COLORS: Record<string, { bg: string; fg: string }> = {
   GREEN: { bg: '#dcfce7', fg: '#166534' },
   YELLOW: { bg: '#fef3c7', fg: '#92400e' },
-  RED: { bg: '#fee2e2', fg: '#b91c1c' },
+  RED: { bg: '#fee2e2', fg: 'var(--color-red-700)' },
 };
 
 export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) {
@@ -105,7 +105,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
   }
   if (error) {
     return (
-      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: '#b91c1c', fontSize: 12 }}>
+      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
         Could not load external waivers: {error}
       </div>
     );

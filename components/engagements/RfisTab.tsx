@@ -59,7 +59,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   ANSWERED: { bg: '#fffbeb', color: '#92400e' },
   RESOLVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   CLOSED: { bg: 'var(--color-surface)', color: '#475569' },
-  VOID: { bg: '#fef2f2', color: '#b91c1c' },
+  VOID: { bg: '#fef2f2', color: 'var(--color-red-700)' },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -187,7 +187,7 @@ export default function RfisTab({ kID }: { kID: string }) {
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -195,7 +195,7 @@ export default function RfisTab({ kID }: { kID: string }) {
 
   if (err) {
     return (
-      <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+      <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
         Failed to load RFIs: {err}
       </div>
     );
@@ -215,7 +215,7 @@ export default function RfisTab({ kID }: { kID: string }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
         <div style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Overdue</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.overdue > 0 ? '#b91c1c' : '#059669', marginTop: 4 }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.overdue > 0 ? 'var(--color-red-700)' : '#059669', marginTop: 4 }}>
             {data.summary.overdue}
           </div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>past required-by</div>
@@ -358,12 +358,12 @@ export default function RfisTab({ kID }: { kID: string }) {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {it.required_response_by_date && (
-                      <div style={{ fontSize: 11, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
+                      <div style={{ fontSize: 11, color: overdue ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                         Due {it.required_response_by_date}
                       </div>
                     )}
                     {d !== null && isOpen && (
-                      <div style={{ fontSize: 10, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginTop: 2, fontWeight: 700 }}>
+                      <div style={{ fontSize: 10, color: overdue ? 'var(--color-red-700)' : 'var(--bos-color-ink-tertiary)', marginTop: 2, fontWeight: 700 }}>
                         {overdue ? `${Math.abs(d)}d overdue` : `${d}d to due`}
                       </div>
                     )}

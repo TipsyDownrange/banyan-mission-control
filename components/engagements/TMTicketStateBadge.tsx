@@ -22,7 +22,7 @@ const STATE_PALETTE: Record<TmTicketState, Palette> = {
   BILLABLE:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Billable' },
   BILLED:                { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Billed' },
   PAID:                  { bg: '#ecfdf5', color: '#047857', label: 'Paid' },
-  REJECTED:              { bg: '#fef2f2', color: '#b91c1c', label: 'Rejected' },
+  REJECTED:              { bg: '#fef2f2', color: 'var(--color-red-700)', label: 'Rejected' },
 };
 
 export default function TMTicketStateBadge({ state }: { state: string }) {

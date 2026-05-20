@@ -25,13 +25,13 @@ type Task = {
 };
 
 const PRIORITY_DOT: Record<string, string> = {
-  critical: '#b91c1c', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
+  critical: 'var(--color-red-700)', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
 };
 const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
   in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
-  blocked:     { color: '#b91c1c', bg: '#fef2f2', label: 'Blocked' },
+  blocked:     { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
 };
 const PHASE_ORDER = ['Phase 0','Phase 1','Phase 2','Phase 3','Phase 4','Phase 5','Phase 6','Inbox'];
@@ -232,7 +232,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
               <div style={{fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em',color:'#92400e',marginBottom:8}}>Inbox Actions</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'#f0fdfa',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
-                <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'#fef2f2',color:'#b91c1c',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>
+                <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'#fef2f2',color:'var(--color-red-700)',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>
               </div>
               {showPromote && (
                 <div style={{display:'flex',gap:6,marginTop:8}}>
@@ -279,7 +279,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
           <div style={{padding:'12px 20px',borderTop:'1px solid #f1f5f9',display:'flex',gap:8}}>
             {(task.status==='queued'||task.status==='waiting') && (
               <button onClick={()=>save({status:'in_progress'})} disabled={saving}
-                style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',color:'white',fontSize:13,fontWeight:800,cursor:'pointer'}}>
+                style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',color:'white',fontSize:13,fontWeight:800,cursor:'pointer'}}>
                 🚀 Start
               </button>
             )}
@@ -295,7 +295,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             </>)}
             {(task.status as string)!=='done' && (
               <button onClick={()=>save({status:'done',detail:task.detail+'\n\n— Dismissed'})} disabled={saving}
-                style={{padding:'11px 14px',borderRadius:10,border:'1px solid #fca5a5',background:'#fef2f2',color:'#b91c1c',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                style={{padding:'11px 14px',borderRadius:10,border:'1px solid #fca5a5',background:'#fef2f2',color:'var(--color-red-700)',fontSize:13,fontWeight:700,cursor:'pointer'}}>
                 🗑
               </button>
             )}
@@ -443,7 +443,7 @@ export default function TaskBoardPanel() {
         <div style={{fontSize:26,fontWeight:900,color:'var(--color-ink-primary)',letterSpacing:'-0.03em',marginBottom:4}}>Command Center</div>
         <div style={{fontSize:13,color:'var(--bos-color-ink-disabled)',marginBottom:12}}>{roadmapTasks.length} active · {inboxTasks.length} inbox · {archiveTasks.length} completed</div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>setShowNewTask(p=>!p)} style={{padding:'8px 16px',borderRadius:10,background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer'}}>+ New Task</button>
+          <button onClick={()=>setShowNewTask(p=>!p)} style={{padding:'8px 16px',borderRadius:10,background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer'}}>+ New Task</button>
           <button onClick={fetchTasks} style={{padding:'8px 14px',borderRadius:10,background:'white',border:'1px solid var(--color-surface-border)',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer'}}>↻</button>
         </div>
       </div>
@@ -503,7 +503,7 @@ export default function TaskBoardPanel() {
                 <span style={{fontSize:11,color:'var(--bos-color-ink-tertiary)',marginLeft:'auto'}}>{phaseTasks.length} showing</span>
               </button>
               <div style={{height:3,background:'#f1f5f9',borderRadius:999,marginBottom:8,overflow:'hidden'}}>
-                <div style={{height:'100%',width:`${pct}%`,background:pct===100?'#15803d':'#14b8a6',borderRadius:999}}/>
+                <div style={{height:'100%',width:`${pct}%`,background:pct===100?'#15803d':'var(--bos-color-brand-primary)',borderRadius:999}}/>
               </div>
               {!collapsed && (
                 <div style={{display:'flex',flexDirection:'column',gap:4}}>

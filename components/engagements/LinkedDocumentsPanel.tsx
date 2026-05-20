@@ -75,7 +75,7 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
       {loading ? (
         <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
       ) : err ? (
-        <div style={{ fontSize: 12, color: '#b91c1c' }}>{err}</div>
+        <div style={{ fontSize: 12, color: 'var(--color-red-700)' }}>{err}</div>
       ) : items.length === 0 ? (
         <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No documents linked yet.</div>
       ) : (

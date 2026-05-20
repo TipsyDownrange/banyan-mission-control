@@ -86,7 +86,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
   }, [data]);
 
   if (loading) return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)' }}>Loading open actions...</div>;
-  if (err) return <div style={{ padding: 24, color: '#b91c1c' }}>Failed to load: {err}</div>;
+  if (err) return <div style={{ padding: 24, color: 'var(--color-red-700)' }}>Failed to load: {err}</div>;
 
   const total = data?.total ?? 0;
   const projects = data?.project_count ?? 0;
@@ -112,7 +112,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.kid ?? '—'}</div>
                 <div style={{ minWidth: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
                 <div style={{ fontSize: 10, fontWeight: 800, color: '#475569' }}>{it.priority}</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? '#b91c1c' : '#334155' }}>{it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due'}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : '#334155' }}>{it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due'}</div>
               </div>
             );
           })}

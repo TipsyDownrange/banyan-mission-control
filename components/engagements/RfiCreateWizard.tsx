@@ -99,7 +99,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
           <span style={labelStyle}>
-            Subject <span style={{ color: subjectInvalid ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginLeft: 6, fontWeight: 600 }}>
+            Subject <span style={{ color: subjectInvalid ? 'var(--color-red-700)' : 'var(--bos-color-ink-tertiary)', marginLeft: 6, fontWeight: 600 }}>
               {subject.length}/{SUBJECT_MAX}
             </span>
           </span>
@@ -176,7 +176,7 @@ export default function RfiCreateWizard({ kID, onClose, onCreated }: {
         )}
 
         {err && (
-          <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
+          <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
             {err}
           </div>
         )}
@@ -207,5 +207,5 @@ const labelStyle: React.CSSProperties = {
 };
 
 const errStyle: React.CSSProperties = {
-  fontSize: 10, color: '#b91c1c', fontWeight: 700,
+  fontSize: 10, color: 'var(--color-red-700)', fontWeight: 700,
 };

@@ -61,7 +61,7 @@ export default function ForecastingPanel() {
               Long-range capacity and pipeline view. Work inside the next three weeks belongs in Scheduling Matrix; later demand stays here until it is close enough to schedule.
             </div>
           </div>
-          <button onClick={() => load()} disabled={loading} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(20,184,166,0.3)', background: 'rgba(20,184,166,0.08)', color: '#14b8a6', fontSize: 12, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}>
+          <button onClick={() => load()} disabled={loading} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(20,184,166,0.3)', background: 'rgba(20,184,166,0.08)', color: 'var(--bos-color-brand-primary)', fontSize: 12, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}>
             {loading ? '↻ Loading…' : '↻ Refresh'}
           </button>
         </div>

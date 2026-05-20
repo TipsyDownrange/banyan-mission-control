@@ -135,7 +135,7 @@ function ForecastSection({ slots }: { slots: DispatchSlot[] }) {
 
   return (
     <div>
-      <SectionHeader title="Forecast / Planning" count={slots.length} accent="#14b8a6" />
+      <SectionHeader title="Forecast / Planning" count={slots.length} accent="var(--bos-color-brand-primary)" />
       {dates.length === 0 ? (
         <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.5)', margin: 0 }}>No slots in window.</p>
       ) : (
@@ -433,7 +433,7 @@ export default function LogisticsPanel() {
                 style={{
                   padding: '6px 12px', fontSize: 11, fontWeight: 700,
                   background: days === d ? 'rgba(20,184,166,0.2)' : 'rgba(255,255,255,0.03)',
-                  color: days === d ? '#14b8a6' : 'rgba(148,163,184,0.6)',
+                  color: days === d ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.6)',
                   border: 'none', cursor: 'pointer', transition: 'all 0.1s',
                   borderRight: d !== 56 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                 }}

@@ -226,7 +226,7 @@ export default function PMDashboardPanel() {
   }
   if (error && !resp) {
     return (
-      <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca', margin: 24 }}>
+      <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca', margin: 24 }}>
         Failed to load dashboard: {error}
       </div>
     );

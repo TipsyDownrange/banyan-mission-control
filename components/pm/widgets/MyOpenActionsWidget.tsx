@@ -18,7 +18,7 @@ type Item = {
 type Data = { items: Item[]; total: number; project_count: number };
 
 const PRIORITY_COLOR: Record<string, string> = {
-  URGENT: '#b91c1c',
+  URGENT: 'var(--color-red-700)',
   HIGH: '#c2410c',
   MEDIUM: 'var(--bos-color-brand-primary-deep)',
   LOW: '#475569',

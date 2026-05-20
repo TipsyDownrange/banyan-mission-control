@@ -74,16 +74,16 @@ export default function StatusPipeline({
         let dotBg = '#f1f5f9';
 
         if (isPast) {
-          dotColor = stage.terminal === 'success' ? '#16a34a' : (stage.color ?? '#14b8a6');
+          dotColor = stage.terminal === 'success' ? '#16a34a' : (stage.color ?? 'var(--bos-color-brand-primary)');
           textColor = 'var(--bos-color-ink-disabled)';
           dotBg = stage.terminal === 'success' ? '#f0fdf4' : 'rgba(20,184,166,0.1)';
-          lineColor = stage.color ?? '#14b8a6';
+          lineColor = stage.color ?? 'var(--bos-color-brand-primary)';
         }
         if (isActive) {
-          dotColor = stage.terminal === 'fail' ? '#dc2626' : stage.terminal === 'success' ? '#16a34a' : (stage.color ?? '#14b8a6');
+          dotColor = stage.terminal === 'fail' ? '#dc2626' : stage.terminal === 'success' ? '#16a34a' : (stage.color ?? 'var(--bos-color-brand-primary)');
           textColor = dotColor;
           dotBg = stage.terminal === 'fail' ? '#fef2f2' : stage.terminal === 'success' ? '#f0fdf4' : 'rgba(20,184,166,0.15)';
-          lineColor = stage.color ?? '#14b8a6';
+          lineColor = stage.color ?? 'var(--bos-color-brand-primary)';
         }
 
         const canClick = !readOnly && onAdvance && !isActive && !isAdvancing;

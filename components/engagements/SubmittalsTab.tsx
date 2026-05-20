@@ -57,7 +57,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   APPROVED_AS_NOTED: { bg: '#f0fdfa', color: '#15803d' },
   REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
-  REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
+  REJECTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
   CLOSED: { bg: 'var(--color-surface)', color: '#475569' },
 };
 
@@ -200,7 +200,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -208,7 +208,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
 
   if (err) {
     return (
-      <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+      <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
         Failed to load submittals: {err}
       </div>
     );
@@ -351,12 +351,12 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {it.required_by_date && (
-                      <div style={{ fontSize: 11, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
+                      <div style={{ fontSize: 11, color: overdue ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                         Due {it.required_by_date}
                       </div>
                     )}
                     {d !== null && (
-                      <div style={{ fontSize: 10, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginTop: 2, fontWeight: 700 }}>
+                      <div style={{ fontSize: 10, color: overdue ? 'var(--color-red-700)' : 'var(--bos-color-ink-tertiary)', marginTop: 2, fontWeight: 700 }}>
                         {overdue ? `${Math.abs(d)}d overdue` : `${d}d to due`}
                       </div>
                     )}

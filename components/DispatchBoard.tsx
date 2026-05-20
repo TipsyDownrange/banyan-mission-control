@@ -50,7 +50,7 @@ function parseConfirmations(raw: string): Record<string, string> {
 
 const CONF_STYLE: Record<string, { icon: string; color: string }> = {
   confirmed: { icon: '✓', color: 'var(--bos-color-brand-primary-deep)' },
-  declined:  { icon: '✗', color: '#b91c1c' },
+  declined:  { icon: '✗', color: 'var(--color-red-700)' },
   pending:   { icon: '?', color: 'var(--bos-color-ink-tertiary)' },
 };
 
@@ -58,7 +58,7 @@ type CrewMember = { user_id: string; name: string; role: string; island: string 
 type WorkOrder = { id: string; name: string; island: string; status: string; contact: string };
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
-  open:      { color: '#b91c1c', bg: '#fef2f2', label: 'Open' },
+  open:      { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Open' },
   partial:   { color: '#92400e', bg: '#fffbeb', label: 'Partial' },
   filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'Filled' },
   completed: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', label: 'Done' },
@@ -274,7 +274,7 @@ export default function DispatchBoard() {
                 style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>›</button>
             </div>
             <button onClick={() => setShowAddSlot(true)}
-              style={{ padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
               + Add Slot
             </button>
           </div>
@@ -356,7 +356,7 @@ export default function DispatchBoard() {
                                 {name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 {isExpanded && (
                                   <button onClick={e => { e.stopPropagation(); removeCrewFromSlot(slot.slot_id, name); }}
-                                    style={{ width: 14, height: 14, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 9, color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minWidth: 14 }}>×</button>
+                                    style={{ width: 14, height: 14, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 9, color: 'var(--color-red-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minWidth: 14 }}>×</button>
                                 )}
                               </div>
                             );
@@ -370,7 +370,7 @@ export default function DispatchBoard() {
                         {/* Assign Crew button — always visible */}
                         <button
                           onClick={e => { e.stopPropagation(); openCrewPicker(slot.slot_id); }}
-                          style={{ marginTop: 5, width: '100%', padding: '5px 6px', borderRadius: 6, background: 'rgba(15,118,110,0.06)', border: '1px dashed #14b8a6', color: 'var(--bos-color-brand-primary-deep)', fontSize: 8, fontWeight: 800, cursor: 'pointer', minHeight: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                          style={{ marginTop: 5, width: '100%', padding: '5px 6px', borderRadius: 6, background: 'rgba(15,118,110,0.06)', border: '1px dashed var(--bos-color-brand-primary)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 8, fontWeight: 800, cursor: 'pointer', minHeight: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
                           <span style={{ fontSize: 10 }}>+</span> Assign Crew
                         </button>
                         {/* Expanded: full name, confirmations, delete */}
@@ -398,7 +398,7 @@ export default function DispatchBoard() {
                               </div>
                             )}
                             <button onClick={e => { e.stopPropagation(); deleteSlot(slot.slot_id); }}
-                              style={{ marginTop: 2, fontSize: 8, color: '#b91c1c', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}>
+                              style={{ marginTop: 2, fontSize: 8, color: 'var(--color-red-700)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}>
                               Remove slot
                             </button>
                           </div>
@@ -487,7 +487,7 @@ export default function DispatchBoard() {
             </div>
             {/* Done button */}
             <button onClick={() => setCrewPickerSlotId(null)}
-              style={{ marginTop: 12, width: '100%', padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
+              style={{ marginTop: 12, width: '100%', padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 48 }}>
               Done
             </button>
           </div>
@@ -651,7 +651,7 @@ export default function DispatchBoard() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Work Type *</label>
+                <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-red-700)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Work Type *</label>
                 <select value={addWorkType} onChange={e => setAddWorkType(e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: addWorkType ? '1px solid var(--color-surface-border)' : '1px solid #fca5a5', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, cursor: 'pointer', background: addWorkType ? 'white' : '#fff5f5' }}>
                   <option value="">Select work type…</option>
@@ -669,7 +669,7 @@ export default function DispatchBoard() {
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); setAddWorkType(''); setAddNotes(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || !addWorkType || saving}
-                style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : 'Add Slot'}
               </button>
             </div>

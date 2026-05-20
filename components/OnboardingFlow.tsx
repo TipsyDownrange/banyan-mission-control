@@ -185,7 +185,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
             <img src="/banyan-tree.png" alt="BanyanOS" style={{ width: welcomeSlide === 0 ? 160 : 100, height: 'auto', transition: 'width 0.3s' }} />
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 8px' }}>
-            {slide.title.includes('Banyan') ? <>Banyan<span style={{ color: '#14b8a6' }}>OS</span></> : slide.title}
+            {slide.title.includes('Banyan') ? <>Banyan<span style={{ color: 'var(--bos-color-brand-primary)' }}>OS</span></> : slide.title}
           </h1>
           <p style={{ fontSize: 15, color: 'rgba(148,163,184,0.7)', margin: '0 0 12px' }}>{slide.subtitle}</p>
           <p style={{ fontSize: 14, color: 'rgba(148,163,184,0.5)', lineHeight: 1.6, margin: '0 0 40px' }}>{slide.desc}</p>
@@ -193,7 +193,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
           {/* Dots */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 32 }}>
             {SLIDES.map((_, i) => (
-              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i === welcomeSlide ? '#14b8a6' : 'rgba(148,163,184,0.3)', transition: 'background 0.3s' }} />
+              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i === welcomeSlide ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.3)', transition: 'background 0.3s' }} />
             ))}
           </div>
 
@@ -211,7 +211,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
             </button>
           ) : (
             <button onClick={startChat}
-              style={{ padding: '14px 48px', borderRadius: 14, background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
+              style={{ padding: '14px 48px', borderRadius: 14, background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
               Talk to Kai →
             </button>
           )}
@@ -355,7 +355,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
                   }}>
                   <div style={{
                     width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                    background: selected ? '#14b8a6' : 'transparent',
+                    background: selected ? 'var(--bos-color-brand-primary)' : 'transparent',
                     border: selected ? 'none' : '2px solid rgba(148,163,184,0.3)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: 'white', fontSize: 14, fontWeight: 800,
@@ -372,7 +372,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
 
           <div style={{ marginTop: 32, display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={finishOnboarding}
-              style={{ padding: '14px 40px', borderRadius: 14, background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
+              style={{ padding: '14px 40px', borderRadius: 14, background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
               {selectedRoutines.size > 0 ? `Set up ${selectedRoutines.size} routine${selectedRoutines.size > 1 ? 's' : ''} →` : 'Skip for now →'}
             </button>
           </div>

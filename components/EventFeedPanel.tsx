@@ -9,7 +9,7 @@ type Event = {
 
 const TYPE_STYLE: Record<string, { label: string; color: string; bg: string; border: string }> = {
   DAILY_LOG:         { label: 'Daily Log',    color: '#0369a1', bg: 'rgba(239,246,255,0.9)',  border: 'rgba(59,130,246,0.2)' },
-  FIELD_ISSUE:       { label: 'Field Issue',  color: '#b91c1c', bg: 'rgba(254,242,242,0.9)',  border: 'rgba(239,68,68,0.2)' },
+  FIELD_ISSUE:       { label: 'Field Issue',  color: 'var(--color-red-700)', bg: 'rgba(254,242,242,0.9)',  border: 'rgba(239,68,68,0.2)' },
   INSTALL_STEP:      { label: 'Install',      color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)',  border: 'rgba(13,148,136,0.2)' },
   QA_CHECK:          { label: 'QA Check',     color: '#6d28d9', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(139,92,246,0.2)' },
   PHOTO_ONLY:        { label: 'Photo',        color: '#92400e', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(245,158,11,0.2)' },
@@ -80,13 +80,13 @@ export default function EventFeedPanel() {
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading field events...</div>
         </div>
       )}
 
-      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>{error}</div>}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>{error}</div>}
 
       {!loading && filtered.length === 0 && !error && (
         <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)' }}>

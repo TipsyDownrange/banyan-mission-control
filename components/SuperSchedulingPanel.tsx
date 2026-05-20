@@ -108,7 +108,7 @@ function islandColor(island: string): { bg: string; border: string; text: string
   if (i.includes('kauai'))  return { bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)', text: '#d8b4fe', dot: '#a855f7' };
   if (i.includes('big') || i.includes('hawaii')) return { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', text: '#fca5a5', dot: '#ef4444' };
   // Oahu default
-  return { bg: 'rgba(20,184,166,0.12)', border: 'rgba(20,184,166,0.3)', text: '#5eead4', dot: '#14b8a6' };
+  return { bg: 'rgba(20,184,166,0.12)', border: 'rgba(20,184,166,0.3)', text: '#5eead4', dot: 'var(--bos-color-brand-primary)' };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -558,8 +558,8 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
                     }}>
                       <div style={{
                         width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                        background: checked ? '#14b8a6' : 'rgba(255,255,255,0.06)',
-                        border: `1.5px solid ${checked ? '#14b8a6' : 'rgba(255,255,255,0.2)'}`,
+                        background: checked ? 'var(--bos-color-brand-primary)' : 'rgba(255,255,255,0.06)',
+                        border: `1.5px solid ${checked ? 'var(--bos-color-brand-primary)' : 'rgba(255,255,255,0.2)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
@@ -600,7 +600,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
           disabled={saving || !date}
           style={{
             width: '100%', padding: '14px',
-            background: (saving || !date) ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)',
+            background: (saving || !date) ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, var(--bos-color-brand-primary))',
             border: 'none', borderRadius: 12,
             color: '#fff', fontSize: 15, fontWeight: 800,
             cursor: (saving || !date) ? 'not-allowed' : 'pointer',
@@ -834,7 +834,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                   const checked = selectedCrew.includes(m.name);
                   return (
                     <label key={m.user_id || m.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', background: checked ? 'rgba(20,184,166,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${checked ? 'rgba(20,184,166,0.3)' : 'rgba(255,255,255,0.06)'}`, marginBottom: 3 }}>
-                      <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, background: checked ? '#14b8a6' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${checked ? '#14b8a6' : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, background: checked ? 'var(--bos-color-brand-primary)' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${checked ? 'var(--bos-color-brand-primary)' : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => toggleCrew(m.name)} style={{ display: 'none' }} />
@@ -870,7 +870,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                   const checked = selectedStepIds.includes(step.install_step_id);
                   return (
                     <label key={step.install_step_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', background: checked ? 'rgba(20,184,166,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${checked ? 'rgba(20,184,166,0.3)' : 'rgba(255,255,255,0.06)'}`, marginBottom: 3 }}>
-                      <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, background: checked ? '#14b8a6' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${checked ? '#14b8a6' : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, background: checked ? 'var(--bos-color-brand-primary)' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${checked ? 'var(--bos-color-brand-primary)' : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => setSelectedStepIds(prev => checked ? prev.filter(id => id !== step.install_step_id) : [...prev, step.install_step_id])} style={{ display: 'none' }} />
@@ -886,7 +886,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
           </div>
         )}
 
-        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', background: saving ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, #14b8a6)', border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', marginBottom: 10 }}>
+        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', background: saving ? 'rgba(20,184,166,0.3)' : 'linear-gradient(135deg, #0d9488, var(--bos-color-brand-primary))', border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', marginBottom: 10 }}>
           {saving ? '⏳ Saving…' : '✓ Save Changes'}
         </button>
 
@@ -1155,7 +1155,7 @@ function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
                 <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${pct}%`,
-                    background: pct >= 100 ? '#22c55e' : '#14b8a6',
+                    background: pct >= 100 ? '#22c55e' : 'var(--bos-color-brand-primary)',
                     borderRadius: 3, transition: 'width 0.4s',
                   }} />
                 </div>
@@ -1372,7 +1372,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                           </div>
                           {pct > 0 && (
                             <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#22c55e' : '#14b8a6', borderRadius: 2 }} />
+                              <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#22c55e' : 'var(--bos-color-brand-primary)', borderRadius: 2 }} />
                             </div>
                           )}
                         </button>
@@ -1422,7 +1422,7 @@ function CrewAvailability({ crew, weekDays }: { crew: CrewMember[]; weekDays: st
                 return (
                   <td key={date} style={{ padding: '3px 4px', textAlign: 'center' }}>
                     <div style={{ width: 32, height: 22, borderRadius: 5, margin: '0 auto', background: booked ? (todayCol ? 'rgba(56,189,248,0.3)' : 'rgba(20,184,166,0.25)') : 'rgba(255,255,255,0.04)', border: booked ? `1px solid ${todayCol ? 'rgba(56,189,248,0.4)' : 'rgba(20,184,166,0.35)'}` : '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {booked && <div style={{ width: 8, height: 8, borderRadius: '50%', background: todayCol ? '#38bdf8' : '#14b8a6' }} />}
+                      {booked && <div style={{ width: 8, height: 8, borderRadius: '50%', background: todayCol ? '#38bdf8' : 'var(--bos-color-brand-primary)' }} />}
                     </div>
                   </td>
                 );
@@ -1588,7 +1588,7 @@ export default function SuperSchedulingPanel() {
               padding: '7px 14px', borderRadius: 8,
               border: '1px solid rgba(20,184,166,0.3)',
               background: 'rgba(20,184,166,0.08)',
-              color: '#14b8a6', fontSize: 12, fontWeight: 700,
+              color: 'var(--bos-color-brand-primary)', fontSize: 12, fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.5 : 1,
             }}
@@ -1606,7 +1606,7 @@ export default function SuperSchedulingPanel() {
 
       {loading && !data && (
         <div style={{ textAlign: 'center', padding: 64 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.15)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.15)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)' }}>Loading scheduling data…</div>
         </div>

@@ -56,7 +56,7 @@ const RESOLUTION_CONFIG: Record<string, { label: string; color: string; bg: stri
   approved_amended:  { label: 'Approved (amended)', color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(20,184,166,0.08)' },
   rejected:          { label: 'Rejected',          color: '#dc2626', bg: '#fef2f2' },
   deferred:          { label: 'Deferred',          color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9' },
-  overridden:        { label: 'Overridden',        color: '#b91c1c', bg: '#fef2f2' },
+  overridden:        { label: 'Overridden',        color: 'var(--color-red-700)', bg: '#fef2f2' },
   rerouted:          { label: 'Rerouted',          color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
 };
 
@@ -307,7 +307,7 @@ function DecisionCard({ decision, onAction }: {
               }}
               style={{
                 padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: 'none',
-                background: '#14b8a6', color: 'white',
+                background: 'var(--bos-color-brand-primary)', color: 'white',
                 cursor: submitting ? 'default' : 'pointer', opacity: disabled('directive') ? 0.5 : 1,
               }}>
               {submitting === 'directive' ? '…' : 'Add Directive'}

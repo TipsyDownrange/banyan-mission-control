@@ -1209,7 +1209,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
                 borderRadius: 999,
                 border: active ? 'none' : '1px solid var(--color-surface-border)',
                 background: active
-                  ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)'
+                  ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))'
                   : 'white',
                 color: active ? 'white' : '#475569',
                 fontSize: 11,
@@ -1259,7 +1259,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
         alignItems: 'center',
       }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 8, height: 8, borderRadius: 2, background: '#14b8a6', display: 'inline-block' }} />
+          <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--bos-color-brand-primary)', display: 'inline-block' }} />
           Editable fields (green)
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

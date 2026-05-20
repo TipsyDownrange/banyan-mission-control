@@ -69,7 +69,7 @@ function statusBadgeStyle(status: string): React.CSSProperties {
     draft:      { bg: 'rgba(245,158,11,0.12)',   border: 'rgba(245,158,11,0.3)',   color: '#f59e0b' },
     in_review:  { bg: 'rgba(96,165,250,0.12)',   border: 'rgba(96,165,250,0.3)',   color: '#60a5fa' },
     approved:   { bg: 'rgba(167,139,250,0.12)',  border: 'rgba(167,139,250,0.3)',  color: '#a78bfa' },
-    published:  { bg: 'rgba(20,184,166,0.12)',   border: 'rgba(20,184,166,0.3)',   color: '#14b8a6' },
+    published:  { bg: 'rgba(20,184,166,0.12)',   border: 'rgba(20,184,166,0.3)',   color: 'var(--bos-color-brand-primary)' },
     archived:   { bg: 'rgba(148,163,184,0.08)',  border: 'rgba(148,163,184,0.2)',  color: 'rgba(148,163,184,0.5)' },
   };
   const s = map[status] || map['draft'];
@@ -348,7 +348,7 @@ function NewArticleForm({
             padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
             background: saving ? 'rgba(20,184,166,0.3)' : 'rgba(20,184,166,0.2)',
             border: '1px solid rgba(20,184,166,0.4)',
-            color: '#14b8a6',
+            color: 'var(--bos-color-brand-primary)',
           }}>
             {saving ? 'Saving…' : 'Save Article'}
           </button>
@@ -566,7 +566,7 @@ function ArticleDetail({
               ))}
             </select>
           ) : (
-            <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.22)', color: '#14b8a6', borderRadius: 6, padding: '2px 8px' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.22)', color: 'var(--bos-color-brand-primary)', borderRadius: 6, padding: '2px 8px' }}>
               {article.product_line_id}
             </span>
           )}
@@ -607,7 +607,7 @@ function ArticleDetail({
               <span style={{ fontSize: 12, color: 'rgba(248,250,252,0.7)' }}>{article.article_type || '—'}</span>
             </Section>
             <Section label="Field Visible">
-              <span style={{ fontSize: 12, color: article.field_visible === 'TRUE' ? '#14b8a6' : 'rgba(148,163,184,0.5)' }}>
+              <span style={{ fontSize: 12, color: article.field_visible === 'TRUE' ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.5)' }}>
                 {article.field_visible === 'TRUE' ? 'Yes' : 'No'}
               </span>
             </Section>
@@ -665,7 +665,7 @@ function ArticleDetail({
                 {article.source_document_ids.map((src, i) => (
                   <li key={i} style={{ fontSize: 12, color: 'rgba(148,163,184,0.75)', marginBottom: 4 }}>
                     {isUrl(src) ? (
-                      <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: '#14b8a6', textDecoration: 'underline', wordBreak: 'break-all' }}>{src}</a>
+                      <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--bos-color-brand-primary)', textDecoration: 'underline', wordBreak: 'break-all' }}>{src}</a>
                     ) : src}
                   </li>
                 ))}
@@ -797,7 +797,7 @@ function ArticleDetail({
             padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: voted ? 'default' : 'pointer',
             background: voted === 'helpful' ? 'rgba(20,184,166,0.2)' : 'rgba(255,255,255,0.04)',
             border: `1px solid ${voted === 'helpful' ? 'rgba(20,184,166,0.4)' : 'rgba(255,255,255,0.08)'}`,
-            color: voted === 'helpful' ? '#14b8a6' : 'rgba(148,163,184,0.6)',
+            color: voted === 'helpful' ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.6)',
             opacity: voted && voted !== 'helpful' ? 0.5 : 1,
           }}
         >
@@ -826,7 +826,7 @@ function ArticleDetail({
             <>
               <button onClick={handleSave} disabled={saving} style={{
                 padding: '7px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
-                background: 'rgba(20,184,166,0.2)', border: '1px solid rgba(20,184,166,0.4)', color: '#14b8a6',
+                background: 'rgba(20,184,166,0.2)', border: '1px solid rgba(20,184,166,0.4)', color: 'var(--bos-color-brand-primary)',
               }}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -999,7 +999,7 @@ export default function KnowledgeLibraryPanel() {
           <button onClick={() => setShowNewForm(true)} style={{
             padding: '7px 16px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer',
             background: 'rgba(20,184,166,0.15)', border: '1px solid rgba(20,184,166,0.35)',
-            color: '#14b8a6', letterSpacing: '0.01em',
+            color: 'var(--bos-color-brand-primary)', letterSpacing: '0.01em',
           }}>
             + New Article
           </button>
@@ -1018,7 +1018,7 @@ export default function KnowledgeLibraryPanel() {
             background: tab === t ? 'rgba(20,184,166,0.1)' : 'transparent',
             border: tab === t ? '1px solid rgba(20,184,166,0.25)' : '1px solid transparent',
             borderBottom: 'none',
-            color: tab === t ? '#14b8a6' : 'rgba(148,163,184,0.55)',
+            color: tab === t ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.55)',
           }}>
             {t === 'articles' ? 'Articles' : 'Feedback Queue'}
           </button>
@@ -1043,7 +1043,7 @@ export default function KnowledgeLibraryPanel() {
                 padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 background: selectedLine === 'All' ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.04)',
                 border: `1px solid ${selectedLine === 'All' ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                color: selectedLine === 'All' ? '#14b8a6' : 'rgba(148,163,184,0.55)',
+                color: selectedLine === 'All' ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.55)',
               }}>
                 All
               </button>
@@ -1052,7 +1052,7 @@ export default function KnowledgeLibraryPanel() {
                   padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                   background: selectedLine === pl.product_line_id ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${selectedLine === pl.product_line_id ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                  color: selectedLine === pl.product_line_id ? '#14b8a6' : 'rgba(148,163,184,0.55)',
+                  color: selectedLine === pl.product_line_id ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.55)',
                 }}>
                   {pl.display_name}
                 </button>
@@ -1144,7 +1144,7 @@ export default function KnowledgeLibraryPanel() {
               fontSize: 10, fontWeight: 700, borderRadius: 5, padding: '2px 7px',
               background: f.status === 'open' ? 'rgba(245,158,11,0.12)' : f.status === 'triaged' ? 'rgba(96,165,250,0.12)' : 'rgba(20,184,166,0.12)',
               border: `1px solid ${f.status === 'open' ? 'rgba(245,158,11,0.3)' : f.status === 'triaged' ? 'rgba(96,165,250,0.3)' : 'rgba(20,184,166,0.3)'}`,
-              color: f.status === 'open' ? '#f59e0b' : f.status === 'triaged' ? '#60a5fa' : '#14b8a6',
+              color: f.status === 'open' ? '#f59e0b' : f.status === 'triaged' ? '#60a5fa' : 'var(--bos-color-brand-primary)',
             };
             return (
               <div key={f.feedback_id} style={{

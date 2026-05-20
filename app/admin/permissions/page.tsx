@@ -70,7 +70,7 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
       position: 'fixed',
       bottom: 24,
       right: 24,
-      background: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+      background: 'linear-gradient(135deg, var(--bos-color-brand-primary), #0d9488)',
       color: '#fff',
       padding: '10px 18px',
       borderRadius: 10,
@@ -243,7 +243,7 @@ export default function PermissionsPage() {
             </a>
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-            Permissions<span style={{ color: '#14b8a6' }}> Control</span>
+            Permissions<span style={{ color: 'var(--bos-color-brand-primary)' }}> Control</span>
           </h1>
           <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.5)', marginTop: 3 }}>
             Configure role-based access — changes sync to Google Sheets
@@ -258,7 +258,7 @@ export default function PermissionsPage() {
 
         {/* ── Permissions Matrix ── */}
         <div style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 700, color: '#14b8a6', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, marginTop: 0 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--bos-color-brand-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, marginTop: 0 }}>
             Role Permissions Matrix
           </h2>
 
@@ -358,7 +358,7 @@ export default function PermissionsPage() {
                         <span style={{
                           fontSize: 13,
                           fontWeight: isLocked ? 700 : 500,
-                          color: isLocked ? '#14b8a6' : 'rgba(226,232,240,0.85)',
+                          color: isLocked ? 'var(--bos-color-brand-primary)' : 'rgba(226,232,240,0.85)',
                         }}>
                           {ROLE_LABELS[role] || role}
                         </span>
@@ -410,9 +410,9 @@ export default function PermissionsPage() {
                               }}
                             >
                               {isSaving ? (
-                                <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid rgba(20,184,166,0.5)', borderTopColor: '#14b8a6', animation: 'spin 0.6s linear infinite' }} />
+                                <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid rgba(20,184,166,0.5)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.6s linear infinite' }} />
                               ) : hasIt ? (
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isAdminLocked ? 'rgba(20,184,166,0.6)' : '#14b8a6'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isAdminLocked ? 'rgba(20,184,166,0.6)' : 'var(--bos-color-brand-primary)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="20 6 9 17 4 12" />
                                 </svg>
                               ) : null}
@@ -431,7 +431,7 @@ export default function PermissionsPage() {
           <div style={{ display: 'flex', gap: 20, marginTop: 14, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(148,163,184,0.5)' }}>
               <div style={{ width: 14, height: 14, borderRadius: 4, background: 'rgba(20,184,166,0.15)', border: '1px solid rgba(20,184,166,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-brand-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
               Has permission
             </div>
@@ -440,7 +440,7 @@ export default function PermissionsPage() {
               No permission
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(148,163,184,0.5)' }}>
-              <span style={{ color: '#14b8a6' }}>●</span>
+              <span style={{ color: 'var(--bos-color-brand-primary)' }}>●</span>
               Locked (GM/Owner admin is permanent)
             </div>
           </div>
@@ -448,7 +448,7 @@ export default function PermissionsPage() {
 
         {/* ── User List ── */}
         <div>
-          <h2 style={{ fontSize: 14, fontWeight: 700, color: '#14b8a6', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, marginTop: 0 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--bos-color-brand-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, marginTop: 0 }}>
             Users & Role Assignment
           </h2>
 
@@ -518,7 +518,7 @@ export default function PermissionsPage() {
                         borderRadius: 7,
                         border: '1px solid rgba(255,255,255,0.1)',
                         background: isGmOwner ? 'rgba(20,184,166,0.08)' : 'rgba(255,255,255,0.04)',
-                        color: isGmOwner ? '#14b8a6' : 'rgba(203,213,225,0.8)',
+                        color: isGmOwner ? 'var(--bos-color-brand-primary)' : 'rgba(203,213,225,0.8)',
                         cursor: 'pointer',
                         outline: 'none',
                         width: '100%',
@@ -541,7 +541,7 @@ export default function PermissionsPage() {
                   {/* Permission count */}
                   <div style={{ textAlign: 'center' }}>
                     {isGmOwner ? (
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#14b8a6', background: 'rgba(20,184,166,0.1)', padding: '3px 8px', borderRadius: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary)', background: 'rgba(20,184,166,0.1)', padding: '3px 8px', borderRadius: 6 }}>
                         All
                       </span>
                     ) : (

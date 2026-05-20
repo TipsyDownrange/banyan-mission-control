@@ -94,7 +94,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
                 <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{v.license_plate}</span>
                 {v.island && <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 7px', borderRadius: 999, color: ISLAND_COLOR[v.island] || 'var(--bos-color-ink-disabled)', border: '1px solid currentColor', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{v.island}</span>}
-                {v.status !== 'Active' && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 999, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(185,28,28,0.2)' }}>{v.status}</span>}
+                {v.status !== 'Active' && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 999, color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid rgba(185,28,28,0.2)' }}>{v.status}</span>}
               </div>
               <div style={{ fontSize: 12, color: '#334155' }}>{v.year} {v.make} {v.model} {v.color && `· ${v.color}`} {v.type && `· ${v.type}`}</div>
               {v.assigned_to && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>→ {v.assigned_to}</div>}
@@ -103,7 +103,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           </div>
           {/* Expiry badges */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? '#b91c1c' : regSoon ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
+            {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? 'var(--color-red-700)' : regSoon ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
             {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid var(--color-surface-border)' }}>Last service: {v.last_service_date}</span>}
             {v.notes && <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>{v.notes}</span>}
           </div>
@@ -185,7 +185,7 @@ export default function AssetsPanel() {
                 {t === 'vehicles' ? `Vehicles (${vehicles.length})` : `Equipment (${equipment.length})`}
               </button>
             ))}
-            <button onClick={() => setShowAdd(true)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
+            <button onClick={() => setShowAdd(true)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
               + Add {tab === 'vehicles' ? 'Vehicle' : 'Equipment'}
             </button>
           </div>
@@ -299,7 +299,7 @@ export default function AssetsPanel() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
               <button onClick={() => { setShowAdd(false); setNewItem({}); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addItem} disabled={saving} style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={addItem} disabled={saving} style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : `Add ${tab === 'vehicles' ? 'Vehicle' : 'Equipment'}`}
               </button>
             </div>

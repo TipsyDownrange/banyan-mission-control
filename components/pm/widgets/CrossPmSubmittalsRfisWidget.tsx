@@ -19,7 +19,7 @@ function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
           {label}
         </div>
         <div style={{ fontSize: 12, color: '#475569' }}>
-          {p.total} open · <span style={{ color: '#b91c1c', fontWeight: 700 }}>{p.overdue} overdue</span>
+          {p.total} open · <span style={{ color: 'var(--color-red-700)', fontWeight: 700 }}>{p.overdue} overdue</span>
         </div>
       </div>
       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
