@@ -1162,6 +1162,21 @@ export const punchListItemStatusEnum = pgEnum('punch_list_item_status', [
   'SIGNED_OFF',
   'DISPUTED',
   'DEFERRED_TO_WARRANTY',
+  'WAIVED',
+]);
+
+// Closeout v1.1.1 — trade enum (orthogonal to category). Migration 0030.
+export const punchTradeEnum = pgEnum('punch_trade', [
+  'glazier',
+  'framer',
+  'waterproofer',
+  'electrician',
+  'plumber',
+  'hvac',
+  'drywall',
+  'paint',
+  'cleaning',
+  'other',
 ]);
 
 export const warrantyStatusEnum = pgEnum('warranty_status', [
@@ -1221,6 +1236,9 @@ export const project_lifecycle_states = pgTable('project_lifecycle_states', {
 ]);
 
 // Closeout §6.2 — punch list items
+// v1.1.1 additions (migration 0031): trade, assigned_to_sub_id, walk_id,
+// waived_reason. punch_walks + subcontractors tables defined below; forward
+// references via AnyPgColumn cast keep declaration order flexible.
 export const punch_list_items = pgTable('punch_list_items', {
   punch_item_id: uuid('punch_item_id').defaultRandom().primaryKey(),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
@@ -1231,16 +1249,20 @@ export const punch_list_items = pgTable('punch_list_items', {
   description: text('description').notNull(),
   location: jsonb('location').notNull().default(sql`'{}'::jsonb`),
   category: punchListItemCategoryEnum('category').notNull().default('OTHER'),
+  trade: punchTradeEnum('trade').notNull().default('other'),
   responsible_party: punchListResponsiblePartyEnum('responsible_party').notNull().default('KULA'),
   photos_required: boolean('photos_required').notNull().default(false),
   photo_evidence: text('photo_evidence').array().notNull().default(sql`ARRAY[]::text[]`),
   assigned_to: uuid('assigned_to').references(() => users.user_id),
+  assigned_to_sub_id: uuid('assigned_to_sub_id').references((): AnyPgColumn => subcontractors.subcontractor_id),
+  walk_id: uuid('walk_id').references((): AnyPgColumn => punch_walks.walk_id),
   due_date: date('due_date'),
   status: punchListItemStatusEnum('status').notNull().default('NEW'),
   completion_evidence: jsonb('completion_evidence').notNull().default(sql`'{}'::jsonb`),
   signoff_evidence: jsonb('signoff_evidence').notNull().default(sql`'{}'::jsonb`),
   dispute_reason: text('dispute_reason'),
   dispute_resolution: jsonb('dispute_resolution'),
+  waived_reason: text('waived_reason'),
   created_by: uuid('created_by').references(() => users.user_id),
   updated_by: uuid('updated_by').references(() => users.user_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -1249,6 +1271,76 @@ export const punch_list_items = pgTable('punch_list_items', {
   unique('punch_list_items_engagement_number_uidx').on(table.tenant_id, table.engagement_id, table.item_number),
   index('punch_list_items_engagement_status_idx').on(table.tenant_id, table.engagement_id, table.status),
   index('punch_list_items_assigned_status_idx').on(table.tenant_id, table.assigned_to, table.status),
+  index('punch_list_items_trade_idx').on(table.tenant_id, table.trade),
+]);
+
+// Closeout v1.1.1 — subs catalog (Sean delta 2). Migration 0029.
+// trade locked at app + db CHECK to ('framer','waterproofer') per Sean
+// directive (Scheduling Spine subs alignment); broader trade list captured
+// in punch_trade enum applies to punch_list_items, not subcontractors.
+export const subcontractors = pgTable('subcontractors', {
+  subcontractor_id: uuid('subcontractor_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  company_name: text('company_name').notNull(),
+  primary_contact_name: text('primary_contact_name'),
+  primary_contact_email: text('primary_contact_email'),
+  primary_contact_phone: text('primary_contact_phone'),
+  trade: text('trade').notNull(),
+  island: text('island'),
+  active: boolean('active').notNull().default(true),
+  notes: text('notes'),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('subcontractors_trade_active_idx').on(table.tenant_id, table.trade, table.active),
+  index('subcontractors_company_idx').on(table.tenant_id, table.company_name),
+  check('subcontractors_trade_check', sql`${table.trade} IN ('framer','waterproofer')`),
+  check('subcontractors_island_check', sql`${table.island} IS NULL OR ${table.island} IN ('maui','oahu','big_island','kauai','lanai','molokai')`),
+]);
+
+// Closeout v1.1.1 — punch walks aggregator (§6.1). Migration 0029.
+export const punch_walks = pgTable('punch_walks', {
+  walk_id: uuid('walk_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  engagement_id: uuid('engagement_id').notNull().references(() => engagements.engagement_id),
+  type: text('type').notNull(),
+  walk_date: date('walk_date').notNull(),
+  walked_by: uuid('walked_by').references(() => users.user_id),
+  attendees: jsonb('attendees').notNull().default(sql`'[]'::jsonb`),
+  notes: text('notes'),
+  status: text('status').notNull().default('in_progress'),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_by: uuid('updated_by').references(() => users.user_id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('punch_walks_engagement_date_idx').on(table.tenant_id, table.engagement_id, table.walk_date),
+  index('punch_walks_engagement_status_idx').on(table.tenant_id, table.engagement_id, table.status),
+  check('punch_walks_type_check', sql`${table.type} IN ('initial','reinspection','substantial_completion','owner_walkthrough','architect','final','internal_qa')`),
+  check('punch_walks_status_check', sql`${table.status} IN ('in_progress','complete')`),
+]);
+
+// Closeout v1.1.1 — per-item audit trail. Migration 0029. Parallels the
+// project_lifecycle_states pattern at item granularity. Status transitions
+// continue to emit PUNCH_LIST_ITEM_STATE_CHANGED via the BAN-311 executor;
+// this table captures item-level actions (assignment, photo add, waive,
+// hard delete) that don't need their own Activity Spine event_type.
+export const punch_list_item_history = pgTable('punch_list_item_history', {
+  history_id: uuid('history_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  punch_item_id: uuid('punch_item_id').notNull().references(() => punch_list_items.punch_item_id, { onDelete: 'cascade' }),
+  action: text('action').notNull(),
+  actor: uuid('actor').references(() => users.user_id),
+  previous_status: punchListItemStatusEnum('previous_status'),
+  new_status: punchListItemStatusEnum('new_status'),
+  note: text('note'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('punch_list_item_history_item_idx').on(table.tenant_id, table.punch_item_id, table.created_at),
+  index('punch_list_item_history_action_idx').on(table.tenant_id, table.action, table.created_at),
+  check('punch_list_item_history_action_check', sql`${table.action} IN ('created','status_changed','assigned','completed','signed_off','disputed','waived','hard_deleted','reopened','photo_added')`),
 ]);
 
 // Closeout §7 — substantial completion attestation

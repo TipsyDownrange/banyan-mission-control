@@ -16,7 +16,7 @@
 
 import { NextResponse } from 'next/server';
 import { and, eq, sql } from 'drizzle-orm';
-import { db, punch_list_items, engagements } from '@/db';
+import { db, punch_list_items, punch_list_item_history, engagements } from '@/db';
 import { passAiaApiGate } from '@/lib/aia/api-gate';
 import { executeCloseoutPatternBTransition } from '@/lib/closeout/execute-state-transition';
 import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
@@ -24,7 +24,23 @@ import { emitActivitySpineEvent } from '@/lib/activity-spine/emit';
 const ROUTE_PATH = '/api/closeout/punch-list-items/[id]/transition';
 
 // Per §6.5: terminal states for clearance purposes. DISPUTED is excluded.
+// WAIVED (v1.1.1) is intentionally NOT part of the clearance set — waived
+// items drop out of scope rather than counting as "cleared".
 const CLEARANCE_TERMINAL_STATES = ['COMPLETED', 'SIGNED_OFF', 'DEFERRED_TO_WARRANTY'] as const;
+
+// Map a to_state landing to the punch_list_item_history.action label per
+// the action CHECK constraint (migration 0029). Defaults to 'status_changed'
+// for transitions that don't have a dedicated action verb.
+function historyActionFor(toState: string): string {
+  switch (toState) {
+    case 'COMPLETED': return 'completed';
+    case 'SIGNED_OFF': return 'signed_off';
+    case 'DISPUTED': return 'disputed';
+    case 'WAIVED': return 'waived';
+    case 'ASSIGNED': return 'assigned';
+    default: return 'status_changed';
+  }
+}
 
 export async function POST(
   req: Request,
@@ -35,7 +51,7 @@ export async function POST(
 
   const { id } = await context.params;
 
-  let body: { to_state?: string; reason?: string };
+  let body: { to_state?: string; reason?: string; waived_reason?: string };
   try {
     body = await req.json();
   } catch {
@@ -44,6 +60,16 @@ export async function POST(
   const toState = (body.to_state ?? '').trim();
   if (!toState) {
     return NextResponse.json({ error: 'to_state is required' }, { status: 400 });
+  }
+  // v1.1.1 Sean delta 3: waiving a punch item requires a captured reason so
+  // the audit trail explains why the item left the closeout list. Validated
+  // here before the tx opens to surface a clean 400.
+  const waivedReason = (body.waived_reason ?? '').trim();
+  if (toState === 'WAIVED' && !waivedReason) {
+    return NextResponse.json(
+      { error: 'waived_reason is required when transitioning to WAIVED', code: 'WAIVED_REASON_REQUIRED' },
+      { status: 400 },
+    );
   }
 
   const lookup = await db
@@ -88,6 +114,34 @@ export async function POST(
     testData: lookup[0].is_test_project === true,
     engagementId: lookup[0].engagement_id,
     afterEntityUpdate: async (tx, ctx) => {
+      // v1.1.1: persist waived_reason in the same tx (status update already
+      // happened via the generic executor; this is the column-specific extra).
+      if (ctx.toState === 'WAIVED') {
+        await tx
+          .update(punch_list_items)
+          .set({ waived_reason: waivedReason, updated_at: new Date() })
+          .where(
+            and(
+              eq(punch_list_items.punch_item_id, id),
+              eq(punch_list_items.tenant_id, gate.tenantId),
+            ),
+          );
+      }
+      // v1.1.1: write per-item history row for every status transition.
+      // previous_status / new_status both carry the literal enum value;
+      // 'note' carries the human reason (the existing body.reason for
+      // non-WAIVED, the waived_reason for WAIVED).
+      await tx
+        .insert(punch_list_item_history)
+        .values({
+          tenant_id: ctx.tenantId,
+          punch_item_id: id,
+          action: historyActionFor(ctx.toState),
+          previous_status: ctx.fromState as 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'SIGNED_OFF' | 'DISPUTED' | 'DEFERRED_TO_WARRANTY' | 'WAIVED',
+          new_status: ctx.toState as 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'SIGNED_OFF' | 'DISPUTED' | 'DEFERRED_TO_WARRANTY' | 'WAIVED',
+          note: ctx.toState === 'WAIVED' ? waivedReason : (body.reason ?? null),
+        });
+
       // Only consider clearance when the transition LANDED on a terminal state.
       // Transitions away from a terminal (e.g., COMPLETED → IN_PROGRESS rework)
       // cannot trigger clearance, so skip the count query.

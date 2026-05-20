@@ -26,21 +26,43 @@ export type PunchListItem = {
   description: string;
   location: Record<string, unknown> | null;
   category: string;
+  // v1.1.1 additions (BAN-375): trade is required (defaults to 'other') on
+  // every new row; assigned_to_sub_id / walk_id / waived_reason are nullable.
+  trade?: string;
   responsible_party: string;
   photos_required: boolean;
   photo_evidence: string[];
   assigned_to: string | null;
+  assigned_to_sub_id?: string | null;
+  walk_id?: string | null;
   due_date: string | null;
   status: PunchListItemStatus | string;
   completion_evidence: Record<string, unknown> | null;
   signoff_evidence: Record<string, unknown> | null;
   dispute_reason: string | null;
   dispute_resolution: Record<string, unknown> | null;
+  waived_reason?: string | null;
   created_at?: string;
   updated_at?: string;
 };
 
+// Collapsed-by-default for "closed" states. WAIVED is intentionally NOT
+// included — the waived_reason is short and reviewers need to see why an
+// item left the closeout list at a glance (no extra click).
 const TERMINAL_STATUSES = new Set(['COMPLETED', 'SIGNED_OFF', 'DEFERRED_TO_WARRANTY']);
+
+const TRADE_LABEL: Record<string, string> = {
+  glazier: 'Glazier',
+  framer: 'Framer',
+  waterproofer: 'Waterproofer',
+  electrician: 'Electrician',
+  plumber: 'Plumber',
+  hvac: 'HVAC',
+  drywall: 'Drywall',
+  paint: 'Paint',
+  cleaning: 'Cleaning',
+  other: 'Other',
+};
 
 const SOURCE_LABEL: Record<string, string> = {
   FIELD_ISSUE: 'Field issue',
@@ -164,6 +186,12 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
               <div style={ROW_VALUE}>{CATEGORY_LABEL[item.category] ?? item.category}</div>
             </div>
             <div>
+              <div style={ROW_LABEL}>Trade</div>
+              <div style={ROW_VALUE} data-testid="punch-item-trade">
+                {item.trade ? (TRADE_LABEL[item.trade] ?? item.trade) : '—'}
+              </div>
+            </div>
+            <div>
               <div style={ROW_LABEL}>Responsible party</div>
               <div style={ROW_VALUE}>{RESPONSIBLE_LABEL[item.responsible_party] ?? item.responsible_party}</div>
             </div>
@@ -172,6 +200,14 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
               <div style={ROW_VALUE}>
                 {item.assigned_to
                   ? <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{item.assigned_to.slice(0, 8)}</span>
+                  : '—'}
+              </div>
+            </div>
+            <div>
+              <div style={ROW_LABEL}>Assigned sub</div>
+              <div style={ROW_VALUE} data-testid="punch-item-assigned-sub">
+                {item.assigned_to_sub_id
+                  ? <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(item.assigned_to_sub_id).slice(0, 8)}</span>
                   : '—'}
               </div>
             </div>
@@ -266,6 +302,21 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
               <div style={ROW_VALUE}>
                 Resolution moved to the warranty registry; this item is closed
                 for closeout purposes.
+              </div>
+            </div>
+          )}
+
+          {item.status === 'WAIVED' && (
+            <div
+              data-testid="punch-item-waived-block"
+              style={{
+                padding: '10px 12px', borderRadius: 10,
+                background: '#fff7ed', border: '1px solid #c2410c33',
+              }}
+            >
+              <div style={{ ...ROW_LABEL, color: '#c2410c' }}>Waived</div>
+              <div style={ROW_VALUE}>
+                {item.waived_reason || '— no waiver reason captured —'}
               </div>
             </div>
           )}

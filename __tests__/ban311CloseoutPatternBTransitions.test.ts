@@ -98,6 +98,7 @@ jest.mock('@/db', () => ({
   db: mockDb,
   field_events: tbl('field_events'),
   punch_list_items: tbl('punch_list_items'),
+  punch_list_item_history: tbl('punch_list_item_history'),
   warranties: tbl('warranties'),
   engagements: tbl('engagements'),
   project_lifecycle_states: tbl('project_lifecycle_states'),
@@ -162,10 +163,10 @@ describe('BAN-311 PR 1 — Closeout Pattern B state-machine inventory', () => {
       'IN_CLOSEOUT', 'SUBSTANTIALLY_COMPLETE', 'FINAL_COMPLETE', 'ARCHIVED',
     ]);
   });
-  it('punch_list_item declares the 7 canonical states', () => {
+  it('punch_list_item declares the 8 canonical states (BAN-375 v1.1.1 added WAIVED)', () => {
     expect([...PUNCH_LIST_ITEM_STATES]).toEqual([
       'NEW', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED',
-      'SIGNED_OFF', 'DISPUTED', 'DEFERRED_TO_WARRANTY',
+      'SIGNED_OFF', 'DISPUTED', 'DEFERRED_TO_WARRANTY', 'WAIVED',
     ]);
   });
   it('warranty declares the 3 canonical states', () => {

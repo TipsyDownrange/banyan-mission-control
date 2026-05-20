@@ -101,6 +101,7 @@ jest.mock('@/db', () => ({
   db: mockDb,
   field_events: tbl('field_events'),
   punch_list_items: tbl('punch_list_items'),
+  punch_list_item_history: tbl('punch_list_item_history'),
   engagements: tbl('engagements'),
   project_lifecycle_states: tbl('project_lifecycle_states'),
   notices_of_completion: tbl('notices_of_completion'),
