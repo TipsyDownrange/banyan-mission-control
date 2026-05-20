@@ -15,7 +15,7 @@ function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
   return (
     <div style={{ padding: 10, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {label}
         </div>
         <div style={{ fontSize: 12, color: '#475569' }}>
@@ -29,7 +29,7 @@ function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
         {entries.map(([bic, n]) => (
           <div key={bic} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
             <span style={{ color: '#475569' }}>{bic}</span>
-            <span style={{ fontWeight: 700, color: '#0f172a' }}>{n}</span>
+            <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{n}</span>
           </div>
         ))}
       </div>

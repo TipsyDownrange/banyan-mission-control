@@ -120,7 +120,7 @@ export default function CardList({
                   <div style={{
                     fontSize: 13,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--color-ink-primary)',
                     lineHeight: 1.3,
                     flex: 1,
                     minWidth: 0,

@@ -989,16 +989,16 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
               style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, lineHeight: 1.45, resize: 'vertical', outline: 'none' }}
             />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-              <select value={intake.priority} onChange={event => setIntake(previous => ({ ...previous, priority: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.priority} onChange={event => setIntake(previous => ({ ...previous, priority: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['P0', 'P1', 'P2', 'P3'].map(value => <option key={value} value={value}>Priority {value}</option>)}
               </select>
-              <select value={intake.risk} onChange={event => setIntake(previous => ({ ...previous, risk: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.risk} onChange={event => setIntake(previous => ({ ...previous, risk: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['P0', 'P1', 'P2', 'P3'].map(value => <option key={value} value={value}>Risk {value}</option>)}
               </select>
-              <select value={intake.scopeType} onChange={event => setIntake(previous => ({ ...previous, scopeType: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.scopeType} onChange={event => setIntake(previous => ({ ...previous, scopeType: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['audit', 'code', 'verify', 'doc', 'external-action', 'recurring'].map(value => <option key={value} value={value}>{value}</option>)}
               </select>
-              <select value={intake.suggestedLane} onChange={event => setIntake(previous => ({ ...previous, suggestedLane: event.target.value }))} style={{ background: '#0f172a', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.suggestedLane} onChange={event => setIntake(previous => ({ ...previous, suggestedLane: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['kai', 'codex', 'claude', 'sean'].map(value => <option key={value} value={value}>Lane {value}</option>)}
               </select>
             </div>

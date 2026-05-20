@@ -55,7 +55,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
     <Card>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' }}>
+          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>
             Handoffs Awaiting Review
           </div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -88,7 +88,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
                   }}
                   style={{ background: 'none', border: 'none', cursor: r.engagement_kid && onNavigate ? 'pointer' : 'default', textAlign: 'left', padding: 0, flex: 1, minWidth: 0 }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
                     {r.engagement_kid ?? r.kid ?? '—'}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>

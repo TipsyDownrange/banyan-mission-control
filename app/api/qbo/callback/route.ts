@@ -50,10 +50,10 @@ export async function GET(req: NextRequest) {
 <head><title>QuickBooks Connected</title>
 <style>body{font-family:system-ui;max-width:600px;margin:60px auto;padding:20px;background:#f8fafc;}
 .card{background:white;border-radius:16px;padding:24px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
-h1{color:#0f766e;margin:0 0 8px;}
+h1{color:var(--bos-color-brand-primary-deep);margin:0 0 8px;}
 p{color:var(--bos-color-ink-disabled);margin:0 0 16px;}
 pre{background:#f1f5f9;border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;color:#334155;}
-.success{color:#0f766e;font-weight:700;font-size:18px;}</style>
+.success{color:var(--bos-color-brand-primary-deep);font-weight:700;font-size:18px;}</style>
 </head>
 <body>
 <div class="card">

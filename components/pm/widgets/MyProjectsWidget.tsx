@@ -54,7 +54,7 @@ export default function MyProjectsWidget({ onHide, showHide }: { onHide?: () => 
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{p.kid}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{p.kid}</div>
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{p.pm_handoff_state}</div>
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, color: '#475569' }}>

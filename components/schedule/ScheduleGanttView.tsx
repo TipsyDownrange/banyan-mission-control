@@ -153,8 +153,8 @@ export default function ScheduleGanttView({
         end,
         progress: 0,
         styles: {
-          backgroundColor: '#0f172a',
-          backgroundSelectedColor: '#0f172a',
+          backgroundColor: 'var(--color-ink-primary)',
+          backgroundSelectedColor: 'var(--color-ink-primary)',
           progressColor: '#1e293b',
           progressSelectedColor: '#1e293b',
         },
@@ -245,7 +245,7 @@ export default function ScheduleGanttView({
               padding: '4px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 11, fontWeight: 700,
               background: zoom === z ? 'white' : 'transparent',
-              color: zoom === z ? '#0f172a' : 'var(--bos-color-ink-disabled)',
+              color: zoom === z ? 'var(--color-ink-primary)' : 'var(--bos-color-ink-disabled)',
               boxShadow: zoom === z ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -341,7 +341,7 @@ function ResourceLegend({
         borderRadius: 6, fontSize: 11, color: '#475569',
       }}
     >
-      <strong style={{ display: 'block', marginBottom: 4, color: '#0f172a' }}>Crew on bars</strong>
+      <strong style={{ display: 'block', marginBottom: 4, color: 'var(--color-ink-primary)' }}>Crew on bars</strong>
       <ul style={{ margin: 0, paddingLeft: 18 }}>
         {tasksWithResources.map((t) => {
           const rows = resourcesByTask.get(t.id) ?? [];

@@ -103,7 +103,7 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 8 }}>
           No T&amp;M tickets yet
         </div>
         <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
@@ -144,9 +144,9 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
                   fontWeight: 800,
                   letterSpacing: '0.04em',
                   cursor: 'pointer',
-                  background: active ? '#0f172a' : '#f8fafc',
+                  background: active ? 'var(--color-ink-primary)' : '#f8fafc',
                   color: active ? '#f8fafc' : '#475569',
-                  border: `1px solid ${active ? '#0f172a' : '#e2e8f0'}`,
+                  border: `1px solid ${active ? 'var(--color-ink-primary)' : '#e2e8f0'}`,
                 }}
               >
                 {st.replace(/_/g, ' ')}
@@ -192,9 +192,9 @@ export default function TMTicketsList({ tickets }: { tickets: TMTicket[] }) {
                     fontSize: 11,
                     fontWeight: 800,
                     cursor: 'pointer',
-                    background: active ? '#0f766e' : '#f8fafc',
+                    background: active ? 'var(--bos-color-brand-primary-deep)' : '#f8fafc',
                     color: active ? '#f8fafc' : '#475569',
-                    border: `1px solid ${active ? '#0f766e' : '#e2e8f0'}`,
+                    border: `1px solid ${active ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0'}`,
                     textTransform: 'capitalize',
                   }}
                 >

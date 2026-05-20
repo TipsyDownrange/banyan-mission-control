@@ -18,14 +18,14 @@ type OrgNode = {
 
 // ── Colors ──────────────────────────────────────────────────────────────
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
   Lanai: '#7c3aed', Molokai: '#a16207',
 };
 
 const ROLE_COLOR: Record<string, string> = {
-  owner: '#0f172a', gm: '#0369a1', pm: '#0f766e', estimator: '#0f766e',
+  owner: 'var(--color-ink-primary)', gm: '#0369a1', pm: 'var(--bos-color-brand-primary-deep)', estimator: 'var(--bos-color-brand-primary-deep)',
   admin_mgr: '#7c3aed', admin: '#7c3aed', service_pm: '#6d28d9',
-  super: '#92400e', sales: '#0f766e', pm_track: '#7c3aed',
+  super: '#92400e', sales: 'var(--bos-color-brand-primary-deep)', pm_track: '#7c3aed',
   journeyman: '#334155', apprentice: 'var(--bos-color-ink-tertiary)', laborer: 'var(--bos-color-ink-tertiary)',
   glazier: '#334155', field: '#334155',
 };
@@ -144,7 +144,7 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
 
   // Build owner node — floats above all
   const ownerNode: OrgNode = owner ? toNode(owner) : {
-    id: 'owner', name: 'Owner', title: 'Owner / President', island: 'Maui', color: '#0f172a', children: [],
+    id: 'owner', name: 'Owner', title: 'Owner / President', island: 'Maui', color: 'var(--color-ink-primary)', children: [],
   };
   // Owner's direct reports: Sean (Maui+outer) and Frank (Oahu)
   ownerNode.children = [gmNode];
@@ -157,9 +157,9 @@ function buildOrgTree(crew: CrewMember[]): OrgNode | null {
 function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean }) {
   const islandColor = ISLAND_COLOR[node.island] || 'var(--bos-color-ink-disabled)';
   const isLeader = ['owner', 'gm', 'pm', 'estimator', 'admin_mgr', 'service_pm', 'sales', 'super'].some(r =>
-    node.title.toLowerCase().includes(r) || node.color === '#0f172a' || node.color === '#0369a1'
+    node.title.toLowerCase().includes(r) || node.color === 'var(--color-ink-primary)' || node.color === '#0369a1'
   );
-  const tier = node.children.length > 0 || isLeader ? (node.color === '#0f172a' ? 0 : node.color === '#0369a1' ? 1 : 2) : 3;
+  const tier = node.children.length > 0 || isLeader ? (node.color === 'var(--color-ink-primary)' ? 0 : node.color === '#0369a1' ? 1 : 2) : 3;
 
   if (compact) {
     return (
@@ -176,7 +176,7 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
           {getInitials(node.name)}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {node.name}
           </div>
           <div style={{ fontSize: 9, color: node.color, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -212,7 +212,7 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
       }}>
         {getInitials(node.name)}
       </div>
-      <div style={{ fontSize: tier <= 1 ? 14 : tier <= 2 ? 12 : 11, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, marginBottom: 3 }}>
+      <div style={{ fontSize: tier <= 1 ? 14 : tier <= 2 ? 12 : 11, fontWeight: 800, color: 'var(--color-ink-primary)', lineHeight: 1.3, marginBottom: 3 }}>
         {node.name}
       </div>
       <div style={{ fontSize: tier <= 1 ? 10 : 9, fontWeight: 700, color: node.color, lineHeight: 1.3 }}>
@@ -221,7 +221,7 @@ function NodeCard({ node, compact = false }: { node: OrgNode; compact?: boolean 
       {node.note && (
         <div style={{
           fontSize: 8, fontWeight: 700, borderRadius: 4, padding: '1px 6px', marginTop: 4,
-          color: node.note.includes('Management') ? '#0f766e' : '#92400e',
+          color: node.note.includes('Management') ? 'var(--bos-color-brand-primary-deep)' : '#92400e',
           background: node.note.includes('Management') ? '#f0fdfa' : '#fffbeb',
         }}>
           {node.note.includes('Management') ? '★ Management Team' : node.note}
@@ -340,7 +340,7 @@ export default function OrgChartPanel() {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Org Chart</h1>
+            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0, marginBottom: 4 }}>Org Chart</h1>
             <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>
               {crew.length} people · Live from crew database
               {lastUpdated && (
@@ -394,7 +394,7 @@ export default function OrgChartPanel() {
                 <div style={{ width: 2, height: 12, background: '#e2e8f0' }} />
                 <IslandSection
                   label="Maui Office — HQ + Outer Islands"
-                  color="#0f766e"
+                  color="var(--bos-color-brand-primary-deep)"
                   borderColor="rgba(15,118,110,0.15)"
                   superNode={mauiSuper}
                   officeStaff={mauiStaff}
@@ -436,7 +436,7 @@ export default function OrgChartPanel() {
           ].map(({ label, value }) => (
             <div key={label}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 2 }}>{label}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a' }}>{value}</div>
+              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)' }}>{value}</div>
             </div>
           ))}
         </div>

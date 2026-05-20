@@ -123,7 +123,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
           <div style={{ padding: '20px 24px' }}>
             <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Status</h3>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{s.status.replace(/_/g, ' ')}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{s.status.replace(/_/g, ' ')}</div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
                 Ball: <strong>{s.ball_in_court || '—'}</strong>{s.submitted_to ? ` · Submitted to ${s.submitted_to}` : ''}
               </div>
@@ -136,7 +136,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
 
             <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Details</h3>
-              <div style={{ fontSize: 13, color: '#0f172a', marginBottom: 6 }}>{s.description || '(no description)'}</div>
+              <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', marginBottom: 6 }}>{s.description || '(no description)'}</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Type {s.submittal_type} · CSI {s.csi_spec_section}-{s.csi_subsection}-{s.csi_sub_subsection}</div>
               {s.required_by_date && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>Required by {s.required_by_date}</div>}
               {s.requirements_text && (
@@ -155,12 +155,12 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
                       <option value="ENGINEER">Engineer</option>
                       <option value="OWNER">Owner</option>
                     </select>
-                    <button type="button" disabled={busy} onClick={() => callTransition('/submit', { submitted_to: submittedTo })} style={actionBtn('#0f766e')}>Submit →</button>
+                    <button type="button" disabled={busy} onClick={() => callTransition('/submit', { submitted_to: submittedTo })} style={actionBtn('var(--bos-color-brand-primary-deep)')}>Submit →</button>
                   </div>
                 )}
                 {(s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW') && (
                   <>
-                    <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED' })} style={actionBtn('#0f766e')}>Approve</button>
+                    <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED' })} style={actionBtn('var(--bos-color-brand-primary-deep)')}>Approve</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED_AS_NOTED' })} style={actionBtn('#15803d')}>Approve as Noted</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REVISE_RESUBMIT' })} style={actionBtn('#92400e')}>Revise &amp; Resubmit</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REJECTED' })} style={actionBtn('#b91c1c')}>Reject</button>
@@ -189,7 +189,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
                   <option value="approved">Approved</option>
                 </select>
                 <input value={uploadDriveId} onChange={(e) => setUploadDriveId(e.target.value)} placeholder="Drive file ID" style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
-                <button type="button" disabled={busy} onClick={upload} style={actionBtn('#0f766e')}>Attach</button>
+                <button type="button" disabled={busy} onClick={upload} style={actionBtn('var(--bos-color-brand-primary-deep)')}>Attach</button>
               </div>
             </section>
 
@@ -217,7 +217,7 @@ function DocList({ label, ids }: { label: string; ids: string[] }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {ids.map((id) => (
             <a key={id} href={`https://drive.google.com/file/d/${id}/view`} target="_blank" rel="noreferrer"
-              style={{ fontSize: 11, color: '#0f766e', background: '#f0fdfa', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
+              style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
               {id.length > 14 ? `${id.slice(0, 10)}…` : id}
             </a>
           ))}

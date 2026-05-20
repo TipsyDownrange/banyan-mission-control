@@ -56,8 +56,8 @@ type OrgSuggestion = {
 const STAGES = [
   { key: 'lead',               label: 'Lead',         color: '#3b82f6' },
   { key: 'quoted',             label: 'Quoted',       color: '#3b82f6' },
-  { key: 'accepted',           label: 'Accepted',     color: '#0f766e' },
-  { key: 'deposit_received',   label: 'Deposit',      color: '#0f766e' },
+  { key: 'accepted',           label: 'Accepted',     color: 'var(--bos-color-brand-primary-deep)' },
+  { key: 'deposit_received',   label: 'Deposit',      color: 'var(--bos-color-brand-primary-deep)' },
   { key: 'materials_ordered',  label: 'Mat Ordered',  color: '#d97706' },
   { key: 'materials_received', label: 'Mat In',       color: '#d97706' },
   { key: 'ready_to_schedule',  label: 'Ready',        color: '#7c3aed' },
@@ -151,7 +151,7 @@ function scoreOrgSuggestion(org: OrgSuggestion, wo: WorkOrder): number {
 const INP: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
   border: '1px solid #e2e8f0', background: 'white',
-  fontSize: 13, color: '#0f172a', outline: 'none',
+  fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none',
   boxSizing: 'border-box',
 };
 
@@ -423,9 +423,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           padding: 32,
         }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Work order not found</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 8 }}>Work order not found</div>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginBottom: 20, textAlign: 'center' }}>The work order you selected could not be loaded. It may have been removed or the data is unavailable.</div>
-          <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Close</button>
+          <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Close</button>
         </div>
       </>
     );
@@ -909,7 +909,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
             <div style={{ width: 4, height: 36, borderRadius: 2, background: stage.color }} />
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 {toTitleCase(wo.name)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
@@ -944,7 +944,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             <button
               onClick={() => onEstimate(wo)}
               title="Open Simple Estimate"
-              style={{ padding: '7px 14px', borderRadius: 10, background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 10, background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
               📊 Estimate
             </button>
             <button
@@ -997,7 +997,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               <button
                 onClick={handleSave}
                 disabled={saving}
-                style={{ padding: '7px 16px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
+                style={{ padding: '7px 16px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
             )}
@@ -1031,7 +1031,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               placeholder="Paste Google Drive folder URL..."
               autoFocus
               onKeyDown={e => { if (e.key === 'Enter') handleLinkFolder(); if (e.key === 'Escape') { setLinkingFolder(false); setLinkFolderInput(''); } }}
-              style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(3,105,161,0.3)', fontSize: 12, outline: 'none', background: 'white', color: '#0f172a' }}
+              style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(3,105,161,0.3)', fontSize: 12, outline: 'none', background: 'white', color: 'var(--color-ink-primary)' }}
             />
             <button
               onClick={handleLinkFolder}
@@ -1215,7 +1215,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       type="button"
                       onClick={saveJobDetails}
                       disabled={!jobDetailsDirty || jobDetailsSaving}
-                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!jobDetailsDirty || jobDetailsSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!jobDetailsDirty || jobDetailsSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', boxShadow: (!jobDetailsDirty || jobDetailsSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!jobDetailsDirty || jobDetailsSaving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!jobDetailsDirty || jobDetailsSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', boxShadow: (!jobDetailsDirty || jobDetailsSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                     >
                       {jobDetailsSaving ? 'Saving...' : 'Save Job Details'}
                     </button>
@@ -1267,7 +1267,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       ].map(([label, value]) => (
                         <div key={label} style={{ padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(245,158,11,0.16)' }}>
                           <div style={{ fontSize: 9, fontWeight: 800, color: '#b45309', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</div>
-                          <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 700, marginTop: 3, overflowWrap: 'anywhere' }}>{value}</div>
+                          <div style={{ fontSize: 12, color: 'var(--color-ink-primary)', fontWeight: 700, marginTop: 3, overflowWrap: 'anywhere' }}>{value}</div>
                         </div>
                       ))}
                     </div>
@@ -1294,7 +1294,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                              <span style={{ fontSize: 12, fontWeight: 800, color: selected ? '#0f766e' : '#0f172a' }}>{org.name || org.company}</span>
+                              <span style={{ fontSize: 12, fontWeight: 800, color: selected ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-ink-primary)' }}>{org.name || org.company}</span>
                               <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)' }}>{org.woCount || 0} WOs</span>
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 3 }}>{org.org_id}</div>
@@ -1315,7 +1315,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <button
                           onClick={() => selectedOrgId && handleOrgRepair({ org_id: selectedOrgId, requires_org_assignment: false }, 'assign')}
                           disabled={!selectedOrgId || !!orgRepairSaving}
-                          style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: selectedOrgId && !orgRepairSaving ? 'pointer' : 'default', opacity: selectedOrgId && !orgRepairSaving ? 1 : 0.5 }}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: selectedOrgId && !orgRepairSaving ? 'pointer' : 'default', opacity: selectedOrgId && !orgRepairSaving ? 1 : 0.5 }}
                         >
                           {orgRepairSaving === 'assign' ? 'Assigning...' : 'Assign to selected org'}
                         </button>
@@ -1336,7 +1336,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <button
                           onClick={handleCreateOrgFromWO}
                           disabled={!!orgRepairSaving || !!wo.org_id}
-                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(15,118,110,0.3)', background: 'white', color: '#0f766e', fontSize: 12, fontWeight: 800, cursor: !orgRepairSaving && !wo.org_id ? 'pointer' : 'default', opacity: !orgRepairSaving && !wo.org_id ? 1 : 0.5 }}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(15,118,110,0.3)', background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: !orgRepairSaving && !wo.org_id ? 'pointer' : 'default', opacity: !orgRepairSaving && !wo.org_id ? 1 : 0.5 }}
                         >
                           {orgRepairSaving === 'create' ? 'Creating...' : 'Create new org from this WO'}
                         </button>
@@ -1393,7 +1393,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       {contactPeople.length > 1 && (
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                           {contactPeople.map(name => (
-                            <span key={name} style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.18)', borderRadius: 999, padding: '4px 8px' }}>
+                            <span key={name} style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'rgba(15,118,110,0.08)', border: '1px solid rgba(15,118,110,0.18)', borderRadius: 999, padding: '4px 8px' }}>
                               {normalizeName(name)}
                             </span>
                           ))}
@@ -1462,7 +1462,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       type="button"
                       onClick={saveCustomerSite}
                       disabled={!customerSiteDirty || customerSiteSaving}
-                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!customerSiteDirty || customerSiteSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!customerSiteDirty || customerSiteSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!customerSiteDirty || customerSiteSaving) ? 'default' : 'pointer', boxShadow: (!customerSiteDirty || customerSiteSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!customerSiteDirty || customerSiteSaving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!customerSiteDirty || customerSiteSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!customerSiteDirty || customerSiteSaving) ? 'default' : 'pointer', boxShadow: (!customerSiteDirty || customerSiteSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                     >
                       {customerSiteSaving ? 'Saving...' : 'Save Customer & Site'}
                     </button>
@@ -1560,7 +1560,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         type="button"
                         onClick={saveCrew}
                         disabled={!crewDirty || crewSaving}
-                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!crewDirty || crewSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!crewDirty || crewSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', boxShadow: (!crewDirty || crewSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!crewDirty || crewSaving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!crewDirty || crewSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', boxShadow: (!crewDirty || crewSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                       >
                         {crewSaving ? 'Saving...' : 'Save Crew'}
                       </button>
@@ -1586,7 +1586,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                         <span style={{ fontSize: 12, color: '#475569' }}>Quote Total</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>${Number((safeWo as any).quote_total).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>${Number((safeWo as any).quote_total).toLocaleString('en-US', {minimumFractionDigits:2})}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <span style={{ fontSize: 12, color: '#475569' }}>Deposit (50%)</span>
@@ -1612,7 +1612,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 <div style={{ background: '#fafafa', borderRadius: 10, border: '1px solid #e2e8f0', padding: '12px 14px', marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Vendor Quotes</div>
-                    <button onClick={() => setShowAddQuote(p => !p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid #0f766e', background: showAddQuote ? '#0f766e' : 'white', color: showAddQuote ? 'white' : '#0f766e', cursor: 'pointer', fontWeight: 700 }}>
+                    <button onClick={() => setShowAddQuote(p => !p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid var(--bos-color-brand-primary-deep)', background: showAddQuote ? 'var(--bos-color-brand-primary-deep)' : 'white', color: showAddQuote ? 'white' : 'var(--bos-color-brand-primary-deep)', cursor: 'pointer', fontWeight: 700 }}>
                       {showAddQuote ? '✕ Cancel' : '+ Add Vendor Quote'}
                     </button>
                   </div>
@@ -1650,7 +1650,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                   setVendorSearch(vName);
                                   setNewQuote(p => ({...p, vendor_org_id: v.id || v.org_id || '', vendor_name: vName}));
                                   setShowVendorDropdown(false);
-                                }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 12, color: '#0f172a', background: 'white' }}
+                                }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 12, color: 'var(--color-ink-primary)', background: 'white' }}
                                   onMouseOver={e => (e.currentTarget.style.background = '#f8fafc')}
                                   onMouseOut={e => (e.currentTarget.style.background = 'white')}>
                                   {v.name || v.org_name}
@@ -1694,7 +1694,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                   setVendorCreating(false);
                                 }
                               }}
-                              style={{ padding: '8px 12px', cursor: vendorCreating ? 'wait' : 'pointer', fontSize: 12, color: '#0f766e', fontWeight: 700, borderTop: '1px solid #f1f5f9', opacity: vendorCreating ? 0.6 : 1 }}
+                              style={{ padding: '8px 12px', cursor: vendorCreating ? 'wait' : 'pointer', fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700, borderTop: '1px solid #f1f5f9', opacity: vendorCreating ? 0.6 : 1 }}
                             >
                               {vendorCreating
                                 ? 'Creating vendor…'
@@ -1735,7 +1735,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                               <span style={{ position:'absolute', left:8, fontSize:12, color:'var(--bos-color-ink-disabled)', pointerEvents:'none', fontWeight:600 }}>$</span>
                               <input style={{...INP, paddingLeft:18}} type="number" min="0" step="0.01" value={li.unit_cost} onChange={e => setNewQuote(p => ({...p, line_items: p.line_items.map((x, j) => j===i ? {...x, unit_cost: e.target.value} : x)}))} placeholder="0.00" />
                             </div>
-                            <span style={{fontSize:12,fontWeight:700,color:'#0f172a',textAlign:'right',paddingRight:4}}>${lineTotal.toFixed(2)}</span>
+                            <span style={{fontSize:12,fontWeight:700,color:'var(--color-ink-primary)',textAlign:'right',paddingRight:4}}>${lineTotal.toFixed(2)}</span>
                             {newQuote.line_items.length > 1 ? (
                               <button onClick={() => setNewQuote(p => ({...p, line_items: p.line_items.filter((_, j) => j !== i)}))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 14, padding: 0, lineHeight:1 }}>×</button>
                             ) : <span />}
@@ -1743,8 +1743,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         );})}
                         {/* Quote total + add button */}
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:4, padding:'6px 0 2px' }}>
-                          <button onClick={() => setNewQuote(p => ({...p, line_items: [...p.line_items, {description:'', quantity:'1', unit:'EA', unit_cost:''}]}))} style={{ fontSize: 11, color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}>+ Add Line Item</button>
-                          <div style={{fontSize:13,fontWeight:800,color:'#0f172a'}}>
+                          <button onClick={() => setNewQuote(p => ({...p, line_items: [...p.line_items, {description:'', quantity:'1', unit:'EA', unit_cost:''}]}))} style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}>+ Add Line Item</button>
+                          <div style={{fontSize:13,fontWeight:800,color:'var(--color-ink-primary)'}}>
                             Quote Total: ${newQuote.line_items.reduce((s,li)=>s+(Number(li.quantity)||0)*(Number(li.unit_cost)||0),0).toFixed(2)}
                           </div>
                         </div>
@@ -1762,7 +1762,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         {newQuote.quote_document_url ? (
                           <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12,padding:'6px 0'}}>
                             <span>📎</span>
-                            <a href={newQuote.quote_document_url} target="_blank" rel="noopener noreferrer" style={{color:'#0f766e',fontWeight:600}}>{newQuote.quote_document_name||'Document'}</a>
+                            <a href={newQuote.quote_document_url} target="_blank" rel="noopener noreferrer" style={{color:'var(--bos-color-brand-primary-deep)',fontWeight:600}}>{newQuote.quote_document_name||'Document'}</a>
                             <button onClick={()=>setNewQuote(p=>({...p,quote_document_url:'',quote_document_name:''}))} style={{fontSize:10,color:'var(--bos-color-ink-tertiary)',background:'none',border:'none',cursor:'pointer'}}>Remove</button>
                           </div>
                         ) : (
@@ -1802,7 +1802,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                               setShowAddQuote(false);
                             }
                           } catch(err) { console.error('[WODetailPanel] addVendorQuote', err); }
-                        }} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#0f766e,#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>
+                        }} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>
                           Save Vendor Quote
                         </button>
                         <button onClick={() => { setShowAddQuote(false); setVendorSearch(''); }} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:13, cursor:'pointer' }}>Cancel</button>
@@ -1831,7 +1831,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         {/* Header */}
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
                           <div>
-                            <div style={{fontWeight:800,fontSize:13,color:'#0f172a'}}>{order.vendor_name||'Unknown Vendor'}</div>
+                            <div style={{fontWeight:800,fontSize:13,color:'var(--color-ink-primary)'}}>{order.vendor_name||'Unknown Vendor'}</div>
                             <div style={{fontSize:11,color:'var(--bos-color-ink-tertiary)',marginTop:1}}>
                               {order.quote_date && `Quoted: ${order.quote_date}`}
                               {order.quote_valid_until && ` · Valid until: ${order.quote_valid_until}`}
@@ -1856,8 +1856,8 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         <div style={{background:'#fafafa',borderRadius:8,border:'1px solid #f1f5f9',overflow:'hidden',marginBottom:8}}>
                           {order.line_items.map((item: any, i: number) => (
                             <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 10px',borderBottom:i<order.line_items.length-1?'1px solid #f1f5f9':'none',fontSize:12}}>
-                              <span style={{color:'#0f172a'}}>{item.quantity}{item.unit && item.unit!=='EA' ? ' '+item.unit : ''} × {item.description}</span>
-                              <span style={{fontWeight:700,color:'#0f172a'}}>${Number(item.line_total||0).toFixed(2)}</span>
+                              <span style={{color:'var(--color-ink-primary)'}}>{item.quantity}{item.unit && item.unit!=='EA' ? ' '+item.unit : ''} × {item.description}</span>
+                              <span style={{fontWeight:700,color:'var(--color-ink-primary)'}}>${Number(item.line_total||0).toFixed(2)}</span>
                             </div>
                           ))}
                           <div style={{display:'flex',justifyContent:'space-between',padding:'6px 10px',background:'#f1f5f9',fontWeight:800,fontSize:12}}>
@@ -1871,7 +1871,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           {order.quote_document_url ? (
                             <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
                               <span>📎</span>
-                              <a href={order.quote_document_url} target="_blank" rel="noopener noreferrer" style={{color:'#0f766e',fontWeight:600,textDecoration:'none'}}>
+                              <a href={order.quote_document_url} target="_blank" rel="noopener noreferrer" style={{color:'var(--bos-color-brand-primary-deep)',fontWeight:600,textDecoration:'none'}}>
                                 {order.quote_document_name||'View Document'}
                               </a>
                               <span style={{color:'var(--bos-color-ink-tertiary)',fontSize:10}}>[View]</span>
@@ -1890,7 +1890,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                             </div>
                           ) : (
                             <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                              <label style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'#0f766e',fontWeight:700,cursor:'pointer',padding:'4px 10px',borderRadius:7,border:'1px dashed #0f766e',background:'white'}}>
+                              <label style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'var(--bos-color-brand-primary-deep)',fontWeight:700,cursor:'pointer',padding:'4px 10px',borderRadius:7,border:'1px dashed var(--bos-color-brand-primary-deep)',background:'white'}}>
                                 📎 Attach PDF/Image
                                 <input type="file" accept=".pdf,.jpg,.jpeg,.png,.heic" style={{display:'none'}} onChange={async e=>{
                                   const f=e.target.files?.[0]; if(!f) return;
@@ -1939,7 +1939,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                                 setProcurementOrders(p => p.map(o => o.procurement_id===order.procurement_id ? {...o, status:isOnHand?'DELIVERED':'RELEASED', order_method:orderMethod, order_ref:orderRef} : o));
                                 if (!isOnHand) { try { await onStageChange(safeWo.id, 'materials_ordered'); } catch(e) { console.error('[WODetailPanel] stageChange', e); } }
                               } catch(err) { console.error('[WODetailPanel] releaseOrder', err); }
-                            }} style={{padding:'6px 12px',borderRadius:8,border:'1px solid #0f766e',background:'white',color:'#0f766e',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                            }} style={{padding:'6px 12px',borderRadius:8,border:'1px solid var(--bos-color-brand-primary-deep)',background:'white',color:'var(--bos-color-brand-primary-deep)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                               ▶ Release Order
                             </button>
                           )}
@@ -2077,7 +2077,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         </div>
                       </div>
                     ))}
-                    <button onClick={addRow} style={{ width:'100%', padding:'10px', borderRadius:10, border:'1.5px dashed #0f766e', background:'transparent', color:'#0f766e', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                    <button onClick={addRow} style={{ width:'100%', padding:'10px', borderRadius:10, border:'1.5px dashed var(--bos-color-brand-primary-deep)', background:'transparent', color:'var(--bos-color-brand-primary-deep)', fontSize:13, fontWeight:700, cursor:'pointer' }}>
                       + Add Invoice
                     </button>
                     </div>{/* ── end invoicing collapse wrapper ── */}
@@ -2117,7 +2117,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         type="button"
                         onClick={saveNotes}
                         disabled={!notesDirty || notesSaving}
-                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!notesDirty || notesSaving) ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: (!notesDirty || notesSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', boxShadow: (!notesDirty || notesSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!notesDirty || notesSaving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!notesDirty || notesSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', boxShadow: (!notesDirty || notesSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                       >
                         {notesSaving ? 'Saving...' : 'Save Notes'}
                       </button>
@@ -2132,7 +2132,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <button onClick={() => toggleSection('qbo-invoice')} style={secBtn('qbo-invoice')}>Invoice {chevron('qbo-invoice')}</button>
                   <div style={{ display: collapsed['qbo-invoice'] ? 'none' : 'block' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{(() => { const raw = wo.invoice_number || wo.qbo_invoice_id || ''; return /^\d{4}-\d{2}-\d{2}T/.test(raw) ? `(Draft - ${new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})` : raw ? `#${raw}` : ''; })()}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{(() => { const raw = wo.invoice_number || wo.qbo_invoice_id || ''; return /^\d{4}-\d{2}-\d{2}T/.test(raw) ? `(Draft - ${new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})` : raw ? `#${raw}` : ''; })()}</div>
                     {(() => {
                       const balance = parseFloat(wo.invoice_balance || '0');
                       const isPaid = balance === 0;
@@ -2151,7 +2151,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                     <div style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
                       <div style={{ ...LBL, marginBottom: 2 }}>Invoice Total</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
                         {(() => { const t = parseFloat(wo.invoice_total || ''); return isNaN(t) ? '—' : `$${t.toLocaleString('en-US', { minimumFractionDigits: 2 })}`; })()}
                       </div>
                     </div>
@@ -2185,7 +2185,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   }}
                 />
                 <button onClick={() => toggleSection('job-files')} style={secBtn('job-files')}>
-                  <span>Job Files{uploadedFiles.length > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)', marginLeft: 8 }}>{uploadedFiles.length}</span>}</span>
+                  <span>Job Files{uploadedFiles.length > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', background: 'rgba(15,118,110,0.08)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.15)', marginLeft: 8 }}>{uploadedFiles.length}</span>}</span>
                   {chevron('job-files')}
                 </button>
                 <div style={{ display: collapsed['job-files'] ? 'none' : 'block' }}>
@@ -2216,7 +2216,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   }}
                 >
                   <div style={{ fontSize: 22, marginBottom: 4 }}>📎</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: isDraggingOver ? '#0f766e' : 'var(--bos-color-ink-disabled)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: isDraggingOver ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)' }}>
                     Drop files here or click to browse
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>Images, PDFs, documents — max 25 MB</div>
@@ -2224,7 +2224,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 {uploadingCount > 0 && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.15)' }}>
                     <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: '#0f766e', fontWeight: 600 }}>Uploading {uploadingCount} file{uploadingCount > 1 ? 's' : ''}...</span>
+                    <span style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>Uploading {uploadingCount} file{uploadingCount > 1 ? 's' : ''}...</span>
                   </div>
                 )}
                 {uploadedFiles.length > 0 && (
@@ -2272,7 +2272,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               Discard
             </button>
             <button onClick={handleSave} disabled={saving}
-              style={{ padding: '10px 24px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
+              style={{ padding: '10px 24px', borderRadius: 10, background: saving ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
               {saving ? 'Saving...' : '✓ Save All Changes'}
             </button>
           </div>
@@ -2288,7 +2288,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
             boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
           }}>
-            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Close Work Order</div>
+            <div style={{ fontSize:18, fontWeight:800, color:'var(--color-ink-primary)', marginBottom:6 }}>Close Work Order</div>
             <div style={{ fontSize:13, color:'var(--bos-color-ink-disabled)', marginBottom: safeWo.final_status && safeWo.final_status !== 'Paid' ? 8 : 20 }}>Enter final details before closing {safeWo.name}.</div>
 {(() => {
               let invoices: {status:string}[] = [];
@@ -2347,7 +2347,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
             boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
           }}>
-            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Mark as Declined</div>
+            <div style={{ fontSize:18, fontWeight:800, color:'var(--color-ink-primary)', marginBottom:6 }}>Mark as Declined</div>
             <div style={{ fontSize:13, color:'var(--bos-color-ink-disabled)', marginBottom:20 }}>This work order will be removed from the active board. You can view it using "Show Declined."</div>
             <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:6 }}>Reason (optional)</label>
             <textarea
@@ -2384,7 +2384,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             zIndex:601, background:'white', borderRadius:20, padding:28, width:420, maxWidth:'90vw',
             boxShadow:'0 24px 80px rgba(15,23,42,0.2)',
           }}>
-            <div style={{ fontSize:18, fontWeight:800, color:'#0f172a', marginBottom:6 }}>Schedule Work Order</div>
+            <div style={{ fontSize:18, fontWeight:800, color:'var(--color-ink-primary)', marginBottom:6 }}>Schedule Work Order</div>
             <div style={{ fontSize:13, color:'var(--bos-color-ink-disabled)', marginBottom:20 }}>
               Scheduled date is mandatory before this work order can move into the Scheduled stage.
             </div>

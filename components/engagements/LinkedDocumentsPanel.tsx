@@ -64,7 +64,7 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' }}>
+        <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>
           Linked Documents ({items.length})
         </div>
         {kID && (
@@ -83,7 +83,7 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
           {items.map((it) => (
             <li key={it.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.filename}
                   {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>v{it.version}</span>}
                 </div>
@@ -109,5 +109,5 @@ export default function LinkedDocumentsPanel({ linkedEntityType, linkedEntityId,
   );
 }
 
-const addBtnStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', fontSize: 11, fontWeight: 800, cursor: 'pointer' };
-const openLinkStyle: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: '#0f766e', textDecoration: 'none', padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.22)', background: 'white' };
+const addBtnStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 11, fontWeight: 800, cursor: 'pointer' };
+const openLinkStyle: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none', padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.22)', background: 'white' };

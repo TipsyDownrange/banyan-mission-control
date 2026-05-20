@@ -66,7 +66,7 @@ export default function WidgetShell({
               fontWeight: 900,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              color: '#0f766e',
+              color: 'var(--bos-color-brand-primary-deep)',
             }}
           >
             {title}

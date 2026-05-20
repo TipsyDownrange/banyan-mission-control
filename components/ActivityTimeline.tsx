@@ -171,7 +171,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
   SITE_VISIT:        { icon: '👁️', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
-  WARRANTY_CALLBACK: { icon: '🔁', color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
+  WARRANTY_CALLBACK: { icon: '🔁', color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
   STATUS_CHANGED:        { icon: '🔄', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Status Changed' },
   STAGE_ROLLED_BACK:     { icon: '↩️', color: '#b45309', bg: 'rgba(180,83,9,0.08)', label: 'Stage Rolled Back' },
   STAGE_SKIPPED_FORWARD: { icon: '⏩', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Stage Skipped Forward' },
@@ -181,16 +181,16 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   QUOTE_GENERATED:       { icon: '📄', color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Quote Generated' },
   WORK_BREAKDOWN_ADDED:  { icon: '🧱', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'Work Breakdown' },
   JOB_FILE_UPLOADED:     { icon: '📎', color: '#475569', bg: 'rgba(71,85,105,0.08)', label: 'Job File Uploaded' },
-  ORG_CREATED:           { icon: Building2, color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Org Created', display_label: 'Org Created', color_token: 'teal', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
+  ORG_CREATED:           { icon: Building2, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Org Created', display_label: 'Org Created', color_token: 'teal', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ORG_UPDATED:           { icon: RefreshCcw, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', label: 'Org Updated', display_label: 'Org Updated', color_token: 'cyan', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   ORG_MERGED:            { icon: GitMerge, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Org Merged', display_label: 'Org Merged', color_token: 'violet', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   CONTACT_CREATED:       { icon: UserPlus, color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Contact Created', display_label: 'Contact Created', color_token: 'sky', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
   SITE_CREATED:          { icon: MapPin, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Address Created', display_label: 'Address Created', color_token: 'blue', domain_group: 'Identity', render_branch: IdentityEventBranch, default_origin: 'office' },
-  ENGAGEMENT_CREATED:    { icon: Handshake, color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Engagement Created', display_label: 'Engagement Created', color_token: 'teal', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
+  ENGAGEMENT_CREATED:    { icon: Handshake, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Engagement Created', display_label: 'Engagement Created', color_token: 'teal', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
   ENGAGEMENT_STATUS_CHANGED: { icon: Activity, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Engagement Status', display_label: 'Engagement Status Changed', color_token: 'blue', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
   ROUTING_DECISION_ASSIGNED: { icon: Route, color: '#b45309', bg: 'rgba(180,83,9,0.08)', label: 'Routing Decision', display_label: 'Routing Decision Assigned', color_token: 'amber', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
   PM_HANDOFF_STATE_TRANSITIONED: { icon: ClipboardCheck, color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', label: 'PM Handoff', display_label: 'PM Handoff State Transitioned', color_token: 'indigo', domain_group: 'Engagement', render_branch: EngagementEventBranch, default_origin: 'office' },
-  WORK_RECORD_CREATED:   { icon: FileCheck2, color: '#0f766e', bg: 'rgba(15,118,110,0.08)', label: 'Work Record Created', display_label: 'Work Record Created', color_token: 'teal', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
+  WORK_RECORD_CREATED:   { icon: FileCheck2, color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Work Record Created', display_label: 'Work Record Created', color_token: 'teal', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
   WORK_RECORD_STATE_CHANGED: { icon: Repeat2, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', label: 'Work State Changed', display_label: 'Work Record State Changed', color_token: 'blue', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'system' },
   BID_PROMOTED:          { icon: Rocket, color: '#15803d', bg: 'rgba(21,128,61,0.08)', label: 'Bid Promoted', display_label: 'Bid Promoted', color_token: 'green', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
   ESTIMATE_VERSION_FROZEN: { icon: Snowflake, color: '#0369a1', bg: 'rgba(3,105,161,0.08)', label: 'Estimate Frozen', display_label: 'Estimate Version Frozen', color_token: 'sky', domain_group: 'Work Record', render_branch: WorkRecordEventBranch, default_origin: 'office' },
@@ -811,8 +811,8 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
             <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>{label}</span>
             {badge
-              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? '#b91c1c' : badge === 'LOW' ? '#0f766e' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
-              : <span style={{ color: '#0f172a', fontWeight: 600 }}>{value}</span>}
+              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? '#b91c1c' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
+              : <span style={{ color: 'var(--color-ink-primary)', fontWeight: 600 }}>{value}</span>}
           </div>
         ) : null;
 
@@ -831,7 +831,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               {hasDelayClaim ? (
                 <div style={{ marginTop: 4, padding: '6px 8px', background: 'rgba(220,38,38,0.06)', borderRadius: 6, border: '1px solid rgba(220,38,38,0.12)' }}>
                   <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#dc2626', marginBottom: 3 }}>Delay Claim</div>
-                  <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 700 }}>
+                  <div style={{ fontSize: 12, color: 'var(--color-ink-primary)', fontWeight: 700 }}>
                     {[
                       affectedCount > 0 ? `${affectedCount} opening${affectedCount !== 1 ? 's' : ''} affected` : null,
                       hoursLost > 0 ? `${hoursLost}h lost` : null,
@@ -917,7 +917,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                             <span style={{ fontSize: 14 }}>{meta.icon}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--bos-color-ink-disabled)' }}>{meta.label}</div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{valStr}</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{valStr}</div>
                             </div>
                             <div style={{ fontSize: 11, color: '#0891b2', fontWeight: 600, whiteSpace: 'nowrap' }}>{meta.implication}</div>
                           </div>
@@ -932,7 +932,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                       {captureToolStr && (
                         <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
                           <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Capture Tool</span>
-                          <span style={{ color: '#0f172a', fontWeight: 600 }}>{captureToolStr}</span>
+                          <span style={{ color: 'var(--color-ink-primary)', fontWeight: 600 }}>{captureToolStr}</span>
                           {captureBadge && <span style={{ padding: '1px 7px', borderRadius: 999, background: captureBadge.bg, color: captureBadge.color, fontSize: 11, fontWeight: 800 }}>{captureBadge.label}</span>}
                         </div>
                       )}
@@ -1118,7 +1118,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 {authorizedBy && (
                   <div style={{ display: 'flex', gap: 8, fontSize: 12 }}>
                     <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Authorized By</span>
-                    <span style={{ color: '#0f172a', fontWeight: 700 }}>
+                    <span style={{ color: 'var(--color-ink-primary)', fontWeight: 700 }}>
                       {authorizedBy}{authorizedByTitle ? ` · ${authorizedByTitle}` : ''}
                     </span>
                   </div>
@@ -1461,7 +1461,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             if (!t) return null;
             const map: Record<string, { label: string; bg: string; color: string }> = {
               before:   { label: 'Before',   bg: '#eff6ff', color: '#1d4ed8' },
-              during:   { label: 'During',   bg: '#f0fdfa', color: '#0f766e' },
+              during:   { label: 'During',   bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
               after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
               progress: { label: 'Progress', bg: '#fffbeb', color: '#92400e' },
               damage:   { label: 'Damage',   bg: '#fef2f2', color: '#b91c1c' },
@@ -1544,7 +1544,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               onError={e => { (e.target as HTMLImageElement).alt = 'Image unavailable'; }}
             />
 
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
               {lightboxPhotos[lightboxIndex].filename}
             </div>
 
@@ -1698,9 +1698,9 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={() => setSelectedTypes([])} style={{
             padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer',
-            border: selectedTypes.length === 0 ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
+            border: selectedTypes.length === 0 ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid #e2e8f0',
             background: selectedTypes.length === 0 ? 'rgba(15,118,110,0.08)' : 'white',
-            color: selectedTypes.length === 0 ? '#0f766e' : 'var(--bos-color-ink-disabled)',
+            color: selectedTypes.length === 0 ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
           }}>All ({displayEvents.length})</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1710,7 +1710,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                 <button onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: prev[group.label] !== true }))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 900, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', minWidth: 112, textAlign: 'left' }}>
                   {openGroups[group.label] === true ? '▾' : '▸'} {group.label}
                 </button>
-                <button onClick={() => selectGroup(group)} style={{ border: 'none', background: 'transparent', color: '#0f766e', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Select all</button>
+                <button onClick={() => selectGroup(group)} style={{ border: 'none', background: 'transparent', color: 'var(--bos-color-brand-primary-deep)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Select all</button>
                 <button onClick={() => clearGroup(group)} style={{ border: 'none', background: 'transparent', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>None</button>
               </div>
               {openGroups[group.label] === true && <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -1722,9 +1722,9 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                 return (
                   <button key={p.key} onClick={() => toggleType(p.key)} style={{
                     padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                    border: active ? `1.5px solid ${cfg?.color || '#0f766e'}` : '1.5px solid #e2e8f0',
-                    background: active ? `${cfg?.color || '#0f766e'}12` : 'white',
-                    color: active ? (cfg?.color || '#0f766e') : 'var(--bos-color-ink-disabled)',
+                    border: active ? `1.5px solid ${cfg?.color || 'var(--bos-color-brand-primary-deep)'}` : '1.5px solid #e2e8f0',
+                    background: active ? `${cfg?.color || 'var(--bos-color-brand-primary-deep)'}12` : 'white',
+                    color: active ? (cfg?.color || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
                     transition: 'all 0.1s',
                   }}>
                     {FilterIcon ? <FilterIcon size={12} strokeWidth={2.4} style={{ marginRight: 5, verticalAlign: '-2px' }} /> : filterIconText ? `${filterIconText} ` : ''}{p.label}
@@ -1754,9 +1754,9 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
             return (
               <button key={p.key} onClick={() => setDateFilter(p.key)} style={{
                 padding: '5px 12px', borderRadius: 999, fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                border: active ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
+                border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid #e2e8f0',
                 background: active ? 'rgba(15,118,110,0.08)' : 'white',
-                color: active ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
+                color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
               }}>
                 {p.label}
               </button>

@@ -104,7 +104,7 @@ const PANEL_TITLE: React.CSSProperties = {
   fontWeight: 900,
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: '#0f766e',
+  color: 'var(--bos-color-brand-primary-deep)',
 };
 
 const PANEL_SUBTITLE: React.CSSProperties = {
@@ -116,7 +116,7 @@ const PANEL_SUBTITLE: React.CSSProperties = {
 const STAT_VALUE: React.CSSProperties = {
   fontSize: 22,
   fontWeight: 900,
-  color: '#0f172a',
+  color: 'var(--color-ink-primary)',
 };
 
 const STAT_LABEL: React.CSSProperties = {
@@ -217,7 +217,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={PANEL_TITLE}>Project Header</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginTop: 6 }}>{project.name}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 6 }}>{project.name}</div>
             <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
               {project.kID} · PM: {project.pm || '—'}{project.island ? ` · ${project.island}` : ''}
             </div>
@@ -286,7 +286,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           <button
             type="button"
             onClick={() => onNavigateTab?.('action-items')}
-            style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+            style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
           >
             All Action Items →
           </button>
@@ -315,7 +315,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                 }}
               >
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                     {(it.source_entity_type || 'MANUAL').replace(/_/g, ' ')}
                     {it.due_date ? ` · due ${formatRelativeDate(it.due_date)}` : ''}
@@ -341,7 +341,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           </div>
           <div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Outstanding</div>
-            <div style={{ ...STAT_VALUE, color: submittalKpi.outstanding > 0 ? '#92400e' : '#0f766e' }}>{submittalKpi.outstanding}</div>
+            <div style={{ ...STAT_VALUE, color: submittalKpi.outstanding > 0 ? '#92400e' : 'var(--bos-color-brand-primary-deep)' }}>{submittalKpi.outstanding}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
               {submittalKpi.hasTypeField
                 ? `Action ${submittalKpi.outstandingByType.ACTION} · Physical ${submittalKpi.outstandingByType.PHYSICAL} · Closeout ${submittalKpi.outstandingByType.CLOSEOUT}`
@@ -375,7 +375,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           </div>
           <div style={{ background: '#fef2f2', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Overdue</div>
-            <div style={{ ...STAT_VALUE, color: rfiKpi.overdue > 0 ? '#b91c1c' : '#0f766e' }}>{rfiKpi.overdue}</div>
+            <div style={{ ...STAT_VALUE, color: rfiKpi.overdue > 0 ? '#b91c1c' : 'var(--bos-color-brand-primary-deep)' }}>{rfiKpi.overdue}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>past required_response_by</div>
           </div>
           <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '10px 12px' }}>
@@ -396,7 +396,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           <button
             type="button"
             onClick={() => onNavigateTab?.('documents')}
-            style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+            style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
           >
             All Documents →
           </button>
@@ -425,7 +425,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                 }}
               >
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.filename}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.filename}</div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{d.kind.replace(/_/g, ' ')} · {formatRelativeDate(d.uploaded_at)}</div>
                 </div>
                 <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6, background: '#eff6ff', color: '#1d4ed8' }}>{d.kind}</span>
@@ -461,7 +461,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           </div>
           <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Outstanding AR</div>
-            <div style={{ ...STAT_VALUE, color: financial.outstandingAr > 0 ? '#92400e' : '#0f766e' }}>{financial.outstandingAr > 0 ? formatCurrency(financial.outstandingAr) : '$0'}</div>
+            <div style={{ ...STAT_VALUE, color: financial.outstandingAr > 0 ? '#92400e' : 'var(--bos-color-brand-primary-deep)' }}>{financial.outstandingAr > 0 ? formatCurrency(financial.outstandingAr) : '$0'}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>billed, not yet paid</div>
           </div>
         </div>
@@ -488,7 +488,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           <button
             type="button"
             onClick={() => onNavigateTab?.('activity')}
-            style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: '#0f766e', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+            style={{ border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
           >
             Full Activity →
           </button>
@@ -499,8 +499,8 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
           <ol data-testid="activity-ticker-list" style={{ listStyle: 'none', padding: 0, margin: '12px 0 0 0', display: 'grid', gap: 6 }}>
             {ticker.map((e: ActivityTickerEntry) => (
               <li key={e.id || `${e.eventType}-${e.occurredAt}`} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 90px', gap: 10, fontSize: 12, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #eef2f7' }}>
-                <span style={{ fontWeight: 700, color: '#0f766e', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>{e.eventType.replace(/_/g, ' ')}</span>
-                <span style={{ color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>{e.eventType.replace(/_/g, ' ')}</span>
+                <span style={{ color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {e.summary || (e.actor ? `by ${e.actor}` : '—')}
                 </span>
                 <span style={{ color: 'var(--bos-color-ink-tertiary)', textAlign: 'right' }}>{formatTickerTimestamp(e.occurredAt)}</span>

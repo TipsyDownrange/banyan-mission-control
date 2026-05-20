@@ -113,8 +113,8 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: '#0f766e', textTransform: 'uppercase' }}>{kID}</div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '4px 0 0' }}>New Submittal</h2>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase' }}>{kID}</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-ink-primary)', margin: '4px 0 0' }}>New Submittal</h2>
           </div>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>×</button>
         </div>
@@ -155,7 +155,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
         </div>
 
         {previewNumber && (
-          <div style={{ background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 10, padding: '8px 12px', fontFamily: 'monospace', fontSize: 13, color: '#0f766e', fontWeight: 700, marginBottom: 12 }}>
+          <div style={{ background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', borderRadius: 10, padding: '8px 12px', fontFamily: 'monospace', fontSize: 13, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700, marginBottom: 12 }}>
             {previewNumber}
           </div>
         )}
@@ -198,7 +198,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
             Cancel
           </button>
           <button type="submit" disabled={busy || Object.keys(validationErrors).length > 0}
-            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: busy ? 'var(--bos-color-ink-tertiary)' : '#0f766e', color: 'white', fontWeight: 800, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: busy ? 'var(--bos-color-ink-tertiary)' : 'var(--bos-color-brand-primary-deep)', color: 'white', fontWeight: 800, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
             {busy ? 'Creating…' : 'Create Submittal'}
           </button>
         </div>

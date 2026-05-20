@@ -33,7 +33,7 @@ type CO = Record<string, string>;
 type SOVLine = Record<string, string>;
 type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
 
-const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e' };
+const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e' };
 
 interface Props { onNavigate?: (view: string, params?: Record<string, string>) => void; }
 
@@ -63,7 +63,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
         {/* Header: name + island badge */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {project.name}
             </div>
             <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -186,7 +186,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
   ] as const;
 
   const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-    APPROVED: { bg: '#f0fdfa', color: '#0f766e' },
+    APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
     SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
     PENDING: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
     REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
@@ -289,7 +289,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                       {cos.map((c, i) => (
                         <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{c.title || `CO #${c.co_number}`}</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink-primary)' }}>{c.title || `CO #${c.co_number}`}</div>
                             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                               #{c.co_number} {c.amount_requested ? `· $${parseFloat(c.amount_requested).toLocaleString()}` : ''}
                             </div>
@@ -345,7 +345,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                     alignItems: 'center', gap: 12,
                   }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
                         Warranty registry
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
@@ -357,7 +357,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                       data-testid="new-warranty-claim-trigger"
                       style={{
                         padding: '8px 16px', borderRadius: 10, border: 'none',
-                        background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700,
+                        background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700,
                         cursor: 'pointer',
                       }}
                     >
@@ -400,7 +400,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
                   New warranty claim
                 </div>
                 <button
@@ -485,16 +485,16 @@ export default function ProjectsPanel({ onNavigate }: Props) {
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Projects</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>
             {showHistorical ? 'All Projects' : 'Active Projects'}
           </h1>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setShowHistorical(false)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: !showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: !showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: !showHistorical ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: !showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: !showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: !showHistorical ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               Active
             </button>
             <button onClick={() => setShowHistorical(true)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: showHistorical ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: showHistorical ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               Historical
             </button>
           </div>
@@ -507,9 +507,9 @@ export default function ProjectsPanel({ onNavigate }: Props) {
           <button key={isl} onClick={() => setFilterIsland(isl)}
             style={{
               padding: '8px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              border: filterIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1.5px solid #e2e8f0',
-              background: filterIsland === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}10` : 'white',
-              color: filterIsland === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-disabled)',
+              border: filterIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1.5px solid #e2e8f0',
+              background: filterIsland === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}10` : 'white',
+              color: filterIsland === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
             }}>
             {isl} {isl !== 'All' && <span style={{ fontWeight: 800 }}>({byIsland[isl] || 0})</span>}
           </button>
@@ -519,9 +519,9 @@ export default function ProjectsPanel({ onNavigate }: Props) {
           <button key={pm} onClick={() => setFilterPM(pm)}
             style={{
               padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              border: filterPM === pm ? '1.5px solid #0f766e' : '1.5px solid #e2e8f0',
+              border: filterPM === pm ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid #e2e8f0',
               background: filterPM === pm ? 'rgba(15,118,110,0.08)' : 'white',
-              color: filterPM === pm ? '#0f766e' : 'var(--bos-color-ink-disabled)',
+              color: filterPM === pm ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
             }}>
             {pm}
           </button>
@@ -538,7 +538,7 @@ export default function ProjectsPanel({ onNavigate }: Props) {
       <section style={{ marginBottom: 18, padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 8px 22px rgba(15,23,42,0.04)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>BG1 Work Records</div>
+            <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>BG1 Work Records</div>
             <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>Read-only project records from Postgres (`work_records where work_type='project'`).</div>
           </div>
           <span style={{ fontSize: 12, fontWeight: 800, color: '#334155' }}>{workRecordProjects.length} records</span>
@@ -550,8 +550,8 @@ export default function ProjectsPanel({ onNavigate }: Props) {
             {workRecordProjects.slice(0, 12).map(wr => (
               <div key={wr.work_record_id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px', gap: 12, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: '#f8fafc', border: '1px solid #eef2f7' }}>
                 <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{wr.kid}</div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>{wr.name}</div>
-                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0f766e' }}>{wr.status}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{wr.name}</div>
+                <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>{wr.status}</div>
               </div>
             ))}
           </div>

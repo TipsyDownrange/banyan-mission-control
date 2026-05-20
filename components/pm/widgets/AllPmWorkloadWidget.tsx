@@ -39,14 +39,14 @@ export default function AllPmWorkloadWidget({ onHide, showHide }: { onHide?: () 
             <div key={it.pm_user_id ?? it.email ?? Math.random()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#475569' }}>
                 <span>{it.name ?? it.email ?? '—'}</span>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{it.active_project_count}</span>
+                <span style={{ fontWeight: 700, color: 'var(--color-ink-primary)' }}>{it.active_project_count}</span>
               </div>
               <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden', marginTop: 2 }}>
                 <div
                   style={{
                     width: `${(it.active_project_count / max) * 100}%`,
                     height: '100%',
-                    background: '#0f766e',
+                    background: 'var(--bos-color-brand-primary-deep)',
                   }}
                 />
               </div>

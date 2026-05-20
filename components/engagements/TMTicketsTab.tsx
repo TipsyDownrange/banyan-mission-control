@@ -106,7 +106,7 @@ export default function TMTicketsTab({ kID }: { kID: string }) {
           borderRadius: 18, border: '1px solid #e2e8f0',
         }}
       >
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 10 }}>
           This project isn&apos;t on the Postgres billing system yet.
         </div>
         <div style={{

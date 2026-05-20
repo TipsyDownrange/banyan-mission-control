@@ -112,7 +112,7 @@ const ROW_LABEL: CSSProperties = {
 };
 
 const ROW_VALUE: CSSProperties = {
-  fontSize: 13, color: '#0f172a', marginTop: 2,
+  fontSize: 13, color: 'var(--color-ink-primary)', marginTop: 2,
 };
 
 function locationLabel(loc: Record<string, unknown> | null | undefined): string {
@@ -149,14 +149,14 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
         aria-expanded={expanded}
       >
         <div style={{
-          fontSize: 11, fontWeight: 800, color: '#0f766e', letterSpacing: '0.05em',
+          fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.05em',
           minWidth: 44, textAlign: 'right',
         }}>
           #{item.item_number}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 13, fontWeight: 700, color: '#0f172a',
+            fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
             {item.description}
@@ -237,7 +237,7 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
                     rel="noreferrer"
                     style={{
                       padding: '4px 10px', borderRadius: 8,
-                      background: '#f0fdfa', color: '#0f766e',
+                      background: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)',
                       fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
                       textDecoration: 'none', border: '1px solid #0f766e22',
                     }}

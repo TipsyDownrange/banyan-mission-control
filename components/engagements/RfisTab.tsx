@@ -57,7 +57,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
   ANSWERED: { bg: '#fffbeb', color: '#92400e' },
-  RESOLVED: { bg: '#f0fdfa', color: '#0f766e' },
+  RESOLVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   CLOSED: { bg: '#f8fafc', color: '#475569' },
   VOID: { bg: '#fef2f2', color: '#b91c1c' },
 };
@@ -81,7 +81,7 @@ function DocChip({ icon, label, count, onClick, accent }: {
   accent?: string;
 }) {
   const has = count > 0;
-  const color = has ? (accent ?? '#0f766e') : 'var(--bos-color-ink-tertiary)';
+  const color = has ? (accent ?? 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-tertiary)';
   return (
     <button
       type="button"
@@ -222,18 +222,18 @@ export default function RfisTab({ kID }: { kID: string }) {
         </div>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Open</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.open}</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{data.summary.open}</div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>submitted / under review / answered</div>
         </div>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.total}</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{data.summary.total}</div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>all statuses</div>
         </div>
         {(['SUBMITTED', 'ANSWERED', 'RESOLVED'] as const).map((k) => (
           <div key={k} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.replace(/_/g, ' ')}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.by_status[k] ?? 0}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{data.summary.by_status[k] ?? 0}</div>
           </div>
         ))}
       </div>
@@ -280,7 +280,7 @@ export default function RfisTab({ kID }: { kID: string }) {
         <button
           type="button"
           onClick={() => setShowWizard(true)}
-          style={{ padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 800, border: '1px solid #0f766e', background: '#0f766e', color: 'white', cursor: 'pointer' }}
+          style={{ padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 800, border: '1px solid var(--bos-color-brand-primary-deep)', background: 'var(--bos-color-brand-primary-deep)', color: 'white', cursor: 'pointer' }}
         >
           + New RFI
         </button>
@@ -331,7 +331,7 @@ export default function RfisTab({ kID }: { kID: string }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 800, color: '#0f172a' }}>{it.rfi_number}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{it.rfi_number}</span>
                       <StatusPill status={it.status} />
                       {it.submitted_to && (
                         <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>→ {it.submitted_to}</span>
@@ -347,7 +347,7 @@ export default function RfisTab({ kID }: { kID: string }) {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {it.subject}
                     </div>
                     {it.reason_for_rfi && (
@@ -382,7 +382,7 @@ export default function RfisTab({ kID }: { kID: string }) {
                     icon="📋"
                     label="Attachments"
                     count={it.submitted_attachments?.length ?? 0}
-                    accent="#0f766e"
+                    accent="var(--bos-color-brand-primary-deep)"
                   />
                   <DocChip
                     icon="✅"

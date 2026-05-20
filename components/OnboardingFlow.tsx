@@ -211,7 +211,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
             </button>
           ) : (
             <button onClick={startChat}
-              style={{ padding: '14px 48px', borderRadius: 14, background: 'linear-gradient(135deg, #0f766e, #14b8a6)', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
+              style={{ padding: '14px 48px', borderRadius: 14, background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
               Talk to Kai →
             </button>
           )}
@@ -372,7 +372,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
 
           <div style={{ marginTop: 32, display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={finishOnboarding}
-              style={{ padding: '14px 40px', borderRadius: 14, background: 'linear-gradient(135deg, #0f766e, #14b8a6)', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
+              style={{ padding: '14px 40px', borderRadius: 14, background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)', border: 'none', color: 'white', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(20,184,166,0.3)' }}>
               {selectedRoutines.size > 0 ? `Set up ${selectedRoutines.size} routine${selectedRoutines.size > 1 ? 's' : ''} →` : 'Skip for now →'}
             </button>
           </div>

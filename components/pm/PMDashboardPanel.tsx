@@ -237,7 +237,7 @@ export default function PMDashboardPanel() {
     <div style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em' }}>
             PM Dashboard
           </div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
@@ -251,7 +251,7 @@ export default function PMDashboardPanel() {
             onClick={() => setShowHidden((v) => !v)}
             style={{
               padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1',
-              background: 'white', color: '#0f172a', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: 'white', color: 'var(--color-ink-primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
             }}
           >
             {showHidden ? 'Hide' : 'Show'} widgets ({hiddenWidgets.length} hidden)
@@ -262,7 +262,7 @@ export default function PMDashboardPanel() {
             disabled={saving}
             style={{
               padding: '6px 12px', borderRadius: 8, border: 'none',
-              background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700,
+              background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 700,
               cursor: saving ? 'wait' : 'pointer',
             }}
           >
@@ -297,7 +297,7 @@ export default function PMDashboardPanel() {
                 style={{
                   padding: '4px 10px', borderRadius: 999,
                   border: '1px solid #cbd5e1', background: 'white',
-                  fontSize: 11, color: '#0f172a', cursor: 'pointer',
+                  fontSize: 11, color: 'var(--color-ink-primary)', cursor: 'pointer',
                 }}
               >
                 + {WIDGET_TITLES[k]}

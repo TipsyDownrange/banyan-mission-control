@@ -28,7 +28,7 @@ const FIELD_STYLE: React.CSSProperties = {
   border: '1px solid rgba(20,184,166,0.3)',
   borderRadius: 8,
   fontSize: 12,
-  color: '#0f172a',
+  color: 'var(--color-ink-primary)',
   background: 'rgba(240,253,250,0.5)',
   outline: 'none',
   boxSizing: 'border-box',
@@ -49,7 +49,7 @@ function MetricCard({
   label,
   value,
   sub,
-  color = '#0f172a',
+  color = 'var(--color-ink-primary)',
   icon,
 }: {
   label: string;
@@ -220,7 +220,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
 
   const dueDaysColor = daysUntil !== null && daysUntil <= 0 ? '#dc2626'
     : daysUntil !== null && daysUntil <= 3 ? '#ea580c'
-    : '#0f172a';
+    : 'var(--color-ink-primary)';
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 960 }}>
@@ -256,7 +256,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
           value={totalEstimate}
           sub="Base bid"
           icon="💰"
-          color="#0f766e"
+          color="var(--bos-color-brand-primary-deep)"
         />
         <MetricCard
           label="Open Gaps"
@@ -292,7 +292,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
       }}>
         {/* Header */}
         <div style={{
-          background: '#0f172a',
+          background: 'var(--color-ink-primary)',
           padding: '14px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -308,7 +308,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               padding: '5px 14px',
               borderRadius: 8,
               border: 'none',
-              background: editing ? 'linear-gradient(135deg, #0f766e, #14b8a6)' : 'rgba(255,255,255,0.08)',
+              background: editing ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'rgba(255,255,255,0.08)',
               color: editing ? 'white' : 'rgba(148,163,184,0.8)',
               fontSize: 11,
               fontWeight: 700,
@@ -465,7 +465,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
           marginBottom: 20,
         }}>
           <div style={{
-            background: '#0f172a',
+            background: 'var(--color-ink-primary)',
             padding: '14px 20px',
             display: 'flex',
             alignItems: 'center',
@@ -531,14 +531,14 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                       borderRadius: 10,
                       flexWrap: 'wrap',
                     }}>
-                      <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', minWidth: 140 }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--color-ink-primary)', minWidth: 140 }}>
                         {sys.name}
                       </span>
                       {sys.qty && (
                         <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{sys.qty}</span>
                       )}
                       {templateHours !== null ? (
-                        <span style={{ fontSize: 11, color: '#0f766e', fontWeight: 600, marginLeft: 'auto' }}>
+                        <span style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600, marginLeft: 'auto' }}>
                           📋 {templateHours.toFixed(2)}h template
                           {stepCount ? <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 400 }}> ({stepCount} steps)</span> : null}
                         </span>
@@ -572,7 +572,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                         <span style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                           Total Baseline
                         </span>
-                        <span style={{ fontSize: 15, fontWeight: 900, color: '#0f766e' }}>
+                        <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--bos-color-brand-primary-deep)' }}>
                           {totalTemplateHours.toFixed(2)}h
                         </span>
                       </div>
@@ -602,7 +602,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
           gap: 10,
         }}>
           <span style={{ fontSize: 16 }}>✦</span>
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>
             Kai Bid Assessment
           </span>
           <span style={{
@@ -612,7 +612,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
             padding: '2px 8px',
             borderRadius: 999,
             background: 'rgba(20,184,166,0.1)',
-            color: '#0f766e',
+            color: 'var(--bos-color-brand-primary-deep)',
             border: '1px solid rgba(20,184,166,0.2)',
           }}>
             Phase 5
@@ -631,7 +631,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
             border: '1px dashed rgba(20,184,166,0.3)',
             borderRadius: 10,
             fontSize: 12,
-            color: '#0f766e',
+            color: 'var(--bos-color-brand-primary-deep)',
             fontStyle: 'italic',
           }}>
             &ldquo;This is a [project type] on [island] with [N] glazing systems. Key concerns: [compliance flags]. 
@@ -650,7 +650,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
         marginTop: 20,
       }}>
         <div style={{
-          background: '#0f172a',
+          background: 'var(--color-ink-primary)',
           padding: '14px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -717,7 +717,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
               📁 Link Bid Folder
             </h3>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.5 }}>
@@ -758,7 +758,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               style={{
                 width: '100%', padding: '10px 12px', borderRadius: 10,
                 border: '1.5px solid rgba(20,184,166,0.4)',
-                fontSize: 12, color: '#0f172a',
+                fontSize: 12, color: 'var(--color-ink-primary)',
                 background: 'rgba(240,253,250,0.4)',
                 outline: 'none', boxSizing: 'border-box',
                 marginBottom: 6,
@@ -784,7 +784,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                 disabled={folderSaving || !folderUrl.trim()}
                 style={{
                   padding: '9px 20px', borderRadius: 10, border: 'none',
-                  background: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+                  background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)',
                   color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer',
                   opacity: (!folderUrl.trim()) ? 0.5 : 1,
                 }}

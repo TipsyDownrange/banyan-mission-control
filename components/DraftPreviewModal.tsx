@@ -33,7 +33,7 @@ const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
 const INP: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 10,
   border: '1px solid #e2e8f0', background: 'white',
-  fontSize: 13, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+  fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box',
   fontFamily: FONT,
 };
 
@@ -180,7 +180,7 @@ export default function DraftPreviewModal({
         <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Email to Customer</div>
-            <h2 style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', margin: 0 }}>Review &amp; Send Proposal</h2>
+            <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', margin: 0 }}>Review &amp; Send Proposal</h2>
           </div>
           <button
             onClick={() => !sending && onClose()}
@@ -226,7 +226,7 @@ export default function DraftPreviewModal({
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
             </svg>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{pdfFilename}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{pdfFilename}</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>PDF proposal — generated on send</div>
             </div>
           </div>

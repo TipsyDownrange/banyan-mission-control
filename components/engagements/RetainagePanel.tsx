@@ -64,14 +64,14 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
           Retainage Holdings
           <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             ({retainage.length})
           </span>
         </div>
         <div style={{ display: 'flex', gap: 16, fontSize: 11, fontWeight: 700 }}>
-          <span style={{ color: '#0f766e' }}>Held {fmtMoney(totalHeld)}</span>
+          <span style={{ color: 'var(--bos-color-brand-primary-deep)' }}>Held {fmtMoney(totalHeld)}</span>
           <span style={{ color: 'var(--bos-color-ink-disabled)' }}>Released {fmtMoney(totalReleased)}</span>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
           return (
             <div key={h.holding_id} style={ROW}>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>
-                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>
+                <div style={{ fontWeight: 700, color: 'var(--color-ink-primary)', fontSize: 13 }}>
                   Pay app <span style={{ fontFamily: 'monospace' }}>{h.pay_app_id.slice(0, 8)}</span>
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, letterSpacing: '0.04em' }}>
@@ -91,7 +91,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
               <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', textAlign: 'right' }}>
                 {fmtMoney(h.amount_held)}
               </div>
-              <div style={{ fontSize: 11, color: isReleased ? '#0f766e' : 'var(--bos-color-ink-tertiary)', textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: isReleased ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)', textAlign: 'right' }}>
                 {isReleased ? fmtDate(h.released_at) : '—'}
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -99,7 +99,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
                   padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
                   letterSpacing: '0.04em', whiteSpace: 'nowrap',
                   background: isReleased ? '#f0fdfa' : '#fffbeb',
-                  color: isReleased ? '#0f766e' : '#92400e',
+                  color: isReleased ? 'var(--bos-color-brand-primary-deep)' : '#92400e',
                   border: isReleased ? '1px solid #0f766e33' : '1px solid #92400e33',
                 }}>
                   {isReleased ? 'Released' : 'Held'}

@@ -40,7 +40,7 @@ type ApiResponse = {
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   LOGGED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   FOLLOWED_UP: { bg: '#eff6ff', color: '#1d4ed8' },
-  FORMALIZED: { bg: '#f0fdfa', color: '#0f766e' },
+  FORMALIZED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   DISPUTED: { bg: '#fef2f2', color: '#b91c1c' },
   RESOLVED: { bg: '#f8fafc', color: '#475569' },
 };
@@ -51,7 +51,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function DocChip({ icon, label, active }: { icon: string; label: string; active: boolean }) {
-  const color = active ? '#0f766e' : 'var(--bos-color-ink-tertiary)';
+  const color = active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)';
   return (
     <button
       type="button"
@@ -146,7 +146,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
         ))}
       </div>
@@ -163,7 +163,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
         </select>
         <label style={toggleStyle}><input type="checkbox" checked={followupOnly} onChange={(e) => setFollowupOnly(e.target.checked)} /> Follow-up sent</label>
         <label style={toggleStyle}><input type="checkbox" checked={formalizedOnly} onChange={(e) => setFormalizedOnly(e.target.checked)} /> Formalized</label>
-        <button type="button" onClick={() => setShowWizard(true)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New Agreement</button>
+        <button type="button" onClick={() => setShowWizard(true)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New Agreement</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -174,7 +174,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
             <div style={{ display: 'grid', gridTemplateColumns: '100px minmax(160px, 1.4fr) minmax(140px, 1fr) 130px 90px 90px', gap: 10, alignItems: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.occurred_at)}</div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.subject}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.subject}</div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.agreement_summary}</div>
               </div>
               <div style={{ minWidth: 0 }}>
@@ -182,7 +182,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{it.external_party_contact_name || '-'}</div>
               </div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.agreement_type.replace(/_/g, ' ')}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>{formatCurrency(it.cost_impact_estimate)}</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{formatCurrency(it.cost_impact_estimate)}</div>
               <StatusPill status={it.status} />
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>

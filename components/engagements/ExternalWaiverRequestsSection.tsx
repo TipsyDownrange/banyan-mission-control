@@ -117,7 +117,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
       display: 'flex', flexDirection: 'column', gap: 10,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>External Waiver Requests</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>External Waiver Requests</div>
         {engagementId && <CreateExternalForm engagementId={engagementId} onCreated={refresh} />}
       </div>
       {rows.length === 0 ? (

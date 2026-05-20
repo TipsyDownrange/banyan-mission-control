@@ -40,13 +40,13 @@ const TAB_BASE: CSSProperties = {
 };
 const TAB_ACTIVE: CSSProperties = {
   ...TAB_BASE,
-  background: '#0f766e',
-  borderColor: '#0f766e',
+  background: 'var(--bos-color-brand-primary-deep)',
+  borderColor: 'var(--bos-color-brand-primary-deep)',
   color: 'white',
 };
 
 const CELL: CSSProperties = {
-  padding: '10px 12px', fontSize: 13, color: '#0f172a',
+  padding: '10px 12px', fontSize: 13, color: 'var(--color-ink-primary)',
   borderBottom: '1px solid #f1f5f9', verticalAlign: 'top',
 };
 const HEADER_CELL: CSSProperties = {
@@ -102,7 +102,7 @@ export function SubcontractorsTableView({
           padding: '40px 24px', borderRadius: 14, border: '1px solid #e2e8f0',
           background: 'white', textAlign: 'center',
         }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>
             No {TRADE_TAB_LABEL[activeTrade].toLowerCase()} on file
           </div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>

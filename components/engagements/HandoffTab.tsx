@@ -104,8 +104,8 @@ export default function HandoffTab({ kID }: { kID: string }) {
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: '18px 20px', marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' }}>Current Handoff</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>Current Handoff</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 4 }}>
                 {current.estimate_version_id ? `Estimate ${current.estimate_version_id}` : 'Handoff packet'}
               </div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 4 }}>
@@ -118,7 +118,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
               <button
                 type="button"
                 onClick={() => setOpenReceiptId(current.id)}
-                style={{ padding: '7px 14px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                style={{ padding: '7px 14px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
               >
                 {STATE_COLORS[current.state] && current.state !== 'pending_review' && current.state !== 'reviewed_complete' ? 'View' : 'Review →'}
               </button>
@@ -155,7 +155,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
                 style={{ textAlign: 'left', background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>
                     {r.estimate_version_id ?? 'Handoff packet'}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>

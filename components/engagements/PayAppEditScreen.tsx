@@ -317,10 +317,10 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
     <div style={{ background: '#f8fafc', minHeight: '100%', padding: '20px 24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: '#0f766e', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase' }}>
             Pay App #{payApp.pay_app_number} · {payApp.billing_format}
           </div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
             {payApp.period_start} → {payApp.period_end}
           </div>
           <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>State: {payApp.state}</div>
@@ -606,7 +606,7 @@ function NotarizationUploadModal({
   );
 }
 
-const lblStyle = { display: 'flex', flexDirection: 'column' as const, gap: 4, fontSize: 11, fontWeight: 700, color: '#0f172a' };
+const lblStyle = { display: 'flex', flexDirection: 'column' as const, gap: 4, fontSize: 11, fontWeight: 700, color: 'var(--color-ink-primary)' };
 const inputStyle = { padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', background: '#fff' };
 
 function summaryRow(num: string, label: string, value: number, footnote?: string, bold?: boolean) {
@@ -624,7 +624,7 @@ function summaryRow(num: string, label: string, value: number, footnote?: string
 
 const th = { padding: '8px 6px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' };
 const thRight = { ...th, textAlign: 'right' as const };
-const td = { padding: '6px', color: '#0f172a' };
+const td = { padding: '6px', color: 'var(--color-ink-primary)' };
 const tdRight = { ...td, textAlign: 'right' as const };
 const tdRightEdit = { ...tdRight, background: '#fefce8' };
 const cellInput = {
@@ -634,7 +634,7 @@ const cellInput = {
 };
 const btnPrimary = { background: '#0c2330', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnGreen = { background: '#15803d', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
-const btnSecondary = { background: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
+const btnSecondary = { background: '#f1f5f9', color: 'var(--color-ink-primary)', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnDanger = { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 
 // ─── Submission Packet Export (AIA bundle) ──────────────────────────────────

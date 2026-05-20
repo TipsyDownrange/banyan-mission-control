@@ -24,7 +24,7 @@ const KPI_LABEL: CSSProperties = {
 };
 
 const KPI_VALUE: CSSProperties = {
-  fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 5,
+  fontSize: 20, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 5,
 };
 
 const KPI_SUB: CSSProperties = {
@@ -70,7 +70,7 @@ export default function PunchListSummaryCard({ items }: { items: PunchListItem[]
       display: 'flex', flexDirection: 'column', gap: 14,
     }}>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>
+        <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>
           Punch List Summary
         </div>
         <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
@@ -113,7 +113,7 @@ export default function PunchListSummaryCard({ items }: { items: PunchListItem[]
             fontSize: 11, fontWeight: 700, color: '#334155',
           }}>
             <span>{STATUS_LABEL[s]}</span>
-            <span style={{ color: '#0f172a', fontWeight: 900 }}>{byStatus[s]}</span>
+            <span style={{ color: 'var(--color-ink-primary)', fontWeight: 900 }}>{byStatus[s]}</span>
           </div>
         ))}
       </div>

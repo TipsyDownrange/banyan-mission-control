@@ -45,7 +45,7 @@ interface DecisionQueueData {
 // ── Status + resolution config ─────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<DecisionStatus, { label: string; color: string; bg: string }> = {
-  open:       { label: 'Open',       color: '#0f766e', bg: 'rgba(20,184,166,0.1)' },
+  open:       { label: 'Open',       color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(20,184,166,0.1)' },
   deferred:   { label: 'Deferred',   color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9' },
   discussing: { label: 'Discussing', color: '#d97706', bg: '#fffbeb' },
   resolved:   { label: 'Resolved',   color: '#15803d', bg: '#f0fdf4' },
@@ -53,7 +53,7 @@ const STATUS_CONFIG: Record<DecisionStatus, { label: string; color: string; bg: 
 
 const RESOLUTION_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   approved:          { label: 'Approved',          color: '#059669', bg: '#f0fdf4' },
-  approved_amended:  { label: 'Approved (amended)', color: '#0f766e', bg: 'rgba(20,184,166,0.08)' },
+  approved_amended:  { label: 'Approved (amended)', color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(20,184,166,0.08)' },
   rejected:          { label: 'Rejected',          color: '#dc2626', bg: '#fef2f2' },
   deferred:          { label: 'Deferred',          color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9' },
   overridden:        { label: 'Overridden',        color: '#b91c1c', bg: '#fef2f2' },
@@ -91,7 +91,7 @@ function ResolvedDecisionCard({ decision }: { decision: DecisionItem }) {
         <div style={{ marginTop: 10, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
           <div style={{ fontSize: 12, color: '#334155', marginBottom: 6 }}>{decision.question}</div>
           {decision.rationale && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}><strong>Rationale:</strong> {decision.rationale}</div>}
-          {decision.direct_order_text && <div style={{ fontSize: 11, color: '#0f766e', padding: '6px 10px', borderRadius: 7, background: 'rgba(15,118,110,0.05)', border: '1px solid rgba(15,118,110,0.15)', marginTop: 4 }}><strong>Direct Order:</strong> {decision.direct_order_text}</div>}
+          {decision.direct_order_text && <div style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', padding: '6px 10px', borderRadius: 7, background: 'rgba(15,118,110,0.05)', border: '1px solid rgba(15,118,110,0.15)', marginTop: 4 }}><strong>Direct Order:</strong> {decision.direct_order_text}</div>}
         </div>
       )}
     </div>
@@ -147,7 +147,7 @@ function DecisionCard({ decision, onAction }: {
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #f1f5f9' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', lineHeight: 1.3 }}>{decision.label}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', lineHeight: 1.3 }}>{decision.label}</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap' as const }}>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, color: statusCfg.color, background: statusCfg.bg }}>
                 {statusCfg.label}
@@ -169,7 +169,7 @@ function DecisionCard({ decision, onAction }: {
 
       <div style={{ padding: '14px 20px' }}>
         {/* Question */}
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 8, lineHeight: 1.4 }}>{decision.question}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 8, lineHeight: 1.4 }}>{decision.question}</div>
 
         {/* Context */}
         <div>
@@ -183,7 +183,7 @@ function DecisionCard({ decision, onAction }: {
             {decision.context}
           </div>
           {decision.context.length > 120 && (
-            <button onClick={() => setContextExpanded(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#0f766e', padding: '2px 0', fontWeight: 600 }}>
+            <button onClick={() => setContextExpanded(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', padding: '2px 0', fontWeight: 600 }}>
               {contextExpanded ? 'Less ▴' : 'More ▾'}
             </button>
           )}
@@ -200,10 +200,10 @@ function DecisionCard({ decision, onAction }: {
                 border: isRec ? '1.5px solid rgba(15,118,110,0.2)' : '1px solid #f1f5f9',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: isRec ? '#0f766e' : '#334155' }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: isRec ? 'var(--bos-color-brand-primary-deep)' : '#334155' }}>
                     {i + 1}. {opt.label}
                   </span>
-                  {isRec && <span style={{ fontSize: 9, fontWeight: 800, color: '#0f766e', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>XO recommends</span>}
+                  {isRec && <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>XO recommends</span>}
                 </div>
                 <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.4 }}>{opt.description}</div>
                 {opt.tradeoffs && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>Tradeoffs: {opt.tradeoffs}</div>}
@@ -215,7 +215,7 @@ function DecisionCard({ decision, onAction }: {
         {/* XO Recommendation callout */}
         {decision.recommendation_rationale && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(15,118,110,0.04)', border: '1px solid rgba(15,118,110,0.15)' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>XO: </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)' }}>XO: </span>
             <span style={{ fontSize: 11, color: '#334155' }}>{decision.recommendation_rationale}</span>
           </div>
         )}
@@ -232,7 +232,7 @@ function DecisionCard({ decision, onAction }: {
               fontSize: 13, padding: '9px 12px', borderRadius: 9,
               border: overrideError ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
               outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
-              color: '#0f172a', background: 'white', lineHeight: 1.5,
+              color: 'var(--color-ink-primary)', background: 'white', lineHeight: 1.5,
             }}
           />
           {overrideError && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 3 }}>Override requires a Direct Order explaining why.</div>}
@@ -406,10 +406,10 @@ export default function CaptainsOrders() {
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-tertiary)' }}>
             S3 — Captain's Orders
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginTop: 1 }}>Decision Queue</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 1 }}>Decision Queue</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-          {openCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(20,184,166,0.1)', color: '#0f766e' }}>{openCount} open</span>}
+          {openCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(20,184,166,0.1)', color: 'var(--bos-color-brand-primary-deep)' }}>{openCount} open</span>}
           {discussingCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: '#fffbeb', color: '#d97706' }}>{discussingCount} discussing</span>}
           {deferredCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: '#f1f5f9', color: 'var(--bos-color-ink-disabled)' }}>{deferredCount} deferred</span>}
           {openCount === 0 && discussingCount === 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: '#f0fdf4', color: '#15803d' }}>All clear ✓</span>}
@@ -424,7 +424,7 @@ export default function CaptainsOrders() {
               padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
               border: filter === tab.key ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
               background: filter === tab.key ? 'rgba(240,253,250,0.96)' : 'white',
-              color: filter === tab.key ? '#0f766e' : 'var(--bos-color-ink-disabled)',
+              color: filter === tab.key ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
             }}>
             {tab.label}{tab.count !== undefined && tab.count > 0 ? ` (${tab.count})` : ''}
           </button>

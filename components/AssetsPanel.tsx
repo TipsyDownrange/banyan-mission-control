@@ -15,13 +15,13 @@ type Equipment = {
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: '#0f766e', Kauai: '#6d28d9', Hawaii: '#92400e',
+  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: '#92400e',
 };
 
 const INP: React.CSSProperties = {
   width: '100%', padding: '6px 9px', borderRadius: 8,
   border: '1px solid #e2e8f0', background: 'white',
-  fontSize: 12, color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+  fontSize: 12, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box',
 };
 
 function isExpiringSoon(dateStr: string): boolean {
@@ -83,7 +83,7 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           </div>
           <div><div style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Notes</div><input value={draft.notes ?? v.notes} onChange={e => onDraftChange('notes', e.target.value)} style={INP} placeholder="Notes..." /></div>
           <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-            <button onClick={() => onSave(v.asset_id)} disabled={saving} style={{ padding: '4px 12px', borderRadius: 8, background: saving ? '#e2e8f0' : '#0f766e', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 10, fontWeight: 800, cursor: saving ? 'default' : 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
+            <button onClick={() => onSave(v.asset_id)} disabled={saving} style={{ padding: '4px 12px', borderRadius: 8, background: saving ? '#e2e8f0' : 'var(--bos-color-brand-primary-deep)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 10, fontWeight: 800, cursor: saving ? 'default' : 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
             <button onClick={onCancel} style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
@@ -92,18 +92,18 @@ const VehicleCard = memo(function VehicleCard({ v, isEditing, draft, onEditStart
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>{v.license_plate}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{v.license_plate}</span>
                 {v.island && <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 7px', borderRadius: 999, color: ISLAND_COLOR[v.island] || 'var(--bos-color-ink-disabled)', border: '1px solid currentColor', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{v.island}</span>}
                 {v.status !== 'Active' && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 999, color: '#b91c1c', background: '#fef2f2', border: '1px solid rgba(185,28,28,0.2)' }}>{v.status}</span>}
               </div>
               <div style={{ fontSize: 12, color: '#334155' }}>{v.year} {v.make} {v.model} {v.color && `· ${v.color}`} {v.type && `· ${v.type}`}</div>
               {v.assigned_to && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>→ {v.assigned_to}</div>}
             </div>
-            <button onClick={() => onEditStart(v.asset_id)} style={{ padding: '3px 8px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.2)', background: 'rgba(240,253,250,0.8)', color: '#0f766e', fontSize: 9, fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>Edit</button>
+            <button onClick={() => onEditStart(v.asset_id)} style={{ padding: '3px 8px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.2)', background: 'rgba(240,253,250,0.8)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 9, fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>Edit</button>
           </div>
           {/* Expiry badges */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? '#b91c1c' : regSoon ? '#92400e' : '#0f766e', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
+            {v.registration_exp && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: regExp ? '#fef2f2' : regSoon ? '#fffbeb' : '#f0fdfa', color: regExp ? '#b91c1c' : regSoon ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: `1px solid ${regExp ? 'rgba(185,28,28,0.2)' : regSoon ? 'rgba(245,158,11,0.2)' : 'rgba(15,118,110,0.2)'}` }}>Reg: {v.registration_exp}</span>}
             {v.last_service_date && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 999, background: '#f8fafc', color: 'var(--bos-color-ink-disabled)', fontWeight: 600, border: '1px solid #e2e8f0' }}>Last service: {v.last_service_date}</span>}
             {v.notes && <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>{v.notes}</span>}
           </div>
@@ -178,14 +178,14 @@ export default function AssetsPanel() {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Assets</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Assets</h1>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['vehicles', 'equipment'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: tab === t ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: tab === t ? 'rgba(240,253,250,0.96)' : 'white', color: tab === t ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: tab === t ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: tab === t ? 'rgba(240,253,250,0.96)' : 'white', color: tab === t ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {t === 'vehicles' ? `Vehicles (${vehicles.length})` : `Equipment (${equipment.length})`}
               </button>
             ))}
-            <button onClick={() => setShowAdd(true)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
+            <button onClick={() => setShowAdd(true)} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
               + Add {tab === 'vehicles' ? 'Vehicle' : 'Equipment'}
             </button>
           </div>
@@ -203,7 +203,7 @@ export default function AssetsPanel() {
       {tab === 'vehicles' && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
           {islands.map(isl => (
-            <button key={isl} onClick={() => setIslandFilter(isl)} style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+            <button key={isl} onClick={() => setIslandFilter(isl)} style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               {isl} {isl !== 'All' ? `(${vehicles.filter(v => v.island === isl).length})` : `(${vehicles.length})`}
             </button>
           ))}
@@ -237,14 +237,14 @@ export default function AssetsPanel() {
             <div key={eq.asset_id} style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 2 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{eq.name || '—'}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{eq.name || '—'}</span>
                   {eq.island && <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 7px', borderRadius: 999, color: ISLAND_COLOR[eq.island] || 'var(--bos-color-ink-disabled)', border: '1px solid currentColor' }}>{eq.island}</span>}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{eq.category} {eq.make && `· ${eq.make}`} {eq.model && `· ${eq.model}`}</div>
                 {eq.assigned_to && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>→ {eq.assigned_to}</div>}
               </div>
               {eq.next_service_due && (
-                <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 999, background: isExpiringSoon(eq.next_service_due) ? '#fffbeb' : '#f0fdfa', color: isExpiringSoon(eq.next_service_due) ? '#92400e' : '#0f766e', fontWeight: 700, border: '1px solid currentColor', flexShrink: 0 }}>
+                <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 999, background: isExpiringSoon(eq.next_service_due) ? '#fffbeb' : '#f0fdfa', color: isExpiringSoon(eq.next_service_due) ? '#92400e' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700, border: '1px solid currentColor', flexShrink: 0 }}>
                   Service: {eq.next_service_due}
                 </span>
               )}
@@ -258,7 +258,7 @@ export default function AssetsPanel() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 480, padding: 28, boxShadow: '0 24px 64px rgba(15,23,42,0.15)' }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Add {tab === 'vehicles' ? 'Vehicle' : 'Equipment'}</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 16 }}>Add {tab === 'vehicles' ? 'Vehicle' : 'Equipment'}</div>
             <div style={{ display: 'grid', gap: 10 }}>
               {tab === 'vehicles' ? (
                 <>
@@ -299,7 +299,7 @@ export default function AssetsPanel() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
               <button onClick={() => { setShowAdd(false); setNewItem({}); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addItem} disabled={saving} style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={addItem} disabled={saving} style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : `Add ${tab === 'vehicles' ? 'Vehicle' : 'Equipment'}`}
               </button>
             </div>

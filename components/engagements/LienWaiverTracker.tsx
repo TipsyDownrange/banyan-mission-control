@@ -106,7 +106,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
       display: 'flex', flexDirection: 'column', gap: 14,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>Lien Waiver Tracker</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Lien Waiver Tracker</div>
         <div style={{ fontSize: 12, fontWeight: 700, color: data.exposure > 0 ? '#b45309' : '#16a34a' }}>
           Outstanding exposure: ${data.exposure.toLocaleString()}
         </div>
@@ -120,7 +120,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
               padding: 12, borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0',
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>{c.total}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-ink-primary)', marginTop: 4 }}>{c.total}</div>
               <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <span>Generated: {c.generated}</span>
                 <span>Notarized: {c.notarized}</span>

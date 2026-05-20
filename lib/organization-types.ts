@@ -1,7 +1,7 @@
 export const ORGANIZATION_TYPE_COLORS: Record<string, { color: string; bg: string }> = {
-  CUSTOMER:      { color: '#0f766e', bg: '#f0fdfa' },
+  CUSTOMER:      { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa' },
   GC:            { color: '#1d4ed8', bg: '#eff6ff' },
-  COMMERCIAL:    { color: '#0f766e', bg: '#f0fdfa' },
+  COMMERCIAL:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa' },
   RESIDENTIAL:   { color: '#15803d', bg: '#f0fdf4' },
   VENDOR:        { color: '#c2410c', bg: '#fff7ed' },
   ARCHITECT:     { color: '#7c3aed', bg: '#f5f3ff' },

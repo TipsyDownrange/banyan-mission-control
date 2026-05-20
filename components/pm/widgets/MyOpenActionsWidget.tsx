@@ -20,7 +20,7 @@ type Data = { items: Item[]; total: number; project_count: number };
 const PRIORITY_COLOR: Record<string, string> = {
   URGENT: '#b91c1c',
   HIGH: '#c2410c',
-  MEDIUM: '#0f766e',
+  MEDIUM: 'var(--bos-color-brand-primary-deep)',
   LOW: '#475569',
 };
 
@@ -66,7 +66,7 @@ export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () 
                 {it.priority}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.title}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>

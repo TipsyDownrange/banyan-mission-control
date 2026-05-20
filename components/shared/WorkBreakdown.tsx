@@ -102,7 +102,7 @@ const LBL: React.CSSProperties = {
 const INP: React.CSSProperties = {
   width: '100%', padding: '8px 10px', borderRadius: 8,
   border: '1px solid #e2e8f0', background: 'white',
-  fontSize: 13, color: '#0f172a', outline: 'none',
+  fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none',
   boxSizing: 'border-box',
 };
 
@@ -719,7 +719,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     return (
       <div style={{ padding: 14, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-ink-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Job Documents
           </span>
           {!readOnly && (
@@ -769,7 +769,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 style={{
                   padding: '9px 20px', borderRadius: 8, fontSize: 12, fontWeight: 800, border: 'none',
                   cursor: savingDocs ? 'default' : 'pointer',
-                  background: savingDocs ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+                  background: savingDocs ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
                   color: savingDocs ? 'var(--bos-color-ink-tertiary)' : 'white',
                 }}
               >
@@ -1013,7 +1013,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 <span
                   style={{
                     fontSize: 13, fontWeight: 600,
-                    color: status === 'complete' ? 'var(--bos-color-ink-disabled)' : '#0f172a',
+                    color: status === 'complete' ? 'var(--bos-color-ink-disabled)' : 'var(--color-ink-primary)',
                     textDecoration: status === 'complete' ? 'line-through' : 'none',
                     cursor: readOnly || isLocked ? 'default' : 'text',
                     borderBottom: readOnly || isLocked ? 'none' : '1px dashed #e2e8f0',
@@ -1046,7 +1046,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   onBlur={() => loadData()}
                   onClick={e => e.stopPropagation()}
                   style={{
-                    width: 48, fontSize: 11, fontWeight: 600, color: '#0f766e',
+                    width: 48, fontSize: 11, fontWeight: 600, color: 'var(--bos-color-brand-primary-deep)',
                     background: 'rgba(15,118,110,0.06)', border: '1px solid rgba(15,118,110,0.15)',
                     borderRadius: 6, padding: '2px 4px', textAlign: 'center', outline: 'none',
                   }}
@@ -1112,13 +1112,13 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     } catch {}
                   }}
                   onClick={e => e.stopPropagation()}
-                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid #e2e8f0', background: step.category ? '#f0fdfa' : 'white', color: step.category ? '#0f766e' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', outline: 'none' }}
+                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid #e2e8f0', background: step.category ? '#f0fdfa' : 'white', color: step.category ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', outline: 'none' }}
                 >
                   <option value="">Category</option>
                   {STEP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               ) : step.category ? (
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#f0fdfa', color: '#0f766e', border: '1px solid rgba(15,118,110,0.15)' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', border: '1px solid rgba(15,118,110,0.15)' }}>
                   {step.category}
                 </span>
               ) : null}
@@ -1155,7 +1155,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       } catch {}
                     }}
                     onClick={ev => ev.stopPropagation()}
-                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', background: step.planned_start_date ? '#f0fdfa' : 'white', color: '#0f172a' }}
+                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', background: step.planned_start_date ? '#f0fdfa' : 'white', color: 'var(--color-ink-primary)' }}
                   />
                 </label>
 
@@ -1188,7 +1188,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       } catch {}
                     }}
                     onClick={ev => ev.stopPropagation()}
-                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', background: step.planned_end_date ? '#f0fdfa' : 'white', color: '#0f172a' }}
+                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid #e2e8f0', outline: 'none', background: step.planned_end_date ? '#f0fdfa' : 'white', color: 'var(--color-ink-primary)' }}
                   />
                 </label>
 
@@ -1328,7 +1328,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 onClick={e => e.stopPropagation()}
                 autoFocus
                 style={{
-                  fontSize: 13, fontWeight: 700, color: '#0f172a',
+                  fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)',
                   border: '1px solid #14b8a6', borderRadius: 5,
                   padding: '3px 8px', background: 'white', outline: 'none',
                   flex: 1, minWidth: 80,
@@ -1337,7 +1337,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             ) : (
               <span
                 style={{
-                  fontSize: 13, fontWeight: 700, color: '#0f172a', flex: 1,
+                  fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', flex: 1,
                   cursor: readOnly ? 'default' : 'text',
                   borderBottom: readOnly ? 'none' : '1px dashed #e2e8f0',
                   padding: '1px 0',
@@ -1430,7 +1430,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
                 {plan.system_type || 'Unnamed Scope'}
               </span>
 
@@ -1448,7 +1448,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     onClick={e => e.stopPropagation()}
                     autoFocus
                     style={{
-                      fontSize: 11, color: '#0f172a', fontWeight: 600,
+                      fontSize: 11, color: 'var(--color-ink-primary)', fontWeight: 600,
                       border: '1px solid #14b8a6', borderRadius: 5,
                       padding: '2px 8px', background: 'white', outline: 'none',
                       minWidth: 80,
@@ -1479,7 +1479,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 fontSize: 10, fontWeight: 700,
                 padding: '2px 8px', borderRadius: 999,
                 background: pct === 100 ? 'rgba(21,128,61,0.1)' : 'rgba(15,118,110,0.08)',
-                color: pct === 100 ? '#15803d' : '#0f766e',
+                color: pct === 100 ? '#15803d' : 'var(--bos-color-brand-primary-deep)',
                 border: `1px solid ${pct === 100 ? 'rgba(21,128,61,0.2)' : 'rgba(15,118,110,0.15)'}`,
               }}>
                 {completedSteps}/{totalSteps} steps
@@ -1512,7 +1512,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
                   <div style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{plan.location || 'Default Area'}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{plan.location || 'Default Area'}</span>
                     <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{plan.estimated_qty} mark{plan.estimated_qty !== 1 ? 's' : ''}</span>
                   </div>
                   <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1529,8 +1529,8 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   onClick={() => { setAddingStepToPlan(isAddingStep ? null : plan.install_plan_id); setShowTemplateFor(null); }}
                   style={{
                     padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                    background: isAddingStep ? '#0f766e' : 'white',
-                    color: isAddingStep ? 'white' : '#0f766e',
+                    background: isAddingStep ? 'var(--bos-color-brand-primary-deep)' : 'white',
+                    color: isAddingStep ? 'white' : 'var(--bos-color-brand-primary-deep)',
                     border: '1px solid rgba(15,118,110,0.3)',
                   }}
                 >
@@ -1613,7 +1613,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     style={{
                       marginLeft: 'auto',
                       padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: stepForm.step_name ? 'pointer' : 'default',
-                      background: stepForm.step_name ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+                      background: stepForm.step_name ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0',
                       color: stepForm.step_name ? 'white' : 'var(--bos-color-ink-tertiary)',
                       border: 'none',
                     }}
@@ -1726,10 +1726,10 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
               💡 Recommended scopes based on job type
             </div>
-            <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}>
+            <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', fontWeight: 600 }}>
               {matchingTypes.join(', ')}
             </div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
@@ -1747,7 +1747,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             disabled={creatingFromTemplates}
             style={{
               padding: '9px 18px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: creatingFromTemplates ? 'default' : 'pointer',
-              background: creatingFromTemplates ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
+              background: creatingFromTemplates ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
               color: creatingFromTemplates ? 'var(--bos-color-ink-tertiary)' : 'white',
               boxShadow: creatingFromTemplates ? 'none' : '0 2px 8px rgba(15,118,110,0.25)',
             }}
@@ -1807,8 +1807,8 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             onClick={() => { setShowAddScope(p => !p); setShowBulkCreate(false); }}
             style={{
               width: '100%', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              background: showAddScope ? '#0f172a' : 'white',
-              color: showAddScope ? 'white' : '#0f172a',
+              background: showAddScope ? 'var(--color-ink-primary)' : 'white',
+              color: showAddScope ? 'white' : 'var(--color-ink-primary)',
               border: '1px dashed #e2e8f0',
               textAlign: 'center',
             }}
@@ -1818,7 +1818,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           {/* Add Scope form */}
           {showAddScope && (
             <div style={{ padding: 16, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em' }}>New Scope</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>New Scope</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={LBL}>System Type</label>
@@ -1848,7 +1848,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   disabled={!scopeForm.system_type || !scopeForm.location}
                   style={{
                     padding: '9px 22px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none', cursor: 'pointer',
-                    background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+                    background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0',
                     color: scopeForm.system_type && scopeForm.location ? 'white' : 'var(--bos-color-ink-tertiary)',
                   }}
                 >
@@ -1868,10 +1868,10 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         }}>
           <div style={{ flex: 1, minWidth: 120 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Overall Progress
               </span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: overallPct === 100 ? '#15803d' : '#0f172a' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: overallPct === 100 ? '#15803d' : 'var(--color-ink-primary)' }}>
                 {overallPct}%
               </span>
             </div>
@@ -1881,12 +1881,12 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             {quotedHours !== undefined && quotedHours > 0 && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Quoted</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{quotedHours}h</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{quotedHours}h</div>
               </div>
             )}
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Planned</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{totalPlannedHours.toFixed(1)}h</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{totalPlannedHours.toFixed(1)}h</div>
             </div>
             {totalActualHours > 0 && (
               <div style={{ textAlign: 'center' }}>
@@ -1901,7 +1901,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             )}
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Steps</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{totalCompletedSteps}/{totalSteps}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{totalCompletedSteps}/{totalSteps}</div>
             </div>
           </div>
         </div>
@@ -1918,7 +1918,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setShowAddScope(true)}
-                style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+                style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
               >
                 + Add Scope
               </button>
@@ -1999,7 +1999,7 @@ function _MeasurementViewButton_REMOVED({ eventId, kID }: { eventId?: string; kI
             {Object.entries(fields).map(([k, v]) => (
               <div key={k}>
                 <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--bos-color-ink-disabled)' }}>{k.replace(/_/g, ' ')}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-primary)' }}>
                   {typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}
                 </div>
               </div>

@@ -164,7 +164,7 @@ export default function DocumentsTab({ kID }: { kID: string }) {
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
         ))}
       </div>
@@ -184,7 +184,7 @@ export default function DocumentsTab({ kID }: { kID: string }) {
           <input type="checkbox" checked={includeSuperseded} onChange={(e) => setIncludeSuperseded(e.target.checked)} />
           Include superseded
         </label>
-        <button type="button" onClick={() => setShowWizard(true)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Upload Document</button>
+        <button type="button" onClick={() => setShowWizard(true)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ Upload Document</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -195,7 +195,7 @@ export default function DocumentsTab({ kID }: { kID: string }) {
             <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(180px, 1.6fr) 130px 140px 90px', gap: 10, alignItems: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.uploaded_at)}</div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.filename}
                   {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>v{it.version}</span>}
                   {!it.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>· SUPERSEDED</span>}
@@ -204,11 +204,11 @@ export default function DocumentsTab({ kID }: { kID: string }) {
                   {it.subkind || it.notes || '—'}
                 </div>
               </div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#0f766e', padding: '3px 8px', borderRadius: 999, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.22)', justifySelf: 'start' }}>{KIND_LABEL[it.kind]}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', padding: '3px 8px', borderRadius: 999, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.22)', justifySelf: 'start' }}>{KIND_LABEL[it.kind]}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>
                 {it.linked_entity_type ? <span>→ {LINKED_LABEL[it.linked_entity_type]}</span> : <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>unlinked</span>}
               </div>
-              <a href={`https://drive.google.com/file/d/${encodeURIComponent(it.drive_file_id)}/view`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.22)', background: 'white', textDecoration: 'none', justifySelf: 'end' }}>Open</a>
+              <a href={`https://drive.google.com/file/d/${encodeURIComponent(it.drive_file_id)}/view`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.22)', background: 'white', textDecoration: 'none', justifySelf: 'end' }}>Open</a>
             </div>
           </div>
         ))}

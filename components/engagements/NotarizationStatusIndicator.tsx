@@ -20,7 +20,7 @@ export type NotarizationSession = {
 const STATE_BADGE: Record<string, { bg: string; color: string; label: string }> = {
   CREATED:     { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · Created' },
   IN_PROGRESS: { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · In Progress' },
-  COMPLETED:   { bg: '#f0fdfa', color: '#0f766e', label: 'Notarization · Completed' },
+  COMPLETED:   { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Notarization · Completed' },
   FAILED:      { bg: '#fef2f2', color: '#b91c1c', label: 'Notarization · Failed' },
   CANCELLED:   { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Notarization · Cancelled' },
 };
@@ -75,7 +75,7 @@ export default function NotarizationStatusIndicator({
         href={`/notarization/${latestNotarization.session_id}`}
         style={{
           marginLeft: 'auto', fontSize: 11, fontWeight: 700,
-          color: '#0f766e', textDecoration: 'none',
+          color: 'var(--bos-color-brand-primary-deep)', textDecoration: 'none',
         }}
       >
         View →

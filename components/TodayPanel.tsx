@@ -91,7 +91,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       id: p.kID || `proj-${i}`, type: 'project',
       title: p.name,
       detail: `Active · PM: ${p.pm}`,
-      tag: 'Active Job', tagColor: '#0f766e', tagBg: '#f0fdfa',
+      tag: 'Active Job', tagColor: 'var(--bos-color-brand-primary-deep)', tagBg: '#f0fdfa',
       kID: p.kID,
     })),
   ];
@@ -104,7 +104,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Assistant</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Today</h1>
+            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0, marginBottom: 4 }}>Today</h1>
             <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>{today}</p>
           </div>
           <button
@@ -131,7 +131,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
-            <div style={{ marginTop: 6, fontSize: typeof s.value === 'number' && s.value > 0 ? 32 : 22, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
+            <div style={{ marginTop: 6, fontSize: typeof s.value === 'number' && s.value > 0 ? 32 : 22, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--color-ink-primary)', lineHeight: 1 }}>{s.value}</div>
             <div style={{ marginTop: 6, fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
           </div>
         ))}
@@ -180,7 +180,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                   <div style={{ display: 'flex', gap: 8, marginBottom: 5 }}>
                     <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: item.tagColor, background: item.tagBg, padding: '2px 8px', borderRadius: 999 }}>{item.tag}</span>
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 3 }}>{item.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 3 }}>{item.title}</div>
                   <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{item.detail}</div>
                 </div>
               </div>
@@ -201,7 +201,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                   <div style={{ display: 'flex', gap: 8, marginBottom: 5, alignItems: 'center' }}>
                     <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: item.tagColor, background: item.tagBg, padding: '2px 8px', borderRadius: 999 }}>{item.tag}</span>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{item.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 2 }}>{item.title}</div>
                   <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{item.detail}</div>
                 </div>
                 {item.type === 'project' && onNavigate && (
@@ -209,7 +209,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                     onClick={() => onNavigate('Schedules', { kID: 'kID' in item ? String(item.kID) : '' })}
                     style={{
                       alignSelf: 'center', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                      background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e',
+                      background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)',
                       cursor: 'pointer', whiteSpace: 'nowrap',
                     }}>
                     View in PM →
@@ -245,7 +245,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
             background: 'white', borderRadius: 24, padding: 28, zIndex: 301,
             width: '100%', maxWidth: 420, boxShadow: '0 24px 64px rgba(15,23,42,0.15)',
           }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>🚨 Log Field Issue</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 18 }}>🚨 Log Field Issue</div>
             <div style={{ display: 'grid', gap: 14 }}>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', display: 'block', marginBottom: 4 }}>Project *</label>

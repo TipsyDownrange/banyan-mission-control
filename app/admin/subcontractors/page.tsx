@@ -27,7 +27,7 @@ export default function SubcontractorsAdminPage() {
     >
       <div>
         <div style={{
-          fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em',
+          fontSize: 22, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em',
         }}>
           Subcontractors
         </div>

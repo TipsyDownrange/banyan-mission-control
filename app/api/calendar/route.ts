@@ -247,7 +247,7 @@ function userColor(email: string): string {
   const map: Record<string, string> = {
     'sean@kulaglass.com':  '#0369a1',
     'jody@kulaglass.com':  '#0D0D80',
-    'frank@kulaglass.com': '#0f766e',
+    'frank@kulaglass.com': 'var(--bos-color-brand-primary-deep)',
     'kyle@kulaglass.com':  '#4338ca',
     'jenny@kulaglass.com': '#6d28d9',
     'joey@kulaglass.com':  '#92400e',

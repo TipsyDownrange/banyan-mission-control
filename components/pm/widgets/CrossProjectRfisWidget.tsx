@@ -79,7 +79,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {r.rfi_number} — {r.subject}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>

@@ -161,7 +161,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Operations</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Issues</h1>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Issues</h1>
           {!loading && <span style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', paddingBottom: 4 }}>{counts.open} open field issue{counts.open !== 1 ? 's' : ''}</span>}
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 800, transition: 'all 0.15s',
                 background: filter === t.key ? 'white' : 'transparent',
-                color: filter === t.key ? (t.key === 'blocking' ? '#b91c1c' : '#0f172a') : 'var(--bos-color-ink-disabled)',
+                color: filter === t.key ? (t.key === 'blocking' ? '#b91c1c' : 'var(--color-ink-primary)') : 'var(--bos-color-ink-disabled)',
                 boxShadow: filter === t.key ? '0 1px 4px rgba(15,23,42,0.08)' : 'none',
               }}>
               {t.label}
@@ -242,7 +242,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 </div>
 
                 {/* Project */}
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', marginBottom: 4 }}>{issue.projectName}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 4 }}>{issue.projectName}</div>
 
                 {/* Note / description */}
                 {issue.note && <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, marginBottom: 8 }}>{issue.note}</div>}
@@ -256,7 +256,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                     <span>By: <strong>{displayName(issue.performedBy || issue.recordedBy)}</strong></span>
                   )}
                   {issue.assigned_to && (
-                    <span>Assigned: <strong style={{ color: '#0f766e' }}>{issue.assigned_to}</strong></span>
+                    <span>Assigned: <strong style={{ color: 'var(--bos-color-brand-primary-deep)' }}>{issue.assigned_to}</strong></span>
                   )}
                 </div>
 
@@ -276,7 +276,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                       disabled={saving}
                       style={{
                         padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
-                        background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: '#0f766e',
+                        background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)',
                         opacity: saving ? 0.5 : 1,
                       }}>
                       ✓ Close
@@ -299,7 +299,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
             background: 'white', borderRadius: 24, padding: 28, zIndex: 301,
             width: '100%', maxWidth: 420, boxShadow: '0 24px 64px rgba(15,23,42,0.15)',
           }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Assign Issue</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 6 }}>Assign Issue</div>
             <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginBottom: 16 }}>{assignModalIssue.id} — {assignModalIssue.projectName}</div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Assign To</div>
             <select
@@ -323,7 +323,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
               <button onClick={handleAssign} disabled={!assignee || saving}
                 style={{
                   flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  background: assignee ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
+                  background: assignee ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0',
                   color: assignee ? 'white' : 'var(--bos-color-ink-tertiary)',
                 }}>
                 {saving ? 'Saving...' : 'Assign'}

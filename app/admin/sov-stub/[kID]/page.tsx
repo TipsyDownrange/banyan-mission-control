@@ -29,7 +29,7 @@ export default async function AdminSovStubPage(
         }}>
           Admin · SOV Stub
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-ink-primary)', margin: 0 }}>
           Stub Schedule of Values — {kID}
         </h1>
         <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>

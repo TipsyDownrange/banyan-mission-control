@@ -51,7 +51,7 @@ function AddInvoiceForm({ onAdded }: { onAdded: () => void }) {
     setOpen(false); setAmount(''); setSaving(false);
     onAdded();
   }
-  if (!open) return <button onClick={() => setOpen(true)} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid #0f766e', background:'transparent', color:'#0f766e', fontSize:12, fontWeight:700, cursor:'pointer' }}>+ Add Invoice</button>;
+  if (!open) return <button onClick={() => setOpen(true)} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid var(--bos-color-brand-primary-deep)', background:'transparent', color:'var(--bos-color-brand-primary-deep)', fontSize:12, fontWeight:700, cursor:'pointer' }}>+ Add Invoice</button>;
   return (
     <div style={{ background:'#f8fafc', borderRadius:12, border:'1px solid #e2e8f0', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
@@ -67,7 +67,7 @@ function AddInvoiceForm({ onAdded }: { onAdded: () => void }) {
       </div>
       <div style={{ display:'flex', gap:8 }}>
         <button onClick={() => setOpen(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Cancel</button>
-        <button onClick={submit} disabled={!amount||saving} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'#0f766e', color:'white', fontSize:12, fontWeight:800, cursor:'pointer', opacity:saving?0.7:1 }}>{saving?'Saving…':'Save Invoice'}</button>
+        <button onClick={submit} disabled={!amount||saving} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'var(--bos-color-brand-primary-deep)', color:'white', fontSize:12, fontWeight:800, cursor:'pointer', opacity:saving?0.7:1 }}>{saving?'Saving…':'Save Invoice'}</button>
       </div>
     </div>
   );
@@ -154,14 +154,14 @@ export default function CostPanel() {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, padding:'0 4px' }}>
         <div style={{ display:'flex', gap:4, background:'#f1f5f9', borderRadius:10, padding:3 }}>
           {(['today','week','month','all'] as const).map(r=>(
-            <button key={r} onClick={()=>setRange(r)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:range===r?'#0f766e':'transparent', color:range===r?'white':'var(--bos-color-ink-disabled)' }}>
+            <button key={r} onClick={()=>setRange(r)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:range===r?'var(--bos-color-brand-primary-deep)':'transparent', color:range===r?'white':'var(--bos-color-ink-disabled)' }}>
               {r==='today'?'Today':r==='week'?'7 Days':r==='month'?'30 Days':'All Time'}
             </button>
           ))}
         </div>
         <div style={{ display:'flex', gap:4, background:'#f1f5f9', borderRadius:10, padding:3 }}>
           {(['overview','anthropic','openai','subscriptions'] as const).map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:tab===t?'#0f766e':'transparent', color:tab===t?'white':'var(--bos-color-ink-disabled)', textTransform:'capitalize' }}>
+            <button key={t} onClick={()=>setTab(t)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:tab===t?'var(--bos-color-brand-primary-deep)':'transparent', color:tab===t?'white':'var(--bos-color-ink-disabled)', textTransform:'capitalize' }}>
               {t}
             </button>
           ))}
@@ -184,7 +184,7 @@ export default function CostPanel() {
               return (
                 <div key={label} style={{ marginBottom:12 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                    <span style={{ fontSize:13, fontWeight:600, color:'#0f172a' }}>{label}</span>
+                    <span style={{ fontSize:13, fontWeight:600, color:'var(--color-ink-primary)' }}>{label}</span>
                     <span style={{ fontSize:13, fontWeight:700, color:'#334155' }}>{fmtUsd(value)} <span style={{ fontSize:10, color:'var(--bos-color-ink-tertiary)' }}>({pct.toFixed(0)}%)</span></span>
                   </div>
                   <div style={{ height:6, background:'#f1f5f9', borderRadius:999, overflow:'hidden' }}>
@@ -241,11 +241,11 @@ export default function CostPanel() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
               <div style={{ padding:'10px 14px', background:'#fef2f2', borderRadius:10, border:'1px solid rgba(185,28,28,0.15)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#b91c1c', marginBottom:2 }}>Invoices Paid</div>
-                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(ant?.invoicesPaid)}</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(ant?.invoicesPaid)}</div>
               </div>
               <div style={{ padding:'10px 14px', background:'#f0fdf4', borderRadius:10, border:'1px solid rgba(5,150,105,0.2)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#059669', marginBottom:2 }}>Credits Received</div>
-                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(ant?.creditsReceived)}</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(ant?.creditsReceived)}</div>
               </div>
             </div>
             {(data?.anthropicInvoices||[]).length > 0 ? (
@@ -258,7 +258,7 @@ export default function CostPanel() {
                     <tr key={i} style={{ borderBottom:'1px solid #f8fafc' }}>
                       <td style={{ padding:'7px 8px', color:'#334155' }}>{inv.date}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'#fef2f2':'#f0fdf4', color:inv.type==='invoice'?'#b91c1c':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
-                      <td style={{ padding:'7px 8px', fontWeight:700, color:'#0f172a' }}>{fmtUsd(inv.amount)}</td>
+                      <td style={{ padding:'7px 8px', fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(inv.amount)}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>{inv.status||'paid'}</span></td>
                     </tr>
                   ))}
@@ -272,7 +272,7 @@ export default function CostPanel() {
             {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).slice(0,20).map(([date,d])=>(
               <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid #f8fafc' }}>
                 <span style={{ fontSize:13, color:'#334155' }}>{date}</span>
-                <span style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{fmtUsd(d.anthropic||d.cost||0,4)}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(d.anthropic||d.cost||0,4)}</span>
               </div>
             ))}
             {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No API data for this range.</div>}
@@ -290,7 +290,7 @@ export default function CostPanel() {
           {[...(data?.openaiDaily||[])].filter(e=>inRange(e.date)).sort((a,b)=>b.date.localeCompare(a.date)).map((e,i)=>(
             <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid #f8fafc', fontSize:13 }}>
               <span style={{ color:'#334155' }}>{e.date}</span>
-              <span style={{ fontWeight:700, color:'#0f172a' }}>{fmtUsd(e.costUsd,2)}</span>
+              <span style={{ fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(e.costUsd,2)}</span>
             </div>
           ))}
           {(data?.openaiDaily||[]).filter(e=>inRange(e.date)).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No OpenAI data for this range.</div>}
@@ -307,21 +307,21 @@ export default function CostPanel() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
               <div style={{ padding:'10px 14px', background:'#eff6ff', borderRadius:10, border:'1px solid rgba(37,99,235,0.2)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#2563eb', marginBottom:2 }}>Monthly Burn</div>
-                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(subs?.monthly)}/mo</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(subs?.monthly)}/mo</div>
               </div>
               <div style={{ padding:'10px 14px', background:'#f5f3ff', borderRadius:10, border:'1px solid rgba(124,58,237,0.2)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#7c3aed', marginBottom:2 }}>Cumulative</div>
-                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a' }}>{fmtUsd(subs?.totalToDate)}</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(subs?.totalToDate)}</div>
               </div>
             </div>
             {(subs?.items||data?.subscriptions||[]).map((sub,i)=>(
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 0', borderBottom:'1px solid #f1f5f9' }}>
                 <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{sub.provider} — {sub.plan}</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'var(--color-ink-primary)' }}>{sub.provider} — {sub.plan}</div>
                   <div style={{ fontSize:11, color:'var(--bos-color-ink-tertiary)' }}>Since {sub.startDate}</div>
                 </div>
                 <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:14, fontWeight:800, color:'#0f172a' }}>{fmtUsd(sub.monthlyCost)}/mo</div>
+                  <div style={{ fontSize:14, fontWeight:800, color:'var(--color-ink-primary)' }}>{fmtUsd(sub.monthlyCost)}/mo</div>
                   <span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>Active</span>
                 </div>
               </div>

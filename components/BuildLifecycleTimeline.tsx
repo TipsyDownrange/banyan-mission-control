@@ -52,7 +52,7 @@ interface SheetTask {
 
 const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
-  in_progress: { color: '#0f766e', bg: '#f0fdfa', label: 'In Progress' },
+  in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
   blocked:     { color: '#b91c1c', bg: '#fef2f2', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
@@ -75,7 +75,7 @@ function phaseNumFromString(phase?: string): number {
 function phaseColors(status: BuildPhaseStatus, isCurrent: boolean) {
   if (status === 'complete') return { bg: '#059669', text: '#fff', border: '#059669' };
   if (status === 'blocked')  return { bg: '#dc2626', text: '#fff', border: '#dc2626' };
-  if (isCurrent || status === 'in_progress') return { bg: '#0f766e', text: '#fff', border: '#14b8a6' };
+  if (isCurrent || status === 'in_progress') return { bg: 'var(--bos-color-brand-primary-deep)', text: '#fff', border: '#14b8a6' };
   return { bg: '#f1f5f9', text: 'var(--bos-color-ink-disabled)', border: '#e2e8f0' };
 }
 
@@ -118,7 +118,7 @@ function PhaseChip({
         <span style={{ fontSize: 10, color: isExpanded ? 'rgba(255,255,255,0.85)' : '#059669' }}>✓</span>
       )}
       {(phase.status === 'in_progress' || isCurrent) && total > 0 && (
-        <span style={{ fontSize: 9, color: isExpanded ? 'rgba(255,255,255,0.85)' : '#0f766e', fontWeight: 700 }}>{pct}%</span>
+        <span style={{ fontSize: 9, color: isExpanded ? 'rgba(255,255,255,0.85)' : 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>{pct}%</span>
       )}
       {phase.status === 'not_started' && (
         <span style={{ fontSize: 8, color: 'var(--bos-color-ink-tertiary)', letterSpacing: '0.04em' }}>{phase.estimated_weeks.replace('Weeks ', 'Wk ')}</span>
@@ -221,7 +221,7 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
           fontSize: 13, padding: '8px 10px', borderRadius: 7,
           border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
           outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
-          color: '#0f172a', background: 'white', lineHeight: 1.5,
+          color: 'var(--color-ink-primary)', background: 'white', lineHeight: 1.5,
         }} />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
         <div style={{ fontSize: 10, color: flash === 'error' ? '#dc2626' : 'var(--bos-color-ink-tertiary)' }}>
@@ -271,7 +271,7 @@ function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: task.status === 'done' ? 'var(--bos-color-ink-tertiary)' : '#0f172a', lineHeight: 1.3, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: task.status === 'done' ? 'var(--bos-color-ink-tertiary)' : 'var(--color-ink-primary)', lineHeight: 1.3, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
           {task.title}
         </div>
         {task.detail && (
@@ -405,7 +405,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
           fontSize: 14, padding: '10px 12px', borderRadius: 9,
           border: flash === 'error' ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
           outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
-          color: '#0f172a', background: 'white', lineHeight: 1.5,
+          color: 'var(--color-ink-primary)', background: 'white', lineHeight: 1.5,
         }}
       />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
@@ -456,7 +456,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
       {/* Panel header */}
       <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-primary)' }}>
             Phase {phase.phase_number}: {phase.phase_name}
           </div>
           <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{phase.estimated_weeks}</div>
@@ -666,7 +666,7 @@ export default function BuildLifecycleTimeline() {
             The Chart — BanyanOS Build Progress
           </div>
           {currentPhase && (
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f766e' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)' }}>
               Currently in Phase {currentPhase.phase_number}: {currentPhase.phase_name}
             </div>
           )}

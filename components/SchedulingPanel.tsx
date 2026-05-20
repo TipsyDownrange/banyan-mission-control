@@ -9,7 +9,7 @@ type ForecastJob = {
 type IslandForecast = { island: string; jobs: ForecastJob[]; totals: WeekData[] };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Maui: '#0f766e', MAUI: '#0f766e',
+  Maui: 'var(--bos-color-brand-primary-deep)', MAUI: 'var(--bos-color-brand-primary-deep)',
   Oahu: '#0369a1', OAHU: '#0369a1',
   Kauai: '#6d28d9', KAUAI: '#6d28d9',
   'Outer Islands': '#92400e', OUTER: '#92400e',
@@ -20,7 +20,7 @@ function menColor(men: number): string {
   if (men >= 8) return '#b91c1c';
   if (men >= 6) return '#c2410c';
   if (men >= 4) return '#0369a1';
-  if (men >= 2) return '#0f766e';
+  if (men >= 2) return 'var(--bos-color-brand-primary-deep)';
   return 'var(--bos-color-ink-disabled)';
 }
 
@@ -95,7 +95,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Manpower Forecasting</h1>
+            <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0, marginBottom: 4 }}>Manpower Forecasting</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>Live from Manpower Schedule sheet · Men per week by job and island</p>
               {lastSynced && (
@@ -108,7 +108,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {(['forecast', 'lookahead'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {v === 'forecast' ? 'Forecast' : '3-Week Lookahead'}
               </button>
             ))}
@@ -178,7 +178,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                 <button onClick={() => toggleIsland(island.island)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: `${color}08`, border: 'none', cursor: 'pointer', borderBottom: isExpanded ? '1px solid #f1f5f9' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: color }} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{island.island}</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{island.island}</span>
                     <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{activeJobs.length} active job{activeJobs.length !== 1 ? 's' : ''}</span>
                   </div>
                   {/* Current week total for this island */}
@@ -231,7 +231,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                         {island.jobs.map((job, ji) => (
                           <tr key={job.job_number} style={{ borderBottom: '1px solid #f8fafc', background: ji % 2 === 1 ? '#fafafa' : 'white' }}>
                             <td style={{ padding: '8px 12px', position: 'sticky', left: 0, background: ji % 2 === 1 ? '#fafafa' : 'white', zIndex: 1 }}>
-                              <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
+                              <div style={{ fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
                                 {job.job_name.includes('WORK ORDER') ? '🔧 ' : ''}{job.job_name.length > 28 ? job.job_name.substring(0, 28) + '...' : job.job_name}
                               </div>
                               <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>{job.job_number}</div>
@@ -334,7 +334,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
 
           {/* Company-wide totals summary — always shown at bottom */}
           <div style={{ marginTop: 16, borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', background: 'white' }}>
-            <div style={{ padding: '10px 16px', background: '#0f172a', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: '10px 16px', background: 'var(--color-ink-primary)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>
                 {islandFilter === 'All' ? 'Company Total — All Islands' : `${islandFilter} Total`}
               </span>
@@ -401,7 +401,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           {/* Legend */}
           <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>Men on site:</span>
-            {[[1,'1-2','#0f766e'],[2,'3-4','#0f766e'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','#b91c1c']].map(([n,label,color]) => (
+            {[[1,'1-2','var(--bos-color-brand-primary-deep)'],[2,'3-4','var(--bos-color-brand-primary-deep)'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','#b91c1c']].map(([n,label,color]) => (
               <div key={String(n)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 20, height: 16, borderRadius: 4, background: menBg(Number(n)), border: `1px solid ${String(color)}44` }} />
                 <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{String(label)}</span>
