@@ -194,79 +194,6 @@ function FinancialsPanel() {
   );
 }
 
-// WIP stub — shows live data structure from projects
-function WIPPanel() {
-  const [projects, setProjects] = useState<{kID:string;name:string;island:string}[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/projects').then(r => r.json()).then(d => {
-      setProjects(d.projects || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
-
-  return (
-    <div>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Admin & Finance</div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>WIP Report</h1>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Work in Progress — financial position across all active projects</p>
-      </div>
-
-      {/* Coming soon notice */}
-      <div style={{ background: 'linear-gradient(135deg, rgba(15,118,110,0.06), rgba(20,184,166,0.04))', border: '1px solid rgba(15,118,110,0.15)', borderRadius: 20, padding: '24px 28px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(15,118,110,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f766e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>WIP Engine — Next Build</div>
-            <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
-              QuickBooks is now connected. The WIP report will show: contract value, % complete, earned revenue, billings to date, overbilling/underbilling per project — queryable to any historical date and exportable as a bank-ready PDF.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Project list preview */}
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>Active Projects ({projects.length})</div>
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>WIP calculation in queue</div>
-        </div>
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                {['Project', 'Island', 'Contract Value', '% Complete', 'Billed to Date', 'Overbilling / Underbilling'].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map(p => (
-                <tr key={p.kID} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{p.name}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#f0fdfa', color: '#0f766e', border: '1px solid rgba(15,118,110,0.2)' }}>{p.island}</span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>Coming soon</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>—</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>—</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>—</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Union Compliance stub
 function CompliancePanel() {
   const APPRENTICES = [
@@ -359,10 +286,9 @@ function ComingSoonPanel({ section }: { section: Section }) {
 export default function AdminPanel({ section }: { section: Section }) {
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
-      {section === 'wip' && <WIPPanel />}
       {section === 'financials' && <FinancialsPanel />}
       {section === 'compliance' && <CompliancePanel />}
-      {(section === 'vendors' || section === 'hr' || section === 'safety' || section === 'fleet') && (
+      {(section === 'wip' || section === 'vendors' || section === 'hr' || section === 'safety' || section === 'fleet') && (
         <ComingSoonPanel section={section} />
       )}
     </div>
