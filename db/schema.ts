@@ -590,6 +590,10 @@ export const engagements = pgTable('engagements', {
   is_test_project: boolean('is_test_project').notNull().default(false),
   test_project_created_by: uuid('test_project_created_by').references(() => users.user_id),
   test_project_purpose: text('test_project_purpose'),
+  // BAN-376 Customer Pipeline P1 — back-link to the originating inquiry per
+  // spec §11.  Forward FK only; no reverse FK from inquiries.engagement_id
+  // (engagement IS the project here, see migration 0008).
+  source_inquiry_id: uuid('source_inquiry_id').references((): AnyPgColumn => inquiries.inquiry_id, { onDelete: 'set null' }),
   metadata: jsonb('metadata').notNull().default(sql`'{}'::jsonb`),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -603,6 +607,7 @@ export const engagements = pgTable('engagements', {
   index('engagements_type_status_idx').on(table.tenant_id, table.engagement_type, table.status),
   index('engagements_tenant_status_pm_handoff_idx').on(table.tenant_id, table.status, table.pm_handoff_state),
   index('engagements_production_default_idx').on(table.tenant_id, table.status).where(sql`${table.is_test_project} = false`),
+  index('engagements_tenant_source_inquiry_idx').on(table.tenant_id, table.source_inquiry_id),
   check('engagements_engagement_type_check', sql`${table.engagement_type} IN ('project','work_order_small','work_order_large','warranty_small','warranty_large','maintenance','internal')`),
   check('engagements_status_check', sql`${table.status} IN ('active','closed','cancelled','on_hold','archived')`),
   check('engagements_routing_decision_check', sql`${table.routing_decision} IS NULL OR ${table.routing_decision} IN ('service_wo','project')`),
@@ -2388,3 +2393,140 @@ export type ScheduleMilestoneKind = typeof SCHEDULE_MILESTONE_KINDS[number];
 
 export const SCHEDULE_TASK_ISLANDS = ['maui', 'kauai', 'oahu', 'big_island', 'lanai', 'molokai', 'unknown'] as const;
 export type ScheduleTaskIsland = typeof SCHEDULE_TASK_ISLANDS[number];
+
+// ─── BAN-376 Customer Pipeline (Inquiry trunk) ─────────────────────────────
+// Spec: Drive 1Jsio4r6XUSUMULaUdeFN27XE8ioXanQB §5 (entity) + §9 (lifecycle).
+// Universal record for any incoming customer/GC contact regardless of intake
+// channel.  Promotion to engagement (project) or sheets-backed Service WO
+// preserves source attribution through to Gold Dataset at closeout (§11).
+
+export const INQUIRY_SOURCES = [
+  'PHONE', 'EMAIL', 'WALK_IN', 'RFP',
+  'WEBSITE_FORM', 'GBA_REVIEW', 'REFERRAL', 'OTHER',
+] as const;
+export type InquirySource = typeof INQUIRY_SOURCES[number];
+
+export const INQUIRY_FIRST_CONTACT_METHODS = [
+  'PHONE', 'EMAIL', 'WALK_IN', 'OFFICE_FORWARD',
+] as const;
+export type InquiryFirstContactMethod = typeof INQUIRY_FIRST_CONTACT_METHODS[number];
+
+export const INQUIRY_TYPE_INITIALS = ['WORK_ORDER', 'PROJECT', 'UNCLEAR'] as const;
+export type InquiryTypeInitial = typeof INQUIRY_TYPE_INITIALS[number];
+
+export const INQUIRY_VALUE_BANDS = [
+  'UNDER_5K', '5K_25K', '25K_100K', '100K_500K', '500K_PLUS', 'UNKNOWN',
+] as const;
+export type InquiryValueBand = typeof INQUIRY_VALUE_BANDS[number];
+
+export const INQUIRY_ASSIGNED_ROLES = [
+  'PM', 'SERVICE_PM', 'ESTIMATOR', 'GM', 'ADMIN',
+] as const;
+export type InquiryAssignedRole = typeof INQUIRY_ASSIGNED_ROLES[number];
+
+export const INQUIRY_STATES = [
+  'NEW', 'IN_DISCUSSION', 'QUOTED', 'AWARDED',
+  'LOST', 'DEFERRED', 'CONVERTED',
+] as const;
+export type InquiryState = typeof INQUIRY_STATES[number];
+
+export const INQUIRY_CONVERSION_EVENTS = [
+  'SIGNED_PROPOSAL', 'VERBAL_GO_AHEAD', 'DOWN_PAYMENT', 'PURCHASE_ORDER',
+  'CONTRACT', 'NOTICE_TO_PROCEED', 'EMAIL_AWARD', 'OTHER',
+] as const;
+export type InquiryConversionEvent = typeof INQUIRY_CONVERSION_EVENTS[number];
+
+// Forward-only state machine.  LOST + CONVERTED are terminal.  Promote-from-
+// any-state per spec §8.3 — direct transitions to CONVERTED are allowed from
+// every non-terminal state, not just AWARDED.  DEFERRED can re-activate to
+// IN_DISCUSSION / QUOTED / AWARDED.
+export const INQUIRY_STATE_TRANSITIONS: Record<InquiryState, ReadonlyArray<InquiryState>> = {
+  NEW:           ['IN_DISCUSSION', 'QUOTED', 'AWARDED', 'LOST', 'DEFERRED', 'CONVERTED'],
+  IN_DISCUSSION: ['QUOTED', 'AWARDED', 'LOST', 'DEFERRED', 'CONVERTED'],
+  QUOTED:        ['AWARDED', 'LOST', 'DEFERRED', 'CONVERTED'],
+  AWARDED:       ['CONVERTED', 'LOST'],
+  DEFERRED:      ['IN_DISCUSSION', 'QUOTED', 'AWARDED', 'LOST', 'CONVERTED'],
+  LOST:          [],
+  CONVERTED:     [],
+};
+
+export const inquiries = pgTable('inquiries', {
+  inquiry_id: uuid('inquiry_id').defaultRandom().primaryKey(),
+  inquiry_number: text('inquiry_number').notNull(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+
+  source: text('source').notNull(),
+  source_detail: text('source_detail'),
+  source_evidence: text('source_evidence'),
+
+  first_contact_user_id: uuid('first_contact_user_id').references(() => users.user_id),
+  first_contact_at: timestamp('first_contact_at', { withTimezone: true }),
+  first_contact_method: text('first_contact_method'),
+
+  customer_name: text('customer_name').notNull(),
+  customer_org_id: uuid('customer_org_id').references(() => organizations.org_id),
+  contact_name: text('contact_name'),
+  contact_email: text('contact_email'),
+  contact_phone: text('contact_phone'),
+
+  inquiry_type_initial: text('inquiry_type_initial').notNull().default('UNCLEAR'),
+  inquiry_description: text('inquiry_description'),
+  inquiry_location: text('inquiry_location'),
+  inquiry_scope_initial: text('inquiry_scope_initial'),
+  estimated_value_band: text('estimated_value_band').notNull().default('UNKNOWN'),
+
+  assigned_to_user_id: uuid('assigned_to_user_id').references(() => users.user_id),
+  assigned_at: timestamp('assigned_at', { withTimezone: true }),
+  assigned_role: text('assigned_role'),
+
+  state: text('state').notNull().default('NEW'),
+  state_changed_at: timestamp('state_changed_at', { withTimezone: true }).notNull().defaultNow(),
+  state_changed_by: uuid('state_changed_by').references(() => users.user_id),
+  state_reason: text('state_reason'),
+
+  conversion_event: text('conversion_event'),
+  conversion_at: timestamp('conversion_at', { withTimezone: true }),
+  conversion_evidence: text('conversion_evidence'),
+
+  converted_to_project_id: uuid('converted_to_project_id').references(() => engagements.engagement_id),
+  // Per dispatch + ADR-026: service WO IDs are SRV-prefixed sheets text, no FK.
+  converted_to_work_order_id: text('converted_to_work_order_id'),
+
+  notes: text('notes'),
+
+  is_test_project: boolean('is_test_project').notNull().default(false),
+
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  created_by: uuid('created_by').references(() => users.user_id),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('inquiries_tenant_number_uidx').on(table.tenant_id, table.inquiry_number),
+  index('inquiries_tenant_state_idx').on(table.tenant_id, table.state),
+  index('inquiries_tenant_assigned_state_idx').on(table.tenant_id, table.assigned_to_user_id, table.state),
+  index('inquiries_tenant_first_contact_idx').on(table.tenant_id, table.first_contact_user_id, table.created_at),
+  index('inquiries_tenant_source_idx').on(table.tenant_id, table.source),
+  index('inquiries_conversion_targets_idx').on(table.converted_to_project_id, table.converted_to_work_order_id),
+  index('inquiries_production_default_idx').on(table.tenant_id, table.state).where(sql`${table.is_test_project} = false`),
+  check('inquiries_source_check', sql`${table.source} IN ('PHONE','EMAIL','WALK_IN','RFP','WEBSITE_FORM','GBA_REVIEW','REFERRAL','OTHER')`),
+  check('inquiries_first_contact_method_check', sql`${table.first_contact_method} IS NULL OR ${table.first_contact_method} IN ('PHONE','EMAIL','WALK_IN','OFFICE_FORWARD')`),
+  check('inquiries_inquiry_type_initial_check', sql`${table.inquiry_type_initial} IN ('WORK_ORDER','PROJECT','UNCLEAR')`),
+  check('inquiries_estimated_value_band_check', sql`${table.estimated_value_band} IN ('UNDER_5K','5K_25K','25K_100K','100K_500K','500K_PLUS','UNKNOWN')`),
+  check('inquiries_assigned_role_check', sql`${table.assigned_role} IS NULL OR ${table.assigned_role} IN ('PM','SERVICE_PM','ESTIMATOR','GM','ADMIN')`),
+  check('inquiries_state_check', sql`${table.state} IN ('NEW','IN_DISCUSSION','QUOTED','AWARDED','LOST','DEFERRED','CONVERTED')`),
+  check('inquiries_conversion_event_check', sql`${table.conversion_event} IS NULL OR ${table.conversion_event} IN ('SIGNED_PROPOSAL','VERBAL_GO_AHEAD','DOWN_PAYMENT','PURCHASE_ORDER','CONTRACT','NOTICE_TO_PROCEED','EMAIL_AWARD','OTHER')`),
+]);
+
+export const inquiry_state_transitions = pgTable('inquiry_state_transitions', {
+  transition_id: uuid('transition_id').defaultRandom().primaryKey(),
+  tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
+  inquiry_id: uuid('inquiry_id').notNull().references(() => inquiries.inquiry_id, { onDelete: 'cascade' }),
+  from_state: text('from_state'),
+  to_state: text('to_state').notNull(),
+  changed_by: uuid('changed_by').references(() => users.user_id),
+  changed_at: timestamp('changed_at', { withTimezone: true }).notNull().defaultNow(),
+  reason: text('reason'),
+}, (table) => [
+  index('inquiry_state_transitions_inquiry_idx').on(table.tenant_id, table.inquiry_id, table.changed_at),
+  check('inquiry_state_transitions_from_state_check', sql`${table.from_state} IS NULL OR ${table.from_state} IN ('NEW','IN_DISCUSSION','QUOTED','AWARDED','LOST','DEFERRED','CONVERTED')`),
+  check('inquiry_state_transitions_to_state_check', sql`${table.to_state} IN ('NEW','IN_DISCUSSION','QUOTED','AWARDED','LOST','DEFERRED','CONVERTED')`),
+]);

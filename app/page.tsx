@@ -36,10 +36,11 @@ import SuperSchedulingPanel from '@/components/SuperSchedulingPanel';
 import ForecastingPanel from '@/components/ForecastingPanel';
 import LogisticsPanel from '@/components/LogisticsPanel';
 import PMDashboardPanel from '@/components/pm/PMDashboardPanel';
+import CustomerPipelinePanel from '@/components/inquiries/CustomerPipelinePanel';
 import { useState, useEffect } from 'react';
 
 export type AppView =
-  | 'Today' | 'Inbox' | 'Calendar'
+  | 'Today' | 'Inbox' | 'Calendar' | 'Customer Pipeline'
   | 'Overview' | 'Forecasting' | 'Scheduling' | 'Dispatch Board' | 'Schedule' | 'Event Feed' | 'Issues'
   | 'PM Dashboard'
   | 'Projects' | 'Schedules' | 'Submittals' | 'Budget' | 'Change Orders'
@@ -250,6 +251,7 @@ export default function Home() {
         {activeView === 'Today'         && <TodayPanel onNavigate={(view) => setActiveView(view as AppView)} />}
         {activeView === 'Inbox'         && <InboxPanel />}
         {activeView === 'Calendar'      && <CalendarPanel />}
+        {activeView === 'Customer Pipeline' && <CustomerPipelinePanel />}
         {activeView === 'Overview'      && <OverviewPanel />}
         {activeView === 'Event Feed'    && <EventFeedPanel />}
         {activeView === 'Projects'      && <ProjectsPanel onNavigate={(view) => setActiveView(view as AppView)} />}
