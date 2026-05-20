@@ -58,10 +58,10 @@ describe('BAN-375 Closeout v1.1.1 — schema.ts extensions', () => {
     expect(block).toMatch(/walk_date: date\('walk_date'\)\.notNull\(\)/);
   });
 
-  it('exports punch_list_item_history pgTable with cascade on punch_item_id', () => {
+  it('exports punch_list_item_history pgTable with SET NULL on punch_item_id (audit survives hard delete)', () => {
     expect(schemaTs).toContain("punch_list_item_history = pgTable('punch_list_item_history'");
     const block = schemaTs.split("punch_list_item_history = pgTable('punch_list_item_history'")[1];
-    expect(block).toMatch(/onDelete: 'cascade'/);
+    expect(block).toMatch(/onDelete: 'set null'/);
     expect(block).toMatch(/previous_status: punchListItemStatusEnum\('previous_status'\)/);
     expect(block).toMatch(/new_status: punchListItemStatusEnum\('new_status'\)/);
   });

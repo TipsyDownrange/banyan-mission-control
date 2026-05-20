@@ -98,10 +98,19 @@ CREATE INDEX IF NOT EXISTS punch_walks_engagement_status_idx
 
 -- 3. punch_list_item_history — per-item audit trail (parallels
 --    project_lifecycle_states pattern at item granularity)
+--
+-- punch_item_id is nullable + ON DELETE SET NULL (NOT cascade) so the
+-- 'hard_deleted' audit row survives after the parent item is hard-deleted.
+-- The hard-delete route writes the audit row BEFORE the DELETE; SET NULL
+-- preserves that row with punch_item_id orphaned (the parent's id is no
+-- longer queryable but the history note captures it via the action +
+-- previous_status + note fields). For live items (active status_changed /
+-- completed / signed_off etc), the column is always populated and the row
+-- joins back to the parent normally.
 CREATE TABLE IF NOT EXISTS public.punch_list_item_history (
   history_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES public.tenants (tenant_id),
-  punch_item_id uuid NOT NULL REFERENCES public.punch_list_items (punch_item_id) ON DELETE CASCADE,
+  punch_item_id uuid REFERENCES public.punch_list_items (punch_item_id) ON DELETE SET NULL,
   action text NOT NULL,
   actor uuid REFERENCES public.users (user_id),
   previous_status public.punch_list_item_status,

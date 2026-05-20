@@ -23,6 +23,23 @@ const ALLOWED_TYPES = [
   'owner_walkthrough', 'architect', 'final', 'internal_qa',
 ] as const;
 
+// YYYY-MM-DD with structural + semantic validation. The regex enforces the
+// pattern; Date construction catches calendar-invalid combinations like
+// 2026-02-31 or 2026-13-01 (which would otherwise bubble up as a Postgres
+// `invalid input syntax for type date` 500).
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isValidDateString(s: string): boolean {
+  if (!DATE_RE.test(s)) return false;
+  const [y, m, d] = s.split('-').map((n) => parseInt(n, 10));
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const probe = new Date(Date.UTC(y, m - 1, d));
+  return (
+    probe.getUTCFullYear() === y &&
+    probe.getUTCMonth() === m - 1 &&
+    probe.getUTCDate() === d
+  );
+}
+
 interface CreateBody {
   engagement_id?: string;
   type?: string;
@@ -88,6 +105,12 @@ export async function POST(req: Request) {
   }
   if (!walkDate) {
     return NextResponse.json({ error: 'walk_date is required (YYYY-MM-DD)' }, { status: 400 });
+  }
+  if (!isValidDateString(walkDate)) {
+    return NextResponse.json(
+      { error: 'walk_date must be a valid YYYY-MM-DD date', code: 'INVALID_WALK_DATE' },
+      { status: 400 },
+    );
   }
 
   // Tenant-scoped engagement check — surface 404 before insert so callers

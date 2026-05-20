@@ -148,13 +148,17 @@ export async function POST(
       if (!(CLEARANCE_TERMINAL_STATES as readonly string[]).includes(ctx.toState)) {
         return;
       }
-      // Aggregate query (single round-trip) against the post-UPDATE state:
-      // total > 0 AND non_terminal_count = 0  ⇒ engagement-wide clearance.
+      // Aggregate query (single round-trip) against the post-UPDATE state.
+      // v1.1.1: WAIVED items "drop out of scope" (per the WAIVED design intent
+      // in lib/closeout/state-transitions.ts) — they count as NEITHER terminal
+      // NOR non-terminal for clearance purposes. The filter excludes WAIVED from
+      // both counts so an engagement with any waived items can still satisfy
+      // total > 0 AND non_terminal_count = 0 ⇒ engagement-wide clearance.
       const rs = await tx.execute(sql`
         SELECT
-          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE status <> 'WAIVED')::int AS total,
           COUNT(*) FILTER (
-            WHERE status NOT IN ('COMPLETED','SIGNED_OFF','DEFERRED_TO_WARRANTY')
+            WHERE status NOT IN ('COMPLETED','SIGNED_OFF','DEFERRED_TO_WARRANTY','WAIVED')
           )::int AS non_terminal
         FROM punch_list_items
         WHERE engagement_id = ${ctx.engagementId}

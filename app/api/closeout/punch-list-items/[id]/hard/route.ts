@@ -67,33 +67,13 @@ export async function DELETE(
 
   try {
     await db.transaction(async (tx) => {
-      // History row must land before the DELETE because ON DELETE CASCADE
-      // wipes the existing history. We INSERT (which is fine — the FK is
-      // valid pre-delete) then DELETE the parent row, and the just-inserted
-      // history row gets cascade-deleted too. So we write to a side audit
-      // table instead — but punch_list_item_history IS the audit table and
-      // it cascades. Resolution: capture a final history row, then drop the
-      // FK reference by setting punch_item_id to NULL on history rows for
-      // this item — but that requires nullable FK, which we don't have.
-      //
-      // Simplest correct behavior: write the 'hard_deleted' history row
-      // (preserved while parent exists), then issue the DELETE. The cascade
-      // wipes everything, including our final row — which loses the audit
-      // trail. To preserve audit through cascade, we use a sentinel row
-      // pattern: insert with the regular FK, then immediately UPDATE the
-      // CASCADE rule for this single row. PostgreSQL doesn't support
-      // per-row cascade rules. Pragmatic alternative: write the audit row
-      // here AS-IF the parent will remain, accept that ON DELETE CASCADE
-      // will wipe it, and instead rely on the Activity-Spine-adjacent
-      // approach: persist the hard-delete event in a separate stable log.
-      //
-      // Phase 1 simplification: write the audit row, perform the delete.
-      // History is preserved up to the moment of delete; the deletion
-      // itself is captured indirectly by the row's absence from the table.
-      // Sean accepts this tradeoff per dispatch §"Hard delete" — the use
-      // case is admin cleanup of bad data, not a high-volume audit
-      // requirement. Phase 2 can add a separate punch_list_deletions log
-      // table that does NOT cascade.
+      // Write the 'hard_deleted' audit row BEFORE the DELETE. The
+      // punch_list_item_history.punch_item_id FK is ON DELETE SET NULL
+      // (migration 0029), so this row survives the cascade and persists as
+      // a durable hard-delete record. The orphaned punch_item_id column
+      // becomes NULL post-delete; the audit row still carries the original
+      // id and previous_status via the note + previous_status columns so
+      // forensic queries can reconstruct what was removed.
       await tx
         .insert(punch_list_item_history)
         .values({
@@ -102,7 +82,7 @@ export async function DELETE(
           action: 'hard_deleted',
           previous_status: previousStatus,
           new_status: null,
-          note: reason,
+          note: reason ? `id=${id}; reason=${reason}` : `id=${id}`,
         });
 
       await tx

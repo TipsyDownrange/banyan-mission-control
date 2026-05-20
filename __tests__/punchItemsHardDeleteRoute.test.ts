@@ -150,6 +150,8 @@ describe('DELETE hard route — history row + delete order', () => {
   });
 
   it('history row carries action=hard_deleted + previous_status + reason note', async () => {
+    // Note format: `id=<uuid>; reason=<text>` so the forensic record carries
+    // the original id even after ON DELETE SET NULL nulls out punch_item_id.
     punchLookupResult = [{ punch_item_id: PUNCH_ID, status: 'IN_PROGRESS' }];
     await route.DELETE(deleteReq({ reason: 'GC clarified scope' }), ctxFor(PUNCH_ID));
     expect(txInsertSpy).toHaveBeenCalledWith(
@@ -159,7 +161,7 @@ describe('DELETE hard route — history row + delete order', () => {
         action: 'hard_deleted',
         previous_status: 'IN_PROGRESS',
         new_status: null,
-        note: 'GC clarified scope',
+        note: `id=${PUNCH_ID}; reason=GC clarified scope`,
       }),
     );
   });

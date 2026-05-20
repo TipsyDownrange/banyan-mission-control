@@ -1327,10 +1327,14 @@ export const punch_walks = pgTable('punch_walks', {
 // continue to emit PUNCH_LIST_ITEM_STATE_CHANGED via the BAN-311 executor;
 // this table captures item-level actions (assignment, photo add, waive,
 // hard delete) that don't need their own Activity Spine event_type.
+//
+// punch_item_id is nullable + ON DELETE SET NULL so the 'hard_deleted'
+// audit row survives after the parent item is hard-deleted. For live items
+// the column is always populated.
 export const punch_list_item_history = pgTable('punch_list_item_history', {
   history_id: uuid('history_id').defaultRandom().primaryKey(),
   tenant_id: uuid('tenant_id').notNull().references(() => tenants.tenant_id),
-  punch_item_id: uuid('punch_item_id').notNull().references(() => punch_list_items.punch_item_id, { onDelete: 'cascade' }),
+  punch_item_id: uuid('punch_item_id').references(() => punch_list_items.punch_item_id, { onDelete: 'set null' }),
   action: text('action').notNull(),
   actor: uuid('actor').references(() => users.user_id),
   previous_status: punchListItemStatusEnum('previous_status'),

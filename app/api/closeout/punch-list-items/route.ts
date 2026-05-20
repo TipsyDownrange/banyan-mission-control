@@ -20,8 +20,12 @@
 
 import { NextResponse } from 'next/server';
 import { and, eq, sql } from 'drizzle-orm';
-import { db, punch_list_items, punch_list_item_history, engagements } from '@/db';
+import { db, punch_list_items, punch_list_item_history, engagements, subcontractors, punch_walks } from '@/db';
 import { passAiaApiGate } from '@/lib/aia/api-gate';
+
+// Postgres error code for unique_violation (raised when two concurrent
+// creates allocate the same item_number against the engagement scope).
+const PG_UNIQUE_VIOLATION = '23505';
 
 const ROUTE_PATH = '/api/closeout/punch-list-items';
 
@@ -118,6 +122,52 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `engagement ${engagementId} not found` }, { status: 404 });
   }
 
+  // App-layer tenant-scope validation: the assigned_to_sub_id + walk_id FKs
+  // only reference the target id (Postgres FKs can't enforce composite
+  // tenant scope against single-PK tables). Without this, a valid UUID
+  // from a different tenant would silently link cross-tenant. Validate
+  // explicitly so we surface a clean 404 instead.
+  if (body.assigned_to_sub_id) {
+    const sub = await db
+      .select({ subcontractor_id: subcontractors.subcontractor_id })
+      .from(subcontractors)
+      .where(and(
+        eq(subcontractors.subcontractor_id, body.assigned_to_sub_id),
+        eq(subcontractors.tenant_id, gate.tenantId),
+      ))
+      .limit(1);
+    if (sub.length === 0) {
+      return NextResponse.json(
+        { error: `subcontractor ${body.assigned_to_sub_id} not found in tenant`, code: 'SUB_NOT_FOUND' },
+        { status: 404 },
+      );
+    }
+  }
+  if (body.walk_id) {
+    const walk = await db
+      .select({ walk_id: punch_walks.walk_id, engagement_id: punch_walks.engagement_id })
+      .from(punch_walks)
+      .where(and(
+        eq(punch_walks.walk_id, body.walk_id),
+        eq(punch_walks.tenant_id, gate.tenantId),
+      ))
+      .limit(1);
+    if (walk.length === 0) {
+      return NextResponse.json(
+        { error: `punch_walk ${body.walk_id} not found in tenant`, code: 'WALK_NOT_FOUND' },
+        { status: 404 },
+      );
+    }
+    // Walk must belong to the same engagement as the item — otherwise the
+    // item would link to a walk from a different project.
+    if (walk[0].engagement_id !== engagementId) {
+      return NextResponse.json(
+        { error: 'walk_id belongs to a different engagement', code: 'WALK_ENGAGEMENT_MISMATCH' },
+        { status: 400 },
+      );
+    }
+  }
+
   try {
     const result = await db.transaction(async (tx) => {
       // Next item_number for this engagement. Gap-tolerant: just max+1.
@@ -167,6 +217,20 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, punch_list_item: result }, { status: 201 });
   } catch (err) {
+    // Concurrent creates against the same engagement can collide on the
+    // punch_list_items_engagement_number_uidx unique constraint (max+1 is
+    // not race-safe). Surface that as 409 retryable so clients can re-POST
+    // rather than treating it as a generic server failure.
+    const code = (err as { code?: string } | null)?.code;
+    if (code === PG_UNIQUE_VIOLATION) {
+      return NextResponse.json(
+        {
+          error: 'concurrent create collided on item_number; retry the request',
+          code: 'ITEM_NUMBER_RACE',
+        },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { error: err instanceof Error ? err.message : String(err), code: 'INTERNAL' },
       { status: 500 },

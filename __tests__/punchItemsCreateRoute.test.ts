@@ -83,6 +83,8 @@ jest.mock('@/db', () => {
     punch_list_items: tbl('punch_list_items'),
     punch_list_item_history: tbl('punch_list_item_history'),
     engagements: tbl('engagements'),
+    subcontractors: tbl('subcontractors'),
+    punch_walks: tbl('punch_walks'),
   };
 });
 

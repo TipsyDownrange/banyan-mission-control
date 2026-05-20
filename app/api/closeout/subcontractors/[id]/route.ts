@@ -92,13 +92,33 @@ export async function PATCH(
     }
   }
 
+  // company_name PATCH must enforce the same non-empty rule as POST so
+  // whitespace-only payloads can't bypass the create-path guard and persist
+  // unusable catalog rows.
+  if (body.company_name !== undefined && body.company_name.trim() === '') {
+    return NextResponse.json(
+      { error: 'company_name cannot be blank' },
+      { status: 400 },
+    );
+  }
+
   const updateValues: Record<string, unknown> = { updated_at: new Date() };
   if (body.company_name !== undefined) updateValues.company_name = body.company_name.trim();
   if (body.primary_contact_name !== undefined) updateValues.primary_contact_name = body.primary_contact_name;
   if (body.primary_contact_email !== undefined) updateValues.primary_contact_email = body.primary_contact_email;
   if (body.primary_contact_phone !== undefined) updateValues.primary_contact_phone = body.primary_contact_phone;
   if (body.trade !== undefined) updateValues.trade = body.trade.trim();
-  if (body.island !== undefined) updateValues.island = body.island;
+  // Persist the trimmed island value (or null for empty) so payloads like
+  // 'maui ' don't fail the subcontractors_island_check after passing the
+  // app-layer validator.
+  if (body.island !== undefined) {
+    if (body.island === null) {
+      updateValues.island = null;
+    } else {
+      const normalized = body.island.trim();
+      updateValues.island = normalized === '' ? null : normalized;
+    }
+  }
   if (body.active !== undefined) updateValues.active = body.active;
   if (body.notes !== undefined) updateValues.notes = body.notes;
 

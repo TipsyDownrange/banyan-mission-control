@@ -49,8 +49,13 @@ describe('Migration 0029 — subcontractors / punch_walks / punch_list_item_hist
     expect(sql0029).toMatch(/punch_walks_status_check[\s\S]*?CHECK \(status IN \('in_progress','complete'\)\)/);
   });
 
-  it('punch_list_item_history.punch_item_id cascades on parent delete', () => {
-    expect(sql0029).toMatch(/punch_item_id uuid NOT NULL REFERENCES public\.punch_list_items \(punch_item_id\) ON DELETE CASCADE/);
+  it('punch_list_item_history.punch_item_id is nullable + ON DELETE SET NULL', () => {
+    // Codex P1 (PR #209): a CASCADE FK would wipe the just-written
+    // 'hard_deleted' audit row when the parent punch item is hard-deleted,
+    // defeating the audit-trail intent. SET NULL preserves the row.
+    expect(sql0029).toMatch(/punch_item_id uuid REFERENCES public\.punch_list_items \(punch_item_id\) ON DELETE SET NULL/);
+    // Must NOT be NOT NULL — that would block the post-delete orphan state.
+    expect(sql0029).not.toMatch(/punch_item_id uuid NOT NULL REFERENCES public\.punch_list_items/);
   });
 
   it('punch_list_item_history.action CHECK lists the 10 ratified actions', () => {
