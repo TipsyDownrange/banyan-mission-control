@@ -16,7 +16,7 @@ const EVENT_STYLE: Record<string, { label: string; color: string; bg: string }> 
   INSTALL_STEP:      { label: 'Install',     color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)' },
   NOTE:              { label: 'Note',        color: 'var(--bos-color-ink-tertiary)', bg: 'rgba(248,250,252,0.9)' },
   FIELD_MEASUREMENT: { label: 'Measurement', color: '#0891b2', bg: 'rgba(236,254,255,0.9)' },
-  PUNCH_LIST:        { label: 'Punch List',  color: '#d97706', bg: 'rgba(255,251,235,0.9)' },
+  PUNCH_LIST:        { label: 'Punch List',  color: 'var(--color-amber-500)', bg: 'rgba(255,251,235,0.9)' },
   TM_CAPTURE:        { label: 'T&M',         color: 'var(--color-amber-800)', bg: 'rgba(255,247,237,0.9)' },
   SITE_VISIT:        { label: 'Site Visit',  color: 'var(--bos-color-accent-data)', bg: 'rgba(240,249,255,0.9)' },
   TESTING:           { label: 'Test',        color: '#7c3aed', bg: 'rgba(245,243,255,0.9)' },
@@ -123,13 +123,13 @@ export default function OverviewPanel() {
       label: 'AR Outstanding',
       value: fmtKpi(qboKpis.arOutstanding),
       subtitle: 'Unpaid invoices',
-      color: qboKpis.arOutstanding > 200000 ? '#d97706' : 'var(--color-ink-primary)',
+      color: qboKpis.arOutstanding > 200000 ? 'var(--color-amber-500)' : 'var(--color-ink-primary)',
     },
     {
       label: 'AP Outstanding',
       value: fmtKpi(qboKpis.apOutstanding),
       subtitle: 'Unpaid bills',
-      color: qboKpis.apOutstanding > 100000 ? '#d97706' : 'var(--color-ink-primary)',
+      color: qboKpis.apOutstanding > 100000 ? 'var(--color-amber-500)' : 'var(--color-ink-primary)',
     },
     {
       label: 'Net Income YTD',
@@ -151,25 +151,25 @@ export default function OverviewPanel() {
       value: `${utilizationPct}%`,
       subtitle: `${crewDeployed} deployed / ${crewTotal} total`,
       progress: utilizationPct,
-      color: utilizationPct >= 70 ? '#059669' : utilizationPct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)',
+      color: utilizationPct >= 70 ? '#059669' : utilizationPct >= 40 ? 'var(--color-amber-500)' : 'var(--bos-color-ink-tertiary)',
     },
     {
       label: 'Open Submittals',
       value: submittals.pending,
       subtitle: `${submittals.approved} approved · ${submittals.total} total`,
-      color: submittals.pending > 20 ? '#dc2626' : submittals.pending > 10 ? '#d97706' : 'var(--color-ink-primary)',
+      color: submittals.pending > 20 ? '#dc2626' : submittals.pending > 10 ? 'var(--color-amber-500)' : 'var(--color-ink-primary)',
     },
     {
       label: 'Pending Change Orders',
       value: cos.pending,
       subtitle: cos.totalExposure > 0 ? `$${(cos.totalExposure / 1000).toFixed(0)}K exposure` : `${cos.total} total`,
-      color: cos.pending > 5 ? '#dc2626' : cos.pending > 2 ? '#d97706' : 'var(--color-ink-primary)',
+      color: cos.pending > 5 ? '#dc2626' : cos.pending > 2 ? 'var(--color-amber-500)' : 'var(--color-ink-primary)',
     },
     {
       label: 'Open Issues',
       value: totalIssues,
       subtitle: 'Across all projects',
-      color: totalIssues > 10 ? '#dc2626' : totalIssues > 3 ? '#d97706' : '#059669',
+      color: totalIssues > 10 ? '#dc2626' : totalIssues > 3 ? 'var(--color-amber-500)' : '#059669',
     },
   ];
 
@@ -218,7 +218,7 @@ export default function OverviewPanel() {
                 </div>
                 {islandProjects.map(p => (
                   <div key={p.kID} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0 6px 16px', fontSize: 13 }}>
-                    <span style={{ color: '#334155', fontWeight: 500 }}>{p.name}</span>
+                    <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 500 }}>{p.name}</span>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {p.issues > 0 && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'var(--color-red-50)', color: '#dc2626' }}>{p.issues} issues</span>}
                       <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{p.pm?.split(' ')[0] || ''}</span>
@@ -247,7 +247,7 @@ export default function OverviewPanel() {
                       {style.label}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {ev.note || ev.projectName}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -275,7 +275,7 @@ export default function OverviewPanel() {
               return (
                 <div key={p.kID} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.name}
                     </div>
                     <div style={{ marginTop: 4, height: 4, borderRadius: 2, background: '#f1f5f9', overflow: 'hidden' }}>

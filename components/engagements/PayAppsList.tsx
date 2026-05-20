@@ -19,13 +19,13 @@ export type PayApp = {
 
 const STATE_BADGE: Record<string, { bg: string; color: string; label?: string }> = {
   PENDING_DRAFT:          { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
-  READY_FOR_NOTARIZATION: { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'Ready · Notarize' },
-  READY_FOR_SUBMISSION:   { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'Ready · Submit' },
+  READY_FOR_NOTARIZATION: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)', label: 'Ready · Notarize' },
+  READY_FOR_SUBMISSION:   { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)', label: 'Ready · Submit' },
   SUBMITTED:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Submitted' },
   ARCHITECT_CERTIFIED:    { bg: '#eff6ff', color: '#1d4ed8', label: 'Architect Cert.' },
-  GC_APPROVED:            { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'GC Approved' },
-  PAID_PARTIAL:           { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Partial' },
-  PAID_FULL:              { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Full' },
+  GC_APPROVED:            { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)', label: 'GC Approved' },
+  PAID_PARTIAL:           { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Partial' },
+  PAID_FULL:              { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Full' },
   REJECTED:               { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Rejected' },
 };
 
@@ -150,13 +150,13 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
                 {fmtSubmitted(p.submitted_at)}
               </div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', textAlign: 'right' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-secondary)', textAlign: 'right' }}>
               {fmtMoney(p.current_amount_due)}
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                 Due this app
               </div>
             </div>
-            <div style={{ fontSize: 13, color: '#334155', textAlign: 'right' }}>
+            <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', textAlign: 'right' }}>
               {fmtMoney(p.total_earned_less_retainage)}
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                 Earned · less retainage

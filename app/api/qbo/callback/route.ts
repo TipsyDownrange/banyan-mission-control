@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 .card{background:white;border-radius:16px;padding:24px;border:1px solid var(--color-surface-border);box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 h1{color:var(--bos-color-brand-primary-deep);margin:0 0 8px;}
 p{color:var(--bos-color-ink-disabled);margin:0 0 16px;}
-pre{background:#f1f5f9;border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;color:#334155;}
+pre{background:#f1f5f9;border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;color:var(--color-ink-secondary);}
 .success{color:var(--bos-color-brand-primary-deep);font-weight:700;font-size:18px;}</style>
 </head>
 <body>

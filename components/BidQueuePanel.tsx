@@ -172,8 +172,8 @@ export default function BidQueuePanel() {
         const kpis: KPI[] = [
           { label: 'Active Bids', value: activeBids.length, subtitle: workloadStr || 'None assigned' },
           { label: 'Submitted', value: submittedBids.length, subtitle: 'Awaiting decision', color: '#1d4ed8' },
-          { label: 'Hit Rate', value: `${hitRate}%`, subtitle: `${wonBids.length} won / ${totalDecided} decided`, color: hitRate >= 30 ? '#059669' : '#d97706', progress: hitRate },
-          { label: 'Due This Week', value: dueSoon.length, subtitle: overdue.length > 0 ? `${overdue.length} overdue` : 'On track', color: overdue.length > 0 ? '#dc2626' : dueSoon.length > 3 ? '#d97706' : '#059669' },
+          { label: 'Hit Rate', value: `${hitRate}%`, subtitle: `${wonBids.length} won / ${totalDecided} decided`, color: hitRate >= 30 ? '#059669' : 'var(--color-amber-500)', progress: hitRate },
+          { label: 'Due This Week', value: dueSoon.length, subtitle: overdue.length > 0 ? `${overdue.length} overdue` : 'On track', color: overdue.length > 0 ? '#dc2626' : dueSoon.length > 3 ? 'var(--color-amber-500)' : '#059669' },
         ];
         const actionItems: ActionItem[] = [];
         if (overdue.length > 0) actionItems.push({ text: 'Overdue bids', severity: 'critical', count: overdue.length });
@@ -228,7 +228,7 @@ export default function BidQueuePanel() {
           style={{ flex: '1 1 220px', background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }}
         />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-secondary)', cursor: 'pointer', outline: 'none' }}>
           <option value="active">Active pipeline</option>
           <option value="submitted">Submitted</option>
           <option value="won">Won</option>
@@ -236,7 +236,7 @@ export default function BidQueuePanel() {
           <option value="all">All bids</option>
         </select>
         <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}
-          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-secondary)', cursor: 'pointer', outline: 'none' }}>
           <option value="All">All estimators</option>
           <option value="Kyle Shimizu">Kyle Shimizu</option>
           <option value="Jenny Shimabukuro">Jenny Shimabukuro</option>
@@ -245,7 +245,7 @@ export default function BidQueuePanel() {
           <option value="unassigned">Unassigned</option>
         </select>
         <select value={filterIsland} onChange={e => setFilterIsland(e.target.value)}
-          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+          style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '9px 14px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-secondary)', cursor: 'pointer', outline: 'none' }}>
           {ISLANDS.map(i => <option key={i}>{i}</option>)}
         </select>
         {(search || filterAssignee !== 'All' || filterIsland !== 'All Islands') && (
@@ -303,7 +303,7 @@ export default function BidQueuePanel() {
                     <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center' }}>{bid['kID']}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{bid['Job Name']}</div>
                     <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center' }}>{bid['Island'] || '—'}</div>
-                    <div style={{ fontSize: 12, color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{bid['Assigned To'] || <span style={{ color: '#f59e0b', fontWeight: 700 }}>Unassigned</span>}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{bid['Assigned To'] || <span style={{ color: '#f59e0b', fontWeight: 700 }}>Unassigned</span>}</div>
                     <div style={{ fontSize: 12, color: urgent ? '#c2410c' : 'var(--bos-color-ink-disabled)', fontWeight: urgent ? 700 : 400, display: 'flex', alignItems: 'center' }}>
                       {bid['Due Date'] ? (urgent ? ` ${days}d` : bid['Due Date'].substring(5)) : '—'}
                     </div>
@@ -343,7 +343,7 @@ export default function BidQueuePanel() {
                           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>{bid['Notes']}</div>
                         </div>}
                         {bid['Products / Specs'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Products</div>
-                          <div style={{ fontSize: 13, color: '#334155' }}>{bid['Products / Specs']}</div>
+                          <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)' }}>{bid['Products / Specs']}</div>
                         </div>}
                       </div>
                       <div>
@@ -393,7 +393,7 @@ export default function BidQueuePanel() {
                       {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
                     </div>
                     <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', lineHeight: 1.1 }}>{bid['Job Name']}</h3>
-                    <div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>
+                    <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', fontWeight: 600 }}>
                       {bid['Island'] && <span>{bid['Island']} · </span>}
                       {bid['Assigned To'] || 'Unassigned'}
                     </div>
@@ -423,7 +423,7 @@ export default function BidQueuePanel() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(220px,0.8fr)', gap: 12, paddingLeft: 4 }}>
                     <div style={{ padding: 14, borderRadius: 16, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)' }}>
                       {FL('Notes / Scope')}
-                      <div style={{ fontSize: 13, lineHeight: 1.7, color: '#334155' }}>{bid['Notes'] || 'No notes.'}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--color-ink-secondary)' }}>{bid['Notes'] || 'No notes.'}</div>
                     </div>
                     <div style={{ padding: 14, borderRadius: 16, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.16)', display: 'grid', gap: 8 }}>
                       {FL('Decision state')}

@@ -201,7 +201,7 @@ export default function InboxPanel() {
                   <div style={{ display: 'grid', gap: '6px', padding: '10px 14px', borderRadius: 18, background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(226,232,240,0.94)' }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(13,148,136,0.7)', flexShrink: 0, marginTop: 1 }}>KAI</span>
-                      <span style={{ fontSize: 13, color: '#334155', lineHeight: 1.55 }}>{item.kaiNote}</span>
+                      <span style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.55 }}>{item.kaiNote}</span>
                     </div>
                     {item.bidMatch && (
                       <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', borderTop: '1px solid rgba(226,232,240,0.7)', paddingTop: 6, marginTop: 2 }}>
@@ -214,7 +214,7 @@ export default function InboxPanel() {
                 {/* Expanded */}
                 {isExpanded && (
                   <div style={{ paddingLeft: 4, borderTop: '1px solid rgba(226,232,240,0.7)', paddingTop: 16 }}>
-                    <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.6, marginBottom: 16, padding: '10px 14px', background: 'rgba(248,250,252,0.9)', borderRadius: 14, border: '1px solid rgba(226,232,240,0.9)' }}>
+                    <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.6, marginBottom: 16, padding: '10px 14px', background: 'rgba(248,250,252,0.9)', borderRadius: 14, border: '1px solid rgba(226,232,240,0.9)' }}>
                       {item.snippet}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
@@ -249,7 +249,7 @@ export default function InboxPanel() {
                               } catch(err) { alert('Error: ' + err); }
                               setDelegating(null);
                             }}
-                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? 'var(--color-surface-border)' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? 'var(--bos-color-ink-tertiary)' : '#334155', cursor: delegating === item.id ? 'default' : 'pointer' }}>
+                              style={{ padding: '6px 14px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: delegating === item.id ? 'var(--color-surface-border)' : 'white', border: '1px solid rgba(226,232,240,0.9)', color: delegating === item.id ? 'var(--bos-color-ink-tertiary)' : 'var(--color-ink-secondary)', cursor: delegating === item.id ? 'default' : 'pointer' }}>
                               {delegating === item.id ? '...' : d}
                             </button>
                           ))}

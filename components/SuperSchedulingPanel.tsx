@@ -151,7 +151,7 @@ function progressPct(p: DispatchSlot['progress']): number {
 
 function bufferColor(buffer: number): string {
   if (buffer >= 3) return '#15803d';
-  if (buffer >= 1) return '#d97706';
+  if (buffer >= 1) return 'var(--color-amber-500)';
   return '#dc2626';
 }
 

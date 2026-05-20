@@ -118,7 +118,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
             {fmtDate(ticket.work_date)}
           </div>
         </div>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#334155', textAlign: 'right' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-ink-secondary)', textAlign: 'right' }}>
           {fmtMoney(ticket.ticket_total)}
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -133,7 +133,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
         <div data-testid={`tm-ticket-body-${ticket.ticket_id}`} style={{ borderTop: '1px solid #f1f5f9', marginTop: 12, paddingTop: 4 }}>
           {auth && (
             <Section label="AUTHORIZATION">
-              <div style={{ fontSize: 12, color: '#334155' }}>
+              <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>
                 Authorized under <strong>TMA-{auth.authorization_number}</strong>
                 {auth.authorized_by_name ? ` by ${auth.authorized_by_name}` : ''}
                 {` (${auth.authorization_method.replace(/_/g, ' ').toLowerCase()})`}
@@ -157,7 +157,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
                       gridTemplateColumns: '1fr 60px 90px 90px',
                       gap: 8,
                       fontSize: 12,
-                      color: '#334155',
+                      color: 'var(--color-ink-secondary)',
                       padding: '4px 0',
                       borderBottom: i === labor.length - 1 ? 'none' : '1px dashed #f1f5f9',
                     }}
@@ -183,7 +183,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
                       gridTemplateColumns: '1fr 70px 90px 90px',
                       gap: 8,
                       fontSize: 12,
-                      color: '#334155',
+                      color: 'var(--color-ink-secondary)',
                       padding: '4px 0',
                       borderBottom: i === materials.length - 1 ? 'none' : '1px dashed #f1f5f9',
                     }}
@@ -209,7 +209,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
                       gridTemplateColumns: '1fr 60px 90px 90px',
                       gap: 8,
                       fontSize: 12,
-                      color: '#334155',
+                      color: 'var(--color-ink-secondary)',
                       padding: '4px 0',
                     }}
                   >
@@ -225,7 +225,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
 
           {(ticket.field_signoff_at || ticket.gc_signoff_at || ticket.gc_signoff_required) && (
             <Section label="SIGNOFF">
-              <div style={{ fontSize: 12, color: '#334155', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ fontSize: 12, color: 'var(--color-ink-secondary)', display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <div>
                   Field: {ticket.field_signoff_at ? `signed ${fmtDate(ticket.field_signoff_at)}` : 'pending'}
                 </div>

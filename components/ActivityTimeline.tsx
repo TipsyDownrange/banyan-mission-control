@@ -136,7 +136,7 @@ type ActivityEventRenderBranchProps = {
 function Bg1RenderBranch({ event, description }: ActivityEventRenderBranchProps): React.ReactElement {
   const summary = description || event.notes || 'No additional event detail recorded.';
   return (
-    <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
+    <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', fontSize: 12, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>
       {summary}
     </div>
   );
@@ -168,7 +168,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   PHOTO_ONLY:        { icon: '📸', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Photo' },
   NOTE:              { icon: '📝', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Note' },
   TM_CAPTURE:        { icon: '⏱️', color: 'var(--color-amber-800)', bg: 'rgba(146,64,14,0.08)', label: 'T&M' },
-  PUNCH_LIST:        { icon: '🔧', color: '#d97706', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
+  PUNCH_LIST:        { icon: '🔧', color: 'var(--color-amber-500)', bg: 'rgba(217,119,6,0.08)', label: 'Punch List' },
   SITE_VISIT:        { icon: '👁️', color: 'var(--bos-color-accent-data)', bg: 'rgba(3,105,161,0.08)', label: 'Site Visit' },
   TESTING:           { icon: '🧪', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', label: 'Test' },
   WARRANTY_CALLBACK: { icon: '🔁', color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.08)', label: 'Warranty' },
@@ -203,7 +203,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
   QA_COMPLETE:       { icon: '🔍', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)', label: 'QA Check' },
   CREW_DEMOBILIZED:  { icon: '🚛', color: 'var(--color-red-700)', bg: 'rgba(185,28,28,0.08)', label: 'Crew Demobilized' },
-  WO_CLOSED:         { icon: '🔒', color: '#334155', bg: 'rgba(51,65,85,0.08)', label: 'WO Closed' },
+  WO_CLOSED:         { icon: '🔒', color: 'var(--color-ink-secondary)', bg: 'rgba(51,65,85,0.08)', label: 'WO Closed' },
 };
 
 export const ACTIVITY_TIMELINE_TYPE_GROUPS: { label: string; pills: { key: TypeFilter; label: string }[] }[] = [
@@ -401,7 +401,7 @@ function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
     borderRadius: 8,
     background: 'var(--color-surface)',
     border: '1px solid var(--color-surface-border)',
-    color: href ? 'var(--bos-color-accent-data)' : '#334155',
+    color: href ? 'var(--bos-color-accent-data)' : 'var(--color-ink-secondary)',
     fontSize: 12,
     fontWeight: 700,
     textDecoration: 'none',
@@ -468,7 +468,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
 
   // For FIELD_ISSUE resolved state — use orange badge
   const isIssueResolved = event.event_type === 'FIELD_ISSUE' && event.issue_status === 'RESOLVED';
-  const iconColor = isIssueResolved ? '#d97706' : cfg.color;
+  const iconColor = isIssueResolved ? 'var(--color-amber-500)' : cfg.color;
   const iconBg = isIssueResolved ? 'rgba(217,119,6,0.1)' : cfg.bg;
   const IconComponent = typeof cfg.icon === 'string' ? null : cfg.icon;
   const iconText = typeof cfg.icon === 'string' ? cfg.icon : null;
@@ -781,7 +781,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           <div
             onClick={handleNestedToggle}
             style={{
-              fontSize: 13, color: '#334155', lineHeight: 1.5,
+              fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5,
               cursor: description.length > 120 ? 'pointer' : 'default',
               display: '-webkit-box',
               WebkitLineClamp: expanded ? 'unset' : 2,
@@ -811,7 +811,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
             <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>{label}</span>
             {badge
-              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? 'var(--color-red-50)' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)', fontSize: 11, fontWeight: 800 }}>{value}</span>
+              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? 'var(--color-red-50)' : badge === 'LOW' ? 'var(--color-teal-50)' : 'var(--color-amber-50)', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)', fontSize: 11, fontWeight: 800 }}>{value}</span>
               : <span style={{ color: 'var(--color-ink-primary)', fontWeight: 600 }}>{value}</span>}
           </div>
         ) : null;
@@ -857,7 +857,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const captureBadge = (() => {
             if (/flexijet|total station/i.test(captureToolStr)) return { label: 'High accuracy', bg: '#f0fdf4', color: '#15803d' };
             if (/leica|disto/i.test(captureToolStr)) return { label: 'Pro', bg: '#eff6ff', color: '#1d4ed8' };
-            if (/tape measure/i.test(captureToolStr)) return { label: 'Manual', bg: '#fffbeb', color: 'var(--color-amber-800)' };
+            if (/tape measure/i.test(captureToolStr)) return { label: 'Manual', bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' };
             return null;
           })();
           const calloutMeta: Record<string, { icon: string; label: string; implication: string }> = {
@@ -882,7 +882,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   </div>
                   {/* Obstruction pricing gap alert */}
                   {hasObstruction && (
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', background: 'var(--color-amber-50)', border: '1px solid #fcd34d', borderRadius: 8 }}>
                       <span style={{ fontSize: 14 }}>⚠️</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-amber-800)' }}>Obstruction flagged: {obstructionVal} — may trigger RFI/CO</span>
                     </div>
@@ -975,7 +975,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           return (event.notes || event.evidence_ref) ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', background: 'rgba(29,78,216,0.04)', borderRadius: 10, border: '1px solid rgba(29,78,216,0.12)' }}>
               {event.notes && (
-                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{event.notes}</div>
               )}
               {event.evidence_ref && (
                 <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
@@ -1092,7 +1092,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           };
           const tmCellStyle: React.CSSProperties = {
             padding: '6px 8px',
-            color: '#334155',
+            color: 'var(--color-ink-secondary)',
             borderBottom: '1px solid rgba(146,64,14,0.08)',
             verticalAlign: 'top',
           };
@@ -1126,7 +1126,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 {authType && (
                   <div style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'center' }}>
                     <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>Auth Type</span>
-                    <span style={{ padding: '1px 7px', borderRadius: 999, background: '#fffbeb', color: 'var(--color-amber-800)', border: '1px solid rgba(146,64,14,0.2)', fontSize: 11, fontWeight: 800 }}>{authType}</span>
+                    <span style={{ padding: '1px 7px', borderRadius: 999, background: 'var(--color-amber-50)', color: 'var(--color-amber-800)', border: '1px solid rgba(146,64,14,0.2)', fontSize: 11, fontWeight: 800 }}>{authType}</span>
                   </div>
                 )}
                 {signedAt && kv('Signed', signedAt)}
@@ -1284,7 +1284,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   )}
                 </>
               ) : event.notes && !isJson ? (
-                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{event.notes}</div>
               ) : (
                 <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>Site visit notes unavailable.</div>
               )}
@@ -1300,7 +1300,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const issueContext = parts[1]?.trim() ?? '';
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'rgba(185,28,28,0.05)', borderRadius: 10, border: '1px solid rgba(185,28,28,0.15)' }}>
-              {demobLine && <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{demobLine}</div>}
+              {demobLine && <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{demobLine}</div>}
               {issueContext && (
                 <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, borderTop: '1px solid rgba(185,28,28,0.1)', paddingTop: 6, marginTop: 2 }}>
                   <span style={{ fontWeight: 700 }}>Original issue: </span>{issueContext}
@@ -1335,7 +1335,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   )}
                 </>
               ) : event.notes && !isJson ? (
-                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{event.notes}</div>
               ) : (
                 <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>Test details unavailable.</div>
               )}
@@ -1365,7 +1365,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   )}
                 </>
               ) : event.notes && !isJson ? (
-                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{event.notes}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{event.notes}</div>
               ) : (
                 <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.5 }}>Warranty callback details unavailable.</div>
               )}
@@ -1395,7 +1395,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const qaStatusStyle = qaStatus === 'PASS'
             ? { label: 'PASS',    bg: '#ecfdf5', color: '#059669', border: 'rgba(5,150,105,0.2)' }
             : qaStatus === 'PARTIAL'
-            ? { label: 'PARTIAL', bg: '#fffbeb', color: '#d97706', border: 'rgba(217,119,6,0.2)' }
+            ? { label: 'PARTIAL', bg: 'var(--color-amber-50)', color: 'var(--color-amber-500)', border: 'rgba(217,119,6,0.2)' }
             : qaStatus === 'FAIL'
             ? { label: 'FAIL',    bg: 'var(--color-red-50)', color: '#dc2626', border: 'rgba(220,38,38,0.2)' }
             : { label: qaStatus,  bg: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)', border: 'var(--color-surface-border)' };
@@ -1442,7 +1442,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {checkEntries.map(([k, v]) => (
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                       <span style={{ color: v ? '#059669' : '#dc2626', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>{v ? '✓' : '✗'}</span>
-                      <span style={{ color: v ? '#334155' : 'var(--color-red-700)', fontWeight: v ? 500 : 700 }}>{checkLabels[k] || k.replace(/_/g, ' ')}</span>
+                      <span style={{ color: v ? 'var(--color-ink-secondary)' : 'var(--color-red-700)', fontWeight: v ? 500 : 700 }}>{checkLabels[k] || k.replace(/_/g, ' ')}</span>
                     </div>
                   ))}
                 </div>
@@ -1461,9 +1461,9 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             if (!t) return null;
             const map: Record<string, { label: string; bg: string; color: string }> = {
               before:   { label: 'Before',   bg: '#eff6ff', color: '#1d4ed8' },
-              during:   { label: 'During',   bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
+              during:   { label: 'During',   bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
               after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
-              progress: { label: 'Progress', bg: '#fffbeb', color: 'var(--color-amber-800)' },
+              progress: { label: 'Progress', bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
               damage:   { label: 'Damage',   bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
               qa:       { label: 'QA',       bg: '#faf5ff', color: '#7e22ce' },
             };

@@ -52,8 +52,8 @@ const STAGES: { key: string; label: string; color: string; bg: string; border: s
   { key: 'accepted',           label: 'Accepted',           color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
   { key: 'approved',           label: 'Accepted',           color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
   { key: 'deposit_received',   label: 'Deposit Received',   color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)' },
-  { key: 'materials_ordered',  label: 'Materials Ordered',  color: '#d97706', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
-  { key: 'materials_received', label: 'Materials In',       color: '#d97706', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
+  { key: 'materials_ordered',  label: 'Materials Ordered',  color: 'var(--color-amber-500)', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
+  { key: 'materials_received', label: 'Materials In',       color: 'var(--color-amber-500)', bg: 'rgba(255,251,235,0.96)', border: '1px solid rgba(217,119,6,0.2)' },
   { key: 'ready_to_schedule',  label: 'Ready to Schedule',  color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
   { key: 'scheduled',          label: 'Scheduled',          color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
   { key: 'in_progress',        label: 'In Progress',        color: '#7c3aed', bg: 'rgba(245,243,255,0.96)', border: '1px solid rgba(124,58,237,0.2)' },
@@ -72,7 +72,7 @@ const ISLAND_COLORS: Record<string, string> = {
   'Hawaii': '#16a34a',
   'Molokai': '#ea580c',
   'Lanai': '#dc2626',
-  'Hana': '#d97706',
+  'Hana': 'var(--color-amber-500)',
 };
 
 // Normalize raw Smartsheet statuses to display stages
@@ -457,7 +457,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
         const completed = mergedWorkOrders.filter(w => w.status === 'closed' || w.status === 'completed');
         const kpis: KPI[] = [
           { label: 'Open Work Orders', value: mergedWorkOrders.length - completed.length, subtitle: `${completed.length} completed` },
-          { label: 'Needs Action', value: needsAction.length, subtitle: 'New leads', color: needsAction.length > 5 ? '#d97706' : '#059669' },
+          { label: 'Needs Action', value: needsAction.length, subtitle: 'New leads', color: needsAction.length > 5 ? 'var(--color-amber-500)' : '#059669' },
           { label: 'Scheduled', value: scheduled.length, subtitle: 'In the pipeline', color: 'var(--bos-color-accent-data)' },
           { label: 'Completed', value: completed.length, color: '#059669' },
         ];

@@ -33,8 +33,8 @@ export type ActionItem = {
 const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string; dot: string }> = {
   critical: { bg: 'var(--color-red-50)', border: '#fecaca', color: '#991b1b', dot: '#dc2626' },
   high:     { bg: '#fff7ed', border: '#fed7aa', color: '#9a3412', dot: '#ea580c' },
-  medium:   { bg: '#fffbeb', border: '#fde68a', color: 'var(--color-amber-800)', dot: '#d97706' },
-  low:      { bg: '#f0fdfa', border: '#99f6e4', color: '#115e59', dot: 'var(--bos-color-brand-primary)' },
+  medium:   { bg: 'var(--color-amber-50)', border: '#fde68a', color: 'var(--color-amber-800)', dot: 'var(--color-amber-500)' },
+  low:      { bg: 'var(--color-teal-50)', border: '#99f6e4', color: '#115e59', dot: 'var(--bos-color-brand-primary)' },
   info:     { bg: '#f0f9ff', border: '#bae6fd', color: '#075985', dot: '#0284c7' },
 };
 
@@ -118,7 +118,7 @@ export default function DashboardHeader({
                 }}>
                   <div style={{
                     height: '100%', borderRadius: 3,
-                    background: kpi.color || (kpi.progress >= 75 ? '#059669' : kpi.progress >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)'),
+                    background: kpi.color || (kpi.progress >= 75 ? '#059669' : kpi.progress >= 40 ? 'var(--color-amber-500)' : 'var(--bos-color-ink-tertiary)'),
                     width: `${Math.min(100, kpi.progress)}%`,
                     transition: 'width 0.5s',
                   }} />

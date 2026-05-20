@@ -56,7 +56,7 @@ export default function HealthPage() {
                 ['Have Dispatch', data.summary.wos_with_dispatch, true],
                 ['Have Mismatches', data.summary.wos_with_mismatches, data.summary.wos_with_mismatches === 0],
               ].map(([label, val, ok]) => (
-                <div key={String(label)} style={{ padding: '14px 16px', borderRadius: 12, background: '#1e293b', border: `1px solid ${ok ? '#334155' : '#7f1d1d'}` }}>
+                <div key={String(label)} style={{ padding: '14px 16px', borderRadius: 12, background: '#1e293b', border: `1px solid ${ok ? 'var(--color-ink-secondary)' : '#7f1d1d'}` }}>
                   <div style={{ fontSize: 28, fontWeight: 800, color: ok ? '#f1f5f9' : '#ef4444' }}>{String(val)}</div>
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{String(label)}</div>
                 </div>
@@ -71,7 +71,7 @@ export default function HealthPage() {
                 </button>
               ))}
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search WO ID or name…"
-                style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid #334155', background: '#1e293b', color: 'var(--color-surface-border)', fontSize: 12, outline: 'none', minWidth: 200 }} />
+                style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid var(--color-ink-secondary)', background: '#1e293b', color: 'var(--color-surface-border)', fontSize: 12, outline: 'none', minWidth: 200 }} />
               <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{filtered.length} results</span>
             </div>
 

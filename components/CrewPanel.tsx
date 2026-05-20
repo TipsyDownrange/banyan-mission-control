@@ -31,7 +31,7 @@ const ISLAND_COLORS: Record<string, string> = {
 };
 const DEPT_COLORS: Record<string, string> = {
   PM: 'var(--bos-color-brand-primary-deep)', Estimating: 'var(--bos-color-brand-primary-deep)',
-  Service: '#6d28d9', Admin: 'var(--bos-color-ink-disabled)', Superintendent: '#4338ca', Field: '#334155',
+  Service: '#6d28d9', Admin: 'var(--bos-color-ink-disabled)', Superintendent: '#4338ca', Field: 'var(--color-ink-secondary)',
 };
 
 function initials(name: string): string {
@@ -200,7 +200,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                             }} style={{
                               padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer',
                               border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
-                              background: active ? '#f0fdfa' : 'white',
+                              background: active ? 'var(--color-teal-50)' : 'white',
                               color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                             }}>{d}</button>
                           );

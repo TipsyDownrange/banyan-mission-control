@@ -116,7 +116,7 @@ function FinancialsPanel() {
             <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '16px 18px' }}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>AP Outstanding</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{fmt$(data.ap.total)}</div>
-              <div style={{ fontSize: 12, color: data.ap.upcomingDue > 0 ? '#d97706' : 'var(--bos-color-ink-disabled)' }}>
+              <div style={{ fontSize: 12, color: data.ap.upcomingDue > 0 ? 'var(--color-amber-500)' : 'var(--bos-color-ink-disabled)' }}>
                 {data.ap.upcomingDue > 0 ? `${fmt$(data.ap.upcomingDue)} due next 7 days` : 'Nothing due soon'} · {data.ap.count} open
               </div>
             </div>
@@ -247,14 +247,14 @@ function CompliancePanel() {
               <div style={{ flex: 1, height: 6, borderRadius: 999, background: '#f1f5f9' }}>
                 <div style={{ width: `${a.pct}%`, height: '100%', borderRadius: 999, background: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : a.pct >= 70 ? 'var(--bos-color-accent-data)' : 'var(--bos-color-ink-tertiary)' }} />
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : '#334155', whiteSpace: 'nowrap' }}>{a.pct}%</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-ink-secondary)', whiteSpace: 'nowrap' }}>{a.pct}%</span>
             </div>
             <div style={{ fontSize: 11, color: a.pct >= 90 ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', fontWeight: a.pct >= 90 ? 700 : 400 }}>{a.hoursToNext}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ background: '#fffbeb', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 14, padding: '14px 18px' }}>
+      <div style={{ background: 'var(--color-amber-50)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 14, padding: '14px 18px' }}>
         <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-amber-800)', marginBottom: 4 }}>⚡ Action Required — Monday</div>
         <div style={{ fontSize: 12, color: '#78350f', lineHeight: 1.5 }}>Owen Nakamura, Ninja Thang, and Santia-Jacob Pascual are at 90% apprentice level. Discuss journeyman promotion timeline with superintendents. Update payroll rate when promoted (100% journeyman rate).</div>
       </div>

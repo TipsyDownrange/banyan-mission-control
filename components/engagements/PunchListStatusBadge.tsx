@@ -23,9 +23,9 @@ export type PunchListItemStatus =
 const STATUS_BADGE: Record<PunchListItemStatus, { bg: string; color: string; label: string }> = {
   NEW:                  { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'New' },
   ASSIGNED:             { bg: '#eff6ff', color: '#1d4ed8', label: 'Assigned' },
-  IN_PROGRESS:          { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'In Progress' },
+  IN_PROGRESS:          { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)', label: 'In Progress' },
   COMPLETED:            { bg: '#f0fdf4', color: '#15803d', label: 'Completed' },
-  SIGNED_OFF:           { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Signed Off' },
+  SIGNED_OFF:           { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)', label: 'Signed Off' },
   DISPUTED:             { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Disputed' },
   DEFERRED_TO_WARRANTY: { bg: '#faf5ff', color: '#7e22ce', label: 'Deferred → Warranty' },
 };

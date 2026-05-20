@@ -20,7 +20,7 @@ const WORK_TYPES = [
 
 const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   'Site Visit / Assessment': { color: 'var(--bos-color-accent-data)', bg: '#eff6ff', border: '#bfdbfe' },
-  'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', border: '#99f6e4' },
+  'Measurement':             { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)', border: '#99f6e4' },
   'Installation':            { color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
   'Punch List / Warranty':   { color: 'var(--bos-color-ink-tertiary)', bg: 'var(--color-surface)', border: '#cbd5e1' },
@@ -59,8 +59,8 @@ type WorkOrder = { id: string; name: string; island: string; status: string; con
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
   open:      { color: 'var(--color-red-700)', bg: 'var(--color-red-50)', label: 'Open' },
-  partial:   { color: 'var(--color-amber-800)', bg: '#fffbeb', label: 'Partial' },
-  filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'Filled' },
+  partial:   { color: 'var(--color-amber-800)', bg: 'var(--color-amber-50)', label: 'Partial' },
+  filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)', label: 'Filled' },
   completed: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', label: 'Done' },
 };
 
@@ -351,7 +351,7 @@ export default function DispatchBoard() {
                             const confStatus = confMap[confKey] || 'pending';
                             const cs = CONF_STYLE[confStatus] || CONF_STYLE.pending;
                             return (
-                              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8.5, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'white', border: `1px solid ${confStatus === 'confirmed' ? '#0f766e33' : confStatus === 'declined' ? '#b91c1c33' : 'var(--color-surface-border)'}`, color: '#334155' }}>
+                              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8.5, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'white', border: `1px solid ${confStatus === 'confirmed' ? '#0f766e33' : confStatus === 'declined' ? '#b91c1c33' : 'var(--color-surface-border)'}`, color: 'var(--color-ink-secondary)' }}>
                                 <span style={{ fontSize: 7, fontWeight: 900, color: cs.color }}>{cs.icon}</span>
                                 {name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 {isExpanded && (
@@ -503,7 +503,7 @@ export default function DispatchBoard() {
               <div>
                 <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Project *</label>
                 {addProject.startsWith('[WO]') ? (
-                  <div style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #0f766e44', background: '#f0fdfa', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #0f766e44', background: 'var(--color-teal-50)', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>{addProject}</span>
                     <button type="button" onClick={() => { setAddProject(''); setAddKID(''); }} style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', background: 'none', border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
                   </div>
@@ -545,7 +545,7 @@ export default function DispatchBoard() {
               </div>
               {/* Secondary WO Picker */}
               {showWOPicker && (
-                <div style={{ border: '1px solid #ccfbf1', borderRadius: 12, padding: 12, background: '#f0fdfa' }}>
+                <div style={{ border: '1px solid #ccfbf1', borderRadius: 12, padding: 12, background: 'var(--color-teal-50)' }}>
                   <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
                     Select Work Order
                   </div>
@@ -663,7 +663,7 @@ export default function DispatchBoard() {
                 <textarea value={addNotes} onChange={e => setAddNotes(e.target.value)}
                   placeholder="e.g. Measure all openings on 2nd floor · Bring silicone and backer rod"
                   rows={2}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, resize: 'vertical', fontFamily: 'inherit', color: '#334155' }} />
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const, resize: 'vertical', fontFamily: 'inherit', color: 'var(--color-ink-secondary)' }} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>

@@ -195,7 +195,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                     <h3 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', lineHeight: 1.1 }}>
                       {bid['Job Name']}
                     </h3>
-                    <div style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
+                    <div style={{ fontSize: 14, color: 'var(--color-ink-secondary)', fontWeight: 600 }}>
                       {bid['Due Date'] ? `Due ${bid['Due Date']}` : 'No due date set'}
                     </div>
                   </div>
@@ -231,7 +231,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                   <div>{FL('Received')}<div style={{ fontSize: 14, color: 'var(--color-ink-primary)', fontWeight: 700 }}>{bid['Received Date'] || '—'}</div></div>
                   <div>{FL('GC Count')}<div style={{ fontSize: 14, color: 'var(--color-ink-primary)', fontWeight: 700 }}>{bid['GC Count'] || '1'} GC{parseInt(bid['GC Count']||'1') > 1 ? 's' : ''}</div></div>
                   <div>{FL('Est. Value')}<div style={{ fontSize: 14, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>{bid['Est Value (High)'] || '—'}</div></div>
-                  <div>{FL('Products / Specs')}<div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>{bid['Products / Specs'] || '—'}</div></div>
+                  <div>{FL('Products / Specs')}<div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', fontWeight: 600 }}>{bid['Products / Specs'] || '—'}</div></div>
                 </div>
 
                 {/* Scope + Notes */}
@@ -239,7 +239,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                   <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(226,232,240,0.92)' }}>
                     {FL('Scope summary — click to edit')}
                     <textarea defaultValue={bid['Notes'] || ''} placeholder="Add scope notes as you work through the takeoff..." onClick={e => e.stopPropagation()}
-                      style={{ width: '100%', fontSize: 13, lineHeight: 1.7, color: '#334155', background: 'transparent', border: 'none', outline: 'none', resize: 'none', fontFamily: 'inherit', cursor: 'text', padding: 0 }}
+                      style={{ width: '100%', fontSize: 13, lineHeight: 1.7, color: 'var(--color-ink-secondary)', background: 'transparent', border: 'none', outline: 'none', resize: 'none', fontFamily: 'inherit', cursor: 'text', padding: 0 }}
                       rows={4} />
                   </div>
                   <div style={{ padding: 16, borderRadius: 18, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(148,163,184,0.16)', display: 'grid', gap: 10 }}>

@@ -83,11 +83,11 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
         {/* KPI grid on the card */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: openSubs > 0 ? '#d97706' : '#059669' }}>{openSubs}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: openSubs > 0 ? 'var(--color-amber-500)' : '#059669' }}>{openSubs}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Submittals</div>
           </div>
           <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: pendingCOs > 0 ? '#d97706' : '#059669' }}>{pendingCOs}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: pendingCOs > 0 ? 'var(--color-amber-500)' : '#059669' }}>{pendingCOs}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Chg Orders</div>
           </div>
           <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
@@ -95,7 +95,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Issues</div>
           </div>
           <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: installPct !== null ? (installPct >= 75 ? '#059669' : '#d97706') : 'var(--bos-color-ink-tertiary)' }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: installPct !== null ? (installPct >= 75 ? '#059669' : 'var(--color-amber-500)') : 'var(--bos-color-ink-tertiary)' }}>
               {installPct !== null ? `${installPct}%` : '—'}
             </div>
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Install</div>
@@ -104,7 +104,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
         {/* CO exposure if any */}
         {coExposure > 0 && (
-          <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--color-amber-800)', background: '#fffbeb', padding: '4px 10px', borderRadius: 8, display: 'inline-block' }}>
+          <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--color-amber-800)', background: 'var(--color-amber-50)', padding: '4px 10px', borderRadius: 8, display: 'inline-block' }}>
             ${(coExposure / 1000).toFixed(0)}K CO exposure
           </div>
         )}
@@ -186,14 +186,14 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
   ] as const;
 
   const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-    APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
+    APPROVED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
     SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
     PENDING: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
     REJECTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
-    REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
+    REVISE_RESUBMIT: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
     UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
-    IDENTIFIED: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
-    IN_NEGOTIATION: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
+    IDENTIFIED: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
+    IN_NEGOTIATION: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
   };
 
   const statusTag = (status: string) => {
@@ -541,7 +541,7 @@ export default function ProjectsPanel({ onNavigate }: Props) {
             <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' }}>BG1 Work Records</div>
             <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>Read-only project records from Postgres (`work_records where work_type='project'`).</div>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 800, color: '#334155' }}>{workRecordProjects.length} records</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-secondary)' }}>{workRecordProjects.length} records</span>
         </div>
         {workRecordProjects.length === 0 ? (
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>No BG1 project work records yet.</div>

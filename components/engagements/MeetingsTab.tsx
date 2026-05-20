@@ -179,7 +179,7 @@ export default function MeetingsTab({ kID }: { kID: string }) {
                 </div>
               </div>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{MEETING_TYPE_LABELS[it.meeting_type ?? ''] ?? '—'}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-secondary)' }}>
                 {it.attendee_count_total} attendees
                 <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>
                   <span style={{ color: '#1d4ed8' }}>{it.attendee_count_kula} Kula</span> · <span>{it.attendee_count_external} ext.</span>

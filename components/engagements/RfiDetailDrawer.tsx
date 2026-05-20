@@ -142,7 +142,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                 {r.question}
               </div>
               {r.cost_or_schedule_impact_anticipated && (
-                <div style={{ marginTop: 8, padding: '8px 10px', background: '#fffbeb', borderRadius: 8, fontSize: 11, color: 'var(--color-amber-800)', border: '1px solid #fde68a' }}>
+                <div style={{ marginTop: 8, padding: '8px 10px', background: 'var(--color-amber-50)', borderRadius: 8, fontSize: 11, color: 'var(--color-amber-800)', border: '1px solid #fde68a' }}>
                   <div style={{ fontWeight: 800, marginBottom: 2 }}>Cost / schedule impact anticipated</div>
                   {r.cost_impact_estimate && <div>Cost: ${Number(r.cost_impact_estimate).toLocaleString()}</div>}
                   {r.schedule_impact_days !== null && <div>Schedule: {r.schedule_impact_days} days</div>}
@@ -162,7 +162,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
               <h3 style={sectionTitleStyle}>Lifecycle</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {(r.status === 'DRAFT' || r.status === 'ANSWERED') && (
-                  <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', background: '#f0fdfa', padding: '4px 8px', borderRadius: 8 }}>
+                  <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', background: 'var(--color-teal-50)', padding: '4px 8px', borderRadius: 8 }}>
                     <select value={submittedTo} onChange={(e) => setSubmittedTo(e.target.value as typeof submittedTo)} style={selectStyle}>
                       <option value="GC">GC</option>
                       <option value="ARCHITECT">Architect</option>
@@ -276,7 +276,7 @@ function DocList({ label, ids }: { label: string; ids: string[] }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {ids.map((id) => (
             <a key={id} href={`https://drive.google.com/file/d/${id}/view`} target="_blank" rel="noreferrer"
-              style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: '#f0fdfa', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
+              style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', background: 'var(--color-teal-50)', padding: '2px 6px', borderRadius: 6, textDecoration: 'none', border: '1px solid rgba(15,118,110,0.2)', fontFamily: 'monospace' }}>
               {id.length > 14 ? `${id.slice(0, 10)}…` : id}
             </a>
           ))}

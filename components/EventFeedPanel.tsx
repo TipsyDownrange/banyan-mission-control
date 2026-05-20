@@ -15,7 +15,7 @@ const TYPE_STYLE: Record<string, { label: string; color: string; bg: string; bor
   PHOTO_ONLY:        { label: 'Photo',        color: 'var(--color-amber-800)', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(245,158,11,0.2)' },
   NOTE:              { label: 'Note',         color: 'var(--bos-color-ink-tertiary)', bg: 'rgba(248,250,252,0.9)',  border: 'rgba(148,163,184,0.2)' },
   FIELD_MEASUREMENT: { label: 'Measurement',  color: '#0891b2', bg: 'rgba(236,254,255,0.9)',  border: 'rgba(8,145,178,0.2)' },
-  PUNCH_LIST:        { label: 'Punch List',   color: '#d97706', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(217,119,6,0.2)' },
+  PUNCH_LIST:        { label: 'Punch List',   color: 'var(--color-amber-500)', bg: 'rgba(255,251,235,0.9)',  border: 'rgba(217,119,6,0.2)' },
   TM_CAPTURE:        { label: 'T&M',          color: 'var(--color-amber-800)', bg: 'rgba(255,247,237,0.9)',  border: 'rgba(146,64,14,0.2)' },
   SITE_VISIT:        { label: 'Site Visit',   color: 'var(--bos-color-accent-data)', bg: 'rgba(240,249,255,0.9)',  border: 'rgba(3,105,161,0.2)' },
   TESTING:           { label: 'Test',         color: '#7c3aed', bg: 'rgba(245,243,255,0.9)',  border: 'rgba(124,58,237,0.2)' },
@@ -104,11 +104,11 @@ export default function EventFeedPanel() {
                 <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 999, color: s.color, background: 'rgba(255,255,255,0.7)', border: `1px solid ${s.border}` }}>
                   {s.label}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>{e.projectName}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-secondary)' }}>{e.projectName}</span>
                 <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginLeft: 'auto' }}>{formatTime(e.occurredAt || e.recordedAt)}</span>
               </div>
               {(e.note || e.location) && (
-                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{e.note || e.location}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{e.note || e.location}</div>
               )}
               {who && (
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{who}</div>

@@ -56,8 +56,8 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   DRAFT: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
-  ANSWERED: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
-  RESOLVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
+  ANSWERED: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
+  RESOLVED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
   CLOSED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
   VOID: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
 };
@@ -342,7 +342,7 @@ export default function RfisTab({ kID }: { kID: string }) {
                         </span>
                       )}
                       {it.cost_or_schedule_impact_anticipated && (
-                        <span style={{ fontSize: 10, color: 'var(--color-amber-800)', fontWeight: 800, background: '#fffbeb', padding: '1px 6px', borderRadius: 6, border: '1px solid #fde68a' }}>
+                        <span style={{ fontSize: 10, color: 'var(--color-amber-800)', fontWeight: 800, background: 'var(--color-amber-50)', padding: '1px 6px', borderRadius: 6, border: '1px solid #fde68a' }}>
                           $ impact
                         </span>
                       )}

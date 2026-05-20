@@ -246,7 +246,7 @@ function DispatchPDF({ data }: { data: DispatchWOData }) {
 
         {/* Special instructions */}
         {data.special_instructions && (
-          <View style={{ marginTop: 8, padding: '8 12', backgroundColor: '#fffbeb', borderRadius: 8, border: `1 solid ${C.orangeBorder}` }}>
+          <View style={{ marginTop: 8, padding: '8 12', backgroundColor: 'var(--color-amber-50)', borderRadius: 8, border: `1 solid ${C.orangeBorder}` }}>
             <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.orange, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>⚠ Special Instructions</Text>
             <Text style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>{data.special_instructions}</Text>
           </View>

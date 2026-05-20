@@ -33,7 +33,7 @@ export const C = {
   subtext:    'var(--bos-color-ink-tertiary)',
   // Keep teal only for status indicators
   teal:       'var(--bos-color-brand-primary-deep)',
-  tealBg:     '#f0fdfa',
+  tealBg:     'var(--color-teal-50)',
   // Orange accent — for highlighted info blocks
   orange:     '#ea580c',
   orangeBg:   '#fff7ed',

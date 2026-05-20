@@ -40,7 +40,7 @@ type ApiResponse = {
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   LOGGED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   FOLLOWED_UP: { bg: '#eff6ff', color: '#1d4ed8' },
-  FORMALIZED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
+  FORMALIZED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
   DISPUTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   RESOLVED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
 };
@@ -178,7 +178,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.agreement_summary}</div>
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.external_party_org}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.external_party_org}</div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{it.external_party_contact_name || '-'}</div>
               </div>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>{it.agreement_type.replace(/_/g, ' ')}</div>

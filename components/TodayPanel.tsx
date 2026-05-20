@@ -81,7 +81,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       id: b.kID, type: 'bid',
       title: `Bid due — ${b.name}`,
       detail: `Assigned to ${b.assigned || 'Unassigned'} · Due ${b.due ? new Date(b.due + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}`,
-      tag: 'Bid Deadline', tagColor: 'var(--color-amber-800)', tagBg: '#fffbeb',
+      tag: 'Bid Deadline', tagColor: 'var(--color-amber-800)', tagBg: 'var(--color-amber-50)',
     })),
   ];
 
@@ -91,7 +91,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       id: p.kID || `proj-${i}`, type: 'project',
       title: p.name,
       detail: `Active · PM: ${p.pm}`,
-      tag: 'Active Job', tagColor: 'var(--bos-color-brand-primary-deep)', tagBg: '#f0fdfa',
+      tag: 'Active Job', tagColor: 'var(--bos-color-brand-primary-deep)', tagBg: 'var(--color-teal-50)',
       kID: p.kID,
     })),
   ];
@@ -209,7 +209,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
                     onClick={() => onNavigate('Schedules', { kID: 'kID' in item ? String(item.kID) : '' })}
                     style={{
                       alignSelf: 'center', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                      background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)',
+                      background: 'var(--color-teal-50)', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)',
                       cursor: 'pointer', whiteSpace: 'nowrap',
                     }}>
                     View in PM →

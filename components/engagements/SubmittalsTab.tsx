@@ -54,9 +54,9 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   IN_PROGRESS: { bg: '#fff7ed', color: '#9a3412' },
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
-  APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
-  APPROVED_AS_NOTED: { bg: '#f0fdfa', color: '#15803d' },
-  REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
+  APPROVED: { bg: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)' },
+  APPROVED_AS_NOTED: { bg: 'var(--color-teal-50)', color: '#15803d' },
+  REVISE_RESUBMIT: { bg: 'var(--color-amber-50)', color: 'var(--color-amber-800)' },
   REJECTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   CLOSED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
 };
@@ -228,7 +228,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
         <div style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Outstanding</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.outstanding > 0 ? '#d97706' : '#059669', marginTop: 4 }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.outstanding > 0 ? 'var(--color-amber-500)' : '#059669', marginTop: 4 }}>
             {data.summary.outstanding}
           </div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>per §5.4 logic</div>

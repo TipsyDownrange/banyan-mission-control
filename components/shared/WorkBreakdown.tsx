@@ -703,7 +703,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
         label: 'MSDS / Safety',
         icon: '⚠️',
         color: '#b45309',
-        bg: '#fffbeb',
+        bg: 'var(--color-amber-50)',
         border: '#fde68a',
       },
       {
@@ -1060,7 +1060,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 </span>
               ) : null}
               {step.bid_hours != null && (
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--color-amber-50)', color: '#b45309', border: '1px solid #fde68a' }}>
                   Bid: {step.bid_hours}h
                 </span>
               )}
@@ -1112,13 +1112,13 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     } catch {}
                   }}
                   onClick={e => e.stopPropagation()}
-                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid var(--color-surface-border)', background: step.category ? '#f0fdfa' : 'white', color: step.category ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', outline: 'none' }}
+                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid var(--color-surface-border)', background: step.category ? 'var(--color-teal-50)' : 'white', color: step.category ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', outline: 'none' }}
                 >
                   <option value="">Category</option>
                   {STEP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               ) : step.category ? (
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', border: '1px solid rgba(15,118,110,0.15)' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)', border: '1px solid rgba(15,118,110,0.15)' }}>
                   {step.category}
                 </span>
               ) : null}
@@ -1155,7 +1155,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       } catch {}
                     }}
                     onClick={ev => ev.stopPropagation()}
-                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid var(--color-surface-border)', outline: 'none', background: step.planned_start_date ? '#f0fdfa' : 'white', color: 'var(--color-ink-primary)' }}
+                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid var(--color-surface-border)', outline: 'none', background: step.planned_start_date ? 'var(--color-teal-50)' : 'white', color: 'var(--color-ink-primary)' }}
                   />
                 </label>
 
@@ -1188,7 +1188,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       } catch {}
                     }}
                     onClick={ev => ev.stopPropagation()}
-                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid var(--color-surface-border)', outline: 'none', background: step.planned_end_date ? '#f0fdfa' : 'white', color: 'var(--color-ink-primary)' }}
+                    style={{ fontSize: 11, padding: '2px 5px', borderRadius: 5, border: '1px solid var(--color-surface-border)', outline: 'none', background: step.planned_end_date ? 'var(--color-teal-50)' : 'white', color: 'var(--color-ink-primary)' }}
                   />
                 </label>
 
@@ -1223,7 +1223,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                           return next;
                         });
                       }}
-                      style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid #d97706', background: 'transparent', color: 'var(--color-amber-800)', cursor: 'pointer' }}
+                      style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid var(--color-amber-500)', background: 'transparent', color: 'var(--color-amber-800)', cursor: 'pointer' }}
                     >
                       Leave crew board as-is
                     </button>

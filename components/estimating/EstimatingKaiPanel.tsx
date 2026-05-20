@@ -365,7 +365,7 @@ For this bid, use the context: ${bid.totalEstimate ? 'Has estimate total: ' + bi
   const statusIcon = (s: ValidationResult['status']) =>
     s === 'pass' ? '✅' : s === 'fail' ? '❌' : s === 'warn' ? '⚠️' : '◯';
   const statusColor = (s: ValidationResult['status']) =>
-    s === 'pass' ? '#059669' : s === 'fail' ? '#dc2626' : s === 'warn' ? '#d97706' : 'var(--bos-color-ink-tertiary)';
+    s === 'pass' ? '#059669' : s === 'fail' ? '#dc2626' : s === 'warn' ? 'var(--color-amber-500)' : 'var(--bos-color-ink-tertiary)';
 
   const totalEstimate = bid.totalEstimate
     ? (bid.totalEstimate.startsWith('$') ? bid.totalEstimate : `$${bid.totalEstimate}`)

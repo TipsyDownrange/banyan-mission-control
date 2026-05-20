@@ -52,14 +52,14 @@ interface SheetTask {
 
 const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
-  in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
-  waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
+  in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: 'var(--color-teal-50)', label: 'In Progress' },
+  waiting:     { color: 'var(--color-amber-500)', bg: 'var(--color-amber-50)', label: 'Waiting' },
   blocked:     { color: 'var(--color-red-700)', bg: 'var(--color-red-50)', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
 };
 
 const PRIORITY_DOT: Record<string, string> = {
-  critical: 'var(--color-red-700)', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
+  critical: 'var(--color-red-700)', high: 'var(--color-amber-500)', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
 };
 
 const STATUS_ORDER: TaskStatus[] = ['queued', 'in_progress', 'waiting', 'blocked', 'done'];
@@ -462,7 +462,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
           <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{phase.estimated_weeks}</div>
         </div>
         <div style={{ textAlign: 'right' as const }}>
-          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', lineHeight: 1 }}>
+          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? 'var(--color-amber-500)' : 'var(--bos-color-ink-tertiary)', lineHeight: 1 }}>
             {pct}%
           </div>
           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{checkDone}/{checkTotal} checklist</div>
@@ -471,7 +471,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
 
       {/* Progress bar */}
       <div style={{ height: 3, background: '#f1f5f9' }}>
-        <div style={{ height: '100%', background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-brand-primary)', width: `${pct}%`, transition: 'width 0.4s' }} />
+        <div style={{ height: '100%', background: pct >= 75 ? '#059669' : pct >= 40 ? 'var(--color-amber-500)' : 'var(--bos-color-brand-primary)', width: `${pct}%`, transition: 'width 0.4s' }} />
       </div>
 
       <div style={{ padding: '12px 18px' }}>
@@ -491,7 +491,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
                 }}>
                   {task.done && <span style={{ fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</span>}
                 </div>
-                <span style={{ fontSize: 12, color: task.done ? 'var(--bos-color-ink-tertiary)' : '#334155', lineHeight: 1.4, textDecoration: task.done ? 'line-through' : 'none' }}>
+                <span style={{ fontSize: 12, color: task.done ? 'var(--bos-color-ink-tertiary)' : 'var(--color-ink-secondary)', lineHeight: 1.4, textDecoration: task.done ? 'line-through' : 'none' }}>
                   {task.label}
                 </span>
               </div>
@@ -501,7 +501,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
             )}
           </div>
           {phase.notes && (
-            <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 7, background: '#fffbeb', border: '1px solid #fde68a', fontSize: 11, color: 'var(--color-amber-800)' }}>
+            <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 7, background: 'var(--color-amber-50)', border: '1px solid #fde68a', fontSize: 11, color: 'var(--color-amber-800)' }}>
               {phase.notes}
             </div>
           )}
@@ -677,7 +677,7 @@ export default function BuildLifecycleTimeline() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ textAlign: 'center' as const }}>
-            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', lineHeight: 1 }}>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? 'var(--color-amber-500)' : 'var(--bos-color-ink-tertiary)', lineHeight: 1 }}>
               {pct}%
             </div>
             <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>complete</div>
@@ -686,7 +686,7 @@ export default function BuildLifecycleTimeline() {
             <div style={{ height: 6, borderRadius: 3, background: '#f1f5f9' }}>
               <div style={{
                 height: '100%', borderRadius: 3,
-                background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-brand-primary)',
+                background: pct >= 75 ? '#059669' : pct >= 40 ? 'var(--color-amber-500)' : 'var(--bos-color-brand-primary)',
                 width: `${pct}%`, transition: 'width 0.5s',
               }} />
             </div>

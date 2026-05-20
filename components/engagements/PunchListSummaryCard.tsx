@@ -110,7 +110,7 @@ export default function PunchListSummaryCard({ items }: { items: PunchListItem[]
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '6px 10px', borderRadius: 999,
             background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)',
-            fontSize: 11, fontWeight: 700, color: '#334155',
+            fontSize: 11, fontWeight: 700, color: 'var(--color-ink-secondary)',
           }}>
             <span>{STATUS_LABEL[s]}</span>
             <span style={{ color: 'var(--color-ink-primary)', fontWeight: 900 }}>{byStatus[s]}</span>

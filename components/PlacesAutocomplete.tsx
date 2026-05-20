@@ -174,7 +174,7 @@ export default function PlacesAutocomplete({
               onMouseEnter={() => setActiveIdx(i)}
               style={{
                 padding: '9px 12px', cursor: 'pointer',
-                background: i === activeIdx ? '#f0fdfa' : 'white',
+                background: i === activeIdx ? 'var(--color-teal-50)' : 'white',
                 borderBottom: i < suggestions.length - 1 ? '1px solid #f1f5f9' : 'none',
               }}
             >

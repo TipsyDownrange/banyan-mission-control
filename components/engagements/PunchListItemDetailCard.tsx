@@ -237,7 +237,7 @@ export default function PunchListItemDetailCard({ item }: { item: PunchListItem 
                     rel="noreferrer"
                     style={{
                       padding: '4px 10px', borderRadius: 8,
-                      background: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)',
+                      background: 'var(--color-teal-50)', color: 'var(--bos-color-brand-primary-deep)',
                       fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
                       textDecoration: 'none', border: '1px solid #0f766e22',
                     }}
