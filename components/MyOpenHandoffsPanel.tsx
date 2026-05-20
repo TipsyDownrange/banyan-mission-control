@@ -68,7 +68,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
       {loading ? (
         <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>Loading…</div>
       ) : err ? (
-        <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12 }}>{err}</div>
+        <div style={{ padding: 12, background: 'var(--color-red-50)', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12 }}>{err}</div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={<span style={{ fontSize: 20, color: '#15803d' }}>✓</span>}

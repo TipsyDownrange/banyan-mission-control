@@ -118,7 +118,7 @@ export default function MeetingDetailDrawer({ meetingId, kID, onClose, onUpdated
           <div style={{ padding: 32, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>{loading ? 'Loading meeting...' : (err ?? 'Meeting not found.')}</div>
         ) : (
           <div style={{ padding: 22 }}>
-            {err && <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: 10, borderRadius: 8, fontSize: 12, marginBottom: 14 }}>{err}</div>}
+            {err && <div style={{ color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid #fecaca', padding: 10, borderRadius: 8, fontSize: 12, marginBottom: 14 }}>{err}</div>}
 
             <section style={cardStyle}>
               <div style={sectionHeaderStyle}>

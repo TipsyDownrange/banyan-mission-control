@@ -58,7 +58,7 @@ type CrewMember = { user_id: string; name: string; role: string; island: string 
 type WorkOrder = { id: string; name: string; island: string; status: string; contact: string };
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }> = {
-  open:      { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Open' },
+  open:      { color: 'var(--color-red-700)', bg: 'var(--color-red-50)', label: 'Open' },
   partial:   { color: 'var(--color-amber-800)', bg: '#fffbeb', label: 'Partial' },
   filled:    { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'Filled' },
   completed: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)', label: 'Done' },
@@ -356,7 +356,7 @@ export default function DispatchBoard() {
                                 {name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 {isExpanded && (
                                   <button onClick={e => { e.stopPropagation(); removeCrewFromSlot(slot.slot_id, name); }}
-                                    style={{ width: 14, height: 14, borderRadius: '50%', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: 9, color: 'var(--color-red-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minWidth: 14 }}>×</button>
+                                    style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--color-red-50)', border: 'none', cursor: 'pointer', fontSize: 9, color: 'var(--color-red-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minWidth: 14 }}>×</button>
                                 )}
                               </div>
                             );

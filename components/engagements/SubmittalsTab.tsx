@@ -57,7 +57,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   APPROVED_AS_NOTED: { bg: '#f0fdfa', color: '#15803d' },
   REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
-  REJECTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
+  REJECTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   CLOSED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
 };
 
@@ -208,7 +208,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
 
   if (err) {
     return (
-      <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+      <div style={{ padding: 24, color: 'var(--color-red-700)', background: 'var(--color-red-50)', borderRadius: 12, border: '1px solid #fecaca' }}>
         Failed to load submittals: {err}
       </div>
     );

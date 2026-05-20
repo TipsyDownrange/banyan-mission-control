@@ -373,7 +373,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
             <div style={STAT_VALUE}>{rfiKpi.open}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>of {rfiKpi.total} total</div>
           </div>
-          <div style={{ background: '#fef2f2', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-red-50)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Overdue</div>
             <div style={{ ...STAT_VALUE, color: rfiKpi.overdue > 0 ? 'var(--color-red-700)' : 'var(--bos-color-brand-primary-deep)' }}>{rfiKpi.overdue}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>past required_response_by</div>
@@ -511,7 +511,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
       </section>
 
       {data.error && (
-        <div style={{ padding: 12, borderRadius: 8, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
+        <div style={{ padding: 12, borderRadius: 8, background: 'var(--color-red-50)', color: 'var(--color-red-700)', fontSize: 12 }}>
           {data.error}
         </div>
       )}

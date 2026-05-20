@@ -31,7 +31,7 @@ const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> 
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
   in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
-  blocked:     { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Blocked' },
+  blocked:     { color: 'var(--color-red-700)', bg: 'var(--color-red-50)', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
 };
 const PHASE_ORDER = ['Phase 0','Phase 1','Phase 2','Phase 3','Phase 4','Phase 5','Phase 6','Inbox'];
@@ -232,7 +232,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
               <div style={{fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em',color:'var(--color-amber-800)',marginBottom:8}}>Inbox Actions</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 <button onClick={()=>setShowPromote(p=>!p)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(15,118,110,0.3)',background:'#f0fdfa',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Promote to Roadmap</button>
-                <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'#fef2f2',color:'var(--color-red-700)',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>
+                <button onClick={()=>save({status:'done'})} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #fca5a5',background:'var(--color-red-50)',color:'var(--color-red-700)',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑️ Dismiss</button>
               </div>
               {showPromote && (
                 <div style={{display:'flex',gap:6,marginTop:8}}>
@@ -295,7 +295,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
             </>)}
             {(task.status as string)!=='done' && (
               <button onClick={()=>save({status:'done',detail:task.detail+'\n\n— Dismissed'})} disabled={saving}
-                style={{padding:'11px 14px',borderRadius:10,border:'1px solid #fca5a5',background:'#fef2f2',color:'var(--color-red-700)',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                style={{padding:'11px 14px',borderRadius:10,border:'1px solid #fca5a5',background:'var(--color-red-50)',color:'var(--color-red-700)',fontSize:13,fontWeight:700,cursor:'pointer'}}>
                 🗑
               </button>
             )}

@@ -220,7 +220,7 @@ export default function OverviewPanel() {
                   <div key={p.kID} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0 6px 16px', fontSize: 13 }}>
                     <span style={{ color: '#334155', fontWeight: 500 }}>{p.name}</span>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      {p.issues > 0 && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: '#fef2f2', color: '#dc2626' }}>{p.issues} issues</span>}
+                      {p.issues > 0 && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'var(--color-red-50)', color: '#dc2626' }}>{p.issues} issues</span>}
                       <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{p.pm?.split(' ')[0] || ''}</span>
                     </div>
                   </div>

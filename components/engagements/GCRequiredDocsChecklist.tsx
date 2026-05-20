@@ -72,7 +72,7 @@ export default function GCRequiredDocsChecklist({ kID }: { kID: string }) {
   if (loading) return <div style={{ padding: 16, fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading checklist…</div>;
   if (error) {
     return (
-      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
+      <div style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--color-red-50)', color: 'var(--color-red-700)', fontSize: 12 }}>
         Could not load GC required docs: {error}
       </div>
     );

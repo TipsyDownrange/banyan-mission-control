@@ -811,7 +811,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
             <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>{label}</span>
             {badge
-              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)', fontSize: 11, fontWeight: 800 }}>{value}</span>
+              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? 'var(--color-red-50)' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-amber-800)', fontSize: 11, fontWeight: 800 }}>{value}</span>
               : <span style={{ color: 'var(--color-ink-primary)', fontWeight: 600 }}>{value}</span>}
           </div>
         ) : null;
@@ -821,7 +821,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           const hoursLost = Number(event.hours_lost);
           const hasDelayClaim = affectedCount > 0 || hoursLost > 0;
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(220,38,38,0.15)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: 'var(--color-red-50)', borderRadius: 10, border: '1px solid rgba(220,38,38,0.15)' }}>
               {kv('Severity', event.severity, event.severity)}
               {kv('Blocking', event.blocking_flag === 'TRUE' ? 'Yes — work stopped' : 'No')}
               {kv('Category', event.issue_category)}
@@ -1397,7 +1397,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             : qaStatus === 'PARTIAL'
             ? { label: 'PARTIAL', bg: '#fffbeb', color: '#d97706', border: 'rgba(217,119,6,0.2)' }
             : qaStatus === 'FAIL'
-            ? { label: 'FAIL',    bg: '#fef2f2', color: '#dc2626', border: 'rgba(220,38,38,0.2)' }
+            ? { label: 'FAIL',    bg: 'var(--color-red-50)', color: '#dc2626', border: 'rgba(220,38,38,0.2)' }
             : { label: qaStatus,  bg: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)', border: 'var(--color-surface-border)' };
           const isDefenseMode = qaStatus === 'FAIL' || qaStatus === 'PARTIAL';
           const checkLabels: Record<string, string> = {
@@ -1464,7 +1464,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               during:   { label: 'During',   bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
               after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
               progress: { label: 'Progress', bg: '#fffbeb', color: 'var(--color-amber-800)' },
-              damage:   { label: 'Damage',   bg: '#fef2f2', color: 'var(--color-red-700)' },
+              damage:   { label: 'Damage',   bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
               qa:       { label: 'QA',       bg: '#faf5ff', color: '#7e22ce' },
             };
             return map[t] ?? { label: event.evidence_type.trim(), bg: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)' };

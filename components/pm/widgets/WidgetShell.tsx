@@ -106,7 +106,7 @@ export default function WidgetShell({
         ) : error ? (
           <div style={{
             padding: 10,
-            background: '#fef2f2',
+            background: 'var(--color-red-50)',
             border: '1px solid #fecaca',
             borderRadius: 8,
             color: 'var(--color-red-700)',

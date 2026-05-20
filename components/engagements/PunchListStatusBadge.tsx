@@ -26,7 +26,7 @@ const STATUS_BADGE: Record<PunchListItemStatus, { bg: string; color: string; lab
   IN_PROGRESS:          { bg: '#fffbeb', color: 'var(--color-amber-800)', label: 'In Progress' },
   COMPLETED:            { bg: '#f0fdf4', color: '#15803d', label: 'Completed' },
   SIGNED_OFF:           { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Signed Off' },
-  DISPUTED:             { bg: '#fef2f2', color: 'var(--color-red-700)', label: 'Disputed' },
+  DISPUTED:             { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Disputed' },
   DEFERRED_TO_WARRANTY: { bg: '#faf5ff', color: '#7e22ce', label: 'Deferred → Warranty' },
 };
 

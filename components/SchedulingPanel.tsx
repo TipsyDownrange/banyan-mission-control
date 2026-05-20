@@ -134,7 +134,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
         </div>
       </div>
 
-      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>{error}</div>}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>{error}</div>}
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 48 }}>

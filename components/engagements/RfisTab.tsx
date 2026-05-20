@@ -59,7 +59,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   ANSWERED: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   RESOLVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   CLOSED: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
-  VOID: { bg: '#fef2f2', color: 'var(--color-red-700)' },
+  VOID: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -195,7 +195,7 @@ export default function RfisTab({ kID }: { kID: string }) {
 
   if (err) {
     return (
-      <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+      <div style={{ padding: 24, color: 'var(--color-red-700)', background: 'var(--color-red-50)', borderRadius: 12, border: '1px solid #fecaca' }}>
         Failed to load RFIs: {err}
       </div>
     );

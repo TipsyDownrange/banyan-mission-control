@@ -29,14 +29,14 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   PENDING:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   DRAFT:        { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   IDENTIFIED:   { bg: '#fffbeb', color: 'var(--color-amber-800)' },
-  REJECTED:     { bg: '#fef2f2', color: 'var(--color-red-700)' },
-  DISPUTED:     { bg: '#fef2f2', color: 'var(--color-red-700)' },
+  REJECTED:     { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
+  DISPUTED:     { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   IN_NEGOTIATION: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
   REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
   CLEAR_DIRECTIVE: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   AMBIGUOUS:    { bg: '#fffbeb', color: 'var(--color-amber-800)' },
-  PUNTED:       { bg: '#fef2f2', color: 'var(--color-red-700)' },
+  PUNTED:       { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
   CLOSED:       { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   RESPONDED:    { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
 };
@@ -291,7 +291,7 @@ export default function PMPanel() {
                         {rfi.spec_section && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{rfi.spec_section}</span>}
                         {rfi.days_open && rfi.status !== 'CLOSED' && parseInt(rfi.days_open) > 0 && (
                           parseInt(rfi.days_open) > 10
-                            ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: 'var(--color-red-700)', border: '1px solid rgba(239,68,68,0.2)' }}>⚠️ {rfi.days_open}d open</span>
+                            ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: 'var(--color-red-50)', color: 'var(--color-red-700)', border: '1px solid rgba(239,68,68,0.2)' }}>⚠️ {rfi.days_open}d open</span>
                             : <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{rfi.days_open}d open</span>
                         )}
                       </div>

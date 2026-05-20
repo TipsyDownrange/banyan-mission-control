@@ -26,7 +26,7 @@ const STATE_BADGE: Record<string, { bg: string; color: string; label?: string }>
   GC_APPROVED:            { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'GC Approved' },
   PAID_PARTIAL:           { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Partial' },
   PAID_FULL:              { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Paid · Full' },
-  REJECTED:               { bg: '#fef2f2', color: 'var(--color-red-700)', label: 'Rejected' },
+  REJECTED:               { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Rejected' },
 };
 
 function fmtMoney(value: string | number | null | undefined): string {

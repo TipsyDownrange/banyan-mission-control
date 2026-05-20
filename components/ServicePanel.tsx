@@ -527,7 +527,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
       )}
 
       {data?.error && (
-        <div style={{ background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '14px 20px', marginBottom: 16 }}>
+        <div style={{ background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '14px 20px', marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-red-700)' }}>Error loading work orders</div>
           <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{data.error}</div>
         </div>
@@ -658,7 +658,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
         const declinedWOs = filteredByStatus['lost'] || [];
         if (declinedWOs.length === 0) return null;
         return (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid #fef2f2' }}>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid var(--color-red-50)' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f87171', marginBottom: 10 }}>Declined Work Orders ({declinedWOs.length})</div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {declinedWOs.map(wo => (

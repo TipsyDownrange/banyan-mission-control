@@ -422,7 +422,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: 'var(--color-red-700)', padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13 }}>
+        <div style={{ background: 'var(--color-red-50)', border: '1px solid #fecaca', color: 'var(--color-red-700)', padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13 }}>
           {error}
         </div>
       )}

@@ -121,7 +121,7 @@ const ALL_TYPES = ORGANIZATION_TYPES;
 const FILTER_LABELS = ORGANIZATION_TYPE_LABELS;
 
 const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  OPEN:          { bg: '#fef2f2', color: '#dc2626' },
+  OPEN:          { bg: 'var(--color-red-50)', color: '#dc2626' },
   SCHEDULED:     { bg: '#eff6ff', color: '#1d4ed8' },
   IN_PROGRESS:   { bg: '#fffbeb', color: '#d97706' },
   ON_HOLD:       { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
@@ -840,7 +840,7 @@ function OrgDetailPanel({
               </div>
             )}
             {governanceError && (
-              <div style={{ fontSize: 12, color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
                 {governanceError}
               </div>
             )}
@@ -1494,7 +1494,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                 </div>
               )}
               {error && (
-                <div style={{ fontSize: 12, color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>
                   {error}
                 </div>
               )}

@@ -605,7 +605,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <div>{FL('Notes')}<textarea value={draft.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional context..." rows={2} style={{ ...INP, resize: 'none' }} /></div>
 
         {error && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600 }}>
             {error}
           </div>
         )}

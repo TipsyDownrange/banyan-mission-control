@@ -838,7 +838,7 @@ export default function QuoteBuilder({
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
         {error && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
             {error}
             <button onClick={() => setError('')} style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-red-700)', fontSize: 14 }}>×</button>
           </div>
