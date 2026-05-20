@@ -112,6 +112,8 @@ Do not regress existing navigation, auth, role visibility, Work Orders, service 
 
 Do not make opportunistic improvements. Do not change unrelated files. Do not call work done without evidence.
 
+`@react-pdf/renderer` files (see `lib/pdf-MIGRATION-EXCLUDE.md`) are permanently excluded from hex → CSS-variable migration sweeps. pdfkit's color parser does not resolve `var(--*)` references; those files must use literal hex values only.
+
 ## Authenticated verification routing
 
 Random Vercel PR preview URLs are not valid authenticated Google OAuth verification surfaces for BanyanOS.
