@@ -308,7 +308,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               padding: '5px 14px',
               borderRadius: 8,
               border: 'none',
-              background: editing ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'rgba(255,255,255,0.08)',
+              background: editing ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))' : 'rgba(255,255,255,0.08)',
               color: editing ? 'white' : 'rgba(148,163,184,0.8)',
               fontSize: 11,
               fontWeight: 700,
@@ -479,7 +479,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
               marginLeft: 'auto',
               fontSize: 9, fontWeight: 700,
               padding: '2px 8px', borderRadius: 999,
-              background: 'rgba(20,184,166,0.15)', color: '#14b8a6',
+              background: 'rgba(20,184,166,0.15)', color: 'var(--bos-color-brand-primary)',
               border: '1px solid rgba(20,184,166,0.25)',
             }}>
               Step Library
@@ -784,7 +784,7 @@ export default function BidOverviewTab({ bid, onBidUpdate, onStatusAdvance, step
                 disabled={folderSaving || !folderUrl.trim()}
                 style={{
                   padding: '9px 20px', borderRadius: 10, border: 'none',
-                  background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)',
+                  background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))',
                   color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer',
                   opacity: (!folderUrl.trim()) ? 0.5 : 1,
                 }}

@@ -415,7 +415,7 @@ function PermitBand({ permits, range }: { permits: ScheduleMilestone[]; range: D
           const w = Math.max(0.5, x2 - x1);
           const overdue = actMs == null && estMs < todayMs;
           const fill = actMs != null ? '#bbf7d0' : overdue ? '#fecaca' : '#fef9c3';
-          const stroke = actMs != null ? '#15803d' : overdue ? '#b91c1c' : '#a16207';
+          const stroke = actMs != null ? '#15803d' : overdue ? 'var(--color-red-700)' : '#a16207';
           const titleText = `${p.permit_authority ?? 'Permit'} — applied ${p.permit_application_date}, ` +
             `est ${p.permit_estimated_approval_date}` +
             (actMs != null ? `, approved ${p.permit_actual_approval_date}` : overdue ? ' (overdue)' : '');

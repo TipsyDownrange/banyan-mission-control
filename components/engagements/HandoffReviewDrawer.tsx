@@ -135,7 +135,7 @@ export default function HandoffReviewDrawer({
 
         <div style={{ padding: '20px 24px' }}>
           {err && (
-            <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12, marginBottom: 14 }}>
+            <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12, marginBottom: 14 }}>
               {err}
             </div>
           )}
@@ -158,7 +158,7 @@ export default function HandoffReviewDrawer({
                 <h3 style={sectionTitle}>
                   Critical gaps
                   {gaps.length > 0 && (
-                    <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: unresolvedCount > 0 ? '#b91c1c' : '#15803d' }}>
+                    <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: unresolvedCount > 0 ? 'var(--color-red-700)' : '#15803d' }}>
                       {unresolvedCount} unresolved / {gaps.length} total
                     </span>
                   )}
@@ -237,4 +237,4 @@ const btnBase: React.CSSProperties = {
 const btnPrimary: React.CSSProperties = { ...btnBase, background: 'var(--bos-color-brand-primary-deep)', color: 'white' };
 const btnTeal: React.CSSProperties = { ...btnBase, background: '#0e7490', color: 'white' };
 const btnSecondary: React.CSSProperties = { ...btnBase, background: 'white', color: 'var(--color-ink-primary)', border: '1px solid #cbd5e1' };
-const btnDanger: React.CSSProperties = { ...btnBase, background: '#b91c1c', color: 'white' };
+const btnDanger: React.CSSProperties = { ...btnBase, background: 'var(--color-red-700)', color: 'white' };

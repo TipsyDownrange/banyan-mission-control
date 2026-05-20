@@ -182,7 +182,7 @@ export default function KaiPanel() {
                 className="max-w-[80%] rounded-2xl px-5 py-3"
                 style={{
                   background: msg.role === 'user'
-                    ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)'
+                    ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))'
                     : 'white',
                   color: msg.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                   boxShadow: '0 1px 3px rgba(15,23,42,0.07)',
@@ -258,7 +258,7 @@ export default function KaiPanel() {
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || loading}
               className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-30"
-              style={{ background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)', color: 'white' }}
+              style={{ background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))', color: 'white' }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"/>

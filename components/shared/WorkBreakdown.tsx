@@ -114,7 +114,7 @@ function ProgressBar({ pct }: { pct: number }) {
       <div style={{
         height: '100%',
         width: `${Math.min(100, Math.max(0, pct))}%`,
-        background: pct >= 100 ? '#15803d' : '#14b8a6',
+        background: pct >= 100 ? '#15803d' : 'var(--bos-color-brand-primary)',
         borderRadius: 2,
         transition: 'width 0.3s',
       }} />
@@ -769,7 +769,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 style={{
                   padding: '9px 20px', borderRadius: 8, fontSize: 12, fontWeight: 800, border: 'none',
                   cursor: savingDocs ? 'default' : 'pointer',
-                  background: savingDocs ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
+                  background: savingDocs ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
                   color: savingDocs ? 'var(--bos-color-ink-tertiary)' : 'white',
                 }}
               >
@@ -1004,7 +1004,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   autoFocus
                   style={{
                     fontSize: 13, fontWeight: 600,
-                    border: '1px solid #14b8a6', borderRadius: 5,
+                    border: '1px solid var(--bos-color-brand-primary)', borderRadius: 5,
                     padding: '3px 8px', background: 'white', outline: 'none',
                     flex: 1, minWidth: 80,
                   }}
@@ -1329,7 +1329,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 autoFocus
                 style={{
                   fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)',
-                  border: '1px solid #14b8a6', borderRadius: 5,
+                  border: '1px solid var(--bos-color-brand-primary)', borderRadius: 5,
                   padding: '3px 8px', background: 'white', outline: 'none',
                   flex: 1, minWidth: 80,
                 }}
@@ -1449,7 +1449,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     autoFocus
                     style={{
                       fontSize: 11, color: 'var(--color-ink-primary)', fontWeight: 600,
-                      border: '1px solid #14b8a6', borderRadius: 5,
+                      border: '1px solid var(--bos-color-brand-primary)', borderRadius: 5,
                       padding: '2px 8px', background: 'white', outline: 'none',
                       minWidth: 80,
                     }}
@@ -1613,7 +1613,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     style={{
                       marginLeft: 'auto',
                       padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: stepForm.step_name ? 'pointer' : 'default',
-                      background: stepForm.step_name ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)',
+                      background: stepForm.step_name ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)',
                       color: stepForm.step_name ? 'white' : 'var(--bos-color-ink-tertiary)',
                       border: 'none',
                     }}
@@ -1747,7 +1747,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             disabled={creatingFromTemplates}
             style={{
               padding: '9px 18px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: creatingFromTemplates ? 'default' : 'pointer',
-              background: creatingFromTemplates ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
+              background: creatingFromTemplates ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
               color: creatingFromTemplates ? 'var(--bos-color-ink-tertiary)' : 'white',
               boxShadow: creatingFromTemplates ? 'none' : '0 2px 8px rgba(15,118,110,0.25)',
             }}
@@ -1777,7 +1777,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
   if (error) {
     return (
-      <div style={{ padding: '16px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c' }}>
+      <div style={{ padding: '16px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
         Failed to load: {error}
         <button onClick={loadData} style={{ marginLeft: 10, background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', textDecoration: 'underline', fontSize: 12 }}>Retry</button>
       </div>
@@ -1848,7 +1848,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   disabled={!scopeForm.system_type || !scopeForm.location}
                   style={{
                     padding: '9px 22px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none', cursor: 'pointer',
-                    background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)',
+                    background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)',
                     color: scopeForm.system_type && scopeForm.location ? 'white' : 'var(--bos-color-ink-tertiary)',
                   }}
                 >
@@ -1918,7 +1918,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setShowAddScope(true)}
-                style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+                style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
               >
                 + Add Scope
               </button>
@@ -2025,7 +2025,7 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
       rows={focused ? 3 : 1}
       style={{
         width: '100%', padding: '6px 10px', borderRadius: 6, fontSize: 11,
-        border: `1px solid ${focused ? '#14b8a6' : 'var(--color-surface-border)'}`,
+        border: `1px solid ${focused ? 'var(--bos-color-brand-primary)' : 'var(--color-surface-border)'}`,
         background: 'var(--color-surface)', color: '#475569', resize: 'none',
         outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
         transition: 'border-color 0.15s',

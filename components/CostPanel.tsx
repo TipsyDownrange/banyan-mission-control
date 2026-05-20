@@ -116,7 +116,7 @@ export default function CostPanel() {
 
   if (loading) return (
     <div style={{ padding:48, textAlign:'center' }}>
-      <div style={{ width:28, height:28, borderRadius:'50%', border:'2px solid rgba(15,118,110,0.12)', borderTopColor:'#14b8a6', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
+      <div style={{ width:28, height:28, borderRadius:'50%', border:'2px solid rgba(15,118,110,0.12)', borderTopColor:'var(--bos-color-brand-primary)', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ fontSize:13, color:'var(--bos-color-ink-tertiary)' }}>Loading cost data…</div>
     </div>
@@ -144,7 +144,7 @@ export default function CostPanel() {
             <span style={{ fontSize:18, fontWeight:900, color: overBudget?'#fca5a5':'var(--color-surface)' }}>{fmtUsd(todayCost,4)}</span>
           </div>
           <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:999, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${budgetPct}%`, background: overBudget?'#ef4444':'#14b8a6', borderRadius:999, transition:'width 0.5s' }}/>
+            <div style={{ height:'100%', width:`${budgetPct}%`, background: overBudget?'#ef4444':'var(--bos-color-brand-primary)', borderRadius:999, transition:'width 0.5s' }}/>
           </div>
           <div style={{ fontSize:10, color:'rgba(148,163,184,0.4)', marginTop:4 }}>{budgetPct.toFixed(0)}% of {fmtUsd(budget)} daily budget · Last sync: {data?.lastSync ? new Date(data.lastSync).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '—'}</div>
         </div>
@@ -240,7 +240,7 @@ export default function CostPanel() {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
               <div style={{ padding:'10px 14px', background:'#fef2f2', borderRadius:10, border:'1px solid rgba(185,28,28,0.15)' }}>
-                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#b91c1c', marginBottom:2 }}>Invoices Paid</div>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'var(--color-red-700)', marginBottom:2 }}>Invoices Paid</div>
                 <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(ant?.invoicesPaid)}</div>
               </div>
               <div style={{ padding:'10px 14px', background:'#f0fdf4', borderRadius:10, border:'1px solid rgba(5,150,105,0.2)' }}>
@@ -257,7 +257,7 @@ export default function CostPanel() {
                   {[...(data?.anthropicInvoices||[])].sort((a,b)=>b.date.localeCompare(a.date)).map((inv,i)=>(
                     <tr key={i} style={{ borderBottom:'1px solid var(--color-surface)' }}>
                       <td style={{ padding:'7px 8px', color:'#334155' }}>{inv.date}</td>
-                      <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'#fef2f2':'#f0fdf4', color:inv.type==='invoice'?'#b91c1c':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
+                      <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'#fef2f2':'#f0fdf4', color:inv.type==='invoice'?'var(--color-red-700)':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
                       <td style={{ padding:'7px 8px', fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(inv.amount)}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>{inv.status||'paid'}</span></td>
                     </tr>

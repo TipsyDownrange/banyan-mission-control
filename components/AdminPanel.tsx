@@ -30,7 +30,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     paid:    { bg: '#f0fdf4', color: '#15803d', label: 'Paid' },
     unpaid:  { bg: '#eff6ff', color: '#1d4ed8', label: 'Unpaid' },
-    overdue: { bg: '#fef2f2', color: '#b91c1c', label: 'Overdue' },
+    overdue: { bg: '#fef2f2', color: 'var(--color-red-700)', label: 'Overdue' },
   };
   const s = map[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: status };
   return (
@@ -82,7 +82,7 @@ function FinancialsPanel() {
 
       {error && (
         <div style={{ background: '#fef2f2', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 14, padding: '16px 20px', marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#b91c1c', marginBottom: 4 }}>⚠️ QuickBooks Connection Error</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-red-700)', marginBottom: 4 }}>⚠️ QuickBooks Connection Error</div>
           <div style={{ fontSize: 12, color: '#7f1d1d', fontFamily: 'monospace' }}>{error}</div>
         </div>
       )}
@@ -95,7 +95,7 @@ function FinancialsPanel() {
             <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '16px 18px' }}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>AR Outstanding</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{fmt$(data.ar.total)}</div>
-              <div style={{ fontSize: 12, color: data.ar.overdue > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>
+              <div style={{ fontSize: 12, color: data.ar.overdue > 0 ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)' }}>
                 {data.ar.overdue > 0 ? `${fmt$(data.ar.overdue)} overdue` : 'No overdue invoices'} · {data.ar.count} open
               </div>
               {/* Aging buckets */}
@@ -105,7 +105,7 @@ function FinancialsPanel() {
                   if (!val) return null;
                   const isOld = bucket === '61-90' || bucket === '90+';
                   return (
-                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : 'var(--color-surface)', color: isOld ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
+                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : 'var(--color-surface)', color: isOld ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                       {bucket}: {fmt$(val)}
                     </div>
                   );
@@ -123,7 +123,7 @@ function FinancialsPanel() {
             {/* P&L */}
             <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${data.pl.netIncomeYtd >= 0 ? 'rgba(15,118,110,0.2)' : 'rgba(185,28,28,0.2)'}`, padding: '16px 18px' }}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Net Income {data.pl.period}</div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: data.pl.netIncomeYtd >= 0 ? 'var(--bos-color-brand-primary-deep)' : '#b91c1c', marginBottom: 4 }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: data.pl.netIncomeYtd >= 0 ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-red-700)', marginBottom: 4 }}>
                 {data.pl.netIncomeYtd >= 0 ? '' : '−'}{fmt$(Math.abs(data.pl.netIncomeYtd))}
               </div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>
@@ -152,7 +152,7 @@ function FinancialsPanel() {
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: '#0369a1' }}>{inv.invoiceNumber || '—'}</td>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--color-ink-primary)', maxWidth: 200 }}>{inv.customer}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{fmt$(Number(inv.amount))}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(inv.balance) > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(inv.balance))}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(inv.balance) > 0 ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(inv.balance))}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{fmtDate(inv.dueDate)}</td>
                     <td style={{ padding: '11px 16px' }}><StatusBadge status={inv.status} /></td>
                   </tr>
@@ -180,7 +180,7 @@ function FinancialsPanel() {
                   <tr key={bill.id} style={{ borderBottom: '1px solid var(--color-surface)' }}>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--color-ink-primary)', maxWidth: 220 }}>{bill.vendor}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{fmt$(Number(bill.amount))}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(bill.balance) > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(bill.balance))}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(bill.balance) > 0 ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(bill.balance))}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{fmtDate(bill.dueDate)}</td>
                     <td style={{ padding: '11px 16px' }}><StatusBadge status={bill.status} /></td>
                   </tr>

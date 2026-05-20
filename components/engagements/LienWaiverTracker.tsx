@@ -87,7 +87,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
   }
   if (error) {
     return (
-      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: '#b91c1c', fontSize: 12 }}>
+      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
         Could not load lien waivers: {error}
       </div>
     );
@@ -225,7 +225,7 @@ function ManualGenerateButton({ onGenerated }: { onGenerated: () => void }) {
       >
         {busy ? 'Generating…' : 'Generate Waiver'}
       </button>
-      {error && <span style={{ color: '#b91c1c', fontSize: 11 }}>{error}</span>}
+      {error && <span style={{ color: 'var(--color-red-700)', fontSize: 11 }}>{error}</span>}
     </div>
   );
 }

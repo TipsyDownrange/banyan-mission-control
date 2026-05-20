@@ -425,7 +425,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 8 }}>Work order not found</div>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginBottom: 20, textAlign: 'center' }}>The work order you selected could not be loaded. It may have been removed or the data is unavailable.</div>
-          <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Close</button>
+          <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Close</button>
         </div>
       </>
     );
@@ -997,7 +997,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               <button
                 onClick={handleSave}
                 disabled={saving}
-                style={{ padding: '7px 16px', borderRadius: 10, background: saving ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
+                style={{ padding: '7px 16px', borderRadius: 10, background: saving ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
             )}
@@ -1008,15 +1008,15 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
         {/* Error banners */}
         {saveError && (
-          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>⚠️ {saveError}</span>
-            <button onClick={() => setSaveError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 16 }}>×</button>
+            <button onClick={() => setSaveError('')} style={{ background: 'none', border: 'none', color: 'var(--color-red-700)', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
         )}
         {stageError && (
-          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>⚠️ {stageError}</span>
-            <button onClick={() => setStageError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 16 }}>×</button>
+            <button onClick={() => setStageError('')} style={{ background: 'none', border: 'none', color: 'var(--color-red-700)', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
         )}
 
@@ -1067,7 +1067,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             {stageExpanded && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginTop: 12 }}>
                 {safeWo.status === 'lost' ? (
-                  <div style={{ padding: '6px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>Declined</div>
+                  <div style={{ padding: '6px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: 'var(--color-red-700)' }}>Declined</div>
                 ) : (
                   <div style={{ flex: 1, overflowX: 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
@@ -1198,7 +1198,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 {!readOnly && (
                   <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
                     {jobDetailsError && (
-                      <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {jobDetailsError}</span>
+                      <span style={{ marginRight: 'auto', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {jobDetailsError}</span>
                     )}
                     {!jobDetailsDirty && !jobDetailsError && (
                       <span style={{ marginRight: 'auto', fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>Edits to Job Details are local until you Save.</span>
@@ -1215,7 +1215,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       type="button"
                       onClick={saveJobDetails}
                       disabled={!jobDetailsDirty || jobDetailsSaving}
-                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!jobDetailsDirty || jobDetailsSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!jobDetailsDirty || jobDetailsSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', boxShadow: (!jobDetailsDirty || jobDetailsSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!jobDetailsDirty || jobDetailsSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: (!jobDetailsDirty || jobDetailsSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!jobDetailsDirty || jobDetailsSaving) ? 'default' : 'pointer', boxShadow: (!jobDetailsDirty || jobDetailsSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                     >
                       {jobDetailsSaving ? 'Saving...' : 'Save Job Details'}
                     </button>
@@ -1307,7 +1307,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                     </div>
 
                     {orgRepairError && (
-                      <div style={{ marginTop: 10, fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{orgRepairError}</div>
+                      <div style={{ marginTop: 10, fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>{orgRepairError}</div>
                     )}
 
                     {!readOnly && (
@@ -1445,7 +1445,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 {!readOnly && (
                   <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
                     {customerSiteError && (
-                      <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {customerSiteError}</span>
+                      <span style={{ marginRight: 'auto', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {customerSiteError}</span>
                     )}
                     {!customerSiteDirty && !customerSiteError && (
                       <span style={{ marginRight: 'auto', fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>Edits to Customer &amp; Site are local until you Save.</span>
@@ -1462,7 +1462,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       type="button"
                       onClick={saveCustomerSite}
                       disabled={!customerSiteDirty || customerSiteSaving}
-                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!customerSiteDirty || customerSiteSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!customerSiteDirty || customerSiteSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!customerSiteDirty || customerSiteSaving) ? 'default' : 'pointer', boxShadow: (!customerSiteDirty || customerSiteSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                      style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!customerSiteDirty || customerSiteSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: (!customerSiteDirty || customerSiteSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!customerSiteDirty || customerSiteSaving) ? 'default' : 'pointer', boxShadow: (!customerSiteDirty || customerSiteSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                     >
                       {customerSiteSaving ? 'Saving...' : 'Save Customer & Site'}
                     </button>
@@ -1543,7 +1543,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   {!readOnly && (
                     <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
                       {crewError && (
-                        <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {crewError}</span>
+                        <span style={{ marginRight: 'auto', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {crewError}</span>
                       )}
                       {!crewDirty && !crewError && (
                         <span style={{ marginRight: 'auto', fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>Crew changes are local until you Save.</span>
@@ -1560,7 +1560,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         type="button"
                         onClick={saveCrew}
                         disabled={!crewDirty || crewSaving}
-                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!crewDirty || crewSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!crewDirty || crewSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', boxShadow: (!crewDirty || crewSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!crewDirty || crewSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: (!crewDirty || crewSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!crewDirty || crewSaving) ? 'default' : 'pointer', boxShadow: (!crewDirty || crewSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                       >
                         {crewSaving ? 'Saving...' : 'Save Crew'}
                       </button>
@@ -1705,7 +1705,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                           </div>
                         )}
                         {vendorCreateError && (
-                          <div style={{ marginTop: 6, fontSize: 11, color: '#b91c1c', fontWeight: 600 }}>{vendorCreateError}</div>
+                          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--color-red-700)', fontWeight: 600 }}>{vendorCreateError}</div>
                         )}
                       </div>
 
@@ -1802,7 +1802,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                               setShowAddQuote(false);
                             }
                           } catch(err) { console.error('[WODetailPanel] addVendorQuote', err); }
-                        }} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>
+                        }} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color:'white', fontSize:13, fontWeight:800, cursor:'pointer' }}>
                           Save Vendor Quote
                         </button>
                         <button onClick={() => { setShowAddQuote(false); setVendorSearch(''); }} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid var(--color-surface-border)', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:13, cursor:'pointer' }}>Cancel</button>
@@ -2100,7 +2100,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   {!readOnly && (
                     <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
                       {notesError && (
-                        <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {notesError}</span>
+                        <span style={{ marginRight: 'auto', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {notesError}</span>
                       )}
                       {!notesDirty && !notesError && (
                         <span style={{ marginRight: 'auto', fontSize: 11, color: 'var(--bos-color-ink-disabled)', fontWeight: 600 }}>Edits to Notes are local until you Save.</span>
@@ -2117,7 +2117,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                         type="button"
                         onClick={saveNotes}
                         disabled={!notesDirty || notesSaving}
-                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!notesDirty || notesSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!notesDirty || notesSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', boxShadow: (!notesDirty || notesSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+                        style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: (!notesDirty || notesSaving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: (!notesDirty || notesSaving) ? 'var(--bos-color-ink-tertiary)' : 'white', fontSize: 12, fontWeight: 800, cursor: (!notesDirty || notesSaving) ? 'default' : 'pointer', boxShadow: (!notesDirty || notesSaving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
                       >
                         {notesSaving ? 'Saving...' : 'Save Notes'}
                       </button>
@@ -2190,9 +2190,9 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </button>
                 <div style={{ display: collapsed['job-files'] ? 'none' : 'block' }}>
                 {uploadError && (
-                  <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>⚠️ {uploadError}</span>
-                    <button onClick={() => setUploadError('')} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}>×</button>
+                    <button onClick={() => setUploadError('')} style={{ background: 'none', border: 'none', color: 'var(--color-red-700)', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}>×</button>
                   </div>
                 )}
                 <div
@@ -2206,7 +2206,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                   }}
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    border: `2px dashed ${isDraggingOver ? '#14b8a6' : 'var(--color-surface-border)'}`,
+                    border: `2px dashed ${isDraggingOver ? 'var(--bos-color-brand-primary)' : 'var(--color-surface-border)'}`,
                     borderRadius: 10,
                     padding: '14px 16px',
                     textAlign: 'center' as const,
@@ -2223,7 +2223,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </div>
                 {uploadingCount > 0 && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.15)' }}>
-                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
                     <span style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 600 }}>Uploading {uploadingCount} file{uploadingCount > 1 ? 's' : ''}...</span>
                   </div>
                 )}
@@ -2272,7 +2272,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
               Discard
             </button>
             <button onClick={handleSave} disabled={saving}
-              style={{ padding: '10px 24px', borderRadius: 10, background: saving ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
+              style={{ padding: '10px 24px', borderRadius: 10, background: saving ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: saving ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}>
               {saving ? 'Saving...' : '✓ Save All Changes'}
             </button>
           </div>

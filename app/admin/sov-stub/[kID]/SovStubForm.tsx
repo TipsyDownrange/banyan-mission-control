@@ -150,7 +150,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
     return (
       <div style={{
         padding: '16px 20px', borderRadius: 12, background: '#fef2f2',
-        border: '1px solid rgba(185,28,28,0.2)', color: '#b91c1c', fontSize: 13,
+        border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red-700)', fontSize: 13,
       }}>
         {resolveError ?? 'No engagement for this kID'}
       </div>
@@ -196,7 +196,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
         >
           {locking ? 'Locking…' : 'Lock SOV →'}
         </button>
-        {submitError && <div style={{ marginTop: 10, color: '#b91c1c' }}>{submitError}</div>}
+        {submitError && <div style={{ marginTop: 10, color: 'var(--color-red-700)' }}>{submitError}</div>}
       </div>
     );
   }
@@ -267,7 +267,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
             <button
               onClick={() => removeLine(i)}
               style={{
-                background: 'transparent', color: '#b91c1c', border: 'none',
+                background: 'transparent', color: 'var(--color-red-700)', border: 'none',
                 cursor: 'pointer', fontSize: 16, fontWeight: 700,
               }}
               aria-label="Remove line"
@@ -300,7 +300,7 @@ export default function SovStubForm({ kID }: { kID: string }) {
         {submitting ? 'Creating SOV…' : 'Create SOV Stub'}
       </button>
       {submitError && (
-        <div style={{ marginTop: 12, color: '#b91c1c', fontSize: 13 }}>
+        <div style={{ marginTop: 12, color: 'var(--color-red-700)', fontSize: 13 }}>
           {submitError}
         </div>
       )}

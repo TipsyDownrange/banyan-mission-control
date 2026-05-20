@@ -66,7 +66,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
 };
 
 const PRIORITY_COLORS: Record<string, { bg: string; fg: string }> = {
-  URGENT: { bg: '#fee2e2', fg: '#b91c1c' },
+  URGENT: { bg: '#fee2e2', fg: 'var(--color-red-700)' },
   HIGH:   { bg: '#ffedd5', fg: '#c2410c' },
   MEDIUM: { bg: '#fef9c3', fg: '#854d0e' },
   LOW:    { bg: '#f1f5f9', fg: '#475569' },
@@ -193,7 +193,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading action items...</div>;
   }
   if (err) {
-    return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
+    return <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
   }
   if (!data?.kIDFound) {
     return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Action Items requires this project to be migrated to Postgres.</div>;
@@ -210,7 +210,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: label === 'Overdue' && Number(value) > 0 ? '#b91c1c' : 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: label === 'Overdue' && Number(value) > 0 ? 'var(--color-red-700)' : 'var(--color-ink-primary)', marginTop: 4 }}>{value}</div>
           </div>
         ))}
       </div>
@@ -273,7 +273,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                 </div>
                 <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800, color: priority.fg, background: priority.bg, justifySelf: 'start' }}>{it.priority}</span>
                 <span style={{ padding: '3px 8px', borderRadius: 999, fontSize: 10, fontWeight: 800, color: status.fg, background: status.bg, justifySelf: 'start' }}>{it.status.replace(/_/g, ' ')}</span>
-                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? '#b91c1c' : '#334155' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: overdue ? 'var(--color-red-700)' : '#334155' }}>
                   {it.due_date ? `Due ${formatDate(it.due_date)}` : 'No due date'}
                 </div>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
@@ -287,7 +287,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
                       <button type="button" onClick={() => {
                         const reason = window.prompt('Cancel reason:');
                         if (reason) handleAction(it.action_item_id, 'cancel', { reason });
-                      }} style={actionBtnStyle('#b91c1c')}>Cancel</button>
+                      }} style={actionBtnStyle('var(--color-red-700)')}>Cancel</button>
                     </>
                   )}
                 </div>

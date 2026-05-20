@@ -471,7 +471,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Work Orders</h1>
           <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
             {(!readOnly && canCreateLeads) && <button onClick={() => setShowIntake(true)}
-              style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
+              style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
               + New Lead
             </button>}
             <button onClick={loadData}
@@ -520,7 +520,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
 
       {loading && (
         <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid var(--color-surface-border)' }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading work orders from Smartsheet...</div>
         </div>
@@ -528,7 +528,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
 
       {data?.error && (
         <div style={{ background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '14px 20px', marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c' }}>Error loading work orders</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-red-700)' }}>Error loading work orders</div>
           <div style={{ fontSize: 12, color: '#475569' }}>{data.error}</div>
         </div>
       )}

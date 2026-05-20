@@ -81,7 +81,7 @@ const BUTTON_DISABLED: CSSProperties = { ...BUTTON, background: 'var(--bos-color
 
 const ERROR_BANNER: CSSProperties = {
   padding: '8px 12px', borderRadius: 8, background: '#fef2f2',
-  border: '1px solid rgba(185,28,28,0.2)', color: '#b91c1c',
+  border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red-700)',
   fontSize: 12, fontWeight: 700,
 };
 

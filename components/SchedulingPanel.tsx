@@ -17,7 +17,7 @@ const ISLAND_COLOR: Record<string, string> = {
 
 function menColor(men: number): string {
   if (!men) return 'transparent';
-  if (men >= 8) return '#b91c1c';
+  if (men >= 8) return 'var(--color-red-700)';
   if (men >= 6) return '#c2410c';
   if (men >= 4) return '#0369a1';
   if (men >= 2) return 'var(--bos-color-brand-primary-deep)';
@@ -134,11 +134,11 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
         </div>
       </div>
 
-      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>{error}</div>}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>{error}</div>}
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading manpower schedule...</div>
         </div>
@@ -296,7 +296,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                                           } catch { /* non-fatal */ }
                                         }
                                       }}
-                                      style={{ width: men ? 32 : 28, height: men ? 24 : 24, borderRadius: 6, background: draggingMen !== null ? 'rgba(15,118,110,0.08)' : men ? menBg(men) : 'transparent', border: `1px solid ${draggingMen !== null ? '#14b8a6' : men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: draggingMen !== null ? 'copy' : 'text', transition: 'all 0.1s' }}>
+                                      style={{ width: men ? 32 : 28, height: men ? 24 : 24, borderRadius: 6, background: draggingMen !== null ? 'rgba(15,118,110,0.08)' : men ? menBg(men) : 'transparent', border: `1px solid ${draggingMen !== null ? 'var(--bos-color-brand-primary)' : men ? menColor(men)+'44' : '#f1f5f9'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: draggingMen !== null ? 'copy' : 'text', transition: 'all 0.1s' }}>
                                       {men > 0 && <span style={{ fontSize: 12, fontWeight: 800, color: menColor(men) }}>{men}</span>}
                                     </div>
                                   )}
@@ -401,7 +401,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           {/* Legend */}
           <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>Men on site:</span>
-            {[[1,'1-2','var(--bos-color-brand-primary-deep)'],[2,'3-4','var(--bos-color-brand-primary-deep)'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','#b91c1c']].map(([n,label,color]) => (
+            {[[1,'1-2','var(--bos-color-brand-primary-deep)'],[2,'3-4','var(--bos-color-brand-primary-deep)'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','var(--color-red-700)']].map(([n,label,color]) => (
               <div key={String(n)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 20, height: 16, borderRadius: 4, background: menBg(Number(n)), border: `1px solid ${String(color)}44` }} />
                 <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{String(label)}</span>

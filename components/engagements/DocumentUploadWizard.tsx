@@ -170,7 +170,7 @@ export default function DocumentUploadWizard({ kID, onClose, onCreated, presetLi
           </label>
 
           {err && (
-            <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12 }}>{err}</div>
+            <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12 }}>{err}</div>
           )}
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>

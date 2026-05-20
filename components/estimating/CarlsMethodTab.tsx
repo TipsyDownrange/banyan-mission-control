@@ -129,7 +129,7 @@ function DollarInput({ value, onChange, placeholder = '0.00', width = 130 }: Dol
       style={{
         width,
         padding: '5px 10px',
-        border: focused ? '1px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)',
+        border: focused ? '1px solid var(--bos-color-brand-primary)' : '1px solid rgba(20,184,166,0.3)',
         borderRadius: 8,
         fontSize: 13,
         fontFamily: FONT,
@@ -171,7 +171,7 @@ function SmallInput({
       style={{
         width,
         padding: '4px 6px',
-        border: focused ? '1px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)',
+        border: focused ? '1px solid var(--bos-color-brand-primary)' : '1px solid rgba(20,184,166,0.3)',
         borderRadius: 6,
         fontSize: 12,
         fontFamily: FONT,
@@ -200,7 +200,7 @@ function DescriptionInput({ value, onChange }: { value: string; onChange: (v: st
       style={{
         width: '100%',
         border: 'none',
-        borderBottom: focused ? '1.5px solid #14b8a6' : '1px solid var(--color-surface-border)',
+        borderBottom: focused ? '1.5px solid var(--bos-color-brand-primary)' : '1px solid var(--color-surface-border)',
         fontSize: 12,
         fontFamily: FONT,
         background: 'transparent',
@@ -228,7 +228,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
             width: 3,
             height: 14,
             borderRadius: 2,
-            background: 'linear-gradient(180deg, #14b8a6, var(--bos-color-brand-primary-deep))',
+            background: 'linear-gradient(180deg, var(--bos-color-brand-primary), var(--bos-color-brand-primary-deep))',
             flexShrink: 0,
           }} />
           <span style={{

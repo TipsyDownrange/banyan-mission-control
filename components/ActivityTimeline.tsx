@@ -202,7 +202,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   MASTER_LIBRARY_TOGGLE_CHANGED: { icon: '🎛️', color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', label: 'Master Library Toggle' },
   EMAIL_SENT:        { icon: '📧', color: '#059669', bg: 'rgba(5,150,105,0.08)',   label: 'Email Sent' },
   QA_COMPLETE:       { icon: '🔍', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)', label: 'QA Check' },
-  CREW_DEMOBILIZED:  { icon: '🚛', color: '#b91c1c', bg: 'rgba(185,28,28,0.08)', label: 'Crew Demobilized' },
+  CREW_DEMOBILIZED:  { icon: '🚛', color: 'var(--color-red-700)', bg: 'rgba(185,28,28,0.08)', label: 'Crew Demobilized' },
   WO_CLOSED:         { icon: '🔒', color: '#334155', bg: 'rgba(51,65,85,0.08)', label: 'WO Closed' },
 };
 
@@ -811,7 +811,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
           <div key={label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
             <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600, minWidth: 110 }}>{label}</span>
             {badge
-              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? '#b91c1c' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
+              ? <span style={{ padding: '1px 7px', borderRadius: 999, background: badge === 'HIGH' ? '#fef2f2' : badge === 'LOW' ? '#f0fdfa' : '#fffbeb', color: badge === 'HIGH' ? 'var(--color-red-700)' : badge === 'LOW' ? 'var(--bos-color-brand-primary-deep)' : '#92400e', fontSize: 11, fontWeight: 800 }}>{value}</span>
               : <span style={{ color: 'var(--color-ink-primary)', fontWeight: 600 }}>{value}</span>}
           </div>
         ) : null;
@@ -1307,7 +1307,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 </div>
               )}
               {event.location_group && (
-                <span style={{ fontSize: 11, color: '#b91c1c', fontWeight: 600 }}>📍 {event.location_group}</span>
+                <span style={{ fontSize: 11, color: 'var(--color-red-700)', fontWeight: 600 }}>📍 {event.location_group}</span>
               )}
             </div>
           );
@@ -1418,7 +1418,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               </div>
               {/* Legal defense label for FAIL/PARTIAL */}
               {isDefenseMode && lightboxPhotos.length > 0 && (
-                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#b91c1c' }}>⚖️ Legal defense evidence</div>
+                <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-red-700)' }}>⚖️ Legal defense evidence</div>
               )}
               {/* Photo thumbnail — hooks into shared lightbox */}
               {lightboxPhotos.length > 0 && (
@@ -1442,7 +1442,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   {checkEntries.map(([k, v]) => (
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                       <span style={{ color: v ? '#059669' : '#dc2626', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>{v ? '✓' : '✗'}</span>
-                      <span style={{ color: v ? '#334155' : '#b91c1c', fontWeight: v ? 500 : 700 }}>{checkLabels[k] || k.replace(/_/g, ' ')}</span>
+                      <span style={{ color: v ? '#334155' : 'var(--color-red-700)', fontWeight: v ? 500 : 700 }}>{checkLabels[k] || k.replace(/_/g, ' ')}</span>
                     </div>
                   ))}
                 </div>
@@ -1464,7 +1464,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               during:   { label: 'During',   bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
               after:    { label: 'After',    bg: '#f0fdf4', color: '#15803d' },
               progress: { label: 'Progress', bg: '#fffbeb', color: '#92400e' },
-              damage:   { label: 'Damage',   bg: '#fef2f2', color: '#b91c1c' },
+              damage:   { label: 'Damage',   bg: '#fef2f2', color: 'var(--color-red-700)' },
               qa:       { label: 'QA',       bg: '#faf5ff', color: '#7e22ce' },
             };
             return map[t] ?? { label: event.evidence_type.trim(), bg: '#f1f5f9', color: '#475569' };
@@ -1771,7 +1771,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
           <div style={{
             width: 28, height: 28, borderRadius: '50%',
             border: '2.5px solid rgba(20,184,166,0.2)',
-            borderTopColor: '#14b8a6',
+            borderTopColor: 'var(--bos-color-brand-primary)',
             animation: 'spin 0.8s linear infinite',
           }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>

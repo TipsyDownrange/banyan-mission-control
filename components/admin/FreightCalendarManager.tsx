@@ -76,7 +76,7 @@ const GHOST_BUTTON: CSSProperties = {
   cursor: 'pointer',
 };
 const DANGER_BUTTON: CSSProperties = {
-  ...GHOST_BUTTON, color: '#b91c1c', borderColor: '#fecaca',
+  ...GHOST_BUTTON, color: 'var(--color-red-700)', borderColor: '#fecaca',
 };
 const HEADER_CELL: CSSProperties = {
   padding: '10px 12px', fontSize: 10, fontWeight: 800,
@@ -323,7 +323,7 @@ export default function FreightCalendarManager() {
           data-testid="freight-error"
           style={{
             padding: '14px 16px', borderRadius: 12, background: '#fef2f2',
-            color: '#b91c1c', fontSize: 13, fontWeight: 700,
+            color: 'var(--color-red-700)', fontSize: 13, fontWeight: 700,
           }}
         >
           Could not load freight calendar: {state.message}
@@ -479,7 +479,7 @@ export default function FreightCalendarManager() {
                 data-testid="freight-form-error"
                 style={{
                   padding: '8px 12px', borderRadius: 8, background: '#fef2f2',
-                  color: '#b91c1c', fontSize: 12, fontWeight: 700,
+                  color: 'var(--color-red-700)', fontSize: 12, fontWeight: 700,
                 }}
               >
                 {formError}
@@ -533,7 +533,7 @@ export default function FreightCalendarManager() {
                 type="button"
                 data-testid="freight-delete-confirm"
                 onClick={() => softDelete(pendingDeleteId)}
-                style={{ ...PRIMARY_BUTTON, background: '#b91c1c' }}
+                style={{ ...PRIMARY_BUTTON, background: 'var(--color-red-700)' }}
                 disabled={busy}
               >
                 {busy ? 'Removing…' : 'Remove'}

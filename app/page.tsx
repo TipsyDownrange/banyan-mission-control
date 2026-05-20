@@ -188,11 +188,11 @@ export default function Home() {
               ☰
             </button>
             <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--color-surface)' }}>
-              Banyan<span style={{ color: '#14b8a6' }}>OS</span>
+              Banyan<span style={{ color: 'var(--bos-color-brand-primary)' }}>OS</span>
             </div>
             <button
               onClick={() => setShowMobileMenu(m => !m)}
-              style={{ fontSize: 10, fontWeight: 700, color: showMobileMenu ? '#14b8a6' : 'rgba(20,184,166,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, lineHeight: 1 }}
+              style={{ fontSize: 10, fontWeight: 700, color: showMobileMenu ? 'var(--bos-color-brand-primary)' : 'rgba(20,184,166,0.7)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, lineHeight: 1 }}
             >
               {(authSession?.user?.name || demoUser).split(' ')[0]} ▾
             </button>
@@ -218,7 +218,7 @@ export default function Home() {
                     <span style={{
                       display: 'inline-block', marginTop: 6,
                       fontSize: 10, fontWeight: 700,
-                      color: '#14b8a6', background: 'rgba(20,184,166,0.1)',
+                      color: 'var(--bos-color-brand-primary)', background: 'rgba(20,184,166,0.1)',
                       border: '1px solid rgba(20,184,166,0.2)',
                       borderRadius: 5, padding: '2px 8px',
                     }}>

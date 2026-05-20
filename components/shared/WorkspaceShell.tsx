@@ -71,8 +71,8 @@ export default function WorkspaceShell({
                   padding: '12px 16px',
                   background: 'transparent',
                   border: 'none',
-                  borderBottom: isActive ? '2px solid #14b8a6' : '2px solid transparent',
-                  color: isActive ? '#14b8a6' : 'rgba(148,163,184,0.8)',
+                  borderBottom: isActive ? '2px solid var(--bos-color-brand-primary)' : '2px solid transparent',
+                  color: isActive ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.8)',
                   fontSize: 12,
                   fontWeight: isActive ? 700 : 600,
                   letterSpacing: '0.01em',
@@ -87,7 +87,7 @@ export default function WorkspaceShell({
                 {tab.label}
                 {tab.badge !== undefined && tab.badge !== null && (
                   <span style={{
-                    background: isActive ? '#14b8a6' : 'rgba(148,163,184,0.3)',
+                    background: isActive ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.3)',
                     color: isActive ? 'var(--color-ink-primary)' : 'rgba(148,163,184,0.9)',
                     fontSize: 9,
                     fontWeight: 800,
@@ -111,7 +111,7 @@ export default function WorkspaceShell({
                 background: rightPanelOpen ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 8,
-                color: rightPanelOpen ? '#14b8a6' : 'rgba(148,163,184,0.7)',
+                color: rightPanelOpen ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.7)',
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -208,7 +208,7 @@ export default function WorkspaceShell({
               border: '1px solid rgba(255,255,255,0.1)',
               borderRight: 'none',
               borderRadius: '8px 0 0 8px',
-              color: '#14b8a6',
+              color: 'var(--bos-color-brand-primary)',
               fontSize: 10,
               cursor: 'pointer',
               zIndex: 10,

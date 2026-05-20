@@ -20,7 +20,7 @@ export default function LoginPage() {
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(94,234,212,0.6)', marginBottom: 12 }}>Kula Glass Company</div>
         <h1 style={{ fontSize: 36, fontWeight: 900, color: 'var(--color-surface)', letterSpacing: '-0.04em', margin: 0, marginBottom: 8 }}>
-          Banyan<span style={{ color: '#14b8a6' }}>OS</span>
+          Banyan<span style={{ color: 'var(--bos-color-brand-primary)' }}>OS</span>
         </h1>
         <div style={{ fontSize: 14, color: 'rgba(148,163,184,0.6)' }}>Mission Control</div>
       </div>

@@ -222,7 +222,7 @@ function AmtInput({ value, onChange, placeholder = '0.00', width = 110 }: {
       style={{
         width,
         padding: '5px 8px',
-        border: focused ? '1px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)',
+        border: focused ? '1px solid var(--bos-color-brand-primary)' : '1px solid rgba(20,184,166,0.3)',
         borderRadius: 7,
         fontSize: 12,
         fontFamily: FONT,
@@ -253,7 +253,7 @@ function SmallNum({ value, onChange, placeholder, width = 44 }: {
       style={{
         width,
         padding: '4px 6px',
-        border: focused ? '1px solid #14b8a6' : '1px solid rgba(20,184,166,0.3)',
+        border: focused ? '1px solid var(--bos-color-brand-primary)' : '1px solid rgba(20,184,166,0.3)',
         borderRadius: 6,
         fontSize: 12,
         fontFamily: FONT,
@@ -283,7 +283,7 @@ function DescInput({ value, onChange, placeholder = 'Description…' }: {
       style={{
         flex: 1,
         border: 'none',
-        borderBottom: focused ? '1.5px solid #14b8a6' : '1px solid var(--color-surface-border)',
+        borderBottom: focused ? '1.5px solid var(--bos-color-brand-primary)' : '1px solid var(--color-surface-border)',
         fontSize: 12,
         fontFamily: FONT,
         background: 'transparent',
@@ -1032,7 +1032,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 borderRadius: 10,
                 background: isLocked
                   ? 'linear-gradient(135deg,#b45309,#d97706)'
-                  : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
+                  : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
                 color: 'white',
                 border: 'none',
                 fontSize: 12,

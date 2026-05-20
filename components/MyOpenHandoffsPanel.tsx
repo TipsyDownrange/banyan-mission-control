@@ -62,13 +62,13 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
             Estimating → PM packets pending acceptance
           </div>
         </div>
-        <span style={{ fontSize: 22, fontWeight: 900, color: items.length > 0 ? '#b91c1c' : '#15803d' }}>{items.length}</span>
+        <span style={{ fontSize: 22, fontWeight: 900, color: items.length > 0 ? 'var(--color-red-700)' : '#15803d' }}>{items.length}</span>
       </div>
 
       {loading ? (
         <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>Loading…</div>
       ) : err ? (
-        <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12 }}>{err}</div>
+        <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12 }}>{err}</div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={<span style={{ fontSize: 20, color: '#15803d' }}>✓</span>}
@@ -94,7 +94,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
                   <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                     Submitted {new Date(r.submitted_at).toLocaleDateString()}
                     {unresolved > 0 && (
-                      <span style={{ color: '#b91c1c', fontWeight: 700, marginLeft: 8 }}>
+                      <span style={{ color: 'var(--color-red-700)', fontWeight: 700, marginLeft: 8 }}>
                         {unresolved} unresolved {unresolved === 1 ? 'gap' : 'gaps'}
                       </span>
                     )}

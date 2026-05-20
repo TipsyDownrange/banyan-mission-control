@@ -12,7 +12,7 @@ const DECISION_STYLES: Record<string, { color: string; bg: string; border: strin
   'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
   'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
-  'lost':            { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
+  'lost':            { color: 'var(--color-red-700)', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
   'no bid':          { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },
 };
 
@@ -142,7 +142,7 @@ export default function BidQueuePanel() {
   if (loading) return (
     <div style={{ padding: 32, maxWidth: 1000, margin: '0 auto' }}>
       <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+        <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading bid log...</div>
       </div>
@@ -258,12 +258,12 @@ export default function BidQueuePanel() {
 
       {error && (
         <div style={{ background: 'rgba(254,242,242,0.98)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '14px 18px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c' }}>Error: {error}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-red-700)' }}>Error: {error}</div>
         </div>
       )}
 
       {toast && (
-        <div style={{ background: toast.includes('failed') || toast.includes('required') ? 'rgba(254,242,242,0.98)' : 'rgba(240,253,250,0.98)', border: '1px solid rgba(20,184,166,0.22)', borderRadius: 16, padding: '12px 16px', fontSize: 13, fontWeight: 700, color: toast.includes('failed') ? '#b91c1c' : 'var(--bos-color-brand-primary-deep)' }}>
+        <div style={{ background: toast.includes('failed') || toast.includes('required') ? 'rgba(254,242,242,0.98)' : 'rgba(240,253,250,0.98)', border: '1px solid rgba(20,184,166,0.22)', borderRadius: 16, padding: '12px 16px', fontSize: 13, fontWeight: 700, color: toast.includes('failed') ? 'var(--color-red-700)' : 'var(--bos-color-brand-primary-deep)' }}>
           {toast}
         </div>
       )}

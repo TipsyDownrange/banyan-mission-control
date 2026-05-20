@@ -47,7 +47,7 @@ function deriveBlocking(note: string): boolean {
 
 const SEVERITY_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   CRITICAL: { bg: '#fef2f2', color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
-  HIGH:     { bg: '#fef2f2', color: '#b91c1c', border: 'rgba(239,68,68,0.2)' },
+  HIGH:     { bg: '#fef2f2', color: 'var(--color-red-700)', border: 'rgba(239,68,68,0.2)' },
   MEDIUM:   { bg: '#fffbeb', color: '#92400e', border: 'rgba(245,158,11,0.2)' },
   LOW:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', border: 'rgba(148,163,184,0.2)' },
 };
@@ -175,7 +175,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                 flex: 1, padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 800, transition: 'all 0.15s',
                 background: filter === t.key ? 'white' : 'transparent',
-                color: filter === t.key ? (t.key === 'blocking' ? '#b91c1c' : 'var(--color-ink-primary)') : 'var(--bos-color-ink-disabled)',
+                color: filter === t.key ? (t.key === 'blocking' ? 'var(--color-red-700)' : 'var(--color-ink-primary)') : 'var(--bos-color-ink-disabled)',
                 boxShadow: filter === t.key ? '0 1px 4px rgba(15,23,42,0.08)' : 'none',
               }}>
               {t.label}
@@ -186,18 +186,18 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading issues...</div>
         </div>
       )}
 
-      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 20 }}>{error}</div>}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 20 }}>{error}</div>}
 
       {!loading && filteredIssues.length === 0 && !error && (
         <div style={{ borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)' }}>
           <EmptyState
-            icon={<span style={{ fontSize: 20, color: '#14b8a6' }}>✓</span>}
+            icon={<span style={{ fontSize: 20, color: 'var(--bos-color-brand-primary)' }}>✓</span>}
             heading={filter === 'all' ? 'No issues found' : `No ${filter} issues`}
             body={filter === 'all' ? 'Field issues logged by crew will appear here.' : 'Try a different filter.'}
           />
@@ -228,7 +228,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                       {issue.severity}
                     </span>
                     {issue.blocking && (
-                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.3)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: 'var(--color-red-700)', border: '1px solid rgba(239,68,68,0.3)' }}>
                         🚫 BLOCKING
                       </span>
                     )}
@@ -323,7 +323,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
               <button onClick={handleAssign} disabled={!assignee || saving}
                 style={{
                   flex: 2, padding: 11, borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  background: assignee ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)',
+                  background: assignee ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)',
                   color: assignee ? 'white' : 'var(--bos-color-ink-tertiary)',
                 }}>
                 {saving ? 'Saving...' : 'Assign'}

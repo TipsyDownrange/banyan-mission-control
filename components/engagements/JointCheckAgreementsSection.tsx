@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   EXECUTED: { bg: '#dbeafe', fg: '#1e40af' },
   ACTIVE: { bg: '#dcfce7', fg: '#166534' },
   CLOSED: { bg: '#f1f5f9', fg: '#475569' },
-  DISPUTED: { bg: '#fee2e2', fg: '#b91c1c' },
+  DISPUTED: { bg: '#fee2e2', fg: 'var(--color-red-700)' },
 };
 
 const NEXT_STATES: Record<string, string[]> = {
@@ -84,7 +84,7 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
   }
   if (error) {
     return (
-      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: '#b91c1c', fontSize: 12 }}>
+      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
         Could not load joint check agreements: {error}
       </div>
     );

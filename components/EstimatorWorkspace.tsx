@@ -10,7 +10,7 @@ const DECISION_STYLES: Record<string, { color: string; bg: string; border: strin
   'in estimating':   { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(240,253,250,0.9)', border: '1px solid rgba(13,148,136,0.25)' },
   'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
-  'lost':            { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
+  'lost':            { color: 'var(--color-red-700)', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
   'no bid':          { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },
 };
 
@@ -153,7 +153,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
 
       {loading && (
         <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid rgba(226,232,240,0.9)' }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading your bids...</div>
         </div>
@@ -253,7 +253,7 @@ export default function EstimatorWorkspace({ currentUser = 'Kyle Shimizu' }: { c
                     {/* Upload button */}
                     <label onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: 'white', border: '1px solid var(--color-surface-border)', cursor: 'pointer' }}>
                       <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Upload document — Kai routes automatically</span>
-                      <span style={{ padding: '4px 12px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Upload</span>
+                      <span style={{ padding: '4px 12px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Upload</span>
                       <input type="file" style={{ display: 'none' }} onChange={async e => {
                         const file = e.target.files?.[0];
                         if (!file) return;

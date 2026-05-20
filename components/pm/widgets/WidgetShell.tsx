@@ -109,7 +109,7 @@ export default function WidgetShell({
             background: '#fef2f2',
             border: '1px solid #fecaca',
             borderRadius: 8,
-            color: '#b91c1c',
+            color: 'var(--color-red-700)',
             fontSize: 12,
           }}>
             {error}

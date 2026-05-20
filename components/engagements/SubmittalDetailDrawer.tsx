@@ -114,7 +114,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
         </div>
 
         {err && (
-          <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, margin: 20, fontSize: 12 }}>{err}</div>
+          <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, margin: 20, fontSize: 12 }}>{err}</div>
         )}
 
         {!s ? (
@@ -163,7 +163,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED' })} style={actionBtn('var(--bos-color-brand-primary-deep)')}>Approve</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'APPROVED_AS_NOTED' })} style={actionBtn('#15803d')}>Approve as Noted</button>
                     <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REVISE_RESUBMIT' })} style={actionBtn('#92400e')}>Revise &amp; Resubmit</button>
-                    <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REJECTED' })} style={actionBtn('#b91c1c')}>Reject</button>
+                    <button type="button" disabled={busy} onClick={() => callTransition('/log-review', { outcome: 'REJECTED' })} style={actionBtn('var(--color-red-700)')}>Reject</button>
                   </>
                 )}
                 {(s.status === 'APPROVED' || s.status === 'APPROVED_AS_NOTED' || s.status === 'REJECTED') && (

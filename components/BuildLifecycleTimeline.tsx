@@ -54,12 +54,12 @@ const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> 
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
   in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
-  blocked:     { color: '#b91c1c', bg: '#fef2f2', label: 'Blocked' },
+  blocked:     { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
 };
 
 const PRIORITY_DOT: Record<string, string> = {
-  critical: '#b91c1c', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
+  critical: 'var(--color-red-700)', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
 };
 
 const STATUS_ORDER: TaskStatus[] = ['queued', 'in_progress', 'waiting', 'blocked', 'done'];
@@ -75,7 +75,7 @@ function phaseNumFromString(phase?: string): number {
 function phaseColors(status: BuildPhaseStatus, isCurrent: boolean) {
   if (status === 'complete') return { bg: '#059669', text: '#fff', border: '#059669' };
   if (status === 'blocked')  return { bg: '#dc2626', text: '#fff', border: '#dc2626' };
-  if (isCurrent || status === 'in_progress') return { bg: 'var(--bos-color-brand-primary-deep)', text: '#fff', border: '#14b8a6' };
+  if (isCurrent || status === 'in_progress') return { bg: 'var(--bos-color-brand-primary-deep)', text: '#fff', border: 'var(--bos-color-brand-primary)' };
   return { bg: '#f1f5f9', text: 'var(--bos-color-ink-disabled)', border: 'var(--color-surface-border)' };
 }
 
@@ -235,7 +235,7 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
           <button onClick={handleSubmit} disabled={!hasText || submitting}
             style={{
               padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, border: 'none',
-              background: hasText && !submitting ? '#14b8a6' : 'var(--color-surface-border)',
+              background: hasText && !submitting ? 'var(--bos-color-brand-primary)' : 'var(--color-surface-border)',
               color: hasText && !submitting ? 'white' : 'var(--bos-color-ink-tertiary)',
               cursor: hasText && !submitting ? 'pointer' : 'default',
             }}>
@@ -418,7 +418,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
           style={{
             padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
             border: 'none', cursor: hasText && !submitting ? 'pointer' : 'default',
-            background: hasText && !submitting ? '#14b8a6' : 'var(--color-surface-border)',
+            background: hasText && !submitting ? 'var(--bos-color-brand-primary)' : 'var(--color-surface-border)',
             color: hasText && !submitting ? 'white' : 'var(--bos-color-ink-tertiary)',
             transition: 'background 0.15s',
           }}>
@@ -471,7 +471,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
 
       {/* Progress bar */}
       <div style={{ height: 3, background: '#f1f5f9' }}>
-        <div style={{ height: '100%', background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#14b8a6', width: `${pct}%`, transition: 'width 0.4s' }} />
+        <div style={{ height: '100%', background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-brand-primary)', width: `${pct}%`, transition: 'width 0.4s' }} />
       </div>
 
       <div style={{ padding: '12px 18px' }}>
@@ -686,7 +686,7 @@ export default function BuildLifecycleTimeline() {
             <div style={{ height: 6, borderRadius: 3, background: '#f1f5f9' }}>
               <div style={{
                 height: '100%', borderRadius: 3,
-                background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#14b8a6',
+                background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-brand-primary)',
                 width: `${pct}%`, transition: 'width 0.5s',
               }} />
             </div>

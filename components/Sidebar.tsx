@@ -51,7 +51,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
   {
     section: 'Assistant', sectionIcon: '✦',
     items: [
-      { label: 'Today', dot: '#14b8a6' },
+      { label: 'Today', dot: 'var(--bos-color-brand-primary)' },
       { label: 'Inbox', dot: '#f59e0b' },
       { label: 'Calendar' },
       { label: 'Customer Pipeline', dot: '#0ea5e9' },
@@ -61,7 +61,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
     section: 'Operations', sectionIcon: '◈',
     items: [
       { label: 'Overview' },
-      { label: 'Forecasting', dot: '#14b8a6' },
+      { label: 'Forecasting', dot: 'var(--bos-color-brand-primary)' },
       { label: 'Scheduling', dot: '#f97316' },
 
       { label: 'Event Feed' },
@@ -72,7 +72,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
   {
     section: 'Projects', sectionIcon: '⬡',
     items: [
-      { label: 'PM Dashboard', dot: '#14b8a6' },
+      { label: 'PM Dashboard', dot: 'var(--bos-color-brand-primary)' },
       { label: 'Projects' },
 
     ],
@@ -82,7 +82,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
     items: [
       { label: 'Crew' },
       { label: 'Customers' },
-      { label: 'Assets', dot: '#14b8a6' },
+      { label: 'Assets', dot: 'var(--bos-color-brand-primary)' },
       { label: 'Org Chart' },
     ],
   },
@@ -91,7 +91,7 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
     items: [
       { label: 'Bid Intake', dot: '#f59e0b' },
       { label: 'Bid Queue' },
-      { label: 'My Bids', dot: '#14b8a6' },
+      { label: 'My Bids', dot: 'var(--bos-color-brand-primary)' },
       { label: 'Estimating Workspace' },
     ],
   },
@@ -105,8 +105,8 @@ const NAV: { section: string; sectionIcon: string; items: { label: AppView; dot?
   {
     section: 'Admin & Finance', sectionIcon: '◐',
     items: [
-      { label: 'Logistics', dot: '#14b8a6' },
-      { label: 'WIP Report', dot: '#14b8a6' },
+      { label: 'Logistics', dot: 'var(--bos-color-brand-primary)' },
+      { label: 'WIP Report', dot: 'var(--bos-color-brand-primary)' },
       { label: 'Financials' },
       { label: 'Vendors' },
       { label: 'Compliance', dot: '#f59e0b' },
@@ -285,7 +285,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
         ) : (
           <div style={{ width: 28, height: 28, borderRadius: 6, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)' }}>
             <img src="/banyan-icon.png" alt="B" style={{ width: 24, height: 24, objectFit: 'cover', opacity: 0.9 } as React.CSSProperties}
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.innerHTML = '<span style="font-size:11px;font-weight:900;color:#14b8a6">B</span>'; }} />
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.innerHTML = '<span style="font-size:11px;font-weight:900;color:var(--bos-color-brand-primary)">B</span>'; }} />
           </div>
         )}
         <button onClick={onToggle} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '4px 6px', color: 'rgba(148,163,184,0.5)', cursor: 'pointer', fontSize: 10, lineHeight: 1, marginLeft: collapsed ? 0 : 0 }}>
@@ -310,8 +310,8 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                   borderRadius: 6, marginBottom: 1,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: hasActive ? '#14b8a6' : 'rgba(20,184,166,0.32)' }}>{sectionIcon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: hasActive ? '#14b8a6' : 'rgba(20,184,166,0.38)' }}>{section}</span>
+                    <span style={{ fontSize: 11, color: hasActive ? 'var(--bos-color-brand-primary)' : 'rgba(20,184,166,0.32)' }}>{sectionIcon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: hasActive ? 'var(--bos-color-brand-primary)' : 'rgba(20,184,166,0.38)' }}>{section}</span>
                   </div>
                   <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.25)', transform: isSectionCollapsed ? 'rotate(-90deg)' : 'none', display: 'inline-block', transition: 'transform 0.15s' }}>▾</span>
                 </button>
@@ -481,7 +481,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
                     letterSpacing: '0.01em',
                     transition: 'all 0.15s ease',
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(20,184,166,0.12)'; (e.currentTarget as HTMLAnchorElement).style.color = '#14b8a6'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(20,184,166,0.12)'; (e.currentTarget as HTMLAnchorElement).style.color = 'var(--bos-color-brand-primary)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(20,184,166,0.06)'; (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(20,184,166,0.7)'; }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -550,7 +550,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
             </div>
             <span style={{
               fontSize: 10, fontWeight: 700,
-              color: '#14b8a6', background: 'rgba(20,184,166,0.1)',
+              color: 'var(--bos-color-brand-primary)', background: 'rgba(20,184,166,0.1)',
               border: '1px solid rgba(20,184,166,0.2)',
               borderRadius: 5, padding: '2px 8px', letterSpacing: '0.05em',
             }}>

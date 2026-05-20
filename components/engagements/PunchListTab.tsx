@@ -53,7 +53,7 @@ function ErrorState({ message }: { message: string }) {
   return (
     <div style={{
       padding: '16px 20px', borderRadius: 12, background: '#fef2f2',
-      border: '1px solid rgba(185,28,28,0.2)', color: '#b91c1c',
+      border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red-700)',
       fontSize: 13, fontWeight: 700,
     }}>
       Could not load punch list: {message}

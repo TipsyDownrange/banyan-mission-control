@@ -109,7 +109,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
         </div>
 
         {err && (
-          <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, margin: 20, fontSize: 12 }}>{err}</div>
+          <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, margin: 20, fontSize: 12 }}>{err}</div>
         )}
 
         {!r ? (
@@ -230,13 +230,13 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
                 )}
 
                 {r.status !== 'CLOSED' && r.status !== 'VOID' && (
-                  <button type="button" disabled={busy} onClick={() => callRoute('/void', {})} style={actionBtn('#b91c1c')}>
+                  <button type="button" disabled={busy} onClick={() => callRoute('/void', {})} style={actionBtn('var(--color-red-700)')}>
                     Void
                   </button>
                 )}
 
                 {r.status === 'CLOSED' && <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>RFI is closed.</span>}
-                {r.status === 'VOID' && <span style={{ fontSize: 12, color: '#b91c1c' }}>RFI is voided.</span>}
+                {r.status === 'VOID' && <span style={{ fontSize: 12, color: 'var(--color-red-700)' }}>RFI is voided.</span>}
               </div>
             </section>
 

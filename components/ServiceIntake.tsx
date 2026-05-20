@@ -294,7 +294,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
   if (step === 'done') return (
     <div style={{ padding: 40, textAlign: 'center' }}>
       <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdfa', border: '2px solid rgba(15,118,110,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-brand-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 6 }}>Work Order Created</div>
       <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>{draft.businessName || draft.customerName} · {draft.island}</div>
@@ -305,7 +305,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
           + Another
         </button>
         <button onClick={onClose}
-          style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           Done
         </button>
       </div>
@@ -605,7 +605,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <div>{FL('Notes')}<textarea value={draft.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional context..." rows={2} style={{ ...INP, resize: 'none' }} /></div>
 
         {error && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600 }}>
             {error}
           </div>
         )}
@@ -615,7 +615,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10, flexShrink: 0 }}>
         <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
         <button onClick={submit} disabled={!canSubmit}
-          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
+          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
           {saving ? 'Creating...' : 'Create Work Order'}
         </button>
       </div>

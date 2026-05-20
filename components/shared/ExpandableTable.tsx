@@ -171,7 +171,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                     fontSize: 12,
                     userSelect: 'none',
                     verticalAlign: 'middle',
-                    borderLeft: row.rowStyle === 'editable' ? '3px solid #14b8a6'
+                    borderLeft: row.rowStyle === 'editable' ? '3px solid var(--bos-color-brand-primary)'
                       : row.rowStyle === 'generated' ? '3px solid #f97316'
                       : '3px solid transparent',
                   }}>
@@ -219,7 +219,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                             style={{
                               width: '100%',
                               padding: '3px 6px',
-                              border: '1px solid #14b8a6',
+                              border: '1px solid var(--bos-color-brand-primary)',
                               borderRadius: 4,
                               fontSize: 12,
                               color: 'var(--color-ink-primary)',

@@ -151,7 +151,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
 
       {loading && (
         <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', padding: 48, textAlign: 'center' }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading live data...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
@@ -161,7 +161,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
       {hasNoEvents && (
         <div style={{ borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)', marginBottom: 20 }}>
           <EmptyState
-            icon={<span style={{ fontSize: 32, color: '#14b8a6' }}>✓</span>}
+            icon={<span style={{ fontSize: 32, color: 'var(--bos-color-brand-primary)' }}>✓</span>}
             heading="Nothing logged today"
             body="Quiet day or check the field app"
           />
@@ -228,7 +228,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
           padding: '10px 20px', borderRadius: 12,
           background: toast.includes('Failed') ? '#fef2f2' : '#f0fdf4',
           border: `1px solid ${toast.includes('Failed') ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.3)'}`,
-          color: toast.includes('Failed') ? '#b91c1c' : '#15803d',
+          color: toast.includes('Failed') ? 'var(--color-red-700)' : '#15803d',
           fontSize: 13, fontWeight: 700, zIndex: 500,
           boxShadow: '0 4px 16px rgba(15,23,42,0.1)',
         }}>

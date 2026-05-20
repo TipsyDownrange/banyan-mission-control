@@ -29,14 +29,14 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   PENDING:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   DRAFT:        { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   IDENTIFIED:   { bg: '#fffbeb', color: '#92400e' },
-  REJECTED:     { bg: '#fef2f2', color: '#b91c1c' },
-  DISPUTED:     { bg: '#fef2f2', color: '#b91c1c' },
+  REJECTED:     { bg: '#fef2f2', color: 'var(--color-red-700)' },
+  DISPUTED:     { bg: '#fef2f2', color: 'var(--color-red-700)' },
   IN_NEGOTIATION: { bg: '#fffbeb', color: '#92400e' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
   REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
   CLEAR_DIRECTIVE: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   AMBIGUOUS:    { bg: '#fffbeb', color: '#92400e' },
-  PUNTED:       { bg: '#fef2f2', color: '#b91c1c' },
+  PUNTED:       { bg: '#fef2f2', color: 'var(--color-red-700)' },
   CLOSED:       { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   RESPONDED:    { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
 };
@@ -234,7 +234,7 @@ export default function PMPanel() {
                 <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 12 }}>RFIs</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--color-ink-primary)', marginBottom: 4 }}>{rfiSummary.total || 0}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {(rfiSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {rfiSummary.overdue} overdue response{(rfiSummary.overdue || 0) !== 1 ? 's' : ''}</div>}
+                  {(rfiSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {rfiSummary.overdue} overdue response{(rfiSummary.overdue || 0) !== 1 ? 's' : ''}</div>}
                   {(rfiSummary.ballInCourtGC || 0) > 0 && <div style={{ fontSize: 12, color: '#1d4ed8' }}>⚡ {rfiSummary.ballInCourtGC} in GC court</div>}
                   {(rfiSummary.ballInCourtUs || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)' }}>⚡ {rfiSummary.ballInCourtUs} in our court</div>}
                 </div>
@@ -247,7 +247,7 @@ export default function PMPanel() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 12, color: 'var(--bos-color-brand-primary-deep)', fontWeight: 700 }}>✓ {subSummary.approved || 0} approved</div>
                   {(subSummary.pending || 0) > 0 && <div style={{ fontSize: 12, color: '#1d4ed8' }}>⏳ {subSummary.pending} pending</div>}
-                  {(subSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>⚠️ {subSummary.overdue} overdue</div>}
+                  {(subSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>⚠️ {subSummary.overdue} overdue</div>}
                 </div>
                 <button onClick={() => setActiveTab('submittals')} style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all →</button>
               </div>
@@ -271,9 +271,9 @@ export default function PMPanel() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>RFI Log</div>
-                  {(rfiSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700, marginTop: 2 }}>⚠️ {rfiSummary.overdue} overdue response{(rfiSummary.overdue||0)!==1?'s':''}</div>}
+                  {(rfiSummary.overdue || 0) > 0 && <div style={{ fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700, marginTop: 2 }}>⚠️ {rfiSummary.overdue} overdue response{(rfiSummary.overdue||0)!==1?'s':''}</div>}
                 </div>
-                <button onClick={() => setShowNewRFI(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New RFI</button>
+                <button onClick={() => setShowNewRFI(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>+ New RFI</button>
               </div>
               {rfis.length === 0 && <div style={{ padding: '40px 24px', textAlign: 'center', background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-tertiary)' }}>No RFIs logged yet</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -291,7 +291,7 @@ export default function PMPanel() {
                         {rfi.spec_section && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{rfi.spec_section}</span>}
                         {rfi.days_open && rfi.status !== 'CLOSED' && parseInt(rfi.days_open) > 0 && (
                           parseInt(rfi.days_open) > 10
-                            ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}>⚠️ {rfi.days_open}d open</span>
+                            ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: 'var(--color-red-700)', border: '1px solid rgba(239,68,68,0.2)' }}>⚠️ {rfi.days_open}d open</span>
                             : <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{rfi.days_open}d open</span>
                         )}
                       </div>
@@ -439,12 +439,12 @@ export default function PMPanel() {
                           <td style={{ padding:'10px 14px' }}>
                             <div style={{ display:'flex',alignItems:'center',gap:8 }}>
                               <div style={{ flex:1,height:6,borderRadius:999,background:'#f1f5f9',overflow:'hidden' }}>
-                                <div style={{ width:`${Math.min(100,parseFloat(line.total_pct||'0'))}%`,height:'100%',background:'#14b8a6',borderRadius:999 }} />
+                                <div style={{ width:`${Math.min(100,parseFloat(line.total_pct||'0'))}%`,height:'100%',background:'var(--bos-color-brand-primary)',borderRadius:999 }} />
                               </div>
                               <span style={{ fontSize:11,fontWeight:700,color:'#334155',whiteSpace:'nowrap' }}>{parseFloat(line.total_pct||'0').toFixed(0)}%</span>
                             </div>
                           </td>
-                          <td style={{ padding:'10px 14px',fontSize:13,fontWeight:700,color: parseFloat(line.balance_to_finish||'0') > 0 ? 'var(--color-ink-primary)' : '#14b8a6' }}>{fmtMoney(line.balance_to_finish)}</td>
+                          <td style={{ padding:'10px 14px',fontSize:13,fontWeight:700,color: parseFloat(line.balance_to_finish||'0') > 0 ? 'var(--color-ink-primary)' : 'var(--bos-color-brand-primary)' }}>{fmtMoney(line.balance_to_finish)}</td>
                         </tr>
                       ))}
                       {/* Totals row */}
@@ -484,7 +484,7 @@ export default function PMPanel() {
             </div>
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
               <button onClick={() => setShowNewRFI(false)} style={{ flex:1,padding:11,borderRadius:12,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:13,fontWeight:700,cursor:'pointer' }}>Cancel</button>
-              <button onClick={submitRFI} disabled={!newRFISubject||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Create RFI'}</button>
+              <button onClick={submitRFI} disabled={!newRFISubject||saving} style={{ flex:2,padding:11,borderRadius:12,background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',color:'white',border:'none',fontSize:13,fontWeight:700,cursor:'pointer' }}>{saving?'Saving...':'Create RFI'}</button>
             </div>
           </div>
         </div>

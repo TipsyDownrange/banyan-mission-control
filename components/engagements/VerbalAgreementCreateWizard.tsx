@@ -101,7 +101,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
         </div>
 
         <label style={fieldStyle}>
-          <span style={labelStyle}>Subject <span style={{ color: subjectInvalid ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>{subject.length}/{SUBJECT_MAX}</span></span>
+          <span style={labelStyle}>Subject <span style={{ color: subjectInvalid ? 'var(--color-red-700)' : 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>{subject.length}/{SUBJECT_MAX}</span></span>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, borderColor: subjectInvalid ? '#fecaca' : 'var(--color-surface-border)' }} maxLength={SUBJECT_MAX + 20} />
         </label>
 
@@ -152,7 +152,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
           </div>
         )}
 
-        {err && <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+        {err && <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy} style={secondaryButtonStyle}>Cancel</button>

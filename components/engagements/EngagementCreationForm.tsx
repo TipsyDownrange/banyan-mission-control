@@ -118,7 +118,7 @@ export default function EngagementCreationForm() {
         <button onClick={submit} disabled={saving || !siteId || !routingRationale.trim()} style={{ padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(15,118,110,0.28)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer' }}>
           {saving ? 'Creating…' : 'Create Engagement'}
         </button>
-        {message && <span style={{ fontSize: 13, fontWeight: 700, color: message.includes('Created') ? 'var(--bos-color-brand-primary-deep)' : '#b91c1c' }}>{message}</span>}
+        {message && <span style={{ fontSize: 13, fontWeight: 700, color: message.includes('Created') ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-red-700)' }}>{message}</span>}
       </div>
     </section>
   );

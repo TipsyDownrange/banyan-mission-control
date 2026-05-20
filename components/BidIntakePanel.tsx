@@ -143,7 +143,7 @@ export default function BidIntakePanel() {
           <button
             onClick={scan}
             disabled={scanning}
-            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
+            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
             {scanning ? '⟳ Scanning...' : '⟳ Scan Inboxes'}
           </button>
         </div>
@@ -159,7 +159,7 @@ export default function BidIntakePanel() {
             { label: 'Urgent', value: urgentCount },
           ].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 900, color: s.label === 'Urgent (≤7 days)' && s.value > 0 ? '#b91c1c' : 'var(--color-ink-primary)', letterSpacing: '-0.04em' }}>{s.value}</div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: s.label === 'Urgent (≤7 days)' && s.value > 0 ? 'var(--color-red-700)' : 'var(--color-ink-primary)', letterSpacing: '-0.04em' }}>{s.value}</div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
@@ -167,7 +167,7 @@ export default function BidIntakePanel() {
       )}
 
       {error && (
-        <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>
+        <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>
           {error}
         </div>
       )}
@@ -230,7 +230,7 @@ export default function BidIntakePanel() {
                         </span>
                       )}
                       {urgent && (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#b91c1c', background: '#fef2f2', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(185,28,28,0.2)' }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-red-700)', background: '#fef2f2', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(185,28,28,0.2)' }}>
                           ⚠ Due in {days} day{days !== 1 ? 's' : ''}
                         </span>
                       )}
@@ -265,7 +265,7 @@ export default function BidIntakePanel() {
                           </div>
                         ) : (
                           <button onClick={() => addToBidQueue(opp)} disabled={adding === opp.email_id}
-                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
+                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
                             {adding === opp.email_id ? '...' : '→ Joey Queue'}
                           </button>
                         )}

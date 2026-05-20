@@ -205,7 +205,7 @@ export default function CalendarPanel() {
                 style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>Today</button>
               {calMode === 'personal' && (
                 <button onClick={() => setShowNewEvent(true)}
-                  style={{ padding: '5px 14px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                  style={{ padding: '5px 14px', borderRadius: 8, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
                   + New
                 </button>
               )}
@@ -214,7 +214,7 @@ export default function CalendarPanel() {
         </div>
       </div>
 
-      {error && <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>{error}</div>}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>{error}</div>}
 
       {/* ── Personnel Travel Ticker ── */}
       {calMode === 'management' && canSeeAllStaff && (
@@ -244,9 +244,9 @@ export default function CalendarPanel() {
                     {/* Mode icon */}
                     <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {isFerry ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#14b8a6"><path d="M20 21c-1.6 0-3.2-.6-4.4-1.6-1.2 1-2.8 1.6-4.4 1.6S8 20.4 6.8 19.4C5.6 20.4 4 21 2.4 21H2v-2h.4c1 0 2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1s2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1h.4v2H20zM19 7H5l-1 4 8 2 8-2-1-4zM13 3H11v2H7v2h10V5h-4V3z"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--bos-color-brand-primary)"><path d="M20 21c-1.6 0-3.2-.6-4.4-1.6-1.2 1-2.8 1.6-4.4 1.6S8 20.4 6.8 19.4C5.6 20.4 4 21 2.4 21H2v-2h.4c1 0 2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1s2-.4 2.8-1l1.3-1 1.3 1c.8.6 1.8 1 2.8 1h.4v2H20zM19 7H5l-1 4 8 2 8-2-1-4zM13 3H11v2H7v2h10V5h-4V3z"/></svg>
                       ) : (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#14b8a6"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--bos-color-brand-primary)"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
                       )}
                     </div>
                     {/* Date */}
@@ -295,7 +295,7 @@ export default function CalendarPanel() {
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading calendar...</div>
         </div>
@@ -461,7 +461,7 @@ export default function CalendarPanel() {
               <button onClick={() => { setShowNewEvent(false); setNewTitle(''); setNewDate(''); }}
                 style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={createEvent} disabled={!newTitle || !newDate || savingEvent}
-                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)', color: newTitle && newDate ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
+                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)', color: newTitle && newDate ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
                 {savingEvent ? 'Creating...' : 'Create Event'}
               </button>
             </div>

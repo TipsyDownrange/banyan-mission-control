@@ -295,7 +295,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
   }
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>;
-  if (!payApp) return <div style={{ padding: 40, textAlign: 'center', color: '#b91c1c' }}>Pay app not found</div>;
+  if (!payApp) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-red-700)' }}>Pay app not found</div>;
 
   // G702 summary computed client-side off current line state
   const totalCompletedStored = lines.reduce((s, l) => s + num(l.total_completed_and_stored), 0);
@@ -422,7 +422,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13 }}>
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: 'var(--color-red-700)', padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -593,7 +593,7 @@ function NotarizationUploadModal({
           </label>
         </div>
 
-        {err && <div style={{ marginTop: 12, color: '#b91c1c', fontSize: 12, fontWeight: 600 }}>{err}</div>}
+        {err && <div style={{ marginTop: 12, color: 'var(--color-red-700)', fontSize: 12, fontWeight: 600 }}>{err}</div>}
 
         <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={onClose} disabled={submitting} style={btnSecondary}>Cancel</button>
@@ -635,7 +635,7 @@ const cellInput = {
 const btnPrimary = { background: '#0c2330', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnGreen = { background: '#15803d', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const btnSecondary = { background: '#f1f5f9', color: 'var(--color-ink-primary)', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
-const btnDanger = { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
+const btnDanger = { background: '#fee2e2', color: 'var(--color-red-700)', border: '1px solid #fecaca', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 
 // ─── Submission Packet Export (AIA bundle) ──────────────────────────────────
 const SUBMISSION_BUNDLE_ALLOWED_STATES: ReadonlyArray<string> = [

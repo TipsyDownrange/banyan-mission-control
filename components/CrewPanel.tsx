@@ -159,7 +159,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -304,7 +304,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
         {/* Explicit save/discard gate — profile edits stay local until Save. */}
         <div style={{ flexShrink: 0, padding: '12px 20px', background: 'white', borderTop: '1px solid var(--color-surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
             {saveError && (
-              <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{saveError}</span>
+              <span style={{ marginRight: 'auto', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 700 }}>{saveError}</span>
             )}
             {!saveError && (
               <span style={{ marginRight: 'auto', fontSize: 11, color: dirty ? '#b45309' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
@@ -323,7 +323,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
+              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -482,7 +482,7 @@ function AddCrewModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: 
             }
           } catch(err) { console.error('[AddCrewModal] save', err); }
           setSaving(false);
-        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)', color: canSave ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
+        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))' : 'var(--color-surface-border)', color: canSave ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
           {saving ? 'Saving…' : 'Add Crew Member'}
         </button>
       </div>
@@ -584,7 +584,7 @@ export default function CrewPanel() {
 
   if (loading) return (
     <div style={{ padding: 32, textAlign: 'center' }}>
-      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading crew…</div>
     </div>
@@ -600,7 +600,7 @@ export default function CrewPanel() {
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>
             Crew <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)', letterSpacing: 0 }}>{crew.length} people</span>
           </h1>
-          <button onClick={() => setShowAddModal(true)} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color:'white', fontSize:13, fontWeight:800, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,118,110,0.25)', whiteSpace:'nowrap' as const }}>+ Add Crew Member</button>
+          <button onClick={() => setShowAddModal(true)} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color:'white', fontSize:13, fontWeight:800, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,118,110,0.25)', whiteSpace:'nowrap' as const }}>+ Add Crew Member</button>
         </div>
       </div>
 

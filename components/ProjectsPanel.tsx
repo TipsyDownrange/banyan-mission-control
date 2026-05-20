@@ -189,7 +189,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
     SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
     PENDING: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
-    REJECTED: { bg: '#fef2f2', color: '#b91c1c' },
+    REJECTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
     REVISE_RESUBMIT: { bg: '#fffbeb', color: '#92400e' },
     UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
     IDENTIFIED: { bg: '#fffbeb', color: '#92400e' },
@@ -240,7 +240,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
         <div style={{ padding: '24px 28px' }}>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
               <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
           ) : (
@@ -474,7 +474,7 @@ export default function ProjectsPanel({ onNavigate }: Props) {
 
   if (loading) return (
     <div style={{ padding: 40, textAlign: 'center' }}>
-      <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+      <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: 'var(--bos-color-brand-primary)', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );

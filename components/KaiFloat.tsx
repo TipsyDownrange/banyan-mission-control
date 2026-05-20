@@ -93,7 +93,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             position: 'fixed', bottom: 24, right: 24,
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '12px 20px', borderRadius: 999,
-            background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep) 0%, #14b8a6 100%)',
+            background: 'linear-gradient(135deg, var(--bos-color-brand-primary-deep) 0%, var(--bos-color-brand-primary) 100%)',
             color: 'white',
             fontSize: 14, fontWeight: 700,
             border: 'none',
@@ -127,7 +127,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             background: 'linear-gradient(135deg, #071722 0%, #0c2330 100%)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, color: '#14b8a6' }}>◎</span>
+              <span style={{ fontSize: 14, color: 'var(--bos-color-brand-primary)' }}>◎</span>
               <div>
                 <div style={{
                   fontSize: 13, fontWeight: 800, letterSpacing: '-0.01em',
@@ -145,8 +145,8 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               <button key={tab} onClick={() => setKaiTab(tab)} style={{
                 flex:1, padding:'8px', fontSize:11, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase',
                 border:'none', cursor:'pointer', background:'none',
-                color: kaiTab===tab ? '#14b8a6' : 'rgba(148,163,184,0.5)',
-                borderBottom: kaiTab===tab ? '2px solid #14b8a6' : '2px solid transparent',
+                color: kaiTab===tab ? 'var(--bos-color-brand-primary)' : 'rgba(148,163,184,0.5)',
+                borderBottom: kaiTab===tab ? '2px solid var(--bos-color-brand-primary)' : '2px solid transparent',
               }}>{tab === 'feedback' ? '💬 Feedback' : 'Chat'}</button>
             ))}
           </div>
@@ -159,7 +159,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                   <div style={{ fontSize:32, marginBottom:10 }}>✅</div>
                   <div style={{ fontSize:14, fontWeight:800, color:'var(--color-surface)', marginBottom:4 }}>Got it!</div>
                   <div style={{ fontSize:12, color:'rgba(148,163,184,0.7)', lineHeight:1.5 }}>Sean will review this. Thanks for helping me get better. — Kai</div>
-                  <button onClick={() => { setFbDone(false); setFbDesc(''); }} style={{ marginTop:12, padding:'8px 20px', borderRadius:10, background:'rgba(20,184,166,0.15)', border:'1px solid rgba(20,184,166,0.3)', color:'#14b8a6', fontSize:12, fontWeight:700, cursor:'pointer' }}>Send another</button>
+                  <button onClick={() => { setFbDone(false); setFbDesc(''); }} style={{ marginTop:12, padding:'8px 20px', borderRadius:10, background:'rgba(20,184,166,0.15)', border:'1px solid rgba(20,184,166,0.3)', color:'var(--bos-color-brand-primary)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Send another</button>
                 </div>
               ) : (
                 <>
@@ -182,7 +182,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                     setFbSubmitting(false);
                   }} disabled={!fbDesc.trim()||fbSubmitting} style={{
                     width:'100%', padding:'11px', borderRadius:10, border:'none',
-                    background: !fbDesc.trim()||fbSubmitting ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)',
+                    background: !fbDesc.trim()||fbSubmitting ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
                     color: !fbDesc.trim()||fbSubmitting ? 'rgba(148,163,184,0.4)' : 'white',
                     fontSize:13, fontWeight:700, cursor: !fbDesc.trim() ? 'default' : 'pointer',
                   }}>{fbSubmitting ? 'Sending…' : 'Send to Kai →'}</button>
@@ -197,7 +197,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
                   maxWidth: '85%', padding: '10px 14px', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  background: m.role === 'user' ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'var(--color-surface)',
+                  background: m.role === 'user' ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))' : 'var(--color-surface)',
                   color: m.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                   fontSize: 13, lineHeight: 1.5,
                   border: m.role === 'kai' ? '1px solid var(--color-surface-border)' : 'none',
@@ -210,7 +210,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             {loading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 4, alignItems: 'center' }}>
-                  {[0,1,2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#14b8a6', animation: 'bounce 1s ease infinite', animationDelay: `${i*150}ms`, display: 'inline-block' }} />)}
+                  {[0,1,2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--bos-color-brand-primary)', animation: 'bounce 1s ease infinite', animationDelay: `${i*150}ms`, display: 'inline-block' }} />)}
                 </div>
               </div>
             )}
@@ -246,7 +246,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
                 style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 13, color: 'var(--color-ink-primary)' }}
               />
               <button onClick={() => send()} disabled={!input.trim() || loading}
-                style={{ width: 28, height: 28, borderRadius: '50%', background: input.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'var(--color-surface-border)', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
+                style={{ width: 28, height: 28, borderRadius: '50%', background: input.trim() ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), var(--bos-color-brand-primary))' : 'var(--color-surface-border)', border: 'none', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </div>
