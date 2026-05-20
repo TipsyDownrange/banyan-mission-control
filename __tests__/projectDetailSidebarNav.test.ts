@@ -18,7 +18,7 @@ describe('project detail sidebar navigation regression', () => {
       'utf8',
     );
 
-    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'schedule'|'budget'|'work-breakdown'|'matrix'|'activity'>('overview')");
+    expect(source).toContain("useState<'overview'|'submittals'|'rfis'|'verbal-agreements'|'meetings'|'action-items'|'documents'|'handoff'|'cos'|'pay-apps'|'tm-tickets'|'punch-list'|'schedule'|'budget'|'work-breakdown'|'matrix'|'warranty'|'activity'>('overview')");
     expect(source).toContain("{ key: 'rfis', label: `RFIs (${rfis.length})` }");
     expect(source).toContain("{ key: 'verbal-agreements', label: `Verbal Agreements (${verbalAgreements.length})` }");
     expect(source).toContain("{ key: 'meetings', label: `Meetings (${meetings.length})` }");
