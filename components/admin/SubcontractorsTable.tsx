@@ -36,7 +36,7 @@ const TRADE_TAB_LABEL: Record<SubsTrade, string> = {
 const TAB_BASE: CSSProperties = {
   padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 800,
   letterSpacing: '0.05em', cursor: 'pointer', userSelect: 'none',
-  border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569',
+  border: '1px solid var(--color-surface-border)', background: '#f8fafc', color: '#475569',
 };
 const TAB_ACTIVE: CSSProperties = {
   ...TAB_BASE,
@@ -99,7 +99,7 @@ export function SubcontractorsTableView({
 
       {state.kind === 'ready' && state.rows.length === 0 && (
         <div style={{
-          padding: '40px 24px', borderRadius: 14, border: '1px solid #e2e8f0',
+          padding: '40px 24px', borderRadius: 14, border: '1px solid var(--color-surface-border)',
           background: 'white', textAlign: 'center',
         }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>
@@ -113,7 +113,7 @@ export function SubcontractorsTableView({
 
       {state.kind === 'ready' && state.rows.length > 0 && (
         <div style={{
-          background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden',
+          background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', overflow: 'hidden',
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

@@ -265,7 +265,7 @@ function IslandSection({ label, color, borderColor, superNode, officeStaff = [] 
             <NodeCard node={superNode} />
             {superNode.children.length > 0 && (
               <>
-                <div style={{ width: 2, height: 12, background: '#e2e8f0' }} />
+                <div style={{ width: 2, height: 12, background: 'var(--color-surface-border)' }} />
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', maxWidth: 500 }}>
                   {superNode.children.map(child => (
                     <NodeCard key={child.id} node={child} compact={superNode.children.length > 4} />
@@ -283,14 +283,14 @@ function IslandSection({ label, color, borderColor, superNode, officeStaff = [] 
 // ── Legend ──────────────────────────────────────────────────────────────
 function Legend() {
   return (
-    <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '6px 12px', background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+    <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '6px 12px', background: 'white', borderRadius: 10, border: '1px solid var(--color-surface-border)' }}>
       {Object.entries(ISLAND_COLOR).slice(0, 4).map(([label, color]) => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>{label}</span>
         </div>
       ))}
-      <div style={{ width: 1, height: 14, background: '#e2e8f0', margin: '0 4px' }} />
+      <div style={{ width: 1, height: 14, background: 'var(--color-surface-border)', margin: '0 4px' }} />
       <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>Live from crew database</span>
     </div>
   );
@@ -355,7 +355,7 @@ export default function OrgChartPanel() {
       </div>
 
       {loading ? (
-        <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: 48, textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', padding: 48, textAlign: 'center' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading org chart...</div>
@@ -372,12 +372,12 @@ export default function OrgChartPanel() {
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ width: 2, height: 20, background: '#e2e8f0' }} />
+              <div style={{ width: 2, height: 20, background: 'var(--color-surface-border)' }} />
             </div>
 
             {/* Horizontal connector — two branches */}
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
-              <div style={{ height: 2, background: '#e2e8f0', width: '60%', maxWidth: 800 }} />
+              <div style={{ height: 2, background: 'var(--color-surface-border)', width: '60%', maxWidth: 800 }} />
             </div>
 
             {/* Two branches: Sean (Maui+Outer) and Frank (Oahu) */}
@@ -385,13 +385,13 @@ export default function OrgChartPanel() {
 
               {/* MAUI + OUTER ISLANDS — Sean's branch */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
+                <div style={{ width: 2, height: 16, background: 'var(--color-surface-border)' }} />
                 {seanBranch && (
                   <div style={{ marginBottom: 12 }}>
                     <NodeCard node={{ ...seanBranch, children: [] }} />
                   </div>
                 )}
-                <div style={{ width: 2, height: 12, background: '#e2e8f0' }} />
+                <div style={{ width: 2, height: 12, background: 'var(--color-surface-border)' }} />
                 <IslandSection
                   label="Maui Office — HQ + Outer Islands"
                   color="var(--bos-color-brand-primary-deep)"
@@ -403,13 +403,13 @@ export default function OrgChartPanel() {
 
               {/* OAHU — Frank's branch */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: 2, height: 16, background: '#e2e8f0' }} />
+                <div style={{ width: 2, height: 16, background: 'var(--color-surface-border)' }} />
                 {frankBranch && (
                   <div style={{ marginBottom: 12 }}>
                     <NodeCard node={{ ...frankBranch, children: [] }} />
                   </div>
                 )}
-                <div style={{ width: 2, height: 12, background: '#e2e8f0' }} />
+                <div style={{ width: 2, height: 12, background: 'var(--color-surface-border)' }} />
                 <IslandSection
                   label="Oahu Office"
                   color="#0369a1"
@@ -425,7 +425,7 @@ export default function OrgChartPanel() {
 
       {/* Footer stats */}
       {!loading && crew.length > 0 && (
-        <div style={{ marginTop: 20, padding: '14px 20px', background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 20, padding: '14px 20px', background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           {[
             { label: 'Total Headcount', value: crew.length },
             { label: 'Management', value: crew.filter(c => ['gm','owner','pm','estimator','admin_mgr','service_pm','sales'].some(r => c.role.toLowerCase().includes(r))).length },

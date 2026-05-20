@@ -32,7 +32,7 @@ export interface DraftPreviewModalProps {
 const FONT = '-apple-system, "SF Pro Display", Inter, system-ui, sans-serif';
 const INP: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 10,
-  border: '1px solid #e2e8f0', background: 'white',
+  border: '1px solid var(--color-surface-border)', background: 'white',
   fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box',
   fontFamily: FONT,
 };
@@ -184,7 +184,7 @@ export default function DraftPreviewModal({
           </div>
           <button
             onClick={() => !sending && onClose()}
-            style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: sending ? 'default' : 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: sending ? 0.4 : 1 }}
+            style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--color-surface-border)', background: 'white', cursor: sending ? 'default' : 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: sending ? 0.4 : 1 }}
           >×</button>
         </div>
 
@@ -221,7 +221,7 @@ export default function DraftPreviewModal({
           </div>
 
           {/* Attachment */}
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid var(--color-surface-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-ink-disabled)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
             </svg>
@@ -243,7 +243,7 @@ export default function DraftPreviewModal({
         <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10, flexShrink: 0 }}>
           <button
             onClick={() => !sending && onClose()}
-            style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.4 : 1, fontFamily: FONT }}
+            style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.4 : 1, fontFamily: FONT }}
           >
             Cancel
           </button>
@@ -252,7 +252,7 @@ export default function DraftPreviewModal({
             disabled={sending || !to.trim()}
             style={{
               flex: 2, padding: '11px', borderRadius: 12, border: 'none',
-              background: sending || !to.trim() ? '#e2e8f0' : '#4338ca',
+              background: sending || !to.trim() ? 'var(--color-surface-border)' : '#4338ca',
               color: sending || !to.trim() ? 'var(--bos-color-ink-tertiary)' : 'white',
               fontSize: 13, fontWeight: 700,
               cursor: sending || !to.trim() ? 'default' : 'pointer',

@@ -92,7 +92,7 @@ function SourceHealthCard({ card }: { card: SourceHealthSourceCard }) {
         </div>
         <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{card.status}</span>
       </div>
-      <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{card.summary}</p>
+      <p style={{ color: 'var(--color-surface-border)', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{card.summary}</p>
       <div style={{ color: card.isFallback ? '#fbbf24' : 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 850, marginTop: 7 }}>{card.freshnessLabel}</div>
       <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
         {card.isFallback && <span style={{ color: '#fbbf24', border: '1px solid rgba(245,158,11,0.34)', background: 'rgba(245,158,11,0.1)', borderRadius: 999, padding: '3px 6px', fontSize: 10, fontWeight: 950 }}>last verified fallback</span>}
@@ -225,7 +225,7 @@ function QueueCard({ issue, active, onSelect }: { issue: WarRoomIssue; active: b
         background: active ? 'linear-gradient(135deg, rgba(20,184,166,0.18), rgba(14,165,233,0.08))' : 'rgba(15,23,42,0.58)',
         borderRadius: 18,
         padding: 12,
-        color: '#e2e8f0',
+        color: 'var(--color-surface-border)',
         cursor: 'pointer',
         boxShadow: active ? '0 0 24px rgba(20,184,166,0.12)' : 'none',
       }}
@@ -288,7 +288,7 @@ function CrewRuntimeCard({ crew }: { crew: CrewRuntimeStatus }) {
       <div style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 850, marginTop: 7 }}>
         Auth {crew.auth} / runtime {crew.health === 'manual' ? 'manual standby' : crew.runtime} / quota {crew.quota}
       </div>
-      <p style={{ color: '#e2e8f0', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{crew.summary}</p>
+      <p style={{ color: 'var(--color-surface-border)', fontSize: 12, lineHeight: 1.4, margin: '8px 0 0' }}>{crew.summary}</p>
       <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11, marginTop: 8 }}>Last checked {formatDate(crew.lastCheckedAt)}</div>
       {crew.blockers.length > 0 && (
         <ul style={{ margin: '8px 0 0', paddingLeft: 16, color: theme.color, fontSize: 11, lineHeight: 1.35 }}>
@@ -857,7 +857,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
     <div className="war-room-shell" style={{
       minHeight: '100%',
       background: 'radial-gradient(circle at top left, rgba(20,184,166,0.16), transparent 32%), linear-gradient(180deg, #06121f 0%, #071722 38%, #08111d 100%)',
-      color: '#e2e8f0',
+      color: 'var(--color-surface-border)',
       fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif',
       display: 'block',
     }}>
@@ -898,7 +898,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                   flex: 1,
                   minWidth: 0,
                   background: 'rgba(15,23,42,0.82)',
-                  color: '#e2e8f0',
+                  color: 'var(--color-surface-border)',
                   border: '1px solid rgba(148,163,184,0.22)',
                   borderRadius: 18,
                   padding: '11px 12px',
@@ -978,7 +978,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
               onChange={event => setIntake(previous => ({ ...previous, title: event.target.value }))}
               placeholder="Short command title"
               maxLength={140}
-              style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, outline: 'none' }}
+              style={{ background: 'rgba(15,23,42,0.82)', color: 'var(--color-surface-border)', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, outline: 'none' }}
             />
             <textarea
               value={intake.description}
@@ -986,19 +986,19 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
               placeholder="Drop the plain-English task here. Include acceptance criteria, stop conditions, and source links when known."
               rows={2}
               maxLength={4000}
-              style={{ background: 'rgba(15,23,42,0.82)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, lineHeight: 1.45, resize: 'vertical', outline: 'none' }}
+              style={{ background: 'rgba(15,23,42,0.82)', color: 'var(--color-surface-border)', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '8px 10px', fontSize: 12, lineHeight: 1.45, resize: 'vertical', outline: 'none' }}
             />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-              <select value={intake.priority} onChange={event => setIntake(previous => ({ ...previous, priority: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.priority} onChange={event => setIntake(previous => ({ ...previous, priority: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: 'var(--color-surface-border)', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['P0', 'P1', 'P2', 'P3'].map(value => <option key={value} value={value}>Priority {value}</option>)}
               </select>
-              <select value={intake.risk} onChange={event => setIntake(previous => ({ ...previous, risk: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.risk} onChange={event => setIntake(previous => ({ ...previous, risk: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: 'var(--color-surface-border)', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['P0', 'P1', 'P2', 'P3'].map(value => <option key={value} value={value}>Risk {value}</option>)}
               </select>
-              <select value={intake.scopeType} onChange={event => setIntake(previous => ({ ...previous, scopeType: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.scopeType} onChange={event => setIntake(previous => ({ ...previous, scopeType: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: 'var(--color-surface-border)', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['audit', 'code', 'verify', 'doc', 'external-action', 'recurring'].map(value => <option key={value} value={value}>{value}</option>)}
               </select>
-              <select value={intake.suggestedLane} onChange={event => setIntake(previous => ({ ...previous, suggestedLane: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
+              <select value={intake.suggestedLane} onChange={event => setIntake(previous => ({ ...previous, suggestedLane: event.target.value }))} style={{ background: 'var(--color-ink-primary)', color: 'var(--color-surface-border)', border: '1px solid rgba(148,163,184,0.22)', borderRadius: 18, padding: '7px 8px' }}>
                 {['kai', 'codex', 'claude', 'sean'].map(value => <option key={value} value={value}>Lane {value}</option>)}
               </select>
             </div>

@@ -252,7 +252,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
                   maxWidth: '80%', padding: '12px 16px', borderRadius: 16,
                   background: msg.role === 'user' ? 'rgba(20,184,166,0.2)' : 'rgba(255,255,255,0.06)',
                   border: msg.role === 'user' ? '1px solid rgba(20,184,166,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                  fontSize: 14, lineHeight: 1.6, color: msg.role === 'user' ? '#5eead4' : '#e2e8f0',
+                  fontSize: 14, lineHeight: 1.6, color: msg.role === 'user' ? '#5eead4' : 'var(--color-surface-border)',
                 }}>
                   {msg.text}
                 </div>

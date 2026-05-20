@@ -402,7 +402,7 @@ function AddRowForm({ subView, bidVersionId, onSave, onCancel, stepTemplates = {
           style={{
             padding: '7px 16px',
             borderRadius: 8,
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--color-surface-border)',
             background: 'white',
             fontSize: 11,
             fontWeight: 700,
@@ -1177,7 +1177,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
         </div>
         <button
           onClick={load}
-          style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}
+          style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}
         >
           Retry
         </button>
@@ -1207,7 +1207,7 @@ export default function TakeoffTab({ bid, stepTemplates = {} }: TakeoffTabProps)
               style={{
                 padding: '6px 16px',
                 borderRadius: 999,
-                border: active ? 'none' : '1px solid #e2e8f0',
+                border: active ? 'none' : '1px solid var(--color-surface-border)',
                 background: active
                   ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)'
                   : 'white',

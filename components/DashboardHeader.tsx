@@ -80,7 +80,7 @@ export default function DashboardHeader({
               background: 'white',
               borderRadius: 16,
               padding: '16px 20px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--color-surface-border)',
               boxShadow: '0 1px 3px rgba(15,23,42,0.03)',
             }}>
               <div style={{

@@ -77,7 +77,7 @@ export default function ContactAutocomplete({ value, onChange, onSelect, style, 
       {open && results.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000,
-          background: 'white', border: '1px solid #e2e8f0', borderRadius: 10,
+          background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10,
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 240, overflowY: 'auto',
           marginTop: 2,
         }}>

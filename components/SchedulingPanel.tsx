@@ -108,7 +108,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {(['forecast', 'lookahead'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {v === 'forecast' ? 'Forecast' : '3-Week Lookahead'}
               </button>
             ))}
@@ -123,7 +123,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           </div>
           {view === 'forecast' && (
               <select value={weeksAhead} onChange={e => setWeeksAhead(parseInt(e.target.value))}
-                style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, color: '#334155', cursor: 'pointer', outline: 'none' }}>
+                style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 11, color: '#334155', cursor: 'pointer', outline: 'none' }}>
                 <option value={8}>8 weeks</option>
                 <option value={12}>12 weeks</option>
                 <option value={24}>24 weeks</option>
@@ -157,7 +157,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                 return (
                   <div key={w.date} style={{ flexShrink: 0, textAlign: 'center', minWidth: 52 }}>
                     <div style={{ fontSize: 9, color: current ? '#0369a1' : 'var(--bos-color-ink-tertiary)', fontWeight: current ? 800 : 600, marginBottom: 4 }}>{fmtDate(w.date)}</div>
-                    <div style={{ width: 48, height: 48, borderRadius: 10, background: men ? menBg(men) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (men ? menColor(men) + '44' : '#e2e8f0')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 10, background: men ? menBg(men) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (men ? menColor(men) + '44' : 'var(--color-surface-border)')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                       <span style={{ fontSize: men >= 10 ? 14 : 18, fontWeight: 900, color: men ? menColor(men) : '#cbd5e1', letterSpacing: '-0.04em' }}>{men || '—'}</span>
                     </div>
                     {men > 0 && <div style={{ fontSize: 8, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>men</div>}
@@ -173,7 +173,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
             const color = ISLAND_COLOR[island.island] || 'var(--bos-color-ink-disabled)';
             const activeJobs = island.jobs.filter(j => j.total_men_weeks > 0);
             return (
-              <div key={island.island} style={{ marginBottom: 12, borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', background: 'white' }}>
+              <div key={island.island} style={{ marginBottom: 12, borderRadius: 16, border: '1px solid var(--color-surface-border)', overflow: 'hidden', background: 'white' }}>
                 {/* Island header */}
                 <button onClick={() => toggleIsland(island.island)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: `${color}08`, border: 'none', cursor: 'pointer', borderBottom: isExpanded ? '1px solid #f1f5f9' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -211,7 +211,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                           </div>
                         ))}
                         <div key={0} draggable onDragStart={() => setDraggingMen(0)} onDragEnd={() => setDraggingMen(null)}
-                          style={{ width: 32, height: 28, borderRadius: 8, background: '#f8fafc', border: '1.5px dashed #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flexShrink: 0, userSelect: 'none' }}>
+                          style={{ width: 32, height: 28, borderRadius: 8, background: '#f8fafc', border: '1.5px dashed var(--color-surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flexShrink: 0, userSelect: 'none' }}>
                           <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>0</span>
                         </div>
                       </div>
@@ -333,7 +333,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           })}
 
           {/* Company-wide totals summary — always shown at bottom */}
-          <div style={{ marginTop: 16, borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', background: 'white' }}>
+          <div style={{ marginTop: 16, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--color-surface-border)', background: 'white' }}>
             <div style={{ padding: '10px 16px', background: 'var(--color-ink-primary)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>
                 {islandFilter === 'All' ? 'Company Total — All Islands' : `${islandFilter} Total`}
@@ -365,7 +365,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                       <div style={{ fontSize: 9, color: current ? '#0369a1' : 'var(--bos-color-ink-tertiary)', fontWeight: current ? 800 : 600, marginBottom: 4 }}>
                         {fmtDate(w.date)}
                       </div>
-                      <div style={{ width: 48, height: 48, borderRadius: 10, background: total ? menBg(total) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (total ? menColor(total) + '44' : '#e2e8f0')}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 10, background: total ? menBg(total) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (total ? menColor(total) + '44' : 'var(--color-surface-border)')}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                         <span style={{ fontSize: total >= 10 ? 14 : 18, fontWeight: 900, color: total ? menColor(total) : '#cbd5e1', letterSpacing: '-0.04em', lineHeight: 1 }}>{total || '—'}</span>
                         {total > 0 && <span style={{ fontSize: 7.5, color: 'var(--bos-color-ink-tertiary)', marginTop: 1 }}>men</span>}
                       </div>
@@ -399,7 +399,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           </div>
 
           {/* Legend */}
-          <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: '#f8fafc', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>Men on site:</span>
             {[[1,'1-2','var(--bos-color-brand-primary-deep)'],[2,'3-4','var(--bos-color-brand-primary-deep)'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','#b91c1c']].map(([n,label,color]) => (
               <div key={String(n)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

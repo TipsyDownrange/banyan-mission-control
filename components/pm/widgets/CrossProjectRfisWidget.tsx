@@ -50,7 +50,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
           onChange={(e) => setSortKey(e.target.value as SortKey)}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
-          style={{ fontSize: 11, padding: '2px 6px', borderRadius: 6, border: '1px solid #e2e8f0' }}
+          style={{ fontSize: 11, padding: '2px 6px', borderRadius: 6, border: '1px solid var(--color-surface-border)' }}
         >
           <option value="overdue">Sort: Overdue</option>
           <option value="ball">Sort: Ball-in-court</option>
@@ -75,7 +75,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
                 padding: '6px 10px',
                 background: r.is_overdue ? '#fef2f2' : '#f8fafc',
                 borderRadius: 6,
-                border: `1px solid ${r.is_overdue ? '#fecaca' : '#e2e8f0'}`,
+                border: `1px solid ${r.is_overdue ? '#fecaca' : 'var(--color-surface-border)'}`,
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>

@@ -13,7 +13,7 @@ type Data = { submittals: Pipeline; rfis: Pipeline };
 function PipelineBlock({ label, p }: { label: string; p: Pipeline }) {
   const entries = Object.entries(p.by_ball_in_court).sort((a, b) => b[1] - a[1]);
   return (
-    <div style={{ padding: 10, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+    <div style={{ padding: 10, background: '#f8fafc', borderRadius: 8, border: '1px solid var(--color-surface-border)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {label}

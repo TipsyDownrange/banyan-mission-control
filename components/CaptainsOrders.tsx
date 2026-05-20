@@ -140,7 +140,7 @@ function DecisionCard({ decision, onAction }: {
 
   return (
     <div style={{
-      background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+      background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
       boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: 16, overflow: 'hidden',
     }}>
       {/* Header */}
@@ -230,7 +230,7 @@ function DecisionCard({ decision, onAction }: {
             style={{
               width: '100%', boxSizing: 'border-box' as const,
               fontSize: 13, padding: '9px 12px', borderRadius: 9,
-              border: overrideError ? '1.5px solid #fca5a5' : '1.5px solid #e2e8f0',
+              border: overrideError ? '1.5px solid #fca5a5' : '1.5px solid var(--color-surface-border)',
               outline: 'none', resize: 'vertical' as const, fontFamily: 'inherit',
               color: 'var(--color-ink-primary)', background: 'white', lineHeight: 1.5,
             }}
@@ -256,7 +256,7 @@ function DecisionCard({ decision, onAction }: {
             onClick={() => fire('deferred')}
             style={{
               padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-              border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)',
+              border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)',
               cursor: submitting ? 'default' : 'pointer', opacity: disabled('deferred') ? 0.5 : 1,
             }}>
             {submitting === 'deferred' ? '…' : 'Defer'}
@@ -268,7 +268,7 @@ function DecisionCard({ decision, onAction }: {
               onClick={fireDiscuss}
               style={{
                 padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)',
+                border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)',
                 cursor: submitting ? 'default' : 'pointer', opacity: disabled('discuss') ? 0.5 : 1,
               }}>
               {submitting === 'discuss' ? '…' : '💬 Discuss'}
@@ -291,7 +291,7 @@ function DecisionCard({ decision, onAction }: {
             onClick={() => fire('rerouted', true)}
             style={{
               padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-              border: '1px solid #e2e8f0', background: 'white', color: '#7c3aed',
+              border: '1px solid var(--color-surface-border)', background: 'white', color: '#7c3aed',
               cursor: submitting ? 'default' : 'pointer', opacity: disabled('rerouted') ? 0.5 : 1,
             }}>
             {submitting === 'rerouted' ? '…' : '↪ Reroute'}
@@ -398,7 +398,7 @@ export default function CaptainsOrders() {
     <div style={{ marginTop: 24 }}>
       {/* Header */}
       <div style={{
-        background: 'white', borderRadius: 12, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)',
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '14px 20px', marginBottom: 12,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: 10,
       }}>
@@ -422,7 +422,7 @@ export default function CaptainsOrders() {
           <button key={tab.key} onClick={() => setFilter(tab.key)}
             style={{
               padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-              border: filter === tab.key ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
+              border: filter === tab.key ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)',
               background: filter === tab.key ? 'rgba(240,253,250,0.96)' : 'white',
               color: filter === tab.key ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
             }}>

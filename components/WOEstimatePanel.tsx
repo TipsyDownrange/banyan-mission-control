@@ -283,7 +283,7 @@ function DescInput({ value, onChange, placeholder = 'Description…' }: {
       style={{
         flex: 1,
         border: 'none',
-        borderBottom: focused ? '1.5px solid #14b8a6' : '1px solid #e2e8f0',
+        borderBottom: focused ? '1.5px solid #14b8a6' : '1px solid var(--color-surface-border)',
         fontSize: 12,
         fontFamily: FONT,
         background: 'transparent',
@@ -331,7 +331,7 @@ function FixedRow({ label, value, onChange }: {
 
 function SubtotalBar({ label, value }: { label: string; value: number }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '5px 10px', marginTop: 6, marginBottom: 4 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 8, padding: '5px 10px', marginTop: 6, marginBottom: 4 }}>
       <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: FONT }}>{label}</span>
       <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
     </div>
@@ -655,7 +655,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               )}
 
               {/* Aluminum */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Aluminum</span>
                 {data.aluminum.map((item, i) => (
                   <LineRow key={i} desc={item.description} amount={item.amount}
@@ -670,7 +670,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               </div>
 
               {/* Glass */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Glass</span>
                 {data.glass.map((item, i) => (
                   <LineRow key={i} desc={item.description} amount={item.amount}
@@ -685,7 +685,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               </div>
 
               {/* Misc Materials */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Misc Materials</span>
                 {([
                   ['caulking', 'Caulking'],
@@ -712,7 +712,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               </div>
 
               {/* Other Costs */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Other Costs</span>
                 {([
                   ['equipmentRental', 'Equipment Rental'],
@@ -740,7 +740,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
               {/* Labor */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Labor</span>
                 {isLocked && lockedAt && (
                   <div style={{ marginBottom: 10, padding: '8px 12px', background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)', borderRadius: 8, fontSize: 11, color: '#b45309', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -848,7 +848,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               </div>
 
               {/* Markup */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Markup</span>
 
                 {/* Overhead */}
@@ -889,7 +889,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
               </div>
 
               {/* Totals summary */}
-              <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
+              <div style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 14 }}>
                 <span style={SEC}>Summary</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {[
@@ -904,7 +904,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                       <span style={{ fontWeight: 600, color: 'var(--color-ink-primary)', fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
                     </div>
                   ))}
-                  <div style={{ borderTop: '1px solid #e2e8f0', marginTop: 6, paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ borderTop: '1px solid var(--color-surface-border)', marginTop: 6, paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT }}>Grand Total</span>
                     <span style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>${fmt(grandTotal)}</span>
                   </div>
@@ -970,7 +970,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
           flexShrink: 0,
           padding: '12px 20px',
           background: 'white',
-          borderTop: '1px solid #e2e8f0',
+          borderTop: '1px solid var(--color-surface-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -983,7 +983,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
             </span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               Close
             </button>
             <button
@@ -1006,7 +1006,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--color-ink-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+              style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--color-ink-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
             >
               🖨 Print PDF
             </button>

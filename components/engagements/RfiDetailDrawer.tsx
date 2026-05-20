@@ -287,7 +287,7 @@ function DocList({ label, ids }: { label: string; ids: string[] }) {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14,
+  background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14,
 };
 
 const sectionTitleStyle: React.CSSProperties = {
@@ -295,7 +295,7 @@ const sectionTitleStyle: React.CSSProperties = {
 };
 
 const selectStyle: React.CSSProperties = {
-  padding: '4px 6px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11, background: 'white',
+  padding: '4px 6px', borderRadius: 6, border: '1px solid var(--color-surface-border)', fontSize: 11, background: 'white',
 };
 
 const actionBtn = (color: string): React.CSSProperties => ({

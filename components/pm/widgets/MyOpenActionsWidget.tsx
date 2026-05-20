@@ -51,7 +51,7 @@ export default function MyOpenActionsWidget({ onHide, showHide }: { onHide?: () 
                 padding: '8px 10px',
                 background: '#f8fafc',
                 borderRadius: 8,
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
               }}
             >
               <span

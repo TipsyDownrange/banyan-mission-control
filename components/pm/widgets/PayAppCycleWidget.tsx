@@ -50,7 +50,7 @@ export default function PayAppCycleWidget({ onHide, showHide }: { onHide?: () =>
                 padding: '6px 10px',
                 background: '#f8fafc',
                 borderRadius: 6,
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>

@@ -102,7 +102,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
 
         <label style={fieldStyle}>
           <span style={labelStyle}>Subject <span style={{ color: subjectInvalid ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>{subject.length}/{SUBJECT_MAX}</span></span>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, borderColor: subjectInvalid ? '#fecaca' : '#e2e8f0' }} maxLength={SUBJECT_MAX + 20} />
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, borderColor: subjectInvalid ? '#fecaca' : 'var(--color-surface-border)' }} maxLength={SUBJECT_MAX + 20} />
         </label>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -126,13 +126,13 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
         <button
           type="button"
           onClick={() => setShowOptional((v) => !v)}
-          style={{ marginBottom: 12, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+          style={{ marginBottom: 12, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
         >
           {showOptional ? 'Hide optional fields' : 'Optional fields'}
         </button>
 
         {showOptional && (
-          <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, marginBottom: 12, background: '#f8fafc' }}>
+          <div style={{ border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 12, marginBottom: 12, background: '#f8fafc' }}>
             <label style={fieldStyle}>
               <span style={labelStyle}>Occurred At</span>
               <input type="datetime-local" value={occurredAt} onChange={(e) => setOccurredAt(e.target.value)} style={inputStyle} />
@@ -166,7 +166,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
 }
 
 const fieldStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 };
-const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit' };
+const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit' };
 const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' };
-const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
+const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 18px', borderRadius: 10, border: 'none', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' };

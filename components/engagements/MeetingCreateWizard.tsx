@@ -174,7 +174,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
 
         <label style={fieldStyle}>
           <span style={labelStyle}>Title <span style={{ color: titleInvalid ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>{title.length}/{TITLE_MAX}</span></span>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={TITLE_MAX + 20} style={{ ...inputStyle, borderColor: titleInvalid ? '#fecaca' : '#e2e8f0' }} />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={TITLE_MAX + 20} style={{ ...inputStyle, borderColor: titleInvalid ? '#fecaca' : 'var(--color-surface-border)' }} />
         </label>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -221,7 +221,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
           </label>
         </div>
 
-        <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, marginBottom: 12, background: '#f8fafc' }}>
+        <div style={{ border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 12, marginBottom: 12, background: '#f8fafc' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ ...labelStyle, marginBottom: 0 }}>Attendees ({attendees.length})</span>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -231,7 +231,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
           </div>
           {attendees.length === 0 && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No attendees added yet.</div>}
           {attendees.map((a) => (
-            <div key={a.key} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: 10, marginTop: 8 }}>
+            <div key={a.key} style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: 10, marginTop: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: a.is_kula_user ? '#dbeafe' : '#f1f5f9', color: a.is_kula_user ? '#1d4ed8' : '#475569' }}>
                   {a.is_kula_user ? 'KULA' : 'EXTERNAL'}
@@ -287,8 +287,8 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
 }
 
 const fieldStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 };
-const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit' };
+const inputStyle: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit' };
 const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' };
-const smallButtonStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: 700, fontSize: 11, cursor: 'pointer' };
-const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
+const smallButtonStyle: React.CSSProperties = { padding: '4px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 11, cursor: 'pointer' };
+const secondaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: 'pointer' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 18px', borderRadius: 10, border: 'none', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' };

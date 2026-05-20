@@ -202,7 +202,7 @@ export default function OverviewPanel() {
       {/* Two-column layout: Projects by island + Recent Activity */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 8 }}>
         {/* Projects by Island */}
-        <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
+        <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 16 }}>
             Projects by Island
           </div>
@@ -231,7 +231,7 @@ export default function OverviewPanel() {
         </div>
 
         {/* Recent Activity */}
-        <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
+        <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 16 }}>
             Recent Activity
           </div>
@@ -264,7 +264,7 @@ export default function OverviewPanel() {
 
       {/* Most Active Projects */}
       {topProjects.length > 0 && (
-        <div style={{ marginTop: 20, background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
+        <div style={{ marginTop: 20, background: 'white', borderRadius: 16, border: '1px solid var(--color-surface-border)', padding: '20px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.03)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 16 }}>
             Project Activity (Last 30 Days)
           </div>

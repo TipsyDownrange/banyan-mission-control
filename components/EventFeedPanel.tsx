@@ -67,12 +67,12 @@ export default function EventFeedPanel() {
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
         <button onClick={() => setFilter('ALL')}
-          style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === 'ALL' ? '1px solid rgba(15,23,42,0.2)' : '1px solid #e2e8f0', background: filter === 'ALL' ? 'var(--color-ink-primary)' : 'white', color: filter === 'ALL' ? 'white' : 'var(--bos-color-ink-disabled)' }}>
+          style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === 'ALL' ? '1px solid rgba(15,23,42,0.2)' : '1px solid var(--color-surface-border)', background: filter === 'ALL' ? 'var(--color-ink-primary)' : 'white', color: filter === 'ALL' ? 'white' : 'var(--bos-color-ink-disabled)' }}>
           All · {events.length}
         </button>
         {Object.entries(TYPE_STYLE).map(([key, s]) => counts[key] > 0 && (
           <button key={key} onClick={() => setFilter(key)}
-            style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === key ? `1px solid ${s.border}` : '1px solid #e2e8f0', background: filter === key ? s.bg : 'white', color: filter === key ? s.color : 'var(--bos-color-ink-disabled)' }}>
+            style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === key ? `1px solid ${s.border}` : '1px solid var(--color-surface-border)', background: filter === key ? s.bg : 'white', color: filter === key ? s.color : 'var(--bos-color-ink-disabled)' }}>
             {s.label} · {counts[key]}
           </button>
         ))}
@@ -89,7 +89,7 @@ export default function EventFeedPanel() {
       {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#b91c1c', marginBottom: 16 }}>{error}</div>}
 
       {!loading && filtered.length === 0 && !error && (
-        <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
+        <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)' }}>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>No events yet. Field crew activity will appear here as jobs are logged.</div>
         </div>
       )}

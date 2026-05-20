@@ -86,7 +86,7 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
       style={{
         background: 'white',
         borderRadius: 16,
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-surface-border)',
         padding: '18px 22px',
         boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
       }}
@@ -145,7 +145,7 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
                 letterSpacing: '0.04em',
                 background: '#f1f5f9',
                 color: '#334155',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
               }}
             >
               {st.replace(/_/g, ' ')} · {s.by_state[st]}

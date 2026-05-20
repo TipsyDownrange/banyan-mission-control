@@ -336,7 +336,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
       </div>
 
       <div style={{
-        background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
         padding: 14, marginBottom: 16, overflowX: 'auto',
       }}>
         <div style={{ fontSize: 12, fontWeight: 800, color: '#0c2330', marginBottom: 10 }}>
@@ -397,7 +397,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
       </div>
 
       <div style={{
-        background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+        background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
         padding: 16, marginBottom: 16,
       }}>
         <div style={{ fontSize: 12, fontWeight: 800, color: '#0c2330', marginBottom: 10 }}>
@@ -672,7 +672,7 @@ export function SubmissionBundleButtons({
   const tip = submissionBundleTooltip(payAppState);
   const disabledStyle = {
     ...btnSecondary,
-    background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', borderColor: '#e2e8f0',
+    background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', borderColor: 'var(--color-surface-border)',
     cursor: 'not-allowed' as const,
   };
   return (
@@ -722,7 +722,7 @@ export function SubmissionBundlePreview({
     <div style={{
       marginTop: 14,
       background: '#fff',
-      border: '1px solid #e2e8f0',
+      border: '1px solid var(--color-surface-border)',
       borderRadius: 10,
       padding: '10px 14px',
       maxWidth: 520,

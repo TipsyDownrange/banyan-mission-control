@@ -143,7 +143,7 @@ export default function BidIntakePanel() {
           <button
             onClick={scan}
             disabled={scanning}
-            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
+            style={{ padding: '10px 20px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: scanning ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: scanning ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: scanning ? 'default' : 'pointer', boxShadow: scanning ? 'none' : '0 4px 16px rgba(15,118,110,0.3)' }}>
             {scanning ? '⟳ Scanning...' : '⟳ Scan Inboxes'}
           </button>
         </div>
@@ -174,7 +174,7 @@ export default function BidIntakePanel() {
 
       {/* Empty state */}
       {!scanning && visibleOpps.length === 0 && !error && (
-        <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
+        <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: 6 }}>
             {opportunities.length === 0 ? 'Scan inboxes to find bid opportunities' : 'All opportunities processed'}
@@ -196,7 +196,7 @@ export default function BidIntakePanel() {
           const draft = isEditing ? { ...opp, ...editDraft } : opp;
 
           return (
-            <div key={opp.email_id} style={{ background: 'white', borderRadius: 20, border: `1px solid ${urgent ? 'rgba(185,28,28,0.25)' : '#e2e8f0'}`, boxShadow: '0 2px 12px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
+            <div key={opp.email_id} style={{ background: 'white', borderRadius: 20, border: `1px solid ${urgent ? 'rgba(185,28,28,0.25)' : 'var(--color-surface-border)'}`, boxShadow: '0 2px 12px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
 
               {/* Card header */}
               <div style={{ padding: '14px 18px', background: urgent ? 'rgba(254,242,242,0.5)' : 'transparent' }}>
@@ -205,7 +205,7 @@ export default function BidIntakePanel() {
                     {isEditing ? (
                       <input value={editDraft.project_name ?? opp.project_name}
                         onChange={e => setEditDraft(p => ({ ...p, project_name: e.target.value }))}
-                        style={{ width: '100%', fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 8px', outline: 'none', boxSizing: 'border-box' }} />
+                        style={{ width: '100%', fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', border: '1px solid var(--color-surface-border)', borderRadius: 8, padding: '4px 8px', outline: 'none', boxSizing: 'border-box' }} />
                     ) : (
                       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-ink-primary)', letterSpacing: '-0.01em', marginBottom: 2 }}>{opp.project_name}</div>
                     )}
@@ -241,11 +241,11 @@ export default function BidIntakePanel() {
                     {!isAdded && (
                       <>
                         <button onClick={() => { if (isEditing) { setEditingId(null); setEditDraft({}); } else { setEditingId(opp.email_id); setEditDraft({}); } }}
-                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: isEditing ? '1px solid rgba(15,118,110,0.4)' : '1px solid var(--color-surface-border)', background: isEditing ? 'rgba(240,253,250,0.96)' : 'white', color: isEditing ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                           {isEditing ? '✓' : '✎'}
                         </button>
                         <button onClick={() => setDismissed(prev => new Set([...prev, opp.email_id]))}
-                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
+                          style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
                           ✕
                         </button>
                         {/* Assignment — RFP gets estimator dropdown, WO goes to Joey */}
@@ -253,19 +253,19 @@ export default function BidIntakePanel() {
                           <div style={{ display: 'flex', gap: 4 }}>
                             <select value={assignedTo[opp.email_id] || ''}
                               onChange={e => setAssignedTo(prev => ({ ...prev, [opp.email_id]: e.target.value }))}
-                              style={{ padding: '6px 8px', borderRadius: 10, fontSize: 11, border: '1px solid #e2e8f0', background: 'white', color: '#334155', cursor: 'pointer', outline: 'none' }}>
+                              style={{ padding: '6px 8px', borderRadius: 10, fontSize: 11, border: '1px solid var(--color-surface-border)', background: 'white', color: '#334155', cursor: 'pointer', outline: 'none' }}>
                               <option value="">Assign to...</option>
                               {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
                             </select>
                             <button onClick={() => { if (assignedTo[opp.email_id]) addToBidQueue({...opp, gc_name: opp.gc_name}); }}
                               disabled={!assignedTo[opp.email_id] || adding === opp.email_id}
-                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : '#e2e8f0', color: assignedTo[opp.email_id] ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
+                              style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: assignedTo[opp.email_id] ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : 'var(--color-surface-border)', color: assignedTo[opp.email_id] ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', cursor: assignedTo[opp.email_id] ? 'pointer' : 'default', whiteSpace: 'nowrap' as const }}>
                               {adding === opp.email_id ? '...' : '→ Bid Queue'}
                             </button>
                           </div>
                         ) : (
                           <button onClick={() => addToBidQueue(opp)} disabled={adding === opp.email_id}
-                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
+                            style={{ padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 800, background: adding === opp.email_id ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: adding === opp.email_id ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', cursor: adding === opp.email_id ? 'default' : 'pointer', whiteSpace: 'nowrap' as const }}>
                             {adding === opp.email_id ? '...' : '→ Joey Queue'}
                           </button>
                         )}
@@ -283,13 +283,13 @@ export default function BidIntakePanel() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 8, marginTop: 10 }}>
                   {[
                     ['GC / Source', isEditing
-                      ? <input value={editDraft.gc_name ?? opp.gc_name} onChange={e => setEditDraft(p => ({ ...p, gc_name: e.target.value }))} style={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 6px', width: '100%', outline: 'none', boxSizing: 'border-box' as const }} />
+                      ? <input value={editDraft.gc_name ?? opp.gc_name} onChange={e => setEditDraft(p => ({ ...p, gc_name: e.target.value }))} style={{ fontSize: 12, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '2px 6px', width: '100%', outline: 'none', boxSizing: 'border-box' as const }} />
                       : opp.gc_name || '—'],
                     ['Location', isEditing
-                      ? <input value={editDraft.location ?? opp.location} onChange={e => setEditDraft(p => ({ ...p, location: e.target.value }))} style={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 6px', width: '100%', outline: 'none', boxSizing: 'border-box' as const }} />
+                      ? <input value={editDraft.location ?? opp.location} onChange={e => setEditDraft(p => ({ ...p, location: e.target.value }))} style={{ fontSize: 12, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '2px 6px', width: '100%', outline: 'none', boxSizing: 'border-box' as const }} />
                       : opp.location || '—'],
                     ['Bid Due', isEditing
-                      ? <input type="date" value={editDraft.bid_due_date ?? opp.bid_due_date} onChange={e => setEditDraft(p => ({ ...p, bid_due_date: e.target.value }))} style={{ fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 6px', outline: 'none' }} />
+                      ? <input type="date" value={editDraft.bid_due_date ?? opp.bid_due_date} onChange={e => setEditDraft(p => ({ ...p, bid_due_date: e.target.value }))} style={{ fontSize: 12, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '2px 6px', outline: 'none' }} />
                       : (opp.bid_due_date ? fmtDate(opp.bid_due_date) : '—')],
                     ['Received', fmtDate(opp.email_date)],
                   ].map(([label, value]) => (
@@ -305,7 +305,7 @@ export default function BidIntakePanel() {
                   <div style={{ marginTop: 10, padding: '8px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #f1f5f9' }}>
                     <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Scope (Kai extracted)</div>
                     {isEditing
-                      ? <textarea value={editDraft.scope_summary ?? opp.scope_summary} onChange={e => setEditDraft(p => ({ ...p, scope_summary: e.target.value }))} rows={2} style={{ width: '100%', fontSize: 12, border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 6px', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
+                      ? <textarea value={editDraft.scope_summary ?? opp.scope_summary} onChange={e => setEditDraft(p => ({ ...p, scope_summary: e.target.value }))} rows={2} style={{ width: '100%', fontSize: 12, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: '4px 6px', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
                       : <div style={{ fontSize: 12, color: '#334155', lineHeight: 1.5 }}>{opp.scope_summary}</div>
                     }
                   </div>

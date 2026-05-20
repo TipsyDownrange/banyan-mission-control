@@ -50,7 +50,7 @@ export default function MyProjectsWidget({ onHide, showHide }: { onHide?: () => 
                 padding: '10px 12px',
                 background: '#f8fafc',
                 borderRadius: 8,
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

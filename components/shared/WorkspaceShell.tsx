@@ -157,7 +157,7 @@ export default function WorkspaceShell({
               width: isMobile ? 320 : 280,
               flexShrink: 0,
               background: 'white',
-              borderLeft: '1px solid #e2e8f0',
+              borderLeft: '1px solid var(--color-surface-border)',
               overflowY: 'auto',
               position: isMobile ? 'fixed' : 'relative',
               right: isMobile ? 0 : undefined,
@@ -172,7 +172,7 @@ export default function WorkspaceShell({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '14px 16px',
-                  borderBottom: '1px solid #e2e8f0',
+                  borderBottom: '1px solid var(--color-surface-border)',
                 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>✦ Kai</span>
                   <button

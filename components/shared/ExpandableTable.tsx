@@ -94,7 +94,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
         fontSize: 13,
         color: 'var(--bos-color-ink-tertiary)',
         background: 'white',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-surface-border)',
         borderRadius: 12,
       }}>
         {emptyMessage}
@@ -103,7 +103,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
   }
 
   return (
-    <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white' }}>
+    <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
         <thead>
           <tr style={{
@@ -249,7 +249,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                   <tr>
                     <td colSpan={columns.length + 1} style={{
                       padding: 0,
-                      borderBottom: '2px solid #e2e8f0',
+                      borderBottom: '2px solid var(--color-surface-border)',
                       background: row.rowStyle === 'generated' ? 'rgba(255,247,237,0.25)' : 'rgba(240,253,250,0.25)',
                     }}>
                       <div style={{ padding: '12px 16px 16px 40px' }}>
@@ -266,7 +266,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
           {totals && (
             <tr style={{
               background: 'var(--color-ink-primary)',
-              borderTop: '2px solid #e2e8f0',
+              borderTop: '2px solid var(--color-surface-border)',
             }}>
               <td />
               {columns.map((col) => (

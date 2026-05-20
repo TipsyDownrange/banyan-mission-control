@@ -139,17 +139,17 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Spec Section</span>
-            <input value={csiSpec} onChange={(e) => setCsiSpec(e.target.value)} placeholder="08410" style={{ ...inputStyle, borderColor: validationErrors.csi_spec_section ? '#fecaca' : '#e2e8f0' }} />
+            <input value={csiSpec} onChange={(e) => setCsiSpec(e.target.value)} placeholder="08410" style={{ ...inputStyle, borderColor: validationErrors.csi_spec_section ? '#fecaca' : 'var(--color-surface-border)' }} />
             {validationErrors.csi_spec_section && <span style={errStyle}>{validationErrors.csi_spec_section}</span>}
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subsection</span>
-            <input value={csiSub} onChange={(e) => setCsiSub(e.target.value)} placeholder="1.3" style={{ ...inputStyle, borderColor: validationErrors.csi_subsection ? '#fecaca' : '#e2e8f0' }} />
+            <input value={csiSub} onChange={(e) => setCsiSub(e.target.value)} placeholder="1.3" style={{ ...inputStyle, borderColor: validationErrors.csi_subsection ? '#fecaca' : 'var(--color-surface-border)' }} />
             {validationErrors.csi_subsection && <span style={errStyle}>{validationErrors.csi_subsection}</span>}
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-subsection</span>
-            <input value={csiSubSub} onChange={(e) => setCsiSubSub(e.target.value.toUpperCase())} placeholder="A" style={{ ...inputStyle, borderColor: validationErrors.csi_sub_subsection ? '#fecaca' : '#e2e8f0' }} maxLength={1} />
+            <input value={csiSubSub} onChange={(e) => setCsiSubSub(e.target.value.toUpperCase())} placeholder="A" style={{ ...inputStyle, borderColor: validationErrors.csi_sub_subsection ? '#fecaca' : 'var(--color-surface-border)' }} maxLength={1} />
             {validationErrors.csi_sub_subsection && <span style={errStyle}>{validationErrors.csi_sub_subsection}</span>}
           </label>
         </div>
@@ -194,7 +194,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy}
-            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: '#475569', fontWeight: 700, fontSize: 12, cursor: busy ? 'default' : 'pointer' }}>
             Cancel
           </button>
           <button type="submit" disabled={busy || Object.keys(validationErrors).length > 0}
@@ -208,7 +208,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+  padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-surface-border)',
   fontSize: 13, outline: 'none', background: 'white', fontFamily: 'inherit',
 };
 

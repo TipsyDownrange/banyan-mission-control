@@ -41,7 +41,7 @@ export default function CustomerPipelinePanel() {
         />
 
         {showCapture && (
-          <div style={{ padding: 16, borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+          <div style={{ padding: 16, borderTop: '1px solid var(--color-surface-border)', background: '#f8fafc' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>Log a new inquiry</h3>
               <button onClick={() => setShowCapture(false)} aria-label="Close capture form">×</button>

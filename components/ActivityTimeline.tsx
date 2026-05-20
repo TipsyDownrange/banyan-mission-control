@@ -136,7 +136,7 @@ type ActivityEventRenderBranchProps = {
 function Bg1RenderBranch({ event, description }: ActivityEventRenderBranchProps): React.ReactElement {
   const summary = description || event.notes || 'No additional event detail recorded.';
   return (
-    <div style={{ padding: '10px 12px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
+    <div style={{ padding: '10px 12px', borderRadius: 10, background: '#f8fafc', border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
       {summary}
     </div>
   );
@@ -400,7 +400,7 @@ function NoteFileChip({ payload }: { payload: NoteFilePayload }) {
     padding: '7px 10px',
     borderRadius: 8,
     background: '#f8fafc',
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--color-surface-border)',
     color: href ? '#0369a1' : '#334155',
     fontSize: 12,
     fontWeight: 700,
@@ -659,7 +659,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               <span style={{
                 fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)',
                 background: '#f1f5f9', padding: '2px 8px', borderRadius: 999,
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-surface-border)',
               }}>
                 📍 {locationPill}
               </span>
@@ -734,7 +734,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
               height: 28,
               width: showFieldIssueGeneratePdf ? 'auto' : 28,
               padding: showFieldIssueGeneratePdf ? '0 10px' : 0,
-              borderRadius: 7, border: '1px solid #e2e8f0', background: 'white',
+              borderRadius: 7, border: '1px solid var(--color-surface-border)', background: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: pdfState==='generating'?'default':'pointer',
               fontSize: 13, flexShrink: 0, color: pdfState==='done' ? '#15803d' : pdfState==='error' ? '#dc2626' : 'var(--bos-color-ink-disabled)',
               fontWeight: showFieldIssueGeneratePdf ? 800 : undefined,
@@ -952,7 +952,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                     <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 4 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w600`} alt="Measurement photo"
-                        style={{ width: '100%', maxWidth: 400, borderRadius: 10, border: '1px solid #e2e8f0', display: 'block' }}
+                        style={{ width: '100%', maxWidth: 400, borderRadius: 10, border: '1px solid var(--color-surface-border)', display: 'block' }}
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </a>
                   )}
@@ -981,7 +981,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                 <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w400`} alt="Step photo"
-                    style={{ width: '100%', maxWidth: 300, borderRadius: 9, border: '1px solid #e2e8f0', display: 'block' }}
+                    style={{ width: '100%', maxWidth: 300, borderRadius: 9, border: '1px solid var(--color-surface-border)', display: 'block' }}
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </a>
               )}
@@ -1108,7 +1108,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                     <img
                       src={`https://drive.google.com/thumbnail?id=${signatureRef}&sz=w300`}
                       alt="GC Signature"
-                      style={{ maxWidth: 200, maxHeight: 80, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', display: 'block', objectFit: 'contain' }}
+                      style={{ maxWidth: 200, maxHeight: 80, borderRadius: 6, border: '1px solid var(--color-surface-border)', background: 'white', display: 'block', objectFit: 'contain' }}
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   </a>
@@ -1278,7 +1278,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                     <a href={`https://drive.google.com/file/d/${event.evidence_ref}/view`} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 4 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`https://drive.google.com/thumbnail?id=${event.evidence_ref}&sz=w600`} alt="Site visit photo"
-                        style={{ width: '100%', maxWidth: 400, borderRadius: 10, border: '1px solid #e2e8f0', display: 'block' }}
+                        style={{ width: '100%', maxWidth: 400, borderRadius: 10, border: '1px solid var(--color-surface-border)', display: 'block' }}
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </a>
                   )}
@@ -1398,7 +1398,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             ? { label: 'PARTIAL', bg: '#fffbeb', color: '#d97706', border: 'rgba(217,119,6,0.2)' }
             : qaStatus === 'FAIL'
             ? { label: 'FAIL',    bg: '#fef2f2', color: '#dc2626', border: 'rgba(220,38,38,0.2)' }
-            : { label: qaStatus,  bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
+            : { label: qaStatus,  bg: '#f1f5f9', color: '#475569', border: 'var(--color-surface-border)' };
           const isDefenseMode = qaStatus === 'FAIL' || qaStatus === 'PARTIAL';
           const checkLabels: Record<string, string> = {
             glass_seated:         'Glass seated correctly',
@@ -1430,7 +1430,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   <img
                     src={`https://drive.google.com/thumbnail?id=${lightboxPhotos[0].fileId}&sz=w300`}
                     alt="QA photo"
-                    style={{ width: isDefenseMode ? 200 : 140, height: isDefenseMode ? 130 : 90, objectFit: 'cover', borderRadius: 8, border: isDefenseMode ? '2px solid #dc2626' : '1px solid #e2e8f0', display: 'block' }}
+                    style={{ width: isDefenseMode ? 200 : 140, height: isDefenseMode ? 130 : 90, objectFit: 'cover', borderRadius: 8, border: isDefenseMode ? '2px solid #dc2626' : '1px solid var(--color-surface-border)', display: 'block' }}
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 </button>
@@ -1500,7 +1500,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             alt="Field photo"
             style={{
               width: 140, height: 90, objectFit: 'cover',
-              borderRadius: 8, border: '1px solid #e2e8f0',
+              borderRadius: 8, border: '1px solid var(--color-surface-border)',
               display: 'block',
             }}
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -1540,7 +1540,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
             <img
               src={`https://drive.google.com/thumbnail?id=${lightboxPhotos[lightboxIndex].fileId}&sz=w800`}
               alt={lightboxPhotos[lightboxIndex].filename}
-              style={{ width: '100%', maxHeight: 420, objectFit: 'contain', borderRadius: 8, display: 'block', border: '1px solid #e2e8f0' }}
+              style={{ width: '100%', maxHeight: 420, objectFit: 'contain', borderRadius: 8, display: 'block', border: '1px solid var(--color-surface-border)' }}
               onError={e => { (e.target as HTMLImageElement).alt = 'Image unavailable'; }}
             />
 
@@ -1558,7 +1558,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   onClick={() => setLightboxIndex(i => Math.max(0, i - 1))}
                   disabled={lightboxIndex === 0}
                   style={{
-                    padding: '6px 16px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer',
+                    padding: '6px 16px', borderRadius: 8, border: '1px solid var(--color-surface-border)', cursor: 'pointer',
                     opacity: lightboxIndex === 0 ? 0.35 : 1, fontWeight: 600,
                   }}
                 >← Prev</button>
@@ -1567,7 +1567,7 @@ export function EventCard({ event, onResolved, userMap }: { event: FieldEvent; o
                   onClick={() => setLightboxIndex(i => Math.min(lightboxPhotos.length - 1, i + 1))}
                   disabled={lightboxIndex === lightboxPhotos.length - 1}
                   style={{
-                    padding: '6px 16px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer',
+                    padding: '6px 16px', borderRadius: 8, border: '1px solid var(--color-surface-border)', cursor: 'pointer',
                     opacity: lightboxIndex === lightboxPhotos.length - 1 ? 0.35 : 1, fontWeight: 600,
                   }}
                 >Next →</button>
@@ -1698,14 +1698,14 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={() => setSelectedTypes([])} style={{
             padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer',
-            border: selectedTypes.length === 0 ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid #e2e8f0',
+            border: selectedTypes.length === 0 ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid var(--color-surface-border)',
             background: selectedTypes.length === 0 ? 'rgba(15,118,110,0.08)' : 'white',
             color: selectedTypes.length === 0 ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
           }}>All ({displayEvents.length})</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ACTIVITY_TIMELINE_TYPE_GROUPS.map(group => (
-            <div key={group.label} style={{ border: '1px solid #e2e8f0', borderRadius: 14, padding: 8, background: 'white' }}>
+            <div key={group.label} style={{ border: '1px solid var(--color-surface-border)', borderRadius: 14, padding: 8, background: 'white' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: openGroups[group.label] === true ? 8 : 0 }}>
                 <button onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: prev[group.label] !== true }))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 900, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', minWidth: 112, textAlign: 'left' }}>
                   {openGroups[group.label] === true ? '▾' : '▸'} {group.label}
@@ -1722,7 +1722,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
                 return (
                   <button key={p.key} onClick={() => toggleType(p.key)} style={{
                     padding: '6px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                    border: active ? `1.5px solid ${cfg?.color || 'var(--bos-color-brand-primary-deep)'}` : '1.5px solid #e2e8f0',
+                    border: active ? `1.5px solid ${cfg?.color || 'var(--bos-color-brand-primary-deep)'}` : '1.5px solid var(--color-surface-border)',
                     background: active ? `${cfg?.color || 'var(--bos-color-brand-primary-deep)'}12` : 'white',
                     color: active ? (cfg?.color || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
                     transition: 'all 0.1s',
@@ -1754,7 +1754,7 @@ export default function ActivityTimeline({ kID }: ActivityTimelineProps) {
             return (
               <button key={p.key} onClick={() => setDateFilter(p.key)} style={{
                 padding: '5px 12px', borderRadius: 999, fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid #e2e8f0',
+                border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid var(--color-surface-border)',
                 background: active ? 'rgba(15,118,110,0.08)' : 'white',
                 color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
               }}>

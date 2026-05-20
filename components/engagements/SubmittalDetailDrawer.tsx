@@ -121,7 +121,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
         ) : (
           <div style={{ padding: '20px 24px' }}>
-            <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+            <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Status</h3>
               <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)' }}>{s.status.replace(/_/g, ' ')}</div>
               <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
@@ -134,7 +134,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
               </div>
             </section>
 
-            <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+            <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Details</h3>
               <div style={{ fontSize: 13, color: 'var(--color-ink-primary)', marginBottom: 6 }}>{s.description || '(no description)'}</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Type {s.submittal_type} · CSI {s.csi_spec_section}-{s.csi_subsection}-{s.csi_sub_subsection}</div>
@@ -144,7 +144,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
               )}
             </section>
 
-            <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+            <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Lifecycle</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {(s.status === 'REQUIRED' || s.status === 'IN_PROGRESS') && (
@@ -176,24 +176,24 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
               </div>
             </section>
 
-            <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+            <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Documents</h3>
               <DocList label="Spec" ids={s.spec_document_ref ? [s.spec_document_ref] : []} />
               <DocList label="Submitted" ids={s.submitted_documents} />
               <DocList label="Markup / Review" ids={s.review_comments_documents} />
               <DocList label="Approved" ids={s.approved_documents} />
-              <div style={{ borderTop: '1px dashed #e2e8f0', marginTop: 12, paddingTop: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
+              <div style={{ borderTop: '1px dashed var(--color-surface-border)', marginTop: 12, paddingTop: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
                 <select value={uploadCat} onChange={(e) => setUploadCat(e.target.value as typeof uploadCat)} style={selectStyle}>
                   <option value="submitted">Submitted</option>
                   <option value="review">Markup</option>
                   <option value="approved">Approved</option>
                 </select>
-                <input value={uploadDriveId} onChange={(e) => setUploadDriveId(e.target.value)} placeholder="Drive file ID" style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
+                <input value={uploadDriveId} onChange={(e) => setUploadDriveId(e.target.value)} placeholder="Drive file ID" style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', fontSize: 12 }} />
                 <button type="button" disabled={busy} onClick={upload} style={actionBtn('var(--bos-color-brand-primary-deep)')}>Attach</button>
               </div>
             </section>
 
-            <section style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+            <section style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 16, marginBottom: 14 }}>
               <LinkedDocumentsPanel
                 linkedEntityType="SUBMITTAL"
                 linkedEntityId={s.submittal_id}
@@ -228,7 +228,7 @@ function DocList({ label, ids }: { label: string; ids: string[] }) {
 }
 
 const selectStyle: React.CSSProperties = {
-  padding: '4px 6px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11, background: 'white',
+  padding: '4px 6px', borderRadius: 6, border: '1px solid var(--color-surface-border)', fontSize: 11, background: 'white',
 };
 
 const actionBtn = (color: string): React.CSSProperties => ({

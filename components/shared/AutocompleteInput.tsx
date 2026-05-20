@@ -66,7 +66,7 @@ export default function AutocompleteInput({
       {open && filtered.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
-          background: 'white', borderRadius: 10, border: '1px solid #e2e8f0',
+          background: 'white', borderRadius: 10, border: '1px solid var(--color-surface-border)',
           boxShadow: '0 8px 24px rgba(15,23,42,0.12)', overflow: 'hidden', marginTop: 4,
         }}>
           {filtered.map((c, i) => (

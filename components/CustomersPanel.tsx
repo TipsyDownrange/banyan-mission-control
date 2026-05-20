@@ -107,15 +107,15 @@ export default function CustomersPanel() {
       {/* Tabs + Search */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         {(['gc','gc_people','customers'] as const).map(k => (
-          <button key={k} onClick={() => { setTab(k); setSearch(''); setSearchInput(''); setEditing(null); setExpanded(null); }} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: tab === k ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: tab === k ? 'rgba(240,253,250,0.96)' : 'white', color: tab === k ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+          <button key={k} onClick={() => { setTab(k); setSearch(''); setSearchInput(''); setEditing(null); setExpanded(null); }} style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: tab === k ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: tab === k ? 'rgba(240,253,250,0.96)' : 'white', color: tab === k ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
             {k === 'gc' ? 'GC Contacts' : k === 'gc_people' ? 'All Contacts' : 'Service Customers'}
           </button>
         ))}
         <div style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
           <input value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && setSearch(searchInput)}
-            placeholder="Search name, contact, email, island..." style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '8px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }} />
+            placeholder="Search name, contact, email, island..." style={{ flex: 1, background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: '8px 14px', fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none' }} />
           <button onClick={() => setSearch(searchInput)} style={{ padding: '8px 16px', borderRadius: 12, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Search</button>
-          {search && <button onClick={() => { setSearch(''); setSearchInput(''); }} style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Clear</button>}
+          {search && <button onClick={() => { setSearch(''); setSearchInput(''); }} style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Clear</button>}
         </div>
       </div>
 
@@ -128,19 +128,19 @@ export default function CustomersPanel() {
               <div key={field}>
                 {FL(field)}
                 <input value={newDraft[field] || ''} onChange={e => setNewDraft(p => ({ ...p, [field]: e.target.value }))}
-                  style={{ ...INP, background: 'white', border: '1px solid #e2e8f0' }} placeholder={field} />
+                  style={{ ...INP, background: 'white', border: '1px solid var(--color-surface-border)' }} placeholder={field} />
               </div>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => { setShowNew(false); setNewDraft({}); }} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => { setShowNew(false); setNewDraft({}); }} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
             <button onClick={addNew} disabled={saving} style={{ padding: '8px 20px', borderRadius: 10, background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Save'}</button>
           </div>
         </div>
       )}
 
       {loading && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'white', borderRadius: 20, padding: 48, textAlign: 'center', border: '1px solid var(--color-surface-border)' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading...</div>
@@ -177,7 +177,7 @@ export default function CustomersPanel() {
                       ) : (
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button onClick={() => saveEdit(r)} disabled={saving} style={{ padding: '4px 8px', borderRadius: 8, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{saving ? '...' : 'Save'}</button>
-                          <button onClick={() => setEditing(null)} style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>×</button>
+                          <button onClick={() => setEditing(null)} style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-tertiary)', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>×</button>
                         </div>
                       )}
                     </div>

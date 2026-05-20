@@ -52,7 +52,7 @@ function ProjectCard({ project, submittals, cos, install, onClick }: {
 
   return (
     <button onClick={onClick} style={{
-      background: 'white', borderRadius: 18, border: '1.5px solid #e2e8f0',
+      background: 'white', borderRadius: 18, border: '1.5px solid var(--color-surface-border)',
       boxShadow: '0 2px 8px rgba(15,23,42,0.04)', padding: 0, cursor: 'pointer',
       textAlign: 'left', width: '100%', overflow: 'hidden', transition: 'box-shadow 0.15s',
     }}>
@@ -287,7 +287,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {cos.map((c, i) => (
-                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div key={i} style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink-primary)' }}>{c.title || `CO #${c.co_number}`}</div>
                             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -340,7 +340,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
               {activeTab === 'warranty' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{
-                    background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
+                    background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)',
                     padding: '14px 18px', display: 'flex', justifyContent: 'space-between',
                     alignItems: 'center', gap: 12,
                   }}>
@@ -366,7 +366,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                   </div>
                   <div style={{
                     padding: '16px 20px', borderRadius: 12, background: '#f8fafc',
-                    border: '1px solid #e2e8f0', color: 'var(--bos-color-ink-disabled)', fontSize: 13,
+                    border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 13,
                   }}>
                     Warranty record + claim listing for this engagement will populate once the
                     listing endpoint ships. Use <strong>+ New warranty claim</strong> above to
@@ -406,7 +406,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
                 <button
                   onClick={() => setShowNewClaimModal(false)}
                   style={{
-                    background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 8,
+                    background: 'transparent', border: '1px solid var(--color-surface-border)', borderRadius: 8,
                     padding: '6px 12px', fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)',
                     cursor: 'pointer',
                   }}
@@ -490,11 +490,11 @@ export default function ProjectsPanel({ onNavigate }: Props) {
           </h1>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setShowHistorical(false)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: !showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: !showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: !showHistorical ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: !showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: !showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: !showHistorical ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               Active
             </button>
             <button onClick={() => setShowHistorical(true)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0', background: showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: showHistorical ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: showHistorical ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: showHistorical ? 'rgba(240,253,250,0.96)' : 'white', color: showHistorical ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               Historical
             </button>
           </div>
@@ -507,19 +507,19 @@ export default function ProjectsPanel({ onNavigate }: Props) {
           <button key={isl} onClick={() => setFilterIsland(isl)}
             style={{
               padding: '8px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              border: filterIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1.5px solid #e2e8f0',
+              border: filterIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1.5px solid var(--color-surface-border)',
               background: filterIsland === isl ? `${ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)'}10` : 'white',
               color: filterIsland === isl ? (ISLAND_COLOR[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)',
             }}>
             {isl} {isl !== 'All' && <span style={{ fontWeight: 800 }}>({byIsland[isl] || 0})</span>}
           </button>
         ))}
-        <div style={{ width: 1, background: '#e2e8f0', margin: '0 4px' }} />
+        <div style={{ width: 1, background: 'var(--color-surface-border)', margin: '0 4px' }} />
         {pms.filter(p => p !== 'All' || filterPM !== 'All').map(pm => (
           <button key={pm} onClick={() => setFilterPM(pm)}
             style={{
               padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              border: filterPM === pm ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid #e2e8f0',
+              border: filterPM === pm ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1.5px solid var(--color-surface-border)',
               background: filterPM === pm ? 'rgba(15,118,110,0.08)' : 'white',
               color: filterPM === pm ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
             }}>
@@ -532,7 +532,7 @@ export default function ProjectsPanel({ onNavigate }: Props) {
       <input
         type="text" placeholder="Search projects..." value={search}
         onChange={e => setSearch(e.target.value)}
-        style={{ width: '100%', padding: '12px 18px', borderRadius: 14, border: '1.5px solid #e2e8f0', fontSize: 14, marginBottom: 16, outline: 'none', background: 'white', boxSizing: 'border-box' }}
+        style={{ width: '100%', padding: '12px 18px', borderRadius: 14, border: '1.5px solid var(--color-surface-border)', fontSize: 14, marginBottom: 16, outline: 'none', background: 'white', boxSizing: 'border-box' }}
       />
 
       <section style={{ marginBottom: 18, padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 8px 22px rgba(15,23,42,0.04)' }}>

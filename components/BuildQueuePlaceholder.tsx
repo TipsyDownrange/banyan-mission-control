@@ -18,7 +18,7 @@ export default function BuildQueuePlaceholder({
     : buildQueueStatus;
 
   return (
-    <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: '60px 40px', textAlign: 'center' }}>
+    <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--color-surface-border)', padding: '60px 40px', textAlign: 'center' }}>
       {icon && <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>}
       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 8 }}>{surfaceName} — In Build Queue</div>
       {description && (

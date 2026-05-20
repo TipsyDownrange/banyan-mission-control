@@ -103,7 +103,7 @@ export default function TMTicketsTab({ kID }: { kID: string }) {
         data-testid="tm-tickets-no-engagement"
         style={{
           padding: '48px 28px', textAlign: 'center', background: 'white',
-          borderRadius: 18, border: '1px solid #e2e8f0',
+          borderRadius: 18, border: '1px solid var(--color-surface-border)',
         }}
       >
         <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-ink-primary)', marginBottom: 10 }}>

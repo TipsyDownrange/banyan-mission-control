@@ -334,7 +334,7 @@ export default function FreightCalendarManager() {
         <div
           data-testid="freight-empty"
           style={{
-            padding: '40px 24px', borderRadius: 14, border: '1px solid #e2e8f0',
+            padding: '40px 24px', borderRadius: 14, border: '1px solid var(--color-surface-border)',
             background: 'white', textAlign: 'center',
           }}
         >
@@ -351,7 +351,7 @@ export default function FreightCalendarManager() {
 
       {state.kind === 'ready' && carrierFilteredRows.length > 0 && (
         <div style={{
-          background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden',
+          background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', overflow: 'hidden',
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

@@ -565,7 +565,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => toggleCrew(m.name)} style={{ display: 'none' }} />
-                      <span style={{ fontSize: 13, color: checked ? '#e2e8f0' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>
+                      <span style={{ fontSize: 13, color: checked ? 'var(--color-surface-border)' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>
                         {m.name}
                       </span>
                     </label>
@@ -838,7 +838,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => toggleCrew(m.name)} style={{ display: 'none' }} />
-                      <span style={{ fontSize: 13, color: checked ? '#e2e8f0' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{m.name}</span>
+                      <span style={{ fontSize: 13, color: checked ? 'var(--color-surface-border)' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{m.name}</span>
                     </label>
                   );
                 })}
@@ -875,7 +875,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => setSelectedStepIds(prev => checked ? prev.filter(id => id !== step.install_step_id) : [...prev, step.install_step_id])} style={{ display: 'none' }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: checked ? '#e2e8f0' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{step.step_name}</div>
+                        <div style={{ fontSize: 13, color: checked ? 'var(--color-surface-border)' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{step.step_name}</div>
                         {step.allotted_hours > 0 && <div style={{ fontSize: 11, color: '#475569' }}>{step.allotted_hours}h allotted</div>}
                       </div>
                     </label>
@@ -1032,7 +1032,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
               return (
                 <tr key={job.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
                   <td style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', whiteSpace: 'nowrap' }}>{job.kID}</td>
-                  <td style={{ padding: '6px 10px', fontSize: 12, color: '#e2e8f0', maxWidth: 200 }}>
+                  <td style={{ padding: '6px 10px', fontSize: 12, color: 'var(--color-surface-border)', maxWidth: 200 }}>
                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.name}</div>
                     {job.customer && <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.customer}</div>}
                   </td>
@@ -1359,7 +1359,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                               {fmtTime(slot.start_time)}{slot.end_time ? ` – ${fmtTime(slot.end_time)}` : ''}
                             </div>
                           )}
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#e2e8f0', lineHeight: 1.2, overflow: 'hidden', flex: 1 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-surface-border)', lineHeight: 1.2, overflow: 'hidden', flex: 1 }}>
                             {slot.project_name.split('—')[1]?.trim() || slot.work_type || slot.project_name.slice(0, 24)}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
@@ -1413,7 +1413,7 @@ function CrewAvailability({ crew, weekDays }: { crew: CrewMember[]; weekDays: st
         <tbody>
           {crew.map(member => (
             <tr key={member.user_id || member.name}>
-              <td style={{ padding: '3px 10px', fontSize: 12, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap' }}>{member.name}</td>
+              <td style={{ padding: '3px 10px', fontSize: 12, fontWeight: 600, color: 'var(--color-surface-border)', whiteSpace: 'nowrap' }}>{member.name}</td>
               <td style={{ padding: '3px 8px', fontSize: 10, color: 'var(--bos-color-ink-disabled)', whiteSpace: 'nowrap' }}>{member.island || '—'}</td>
               {weekDays.map(date => {
                 const day = member.booked_days.find(d => d.date === date);
@@ -1458,11 +1458,11 @@ function ManpowerForecast({ weeks }: { weeks: ForecastWeek[] }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
               <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>Needed</span>
-              <span style={{ color: '#e2e8f0', fontWeight: 700 }}>{wk.needed}</span>
+              <span style={{ color: 'var(--color-surface-border)', fontWeight: 700 }}>{wk.needed}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
               <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>Available</span>
-              <span style={{ color: '#e2e8f0', fontWeight: 700 }}>{wk.available}</span>
+              <span style={{ color: 'var(--color-surface-border)', fontWeight: 700 }}>{wk.available}</span>
             </div>
             <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1484,7 +1484,7 @@ function SectionHeader({ icon, title, count, accent }: { icon: string; title: st
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       <span style={{ fontSize: 16 }}>{icon}</span>
-      <span style={{ fontSize: 13, fontWeight: 800, color: accent || '#e2e8f0', letterSpacing: '0.02em' }}>{title}</span>
+      <span style={{ fontSize: 13, fontWeight: 800, color: accent || 'var(--color-surface-border)', letterSpacing: '0.02em' }}>{title}</span>
       {count !== undefined && (
         <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: count > 0 ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.06)', color: count > 0 ? '#fca5a5' : 'var(--bos-color-ink-disabled)', border: `1px solid ${count > 0 ? 'rgba(220,38,38,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
           {count}

@@ -92,7 +92,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
   const projects = data?.project_count ?? 0;
 
   return (
-    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: 18 }}>
+    <div style={{ background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 14, padding: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>My Open Actions</div>
@@ -108,7 +108,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
           {sorted.map((it) => {
             const overdue = isOverdue(it);
             return (
-              <div key={it.action_item_id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 110px 110px', gap: 10, alignItems: 'center', padding: '10px 12px', background: overdue ? '#fef2f2' : '#f8fafc', borderRadius: 10, border: overdue ? '1px solid #fca5a5' : '1px solid #e2e8f0' }}>
+              <div key={it.action_item_id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 110px 110px', gap: 10, alignItems: 'center', padding: '10px 12px', background: overdue ? '#fef2f2' : '#f8fafc', borderRadius: 10, border: overdue ? '1px solid #fca5a5' : '1px solid var(--color-surface-border)' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.kid ?? '—'}</div>
                 <div style={{ minWidth: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
                 <div style={{ fontSize: 10, fontWeight: 800, color: '#475569' }}>{it.priority}</div>

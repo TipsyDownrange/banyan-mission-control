@@ -225,7 +225,7 @@ const sectionTitle: React.CSSProperties = {
   fontSize: 12, fontWeight: 800, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px',
 };
 const card: React.CSSProperties = {
-  background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px',
+  background: 'white', border: '1px solid var(--color-surface-border)', borderRadius: 10, padding: '10px 12px',
 };
 const kv: React.CSSProperties = {
   display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, color: 'var(--color-ink-primary)',

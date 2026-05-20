@@ -43,7 +43,7 @@ function avatarColor(dept: string, island: string): string {
 
 const INP: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 10,
-  border: '1px solid #e2e8f0', background: 'white',
+  border: '1px solid var(--color-surface-border)', background: 'white',
   fontSize: 13, color: 'var(--color-ink-primary)', outline: 'none', boxSizing: 'border-box',
 };
 const LBL: React.CSSProperties = {
@@ -132,7 +132,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
       }}>
         {/* Header */}
         <div style={{ padding: '14px 20px 12px', background: 'white', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 36, height: 4, borderRadius: 2, background: '#e2e8f0' }} />
+          <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 36, height: 4, borderRadius: 2, background: 'var(--color-surface-border)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: 'white', flexShrink: 0 }}>
               {initials(draft.name || member.name)}
@@ -151,7 +151,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={requestClose}
               disabled={saving}
-              style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}
+              style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 800, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}
             >
               Cancel
             </button>
@@ -159,11 +159,11 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
+              style={{ padding: '7px 16px', borderRadius: 10, background: (!dirty || saving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 12, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 2px 8px rgba(15,118,110,0.3)' }}
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
-            <button onClick={requestClose} disabled={saving} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 18, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: saving ? 0.6 : 1 }}>×</button>
+            <button onClick={requestClose} disabled={saving} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 18, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: saving ? 0.6 : 1 }}>×</button>
           </div>
         </div>
 
@@ -174,7 +174,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
             {/* LEFT */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 18 }}>
                 <div style={SEC}>Position</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
@@ -199,7 +199,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                               update('department', next[0] || '');
                             }} style={{
                               padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer',
-                              border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid #e2e8f0',
+                              border: active ? '1.5px solid var(--bos-color-brand-primary-deep)' : '1px solid var(--color-surface-border)',
                               background: active ? '#f0fdfa' : 'white',
                               color: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-tertiary)',
                             }}>{d}</button>
@@ -251,7 +251,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                 </div>
               </div>
 
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 18 }}>
                 <div style={SEC}>Notes (Union, Certs, etc.)</div>
                 <textarea rows={4} style={{ ...INP, resize: 'none' }} value={draft.notes || ''} onChange={e => update('notes', e.target.value)} placeholder="Union status, certifications, anything else…" />
               </div>
@@ -260,7 +260,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
             {/* RIGHT */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 18 }}>
                 <div style={SEC}>Contact</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
@@ -278,7 +278,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
                 </div>
               </div>
 
-              <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: 18 }}>
+              <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 18 }}>
                 <div style={SEC}>Address & Emergency</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div>
@@ -302,7 +302,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
         </div>
 
         {/* Explicit save/discard gate — profile edits stay local until Save. */}
-        <div style={{ flexShrink: 0, padding: '12px 20px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ flexShrink: 0, padding: '12px 20px', background: 'white', borderTop: '1px solid var(--color-surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
             {saveError && (
               <span style={{ marginRight: 'auto', fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{saveError}</span>
             )}
@@ -315,7 +315,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={discardDraft}
               disabled={!dirty || saving}
-              style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: (!dirty || saving) ? 'default' : 'pointer', opacity: (!dirty || saving) ? 0.5 : 1 }}
+              style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: (!dirty || saving) ? 'default' : 'pointer', opacity: (!dirty || saving) ? 0.5 : 1 }}
             >
               Discard Changes
             </button>
@@ -323,7 +323,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? '#e2e8f0' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
+              style={{ padding: '10px 24px', borderRadius: 10, background: (!dirty || saving) ? 'var(--color-surface-border)' : 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)', color: (!dirty || saving) ? 'var(--bos-color-ink-tertiary)' : 'white', border: 'none', fontSize: 13, fontWeight: 800, cursor: (!dirty || saving) ? 'default' : 'pointer', boxShadow: (!dirty || saving) ? 'none' : '0 3px 10px rgba(15,118,110,0.3)' }}
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -365,7 +365,7 @@ function CrewCard({ member, onClick, travel }: {
   return (
     <div onClick={onClick} style={{
       background: 'white', borderRadius: 14,
-      border: isTodayTravel ? '1.5px solid rgba(3,105,161,0.3)' : '1px solid #e2e8f0',
+      border: isTodayTravel ? '1.5px solid rgba(3,105,161,0.3)' : '1px solid var(--color-surface-border)',
       padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
       cursor: 'pointer', transition: 'box-shadow 0.1s',
       boxShadow: isTodayTravel ? '0 4px 16px rgba(3,105,161,0.1)' : '0 1px 4px rgba(15,23,42,0.04)',
@@ -441,36 +441,36 @@ function AddCrewModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: 
       <div style={{ background:'white', borderRadius:18, padding:28, width:'100%', maxWidth:520, boxShadow:'0 24px 64px rgba(0,0,0,0.18)', maxHeight:'90vh', overflowY:'auto' }} onClick={e=>e.stopPropagation()}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <h2 style={{ fontSize:18, fontWeight:800, color:'var(--color-ink-primary)', margin:0 }}>Add Crew Member</h2>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:18, cursor:'pointer' }}>×</button>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:'1px solid var(--color-surface-border)', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:18, cursor:'pointer' }}>×</button>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>First Name *</label>
-            <input style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.first_name} onChange={e=>u('first_name',e.target.value)} autoFocus /></div>
+            <input style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.first_name} onChange={e=>u('first_name',e.target.value)} autoFocus /></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Last Name *</label>
-            <input style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.last_name} onChange={e=>u('last_name',e.target.value)} /></div>
+            <input style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.last_name} onChange={e=>u('last_name',e.target.value)} /></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Role</label>
-            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.role} onChange={e=>u('role',e.target.value)}>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.role} onChange={e=>u('role',e.target.value)}>
               {['Superintendent','Journeyman/Glazier','Apprentice','Laborer','PM','Senior PM','Estimator','Admin','Owner'].map(r=><option key={r} value={r}>{r}</option>)}
             </select></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Department</label>
-            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.department} onChange={e=>u('department',e.target.value)}>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.department} onChange={e=>u('department',e.target.value)}>
               {['Field','PM','Estimating','Service','Admin','Executive'].map(d=><option key={d} value={d}>{d}</option>)}
             </select></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Email</label>
-            <input type="email" style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.email} onChange={e=>u('email',e.target.value)} /></div>
+            <input type="email" style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.email} onChange={e=>u('email',e.target.value)} /></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Phone</label>
-            <input type="tel" style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.phone} onChange={e=>u('phone',e.target.value)} onBlur={e=>u('phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" /></div>
+            <input type="tel" style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const }} value={form.phone} onChange={e=>u('phone',e.target.value)} onBlur={e=>u('phone', normalizePhone(e.target.value))} placeholder="(808) 555-0199" /></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Island</label>
-            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.island} onChange={e=>u('island',e.target.value)}>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.island} onChange={e=>u('island',e.target.value)}>
               {['Maui','Oahu','Kauai','Hawaii','Molokai','Lanai'].map(i=><option key={i} value={i}>{i}</option>)}
             </select></div>
           <div><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Classification</label>
-            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.classification} onChange={e=>u('classification',e.target.value)}>
+            <select style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const, background:'white' }} value={form.classification} onChange={e=>u('classification',e.target.value)}>
               {['Journeyman','Apprentice','Superintendent','Foreman','Laborer','PM','Estimator','Admin'].map(c=><option key={c} value={c}>{c}</option>)}
             </select></div>
         </div>
         <div style={{ marginTop:12 }}><label style={{ fontSize:9, fontWeight:800, textTransform:'uppercase' as const, color:'var(--bos-color-ink-tertiary)', letterSpacing:'0.06em', display:'block', marginBottom:4 }}>Home Address</label>
-          <PlacesAutocomplete value={form.address} onChange={v=>u('address',v)} onSelect={place=>u('address', place.formatted_address||'')} style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid #e2e8f0', outline:'none', width:'100%', boxSizing:'border-box' as const }} placeholder="Street address" /></div>
+          <PlacesAutocomplete value={form.address} onChange={v=>u('address',v)} onSelect={place=>u('address', place.formatted_address||'')} style={{ fontSize:13, padding:'8px 12px', borderRadius:9, border:'1px solid var(--color-surface-border)', outline:'none', width:'100%', boxSizing:'border-box' as const }} placeholder="Street address" /></div>
         <button disabled={!canSave || saving} onClick={async () => {
           setSaving(true);
           try {
@@ -482,7 +482,7 @@ function AddCrewModal({ onClose, onAdded }: { onClose: () => void; onAdded: (m: 
             }
           } catch(err) { console.error('[AddCrewModal] save', err); }
           setSaving(false);
-        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : '#e2e8f0', color: canSave ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
+        }} style={{ marginTop:20, width:'100%', padding:'10px', borderRadius:10, border:'none', background: canSave ? 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),#14b8a6)' : 'var(--color-surface-border)', color: canSave ? 'white' : 'var(--bos-color-ink-tertiary)', fontSize:14, fontWeight:800, cursor: canSave ? 'pointer' : 'default' }}>
           {saving ? 'Saving…' : 'Add Crew Member'}
         </button>
       </div>
@@ -609,12 +609,12 @@ export default function CrewPanel() {
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search name, role, email…"
-          style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontSize: 13, outline: 'none', minWidth: 220 }}
+          style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'white', fontSize: 13, outline: 'none', minWidth: 220 }}
         />
         <div style={{ display: 'flex', gap: 4 }}>
           {islands.map(isl => (
             <button key={isl} onClick={() => setFilterIsland(isl)}
-              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterIsland === isl ? `1px solid ${ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid #e2e8f0', background: filterIsland === isl ? `${ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: filterIsland === isl ? (ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)' }}>
+              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterIsland === isl ? `1px solid ${ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)'}` : '1px solid var(--color-surface-border)', background: filterIsland === isl ? `${ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)'}12` : 'white', color: filterIsland === isl ? (ISLAND_COLORS[isl] || 'var(--bos-color-brand-primary-deep)') : 'var(--bos-color-ink-disabled)' }}>
               {isl}
             </button>
           ))}
@@ -622,7 +622,7 @@ export default function CrewPanel() {
         <div style={{ display: 'flex', gap: 4 }}>
           {depts.map(d => (
             <button key={d} onClick={() => setFilterDept(d)}
-              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterDept === d ? '1px solid rgba(15,118,110,0.4)' : '1px solid #e2e8f0', background: filterDept === d ? 'rgba(15,118,110,0.08)' : 'white', color: filterDept === d ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)' }}>
+              style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, cursor: 'pointer', border: filterDept === d ? '1px solid rgba(15,118,110,0.4)' : '1px solid var(--color-surface-border)', background: filterDept === d ? 'rgba(15,118,110,0.08)' : 'white', color: filterDept === d ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)' }}>
               {d}
             </button>
           ))}

@@ -164,7 +164,7 @@ export default function KaiPanel() {
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border"
             style={{
               background: voiceMode ? 'rgba(15,118,110,0.1)' : 'white',
-              borderColor: voiceMode ? 'var(--bos-color-brand-primary-deep)' : '#e2e8f0',
+              borderColor: voiceMode ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
               color: voiceMode ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)',
             }}
           >
@@ -186,7 +186,7 @@ export default function KaiPanel() {
                     : 'white',
                   color: msg.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                   boxShadow: '0 1px 3px rgba(15,23,42,0.07)',
-                  border: msg.role === 'kai' ? '1px solid #e2e8f0' : 'none',
+                  border: msg.role === 'kai' ? '1px solid var(--color-surface-border)' : 'none',
                 }}
               >
                 {msg.role === 'kai' && (

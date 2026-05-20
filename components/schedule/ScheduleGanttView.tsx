@@ -254,7 +254,7 @@ export default function ScheduleGanttView({
         ))}
       </div>
 
-      <div data-bos-gantt-chart style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 12, overflow: 'auto' }}>
+      <div data-bos-gantt-chart style={{ background: 'white', borderRadius: 12, border: '1px solid var(--color-surface-border)', padding: 12, overflow: 'auto' }}>
         {showPermits && permitMilestones.length > 0 && dateRange ? (
           <PermitBand permits={permitMilestones} range={dateRange} />
         ) : null}
