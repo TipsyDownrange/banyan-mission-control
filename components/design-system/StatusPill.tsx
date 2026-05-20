@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertTriangle, CheckCircle2, MapPin, XCircle } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export type StatusPillVariant = 'warn' | 'error' | 'success' | 'info';
 
@@ -9,6 +9,7 @@ export interface StatusPillProps {
   variant: StatusPillVariant;
   children: ReactNode;
   icon?: ReactNode;
+  color?: string;
 }
 
 const PILL_STYLES = `
@@ -39,6 +40,10 @@ const PILL_STYLES = `
   background: var(--bos-color-accent-data-glow);
   color: var(--bos-color-accent-data-bright);
 }
+[data-bos-pill][data-categorical="true"] {
+  background: color-mix(in srgb, var(--bos-pill-color) 15%, transparent);
+  color: var(--bos-pill-color);
+}
 [data-bos-pill] > [data-bos-pill-icon] {
   display: inline-flex;
   align-items: center;
@@ -52,7 +57,24 @@ const DEFAULT_ICON: Record<StatusPillVariant, ReactNode> = {
   info: <MapPin size={11} strokeWidth={1.75} aria-hidden="true" />,
 };
 
-export function StatusPill({ variant, children, icon }: StatusPillProps) {
+export function StatusPill({ variant, children, icon, color }: StatusPillProps) {
+  if (color) {
+    const style = { '--bos-pill-color': color } as CSSProperties;
+    return (
+      <>
+        <style href="bos-pill" precedence="low">{PILL_STYLES}</style>
+        <span
+          data-bos-pill=""
+          data-variant={variant}
+          data-categorical="true"
+          style={style}
+        >
+          {icon ? <span data-bos-pill-icon="">{icon}</span> : null}
+          {children}
+        </span>
+      </>
+    );
+  }
   const resolvedIcon = icon ?? DEFAULT_ICON[variant];
   return (
     <>

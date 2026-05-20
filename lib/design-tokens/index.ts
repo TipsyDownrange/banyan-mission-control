@@ -132,7 +132,7 @@ type ColorScheme = {
   gradient: { hero: string };
 };
 
-type ShadowScheme = { card: string; popover: string; modal: string; none: string };
+type ShadowScheme = { sm: string; card: string; popover: string; modal: string; none: string };
 
 export type Tokens = {
   color: ColorScheme;
@@ -194,6 +194,7 @@ export const tokensDark: Tokens = {
   space,
   radius,
   shadow: {
+    sm: '0 1px 1px rgba(0,0,0,0.3)',
     card: '0 1px 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
     popover: '0 4px 12px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)',
     modal: '0 12px 32px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
@@ -253,6 +254,7 @@ export const tokensLight: Tokens = {
   space,
   radius,
   shadow: {
+    sm: '0 1px 1px rgba(15,23,42,0.06)',
     card: '0 1px 2px rgba(15,23,42,0.04)',
     popover: '0 4px 12px rgba(15,23,42,0.08)',
     modal: '0 12px 32px rgba(15,23,42,0.12)',

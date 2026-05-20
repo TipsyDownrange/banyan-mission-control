@@ -3,10 +3,15 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 export type ButtonVariant = 'primary' | 'action' | 'secondary' | 'destructive';
+export type ButtonSize = 'sm' | 'md';
+export type ButtonShape = 'default' | 'pill';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   icon?: ReactNode;
+  size?: ButtonSize;
+  pressed?: boolean;
+  shape?: ButtonShape;
 }
 
 const BUTTON_STYLES = `
@@ -66,10 +71,36 @@ const BUTTON_STYLES = `
   display: inline-flex;
   align-items: center;
 }
+[data-bos-button][data-size="sm"] {
+  padding: 5px 10px;
+  font-size: 12px;
+  gap: 6px;
+}
+[data-bos-button][data-shape="pill"] {
+  border-radius: var(--bos-radius-pill);
+}
+[data-bos-button][data-pressed="true"][data-variant="primary"] {
+  background: var(--bos-color-brand-primary-deep);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+[data-bos-button][data-pressed="true"][data-variant="action"] {
+  background: var(--bos-color-accent-action-deep);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+[data-bos-button][data-pressed="true"][data-variant="secondary"] {
+  background: var(--bos-color-surface-elevated);
+  color: var(--bos-color-ink-primary);
+  border-color: var(--bos-color-brand-primary);
+}
+[data-bos-button][data-pressed="true"][data-variant="destructive"] {
+  background: var(--bos-color-semantic-error);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  filter: brightness(0.92);
+}
 `;
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', icon, children, type, ...rest },
+  { variant = 'primary', icon, children, type, size = 'md', pressed, shape = 'default', ...rest },
   ref,
 ) {
   return (
@@ -80,6 +111,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         type={type ?? 'button'}
         data-bos-button=""
         data-variant={variant}
+        {...(size !== 'md' ? { 'data-size': size } : {})}
+        {...(shape !== 'default' ? { 'data-shape': shape } : {})}
+        {...(pressed ? { 'data-pressed': 'true', 'aria-pressed': true } : {})}
         {...rest}
       >
         {icon ? <span data-bos-button-icon="">{icon}</span> : null}
