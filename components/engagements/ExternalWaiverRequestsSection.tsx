@@ -127,7 +127,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
         const o = overdue[r.external_waiver_id];
         return (
           <div key={r.external_waiver_id} style={{
-            padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)',
+            padding: 12, background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)',
             display: 'flex', flexDirection: 'column', gap: 6,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

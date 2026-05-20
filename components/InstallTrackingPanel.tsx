@@ -243,7 +243,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                   <div style={{ borderTop: '1px solid #f1f5f9' }}>
                     {group.items.sort((a, b) => a.step_sequence - b.step_sequence).map(item => (
                       <div key={item.install_id}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #f8fafc', gap: 12 }}>
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid var(--color-surface)', gap: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                           <div style={{
                             width: 10, height: 10, borderRadius: '50%', flexShrink: 0,

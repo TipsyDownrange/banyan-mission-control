@@ -331,7 +331,7 @@ function FixedRow({ label, value, onChange }: {
 
 function SubtotalBar({ label, value }: { label: string; value: number }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 8, padding: '5px 10px', marginTop: 6, marginBottom: 4 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', borderRadius: 8, padding: '5px 10px', marginTop: 6, marginBottom: 4 }}>
       <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: FONT }}>{label}</span>
       <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)', fontFamily: FONT, fontVariantNumeric: 'tabular-nums' }}>${fmt(value)}</span>
     </div>
@@ -593,7 +593,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
         position: 'fixed',
         inset: '3vh 3vw',
         zIndex: 501,
-        background: '#f8fafc',
+        background: 'var(--color-surface)',
         borderRadius: 20,
         boxShadow: '0 24px 80px rgba(15,23,42,0.22)',
         display: 'flex',
@@ -753,7 +753,7 @@ export default function WOEstimatePanel({ wo, onClose, onGenerateQuote, procurem
                   </div>
                 )}
                 {data.labor.map((line, i) => (
-                  <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: line.custom ? 'rgba(99,102,241,0.04)' : '#f8fafc', borderRadius: 8, border: line.custom ? '1px solid rgba(99,102,241,0.2)' : '1px solid #f1f5f9' }}>
+                  <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: line.custom ? 'rgba(99,102,241,0.04)' : 'var(--color-surface)', borderRadius: 8, border: line.custom ? '1px solid rgba(99,102,241,0.2)' : '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                       {line.custom ? null : (
                         <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', flexShrink: 0 }}>{i + 1}.</span>

@@ -40,7 +40,7 @@ export default function CriticalGapsList({
 }) {
   if (!gaps || gaps.length === 0) {
     return (
-      <div style={{ background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)' }}>
+      <div style={{ background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)' }}>
         <EmptyState
           icon={<span style={{ fontSize: 20 }}>✓</span>}
           heading="No critical gaps reported."

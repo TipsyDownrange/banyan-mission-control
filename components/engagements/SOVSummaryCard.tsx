@@ -38,7 +38,7 @@ function parseNum(v: string | number | null | undefined): number {
 }
 
 const KPI: CSSProperties = {
-  background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)',
+  background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)',
   padding: '12px 14px',
 };
 

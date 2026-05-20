@@ -56,7 +56,7 @@ export default function WidgetShell({
           borderBottom: '1px solid #f1f5f9',
           cursor: 'grab',
           userSelect: 'none',
-          background: '#f8fafc',
+          background: 'var(--color-surface)',
         }}
       >
         <div style={{ minWidth: 0 }}>

@@ -131,7 +131,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               <div>
                 <div style={{
                   fontSize: 13, fontWeight: 800, letterSpacing: '-0.01em',
-                  color: '#f8fafc',
+                  color: 'var(--color-surface)',
                 }}>Kai</div>
                 <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{context}</div>
               </div>
@@ -157,19 +157,19 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               {fbDone ? (
                 <div style={{ textAlign:'center', padding:'16px 0' }}>
                   <div style={{ fontSize:32, marginBottom:10 }}>✅</div>
-                  <div style={{ fontSize:14, fontWeight:800, color:'#f8fafc', marginBottom:4 }}>Got it!</div>
+                  <div style={{ fontSize:14, fontWeight:800, color:'var(--color-surface)', marginBottom:4 }}>Got it!</div>
                   <div style={{ fontSize:12, color:'rgba(148,163,184,0.7)', lineHeight:1.5 }}>Sean will review this. Thanks for helping me get better. — Kai</div>
                   <button onClick={() => { setFbDone(false); setFbDesc(''); }} style={{ marginTop:12, padding:'8px 20px', borderRadius:10, background:'rgba(20,184,166,0.15)', border:'1px solid rgba(20,184,166,0.3)', color:'#14b8a6', fontSize:12, fontWeight:700, cursor:'pointer' }}>Send another</button>
                 </div>
               ) : (
                 <>
-                  <select value={fbType} onChange={e=>setFbType(e.target.value)} style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.05)', color:'#f8fafc', fontSize:13, marginBottom:10, outline:'none' }}>
+                  <select value={fbType} onChange={e=>setFbType(e.target.value)} style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.05)', color:'var(--color-surface)', fontSize:13, marginBottom:10, outline:'none' }}>
                     {['Bug Report','Feature Suggestion','Question','Other'].map(t=><option key={t} style={{ background:'#0c2330' }}>{t}</option>)}
                   </select>
                   <textarea value={fbDesc} onChange={e=>setFbDesc(e.target.value)}
                     placeholder={fbType==='Bug Report' ? 'What went wrong? What were you doing?' : fbType==='Feature Suggestion' ? "What would make your job easier?" : 'What do you need to know?'}
                     rows={4}
-                    style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.05)', color:'#f8fafc', fontSize:13, resize:'none', outline:'none', boxSizing:'border-box', lineHeight:1.5, marginBottom:10 }}
+                    style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.05)', color:'var(--color-surface)', fontSize:13, resize:'none', outline:'none', boxSizing:'border-box', lineHeight:1.5, marginBottom:10 }}
                   />
                   <button onClick={async () => {
                     if (!fbDesc.trim()) return;
@@ -197,7 +197,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
               <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
                   maxWidth: '85%', padding: '10px 14px', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  background: m.role === 'user' ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : '#f8fafc',
+                  background: m.role === 'user' ? 'linear-gradient(135deg, var(--bos-color-brand-primary-deep), #14b8a6)' : 'var(--color-surface)',
                   color: m.role === 'user' ? 'white' : 'var(--color-ink-primary)',
                   fontSize: 13, lineHeight: 1.5,
                   border: m.role === 'kai' ? '1px solid var(--color-surface-border)' : 'none',
@@ -209,7 +209,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
             ))}
             {loading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: '#f8fafc', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 4, alignItems: 'center' }}>
+                <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 4, alignItems: 'center' }}>
                   {[0,1,2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#14b8a6', animation: 'bounce 1s ease infinite', animationDelay: `${i*150}ms`, display: 'inline-block' }} />)}
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function KaiFloat({ activeView, sessionEmail }: { activeView: App
 
           {/* Input — chat only */}
           {kaiTab === 'chat' && <div style={{ padding: '8px 12px 14px', borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#f8fafc', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '8px 14px' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'var(--color-surface)', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: '8px 14px' }}>
               <input
                 ref={inputRef}
                 value={input}

@@ -220,12 +220,12 @@ export default function CalendarPanel() {
       {calMode === 'management' && canSeeAllStaff && (
         <div style={{ marginBottom: 16 }}>
           {flightsLoading && (
-            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
+            <div style={{ padding: '10px 14px', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
               Scanning emails for travel…
             </div>
           )}
           {!flightsLoading && flights.length === 0 && (
-            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed var(--color-surface-border)', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ padding: '10px 14px', background: 'var(--color-surface)', borderRadius: 12, border: '1px dashed var(--color-surface-border)', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--bos-color-ink-tertiary)"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
               No upcoming travel found. Booking confirmations sent to Tia or Jenna appear here automatically.
             </div>
@@ -251,7 +251,7 @@ export default function CalendarPanel() {
                     </div>
                     {/* Date */}
                     <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 36 }}>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-surface)', letterSpacing: '-0.04em', lineHeight: 1 }}>
                         {f.flightDate ? new Date(f.flightDate + 'T12:00:00').getDate() : '—'}
                       </div>
                       <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -261,9 +261,9 @@ export default function CalendarPanel() {
                     {/* Route */}
                     {f.route && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>{f.route.fromCode}</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-surface)', letterSpacing: '-0.01em' }}>{f.route.fromCode}</span>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.35)" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M14 6l6 6-6 6"/></svg>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>{f.route.toCode}</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-surface)', letterSpacing: '-0.01em' }}>{f.route.toCode}</span>
                       </div>
                     )}
                     {/* Passengers */}
@@ -314,12 +314,12 @@ export default function CalendarPanel() {
             {/* Grid cells */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' }}>
               {cells.map((date, i) => {
-                if (!date) return <div key={i} style={{ minHeight: 90, borderRight: i % 7 !== 6 ? '1px solid #f8fafc' : 'none', borderBottom: '1px solid #f8fafc', background: '#fafafa' }} />;
+                if (!date) return <div key={i} style={{ minHeight: 90, borderRight: i % 7 !== 6 ? '1px solid var(--color-surface)' : 'none', borderBottom: '1px solid var(--color-surface)', background: '#fafafa' }} />;
                 const dayEvents = eventsForDay(date);
                 const isTodayCell = isToday(date.toISOString());
                 const isSelected = selectedDate?.toDateString() === date.toDateString();
                 return (
-                  <div key={i} onClick={() => setSelectedDate(date)} style={{ minHeight: 90, padding: '6px 4px', borderRight: i % 7 !== 6 ? '1px solid #f8fafc' : 'none', borderBottom: '1px solid #f8fafc', cursor: 'pointer', background: isSelected ? 'rgba(239,246,255,0.6)' : 'white', transition: 'background 0.1s' }}>
+                  <div key={i} onClick={() => setSelectedDate(date)} style={{ minHeight: 90, padding: '6px 4px', borderRight: i % 7 !== 6 ? '1px solid var(--color-surface)' : 'none', borderBottom: '1px solid var(--color-surface)', cursor: 'pointer', background: isSelected ? 'rgba(239,246,255,0.6)' : 'white', transition: 'background 0.1s' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
                       <div style={{ width: 26, height: 26, borderRadius: '50%', background: isTodayCell ? '#0369a1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ fontSize: 12, fontWeight: isTodayCell ? 900 : 500, color: isTodayCell ? 'white' : date.getMonth() !== month ? '#cbd5e1' : 'var(--color-ink-primary)' }}>{date.getDate()}</span>
@@ -359,7 +359,7 @@ export default function CalendarPanel() {
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No events</div>
               ) : (
                 selectedDayEvents().map(ev => (
-                  <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: '#f8fafc', border: `1px solid var(--color-surface-border)`, cursor: 'pointer' }}
+                  <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: 'var(--color-surface)', border: `1px solid var(--color-surface-border)`, cursor: 'pointer' }}
                     onClick={() => setSelectedEvent(ev === selectedEvent ? null : ev)}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />

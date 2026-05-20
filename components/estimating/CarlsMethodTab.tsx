@@ -256,7 +256,7 @@ function SubtotalRow({ label, value }: { label: string; value: number }) {
           justifyContent: 'flex-end',
           alignItems: 'center',
           gap: 16,
-          background: '#f8fafc',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-surface-border)',
           borderRadius: 8,
           padding: '6px 12px',
@@ -357,7 +357,7 @@ function GrandTotalRow({ label, value, prominent = false }: {
           <span style={{
             fontSize: 15,
             fontWeight: 900,
-            color: '#f8fafc',
+            color: 'var(--color-surface)',
             fontFamily: FONT,
             fontVariantNumeric: 'tabular-nums',
           }}>
@@ -768,7 +768,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
           {saving ? (
             <span style={{
               fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600,
-              background: '#f8fafc', padding: '2px 8px', borderRadius: 6,
+              background: 'var(--color-surface)', padding: '2px 8px', borderRadius: 6,
             }}>
               Saving…
             </span>
@@ -889,7 +889,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 <div style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: '#f8fafc',
+                  color: 'var(--color-surface)',
                   fontFamily: FONT,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -1045,7 +1045,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 ['travel',         'Travel'],
                 ['totalFreight',   'Total Freight'],
               ] as [keyof CarlsData['misc'], string][]).map(([key, label]) => (
-                <tr key={key} style={{ borderBottom: '1px solid #f8fafc' }}>
+                <tr key={key} style={{ borderBottom: '1px solid var(--color-surface)' }}>
                   <td style={bodyCell}>{label}</td>
                   <td style={bodyCell} />
                   <MarketCell />
@@ -1108,7 +1108,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                 ['travel',          'Travel'],
                 ['freight',         'Freight (misc)'],
               ] as [keyof CarlsData['other'], string][]).map(([key, label]) => (
-                <tr key={key} style={{ borderBottom: '1px solid #f8fafc' }}>
+                <tr key={key} style={{ borderBottom: '1px solid var(--color-surface)' }}>
                   <td style={bodyCell}>{label}</td>
                   <td style={bodyCell} />
                   <MarketCell />
@@ -1311,7 +1311,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
 
               {/* ── MARKUP ── */}
               <SectionHeader>Markup</SectionHeader>
-              <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+              <tr style={{ borderBottom: '1px solid var(--color-surface)' }}>
                 <td style={bodyCell}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>Overhead</span>
@@ -1349,7 +1349,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
                   </div>
                 </td>
               </tr>
-              <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+              <tr style={{ borderBottom: '1px solid var(--color-surface)' }}>
                 <td style={bodyCell}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span>Profit @</span>
@@ -1374,7 +1374,7 @@ export default function CarlsMethodTab({ bid, stepTemplates = {}, goldData = nul
 
               {/* ── TAX ── */}
               <SectionHeader>Tax</SectionHeader>
-              <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+              <tr style={{ borderBottom: '1px solid var(--color-surface)' }}>
                 <td style={bodyCell}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span>GET Tax @</span>

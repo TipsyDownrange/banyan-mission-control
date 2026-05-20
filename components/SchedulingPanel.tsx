@@ -157,7 +157,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                 return (
                   <div key={w.date} style={{ flexShrink: 0, textAlign: 'center', minWidth: 52 }}>
                     <div style={{ fontSize: 9, color: current ? '#0369a1' : 'var(--bos-color-ink-tertiary)', fontWeight: current ? 800 : 600, marginBottom: 4 }}>{fmtDate(w.date)}</div>
-                    <div style={{ width: 48, height: 48, borderRadius: 10, background: men ? menBg(men) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (men ? menColor(men) + '44' : 'var(--color-surface-border)')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 10, background: men ? menBg(men) : 'var(--color-surface)', border: `1.5px solid ${current ? '#0369a1' : (men ? menColor(men) + '44' : 'var(--color-surface-border)')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                       <span style={{ fontSize: men >= 10 ? 14 : 18, fontWeight: 900, color: men ? menColor(men) : '#cbd5e1', letterSpacing: '-0.04em' }}>{men || '—'}</span>
                     </div>
                     {men > 0 && <div style={{ fontSize: 8, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>men</div>}
@@ -200,7 +200,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                       {/* Drag-to-set men chips */}
-                      <div style={{ display: 'flex', gap: 5, padding: '6px 12px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
+                      <div style={{ display: 'flex', gap: 5, padding: '6px 12px', background: 'var(--color-surface)', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
                         <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', alignSelf: 'center', whiteSpace: 'nowrap', marginRight: 4 }}>Drag to set:</span>
                         {[1,2,3,4,5,6,8,10].map(n => (
                           <div key={n} draggable
@@ -211,14 +211,14 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                           </div>
                         ))}
                         <div key={0} draggable onDragStart={() => setDraggingMen(0)} onDragEnd={() => setDraggingMen(null)}
-                          style={{ width: 32, height: 28, borderRadius: 8, background: '#f8fafc', border: '1.5px dashed var(--color-surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flexShrink: 0, userSelect: 'none' }}>
+                          style={{ width: 32, height: 28, borderRadius: 8, background: 'var(--color-surface)', border: '1.5px dashed var(--color-surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flexShrink: 0, userSelect: 'none' }}>
                           <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700 }}>0</span>
                         </div>
                       </div>
 
                       <thead>
-                        <tr style={{ background: '#f8fafc' }}>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: '#f8fafc', zIndex: 1, minWidth: 220 }}>Job</th>
+                        <tr style={{ background: 'var(--color-surface)' }}>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--color-surface)', zIndex: 1, minWidth: 220 }}>Job</th>
                           <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: 700, fontSize: 10, color: 'var(--bos-color-ink-tertiary)', whiteSpace: 'nowrap', minWidth: 60 }}>PM</th>
                           {displayWeeks.map(w => (
                             <th key={w.date} style={{ padding: '8px 4px', textAlign: 'center', fontWeight: isCurrentWeek(w.date) ? 800 : 700, fontSize: 9, color: isCurrentWeek(w.date) ? '#0369a1' : 'var(--bos-color-ink-tertiary)', whiteSpace: 'nowrap', minWidth: 44, borderLeft: isCurrentWeek(w.date) ? '2px solid rgba(3,105,161,0.3)' : '1px solid #f1f5f9' }}>
@@ -229,7 +229,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                       </thead>
                       <tbody>
                         {island.jobs.map((job, ji) => (
-                          <tr key={job.job_number} style={{ borderBottom: '1px solid #f8fafc', background: ji % 2 === 1 ? '#fafafa' : 'white' }}>
+                          <tr key={job.job_number} style={{ borderBottom: '1px solid var(--color-surface)', background: ji % 2 === 1 ? '#fafafa' : 'white' }}>
                             <td style={{ padding: '8px 12px', position: 'sticky', left: 0, background: ji % 2 === 1 ? '#fafafa' : 'white', zIndex: 1 }}>
                               <div style={{ fontWeight: 700, color: 'var(--color-ink-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
                                 {job.job_name.includes('WORK ORDER') ? '🔧 ' : ''}{job.job_name.length > 28 ? job.job_name.substring(0, 28) + '...' : job.job_name}
@@ -241,7 +241,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                               const week = job.weeks.find(wk => wk.date === w.date);
                               const men = week?.men || 0;
                               return (
-                                <td key={w.date} style={{ padding: '6px 4px', textAlign: 'center', borderLeft: isCurrentWeek(w.date) ? '2px solid rgba(3,105,161,0.2)' : '1px solid #f8fafc' }}>
+                                <td key={w.date} style={{ padding: '6px 4px', textAlign: 'center', borderLeft: isCurrentWeek(w.date) ? '2px solid rgba(3,105,161,0.2)' : '1px solid var(--color-surface)' }}>
                                   {editingCell?.jobNum === job.job_number && editingCell?.date === w.date ? (
                                     <input autoFocus type="number" value={editValue} min="0" max="20"
                                       onChange={e => setEditValue(e.target.value)}
@@ -365,7 +365,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
                       <div style={{ fontSize: 9, color: current ? '#0369a1' : 'var(--bos-color-ink-tertiary)', fontWeight: current ? 800 : 600, marginBottom: 4 }}>
                         {fmtDate(w.date)}
                       </div>
-                      <div style={{ width: 48, height: 48, borderRadius: 10, background: total ? menBg(total) : '#f8fafc', border: `1.5px solid ${current ? '#0369a1' : (total ? menColor(total) + '44' : 'var(--color-surface-border)')}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 10, background: total ? menBg(total) : 'var(--color-surface)', border: `1.5px solid ${current ? '#0369a1' : (total ? menColor(total) + '44' : 'var(--color-surface-border)')}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                         <span style={{ fontSize: total >= 10 ? 14 : 18, fontWeight: 900, color: total ? menColor(total) : '#cbd5e1', letterSpacing: '-0.04em', lineHeight: 1 }}>{total || '—'}</span>
                         {total > 0 && <span style={{ fontSize: 7.5, color: 'var(--bos-color-ink-tertiary)', marginTop: 1 }}>men</span>}
                       </div>
@@ -399,7 +399,7 @@ export default function SchedulingPanel({ readOnly = false }: { readOnly?: boole
           </div>
 
           {/* Legend */}
-          <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: '#f8fafc', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ marginTop: 12, padding: '10px 16px', borderRadius: 12, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>Men on site:</span>
             {[[1,'1-2','var(--bos-color-brand-primary-deep)'],[2,'3-4','var(--bos-color-brand-primary-deep)'],[4,'4-5','#0369a1'],[6,'6-7','#c2410c'],[8,'8+','#b91c1c']].map(([n,label,color]) => (
               <div key={String(n)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

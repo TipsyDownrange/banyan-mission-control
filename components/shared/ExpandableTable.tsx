@@ -157,7 +157,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                     borderBottom: !isExpanded && !isLast ? '1px solid #f1f5f9' : 'none',
                   }}
                   onMouseEnter={e => {
-                    if (!isExpanded) (e.currentTarget as HTMLTableRowElement).style.background = '#f8fafc';
+                    if (!isExpanded) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--color-surface)';
                   }}
                   onMouseLeave={e => {
                     if (!isExpanded) (e.currentTarget as HTMLTableRowElement).style.background = rowBg;
@@ -274,7 +274,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                   padding: '10px 12px',
                   fontSize: 12,
                   fontWeight: 800,
-                  color: '#f8fafc',
+                  color: 'var(--color-surface)',
                 }}>
                   {totals[col.key] ?? ''}
                 </td>

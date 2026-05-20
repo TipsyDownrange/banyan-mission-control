@@ -223,7 +223,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, minWidth: 280 }}>
-            <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
               <div style={STAT_LABEL}>Contract Sum</div>
               <div style={STAT_VALUE}>{financial.contractSum > 0 ? formatCurrency(financial.contractSum) : '—'}</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -232,7 +232,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                     'Pending pay app'}
               </div>
             </div>
-            <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
               <div style={STAT_LABEL}>Current Pay App</div>
               <div style={STAT_VALUE}>{financial.currentPayApp ? `#${financial.currentPayApp.pay_app_number}` : '—'}</div>
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -250,7 +250,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
         <div style={PANEL_TITLE}>Status Summary</div>
         <div style={PANEL_SUBTITLE}>Engagement state, days since handoff acceptance, and field-event freshness.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginTop: 12 }}>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Engagement State</div>
             <div style={{ ...STAT_VALUE, textTransform: 'uppercase', fontSize: 14, letterSpacing: '0.04em' }}>
               {formatHandoffStateLabel(data.engagement?.pm_handoff_state ?? null)}
@@ -259,14 +259,14 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
               {data.engagement?.status ? `engagement.status = ${data.engagement.status}` : 'Pre-migration'}
             </div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Days Since Handoff</div>
             <div style={STAT_VALUE}>{daysSinceHandoff !== null ? daysSinceHandoff : '—'}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
               {handoffRef ? `since ${formatRelativeDate(handoffRef)}` : 'No handoff receipt yet'}
             </div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Days Since Last Field Event</div>
             <div style={STAT_VALUE}>{daysSinceLastEvent !== null ? daysSinceLastEvent : '—'}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -303,7 +303,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                 onClick={() => onNavigateTab?.('action-items')}
                 style={{
                   textAlign: 'left',
-                  background: '#f8fafc',
+                  background: 'var(--color-surface)',
                   border: '1px solid #eef2f7',
                   borderRadius: 10,
                   padding: '10px 12px',
@@ -335,7 +335,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
         <div style={PANEL_TITLE}>Submittals KPI</div>
         <div style={PANEL_SUBTITLE}>Outstanding rollup per PM Trunk v1.0 §5.4.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginTop: 12 }}>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Total</div>
             <div style={STAT_VALUE}>{submittalKpi.total}</div>
           </div>
@@ -368,7 +368,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
         <div style={PANEL_TITLE}>RFIs KPI</div>
         <div style={PANEL_SUBTITLE}>Open / overdue / recently answered per PM Trunk v1.0 §6.5.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginTop: 12 }}>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Open</div>
             <div style={STAT_VALUE}>{rfiKpi.open}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>of {rfiKpi.total} total</div>
@@ -413,7 +413,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
                 onClick={() => onNavigateTab?.('documents')}
                 style={{
                   textAlign: 'left',
-                  background: '#f8fafc',
+                  background: 'var(--color-surface)',
                   border: '1px solid #eef2f7',
                   borderRadius: 10,
                   padding: '10px 12px',
@@ -440,11 +440,11 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
         <div style={PANEL_TITLE}>Financial Summary</div>
         <div style={PANEL_SUBTITLE}>Contract sum, current pay app cycle status, outstanding AR.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 12 }}>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Contract Sum</div>
             <div style={STAT_VALUE}>{financial.contractSum > 0 ? formatCurrency(financial.contractSum) : '—'}</div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Approved COs</div>
             <div style={STAT_VALUE}>—</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
@@ -454,12 +454,12 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
               CO trunk pending
             </div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Pay App Cycle</div>
             <div style={STAT_VALUE}>{financial.currentPayApp ? `#${financial.currentPayApp.pay_app_number}` : '—'}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>{financial.currentPayApp?.state ? financial.currentPayApp.state.replace(/_/g, ' ') : 'No pay apps'}</div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={STAT_LABEL}>Outstanding AR</div>
             <div style={{ ...STAT_VALUE, color: financial.outstandingAr > 0 ? '#92400e' : 'var(--bos-color-brand-primary-deep)' }}>{financial.outstandingAr > 0 ? formatCurrency(financial.outstandingAr) : '$0'}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>billed, not yet paid</div>
@@ -468,7 +468,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
       </section>
 
       {/* Panel 8 — Schedule snapshot (STUB) */}
-      <section data-overview-panel="schedule-snapshot" style={{ ...CARD, background: 'linear-gradient(180deg, #f8fafc, #ffffff)' }}>
+      <section data-overview-panel="schedule-snapshot" style={{ ...CARD, background: 'linear-gradient(180deg, var(--color-surface), #ffffff)' }}>
         <div style={PANEL_TITLE}>Schedule Snapshot</div>
         <div style={{ marginTop: 12, padding: '16px 18px', borderRadius: 10, background: '#f1f5f9', border: '1px dashed #cbd5e1', color: 'var(--bos-color-ink-disabled)', fontSize: 13 }}>
           {/* TODO(Schedule Trunk): replace with live milestones + look-ahead window
@@ -498,7 +498,7 @@ export default function ProjectOverview({ project, onNavigateTab }: ProjectOverv
         ) : (
           <ol data-testid="activity-ticker-list" style={{ listStyle: 'none', padding: 0, margin: '12px 0 0 0', display: 'grid', gap: 6 }}>
             {ticker.map((e: ActivityTickerEntry) => (
-              <li key={e.id || `${e.eventType}-${e.occurredAt}`} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 90px', gap: 10, fontSize: 12, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #eef2f7' }}>
+              <li key={e.id || `${e.eventType}-${e.occurredAt}`} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 90px', gap: 10, fontSize: 12, padding: '8px 12px', background: 'var(--color-surface)', borderRadius: 8, border: '1px solid #eef2f7' }}>
                 <span style={{ fontWeight: 700, color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.06em' }}>{e.eventType.replace(/_/g, ' ')}</span>
                 <span style={{ color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {e.summary || (e.actor ? `by ${e.actor}` : '—')}

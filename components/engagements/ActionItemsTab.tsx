@@ -196,7 +196,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Action Items requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Action Items requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -240,7 +240,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} style={{ background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 14, marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 120px 160px auto', gap: 8 }}>
+        <form onSubmit={handleAdd} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 14, marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 120px 160px auto', gap: 8 }}>
           <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="What needs to happen?" style={inputStyle} required maxLength={300} />
           <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)} style={selectStyle}>
             {['URGENT', 'HIGH', 'MEDIUM', 'LOW'].map((p) => <option key={p} value={p}>{p}</option>)}

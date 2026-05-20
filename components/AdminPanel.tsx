@@ -32,7 +32,7 @@ function StatusBadge({ status }: { status: string }) {
     unpaid:  { bg: '#eff6ff', color: '#1d4ed8', label: 'Unpaid' },
     overdue: { bg: '#fef2f2', color: '#b91c1c', label: 'Overdue' },
   };
-  const s = map[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: status };
+  const s = map[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: status };
   return (
     <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: s.bg, color: s.color }}>
       {s.label}
@@ -105,7 +105,7 @@ function FinancialsPanel() {
                   if (!val) return null;
                   const isOld = bucket === '61-90' || bucket === '90+';
                   return (
-                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : '#f8fafc', color: isOld ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
+                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : 'var(--color-surface)', color: isOld ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                       {bucket}: {fmt$(val)}
                     </div>
                   );
@@ -140,7 +140,7 @@ function FinancialsPanel() {
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--color-surface)' }}>
                   {['Invoice #', 'Customer', 'Amount', 'Balance', 'Due', 'Status'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                   ))}
@@ -148,7 +148,7 @@ function FinancialsPanel() {
               </thead>
               <tbody>
                 {data.recentInvoices.map(inv => (
-                  <tr key={inv.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                  <tr key={inv.id} style={{ borderBottom: '1px solid var(--color-surface)' }}>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: '#0369a1' }}>{inv.invoiceNumber || '—'}</td>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--color-ink-primary)', maxWidth: 200 }}>{inv.customer}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{fmt$(Number(inv.amount))}</td>
@@ -169,7 +169,7 @@ function FinancialsPanel() {
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--color-surface)' }}>
                   {['Vendor', 'Amount', 'Balance', 'Due Date', 'Status'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                   ))}
@@ -177,7 +177,7 @@ function FinancialsPanel() {
               </thead>
               <tbody>
                 {data.recentBills.map(bill => (
-                  <tr key={bill.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                  <tr key={bill.id} style={{ borderBottom: '1px solid var(--color-surface)' }}>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--color-ink-primary)', maxWidth: 220 }}>{bill.vendor}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{fmt$(Number(bill.amount))}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, color: Number(bill.balance) > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(bill.balance))}</td>
@@ -240,7 +240,7 @@ function CompliancePanel() {
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)' }}>Apprentice Progression Tracker</div>
         </div>
         {APPRENTICES.map(a => (
-          <div key={a.name} style={{ padding: '12px 20px', borderBottom: '1px solid #f8fafc', display: 'grid', gridTemplateColumns: '1fr 120px 80px 1fr', gap: 12, alignItems: 'center' }}>
+          <div key={a.name} style={{ padding: '12px 20px', borderBottom: '1px solid var(--color-surface)', display: 'grid', gridTemplateColumns: '1fr 120px 80px 1fr', gap: 12, alignItems: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)' }}>{a.name}</div>
             <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{a.island}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -165,7 +165,7 @@ export default function CustomersPanel() {
 
               return (
                 <div key={id}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 150px 150px 60px 80px', padding: '10px 20px', borderBottom: '1px solid #f8fafc', background: isExpanded ? 'rgba(240,253,250,0.3)' : 'white' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 150px 150px 60px 80px', padding: '10px 20px', borderBottom: '1px solid var(--color-surface)', background: isExpanded ? 'rgba(240,253,250,0.3)' : 'white' }}>
                     <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center' }}>{id}</div>
                     <div onClick={() => !isEditing && setExpanded(isExpanded ? null : id)} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}>{r[nameKey]}</div>
                     <div style={{ fontSize: 12, color: '#334155', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{r[contactKey] || '—'}</div>

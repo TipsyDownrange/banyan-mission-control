@@ -18,7 +18,7 @@ export type PayApp = {
 };
 
 const STATE_BADGE: Record<string, { bg: string; color: string; label?: string }> = {
-  PENDING_DRAFT:          { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
+  PENDING_DRAFT:          { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Draft' },
   READY_FOR_NOTARIZATION: { bg: '#fffbeb', color: '#92400e', label: 'Ready · Notarize' },
   READY_FOR_SUBMISSION:   { bg: '#fffbeb', color: '#92400e', label: 'Ready · Submit' },
   SUBMITTED:              { bg: '#eff6ff', color: '#1d4ed8', label: 'Submitted' },
@@ -59,7 +59,7 @@ function fmtSubmitted(iso: string | null): string {
 }
 
 function StateBadge({ state }: { state: string }) {
-  const s = STATE_BADGE[state] ?? { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: state.replace(/_/g, ' ') };
+  const s = STATE_BADGE[state] ?? { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: state.replace(/_/g, ' ') };
   return (
     <span style={{
       padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
@@ -98,7 +98,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
           aria-disabled="true"
           style={{
             padding: '8px 18px', borderRadius: 999, border: '1px solid var(--color-surface-border)',
-            background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 800,
+            background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 800,
             cursor: 'not-allowed',
           }}
         >
@@ -123,7 +123,7 @@ export default function PayAppsList({ payApps, onOpen }: { payApps: PayApp[]; on
           aria-disabled="true"
           style={{
             padding: '6px 14px', borderRadius: 999, border: '1px solid var(--color-surface-border)',
-            background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 800,
+            background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 800,
             cursor: 'not-allowed',
           }}
         >

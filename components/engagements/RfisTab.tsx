@@ -53,17 +53,17 @@ type ApiResponse = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  DRAFT: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
+  DRAFT: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
   ANSWERED: { bg: '#fffbeb', color: '#92400e' },
   RESOLVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
-  CLOSED: { bg: '#f8fafc', color: '#475569' },
+  CLOSED: { bg: 'var(--color-surface)', color: '#475569' },
   VOID: { bg: '#fef2f2', color: '#b91c1c' },
 };
 
 function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
+  const s = STATUS_STYLE[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -203,7 +203,7 @@ export default function RfisTab({ kID }: { kID: string }) {
 
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
         RFI Log v1.0 requires this project to be migrated to Postgres. The legacy Sheets-based RFI list is still shown elsewhere; new entries via this surface require an engagement row.
       </div>
     );

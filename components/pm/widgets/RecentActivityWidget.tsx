@@ -38,7 +38,7 @@ export default function RecentActivityWidget({ onHide, showHide }: { onHide?: ()
               key={e.event_id}
               style={{
                 padding: '6px 10px',
-                background: '#f8fafc',
+                background: 'var(--color-surface)',
                 borderRadius: 6,
                 border: '1px solid var(--color-surface-border)',
               }}

@@ -126,13 +126,13 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
         <button
           type="button"
           onClick={() => setShowOptional((v) => !v)}
-          style={{ marginBottom: 12, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+          style={{ marginBottom: 12, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
         >
           {showOptional ? 'Hide optional fields' : 'Optional fields'}
         </button>
 
         {showOptional && (
-          <div style={{ border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 12, marginBottom: 12, background: '#f8fafc' }}>
+          <div style={{ border: '1px solid var(--color-surface-border)', borderRadius: 12, padding: 12, marginBottom: 12, background: 'var(--color-surface)' }}>
             <label style={fieldStyle}>
               <span style={labelStyle}>Occurred At</span>
               <input type="datetime-local" value={occurredAt} onChange={(e) => setOccurredAt(e.target.value)} style={inputStyle} />

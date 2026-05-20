@@ -125,7 +125,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
       <div onClick={requestClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 400, backdropFilter: 'blur(2px)' }} />
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 401,
-        height: '90vh', background: '#f8fafc',
+        height: '90vh', background: 'var(--color-surface)',
         borderRadius: '20px 20px 0 0',
         boxShadow: '0 -24px 80px rgba(15,23,42,0.18)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -293,7 +293,7 @@ function CrewDetailPanel({ member, onClose, onSave }: {
               </div>
 
               {/* Read-only ID */}
-              <div style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #f1f5f9', padding: '10px 14px' }}>
+              <div style={{ background: 'var(--color-surface)', borderRadius: 12, border: '1px solid #f1f5f9', padding: '10px 14px' }}>
                 <div style={{ ...LBL, marginBottom: 2 }}>Employee ID</div>
                 <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontFamily: 'monospace' }}>{member.user_id}</div>
               </div>

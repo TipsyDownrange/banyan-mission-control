@@ -106,7 +106,7 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
           const color = STATUS_COLORS[r.status] ?? STATUS_COLORS.PROPOSED;
           return (
             <div key={r.joint_check_id} style={{
-              padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)',
+              padding: 12, background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)',
               display: 'flex', flexDirection: 'column', gap: 6,
             }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

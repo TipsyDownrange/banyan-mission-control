@@ -1151,7 +1151,7 @@ function EditTaskRow({ task, allTasks, currentDeps, canWrite, onSaved, onCancel 
   };
 
   return (
-    <tr data-bos-schedule-task-edit={task.id} style={{ background: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
+    <tr data-bos-schedule-task-edit={task.id} style={{ background: 'var(--color-surface)', borderTop: '1px solid #f1f5f9' }}>
       <td colSpan={8} style={{ padding: '12px 18px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 10 }}>
           <input
@@ -1345,7 +1345,7 @@ function HawaiiOverlayToggles({
   return (
     <div data-bos-hawaii-overlay-toggles style={{
       display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
-      padding: '8px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)',
+      padding: '8px 12px', background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)',
       fontSize: 11, color: '#475569',
     }}>
       <label

@@ -26,8 +26,8 @@ type SOVLine = Record<string, string>;
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   APPROVED:     { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   SUBMITTED:    { bg: '#eff6ff', color: '#1d4ed8' },
-  PENDING:      { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
-  DRAFT:        { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
+  PENDING:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
+  DRAFT:        { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   IDENTIFIED:   { bg: '#fffbeb', color: '#92400e' },
   REJECTED:     { bg: '#fef2f2', color: '#b91c1c' },
   DISPUTED:     { bg: '#fef2f2', color: '#b91c1c' },
@@ -42,7 +42,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 const TAG = ({ status, label }: { status: string; label?: string }) => {
-  const s = STATUS_COLORS[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
+  const s = STATUS_COLORS[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{ padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}33` }}>
       {label || status.replace(/_/g, ' ')}
@@ -302,7 +302,7 @@ export default function PMPanel() {
                     <div>
                       {rfi.status === 'DRAFT' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', border: '1px solid rgba(29,78,216,0.2)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
                       {rfi.status === 'SUBMITTED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'RESPONDED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Got Response</button>}
-                      {rfi.status === 'RESPONDED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'CLOSED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f8fafc', border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Close</button>}
+                      {rfi.status === 'RESPONDED' && <button onClick={() => updateRFIStatus(rfi.rfi_id, 'CLOSED')} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Close</button>}
                     </div>
                   </div>
                 ))}
@@ -335,7 +335,7 @@ export default function PMPanel() {
                     <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Rev {sub.revision_number || '1'}</div>
                     <div>
                       {sub.status === 'PENDING' && <button onClick={() => updateSubStatus(sub.sub_id, 'SUBMITTED')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', border: '1px solid rgba(29,78,216,0.2)', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Submit →</button>}
-                      {sub.status === 'SUBMITTED' && <button onClick={() => updateSubStatus(sub.sub_id, 'UNDER_REVIEW')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Under Review</button>}
+                      {sub.status === 'SUBMITTED' && <button onClick={() => updateSubStatus(sub.sub_id, 'UNDER_REVIEW')} style={{ padding: '6px 10px', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', color: 'var(--bos-color-ink-disabled)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Under Review</button>}
                       {sub.status === 'UNDER_REVIEW' && (
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button onClick={() => updateSubStatus(sub.sub_id, 'APPROVED')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f0fdfa', border: '1px solid rgba(15,118,110,0.2)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Approved</button>
@@ -399,7 +399,7 @@ export default function PMPanel() {
                     </div>
                     <div style={{ fontSize:11,color:'var(--bos-color-ink-tertiary)' }}>{fmtDate(co.created_at)}</div>
                     <div>
-                      {co.status === 'IDENTIFIED' && <button onClick={() => updateCOStatus(co.co_id, 'DRAFTED')} style={{ padding:'6px 12px',borderRadius:8,background:'#f8fafc',border:'1px solid var(--color-surface-border)',color:'var(--bos-color-ink-disabled)',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Draft →</button>}
+                      {co.status === 'IDENTIFIED' && <button onClick={() => updateCOStatus(co.co_id, 'DRAFTED')} style={{ padding:'6px 12px',borderRadius:8,background:'var(--color-surface)',border:'1px solid var(--color-surface-border)',color:'var(--bos-color-ink-disabled)',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Draft →</button>}
                       {co.status === 'DRAFTED' && <button onClick={() => updateCOStatus(co.co_id, 'SUBMITTED')} style={{ padding:'6px 12px',borderRadius:8,background:'#eff6ff',border:'1px solid rgba(29,78,216,0.2)',color:'#1d4ed8',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap' }}>Submit →</button>}
                       {co.status === 'SUBMITTED' && <button onClick={() => updateCOStatus(co.co_id, 'APPROVED')} style={{ padding:'6px 12px',borderRadius:8,background:'#f0fdfa',border:'1px solid rgba(15,118,110,0.2)',color:'var(--bos-color-brand-primary-deep)',fontSize:11,fontWeight:700,cursor:'pointer' }}>Approve</button>}
                     </div>
@@ -422,7 +422,7 @@ export default function PMPanel() {
                 <div style={{ background:'white',borderRadius:16,border:'1px solid var(--color-surface-border)',overflow:'hidden' }}>
                   <table style={{ width:'100%',borderCollapse:'collapse' }}>
                     <thead>
-                      <tr style={{ background:'#f8fafc' }}>
+                      <tr style={{ background:'var(--color-surface)' }}>
                         {['#','Description','Contract Value','Prev Periods','This Period','% Complete','Balance'].map(h => (
                           <th key={h} style={{ padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--bos-color-ink-tertiary)',borderBottom:'1px solid #f1f5f9' }}>{h}</th>
                         ))}
@@ -430,7 +430,7 @@ export default function PMPanel() {
                     </thead>
                     <tbody>
                       {sovLines.map((line, i) => (
-                        <tr key={line.sov_id} style={{ borderBottom:'1px solid #f8fafc' }}>
+                        <tr key={line.sov_id} style={{ borderBottom:'1px solid var(--color-surface)' }}>
                           <td style={{ padding:'10px 14px',fontSize:12,color:'var(--bos-color-ink-disabled)',fontWeight:700 }}>{line.line_number}</td>
                           <td style={{ padding:'10px 14px',fontSize:13,fontWeight:700,color:'var(--color-ink-primary)' }}>{line.description}</td>
                           <td style={{ padding:'10px 14px',fontSize:13,color:'#334155' }}>{fmtMoney(line.scheduled_value)}</td>
@@ -448,7 +448,7 @@ export default function PMPanel() {
                         </tr>
                       ))}
                       {/* Totals row */}
-                      <tr style={{ background:'#f8fafc' }}>
+                      <tr style={{ background:'var(--color-surface)' }}>
                         <td colSpan={2} style={{ padding:'12px 14px',fontSize:12,fontWeight:800,color:'var(--color-ink-primary)' }}>TOTALS</td>
                         <td style={{ padding:'12px 14px',fontSize:13,fontWeight:800,color:'var(--color-ink-primary)' }}>{fmtMoney(String(sovLines.reduce((s,l) => s+parseFloat(l.scheduled_value||'0'),0)))}</td>
                         <td style={{ padding:'12px 14px',fontSize:13,fontWeight:800,color:'var(--color-ink-primary)' }}>{fmtMoney(String(sovLines.reduce((s,l) => s+parseFloat(l.previous_periods||'0'),0)))}</td>

@@ -81,7 +81,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
   }
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>
         Handoff tracking requires this project to be migrated to Postgres.
       </div>
     );
@@ -133,7 +133,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
           </div>
 
           {current.reviewer_notes && (
-            <div style={{ marginTop: 14, padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155' }}>
+            <div style={{ marginTop: 14, padding: 12, background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-surface-border)', fontSize: 12, color: '#334155' }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Reviewer notes</div>
               {current.reviewer_notes}
             </div>

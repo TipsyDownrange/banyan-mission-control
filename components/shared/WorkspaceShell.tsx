@@ -41,7 +41,7 @@ export default function WorkspaceShell({
   const showRightPanel = !!rightPanel && rightPanelOpen;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: '#f8fafc' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: 'var(--color-surface)' }}>
 
       {/* Tab Bar */}
       <div style={{
@@ -133,7 +133,7 @@ export default function WorkspaceShell({
           flex: 1,
           overflowY: 'auto',
           minWidth: 0,
-          background: '#f8fafc',
+          background: 'var(--color-surface)',
         }}>
           {children}
         </div>

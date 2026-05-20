@@ -49,7 +49,7 @@ const SEVERITY_COLORS: Record<string, { bg: string; color: string; border: strin
   CRITICAL: { bg: '#fef2f2', color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
   HIGH:     { bg: '#fef2f2', color: '#b91c1c', border: 'rgba(239,68,68,0.2)' },
   MEDIUM:   { bg: '#fffbeb', color: '#92400e', border: 'rgba(245,158,11,0.2)' },
-  LOW:      { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', border: 'rgba(148,163,184,0.2)' },
+  LOW:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', border: 'rgba(148,163,184,0.2)' },
 };
 
 interface IssuesPanelProps {

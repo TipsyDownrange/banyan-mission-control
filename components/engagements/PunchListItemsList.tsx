@@ -70,7 +70,7 @@ function Chip({
       onClick={onClick}
       style={{
         ...CHIP_BASE,
-        background: active ? 'var(--bos-color-brand-primary-deep)' : '#f8fafc',
+        background: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface)',
         color: active ? 'white' : '#475569',
         borderColor: active ? 'var(--bos-color-brand-primary-deep)' : 'var(--color-surface-border)',
       }}

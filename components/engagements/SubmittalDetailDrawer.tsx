@@ -99,7 +99,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '92%', maxWidth: 560, background: '#f8fafc', height: '100%', overflowY: 'auto', boxShadow: '-4px 0 16px rgba(0,0,0,0.15)' }}
+        style={{ width: '92%', maxWidth: 560, background: 'var(--color-surface)', height: '100%', overflowY: 'auto', boxShadow: '-4px 0 16px rgba(0,0,0,0.15)' }}
       >
         <div style={{ background: '#0c2330', color: 'white', padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -140,7 +140,7 @@ export default function SubmittalDetailDrawer({ submittalId, kID, onClose, onCha
               <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Type {s.submittal_type} · CSI {s.csi_spec_section}-{s.csi_subsection}-{s.csi_sub_subsection}</div>
               {s.required_by_date && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>Required by {s.required_by_date}</div>}
               {s.requirements_text && (
-                <div style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', marginTop: 8, whiteSpace: 'pre-wrap' }}>{s.requirements_text}</div>
+                <div style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475569', marginTop: 8, whiteSpace: 'pre-wrap' }}>{s.requirements_text}</div>
               )}
             </section>
 

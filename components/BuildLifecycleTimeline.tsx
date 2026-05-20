@@ -202,7 +202,7 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
       {existingLog.length > 0 && (
         <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {existingLog.map((entry, i) => (
-            <div key={i} style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: '#f8fafc', borderLeft: '2px solid var(--color-surface-border)' }}>
+            <div key={i} style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: 'var(--color-surface)', borderLeft: '2px solid var(--color-surface-border)' }}>
               <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontFamily: 'monospace', marginRight: 6 }}>
                 {new Date(entry.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
@@ -307,7 +307,7 @@ function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
       {task.status === 'done' && (
         <button disabled={isSaving}
           onClick={() => onStatusChange(task.id, 'queued')}
-          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid var(--color-surface-border)', background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
+          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
           ↩ Reopen
         </button>
       )}

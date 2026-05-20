@@ -36,7 +36,7 @@ const TRADE_TAB_LABEL: Record<SubsTrade, string> = {
 const TAB_BASE: CSSProperties = {
   padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 800,
   letterSpacing: '0.05em', cursor: 'pointer', userSelect: 'none',
-  border: '1px solid var(--color-surface-border)', background: '#f8fafc', color: '#475569',
+  border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', color: '#475569',
 };
 const TAB_ACTIVE: CSSProperties = {
   ...TAB_BASE,
@@ -117,7 +117,7 @@ export function SubcontractorsTableView({
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
+              <tr style={{ background: 'var(--color-surface)' }}>
                 <th style={HEADER_CELL}>Company</th>
                 <th style={HEADER_CELL}>Primary contact</th>
                 <th style={HEADER_CELL}>Island</th>

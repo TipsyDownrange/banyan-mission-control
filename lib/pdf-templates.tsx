@@ -27,7 +27,7 @@ export const C = {
   slate:      'var(--bos-color-ink-disabled)',  // labels
   slateLight: 'var(--bos-color-ink-tertiary)',  // sub-labels
   border:     'var(--color-surface-border)',  // dividers
-  bg:         '#f8fafc',  // page tint
+  bg:         'var(--color-surface)',  // page tint
   white:      '#ffffff',
   text:       'var(--color-ink-primary)',
   subtext:    '#475569',

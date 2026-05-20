@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 <!DOCTYPE html>
 <html>
 <head><title>QuickBooks Connected</title>
-<style>body{font-family:system-ui;max-width:600px;margin:60px auto;padding:20px;background:#f8fafc;}
+<style>body{font-family:system-ui;max-width:600px;margin:60px auto;padding:20px;background:var(--color-surface);}
 .card{background:white;border-radius:16px;padding:24px;border:1px solid var(--color-surface-border);box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 h1{color:var(--bos-color-brand-primary-deep);margin:0 0 8px;}
 p{color:var(--bos-color-ink-disabled);margin:0 0 16px;}

@@ -284,7 +284,7 @@ export default function PMDashboardPanel() {
       )}
 
       {showHidden && hiddenWidgets.length > 0 && (
-        <div style={{ marginBottom: 12, padding: 12, background: '#f8fafc', border: '1px solid var(--color-surface-border)', borderRadius: 10 }}>
+        <div style={{ marginBottom: 12, padding: 12, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', borderRadius: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
             Hidden widgets
           </div>

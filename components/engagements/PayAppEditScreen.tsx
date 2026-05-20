@@ -314,7 +314,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
   const HI_GET = currentDue * 0.04712;
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100%', padding: '20px 24px' }}>
+    <div style={{ background: 'var(--color-surface)', minHeight: '100%', padding: '20px 24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--bos-color-brand-primary-deep)', textTransform: 'uppercase' }}>
@@ -672,7 +672,7 @@ export function SubmissionBundleButtons({
   const tip = submissionBundleTooltip(payAppState);
   const disabledStyle = {
     ...btnSecondary,
-    background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', borderColor: 'var(--color-surface-border)',
+    background: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)', borderColor: 'var(--color-surface-border)',
     cursor: 'not-allowed' as const,
   };
   return (

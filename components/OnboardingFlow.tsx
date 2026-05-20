@@ -172,7 +172,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
     background: 'linear-gradient(160deg, #071722 0%, #0c2330 50%, #102c39 100%)',
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
     fontFamily: '-apple-system, SF Pro Display, Inter, system-ui, sans-serif',
-    color: '#f8fafc', overflow: 'hidden',
+    color: 'var(--color-surface)', overflow: 'hidden',
   };
 
   // ─── WELCOME SLIDES ────────────────────────
@@ -307,7 +307,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
               <input value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
                 placeholder={listening ? 'Listening...' : 'Type or hold 🎙 to speak...'}
-                style={{ flex: 1, padding: '14px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', fontSize: 14, outline: 'none' }}
+                style={{ flex: 1, padding: '14px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-surface)', fontSize: 14, outline: 'none' }}
               />
               <button onClick={() => { if (input.trim()) { handleChatResponse(input.trim()); setInput(''); } }}
                 style={{ padding: '14px 20px', borderRadius: 14, background: 'rgba(20,184,166,0.2)', border: '1px solid rgba(20,184,166,0.3)', color: '#5eead4', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>

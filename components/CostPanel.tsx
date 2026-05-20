@@ -53,7 +53,7 @@ function AddInvoiceForm({ onAdded }: { onAdded: () => void }) {
   }
   if (!open) return <button onClick={() => setOpen(true)} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid var(--bos-color-brand-primary-deep)', background:'transparent', color:'var(--bos-color-brand-primary-deep)', fontSize:12, fontWeight:700, cursor:'pointer' }}>+ Add Invoice</button>;
   return (
-    <div style={{ background:'#f8fafc', borderRadius:12, border:'1px solid var(--color-surface-border)', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
+    <div style={{ background:'var(--color-surface)', borderRadius:12, border:'1px solid var(--color-surface-border)', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
         <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Date</label>
           <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid var(--color-surface-border)', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
@@ -127,10 +127,10 @@ export default function CostPanel() {
       {/* ── Dark header ─────────────────────────────────── */}
       <div style={{ background:'linear-gradient(135deg,#071722,#0c2330)', borderRadius:'0 0 20px 20px', padding:'24px 28px', marginBottom:20 }}>
         <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.16em', textTransform:'uppercase', color:'rgba(148,163,184,0.5)', marginBottom:4 }}>AI Command</div>
-        <div style={{ fontSize:26, fontWeight:900, color:'#f8fafc', letterSpacing:'-0.03em', marginBottom:2 }}>Cost & Usage</div>
+        <div style={{ fontSize:26, fontWeight:900, color:'var(--color-surface)', letterSpacing:'-0.03em', marginBottom:2 }}>Cost & Usage</div>
 
         {/* ALL-IN HERO */}
-        <div style={{ fontSize:42, fontWeight:900, color:'#f8fafc', letterSpacing:'-0.04em', margin:'12px 0 4px' }}>{fmtUsd(allIn)}</div>
+        <div style={{ fontSize:42, fontWeight:900, color:'var(--color-surface)', letterSpacing:'-0.04em', margin:'12px 0 4px' }}>{fmtUsd(allIn)}</div>
         <div style={{ fontSize:13, color:'rgba(148,163,184,0.7)', marginBottom:4 }}>
           Anthropic {fmtUsd(ant?.invoicesPaid)} · OpenAI {fmtUsd(oai?.apiCostToDate)} · Subscriptions {fmtUsd(subs?.totalToDate)} · Vercel {fmtUsd(verc?.totalToDate)}
         </div>
@@ -141,7 +141,7 @@ export default function CostPanel() {
           {overBudget && <div style={{ padding:'8px 12px', background:'rgba(239,68,68,0.2)', borderRadius:8, border:'1px solid rgba(239,68,68,0.4)', fontSize:12, fontWeight:700, color:'#fca5a5', marginBottom:10 }}>⚠️ OVER DAILY BUDGET</div>}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
             <span style={{ fontSize:12, fontWeight:700, color:'rgba(148,163,184,0.8)' }}>📍 Today's API Spend</span>
-            <span style={{ fontSize:18, fontWeight:900, color: overBudget?'#fca5a5':'#f8fafc' }}>{fmtUsd(todayCost,4)}</span>
+            <span style={{ fontSize:18, fontWeight:900, color: overBudget?'#fca5a5':'var(--color-surface)' }}>{fmtUsd(todayCost,4)}</span>
           </div>
           <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:999, overflow:'hidden' }}>
             <div style={{ height:'100%', width:`${budgetPct}%`, background: overBudget?'#ef4444':'#14b8a6', borderRadius:999, transition:'width 0.5s' }}/>
@@ -255,7 +255,7 @@ export default function CostPanel() {
                 </tr></thead>
                 <tbody>
                   {[...(data?.anthropicInvoices||[])].sort((a,b)=>b.date.localeCompare(a.date)).map((inv,i)=>(
-                    <tr key={i} style={{ borderBottom:'1px solid #f8fafc' }}>
+                    <tr key={i} style={{ borderBottom:'1px solid var(--color-surface)' }}>
                       <td style={{ padding:'7px 8px', color:'#334155' }}>{inv.date}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'#fef2f2':'#f0fdf4', color:inv.type==='invoice'?'#b91c1c':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
                       <td style={{ padding:'7px 8px', fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(inv.amount)}</td>
@@ -270,7 +270,7 @@ export default function CostPanel() {
           <div style={{ background:'white', borderRadius:16, border:'1px solid var(--color-surface-border)', padding:20 }}>
             <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Daily API Costs (Live from Admin API)</div>
             {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).slice(0,20).map(([date,d])=>(
-              <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid #f8fafc' }}>
+              <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid var(--color-surface)' }}>
                 <span style={{ fontSize:13, color:'#334155' }}>{date}</span>
                 <span style={{ fontSize:13, fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(d.anthropic||d.cost||0,4)}</span>
               </div>
@@ -288,7 +288,7 @@ export default function CostPanel() {
             <div style={{ fontSize:12, fontWeight:700, color:'#059669' }}>Total from CSV imports: {fmtUsd(oai?.apiCostToDate)}</div>
           </div>
           {[...(data?.openaiDaily||[])].filter(e=>inRange(e.date)).sort((a,b)=>b.date.localeCompare(a.date)).map((e,i)=>(
-            <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid #f8fafc', fontSize:13 }}>
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid var(--color-surface)', fontSize:13 }}>
               <span style={{ color:'#334155' }}>{e.date}</span>
               <span style={{ fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(e.costUsd,2)}</span>
             </div>

@@ -418,11 +418,11 @@ function CompareModal({ configs, onClose }: { configs: QuoteConfig[]; onClose: (
 
         {left && right && (
           <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', borderRadius: 12, border: '1px solid var(--color-surface-border)', overflow: 'hidden' }}>
-            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '2px solid var(--color-surface-border)' }}>Field</div>
-            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: 'var(--color-ink-primary)', borderBottom: '2px solid var(--color-surface-border)' }}>
+            <div style={{ padding: '8px 10px', background: 'var(--color-surface)', fontWeight: 800, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '2px solid var(--color-surface-border)' }}>Field</div>
+            <div style={{ padding: '8px 10px', background: 'var(--color-surface)', fontWeight: 800, fontSize: 11, color: 'var(--color-ink-primary)', borderBottom: '2px solid var(--color-surface-border)' }}>
               {left.config_name} <VersionBadge version={left.version} />
             </div>
-            <div style={{ padding: '8px 10px', background: '#f8fafc', fontWeight: 800, fontSize: 11, color: 'var(--color-ink-primary)', borderBottom: '2px solid var(--color-surface-border)' }}>
+            <div style={{ padding: '8px 10px', background: 'var(--color-surface)', fontWeight: 800, fontSize: 11, color: 'var(--color-ink-primary)', borderBottom: '2px solid var(--color-surface-border)' }}>
               {right.config_name} <VersionBadge version={right.version} />
             </div>
             <CompareCell label="Grand Total" leftVal={fmt(parseNum(left.total_amount))} rightVal={fmt(parseNum(right.total_amount))} />
@@ -1014,7 +1014,7 @@ export default function QuoteBuilder({
                     {showVersionHistory && versions.length > 1 && (
                       <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {[...versions].sort((a, b) => parseInt(b.version) - parseInt(a.version)).map((v, idx) => (
-                          <div key={v.version} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: idx < versions.length - 1 ? '1px solid #f8fafc' : undefined }}>
+                          <div key={v.version} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: idx < versions.length - 1 ? '1px solid var(--color-surface)' : undefined }}>
                             <VersionBadge version={v.version} />
                             <span style={{ fontSize: 11, color: 'var(--color-ink-primary)', fontWeight: parseInt(v.version) === parseInt(c.version) ? 800 : 400, flex: 1, fontVariantNumeric: 'tabular-nums' }}>
                               {fmt(parseNum(v.total_amount))}

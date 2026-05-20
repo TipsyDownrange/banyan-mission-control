@@ -221,7 +221,7 @@ export default function DraftPreviewModal({
           </div>
 
           {/* Attachment */}
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid var(--color-surface-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-ink-disabled)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
             </svg>

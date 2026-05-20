@@ -87,7 +87,7 @@ function SourceHealthCard({ card }: { card: SourceHealthSourceCard }) {
     <article data-source-health-card={card.source} data-source-health-status={card.status} style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 16, padding: 11, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 10 }}>
         <div>
-          <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>{card.label}</div>
+          <div style={{ color: 'var(--color-surface)', fontSize: 12, fontWeight: 950 }}>{card.label}</div>
           <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 10, marginTop: 3 }}>Authority: {card.authority} · Freshness: {card.freshness}</div>
         </div>
         <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{card.status}</span>
@@ -123,7 +123,7 @@ function SourceHealthPanel({ snapshot, status }: { snapshot: SourceHealthSnapsho
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 12, marginBottom: 10 }}>
         <div>
           <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Source Health</div>
-          <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Truth labels for build sources</h2>
+          <h2 style={{ color: 'var(--color-surface)', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Truth labels for build sources</h2>
           <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11, marginTop: 4 }}>Read-only Mission Control War Room surface. No remediation, sync, fix, cutover, or Field App controls.</div>
         </div>
         <div style={{ color: status === 'ready' ? '#86efac' : status === 'failed' ? '#fca5a5' : '#fbbf24', fontSize: 11, fontWeight: 950, textAlign: 'right' }}>
@@ -163,7 +163,7 @@ function LiveOpsCard({ lane }: { lane: WarRoomLiveOpsLane }) {
   return (
     <div data-war-room-live-ops={lane.id} style={{ border: `1px solid ${theme.border}`, background: theme.bg, borderRadius: 14, padding: 10, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>{lane.label}</div>
+        <div style={{ color: 'var(--color-surface)', fontSize: 12, fontWeight: 950 }}>{lane.label}</div>
         <span style={{ color: theme.color, border: `1px solid ${theme.border}`, borderRadius: 999, padding: '3px 7px', fontSize: 10, fontWeight: 950, textTransform: 'uppercase' }}>{lane.state}</span>
       </div>
       <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.35, marginTop: 7 }}>{lane.active || lane.note}</div>
@@ -255,7 +255,7 @@ function Column({ title, issues, selectedId, onSelect }: { title: string; issues
       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, color: '#f8fafc', fontSize: 13, fontWeight: 900 }}>{title}</h2>
+        <h2 style={{ margin: 0, color: 'var(--color-surface)', fontSize: 13, fontWeight: 900 }}>{title}</h2>
         <span style={{ color: '#67e8f9', fontSize: 12, fontWeight: 900 }}>{issues.length}</span>
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
@@ -357,7 +357,7 @@ function ClaudeStation({ usage, state }: { usage: WarRoomUsageEntry | undefined;
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div>
           <div style={{ color: '#c08838', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Claude Station</div>
-          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 950, marginTop: 2 }}>Anthropic Subscription</div>
+          <div style={{ color: 'var(--color-surface)', fontSize: 14, fontWeight: 950, marginTop: 2 }}>Anthropic Subscription</div>
         </div>
         <StatePill state={state} />
       </header>
@@ -383,7 +383,7 @@ function ClaudeStation({ usage, state }: { usage: WarRoomUsageEntry | undefined;
       </div>
       {snap?.extraUsage && (
         <div style={{ marginTop: 10, color: '#cbd5e1', fontSize: 11, textAlign: 'center' }}>
-          Extra usage <span style={{ color: '#f8fafc', fontWeight: 900 }}>${snap.extraUsage.usedUsd.toFixed(2)}</span>
+          Extra usage <span style={{ color: 'var(--color-surface)', fontWeight: 900 }}>${snap.extraUsage.usedUsd.toFixed(2)}</span>
           <span style={{ color: 'var(--bos-color-ink-tertiary)' }}> / ${snap.extraUsage.budgetUsd.toFixed(0)}</span>
         </div>
       )}
@@ -398,7 +398,7 @@ function ChatGPTStation({ usage, state }: { usage: WarRoomUsageEntry | undefined
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div>
           <div style={{ color: '#c08838', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>ChatGPT Station</div>
-          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 950, marginTop: 2 }}>OpenAI Subscription</div>
+          <div style={{ color: 'var(--color-surface)', fontSize: 14, fontWeight: 950, marginTop: 2 }}>OpenAI Subscription</div>
         </div>
         <StatePill state={state} />
       </header>
@@ -477,7 +477,7 @@ function BilledToDateStrip({ cost }: { cost: WarRoomCostSnapshot }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8 }}>
         {cells.map(cell => (
           <div key={cell.label} data-billed-cell={cell.label} style={{ border: '1px solid rgba(176,132,56,0.18)', background: 'rgba(10,20,30,0.6)', borderRadius: 14, padding: 10, textAlign: 'center' }}>
-            <div style={{ color: '#f8fafc', fontSize: 22, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>{formatUsd(cell.value)}</div>
+            <div style={{ color: 'var(--color-surface)', fontSize: 22, fontWeight: 950, fontVariantNumeric: 'tabular-nums' }}>{formatUsd(cell.value)}</div>
             <div style={{ color: '#cbd5e1', fontSize: 10, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4 }}>{cell.label}</div>
           </div>
         ))}
@@ -530,7 +530,7 @@ function WarRoomCostMiniDashboard({ cost }: { cost: WarRoomCostSnapshot }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
         <div>
           <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Costmaster · Billed to Date</div>
-          <div style={{ color: '#f8fafc', fontSize: 30, fontWeight: 950, marginTop: 3 }}>{formatUsd(cost.allInTotal)}</div>
+          <div style={{ color: 'var(--color-surface)', fontSize: 30, fontWeight: 950, marginTop: 3 }}>{formatUsd(cost.allInTotal)}</div>
           <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 12, marginTop: 2 }}>All-in tracked spend / monthly burn {formatUsd(cost.monthlyBurn)}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -631,7 +631,7 @@ function LiveClaudeSessionPanel({ snapshot, ageSeconds }: { snapshot: WarRoomCos
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 10 }}>
         <div>
           <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Live Claude Session</div>
-          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 850, marginTop: 3 }}>Real-time subscription window from Mac mini relay</div>
+          <div style={{ color: 'var(--color-surface)', fontSize: 14, fontWeight: 850, marginTop: 3 }}>Real-time subscription window from Mac mini relay</div>
         </div>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -659,7 +659,7 @@ function LiveClaudeSessionPanel({ snapshot, ageSeconds }: { snapshot: WarRoomCos
           )}
           {snapshot.extraUsageDollars && (
             <div style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 850 }}>
-              Extra usage <span style={{ color: '#f8fafc' }}>{formatUsd(snapshot.extraUsageDollars.used)}</span>
+              Extra usage <span style={{ color: 'var(--color-surface)' }}>{formatUsd(snapshot.extraUsageDollars.used)}</span>
               <span style={{ color: 'var(--bos-color-ink-tertiary)' }}> / {formatUsd(snapshot.extraUsageDollars.limit)}</span>
             </div>
           )}
@@ -867,7 +867,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             <div style={{ color: '#38bdf8', fontSize: 11, fontWeight: 900, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
               BanyanOS War Room / Live Command Bridge
             </div>
-            <h1 style={{ margin: 0, color: '#f8fafc', fontSize: 36, fontWeight: 950, letterSpacing: -1 }}>Bridge Watch</h1>
+            <h1 style={{ margin: 0, color: 'var(--color-surface)', fontSize: 36, fontWeight: 950, letterSpacing: -1 }}>Bridge Watch</h1>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
               <span style={{ border: warningCount ? '1px solid rgba(245,158,11,0.45)' : '1px solid rgba(34,197,94,0.36)', background: warningCount ? 'rgba(245,158,11,0.12)' : 'rgba(34,197,94,0.1)', color: warningCount ? '#fbbf24' : '#86efac', borderRadius: 18, padding: '7px 10px', fontSize: 12, fontWeight: 950 }}>
                 {bridgeMode}
@@ -955,7 +955,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
               <div>
                 <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live Operations</div>
-                <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Execution Heartbeat</h2>
+                <h2 style={{ color: 'var(--color-surface)', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>Execution Heartbeat</h2>
               </div>
               <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11 }}>Snapshot {formatDate(runtimeHealth.liveOps.generatedAt)}</div>
             </div>
@@ -971,7 +971,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
           <form onSubmit={submitIntake} style={{ border: '1px solid rgba(94,234,212,0.26)', background: 'linear-gradient(180deg, rgba(3,10,20,0.82), rgba(8,47,73,0.48))', borderRadius: 18, padding: 12, display: 'grid', gap: 8, alignSelf: 'start' }}>
             <div>
               <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Task Intake / Main Bridge</div>
-              <h2 style={{ color: '#f8fafc', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>New Command</h2>
+              <h2 style={{ color: 'var(--color-surface)', margin: '3px 0 0', fontSize: 15, fontWeight: 950 }}>New Command</h2>
             </div>
             <input
               value={intake.title}
@@ -1036,7 +1036,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 12 }}>
                 <div>
                   <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Crew Deck</div>
-                  <h2 style={{ margin: '3px 0 0', color: '#f8fafc', fontSize: 16, fontWeight: 950 }}>Bridge Watch</h2>
+                  <h2 style={{ margin: '3px 0 0', color: 'var(--color-surface)', fontSize: 16, fontWeight: 950 }}>Bridge Watch</h2>
                   <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11, marginTop: 4 }}>
                     {runtimeStatus === 'loading' && 'Checking live runtime and cost signals...'}
                     {runtimeStatus === 'ready' && runtimeHealth && `Generated ${formatDate(runtimeHealth.generatedAt)}`}
@@ -1075,7 +1075,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
 
             <section className="war-room-two-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ border: '1px solid rgba(94,234,212,0.18)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Command Console</h2>
+                <h2 style={{ margin: '0 0 10px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>Command Console</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 12 }}>
                   {[
                     ['Signal Pressure', `${pressure}%`, pressure > 50 ? '#f59e0b' : '#67e8f9'],
@@ -1095,7 +1095,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                     </div>
                   </div>
                   <div>
-                    <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 950 }}>Budget pressure proxy</div>
+                    <div style={{ color: 'var(--color-surface)', fontSize: 12, fontWeight: 950 }}>Budget pressure proxy</div>
                     <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11, lineHeight: 1.45, marginTop: 5 }}>Derived from active warnings, evidence gaps, and P0/P1 risk count. This is a visual routing gauge, not a billing system.</div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
                       {data.commandBridge.crewLanes.map(lane => (
@@ -1108,12 +1108,12 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                 </div>
               </div>
               <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Blockers / Approvals</h2>
+                <h2 style={{ margin: '0 0 10px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>Blockers / Approvals</h2>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {data.commandBridge.approvalInbox.slice(0, 3).map(item => (
                     <div key={item.id} style={{ border: '1px solid rgba(245,158,11,0.24)', background: 'rgba(245,158,11,0.08)', borderRadius: 18, padding: 9 }}>
                       <div style={{ color: '#fbbf24', fontSize: 11, fontWeight: 950 }}>{item.issueId || item.lane} / {item.risk}</div>
-                      <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 850, marginTop: 3 }}>{item.title}</div>
+                      <div style={{ color: 'var(--color-surface)', fontSize: 12, fontWeight: 850, marginTop: 3 }}>{item.title}</div>
                       <div style={{ color: '#cbd5e1', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{item.requestedAction}</div>
                     </div>
                   ))}
@@ -1121,7 +1121,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                 </div>
               </div>
               <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-                <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Evidence Receipts</h2>
+                <h2 style={{ margin: '0 0 10px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>Evidence Receipts</h2>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {data.commandBridge.receipts.slice(0, 3).map(receipt => (
                     <div key={receipt.taskId} style={{ border: '1px solid rgba(34,197,94,0.2)', background: 'rgba(34,197,94,0.07)', borderRadius: 18, padding: 9 }}>
@@ -1138,13 +1138,13 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
 
         <section className="war-room-catalog-grid" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 10, marginBottom: 12 }}>
           <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-            <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Mission Board / Signal Flags</h2>
+            <h2 style={{ margin: '0 0 10px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>Mission Board / Signal Flags</h2>
             <div className="war-room-mission-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
               {data.commandBridge.missions.map(mission => (
                 <details key={mission.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: mission.enabled ? 'rgba(20,184,166,0.1)' : 'rgba(15,23,42,0.5)', borderRadius: 18, padding: 9 }}>
                   <summary style={{ listStyle: 'none', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
-                      <div style={{ color: '#f8fafc', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>{mission.name}</div>
+                      <div style={{ color: 'var(--color-surface)', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>{mission.name}</div>
                       <span style={{ width: 9, height: 9, borderRadius: 999, background: mission.enabled ? '#22c55e' : '#f59e0b', boxShadow: mission.enabled ? '0 0 10px rgba(34,197,94,0.45)' : '0 0 10px rgba(245,158,11,0.35)', flexShrink: 0 }} />
                     </div>
                     <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 11, marginTop: 4 }}>{mission.schedule}</div>
@@ -1156,7 +1156,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             </div>
           </div>
           <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-            <h2 style={{ margin: '0 0 10px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Permanent Agents</h2>
+            <h2 style={{ margin: '0 0 10px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>Permanent Agents</h2>
             <div className="war-room-agent-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
               {data.commandBridge.agents.map(agent => (
                 <div key={agent.id} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(15,23,42,0.5)', borderRadius: 18, padding: 9 }}>
@@ -1184,7 +1184,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                   <span style={{ color: '#67e8f9', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 14, fontWeight: 950 }}>{selectedIssue.id}</span>
                   <span style={{ width: 9, height: 9, borderRadius: 999, background: riskColor(selectedIssue.risk), boxShadow: `0 0 16px ${riskColor(selectedIssue.risk)}` }} />
                 </div>
-                <h2 style={{ color: '#f8fafc', fontSize: 24, lineHeight: 1.15, margin: '0 0 12px', fontWeight: 950 }}>{selectedIssue.title}</h2>
+                <h2 style={{ color: 'var(--color-surface)', fontSize: 24, lineHeight: 1.15, margin: '0 0 12px', fontWeight: 950 }}>{selectedIssue.title}</h2>
                 <IssuePills issue={selectedIssue} />
                 <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.55, margin: '16px 0 0', maxWidth: 900 }}>
                   {selectedIssue.latestCommentSummary || 'No comment or evidence summary has been captured for this issue yet.'}
@@ -1206,7 +1206,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                     borderRadius: 18,
                     padding: '10px 12px',
                     color: dispatchReady ? '#06121f' : 'var(--bos-color-ink-disabled)',
-                    background: dispatchReady ? 'linear-gradient(135deg,#f8fafc,#a7f3d0)' : 'rgba(148,163,184,0.08)',
+                    background: dispatchReady ? 'linear-gradient(135deg,var(--color-surface),#a7f3d0)' : 'rgba(148,163,184,0.08)',
                     border: dispatchReady ? '1px solid rgba(167,243,208,0.5)' : '1px solid rgba(148,163,184,0.16)',
                     fontWeight: 900,
                     cursor: dispatchReady ? 'pointer' : 'not-allowed',
@@ -1235,7 +1235,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
                 <div style={{ color: '#67e8f9', fontSize: 11, fontWeight: 950, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 5 }}>
                   Codex Dispatch Prompt
                 </div>
-                <h2 style={{ color: '#f8fafc', margin: 0, fontSize: 18, lineHeight: 1.25, fontWeight: 950 }}>
+                <h2 style={{ color: 'var(--color-surface)', margin: 0, fontSize: 18, lineHeight: 1.25, fontWeight: 950 }}>
                   {dispatchIssue.id}: {dispatchIssue.title}
                 </h2>
                 <p style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 12, lineHeight: 1.5, margin: '8px 0 0' }}>
@@ -1322,7 +1322,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             ['Up Next', data.upNext],
           ].map(([title, issues]) => (
             <div key={title as string} style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-              <h2 style={{ margin: '0 0 12px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>{title as string}</h2>
+              <h2 style={{ margin: '0 0 12px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>{title as string}</h2>
               <div style={{ display: 'grid', gap: 9 }}>
                 {(issues as WarRoomIssue[]).slice(0, 5).map(issue => (
                   <button key={issue.id} onClick={() => selectIssue(issue)} style={{ textAlign: 'left', background: 'transparent', border: 'none', padding: 0, color: '#cbd5e1', cursor: 'pointer' }}>
@@ -1335,7 +1335,7 @@ export default function WarRoomDashboard({ initialData, initialRuntimeHealth = n
             </div>
           ))}
           <div style={{ border: '1px solid rgba(148,163,184,0.14)', background: 'rgba(8,20,32,0.72)', borderRadius: 18, padding: 14 }}>
-            <h2 style={{ margin: '0 0 12px', color: '#f8fafc', fontSize: 14, fontWeight: 950 }}>Bridge Communications</h2>
+            <h2 style={{ margin: '0 0 12px', color: 'var(--color-surface)', fontSize: 14, fontWeight: 950 }}>Bridge Communications</h2>
             <div style={{ display: 'grid', gap: 10 }}>
               {data.bridgeCommunications.map(note => (
                 <button key={`${note.issueId}-${note.updatedAt}`} onClick={() => {

@@ -21,7 +21,7 @@ export type PunchListItemStatus =
   | 'DEFERRED_TO_WARRANTY';
 
 const STATUS_BADGE: Record<PunchListItemStatus, { bg: string; color: string; label: string }> = {
-  NEW:                  { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'New' },
+  NEW:                  { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'New' },
   ASSIGNED:             { bg: '#eff6ff', color: '#1d4ed8', label: 'Assigned' },
   IN_PROGRESS:          { bg: '#fffbeb', color: '#92400e', label: 'In Progress' },
   COMPLETED:            { bg: '#f0fdf4', color: '#15803d', label: 'Completed' },
@@ -39,7 +39,7 @@ const PILL: CSSProperties = {
 export default function PunchListStatusBadge({ status }: { status: PunchListItemStatus | string }) {
   const known = STATUS_BADGE[status as PunchListItemStatus];
   const s = known ?? {
-    bg: '#f8fafc',
+    bg: 'var(--color-surface)',
     color: 'var(--bos-color-ink-disabled)',
     label: String(status).replace(/_/g, ' '),
   };

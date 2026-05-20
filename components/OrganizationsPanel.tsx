@@ -124,9 +124,9 @@ const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   OPEN:          { bg: '#fef2f2', color: '#dc2626' },
   SCHEDULED:     { bg: '#eff6ff', color: '#1d4ed8' },
   IN_PROGRESS:   { bg: '#fffbeb', color: '#d97706' },
-  ON_HOLD:       { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
+  ON_HOLD:       { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
   COMPLETED:     { bg: '#f0fdf4', color: '#15803d' },
-  CANCELLED:     { bg: '#f8fafc', color: 'var(--bos-color-ink-tertiary)' },
+  CANCELLED:     { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-tertiary)' },
   INVOICED:      { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
   PAID:          { bg: '#f0fdf4', color: '#15803d' },
 };
@@ -136,7 +136,7 @@ const RELATIONSHIP_TYPES = ['billing_account', 'property', 'operator', 'owner_ho
 
 // ── Helper Components ────────────────────────────────────────────────────
 function TypeBadge({ type }: { type: string }) {
-  const c = TYPE_COLORS[type] || { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc' };
+  const c = TYPE_COLORS[type] || { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)' };
   return (
     <span style={{
       fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
@@ -149,7 +149,7 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 function WOStatusBadge({ status }: { status: string }) {
-  const c = WO_STATUS_COLORS[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
+  const c = WO_STATUS_COLORS[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
@@ -1111,7 +1111,7 @@ function OrgDetailPanel({
               <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginBottom: 8 }}>
                 Admin identity fields. Changes affect filtering, reporting, and linked records.
               </div>
-              <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--color-surface-border)', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--color-surface-border)', background: 'var(--color-surface)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Name + Save button row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <div><label style={LBL}>Name</label><input style={INP} value={orgEditForm.name} onChange={e => setOrgEditForm(p => ({ ...p, name: e.target.value }))} /></div>
@@ -1136,7 +1136,7 @@ function OrgDetailPanel({
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {ALL_TYPES.map(t => {
                       const selected = orgEditForm.types.includes(t);
-                      const c = TYPE_COLORS[t] || { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc' };
+                      const c = TYPE_COLORS[t] || { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)' };
                       return (
                         <button
                           key={t}
@@ -1684,7 +1684,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
               }}>All</button>
             {ALL_TYPES.map(t => {
               const active = typeFilter === t;
-              const c = TYPE_COLORS[t] || { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc' };
+              const c = TYPE_COLORS[t] || { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)' };
               return (
                 <button key={t}
                   onClick={() => setTypeFilter(active ? 'ALL' : t)}
@@ -1721,7 +1721,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                     background: isSelected ? '#f0fdfa' : 'white',
                     transition: 'background 0.1s, border 0.1s',
                   }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--color-surface)'; }}
                   onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'white'; }}
                 >
                   {/* Row top: name + WO count */}

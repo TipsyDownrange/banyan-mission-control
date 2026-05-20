@@ -166,7 +166,7 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
         <div style={headerStyle}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(20,184,166,0.6)' }}>Document</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#f8fafc', marginTop: 4 }}>{doc?.filename || 'Loading…'}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-surface)', marginTop: 4 }}>{doc?.filename || 'Loading…'}</div>
             <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.75)', marginTop: 4 }}>
               {doc ? `${doc.kind} · v${doc.version}${doc.is_current ? '' : ' · SUPERSEDED'}` : ''}
             </div>
@@ -221,7 +221,7 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
                 ) : (
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {versions.map((v) => (
-                      <li key={v.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: v.document_id === doc.document_id ? 'rgba(240,253,250,0.96)' : '#f8fafc', border: '1px solid var(--color-surface-border)' }}>
+                      <li key={v.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: v.document_id === doc.document_id ? 'rgba(240,253,250,0.96)' : 'var(--color-surface)', border: '1px solid var(--color-surface-border)' }}>
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-ink-primary)' }}>v{v.version} — {v.filename}</div>
                           <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{new Date(v.uploaded_at).toLocaleString()}</div>
@@ -311,7 +311,7 @@ const panelStyle: React.CSSProperties = { width: '100%', maxWidth: 680, backgrou
 const headerStyle: React.CSSProperties = { background: 'linear-gradient(135deg, #071722, #0c2330)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' };
 const closeButtonStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '4px 12px', color: 'var(--bos-color-ink-tertiary)', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 };
 const inputStyle: React.CSSProperties = { padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--color-surface-border)', fontSize: 13, outline: 'none', background: 'white' };
-const cardStyle: React.CSSProperties = { background: '#f8fafc', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 };
+const cardStyle: React.CSSProperties = { background: 'var(--color-surface)', borderRadius: 14, border: '1px solid var(--color-surface-border)', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 };
 const cardHeaderStyle: React.CSSProperties = { fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-brand-primary-deep)' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: 'none', background: 'var(--bos-color-brand-primary-deep)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
 const secondaryButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'white', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
