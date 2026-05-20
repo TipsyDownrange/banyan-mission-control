@@ -53,7 +53,7 @@ type ApiResponse = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  DRAFT: { bg: '#f8fafc', color: '#64748b' },
+  DRAFT: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
   ANSWERED: { bg: '#fffbeb', color: '#92400e' },
@@ -63,7 +63,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
 };
 
 function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] || { bg: '#f8fafc', color: '#64748b' };
+  const s = STATUS_STYLE[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -81,7 +81,7 @@ function DocChip({ icon, label, count, onClick, accent }: {
   accent?: string;
 }) {
   const has = count > 0;
-  const color = has ? (accent ?? '#0f766e') : '#94a3b8';
+  const color = has ? (accent ?? '#0f766e') : 'var(--bos-color-ink-tertiary)';
   return (
     <button
       type="button"
@@ -203,7 +203,7 @@ export default function RfisTab({ kID }: { kID: string }) {
 
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
         RFI Log v1.0 requires this project to be migrated to Postgres. The legacy Sheets-based RFI list is still shown elsewhere; new entries via this surface require an engagement row.
       </div>
     );
@@ -214,25 +214,25 @@ export default function RfisTab({ kID }: { kID: string }) {
       {/* KPI bar */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Overdue</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Overdue</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.overdue > 0 ? '#b91c1c' : '#059669', marginTop: 4 }}>
             {data.summary.overdue}
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>past required-by</div>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>past required-by</div>
         </div>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Open</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Open</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.open}</div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>submitted / under review / answered</div>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>submitted / under review / answered</div>
         </div>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.total}</div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>all statuses</div>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>all statuses</div>
         </div>
         {(['SUBMITTED', 'ANSWERED', 'RESOLVED'] as const).map((k) => (
           <div key={k} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.replace(/_/g, ' ')}</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.replace(/_/g, ' ')}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.by_status[k] ?? 0}</div>
           </div>
         ))}
@@ -269,11 +269,11 @@ export default function RfisTab({ kID }: { kID: string }) {
           <option value="number">RFI #</option>
           <option value="status">Status</option>
         </select>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', fontWeight: 700 }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
           <input type="checkbox" checked={overdueOnly} onChange={(e) => setOverdueOnly(e.target.checked)} />
           Overdue only
         </label>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', fontWeight: 700 }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
           <input type="checkbox" checked={costImpactOnly} onChange={(e) => setCostImpactOnly(e.target.checked)} />
           Cost/schedule impact
         </label>
@@ -299,7 +299,7 @@ export default function RfisTab({ kID }: { kID: string }) {
                 ? `1.5px solid ${STATUS_STYLE[s].color}`
                 : '1.5px solid #e2e8f0',
               background: filterStatuses.has(s) ? STATUS_STYLE[s].bg : 'white',
-              color: filterStatuses.has(s) ? STATUS_STYLE[s].color : '#64748b',
+              color: filterStatuses.has(s) ? STATUS_STYLE[s].color : 'var(--bos-color-ink-disabled)',
               cursor: 'pointer',
             }}
           >
@@ -309,7 +309,7 @@ export default function RfisTab({ kID }: { kID: string }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>
           {items.length === 0 ? 'No RFIs yet — click + New RFI to start.' : 'No RFIs match the active filters.'}
         </div>
       ) : (
@@ -334,10 +334,10 @@ export default function RfisTab({ kID }: { kID: string }) {
                       <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 800, color: '#0f172a' }}>{it.rfi_number}</span>
                       <StatusPill status={it.status} />
                       {it.submitted_to && (
-                        <span style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>→ {it.submitted_to}</span>
+                        <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>→ {it.submitted_to}</span>
                       )}
                       {it.ball_in_court && (
-                        <span style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>
+                        <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                           Ball: {it.ball_in_court}
                         </span>
                       )}
@@ -351,19 +351,19 @@ export default function RfisTab({ kID }: { kID: string }) {
                       {it.subject}
                     </div>
                     {it.reason_for_rfi && (
-                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                         {it.reason_for_rfi.replace(/_/g, ' ')}
                       </div>
                     )}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {it.required_response_by_date && (
-                      <div style={{ fontSize: 11, color: overdue ? '#b91c1c' : '#64748b', fontWeight: 700 }}>
+                      <div style={{ fontSize: 11, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                         Due {it.required_response_by_date}
                       </div>
                     )}
                     {d !== null && isOpen && (
-                      <div style={{ fontSize: 10, color: overdue ? '#b91c1c' : '#94a3b8', marginTop: 2, fontWeight: 700 }}>
+                      <div style={{ fontSize: 10, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginTop: 2, fontWeight: 700 }}>
                         {overdue ? `${Math.abs(d)}d overdue` : `${d}d to due`}
                       </div>
                     )}

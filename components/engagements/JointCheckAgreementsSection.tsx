@@ -80,7 +80,7 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
   }
 
   if (loading) {
-    return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>Loading joint check agreements…</div>;
+    return <div style={{ padding: 16, color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>Loading joint check agreements…</div>;
   }
   if (error) {
     return (
@@ -100,7 +100,7 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
         {engagementId && <CreateForm engagementId={engagementId} onCreated={refresh} />}
       </div>
       {(!rows || rows.length === 0) ? (
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>No joint check agreements on this project yet.</div>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No joint check agreements on this project yet.</div>
       ) : (
         rows.map((r) => {
           const color = STATUS_COLORS[r.status] ?? STATUS_COLORS.PROPOSED;
@@ -117,11 +117,11 @@ export default function JointCheckAgreementsSection({ kID }: { kID: string }) {
                 }}>
                   {r.status}
                 </span>
-                <span style={{ fontSize: 10, color: '#64748b' }}>{r.trigger_source}</span>
+                <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{r.trigger_source}</span>
               </div>
               {r.scope && <div style={{ fontSize: 12, color: '#475569' }}>{r.scope}</div>}
               {r.manufacturer_contact_name && (
-                <div style={{ fontSize: 11, color: '#64748b' }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                   {r.manufacturer_contact_name}{r.manufacturer_contact_email ? ` · ${r.manufacturer_contact_email}` : ''}
                 </div>
               )}

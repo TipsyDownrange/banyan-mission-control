@@ -50,7 +50,7 @@ type ApiResponse = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  REQUIRED: { bg: '#f8fafc', color: '#64748b' },
+  REQUIRED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   IN_PROGRESS: { bg: '#fff7ed', color: '#9a3412' },
   SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
   UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
@@ -68,7 +68,7 @@ const TYPE_STYLE: Record<string, { bg: string; color: string }> = {
 };
 
 function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] || { bg: '#f8fafc', color: '#64748b' };
+  const s = STATUS_STYLE[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -79,7 +79,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function TypePill({ type }: { type: string }) {
-  const s = TYPE_STYLE[type] || { bg: '#f8fafc', color: '#64748b' };
+  const s = TYPE_STYLE[type] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       padding: '2px 7px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -97,7 +97,7 @@ function DocChip({ icon, label, count, onClick, accent }: {
   accent?: string;
 }) {
   const has = count > 0;
-  const color = has ? (accent ?? '#0f766e') : '#94a3b8';
+  const color = has ? (accent ?? '#0f766e') : 'var(--bos-color-ink-tertiary)';
   return (
     <button
       type="button"
@@ -216,7 +216,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
 
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
         Submittal Log v1.0 requires this project to be migrated to Postgres. The legacy Sheets-based submittals list is still shown elsewhere; new entries via this surface require an engagement row.
       </div>
     );
@@ -227,20 +227,20 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
       {/* KPI bar */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 14 }}>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Outstanding</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Outstanding</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: data.summary.outstanding > 0 ? '#d97706' : '#059669', marginTop: 4 }}>
             {data.summary.outstanding}
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>per §5.4 logic</div>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>per §5.4 logic</div>
         </div>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total</div>
           <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.total}</div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>all statuses</div>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>all statuses</div>
         </div>
         {(['SUBMITTED', 'UNDER_REVIEW', 'APPROVED'] as const).map((k) => (
           <div key={k} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.replace(/_/g, ' ')}</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k.replace(/_/g, ' ')}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{data.summary.by_status[k] ?? 0}</div>
           </div>
         ))}
@@ -276,7 +276,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
           <option value="csi">Number / CSI</option>
           <option value="status">Status</option>
         </select>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', fontWeight: 700 }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
           <input type="checkbox" checked={overdueOnly} onChange={(e) => setOverdueOnly(e.target.checked)} />
           Overdue only
         </label>
@@ -302,7 +302,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                 ? `1.5px solid ${STATUS_STYLE[s].color}`
                 : '1.5px solid #e2e8f0',
               background: filterStatuses.has(s) ? STATUS_STYLE[s].bg : 'white',
-              color: filterStatuses.has(s) ? STATUS_STYLE[s].color : '#64748b',
+              color: filterStatuses.has(s) ? STATUS_STYLE[s].color : 'var(--bos-color-ink-disabled)',
               cursor: 'pointer',
             }}
           >
@@ -312,7 +312,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>
           {items.length === 0 ? 'No submittals yet — click + New Submittal to start.' : 'No submittals match the active filters.'}
         </div>
       ) : (
@@ -337,7 +337,7 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                       <TypePill type={it.submittal_type} />
                       <StatusPill status={it.status} />
                       {it.ball_in_court && (
-                        <span style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>
+                        <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                           Ball: {it.ball_in_court}
                         </span>
                       )}
@@ -345,18 +345,18 @@ export default function SubmittalsTab({ kID }: { kID: string }) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {it.description || it.display_label || '(no description)'}
                     </div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                       CSI {it.csi_spec_section} · {it.csi_subsection} · {it.csi_sub_subsection}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {it.required_by_date && (
-                      <div style={{ fontSize: 11, color: overdue ? '#b91c1c' : '#64748b', fontWeight: 700 }}>
+                      <div style={{ fontSize: 11, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                         Due {it.required_by_date}
                       </div>
                     )}
                     {d !== null && (
-                      <div style={{ fontSize: 10, color: overdue ? '#b91c1c' : '#94a3b8', marginTop: 2, fontWeight: 700 }}>
+                      <div style={{ fontSize: 10, color: overdue ? '#b91c1c' : 'var(--bos-color-ink-tertiary)', marginTop: 2, fontWeight: 700 }}>
                         {overdue ? `${Math.abs(d)}d overdue` : `${d}d to due`}
                       </div>
                     )}

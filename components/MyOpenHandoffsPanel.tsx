@@ -58,7 +58,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' }}>
             Handoffs Awaiting Review
           </div>
-          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
             Estimating → PM packets pending acceptance
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
       </div>
 
       {loading ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>Loading…</div>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>Loading…</div>
       ) : err ? (
         <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12 }}>{err}</div>
       ) : items.length === 0 ? (
@@ -91,7 +91,7 @@ export default function MyOpenHandoffsPanel({ onNavigate }: { onNavigate?: (kID:
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
                     {r.engagement_kid ?? r.kid ?? '—'}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                     Submitted {new Date(r.submitted_at).toLocaleDateString()}
                     {unresolved > 0 && (
                       <span style={{ color: '#b91c1c', fontWeight: 700, marginLeft: 8 }}>

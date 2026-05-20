@@ -124,9 +124,9 @@ const WO_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   OPEN:          { bg: '#fef2f2', color: '#dc2626' },
   SCHEDULED:     { bg: '#eff6ff', color: '#1d4ed8' },
   IN_PROGRESS:   { bg: '#fffbeb', color: '#d97706' },
-  ON_HOLD:       { bg: '#f8fafc', color: '#64748b' },
+  ON_HOLD:       { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   COMPLETED:     { bg: '#f0fdf4', color: '#15803d' },
-  CANCELLED:     { bg: '#f8fafc', color: '#94a3b8' },
+  CANCELLED:     { bg: '#f8fafc', color: 'var(--bos-color-ink-tertiary)' },
   INVOICED:      { bg: '#f0fdfa', color: '#0f766e' },
   PAID:          { bg: '#f0fdf4', color: '#15803d' },
 };
@@ -136,7 +136,7 @@ const RELATIONSHIP_TYPES = ['billing_account', 'property', 'operator', 'owner_ho
 
 // ── Helper Components ────────────────────────────────────────────────────
 function TypeBadge({ type }: { type: string }) {
-  const c = TYPE_COLORS[type] || { color: '#64748b', bg: '#f8fafc' };
+  const c = TYPE_COLORS[type] || { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc' };
   return (
     <span style={{
       fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
@@ -149,7 +149,7 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 function WOStatusBadge({ status }: { status: string }) {
-  const c = WO_STATUS_COLORS[status] || { bg: '#f8fafc', color: '#64748b' };
+  const c = WO_STATUS_COLORS[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' };
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
@@ -193,15 +193,15 @@ function CollapsibleSection({
             {title}
           </span>
           {count !== undefined && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: '#f1f5f9', color: '#64748b', borderRadius: 999, padding: '1px 7px' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, background: '#f1f5f9', color: 'var(--bos-color-ink-disabled)', borderRadius: 999, padding: '1px 7px' }}>
               {count}
             </span>
           )}
           {descriptor && !open && (
-            <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 400 }}>{descriptor}</span>
+            <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 400 }}>{descriptor}</span>
           )}
         </span>
-        <span style={{ fontSize: 12, color: '#94a3b8', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
+        <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
       </button>
       {open && (
         <div style={{ paddingBottom: 12 }}>
@@ -395,7 +395,7 @@ function OrganizationPicker({
     borderRadius: 999,
     border: active ? '1px solid #0f766e' : '1px solid #e2e8f0',
     background: active ? '#f0fdfa' : 'white',
-    color: active ? '#0f766e' : '#64748b',
+    color: active ? '#0f766e' : 'var(--bos-color-ink-disabled)',
     cursor: 'pointer',
   });
 
@@ -433,7 +433,7 @@ function OrganizationPicker({
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.name || 'Unnamed org'}</div>
-            <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{org.org_id}</div>
+            <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{org.org_id}</div>
           </div>
           <span style={{ fontSize: 10, fontWeight: 800, color: '#1d4ed8', background: '#eff6ff', borderRadius: 999, padding: '2px 7px', height: 18, whiteSpace: 'nowrap' }}>
             {org.woCount || 0} WO{org.woCount === 1 ? '' : 's'}
@@ -441,7 +441,7 @@ function OrganizationPicker({
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
           {org.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
-          {orgIsland(org) && <span style={{ fontSize: 10, color: '#64748b' }}>{orgIsland(org)}</span>}
+          {orgIsland(org) && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{orgIsland(org)}</span>}
           {matchBadge && <span style={{ fontSize: 10, color: '#0f766e', background: '#f0fdfa', borderRadius: 999, padding: '2px 6px' }}>{matchBadge}</span>}
           {status && status !== 'active' && <span style={{ fontSize: 10, color: '#92400e', background: '#fffbeb', borderRadius: 999, padding: '2px 6px' }}>{status}</span>}
         </div>
@@ -451,14 +451,14 @@ function OrganizationPicker({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <label style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#94a3b8', display: 'block' }}>{title}</label>
+      <label style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--bos-color-ink-tertiary)', display: 'block' }}>{title}</label>
       <input
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search by organization name, address, org ID, or contact."
         style={{ fontSize: 13, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', background: 'white', width: '100%', boxSizing: 'border-box' }}
       />
-      <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
+      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4 }}>
         {helperText}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -476,21 +476,21 @@ function OrganizationPicker({
       )}
       {bestMatches.length > 0 && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 5 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', marginBottom: 5 }}>
             Best matches {bestMatches.length > 10 ? '(top 10 shown)' : `(${bestMatches.length})`}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {visibleResults.map(renderCard)}
           </div>
           {bestMatches.length > 10 && (
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 6 }}>
               Refine search for more results.
             </div>
           )}
         </div>
       )}
       {canShowSearchResults && bestMatches.length === 0 && (
-        <div style={{ fontSize: 12, color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
           No matching organizations.
         </div>
       )}
@@ -779,11 +779,11 @@ function OrgDetailPanel({
   };
   const LBL: React.CSSProperties = {
     fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const,
-    letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 3, display: 'block',
+    letterSpacing: '0.07em', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3, display: 'block',
   };
   const SEC: React.CSSProperties = {
     fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const,
-    letterSpacing: '0.1em', color: '#64748b', marginBottom: 10, marginTop: 20,
+    letterSpacing: '0.1em', color: 'var(--bos-color-ink-disabled)', marginBottom: 10, marginTop: 20,
     paddingBottom: 6, borderBottom: '1px solid #f1f5f9',
   };
   const orgNameById = new Map(orgOptions.map(o => [o.org_id, o.name]));
@@ -806,22 +806,22 @@ function OrgDetailPanel({
       }}>
         {/* Header */}
         <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }}>←</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', fontSize: 18, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }}>←</button>
           <div style={{ flex: 1, minWidth: 0 }}>
             {loading || !detail ? (
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#94a3b8' }}>Loading…</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>
             ) : (
               <span style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {detail.org.name}
               </span>
             )}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20, padding: 0, lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer', fontSize: 20, padding: 0, lineHeight: 1 }}>×</button>
         </div>
 
         {/* Body */}
         {loading || !detail ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 13 }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
             Loading organization…
           </div>
         ) : (
@@ -829,7 +829,7 @@ function OrgDetailPanel({
             {/* Types + meta */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
               {detail.org.types.map(t => <TypeBadge key={t} type={t} />)}
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>
+              <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                 {detail.org.entity_type} · {detail.org.default_island || '—'}
               </span>
             </div>
@@ -853,7 +853,7 @@ function OrgDetailPanel({
             {/* Contacts */}
             <CollapsibleSection title="Contacts" descriptor="People linked to this org" count={detail.contacts.length} open={!!openSections['contacts']} onToggle={() => toggleSection('contacts')}>
             {detail.contacts.length === 0 && !addingContact && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No contacts yet.</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>No contacts yet.</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
               {detail.contacts.map(c => (
@@ -865,19 +865,19 @@ function OrgDetailPanel({
                         {c.is_primary && <span style={{ fontSize: 13 }}>⭐</span>}
                         <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{c.name}</span>
                       </div>
-                      {c.title && <div style={{ fontSize: 11, color: '#94a3b8' }}>{c.title}</div>}
+                      {c.title && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{c.title}</div>}
                     </div>
                     <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                       <button
                         onClick={() => editingContactId === c.contact_id ? setEditingContactId(null) : startEdit(c)}
-                        style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: editingContactId === c.contact_id ? '#f1f5f9' : 'white', color: '#64748b', cursor: 'pointer' }}
+                        style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: editingContactId === c.contact_id ? '#f1f5f9' : 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}
                       >
                         {editingContactId === c.contact_id ? 'Cancel' : 'Edit'}
                       </button>
                       <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setMenuOpenId(menuOpenId === c.contact_id ? null : c.contact_id)}
-                          style={{ fontSize: 14, fontWeight: 700, padding: '2px 7px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', lineHeight: 1.2 }}
+                          style={{ fontSize: 14, fontWeight: 700, padding: '2px 7px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', lineHeight: 1.2 }}
                         >···</button>
                         {menuOpenId === c.contact_id && (
                           <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10, minWidth: 150, overflow: 'hidden' }}>
@@ -919,7 +919,7 @@ function OrgDetailPanel({
                         <div><label style={LBL}>Email</label><input style={INP} type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} /></div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => setEditingContactId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                         <button onClick={() => saveContactEdit(c.contact_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                       </div>
                     </div>
@@ -957,7 +957,7 @@ function OrgDetailPanel({
                   </label>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => setAddingContact(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                   <button onClick={addContact} disabled={!newContact.name.trim()} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Contact</button>
                 </div>
               </div>
@@ -969,7 +969,7 @@ function OrgDetailPanel({
             {/* Addresses (schema concept remains sites) */}
             <CollapsibleSection title="Addresses" descriptor="Locations" count={detail.sites.length} open={!!openSections['sites']} onToggle={() => toggleSection('sites')}>
             {detail.sites.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>No addresses yet.</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>No addresses yet.</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
               {detail.sites.map(s => (
@@ -995,7 +995,7 @@ function OrgDetailPanel({
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={() => setEditingSiteId(null)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                         <button onClick={() => saveSiteEdit(s.site_id)} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Address</button>
                       </div>
                     </div>
@@ -1005,13 +1005,13 @@ function OrgDetailPanel({
                         <div style={{ minWidth: 0 }}>
                           {s.name && <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', marginBottom: 2 }}>{s.name}</div>}
                           <div style={{ fontWeight: 700 }}>{s.address_line_1 || '—'}{s.city ? `, ${s.city}` : ''}</div>
-                          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                             {[s.state, s.zip, s.island, s.site_type].filter(Boolean).join(' · ')}
                           </div>
                         </div>
                         <button
                           onClick={() => startSiteEdit(s)}
-                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', flexShrink: 0 }}
                         >
                           Edit
                         </button>
@@ -1039,7 +1039,7 @@ function OrgDetailPanel({
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => setAddingSite(false)} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                   <button onClick={addSite} style={{ flex: 2, padding: '7px', borderRadius: 8, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add Address</button>
                 </div>
               </div>
@@ -1051,7 +1051,7 @@ function OrgDetailPanel({
             {/* Linked Work Orders */}
             <CollapsibleSection title="Linked Work Orders" descriptor="Service history" count={detail.linkedWOs.length} open={!!openSections['linkedWOs']} onToggle={() => toggleSection('linkedWOs')}>
             {detail.linkedWOs.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked work orders.</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No linked work orders.</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {detail.linkedWOs.map(wo => (
@@ -1070,12 +1070,12 @@ function OrgDetailPanel({
                     >
                       <div>
                         <span style={{ fontWeight: 700, color: '#0f172a' }}>{wo.name || wo.woNumber}</span>
-                        <span style={{ color: '#94a3b8', marginLeft: 8 }}>{wo.woNumber}</span>
+                        <span style={{ color: 'var(--bos-color-ink-tertiary)', marginLeft: 8 }}>{wo.woNumber}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {wo.island && <span style={{ fontSize: 10, color: '#94a3b8' }}>{wo.island}</span>}
+                        {wo.island && <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{wo.island}</span>}
                         <WOStatusBadge status={wo.status} />
-                        {onNavigate && <span style={{ color: '#94a3b8', fontSize: 12 }}>→</span>}
+                        {onNavigate && <span style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>→</span>}
                       </div>
                     </div>
                   ))}
@@ -1085,7 +1085,7 @@ function OrgDetailPanel({
             {/* Linked Projects */}
             <CollapsibleSection title="Linked Projects" descriptor="Project links" count={detail.linkedProjects.length} open={!!openSections['linkedProjects']} onToggle={() => toggleSection('linkedProjects')}>
             {detail.linkedProjects.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>No linked projects.</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No linked projects.</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {detail.linkedProjects.map(p => (
@@ -1094,7 +1094,7 @@ function OrgDetailPanel({
                         <span style={{ fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
                         <span style={{ fontSize: 10, color: '#0891b2', marginLeft: 6 }}>{p.role}</span>
                       </div>
-                      <span style={{ color: '#94a3b8' }}>{p.kID}</span>
+                      <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>{p.kID}</span>
                     </div>
                   ))}
             </div>
@@ -1103,7 +1103,7 @@ function OrgDetailPanel({
             {/* Admin & Identity Controls divider */}
             <div style={{ marginTop: 20, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
-              <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: '#94a3b8', whiteSpace: 'nowrap' as const }}>Admin & Identity Controls</span>
+              <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: 'var(--bos-color-ink-tertiary)', whiteSpace: 'nowrap' as const }}>Admin & Identity Controls</span>
               <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
             </div>
 
@@ -1124,19 +1124,19 @@ function OrgDetailPanel({
                 {/* Types — governed chips */}
                 <div>
                   <label style={LBL}>Types</label>
-                  <div style={{ fontSize: 10, color: '#64748b', marginBottom: 5 }}>Types are governed classifications used for filtering and identity cleanup.</div>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginBottom: 5 }}>Types are governed classifications used for filtering and identity cleanup.</div>
                   {orgEditForm.types.filter(t => !ALL_TYPES.includes(t)).length > 0 && (
                     <div style={{ marginBottom: 6 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: '#94a3b8', marginRight: 4 }}>Legacy (unsupported):</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: 'var(--bos-color-ink-tertiary)', marginRight: 4 }}>Legacy (unsupported):</span>
                       {orgEditForm.types.filter(t => !ALL_TYPES.includes(t)).map(t => (
-                        <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: '#f1f5f9', color: '#94a3b8', marginRight: 4, display: 'inline-block', textTransform: 'uppercase' as const }}>{t}</span>
+                        <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: '#f1f5f9', color: 'var(--bos-color-ink-tertiary)', marginRight: 4, display: 'inline-block', textTransform: 'uppercase' as const }}>{t}</span>
                       ))}
                     </div>
                   )}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {ALL_TYPES.map(t => {
                       const selected = orgEditForm.types.includes(t);
-                      const c = TYPE_COLORS[t] || { color: '#64748b', bg: '#f8fafc' };
+                      const c = TYPE_COLORS[t] || { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc' };
                       return (
                         <button
                           key={t}
@@ -1149,7 +1149,7 @@ function OrgDetailPanel({
                             fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
                             border: selected ? `1.5px solid ${c.color}` : '1.5px solid #e2e8f0',
                             background: selected ? c.bg : 'white',
-                            color: selected ? c.color : '#64748b',
+                            color: selected ? c.color : 'var(--bos-color-ink-disabled)',
                             letterSpacing: '0.04em', textTransform: 'uppercase' as const,
                           }}
                         >
@@ -1176,7 +1176,7 @@ function OrgDetailPanel({
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                       </select>
-                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 3 }}>Merged status is controlled by the merge workflow and cannot be manually selected.</div>
+                      <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 3 }}>Merged status is controlled by the merge workflow and cannot be manually selected.</div>
                     </>
                   )}
                 </div>
@@ -1234,7 +1234,7 @@ function OrgDetailPanel({
                         <span
                           key={label}
                           title={hot ? `${n} ${label.toLowerCase()} will move to the survivor org.` : `No ${label.toLowerCase()} affected.`}
-                          style={hot ? { padding: '2px 6px', borderRadius: 6, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.35)', color: '#9a3412', fontWeight: 700 } : { color: '#64748b' }}
+                          style={hot ? { padding: '2px 6px', borderRadius: 6, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.35)', color: '#9a3412', fontWeight: 700 } : { color: 'var(--bos-color-ink-disabled)' }}
                         >
                           {label}: <strong>{n}</strong>
                         </span>
@@ -1242,7 +1242,7 @@ function OrgDetailPanel({
                     })}
                   </div>
                   {(mergePreview.affected.work_orders[0] || mergePreview.affected.projects[0] || mergePreview.affected.contacts[0] || mergePreview.affected.sites[0]) && (
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+                    <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 6 }}>
                       Examples: {[mergePreview.affected.work_orders[0]?.wo_number, mergePreview.affected.projects[0]?.kID, mergePreview.affected.contacts[0]?.name, mergePreview.affected.sites[0]?.address].filter(Boolean).join(' · ')}
                     </div>
                   )}
@@ -1283,7 +1283,7 @@ function OrgDetailPanel({
                     return (
                       <div key={rel.relationship_id} style={{ padding: '7px 9px', borderRadius: 8, background: 'white', border: '1px solid #e2e8f0', fontSize: 12 }}>
                         <div style={{ fontWeight: 800, color: '#0f172a' }}>{rel.relationship_type.replace(/_/g, ' ')} · {orgNameById.get(otherOrgId) || otherOrgId}</div>
-                        {rel.notes && <div style={{ color: '#64748b', marginTop: 2 }}>{rel.notes}</div>}
+                        {rel.notes && <div style={{ color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{rel.notes}</div>}
                       </div>
                     );
                   })}
@@ -1402,7 +1402,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   };
   const LBL: React.CSSProperties = {
     fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const,
-    letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 4, display: 'block',
+    letterSpacing: '0.07em', color: 'var(--bos-color-ink-tertiary)', marginBottom: 4, display: 'block',
   };
   const ROW2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
 
@@ -1421,7 +1421,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           <>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>New Customer</div>
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>What type of customer is this?</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>What type of customer is this?</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {ORG_CATEGORIES.map(c => (
@@ -1437,11 +1437,11 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
                 >
                   <span style={{ fontSize: 28 }}>{c.emoji}</span>
                   <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>{c.label}</span>
-                  <span style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>{c.sublabel}</span>
+                  <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center', lineHeight: 1.3 }}>{c.sublabel}</span>
                 </button>
               ))}
             </div>
-            <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </>
         )}
 
@@ -1453,7 +1453,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
                 {cat.emoji} New {cat.label}
               </div>
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>{cat.sublabel}</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{cat.sublabel}</div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1573,7 +1573,7 @@ function NewOrgModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={create} disabled={!orgName || (isPersonal && !phone.trim()) || creating}
                 style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', fontSize: 13, fontWeight: 800, cursor: (!orgName || (isPersonal && !phone.trim())) ? 'not-allowed' : 'pointer', opacity: (!orgName || (isPersonal && !phone.trim())) ? 0.6 : 1 }}>
                 {creating ? 'Creating…' : isPersonal ? 'Create Customer' : `Create ${cat.label}`}
@@ -1646,7 +1646,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
       }}>
         {/* Header */}
         <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>People</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>People</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>Organizations</div>
             <button
@@ -1655,7 +1655,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
               + New Org
             </button>
           </div>
-          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginBottom: 12 }}>
             {loading ? 'Loading…' : `${sorted.length} of ${total} organizations`}
           </div>
 
@@ -1680,11 +1680,11 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                 textTransform: 'uppercase', letterSpacing: '0.04em',
                 border: typeFilter === 'ALL' ? '1.5px solid #0f766e' : '1px solid #e2e8f0',
                 background: typeFilter === 'ALL' ? '#f0fdfa' : 'white',
-                color: typeFilter === 'ALL' ? '#0f766e' : '#94a3b8',
+                color: typeFilter === 'ALL' ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
               }}>All</button>
             {ALL_TYPES.map(t => {
               const active = typeFilter === t;
-              const c = TYPE_COLORS[t] || { color: '#64748b', bg: '#f8fafc' };
+              const c = TYPE_COLORS[t] || { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc' };
               return (
                 <button key={t}
                   onClick={() => setTypeFilter(active ? 'ALL' : t)}
@@ -1692,7 +1692,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                     fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
                     textTransform: 'uppercase' as const, letterSpacing: '0.04em',
                     border: active ? `1.5px solid ${c.color}` : '1px solid #e2e8f0',
-                    background: active ? c.bg : 'white', color: active ? c.color : '#94a3b8',
+                    background: active ? c.bg : 'white', color: active ? c.color : 'var(--bos-color-ink-tertiary)',
                   }}>
                   {FILTER_LABELS[t]}
                 </button>
@@ -1704,9 +1704,9 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
         {/* Org rows */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 20px' }}>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading organizations…</div>
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>Loading organizations…</div>
           ) : sorted.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No organizations match this filter.</div>
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No organizations match this filter.</div>
           ) : (
             sorted.map(o => {
               const isSelected = o.org_id === selectedOrgId;
@@ -1739,7 +1739,7 @@ export default function OrganizationsPanel({ onNavigate }: Props) {
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                     {o.types.slice(0, 3).map(t => <TypeBadge key={t} type={t} />)}
                     {displayIsland && (
-                      <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }}>{displayIsland}</span>
+                      <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginLeft: 2 }}>{displayIsland}</span>
                     )}
                   </div>
                 </div>

@@ -188,7 +188,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0f766e' }}>{label}</span>
       {children}
-      {hint && <span style={{ fontSize: 11, color: '#94a3b8' }}>{hint}</span>}
+      {hint && <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{hint}</span>}
     </label>
   );
 }
@@ -196,7 +196,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,23,42,0.55)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflowY: 'auto', padding: 32 };
 const panelStyle: React.CSSProperties = { width: '100%', maxWidth: 640, background: 'white', borderRadius: 18, overflow: 'hidden', boxShadow: '0 24px 60px rgba(15,23,42,0.4)' };
 const headerStyle: React.CSSProperties = { background: 'linear-gradient(135deg, #071722, #0c2330)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' };
-const closeButtonStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '4px 12px', color: '#94a3b8', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 };
+const closeButtonStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '4px 12px', color: 'var(--bos-color-ink-tertiary)', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 };
 const inputStyle: React.CSSProperties = { padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white' };
 const cancelButtonStyle: React.CSSProperties = { padding: '8px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontSize: 12, fontWeight: 800, cursor: 'pointer' };
 const primaryButtonStyle: React.CSSProperties = { padding: '8px 16px', borderRadius: 10, border: 'none', background: '#0f766e', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer' };

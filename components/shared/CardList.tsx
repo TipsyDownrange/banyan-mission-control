@@ -19,7 +19,7 @@ const PRIORITY_COLORS = {
   critical: '#dc2626',
   high: '#ea580c',
   medium: '#2563eb',
-  low: '#64748b',
+  low: 'var(--bos-color-ink-disabled)',
 };
 
 interface CardListProps {
@@ -57,7 +57,7 @@ export default function CardList({
       <div style={{
         padding: '40px 24px',
         textAlign: 'center',
-        color: '#94a3b8',
+        color: 'var(--bos-color-ink-tertiary)',
         fontSize: 13,
         background: 'white',
         borderRadius: 16,
@@ -148,7 +148,7 @@ export default function CardList({
                 {item.subtitle && (
                   <div style={{
                     fontSize: 11,
-                    color: '#64748b',
+                    color: 'var(--bos-color-ink-disabled)',
                     marginBottom: 8,
                     lineHeight: 1.4,
                   }}>
@@ -158,7 +158,7 @@ export default function CardList({
 
                 {/* Meta */}
                 {item.meta && (
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                     {item.meta}
                   </div>
                 )}

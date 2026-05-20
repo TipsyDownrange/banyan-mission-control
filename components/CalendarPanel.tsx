@@ -169,19 +169,19 @@ export default function CalendarPanel() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Assistant</div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Assistant</div>
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Calendar</h1>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {/* Personal / All Staff toggle — All Staff only for non-glazier roles */}
           <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 3 }}>
             <button onClick={() => setCalMode('personal')}
-              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'personal' ? 'white' : 'transparent', color: calMode === 'personal' ? '#0369a1' : '#94a3b8', cursor: 'pointer', boxShadow: calMode === 'personal' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'personal' ? 'white' : 'transparent', color: calMode === 'personal' ? '#0369a1' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', boxShadow: calMode === 'personal' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
               My Calendar
             </button>
             {canSeeAllStaff && (
               <button onClick={() => setCalMode('management')}
-                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'management' ? 'white' : 'transparent', color: calMode === 'management' ? '#0369a1' : '#94a3b8', cursor: 'pointer', boxShadow: calMode === 'management' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', background: calMode === 'management' ? 'white' : 'transparent', color: calMode === 'management' ? '#0369a1' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', boxShadow: calMode === 'management' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
                 🏢 All Staff
               </button>
             )}
@@ -189,7 +189,7 @@ export default function CalendarPanel() {
           {/* View toggle */}
           {(['month', 'agenda'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
-              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid #e2e8f0', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? '#0369a1' : '#64748b', cursor: 'pointer' }}>
+              style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(3,105,161,0.4)' : '1px solid #e2e8f0', background: view === v ? 'rgba(239,246,255,0.96)' : 'white', color: view === v ? '#0369a1' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
               {v}
             </button>
           ))}
@@ -197,12 +197,12 @@ export default function CalendarPanel() {
           {view === 'month' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
               <button onClick={() => setCurrentMonth(new Date(year, month - 1))}
-                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>‹</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>‹</button>
               <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', minWidth: 140, textAlign: 'center' }}>{monthName}</span>
               <button onClick={() => setCurrentMonth(new Date(year, month + 1))}
-                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>›</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>›</button>
               <button onClick={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
-                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}>Today</button>
+                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>Today</button>
               {calMode === 'personal' && (
                 <button onClick={() => setShowNewEvent(true)}
                   style={{ padding: '5px 14px', borderRadius: 8, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
@@ -220,13 +220,13 @@ export default function CalendarPanel() {
       {calMode === 'management' && canSeeAllStaff && (
         <div style={{ marginBottom: 16 }}>
           {flightsLoading && (
-            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
               Scanning emails for travel…
             </div>
           )}
           {!flightsLoading && flights.length === 0 && (
-            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0', fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="#94a3b8"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+            <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0', fontSize: 12, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--bos-color-ink-tertiary)"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
               No upcoming travel found. Booking confirmations sent to Tia or Jenna appear here automatically.
             </div>
           )}
@@ -297,7 +297,7 @@ export default function CalendarPanel() {
         <div style={{ textAlign: 'center', padding: 48 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading calendar...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading calendar...</div>
         </div>
       )}
 
@@ -308,7 +308,7 @@ export default function CalendarPanel() {
             {/* Day headers */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: '1px solid #f1f5f9' }}>
               {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                <div key={d} style={{ padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{d}</div>
+                <div key={d} style={{ padding: '8px 0', textAlign: 'center', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>{d}</div>
               ))}
             </div>
             {/* Grid cells */}
@@ -337,7 +337,7 @@ export default function CalendarPanel() {
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div style={{ fontSize: 9, color: '#94a3b8', paddingLeft: 4 }}>+{dayEvents.length - 3} more</div>
+                      <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', paddingLeft: 4 }}>+{dayEvents.length - 3} more</div>
                     )}
                   </div>
                 );
@@ -350,13 +350,13 @@ export default function CalendarPanel() {
             <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: '16px', maxHeight: 600, overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)' }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}</div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</div>
                 </div>
-                <button onClick={() => setSelectedDate(null)} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: '#94a3b8', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                <button onClick={() => setSelectedDate(null)} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
               </div>
               {selectedDayEvents().length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: '#94a3b8', fontSize: 13 }}>No events</div>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No events</div>
               ) : (
                 selectedDayEvents().map(ev => (
                   <div key={ev.id} style={{ marginBottom: 10, padding: '10 12', borderRadius: 12, background: '#f8fafc', border: `1px solid #e2e8f0`, cursor: 'pointer' }}
@@ -365,15 +365,15 @@ export default function CalendarPanel() {
                       <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                           {ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}
                           {calMode === 'management' && ev.calendar && (
-                            <span style={{ marginLeft: 8, fontWeight: 700, color: ev.color || '#64748b' }}>
+                            <span style={{ marginLeft: 8, fontWeight: 700, color: ev.color || 'var(--bos-color-ink-disabled)' }}>
                               {ev.calendar.split(',').map((n: string) => n.trim()).join(' · ')}
                             </span>
                           )}
                         </div>
-                        {ev.location && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>​{ev.location}</div>}
+                        {ev.location && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>​{ev.location}</div>}
                         {selectedEvent?.id === ev.id && ev.description && (
                           <div style={{ marginTop: 6, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>{ev.description}</div>
                         )}
@@ -392,7 +392,7 @@ export default function CalendarPanel() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {agendaDays.map(({ date, events: dayEvts }) => (
             <div key={date.toISOString()}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: isToday(date.toISOString()) ? '#0369a1' : '#94a3b8', marginTop: 12, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: isToday(date.toISOString()) ? '#0369a1' : 'var(--bos-color-ink-tertiary)', marginTop: 12, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                 {isToday(date.toISOString()) && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0369a1', flexShrink: 0 }} />}
                 {fmtDate(date.toISOString())}
                 {isToday(date.toISOString()) && <span style={{ padding: '1px 6px', borderRadius: 999, background: '#0369a1', color: 'white', fontSize: 9, fontWeight: 800 }}>TODAY</span>}
@@ -405,7 +405,7 @@ export default function CalendarPanel() {
                     <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 999, background: ev.color || '#0369a1', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{ev.title}</div>
-                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: '#94a3b8' }}>
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                         <span>{ev.allDay ? 'All day' : `${fmt(ev.start)} – ${fmt(ev.end)}`}</span>
                         {ev.location && <span>​{ev.location}</span>}
                         {ev.calendar && (
@@ -421,7 +421,7 @@ export default function CalendarPanel() {
             </div>
           ))}
           {agendaDays.filter(d => d.events.length > 0).length === 0 && (
-            <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', fontSize: 13, color: '#94a3b8' }}>
+            <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0', fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>
               No upcoming events in the next 30 days
             </div>
           )}
@@ -434,34 +434,34 @@ export default function CalendarPanel() {
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>New Event</div>
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>Title *</label>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>Title *</label>
                 <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Event title..." autoFocus
                   style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>Date *</label>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>Date *</label>
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>Start Time</label>
+                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>Start Time</label>
                   <input type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)}
                     style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4, display: 'block' }}>End Time</label>
+                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4, display: 'block' }}>End Time</label>
                   <input type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)}
                     style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>Leave time blank to create an all-day event</div>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Leave time blank to create an all-day event</div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={() => { setShowNewEvent(false); setNewTitle(''); setNewDate(''); }}
-                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={createEvent} disabled={!newTitle || !newDate || savingEvent}
-                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: newTitle && newDate ? 'white' : '#94a3b8', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
+                style={{ flex: 2, padding: 11, borderRadius: 12, background: newTitle && newDate ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: newTitle && newDate ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: newTitle && newDate ? 'pointer' : 'default' }}>
                 {savingEvent ? 'Creating...' : 'Create Event'}
               </button>
             </div>

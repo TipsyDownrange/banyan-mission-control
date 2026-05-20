@@ -87,7 +87,7 @@ export default function UserScheduleView({ tasks, assignments, onDrillToTask }: 
 
   if (byUser.length === 0 || !range) {
     return (
-      <div data-bos-user-schedule-empty style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+      <div data-bos-user-schedule-empty style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
         No crew assignments to chart yet.
       </div>
     );
@@ -99,7 +99,7 @@ export default function UserScheduleView({ tasks, assignments, onDrillToTask }: 
 
   return (
     <div data-bos-user-schedule-view style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, overflowX: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
         <span>{dateLabel(range.startMs)}</span>
         <span>{dateLabel(range.endMs)}</span>
       </div>
@@ -110,7 +110,7 @@ export default function UserScheduleView({ tasks, assignments, onDrillToTask }: 
             <tr key={u.user_id} data-bos-user-schedule-row={u.user_id}>
               <td style={{ padding: '8px 12px', width: 180, color: '#0f172a', fontWeight: 600 }}>
                 {u.name}
-                <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 400 }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 400 }}>
                   {u.rows.length} task{u.rows.length === 1 ? '' : 's'}
                 </div>
               </td>

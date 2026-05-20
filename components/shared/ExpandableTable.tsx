@@ -92,7 +92,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
         padding: '32px 16px',
         textAlign: 'center',
         fontSize: 13,
-        color: '#94a3b8',
+        color: 'var(--bos-color-ink-tertiary)',
         background: 'white',
         border: '1px solid #e2e8f0',
         borderRadius: 12,
@@ -167,7 +167,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                   <td style={{
                     padding: '10px 8px',
                     textAlign: 'center',
-                    color: isExpanded ? '#0f766e' : '#94a3b8',
+                    color: isExpanded ? '#0f766e' : 'var(--bos-color-ink-tertiary)',
                     fontSize: 12,
                     userSelect: 'none',
                     verticalAlign: 'middle',
@@ -186,7 +186,7 @@ export default function ExpandableTable<T = Record<string, unknown>>({
                     let cellBg = 'transparent';
                     let cellColor = '#1e293b';
                     if (col.type === 'currency') { cellColor = '#0f172a'; }
-                    if (col.type === 'status') { cellColor = '#64748b'; }
+                    if (col.type === 'status') { cellColor = 'var(--bos-color-ink-disabled)'; }
                     if (col.editable && row.rowStyle === 'editable') cellBg = 'rgba(20,184,166,0.06)';
                     if (col.editable && row.rowStyle === 'generated') cellBg = 'rgba(249,115,22,0.06)';
 

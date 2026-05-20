@@ -101,7 +101,7 @@ export function RadialQuotaGauge({
           const deg = ARC_START + (t / 100) * ARC_SWEEP;
           const [ix, iy] = polar(cx, cy, r - 14, deg);
           const [ox, oy] = polar(cx, cy, r - 4, deg);
-          return <line key={t} x1={ix} y1={iy} x2={ox} y2={oy} stroke="#94a3b8" strokeWidth={1.5} />;
+          return <line key={t} x1={ix} y1={iy} x2={ox} y2={oy} stroke="var(--bos-color-ink-tertiary)" strokeWidth={1.5} />;
         })}
         <g
           style={{
@@ -118,7 +118,7 @@ export function RadialQuotaGauge({
         </text>
       </svg>
       <div style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 850, textAlign: 'center', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</div>
-      {reset && <div style={{ color: '#94a3b8', fontSize: 10 }}>{reset}</div>}
+      {reset && <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 10 }}>{reset}</div>}
     </div>
   );
 }

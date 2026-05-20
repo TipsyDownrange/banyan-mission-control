@@ -142,13 +142,13 @@ export default function DocumentsTab({ kID }: { kID: string }) {
   }, [items, search, kindFilter, linkedFilter]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading documents...</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading documents...</div>;
   }
   if (err) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load documents: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Document Hub requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Document Hub requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -163,7 +163,7 @@ export default function DocumentsTab({ kID }: { kID: string }) {
           ['Submittals', data.summary.by_kind.SUBMITTAL_PACKAGE ?? 0],
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
           </div>
         ))}
@@ -189,24 +189,24 @@ export default function DocumentsTab({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No documents match the current filters.</div>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No documents match the current filters.</div>
         ) : filtered.map((it) => (
           <div key={it.document_id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', opacity: it.is_current ? 1 : 0.55 }} onClick={() => setOpenDocumentId(it.document_id)}>
             <div style={{ display: 'grid', gridTemplateColumns: '110px minmax(180px, 1.6fr) 130px 140px 90px', gap: 10, alignItems: 'center' }}>
-              <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>{formatDate(it.uploaded_at)}</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.uploaded_at)}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.filename}
                   {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>v{it.version}</span>}
-                  {!it.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', marginLeft: 6 }}>· SUPERSEDED</span>}
+                  {!it.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>· SUPERSEDED</span>}
                 </div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.subkind || it.notes || '—'}
                 </div>
               </div>
               <div style={{ fontSize: 10, fontWeight: 800, color: '#0f766e', padding: '3px 8px', borderRadius: 999, background: 'rgba(240,253,250,0.96)', border: '1px solid rgba(15,118,110,0.22)', justifySelf: 'start' }}>{KIND_LABEL[it.kind]}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#334155' }}>
-                {it.linked_entity_type ? <span>→ {LINKED_LABEL[it.linked_entity_type]}</span> : <span style={{ color: '#94a3b8' }}>unlinked</span>}
+                {it.linked_entity_type ? <span>→ {LINKED_LABEL[it.linked_entity_type]}</span> : <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>unlinked</span>}
               </div>
               <a href={`https://drive.google.com/file/d/${encodeURIComponent(it.drive_file_id)}/view`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,118,110,0.22)', background: 'white', textDecoration: 'none', justifySelf: 'end' }}>Open</a>
             </div>

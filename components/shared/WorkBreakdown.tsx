@@ -95,7 +95,7 @@ interface WorkBreakdownProps {
 
 const LBL: React.CSSProperties = {
   fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
-  textTransform: 'uppercase', color: '#94a3b8',
+  textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)',
   marginBottom: 4, display: 'block',
 };
 
@@ -147,7 +147,7 @@ function HoursDelta({ quoted, planned, actual }: { quoted?: number; planned: num
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
       {quoted !== undefined && quoted > 0 && (
-        <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>
+        <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>
           {quoted}h quoted
         </span>
       )}
@@ -770,7 +770,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   padding: '9px 20px', borderRadius: 8, fontSize: 12, fontWeight: 800, border: 'none',
                   cursor: savingDocs ? 'default' : 'pointer',
                   background: savingDocs ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
-                  color: savingDocs ? '#94a3b8' : 'white',
+                  color: savingDocs ? 'var(--bos-color-ink-tertiary)' : 'white',
                 }}
               >
                 {savingDocs ? 'Saving…' : 'Save Links'}
@@ -797,7 +797,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 >
                   <span style={{ fontSize: 20 }}>{icon}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color, lineHeight: 1.3 }}>{label}</span>
-                  <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600 }}>Open ↗</span>
+                  <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>Open ↗</span>
                 </a>
               ) : (
                 <div
@@ -811,7 +811,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   }}
                 >
                   <span style={{ fontSize: 20 }}>{icon}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', lineHeight: 1.3 }}>{label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', lineHeight: 1.3 }}>{label}</span>
                   {!readOnly && <span style={{ fontSize: 9, color: '#cbd5e1' }}>Add link</span>}
                 </div>
               );
@@ -920,7 +920,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   <div style={{ fontSize: 12, color: '#7c3aed', fontWeight: 700 }}>
                     Creates {count} opening{count !== 1 ? 's' : ''} × {templateStepCount} steps = {count * templateStepCount} total steps
                   </div>
-                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                     {bulkForm.id_prefix} {bulkForm.start} → {bulkForm.id_prefix} {bulkForm.end}
                     {bulkForm.location_prefix && ` · ${bulkForm.location_prefix}`}
                   </div>
@@ -935,7 +935,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     padding: '10px 24px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none',
                     cursor: isValid && !bulkCreating ? 'pointer' : 'default',
                     background: isValid && !bulkCreating ? 'linear-gradient(135deg,#7c3aed,#a78bfa)' : '#e2e8f0',
-                    color: isValid && !bulkCreating ? 'white' : '#94a3b8',
+                    color: isValid && !bulkCreating ? 'white' : 'var(--bos-color-ink-tertiary)',
                   }}
                 >
                   {bulkCreating ? 'Creating…' : `Create ${count > 0 ? count : ''} Opening${count !== 1 ? 's' : ''}`}
@@ -1013,7 +1013,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 <span
                   style={{
                     fontSize: 13, fontWeight: 600,
-                    color: status === 'complete' ? '#64748b' : '#0f172a',
+                    color: status === 'complete' ? 'var(--bos-color-ink-disabled)' : '#0f172a',
                     textDecoration: status === 'complete' ? 'line-through' : 'none',
                     cursor: readOnly || isLocked ? 'default' : 'text',
                     borderBottom: readOnly || isLocked ? 'none' : '1px dashed #e2e8f0',
@@ -1055,7 +1055,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   min="0"
                 />
               ) : step.allotted_hours > 0 ? (
-                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>
+                <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>
                   {step.allotted_hours}h
                 </span>
               ) : null}
@@ -1112,7 +1112,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                     } catch {}
                   }}
                   onClick={e => e.stopPropagation()}
-                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid #e2e8f0', background: step.category ? '#f0fdfa' : 'white', color: step.category ? '#0f766e' : '#94a3b8', cursor: 'pointer', outline: 'none' }}
+                  style={{ fontSize: 9, fontWeight: 700, padding: '2px 4px', borderRadius: 5, border: '1px solid #e2e8f0', background: step.category ? '#f0fdfa' : 'white', color: step.category ? '#0f766e' : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', outline: 'none' }}
                 >
                   <option value="">Category</option>
                   {STEP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -1128,7 +1128,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6, alignItems: 'center' }}>
                 {/* Planned Start Date */}
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Start</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Start</span>
                   <input
                     type="date"
                     value={step.planned_start_date || ''}
@@ -1161,7 +1161,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
                 {/* Planned End Date */}
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>End</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>End</span>
                   <input
                     type="date"
                     value={step.planned_end_date || ''}
@@ -1233,7 +1233,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             )}
 
             {readOnly && step.planned_start_date && (
-              <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 10, color: '#94a3b8', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 10, color: 'var(--bos-color-ink-tertiary)', flexWrap: 'wrap' }}>
                 <span>📅 {step.planned_start_date}{step.planned_end_date ? ` → ${step.planned_end_date}` : ''}</span>
               </div>
             )}
@@ -1310,7 +1310,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               })}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
             >
-              <span style={{ fontSize: 11, color: '#94a3b8', width: 14, flexShrink: 0 }}>
+              <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', width: 14, flexShrink: 0 }}>
                 {isExpanded ? '▼' : '▶'}
               </span>
             </button>
@@ -1361,7 +1361,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           {isExpanded && (
             <div style={{ padding: '0 12px 12px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {planSteps.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>No steps yet.</div>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '8px 0' }}>No steps yet.</div>
               ) : (
                 planSteps.map(step => renderStepRow(step, mark.id))
               )}
@@ -1381,7 +1381,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {planSteps.length === 0 ? (
-          <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '8px 0' }}>
             No steps yet. Add steps or apply a template.
           </div>
         ) : (
@@ -1425,7 +1425,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none',
           }}
         >
-          <span style={{ fontSize: 12, color: '#94a3b8', width: 16, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', width: 16, flexShrink: 0 }}>
             {isExpanded ? '▼' : '▶'}
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -1457,7 +1457,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 ) : (
                   <span
                     style={{
-                      fontSize: 11, color: '#64748b',
+                      fontSize: 11, color: 'var(--bos-color-ink-disabled)',
                       cursor: readOnly ? 'default' : 'text',
                       borderBottom: readOnly ? 'none' : '1px dashed #cbd5e1',
                       padding: '1px 0',
@@ -1513,7 +1513,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                 <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
                   <div style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{plan.location || 'Default Area'}</span>
-                    <span style={{ fontSize: 10, color: '#94a3b8' }}>{plan.estimated_qty} mark{plan.estimated_qty !== 1 ? 's' : ''}</span>
+                    <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{plan.estimated_qty} mark{plan.estimated_qty !== 1 ? 's' : ''}</span>
                   </div>
                   <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {renderMarkTree(plan)}
@@ -1614,7 +1614,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       marginLeft: 'auto',
                       padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: stepForm.step_name ? 'pointer' : 'default',
                       background: stepForm.step_name ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-                      color: stepForm.step_name ? 'white' : '#94a3b8',
+                      color: stepForm.step_name ? 'white' : 'var(--bos-color-ink-tertiary)',
                       border: 'none',
                     }}
                   >
@@ -1643,7 +1643,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                       }}
                     >
                       {name}
-                      <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 5 }}>
+                      <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginLeft: 5 }}>
                         ({STEP_TEMPLATES[name].length} steps)
                       </span>
                     </button>
@@ -1732,13 +1732,13 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}>
               {matchingTypes.join(', ')}
             </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
               Step Library templates available for these system types.
             </div>
           </div>
           <button
             onClick={() => setTemplateBannerDismissed(true)}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 16, padding: '2px 4px', flexShrink: 0 }}
+            style={{ background: 'none', border: 'none', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer', fontSize: 16, padding: '2px 4px', flexShrink: 0 }}
           >×</button>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -1748,7 +1748,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
             style={{
               padding: '9px 18px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 800, cursor: creatingFromTemplates ? 'default' : 'pointer',
               background: creatingFromTemplates ? '#e2e8f0' : 'linear-gradient(135deg,#0f766e,#14b8a6)',
-              color: creatingFromTemplates ? '#94a3b8' : 'white',
+              color: creatingFromTemplates ? 'var(--bos-color-ink-tertiary)' : 'white',
               boxShadow: creatingFromTemplates ? 'none' : '0 2px 8px rgba(15,118,110,0.25)',
             }}
           >
@@ -1756,7 +1756,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           </button>
           <button
             onClick={() => setTemplateBannerDismissed(true)}
-            style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
           >
             Skip
           </button>
@@ -1770,7 +1770,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
   if (loading) {
     return (
       <div style={{ padding: '32px 0', textAlign: 'center' }}>
-        <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading work breakdown…</div>
+        <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading work breakdown…</div>
       </div>
     );
   }
@@ -1849,7 +1849,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
                   style={{
                     padding: '9px 22px', borderRadius: 10, fontSize: 13, fontWeight: 800, border: 'none', cursor: 'pointer',
                     background: scopeForm.system_type && scopeForm.location ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0',
-                    color: scopeForm.system_type && scopeForm.location ? 'white' : '#94a3b8',
+                    color: scopeForm.system_type && scopeForm.location ? 'white' : 'var(--bos-color-ink-tertiary)',
                   }}
                 >
                   Create Scope
@@ -1880,17 +1880,17 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
           <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
             {quotedHours !== undefined && quotedHours > 0 && (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Quoted</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Quoted</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{quotedHours}h</div>
               </div>
             )}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Planned</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Planned</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{totalPlannedHours.toFixed(1)}h</div>
             </div>
             {totalActualHours > 0 && (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Actual</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Actual</div>
                 <div style={{
                   fontSize: 16, fontWeight: 800,
                   color: totalActualHours > totalPlannedHours ? '#dc2626' : '#15803d',
@@ -1900,7 +1900,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
               </div>
             )}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Steps</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Steps</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{totalCompletedSteps}/{totalSteps}</div>
             </div>
           </div>
@@ -1910,7 +1910,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
       {/* Scopes */}
       {plans.length === 0 ? (
         <div style={{ padding: '32px 16px', textAlign: 'center', background: 'white', borderRadius: 12, border: '1px dashed #e2e8f0' }}>
-          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)', marginBottom: 12 }}>
             No work breakdown defined yet.
             {!readOnly && ' Add a scope or bulk-create openings to get started.'}
           </div>
@@ -1998,7 +1998,7 @@ function _MeasurementViewButton_REMOVED({ eventId, kID }: { eventId?: string; kI
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
             {Object.entries(fields).map(([k, v]) => (
               <div key={k}>
-                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b' }}>{k.replace(/_/g, ' ')}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--bos-color-ink-disabled)' }}>{k.replace(/_/g, ' ')}</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
                   {typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}
                 </div>

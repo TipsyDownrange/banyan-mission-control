@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
 <style>body{font-family:system-ui;max-width:600px;margin:60px auto;padding:20px;background:#f8fafc;}
 .card{background:white;border-radius:16px;padding:24px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 h1{color:#0f766e;margin:0 0 8px;}
-p{color:#64748b;margin:0 0 16px;}
+p{color:var(--bos-color-ink-disabled);margin:0 0 16px;}
 pre{background:#f1f5f9;border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;color:#334155;}
 .success{color:#0f766e;font-weight:700;font-size:18px;}</style>
 </head>
@@ -65,7 +65,7 @@ ACCESS_TOKEN: ${tokens.access_token?.slice(0, 40)}...
 REFRESH_TOKEN: ${tokens.refresh_token}
 EXPIRES_IN: ${tokens.expires_in}s
 X_REFRESH_TOKEN_EXPIRES_IN: ${tokens.x_refresh_token_expires_in}s</pre>
-  <p style="margin-top:16px;font-size:13px;color:#94a3b8;">Send the full REFRESH_TOKEN to Kai via Telegram to complete the connection.</p>
+  <p style="margin-top:16px;font-size:13px;color:var(--bos-color-ink-tertiary);">Send the full REFRESH_TOKEN to Kai via Telegram to complete the connection.</p>
 </div>
 </body>
 </html>`;

@@ -67,7 +67,7 @@ export default function CriticalGapsList({
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {g.gap_type} <span style={{ color: '#94a3b8', fontWeight: 600 }}>· {g.gap_id}</span>
+                  {g.gap_type} <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>· {g.gap_id}</span>
                 </div>
                 <div style={{ fontSize: 13, color: '#0f172a', marginTop: 4 }}>{g.description}</div>
               </div>
@@ -90,7 +90,7 @@ export default function CriticalGapsList({
                 <button
                   type="button"
                   onClick={() => removeGap(idx)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 14 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bos-color-ink-tertiary)', fontSize: 14 }}
                   aria-label="Remove gap"
                 >
                   ✕

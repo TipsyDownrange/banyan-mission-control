@@ -21,7 +21,7 @@ type Project = { kID: string; name: string };
 const STATUS_COLOR: Record<string, string> = {
   'Complete': '#059669',
   'In Progress': '#d97706',
-  'Not Started': '#94a3b8',
+  'Not Started': 'var(--bos-color-ink-tertiary)',
   'Failed QC': '#dc2626',
 };
 
@@ -32,7 +32,7 @@ const SYSTEM_COLOR: Record<string, string> = {
   'Euro Wall': '#c2410c',
   'Window': '#0284c7',
   'Door': '#9333ea',
-  'General': '#64748b',
+  'General': 'var(--bos-color-ink-disabled)',
 };
 
 const CARD: React.CSSProperties = {
@@ -105,7 +105,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
           <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>
             QA / Install Tracking
           </h2>
-          <p style={{ fontSize: 14, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)', margin: '4px 0 0' }}>
             {totalSteps} install steps across {summary.length} projects
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
               <button key={mode} onClick={() => setViewMode(mode)}
                 style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
                   background: viewMode === mode ? '#0f172a' : 'white',
-                  color: viewMode === mode ? 'white' : '#64748b',
+                  color: viewMode === mode ? 'white' : 'var(--bos-color-ink-disabled)',
                 }}>
                 {mode === 'overview' ? 'Overview' : 'Detail'}
               </button>
@@ -137,30 +137,30 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
         <div style={CARD}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Overall Progress</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Overall Progress</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>{overallPct}%</div>
           <div style={{ marginTop: 8, height: 6, borderRadius: 3, background: '#f1f5f9', overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: 3, background: overallPct >= 75 ? '#059669' : overallPct >= 40 ? '#d97706' : '#94a3b8', width: `${overallPct}%`, transition: 'width 0.5s' }} />
+            <div style={{ height: '100%', borderRadius: 3, background: overallPct >= 75 ? '#059669' : overallPct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', width: `${overallPct}%`, transition: 'width 0.5s' }} />
           </div>
         </div>
         <div style={CARD}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Steps Complete</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Steps Complete</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: '#059669', letterSpacing: '-0.03em' }}>{totalComplete}</div>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{totalInProgress} in progress · {totalSteps - totalComplete - totalInProgress - totalFailed} remaining</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>{totalInProgress} in progress · {totalSteps - totalComplete - totalInProgress - totalFailed} remaining</div>
         </div>
         <div style={CARD}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>QC Pass Rate</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>QC Pass Rate</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: overallQcRate >= 90 ? '#059669' : overallQcRate >= 70 ? '#d97706' : '#dc2626', letterSpacing: '-0.03em' }}>
             {overallQcRate > 0 ? `${overallQcRate}%` : '—'}
           </div>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{totalFailed > 0 ? `${totalFailed} failed QC` : 'No failures'}</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>{totalFailed > 0 ? `${totalFailed} failed QC` : 'No failures'}</div>
         </div>
         <div style={CARD}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Hours Tracked</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Hours Tracked</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em' }}>
             {totalHoursCompleted > 0 ? totalHoursCompleted.toFixed(0) : '—'}
           </div>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
             {totalHoursAssigned > 0 ? `${totalHoursAssigned.toFixed(0)} assigned · ${(totalHoursAssigned - totalHoursCompleted).toFixed(0)} remaining` : 'Start tracking hours on new projects'}
           </div>
         </div>
@@ -171,8 +171,8 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {summary.length === 0 ? (
             <div style={{ ...CARD, textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#64748b' }}>No install data yet</div>
-              <div style={{ fontSize: 14, color: '#94a3b8', marginTop: 8 }}>Install tracking data will appear here as projects are set up with QA checklists.</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>No install data yet</div>
+              <div style={{ fontSize: 14, color: 'var(--bos-color-ink-tertiary)', marginTop: 8 }}>Install tracking data will appear here as projects are set up with QA checklists.</div>
             </div>
           ) : summary.sort((a, b) => b.totalSteps - a.totalSteps).map(proj => (
             <button key={proj.kID} onClick={() => { setSelectedProject(proj.kID); setViewMode('detail'); setLoading(true); }}
@@ -180,11 +180,11 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{projectName(proj.kID)}</div>
-                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>
+                  <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                     {proj.kID} · {proj.locationCount} locations · {proj.systems.join(', ')}
                   </div>
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: proj.pctComplete >= 75 ? '#059669' : proj.pctComplete >= 40 ? '#d97706' : '#64748b' }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: proj.pctComplete >= 75 ? '#059669' : proj.pctComplete >= 40 ? '#d97706' : 'var(--bos-color-ink-disabled)' }}>
                   {proj.pctComplete}%
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
               <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, fontWeight: 600 }}>
                 <span style={{ color: '#059669' }}>● {proj.completedSteps} complete</span>
                 <span style={{ color: '#d97706' }}>● {proj.inProgressSteps} in progress</span>
-                <span style={{ color: '#94a3b8' }}>● {proj.notStartedSteps} remaining</span>
+                <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>● {proj.notStartedSteps} remaining</span>
                 {proj.qcFailed > 0 && <span style={{ color: '#dc2626' }}>● {proj.qcFailed} failed</span>}
               </div>
             </button>
@@ -208,7 +208,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {selectedProject !== 'ALL' && (
             <button onClick={() => { setSelectedProject('ALL'); setViewMode('overview'); setLoading(true); }}
-              style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 700, color: '#64748b', cursor: 'pointer', marginBottom: 8 }}>
+              style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer', marginBottom: 8 }}>
               ← All Projects
             </button>
           )}
@@ -224,16 +224,16 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                   style={{ width: '100%', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{group.location}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                       {projectName(group.kID)} · {[...new Set(group.items.map(i => i.system_type))].filter(Boolean).join(', ')} · {total} steps
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 60, height: 6, borderRadius: 3, background: '#f1f5f9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 3, background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8', width: `${pct}%` }} />
+                      <div style={{ height: '100%', borderRadius: 3, background: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', width: `${pct}%` }} />
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#64748b', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"
+                    <span style={{ fontSize: 14, fontWeight: 800, color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-ink-disabled)', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-ink-tertiary)" strokeWidth="2" strokeLinecap="round"
                       style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
@@ -247,7 +247,7 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                           <div style={{
                             width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                            background: STATUS_COLOR[item.status] || '#94a3b8',
+                            background: STATUS_COLOR[item.status] || 'var(--bos-color-ink-tertiary)',
                           }} />
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -255,8 +255,8 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                             </div>
                             {item.system_type && (
                               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
-                                background: `${SYSTEM_COLOR[item.system_type] || '#64748b'}15`,
-                                color: SYSTEM_COLOR[item.system_type] || '#64748b',
+                                background: `${SYSTEM_COLOR[item.system_type] || 'var(--bos-color-ink-disabled)'}15`,
+                                color: SYSTEM_COLOR[item.system_type] || 'var(--bos-color-ink-disabled)',
                               }}>
                                 {item.system_type}
                               </span>
@@ -264,12 +264,12 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-                          {item.assigned_to && <span style={{ fontSize: 12, color: '#64748b' }}>{item.assigned_to}</span>}
-                          {item.completed_date && <span style={{ fontSize: 12, color: '#94a3b8' }}>{item.completed_date}</span>}
+                          {item.assigned_to && <span style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{item.assigned_to}</span>}
+                          {item.completed_date && <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{item.completed_date}</span>}
                           <span style={{
                             fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
-                            background: `${STATUS_COLOR[item.status] || '#94a3b8'}15`,
-                            color: STATUS_COLOR[item.status] || '#94a3b8',
+                            background: `${STATUS_COLOR[item.status] || 'var(--bos-color-ink-tertiary)'}15`,
+                            color: STATUS_COLOR[item.status] || 'var(--bos-color-ink-tertiary)',
                           }}>
                             {item.status}
                           </span>
@@ -283,8 +283,8 @@ export default function InstallTrackingPanel({ projects }: { projects: Project[]
           })}
           {Object.keys(locationGroups).length === 0 && (
             <div style={{ ...CARD, textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#64748b' }}>No install data for this project</div>
-              <div style={{ fontSize: 14, color: '#94a3b8', marginTop: 8 }}>QA checklists will appear here once install tracking is set up for this project.</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' }}>No install data for this project</div>
+              <div style={{ fontSize: 14, color: 'var(--bos-color-ink-tertiary)', marginTop: 8 }}>QA checklists will appear here once install tracking is set up for this project.</div>
             </div>
           )}
         </div>

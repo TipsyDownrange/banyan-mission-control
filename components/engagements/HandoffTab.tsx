@@ -74,14 +74,14 @@ export default function HandoffTab({ kID }: { kID: string }) {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading handoff…</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading handoff…</div>;
   }
   if (err) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load handoff: {err}</div>;
   }
   if (!data?.kIDFound) {
     return (
-      <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
         Handoff tracking requires this project to be migrated to Postgres.
       </div>
     );
@@ -92,7 +92,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: 24, color: '#64748b', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+      <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>
         No handoff packet has been submitted for this engagement yet.  Estimating will create one to initiate PM acceptance.
       </div>
     );
@@ -108,7 +108,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
               <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
                 {current.estimate_version_id ? `Estimate ${current.estimate_version_id}` : 'Handoff packet'}
               </div>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 4 }}>
                 Submitted {new Date(current.submitted_at).toLocaleString()}
                 {current.reviewed_at && ` · Reviewed ${new Date(current.reviewed_at).toLocaleString()}`}
               </div>
@@ -126,7 +126,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
           </div>
 
           <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
               Critical gaps ({current.critical_gaps?.length ?? 0})
             </div>
             <CriticalGapsList gaps={current.critical_gaps ?? []} />
@@ -134,7 +134,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
 
           {current.reviewer_notes && (
             <div style={{ marginTop: 14, padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, color: '#334155' }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Reviewer notes</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Reviewer notes</div>
               {current.reviewer_notes}
             </div>
           )}
@@ -143,7 +143,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
 
       {items.length > 1 && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '14px 0 8px' }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '14px 0 8px' }}>
             History
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -158,7 +158,7 @@ export default function HandoffTab({ kID }: { kID: string }) {
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
                     {r.estimate_version_id ?? 'Handoff packet'}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                     Submitted {new Date(r.submitted_at).toLocaleString()}
                   </div>
                 </div>

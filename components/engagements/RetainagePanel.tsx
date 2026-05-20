@@ -46,7 +46,7 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
     return (
       <div style={{
         background: 'white', borderRadius: 14, border: '1px solid #e2e8f0',
-        padding: '24px 18px', textAlign: 'center', color: '#94a3b8',
+        padding: '24px 18px', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)',
         fontSize: 13,
       }}>
         No retainage on file for this engagement.
@@ -66,13 +66,13 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
           Retainage Holdings
-          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>
+          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             ({retainage.length})
           </span>
         </div>
         <div style={{ display: 'flex', gap: 16, fontSize: 11, fontWeight: 700 }}>
           <span style={{ color: '#0f766e' }}>Held {fmtMoney(totalHeld)}</span>
-          <span style={{ color: '#64748b' }}>Released {fmtMoney(totalReleased)}</span>
+          <span style={{ color: 'var(--bos-color-ink-disabled)' }}>Released {fmtMoney(totalReleased)}</span>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -80,18 +80,18 @@ export default function RetainagePanel({ retainage }: { retainage: RetainageHold
           const isReleased = h.released_at !== null;
           return (
             <div key={h.holding_id} style={ROW}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>
                 <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>
                   Pay app <span style={{ fontFamily: 'monospace' }}>{h.pay_app_id.slice(0, 8)}</span>
                 </div>
-                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2, letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, letterSpacing: '0.04em' }}>
                   Trigger: {h.release_trigger.replace(/_/g, ' ')}
                 </div>
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', textAlign: 'right' }}>
                 {fmtMoney(h.amount_held)}
               </div>
-              <div style={{ fontSize: 11, color: isReleased ? '#0f766e' : '#94a3b8', textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: isReleased ? '#0f766e' : 'var(--bos-color-ink-tertiary)', textAlign: 'right' }}>
                 {isReleased ? fmtDate(h.released_at) : '—'}
               </div>
               <div style={{ textAlign: 'right' }}>

@@ -101,7 +101,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
   }
 
   if (loading) {
-    return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>Loading external waivers…</div>;
+    return <div style={{ padding: 16, color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>Loading external waivers…</div>;
   }
   if (error) {
     return (
@@ -121,7 +121,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
         {engagementId && <CreateExternalForm engagementId={engagementId} onCreated={refresh} />}
       </div>
       {rows.length === 0 ? (
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>No external waiver requests on this project yet.</div>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No external waiver requests on this project yet.</div>
       ) : rows.map((r) => {
         const sColor = STATUS_COLORS[r.status] ?? STATUS_COLORS.REQUESTED;
         const o = overdue[r.external_waiver_id];
@@ -148,7 +148,7 @@ export default function ExternalWaiverRequestsSection({ kID }: { kID: string }) 
                 </span>
               )}
             </div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
               Requested {new Date(r.requested_at).toISOString().slice(0, 10)}
               {r.request_method && ` via ${r.request_method}`}
             </div>

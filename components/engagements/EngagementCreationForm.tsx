@@ -110,7 +110,7 @@ export default function EngagementCreationForm() {
       </div>
 
       <label style={{ display: 'grid', gap: 5, fontSize: 12, fontWeight: 800, color: '#475569' }}>
-        Routing rationale <span style={{ color: '#94a3b8', fontWeight: 600 }}>required when routing is set</span>
+        Routing rationale <span style={{ color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>required when routing is set</span>
         <textarea value={routingRationale} onChange={e => setRoutingRationale(e.target.value)} rows={3} style={{ padding: '9px 12px', borderRadius: 12, border: '1px solid #e2e8f0', resize: 'vertical' }} />
       </label>
 

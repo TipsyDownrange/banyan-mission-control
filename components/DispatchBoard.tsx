@@ -25,7 +25,7 @@ const WORK_TYPE_STYLE: Record<string, { color: string; bg: string; border: strin
   'Service / Repair':        { color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
   'Punch List / Warranty':   { color: '#475569', bg: '#f8fafc', border: '#cbd5e1' },
   'Pickup / Delivery':       { color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe' },
-  'Other':                   { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  'Other':                   { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc', border: '#e2e8f0' },
 };
 
 function WorkTypeBadge({ type, compact }: { type: string; compact?: boolean }) {
@@ -51,7 +51,7 @@ function parseConfirmations(raw: string): Record<string, string> {
 const CONF_STYLE: Record<string, { icon: string; color: string }> = {
   confirmed: { icon: '✓', color: '#0f766e' },
   declined:  { icon: '✗', color: '#b91c1c' },
-  pending:   { icon: '?', color: '#94a3b8' },
+  pending:   { icon: '?', color: 'var(--bos-color-ink-tertiary)' },
 };
 
 type CrewMember = { user_id: string; name: string; role: string; island: string };
@@ -61,7 +61,7 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; label: string }>
   open:      { color: '#b91c1c', bg: '#fef2f2', label: 'Open' },
   partial:   { color: '#92400e', bg: '#fffbeb', label: 'Partial' },
   filled:    { color: '#0f766e', bg: '#f0fdfa', label: 'Filled' },
-  completed: { color: '#64748b', bg: '#f8fafc', label: 'Done' },
+  completed: { color: 'var(--bos-color-ink-disabled)', bg: '#f8fafc', label: 'Done' },
 };
 
 const ISLAND_COLOR: Record<string, string> = {
@@ -250,28 +250,28 @@ export default function DispatchBoard() {
 
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>People & Assets</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>People & Assets</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 3 }}>Dispatch Board</h1>
-            <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Tap a slot to expand · Use Assign Crew to add glaziers</p>
+            <p style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>Tap a slot to expand · Use Assign Crew to add glaziers</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Island filter */}
             {['All','Maui','Oahu','Kauai'].map(isl => (
               <button key={isl} onClick={() => setIslandFilter(isl)}
-                style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : '#64748b', cursor: 'pointer' }}>
+                style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, border: islandFilter === isl ? `1px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: islandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}12` : 'white', color: islandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
                 {isl}
               </button>
             ))}
             {/* Week nav */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d); }}
-                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>‹</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>‹</button>
               <button onClick={() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); setWeekStart(d); }}
-                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}>This Week</button>
+                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>This Week</button>
               <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d); }}
-                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: '#64748b' }}>›</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>›</button>
             </div>
             <button onClick={() => setShowAddSlot(true)}
               style={{ padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,118,110,0.3)' }}>
@@ -288,13 +288,13 @@ export default function DispatchBoard() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 6 }}>
             {weekDates.map(date => (
               <div key={dateStr(date)} style={{ textAlign: 'center', padding: '6px 4px', borderRadius: 8, background: isToday(date) ? 'rgba(3,105,161,0.08)' : 'transparent', border: isToday(date) ? '1px solid rgba(3,105,161,0.2)' : '1px solid transparent' }}>
-                <div style={{ fontSize: 11, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? '#0369a1' : '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: 11, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? '#0369a1' : 'var(--bos-color-ink-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                   {date.toLocaleDateString('en-US', { weekday: 'short' })}
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: isToday(date) ? '#0369a1' : '#0f172a' }}>
                   {date.getDate()}
                 </div>
-                <div style={{ fontSize: 9, color: '#94a3b8' }}>{date.toLocaleDateString('en-US', { month: 'short' })}</div>
+                <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>{date.toLocaleDateString('en-US', { month: 'short' })}</div>
               </div>
             ))}
           </div>
@@ -336,7 +336,7 @@ export default function DispatchBoard() {
                           {slot.project_name.startsWith('[WO]') && (
                             <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: '#0d9488', background: '#ccfbf1', border: '1px solid #5eead4' }}>WO</span>
                           )}
-                          {slot.island && <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ISLAND_COLOR[slot.island] || '#64748b', background: `${ISLAND_COLOR[slot.island] || '#64748b'}18`, border: `1px solid currentColor` }}>{slot.island}</span>}
+                          {slot.island && <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ISLAND_COLOR[slot.island] || 'var(--bos-color-ink-disabled)', background: `${ISLAND_COLOR[slot.island] || 'var(--bos-color-ink-disabled)'}18`, border: `1px solid currentColor` }}>{slot.island}</span>}
                           <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ss.color, background: 'white' }}>{ss.label}</span>
                         </div>
                         {/* Crew progress */}
@@ -362,7 +362,7 @@ export default function DispatchBoard() {
                             );
                           })}
                           {assignedNames.length < required && (
-                            <div style={{ fontSize: 8, padding: '2px 5px', borderRadius: 6, background: 'rgba(15,23,42,0.04)', color: '#94a3b8', border: '1px dashed #e2e8f0' }}>
+                            <div style={{ fontSize: 8, padding: '2px 5px', borderRadius: 6, background: 'rgba(15,23,42,0.04)', color: 'var(--bos-color-ink-tertiary)', border: '1px dashed #e2e8f0' }}>
                               +{required - assignedNames.length}
                             </div>
                           )}
@@ -378,8 +378,8 @@ export default function DispatchBoard() {
                           <div style={{ marginTop: 6, paddingTop: 5, borderTop: '1px solid #f1f5f9' }}>
                             <div style={{ fontSize: 9, color: '#475569', marginBottom: 4 }}>{slot.project_name}</div>
                             {slot.work_type && <div style={{ marginBottom: 4 }}><WorkTypeBadge type={slot.work_type} /></div>}
-                            {(slot.start_time || slot.end_time) && <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 3 }}>⏰ {slot.start_time}{slot.start_time && slot.end_time ? '–' : ''}{slot.end_time}</div>}
-                            {slot.hours_estimated && <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
+                            {(slot.start_time || slot.end_time) && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>⏰ {slot.start_time}{slot.start_time && slot.end_time ? '–' : ''}{slot.end_time}</div>}
+                            {slot.hours_estimated && <div style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>{slot.hours_estimated}h est.</div>}
                             {slot.notes && <div style={{ fontSize: 9, color: '#475569', marginBottom: 4, fontStyle: 'italic', background: '#f8fafc', borderRadius: 6, padding: '4px 6px', border: '1px solid #e2e8f0' }}>📋 {slot.notes}</div>}
                             {/* Confirmation breakdown */}
                             {assignedNames.length > 0 && (
@@ -427,19 +427,19 @@ export default function DispatchBoard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Assign Crew</div>
-                <div style={{ fontSize: 10, color: '#64748b', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {crewPickerSlot.project_name.length > 36 ? crewPickerSlot.project_name.substring(0, 36) + '…' : crewPickerSlot.project_name}
-                  {crewPickerSlot.island && <span style={{ marginLeft: 6, fontWeight: 700, color: ISLAND_COLOR[crewPickerSlot.island] || '#64748b' }}>· {crewPickerSlot.island}</span>}
+                  {crewPickerSlot.island && <span style={{ marginLeft: 6, fontWeight: 700, color: ISLAND_COLOR[crewPickerSlot.island] || 'var(--bos-color-ink-disabled)' }}>· {crewPickerSlot.island}</span>}
                 </div>
               </div>
               <button onClick={() => setCrewPickerSlotId(null)}
-                style={{ width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 16, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, minWidth: 32 }}>×</button>
+                style={{ width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, minWidth: 32 }}>×</button>
             </div>
             {/* Island filter pills */}
             <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
               {['All', 'Maui', 'Oahu', 'Kauai', 'Hawaii'].map(isl => (
                 <button key={isl} onClick={() => setCrewPickerIsland(isl)}
-                  style={{ padding: '7px 13px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: crewPickerIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: crewPickerIsland === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: crewPickerIsland === isl ? (ISLAND_COLOR[isl] || '#0f766e') : '#94a3b8', cursor: 'pointer', minHeight: 36, touchAction: 'manipulation' }}>
+                  style={{ padding: '7px 13px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: crewPickerIsland === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: crewPickerIsland === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: crewPickerIsland === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', minHeight: 36, touchAction: 'manipulation' }}>
                   {isl}
                 </button>
               ))}
@@ -455,7 +455,7 @@ export default function DispatchBoard() {
             {/* Crew list — scrollable */}
             <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 5, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
               {crewPickerFiltered.length === 0 && (
-                <div style={{ textAlign: 'center', padding: 24, fontSize: 12, color: '#94a3b8' }}>No crew found</div>
+                <div style={{ textAlign: 'center', padding: 24, fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No crew found</div>
               )}
               {crewPickerFiltered.map(member => {
                 const isAssigned = crewPickerAssigned.includes(member.name);
@@ -466,14 +466,14 @@ export default function DispatchBoard() {
                       ? removeCrewFromSlot(crewPickerSlotId, member.name)
                       : onAssignCrewToSlot(crewPickerSlotId, member.name)}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, background: isAssigned ? 'rgba(15,118,110,0.07)' : 'white', border: isAssigned ? '1.5px solid #0f766e' : '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', minHeight: 56, width: '100%', touchAction: 'manipulation' }}>
-                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: isAssigned ? '#0f766e22' : `${ISLAND_COLOR[member.island] || '#64748b'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: isAssigned ? '#0f766e' : (ISLAND_COLOR[member.island] || '#64748b'), flexShrink: 0 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: isAssigned ? '#0f766e22' : `${ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: isAssigned ? '#0f766e' : (ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'), flexShrink: 0 }}>
                       {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                       <div style={{ display: 'flex', gap: 5, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, color: ISLAND_COLOR[member.island] || '#64748b', background: `${ISLAND_COLOR[member.island] || '#64748b'}18`, border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}` }}>{member.island}</span>
-                        <span style={{ fontSize: 10, color: count > 0 ? '#92400e' : '#94a3b8', fontWeight: count > 0 ? 700 : 400 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, color: ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)', background: `${ISLAND_COLOR[member.island] || 'var(--bos-color-ink-disabled)'}18`, border: `1px solid ${ISLAND_COLOR[member.island] || '#e2e8f0'}` }}>{member.island}</span>
+                        <span style={{ fontSize: 10, color: count > 0 ? '#92400e' : 'var(--bos-color-ink-tertiary)', fontWeight: count > 0 ? 700 : 400 }}>
                           {count > 0 ? `${count} job${count > 1 ? 's' : ''} this week` : 'Available'}
                         </span>
                       </div>
@@ -501,11 +501,11 @@ export default function DispatchBoard() {
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>Add Job Slot</div>
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Project *</label>
+                <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Project *</label>
                 {addProject.startsWith('[WO]') ? (
                   <div style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #0f766e44', background: '#f0fdfa', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#0f766e', fontWeight: 700 }}>{addProject}</span>
-                    <button type="button" onClick={() => { setAddProject(''); setAddKID(''); }} style={{ fontSize: 10, color: '#64748b', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
+                    <button type="button" onClick={() => { setAddProject(''); setAddKID(''); }} style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontWeight: 700 }}>Change</button>
                   </div>
                 ) : (
                 <select value={addKID} onChange={e => {
@@ -556,7 +556,7 @@ export default function DispatchBoard() {
                         key={isl}
                         type="button"
                         onClick={() => setWoIslandFilter(isl)}
-                        style={{ padding: '5px 11px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: woIslandFilter === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: woIslandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: woIslandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : '#94a3b8', cursor: 'pointer', minHeight: 30, touchAction: 'manipulation' }}
+                        style={{ padding: '5px 11px', borderRadius: 999, fontSize: 10, fontWeight: 800, border: woIslandFilter === isl ? `1.5px solid ${ISLAND_COLOR[isl] || '#0f766e'}` : '1px solid #e2e8f0', background: woIslandFilter === isl ? `${ISLAND_COLOR[isl] || '#0f766e'}15` : 'white', color: woIslandFilter === isl ? (ISLAND_COLOR[isl] || '#0f766e') : 'var(--bos-color-ink-tertiary)', cursor: 'pointer', minHeight: 30, touchAction: 'manipulation' }}
                       >
                         {isl}
                       </button>
@@ -570,9 +570,9 @@ export default function DispatchBoard() {
                     autoFocus
                     style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, marginBottom: 8 }}
                   />
-                  {woPickerLoading && <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>Loading work orders…</div>}
+                  {woPickerLoading && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center', padding: 12 }}>Loading work orders…</div>}
                   {!woPickerLoading && woPickerList.length === 0 && (
-                    <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>No work orders found</div>
+                    <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center', padding: 12 }}>No work orders found</div>
                   )}
                   {!woPickerLoading && woPickerList.length > 0 && (
                     <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -601,7 +601,7 @@ export default function DispatchBoard() {
                             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wo.name}</span>
                             <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                               {wo.island && (
-                                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ISLAND_COLOR[wo.island] || '#64748b', background: `${ISLAND_COLOR[wo.island] || '#64748b'}18` }}>{wo.island}</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 999, color: ISLAND_COLOR[wo.island] || 'var(--bos-color-ink-disabled)', background: `${ISLAND_COLOR[wo.island] || 'var(--bos-color-ink-disabled)'}18` }}>{wo.island}</span>
                               )}
                             </div>
                           </button>
@@ -618,34 +618,34 @@ export default function DispatchBoard() {
               )}
               {!addKID && (
                 <div>
-                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Or type job name</label>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Or type job name</label>
                   <input value={addProject} onChange={e => setAddProject(e.target.value)} placeholder="Job name..." style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Date *</label>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Date *</label>
                   <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Start Time</label>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Start Time</label>
                   <input type="time" value={addStartTime} onChange={e => setAddStartTime(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>End Time</label>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>End Time</label>
                   <input type="time" value={addEndTime} onChange={e => setAddEndTime(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Men Needed</label>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Men Needed</label>
                   <input type="number" value={addMen} onChange={e => setAddMen(e.target.value)} min="1" max="12" style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
                 </div>
               </div>
               <div>
-                  <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Est. Hours</label>
+                  <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Est. Hours</label>
                   <input type="number" value={addHours} onChange={e => setAddHours(e.target.value)} placeholder="8" style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Island</label>
+                <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Island</label>
                 <select value={addIsland} onChange={e => setAddIsland(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, cursor: 'pointer' }}>
                   <option>Maui</option><option>Oahu</option><option>Kauai</option><option>Hawaii</option>
                 </select>
@@ -659,7 +659,7 @@ export default function DispatchBoard() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Notes / Instructions</label>
+                <label style={{ fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }}>Notes / Instructions</label>
                 <textarea value={addNotes} onChange={e => setAddNotes(e.target.value)}
                   placeholder="e.g. Measure all openings on 2nd floor · Bring silicone and backer rod"
                   rows={2}
@@ -667,7 +667,7 @@ export default function DispatchBoard() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); setAddWorkType(''); setAddNotes(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowAddSlot(false); setShowWOPicker(false); setWoSearchQuery(''); setWoIslandFilter('All'); setAddKID(''); setAddProject(''); setAddWorkType(''); setAddNotes(''); }} style={{ flex: 1, padding: 11, borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addSlot} disabled={!addDate || (!addKID && !addProject) || showWOPicker || !addWorkType || saving}
                 style={{ flex: 2, padding: 11, borderRadius: 12, background: 'linear-gradient(135deg,#0f766e,#14b8a6)', color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {saving ? 'Adding...' : 'Add Slot'}

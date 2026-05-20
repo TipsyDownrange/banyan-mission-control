@@ -91,7 +91,7 @@ function FilterGroup({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{
-        fontSize: 10, fontWeight: 800, color: '#94a3b8',
+        fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
         textTransform: 'uppercase', letterSpacing: '0.08em',
       }}>
         {label}
@@ -157,7 +157,7 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{
-            fontSize: 10, fontWeight: 800, color: '#94a3b8',
+            fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
             textTransform: 'uppercase', letterSpacing: '0.08em',
           }}>
             Assignee
@@ -180,7 +180,7 @@ export default function PunchListItemsList({ items }: { items: PunchListItem[] }
       </div>
 
       <div style={{
-        fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.04em',
+        fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', letterSpacing: '0.04em',
       }}>
         Showing {filtered.length} of {items.length} items
       </div>

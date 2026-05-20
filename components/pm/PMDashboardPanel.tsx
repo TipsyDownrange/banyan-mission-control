@@ -222,7 +222,7 @@ export default function PMDashboardPanel() {
   }, []);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading dashboard…</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading dashboard…</div>;
   }
   if (error && !resp) {
     return (
@@ -240,7 +240,7 @@ export default function PMDashboardPanel() {
           <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>
             PM Dashboard
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
             {resp.dashboard_kind.replace(/_/g, ' ').toLowerCase()} · {resp.is_default ? 'default layout' : 'custom layout'}
             {saving && ' · saving…'}
           </div>
@@ -285,7 +285,7 @@ export default function PMDashboardPanel() {
 
       {showHidden && hiddenWidgets.length > 0 && (
         <div style={{ marginBottom: 12, padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
             Hidden widgets
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

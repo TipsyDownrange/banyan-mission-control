@@ -176,7 +176,7 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
 
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {loading ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#64748b' }}>Loading...</div>
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading...</div>
           ) : err ? (
             <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#b91c1c', fontSize: 12 }}>{err}</div>
           ) : doc ? (
@@ -217,14 +217,14 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
               <section style={cardStyle}>
                 <div style={cardHeaderStyle}>Version history</div>
                 {versions.length === 0 ? (
-                  <div style={{ fontSize: 12, color: '#94a3b8' }}>No history available.</div>
+                  <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No history available.</div>
                 ) : (
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {versions.map((v) => (
                       <li key={v.document_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 8, background: v.document_id === doc.document_id ? 'rgba(240,253,250,0.96)' : '#f8fafc', border: '1px solid #e2e8f0' }}>
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>v{v.version} — {v.filename}</div>
-                          <div style={{ fontSize: 10, color: '#94a3b8' }}>{new Date(v.uploaded_at).toLocaleString()}</div>
+                          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{new Date(v.uploaded_at).toLocaleString()}</div>
                         </div>
                         {v.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: '#0f766e' }}>CURRENT</span>}
                       </li>
@@ -309,7 +309,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,23,42,0.55)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflowY: 'auto', padding: 32 };
 const panelStyle: React.CSSProperties = { width: '100%', maxWidth: 680, background: 'white', borderRadius: 18, overflow: 'hidden', boxShadow: '0 24px 60px rgba(15,23,42,0.4)' };
 const headerStyle: React.CSSProperties = { background: 'linear-gradient(135deg, #071722, #0c2330)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' };
-const closeButtonStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '4px 12px', color: '#94a3b8', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 };
+const closeButtonStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '4px 12px', color: 'var(--bos-color-ink-tertiary)', fontSize: 18, fontWeight: 700, cursor: 'pointer', lineHeight: 1 };
 const inputStyle: React.CSSProperties = { padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', background: 'white' };
 const cardStyle: React.CSSProperties = { background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 };
 const cardHeaderStyle: React.CSSProperties = { fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0f766e' };

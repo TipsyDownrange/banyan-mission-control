@@ -13,14 +13,14 @@ const DECISION_STYLES: Record<string, { color: string; bg: string; border: strin
   'submitted':       { color: '#1d4ed8', bg: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.25)' },
   'won':             { color: '#15803d', bg: 'rgba(240,253,244,0.9)', border: '1px solid rgba(34,197,94,0.25)' },
   'lost':            { color: '#b91c1c', bg: 'rgba(254,242,242,0.9)', border: '1px solid rgba(239,68,68,0.25)' },
-  'no bid':          { color: '#64748b', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },
+  'no bid':          { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(248,250,252,0.9)', border: '1px solid rgba(148,163,184,0.25)' },
 };
 
 const PILL = (label: string, style: {color:string;bg:string;border:string}) => (
   <span style={{ padding: '4px 9px', borderRadius: 999, fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: style.color, background: style.bg, border: style.border }}>{label}</span>
 );
 
-const FL = (text: string) => <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#64748b', marginBottom: 4 }}>{text}</div>;
+const FL = (text: string) => <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>{text}</div>;
 
 const ESTIMATORS = ['Unassigned', 'Kyle Shimizu', 'Jenny', 'Mark Olson', 'Sean Daniels'];
 const ISLANDS = ['All Islands', 'Oahu', 'Maui', 'Kauai', 'Hawaii', 'Molokai', 'Lanai'];
@@ -144,7 +144,7 @@ export default function BidQueuePanel() {
       <div style={{ background: 'white', borderRadius: 24, padding: 48, textAlign: 'center', border: '1px solid rgba(226,232,240,0.9)', boxShadow: '0 14px 30px rgba(15,23,42,0.06)' }}>
         <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading bid log...</div>
+        <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading bid log...</div>
       </div>
     </div>
   );
@@ -194,7 +194,7 @@ export default function BidQueuePanel() {
               padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
               border: viewMode === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid #e2e8f0',
               background: viewMode === v ? 'rgba(240,253,250,0.96)' : 'white',
-              color: viewMode === v ? '#0f766e' : '#64748b', cursor: 'pointer',
+              color: viewMode === v ? '#0f766e' : 'var(--bos-color-ink-disabled)', cursor: 'pointer',
             }}>{v === 'table' ? '≡ Table' : '⊞ Cards'}</button>
           ))}
         </div>
@@ -212,9 +212,9 @@ export default function BidQueuePanel() {
           { label: 'Showing', value: filtered.length, helper: 'Current filters' },
         ].map(s => (
           <div key={s.label} style={{ padding: '14px 16px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(226,232,240,0.95)' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#64748b' }}>{s.label}</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{s.label}</div>
             <div style={{ marginTop: 6, fontSize: 26, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a', lineHeight: 1 }}>{s.value}</div>
-            <div style={{ marginTop: 4, fontSize: 11, color: '#94a3b8' }}>{s.helper}</div>
+            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{s.helper}</div>
           </div>
         ))}
       </section>
@@ -250,7 +250,7 @@ export default function BidQueuePanel() {
         </select>
         {(search || filterAssignee !== 'All' || filterIsland !== 'All Islands') && (
           <button onClick={() => { setSearch(''); setFilterAssignee('All'); setFilterIsland('All Islands'); }}
-            style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 4px' }}>
+            style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 4px' }}>
             Clear filters ×
           </button>
         )}
@@ -274,7 +274,7 @@ export default function BidQueuePanel() {
           {/* Table header */}
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 90px 110px 90px 100px 32px', gap: 0, padding: '10px 16px', background: 'rgba(248,250,252,0.8)', borderBottom: '1px solid #f1f5f9' }}>
             {['kID','Job Name','Island','Assigned','Due','Status',''].map(h => (
-              <div key={h} style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>{h}</div>
+              <div key={h} style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{h}</div>
             ))}
           </div>
 
@@ -300,11 +300,11 @@ export default function BidQueuePanel() {
                       transition: 'background 0.1s',
                     }}
                   >
-                    <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#94a3b8', display: 'flex', alignItems: 'center' }}>{bid['kID']}</div>
+                    <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center' }}>{bid['kID']}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', paddingRight: 12, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{bid['Job Name']}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', display: 'flex', alignItems: 'center' }}>{bid['Island'] || '—'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', display: 'flex', alignItems: 'center' }}>{bid['Island'] || '—'}</div>
                     <div style={{ fontSize: 12, color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{bid['Assigned To'] || <span style={{ color: '#f59e0b', fontWeight: 700 }}>Unassigned</span>}</div>
-                    <div style={{ fontSize: 12, color: urgent ? '#c2410c' : '#64748b', fontWeight: urgent ? 700 : 400, display: 'flex', alignItems: 'center' }}>
+                    <div style={{ fontSize: 12, color: urgent ? '#c2410c' : 'var(--bos-color-ink-disabled)', fontWeight: urgent ? 700 : 400, display: 'flex', alignItems: 'center' }}>
                       {bid['Due Date'] ? (urgent ? ` ${days}d` : bid['Due Date'].substring(5)) : '—'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -312,7 +312,7 @@ export default function BidQueuePanel() {
                         {ds}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#94a3b8' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                       {isExpanded ? '▲' : '▼'}
                     </div>
                   </div>
@@ -321,28 +321,28 @@ export default function BidQueuePanel() {
                   {isExpanded && (
                     <div style={{ padding: '16px 20px', background: 'rgba(248,250,252,0.6)', borderBottom: '1px solid #f1f5f9', display: 'grid', gap: 14 }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
-                        <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Assign to</div>
+                        <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Assign to</div>
                           <select value={getEff(bid,'Assigned To') || 'Unassigned'} onChange={e => setEff(bid['kID'],'Assigned To',e.target.value)}
                             style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
                             {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
                           </select>
                         </div>
-                        <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Decision state</div>
+                        <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Decision state</div>
                           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                             {(['needs review','in estimating','submitted','won','lost','no bid'] as DecisionState[]).map(s => (
                               <button key={s} onClick={() => setEff(bid['kID'],'decisionState',s)}
                                 style={{ padding: '4px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
                                   border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid #e2e8f0',
-                                  background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : '#94a3b8' }}>
+                                  background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : 'var(--bos-color-ink-tertiary)' }}>
                                 {s}
                               </button>
                             ))}
                           </div>
                         </div>
-                        {bid['Notes'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Notes</div>
+                        {bid['Notes'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Notes</div>
                           <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>{bid['Notes']}</div>
                         </div>}
-                        {bid['Products / Specs'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>Products</div>
+                        {bid['Products / Specs'] && <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>Products</div>
                           <div style={{ fontSize: 13, color: '#334155' }}>{bid['Products / Specs']}</div>
                         </div>}
                       </div>
@@ -358,11 +358,11 @@ export default function BidQueuePanel() {
               );
             })}
             {filtered.length === 0 && (
-              <div style={{ padding: '32px', textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>No bids match your filters</div>
+              <div style={{ padding: '32px', textAlign: 'center', fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>No bids match your filters</div>
             )}
           </div>
 
-          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', fontSize: 11, color: '#94a3b8', background: 'rgba(248,250,252,0.5)' }}>
+          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', fontSize: 11, color: 'var(--bos-color-ink-tertiary)', background: 'rgba(248,250,252,0.5)' }}>
             Showing {filtered.length} of {bids.length} bids · Click any row to expand details
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function BidQueuePanel() {
             const dStyle = DECISION_STYLES[ds];
             const days = daysUntil(bid['Due Date']);
             const urgent = days !== null && days <= 3 && days >= 0;
-            const accent = urgent ? '#f97316' : ds === 'won' ? '#22c55e' : ds === 'lost' ? '#ef4444' : '#94a3b8';
+            const accent = urgent ? '#f97316' : ds === 'won' ? '#22c55e' : ds === 'lost' ? '#ef4444' : 'var(--bos-color-ink-tertiary)';
             const isExpanded = expandedCard === bid['kID'];
 
             return (
@@ -388,7 +388,7 @@ export default function BidQueuePanel() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 12px', justifyContent: 'space-between', paddingLeft: 4 }}>
                   <div style={{ display: 'grid', gap: 8, flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b' }}>{bid['kID']}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bos-color-ink-disabled)' }}>{bid['kID']}</span>
                       {PILL(ds, dStyle)}
                       {urgent && PILL(`Due in ${days}d`, { color: '#c2410c', bg: 'rgba(255,247,237,0.9)', border: '1px solid rgba(249,115,22,0.25)' })}
                     </div>
@@ -404,7 +404,7 @@ export default function BidQueuePanel() {
                       style={{ fontSize: 12, padding: '6px 10px', borderRadius: 10, border: '1px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
                       {ESTIMATORS.map(e => <option key={e}>{e}</option>)}
                     </select>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{bid['Due Date'] ? `Due ${bid['Due Date']}` : 'No due date'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{bid['Due Date'] ? `Due ${bid['Due Date']}` : 'No due date'}</div>
                   </div>
                 </div>
 
@@ -432,7 +432,7 @@ export default function BidQueuePanel() {
                           <button key={s} onClick={() => setEff(bid['kID'],'decisionState',s)}
                             style={{ padding: '4px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
                               border: ds === s ? `1px solid ${DECISION_STYLES[s].color}44` : '1px solid #e2e8f0',
-                              background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : '#94a3b8' }}>
+                              background: ds === s ? DECISION_STYLES[s].bg : 'white', color: ds === s ? DECISION_STYLES[s].color : 'var(--bos-color-ink-tertiary)' }}>
                             {s}
                           </button>
                         ))}
@@ -448,7 +448,7 @@ export default function BidQueuePanel() {
             );
           })}
           {filtered.length > 20 && (
-            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '14px 20px', textAlign: 'center', fontSize: 13, color: '#64748b' }}>
+            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '14px 20px', textAlign: 'center', fontSize: 13, color: 'var(--bos-color-ink-disabled)' }}>
               Showing 20 of {filtered.length} bids in card view. Use filters to narrow results or switch to Table view to see all.
             </div>
           )}

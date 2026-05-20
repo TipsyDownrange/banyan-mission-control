@@ -179,7 +179,7 @@ export default function WorkspaceShell({
                     onClick={() => setRightPanelOpen(false)}
                     style={{
                       background: 'none', border: 'none', fontSize: 18,
-                      color: '#94a3b8', cursor: 'pointer', padding: '4px 8px',
+                      color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer', padding: '4px 8px',
                     }}
                   >×</button>
                 </div>

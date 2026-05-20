@@ -18,7 +18,7 @@ type CrewMember = { user_id: string; name: string; role: string; island: string 
 
 const FL = (label: string, auto?: boolean, places?: boolean) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b' }}>{label}</span>
+    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)' }}>{label}</span>
     {auto && <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(249,115,22,0.1)', color: '#c2410c', border: '1px solid rgba(249,115,22,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Auto</span>}
     {places && <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 999, background: 'rgba(66,133,244,0.1)', color: '#1a56db', border: '1px solid rgba(66,133,244,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>Places</span>}
   </div>
@@ -297,11 +297,11 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Work Order Created</div>
-      <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>{draft.businessName || draft.customerName} · {draft.island}</div>
-      {createdWO && <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>WO# {createdWO}</div>}
+      <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginBottom: 4 }}>{draft.businessName || draft.customerName} · {draft.island}</div>
+      {createdWO && <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginBottom: 20 }}>WO# {createdWO}</div>}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
         <button onClick={() => { setStep('form'); setDraft({ ...BLANK }); setSelectedTypes([]); setCreatedWO(''); }}
-          style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           + Another
         </button>
         <button onClick={onClose}
@@ -317,10 +317,10 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
       {/* Header */}
       <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Service — New Lead</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Service — New Lead</div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Create Work Order</h2>
         </div>
-        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px', display: 'grid', gap: 14 }}>
@@ -335,7 +335,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
         {/* Customer & Site Information */}
         <div style={{ background: 'rgba(248,250,252,0.8)', borderRadius: 12, border: '1px solid #e2e8f0', padding: '14px 16px', display: 'grid', gap: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>Customer &amp; Site Information</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>Customer &amp; Site Information</div>
 
           <div>
             {FL('Business / Property Name', true)}
@@ -349,7 +349,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               matchField="company"
               subField="address"
             />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>The specific site or property — goes in the WO name</div>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>The specific site or property — goes in the WO name</div>
           </div>
 
           <div>
@@ -364,7 +364,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               matchField="company"
               subField="address"
             />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Billing / account identity — selecting auto-fills contacts. Site Address is set separately.</div>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>Billing / account identity — selecting auto-fills contacts. Site Address is set separately.</div>
             {draft.customerName.length >= 2 && !draft.customer_id && !customers.some(c =>
               (c.company || '').toLowerCase().includes(draft.customerName.toLowerCase()) ||
               (c.name || '').toLowerCase().includes(draft.customerName.toLowerCase())
@@ -405,7 +405,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               />
               {orgContacts.length > 0 && (
                 <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>Contacts:</span>
+                  <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>Contacts:</span>
                   {orgContacts.map(oc => (
                     <button
                       key={oc.contact_id}
@@ -459,7 +459,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
               placeholder="Where the work is performed (Google Places)"
               style={INP}
             />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>
               Where the work happens — not the billing address. Google Places auto-detects island &amp; area.
             </div>
             {/* BAN-138: warn-only surfacing of legacy Customers.Address. Not auto-trusted. */}
@@ -548,7 +548,7 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             {FL('System Type')}
-            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>✓ = has install steps in Step Library</div>
+            <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginBottom: 4 }}>✓ = has install steps in Step Library</div>
             {/* Compact dropdown + chip list */}
             <select
               value=""
@@ -613,9 +613,9 @@ export default function ServiceIntake({ onClose, onCreated }: { onClose: () => v
 
       {/* Footer */}
       <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10, flexShrink: 0 }}>
-        <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <button onClick={onClose} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
         <button onClick={submit} disabled={!canSubmit}
-          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: canSubmit ? 'white' : '#94a3b8', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
+          style={{ flex: 2, padding: '11px', borderRadius: 12, background: canSubmit ? 'linear-gradient(135deg,#0f766e,#14b8a6)' : '#e2e8f0', color: canSubmit ? 'white' : 'var(--bos-color-ink-tertiary)', border: 'none', fontSize: 13, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 16px rgba(15,118,110,0.3)' : 'none' }}>
           {saving ? 'Creating...' : 'Create Work Order'}
         </button>
       </div>

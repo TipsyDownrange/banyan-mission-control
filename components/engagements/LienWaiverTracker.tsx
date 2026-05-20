@@ -80,7 +80,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
 
   if (loading) {
     return (
-      <div style={{ padding: 20, color: '#94a3b8', fontSize: 13 }}>
+      <div style={{ padding: 20, color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
         Loading lien waivers…
       </div>
     );
@@ -121,7 +121,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>{c.total}</div>
-              <div style={{ fontSize: 10, color: '#64748b', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <span>Generated: {c.generated}</span>
                 <span>Notarized: {c.notarized}</span>
                 <span>Filed: {c.filed}</span>
@@ -155,7 +155,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {filtered.length === 0 ? (
-          <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>No waivers match the current filter.</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '8px 0' }}>No waivers match the current filter.</div>
         ) : (
           filtered.map((w) => (
             <div key={w.waiver_id} style={{
@@ -166,8 +166,8 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
               <span style={{ fontWeight: 700 }}>{TYPE_LABELS[w.waiver_type] ?? w.waiver_type}</span>
               <span>{w.state}</span>
               <span>${Number(w.waiver_amount ?? 0).toLocaleString()}</span>
-              <span style={{ color: '#64748b' }}>{w.through_date ?? '—'}</span>
-              <span style={{ color: '#94a3b8', fontSize: 10 }}>
+              <span style={{ color: 'var(--bos-color-ink-disabled)' }}>{w.through_date ?? '—'}</span>
+              <span style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 10 }}>
                 {w.trigger_source ?? 'manual'}
                 {w.generated_at && ` · gen ${formatDate(w.generated_at)}`}
                 {w.notarized_at && ` · not ${formatDate(w.notarized_at)}`}
@@ -219,7 +219,7 @@ function ManualGenerateButton({ onGenerated }: { onGenerated: () => void }) {
         disabled={busy || !payAppId.trim()}
         style={{
           padding: '6px 12px', borderRadius: 8, border: '1px solid #0c2330',
-          background: busy ? '#94a3b8' : '#0c2330', color: 'white', fontSize: 11, fontWeight: 700,
+          background: busy ? 'var(--bos-color-ink-tertiary)' : '#0c2330', color: 'white', fontSize: 11, fontWeight: 700,
           cursor: busy ? 'wait' : 'pointer',
         }}
       >

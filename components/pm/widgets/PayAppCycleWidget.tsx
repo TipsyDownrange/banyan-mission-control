@@ -36,7 +36,7 @@ export default function PayAppCycleWidget({ onHide, showHide }: { onHide?: () =>
       showHide={showHide}
     >
       {!data || data.items.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
           No pay applications in your projects.
         </div>
       ) : (
@@ -57,7 +57,7 @@ export default function PayAppCycleWidget({ onHide, showHide }: { onHide?: () =>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
                   {p.kid ?? '—'} · Pay App #{p.pay_app_number}
                 </div>
-                <div style={{ fontSize: 10, color: '#94a3b8' }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>
                   period end {p.period_end} · {p.state}
                 </div>
               </div>

@@ -44,7 +44,7 @@ const STATUS_COLORS: Record<ScheduleTask['status'], string> = {
   in_progress: '#d97706',   // amber
   complete: '#059669',      // green
   blocked: '#dc2626',       // red
-  on_hold: '#64748b',       // gray
+  on_hold: 'var(--bos-color-ink-disabled)',       // gray
 };
 
 const STATUS_PROGRESS_COLORS: Record<ScheduleTask['status'], string> = {
@@ -52,7 +52,7 @@ const STATUS_PROGRESS_COLORS: Record<ScheduleTask['status'], string> = {
   in_progress: '#f59e0b',
   complete: '#10b981',
   blocked: '#ef4444',
-  on_hold: '#94a3b8',
+  on_hold: 'var(--bos-color-ink-tertiary)',
 };
 
 // Outer-island bars are rendered with a chevron-suggestive lighter shade so
@@ -62,7 +62,7 @@ const OUTER_ISLAND_COLORS: Record<ScheduleTask['status'], string> = {
   in_progress: '#f59e0b',
   complete: '#10b981',
   blocked: '#ef4444',
-  on_hold: '#94a3b8',
+  on_hold: 'var(--bos-color-ink-tertiary)',
 };
 
 type ZoomMode = 'Week' | 'Month' | 'Quarter';
@@ -224,7 +224,7 @@ export default function ScheduleGanttView({
 
   if (ganttTasks.length === 0) {
     return (
-      <div data-bos-schedule-gantt-empty style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+      <div data-bos-schedule-gantt-empty style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>
         No phases or tasks to chart yet.
       </div>
     );
@@ -245,7 +245,7 @@ export default function ScheduleGanttView({
               padding: '4px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 11, fontWeight: 700,
               background: zoom === z ? 'white' : 'transparent',
-              color: zoom === z ? '#0f172a' : '#64748b',
+              color: zoom === z ? '#0f172a' : 'var(--bos-color-ink-disabled)',
               boxShadow: zoom === z ? '0 1px 3px rgba(15,23,42,0.08)' : 'none',
             }}
           >
@@ -267,7 +267,7 @@ export default function ScheduleGanttView({
           headerHeight={42}
           rowHeight={32}
           barCornerRadius={4}
-          arrowColor="#94a3b8"
+          arrowColor="var(--bos-color-ink-tertiary)"
           fontFamily="inherit"
           fontSize="12"
           onDateChange={(task) => {
@@ -401,7 +401,7 @@ function PermitBand({ permits, range }: { permits: ScheduleMilestone[]; range: D
   const todayMs = isoToMs(todayISO()) ?? Date.now();
   return (
     <div data-bos-permit-band style={{ position: 'relative', marginBottom: 8 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
         Permit Timeline
       </div>
       <svg width="100%" height={26} style={{ display: 'block' }} role="img" aria-label="Permit timeline">
@@ -447,7 +447,7 @@ function PermitBand({ permits, range }: { permits: ScheduleMilestone[]; range: D
 function FreightStrip({ entries, range }: { entries: FreightCalendarEntry[]; range: DateRange }) {
   return (
     <div data-bos-freight-strip style={{ position: 'relative', marginTop: 8 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
         Matson Schedule
       </div>
       <svg width="100%" height={28} style={{ display: 'block' }} role="img" aria-label="Matson freight schedule">

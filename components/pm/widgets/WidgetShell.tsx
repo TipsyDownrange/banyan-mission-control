@@ -72,7 +72,7 @@ export default function WidgetShell({
             {title}
           </div>
           {subtitle && (
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{subtitle}</div>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>{subtitle}</div>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -89,7 +89,7 @@ export default function WidgetShell({
                 borderRadius: 6,
                 padding: '2px 8px',
                 fontSize: 11,
-                color: '#64748b',
+                color: 'var(--bos-color-ink-disabled)',
                 cursor: 'pointer',
               }}
             >
@@ -100,7 +100,7 @@ export default function WidgetShell({
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
         {loading ? (
-          <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+          <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
             Loading…
           </div>
         ) : error ? (

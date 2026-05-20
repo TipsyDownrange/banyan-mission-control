@@ -60,19 +60,19 @@ export default function EventFeedPanel() {
   return (
     <div style={{ padding: '32px', maxWidth: 800, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Operations</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Operations</div>
         <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0 }}>Event Feed</h1>
       </div>
 
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
         <button onClick={() => setFilter('ALL')}
-          style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === 'ALL' ? '1px solid rgba(15,23,42,0.2)' : '1px solid #e2e8f0', background: filter === 'ALL' ? '#0f172a' : 'white', color: filter === 'ALL' ? 'white' : '#64748b' }}>
+          style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === 'ALL' ? '1px solid rgba(15,23,42,0.2)' : '1px solid #e2e8f0', background: filter === 'ALL' ? '#0f172a' : 'white', color: filter === 'ALL' ? 'white' : 'var(--bos-color-ink-disabled)' }}>
           All · {events.length}
         </button>
         {Object.entries(TYPE_STYLE).map(([key, s]) => counts[key] > 0 && (
           <button key={key} onClick={() => setFilter(key)}
-            style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === key ? `1px solid ${s.border}` : '1px solid #e2e8f0', background: filter === key ? s.bg : 'white', color: filter === key ? s.color : '#64748b' }}>
+            style={{ padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: filter === key ? `1px solid ${s.border}` : '1px solid #e2e8f0', background: filter === key ? s.bg : 'white', color: filter === key ? s.color : 'var(--bos-color-ink-disabled)' }}>
             {s.label} · {counts[key]}
           </button>
         ))}
@@ -82,7 +82,7 @@ export default function EventFeedPanel() {
         <div style={{ textAlign: 'center', padding: 48 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(15,118,110,0.12)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Loading field events...</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading field events...</div>
         </div>
       )}
 
@@ -90,7 +90,7 @@ export default function EventFeedPanel() {
 
       {!loading && filtered.length === 0 && !error && (
         <div style={{ padding: 48, textAlign: 'center', borderRadius: 20, background: 'white', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>No events yet. Field crew activity will appear here as jobs are logged.</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>No events yet. Field crew activity will appear here as jobs are logged.</div>
         </div>
       )}
 
@@ -105,13 +105,13 @@ export default function EventFeedPanel() {
                   {s.label}
                 </span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>{e.projectName}</span>
-                <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>{formatTime(e.occurredAt || e.recordedAt)}</span>
+                <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginLeft: 'auto' }}>{formatTime(e.occurredAt || e.recordedAt)}</span>
               </div>
               {(e.note || e.location) && (
                 <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{e.note || e.location}</div>
               )}
               {who && (
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>{who}</div>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{who}</div>
               )}
             </div>
           );

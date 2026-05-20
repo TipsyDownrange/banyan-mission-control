@@ -43,7 +43,7 @@ const KPI: CSSProperties = {
 };
 
 const KPI_LABEL: CSSProperties = {
-  fontSize: 10, fontWeight: 800, color: '#94a3b8',
+  fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.08em',
 };
 
@@ -52,7 +52,7 @@ const KPI_VALUE: CSSProperties = {
 };
 
 const KPI_SUB: CSSProperties = {
-  fontSize: 11, color: '#64748b', marginTop: 3,
+  fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 3,
 };
 
 export default function SOVSummaryCard({
@@ -104,14 +104,14 @@ export default function SOVSummaryCard({
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f766e' }}>
             SOV Summary
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
             {activeVersion
               ? `Version ${activeVersion.version_number} · ${activeVersion.state.replace(/_/g, ' ')}`
               : 'No SOV version on file yet.'}
           </div>
         </div>
         <div style={{
-          fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase',
+          fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase',
           letterSpacing: '0.08em', textAlign: 'right',
         }}>
           {sovSummary.lineCount} line{sovSummary.lineCount === 1 ? '' : 's'}
@@ -141,7 +141,7 @@ export default function SOVSummaryCard({
         </div>
       </div>
 
-      <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+      <div style={{ marginTop: 12, fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontStyle: 'italic' }}>
         Postgres billing data — may differ from Overview tab during migration.
       </div>
     </div>

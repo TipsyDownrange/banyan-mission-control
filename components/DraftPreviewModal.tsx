@@ -63,7 +63,7 @@ function extractMissingVars(text: string): string[] {
 }
 
 const FL = (label: string) => (
-  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#64748b', marginBottom: 5 }}>
+  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-disabled)', marginBottom: 5 }}>
     {label}
   </div>
 );
@@ -179,12 +179,12 @@ export default function DraftPreviewModal({
         {/* Header */}
         <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>Email to Customer</div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 3 }}>Email to Customer</div>
             <h2 style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', margin: 0 }}>Review &amp; Send Proposal</h2>
           </div>
           <button
             onClick={() => !sending && onClose()}
-            style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: sending ? 'default' : 'pointer', fontSize: 16, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: sending ? 0.4 : 1 }}
+            style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #e2e8f0', background: 'white', cursor: sending ? 'default' : 'pointer', fontSize: 16, color: 'var(--bos-color-ink-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: sending ? 0.4 : 1 }}
           >×</button>
         </div>
 
@@ -222,12 +222,12 @@ export default function DraftPreviewModal({
 
           {/* Attachment */}
           <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--bos-color-ink-disabled)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
             </svg>
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{pdfFilename}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>PDF proposal — generated on send</div>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>PDF proposal — generated on send</div>
             </div>
           </div>
 
@@ -243,7 +243,7 @@ export default function DraftPreviewModal({
         <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10, flexShrink: 0 }}>
           <button
             onClick={() => !sending && onClose()}
-            style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: 13, fontWeight: 700, cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.4 : 1, fontFamily: FONT }}
+            style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', fontSize: 13, fontWeight: 700, cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.4 : 1, fontFamily: FONT }}
           >
             Cancel
           </button>
@@ -253,7 +253,7 @@ export default function DraftPreviewModal({
             style={{
               flex: 2, padding: '11px', borderRadius: 12, border: 'none',
               background: sending || !to.trim() ? '#e2e8f0' : '#4338ca',
-              color: sending || !to.trim() ? '#94a3b8' : 'white',
+              color: sending || !to.trim() ? 'var(--bos-color-ink-tertiary)' : 'white',
               fontSize: 13, fontWeight: 700,
               cursor: sending || !to.trim() ? 'default' : 'pointer',
               boxShadow: !sending && to.trim() ? '0 4px 16px rgba(67,56,202,0.3)' : 'none',

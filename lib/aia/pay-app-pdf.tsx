@@ -73,7 +73,7 @@ const S = StyleSheet.create({
   tdRight: { padding: 3, fontSize: 7, textAlign: 'right' },
   parentRow: { backgroundColor: '#f1f5f9' },
   summaryRow: { backgroundColor: '#fef3c7' },
-  footnote: { fontSize: 7, color: '#64748b', marginTop: 6, fontStyle: 'italic' },
+  footnote: { fontSize: 7, color: 'var(--bos-color-ink-disabled)', marginTop: 6, fontStyle: 'italic' },
   signatureBlock: { marginTop: 24, flexDirection: 'row', justifyContent: 'space-between' },
   signatureBox: { width: '45%', borderTopWidth: 0.5, borderColor: '#0f172a', paddingTop: 4 },
 });

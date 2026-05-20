@@ -62,7 +62,7 @@ function asArray<T>(value: unknown): T[] {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 14 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.08em', marginBottom: 6 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', letterSpacing: '0.08em', marginBottom: 6 }}>
         {label}
       </div>
       {children}
@@ -114,7 +114,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
             {ticket.description || 'T&M ticket'}
           </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
             {fmtDate(ticket.work_date)}
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
         <div style={{ textAlign: 'right' }}>
           <TMTicketStateBadge state={ticket.status} />
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', textAlign: 'center' }}>
           {expanded ? '▾' : '▸'}
         </div>
       </button>
@@ -139,7 +139,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
                 {` (${auth.authorization_method.replace(/_/g, ' ').toLowerCase()})`}
               </div>
               {auth.not_to_exceed_amount && (
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                   Not-to-exceed: {fmtMoney(auth.not_to_exceed_amount)}
                 </div>
               )}
@@ -235,7 +235,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
                     : ticket.gc_signoff_required ? 'required · pending' : 'not required'}
                 </div>
                 {ticket.gc_signoff_evidence_ref && (
-                  <div style={{ fontSize: 11, color: '#64748b' }}>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                     Evidence: {ticket.gc_signoff_evidence_ref}
                   </div>
                 )}
@@ -250,7 +250,7 @@ export default function TMTicketDetailCard({ ticket }: { ticket: TMTicket }) {
                 {billing.period_end ? ` (period ending ${fmtDate(billing.period_end)})` : ''}
               </div>
               {ticket.billed_at && (
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>
                   Billed {fmtDate(ticket.billed_at)}
                 </div>
               )}

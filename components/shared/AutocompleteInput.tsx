@@ -92,12 +92,12 @@ export default function AutocompleteInput({
                     {c.island}
                   </span>
                 )}
-                <span style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}>
+                <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', flexShrink: 0 }}>
                   {c.woCount} past WO{c.woCount !== 1 ? 's' : ''}
                 </span>
               </div>
               {subField && c[subField] && (
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {String(c[subField])}
                 </div>
               )}

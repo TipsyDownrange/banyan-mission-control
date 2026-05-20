@@ -85,7 +85,7 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
     });
   }, [data]);
 
-  if (loading) return <div style={{ padding: 24, color: '#64748b' }}>Loading open actions...</div>;
+  if (loading) return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)' }}>Loading open actions...</div>;
   if (err) return <div style={{ padding: 24, color: '#b91c1c' }}>Failed to load: {err}</div>;
 
   const total = data?.total ?? 0;
@@ -95,14 +95,14 @@ export default function MyOpenActionsPanel({ userId, userName }: { userId: strin
     <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>My Open Actions</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>My Open Actions</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a' }}>
-            {userName ? `${userName.split(' ')[0]}'s ` : ''}{total} open {total === 1 ? 'action' : 'actions'} {projects > 0 && <span style={{ fontSize: 14, color: '#64748b', fontWeight: 700 }}>across {projects} {projects === 1 ? 'project' : 'projects'}</span>}
+            {userName ? `${userName.split(' ')[0]}'s ` : ''}{total} open {total === 1 ? 'action' : 'actions'} {projects > 0 && <span style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>across {projects} {projects === 1 ? 'project' : 'projects'}</span>}
           </div>
         </div>
       </div>
       {sorted.length === 0 ? (
-        <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>Nothing assigned right now. Good.</div>
+        <div style={{ padding: 16, color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>Nothing assigned right now. Good.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {sorted.map((it) => {

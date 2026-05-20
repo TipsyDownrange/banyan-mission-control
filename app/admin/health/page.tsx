@@ -40,9 +40,9 @@ export default function HealthPage() {
     <div style={{ minHeight: '100vh', background: '#0f172a', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6 }}>System Health Check</h1>
-        <p style={{ color: '#64748b', fontSize: 13, marginBottom: 24 }}>Cross-table kID consistency audit. First 100 WOs. Green = consistent, Red = missing/mismatched.</p>
+        <p style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 13, marginBottom: 24 }}>Cross-table kID consistency audit. First 100 WOs. Green = consistent, Red = missing/mismatched.</p>
 
-        {loading && <div style={{ color: '#64748b' }}>Loading… reading all tables from sheet…</div>}
+        {loading && <div style={{ color: 'var(--bos-color-ink-disabled)' }}>Loading… reading all tables from sheet…</div>}
 
         {data && (
           <>
@@ -58,7 +58,7 @@ export default function HealthPage() {
               ].map(([label, val, ok]) => (
                 <div key={String(label)} style={{ padding: '14px 16px', borderRadius: 12, background: '#1e293b', border: `1px solid ${ok ? '#334155' : '#7f1d1d'}` }}>
                   <div style={{ fontSize: 28, fontWeight: 800, color: ok ? '#f1f5f9' : '#ef4444' }}>{String(val)}</div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{String(label)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2 }}>{String(label)}</div>
                 </div>
               ))}
             </div>
@@ -66,7 +66,7 @@ export default function HealthPage() {
             {/* Filters */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
               {(['all', 'mismatch', 'no_plans'] as const).map(f => (
-                <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === f ? '#0f766e' : '#1e293b', color: filter === f ? '#fff' : '#64748b' }}>
+                <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === f ? '#0f766e' : '#1e293b', color: filter === f ? '#fff' : 'var(--bos-color-ink-disabled)' }}>
                   {f === 'all' ? 'All WOs' : f === 'mismatch' ? '⚠ Mismatches Only' : '❌ No Plans'}
                 </button>
               ))}
@@ -81,7 +81,7 @@ export default function HealthPage() {
                 <thead>
                   <tr style={{ background: '#1e293b', textAlign: 'left' }}>
                     {['WO', 'Name', 'Status', 'kID Used', 'Plans', 'Plan Job_ID', 'Steps', 'Completions', 'Dispatch kID', 'Issues'].map(h => (
-                      <th key={h} style={{ padding: '8px 10px', color: '#64748b', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '8px 10px', color: 'var(--bos-color-ink-disabled)', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -89,15 +89,15 @@ export default function HealthPage() {
                   {filtered.map((r, i) => (
                     <tr key={r.wo_id} style={{ background: i % 2 === 0 ? '#0f172a' : '#111827', borderBottom: '1px solid #1e293b' }}>
                       <td style={{ padding: '7px 10px', fontFamily: 'monospace', color: '#7dd3fc', whiteSpace: 'nowrap' }}>{r.wo_number || r.wo_id}</td>
-                      <td style={{ padding: '7px 10px', color: '#94a3b8', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</td>
-                      <td style={{ padding: '7px 10px', color: '#64748b' }}>{r.status}</td>
+                      <td style={{ padding: '7px 10px', color: 'var(--bos-color-ink-tertiary)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</td>
+                      <td style={{ padding: '7px 10px', color: 'var(--bos-color-ink-disabled)' }}>{r.status}</td>
                       <td style={{ padding: '7px 10px', fontFamily: 'monospace', color: '#cbd5e1', fontSize: 11 }}>{r.kID_used}</td>
                       <td style={{ padding: '7px 10px' }}>
                         <span style={{ display: 'flex', alignItems: 'center' }}>
                           {DOT(r.plans.ok)}{r.plans.count}
                         </span>
                       </td>
-                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 10, color: r.plans.format_mismatch ? '#fbbf24' : '#64748b' }}>
+                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 10, color: r.plans.format_mismatch ? '#fbbf24' : 'var(--bos-color-ink-disabled)' }}>
                         {r.plans.job_ids.join(', ') || '—'}
                         {r.plans.format_mismatch && ' ⚠'}
                       </td>
@@ -112,7 +112,7 @@ export default function HealthPage() {
                           {r.completions.format_mismatch && <span style={{ color: '#fbbf24', marginLeft: 4 }}>⚠</span>}
                         </span>
                       </td>
-                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 10, color: r.dispatch.format_mismatch ? '#fbbf24' : '#64748b' }}>
+                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 10, color: r.dispatch.format_mismatch ? '#fbbf24' : 'var(--bos-color-ink-disabled)' }}>
                         {r.dispatch.kIDs.join(', ') || '—'}
                         {r.dispatch.format_mismatch && ' ⚠'}
                       </td>

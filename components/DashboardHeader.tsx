@@ -41,7 +41,7 @@ const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string
 const TREND_ARROW: Record<string, { icon: string; color: string }> = {
   up:   { icon: '↑', color: '#059669' },
   down: { icon: '↓', color: '#dc2626' },
-  flat: { icon: '→', color: '#64748b' },
+  flat: { icon: '→', color: 'var(--bos-color-ink-disabled)' },
 };
 
 export default function DashboardHeader({
@@ -59,11 +59,11 @@ export default function DashboardHeader({
     <div style={{ marginBottom: 24 }}>
       {/* Title */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>
           {title}
         </div>
         {subtitle && (
-          <div style={{ fontSize: 14, color: '#64748b' }}>{subtitle}</div>
+          <div style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)' }}>{subtitle}</div>
         )}
       </div>
 
@@ -84,7 +84,7 @@ export default function DashboardHeader({
               boxShadow: '0 1px 3px rgba(15,23,42,0.03)',
             }}>
               <div style={{
-                fontSize: 11, fontWeight: 700, color: '#94a3b8',
+                fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)',
                 textTransform: 'uppercase', letterSpacing: '0.06em',
                 marginBottom: 8,
               }}>
@@ -107,7 +107,7 @@ export default function DashboardHeader({
                 )}
               </div>
               {kpi.subtitle && (
-                <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 4 }}>
                   {kpi.subtitle}
                 </div>
               )}
@@ -118,7 +118,7 @@ export default function DashboardHeader({
                 }}>
                   <div style={{
                     height: '100%', borderRadius: 3,
-                    background: kpi.color || (kpi.progress >= 75 ? '#059669' : kpi.progress >= 40 ? '#d97706' : '#94a3b8'),
+                    background: kpi.color || (kpi.progress >= 75 ? '#059669' : kpi.progress >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)'),
                     width: `${Math.min(100, kpi.progress)}%`,
                     transition: 'width 0.5s',
                   }} />

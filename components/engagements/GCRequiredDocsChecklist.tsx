@@ -69,7 +69,7 @@ export default function GCRequiredDocsChecklist({ kID }: { kID: string }) {
     if (res.ok) refresh();
   }
 
-  if (loading) return <div style={{ padding: 16, fontSize: 13, color: '#94a3b8' }}>Loading checklist…</div>;
+  if (loading) return <div style={{ padding: 16, fontSize: 13, color: 'var(--bos-color-ink-tertiary)' }}>Loading checklist…</div>;
   if (error) {
     return (
       <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: '#b91c1c', fontSize: 12 }}>
@@ -86,7 +86,7 @@ export default function GCRequiredDocsChecklist({ kID }: { kID: string }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>GC-Required Docs Checklist</div>
-        <div style={{ fontSize: 10, color: '#94a3b8' }}>INFORMATIONAL ONLY — does not block submission</div>
+        <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>INFORMATIONAL ONLY — does not block submission</div>
       </div>
       <div>
         <label style={labelStyle}>Identified phase</label>

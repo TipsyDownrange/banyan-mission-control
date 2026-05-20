@@ -179,7 +179,7 @@ export default function PlacesAutocomplete({
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{s.mainText}</div>
-              {s.secondaryText && <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{s.secondaryText}</div>}
+              {s.secondaryText && <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{s.secondaryText}</div>}
             </div>
           ))}
           <div style={{ padding: '5px 12px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'right' }}>

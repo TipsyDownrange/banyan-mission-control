@@ -94,11 +94,11 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
           T&amp;M Tickets
-          <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>
+          <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)' }}>
             ({s.total_count})
           </span>
         </div>
-        <div style={{ fontSize: 11, color: '#94a3b8' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
           {range.from ? `${fmtDate(range.from)} – ${fmtDate(range.to)}` : 'No tickets yet'}
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function TMTicketsSummaryCard({ tickets, summary }: Props) {
         }}
       >
         <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.06em' }}>TOTAL VALUE</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', letterSpacing: '0.06em' }}>TOTAL VALUE</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
             {fmtMoney(s.total_value_usd)}
           </div>

@@ -73,7 +73,7 @@ export default function TMTicketsTab({ kID }: { kID: string }) {
     return (
       <div
         data-testid="tm-tickets-loading"
-        style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}
+        style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}
       >
         Loading T&amp;M tickets…
       </div>
@@ -110,13 +110,13 @@ export default function TMTicketsTab({ kID }: { kID: string }) {
           This project isn&apos;t on the Postgres billing system yet.
         </div>
         <div style={{
-          fontSize: 13, color: '#64748b', maxWidth: 480, margin: '0 auto', lineHeight: 1.6,
+          fontSize: 13, color: 'var(--bos-color-ink-disabled)', maxWidth: 480, margin: '0 auto', lineHeight: 1.6,
         }}>
           T&amp;M tickets, authorizations, and labor breakdowns will appear
           here once the project is migrated. Reach out to Sean if you expect
           this project to be live.
         </div>
-        <div style={{ marginTop: 18, fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+        <div style={{ marginTop: 18, fontSize: 11, color: 'var(--bos-color-ink-tertiary)', fontFamily: 'monospace' }}>
           kID: {kID}
         </div>
       </div>

@@ -495,7 +495,7 @@ export default function Sidebar({ activeView, onSelect, collapsed, onToggle, dem
           {(() => {
             const isHealthy = qboStatus === 'healthy';
             const isLoading = qboStatus === 'loading' || qboStatus === 'unknown';
-            const dotColor = isLoading ? '#64748b' : isHealthy ? '#22c55e' : '#ef4444';
+            const dotColor = isLoading ? 'var(--bos-color-ink-disabled)' : isHealthy ? '#22c55e' : '#ef4444';
             const label = isLoading ? 'QBO checking…' : isHealthy ? 'QuickBooks connected' : qboStatus === 'refresh_expired' ? 'QBO: re-auth needed' : qboStatus === 'unconfigured' ? 'QBO: not configured' : 'QBO: connection issue';
             return (
               <div

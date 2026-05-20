@@ -251,7 +251,7 @@ function SchedulerIdentityBand({
       background: 'rgba(15,23,42,0.5)',
       border: '1px solid rgba(148,163,184,0.18)',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0, marginBottom: 6 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0, marginBottom: 6 }}>
         Verifying
       </div>
       <div style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', lineHeight: 1.25, marginBottom: 10 }}>
@@ -269,7 +269,7 @@ function SchedulerIdentityBand({
             fontWeight: 700,
             wordBreak: 'break-word',
           }}>
-            <span style={{ color: '#64748b', fontWeight: 800 }}>{detail.label}: </span>{detail.value}
+            <span style={{ color: 'var(--bos-color-ink-disabled)', fontWeight: 800 }}>{detail.label}: </span>{detail.value}
           </span>
         ))}
       </div>
@@ -422,12 +422,12 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
               {job.name}
             </div>
             {job.customer && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>{job.customer}</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>{job.customer}</div>
             )}
           </div>
           <button onClick={onClose} style={{
             background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 8, padding: '6px 10px', color: '#94a3b8', fontSize: 14, cursor: 'pointer', flexShrink: 0,
+            borderRadius: 8, padding: '6px 10px', color: 'var(--bos-color-ink-tertiary)', fontSize: 14, cursor: 'pointer', flexShrink: 0,
           }}>✕</button>
         </div>
 
@@ -447,16 +447,16 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
         {/* Steps */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
             Focus steps for this slot (optional) ({selectedStepIds.length} selected · {focusHours.toFixed(1)}h focus)
           </label>
-          <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 8 }}>
             Leave blank to show the crew all WO steps without a special focus group.
           </div>
           {loadingSteps ? (
-            <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: 12 }}>Loading steps…</div>
+            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontSize: 12 }}>Loading steps…</div>
           ) : steps.length === 0 ? (
-            <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: 12, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)' }}>
+            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontSize: 12, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)' }}>
               No install steps found for this WO
             </div>
           ) : (
@@ -482,10 +482,10 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
                     </div>
                     <input type="checkbox" checked={checked} onChange={() => toggleStep(step.install_step_id)} style={{ display: 'none' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, color: checked ? '#f1f5f9' : '#94a3b8', fontWeight: checked ? 700 : 400 }}>
+                      <div style={{ fontSize: 13, color: checked ? '#f1f5f9' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>
                         {step.step_name}
                       </div>
-                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 1 }}>
+                      <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>
                         {step.allotted_hours}h{isScheduled ? ' · already scheduled' : ''}
                       </div>
                     </div>
@@ -499,11 +499,11 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
         {/* Date + Time row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Start Time</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Start Time</label>
             <select value={startTime} onChange={e => setStartTime(e.target.value)} style={{ ...inputStyle, appearance: 'none' as const }}>
               {TIME_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -523,7 +523,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
         {/* Island */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
             Island {(job as any)?.area_of_island ? `— ${(job as any).area_of_island}` : ''}
           </label>
           <div style={{
@@ -537,7 +537,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
         {/* Crew */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
             Assign Crew ({selectedCrew.length} selected)
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 200, overflowY: 'auto' }}>
@@ -565,7 +565,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => toggleCrew(m.name)} style={{ display: 'none' }} />
-                      <span style={{ fontSize: 13, color: checked ? '#e2e8f0' : '#94a3b8', fontWeight: checked ? 700 : 400 }}>
+                      <span style={{ fontSize: 13, color: checked ? '#e2e8f0' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>
                         {m.name}
                       </span>
                     </label>
@@ -578,7 +578,7 @@ function QuickScheduleModal({ job, crewList, onClose, onScheduled }: QuickSchedu
 
         {/* Notes */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
             Notes (optional)
           </label>
           <textarea
@@ -772,13 +772,13 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
             <div style={{ fontSize: 17, fontWeight: 800, color: '#f1f5f9', lineHeight: 1.3, maxWidth: 300 }}>
               {slot.project_name}
             </div>
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', marginTop: 3 }}>
               {slot.slot_id}
             </div>
           </div>
           <button onClick={onClose} style={{
             background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 8, padding: '6px 10px', color: '#94a3b8', fontSize: 14, cursor: 'pointer', flexShrink: 0,
+            borderRadius: 8, padding: '6px 10px', color: 'var(--bos-color-ink-tertiary)', fontSize: 14, cursor: 'pointer', flexShrink: 0,
           }}>✕</button>
         </div>
 
@@ -800,11 +800,11 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
         {/* Date + Time */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' as const }} />
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Start Time</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Start Time</label>
             <select value={startTime} onChange={e => setStartTime(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' as const, appearance: 'none' as const }}>
               {TIME_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
@@ -819,13 +819,13 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
 
         {/* Hours */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Hours Estimated</label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Hours Estimated</label>
           <input type="number" value={hours} onChange={e => setHours(e.target.value)} placeholder="e.g. 8" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, boxSizing: 'border-box' as const }} />
         </div>
 
         {/* Crew */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Crew ({selectedCrew.length})</label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Crew ({selectedCrew.length})</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
             {Object.entries(crewByIsland).map(([islandName, members]) => (
               <div key={islandName}>
@@ -838,7 +838,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                         {checked && <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>✓</span>}
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => toggleCrew(m.name)} style={{ display: 'none' }} />
-                      <span style={{ fontSize: 13, color: checked ? '#e2e8f0' : '#94a3b8', fontWeight: checked ? 700 : 400 }}>{m.name}</span>
+                      <span style={{ fontSize: 13, color: checked ? '#e2e8f0' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{m.name}</span>
                     </label>
                   );
                 })}
@@ -849,21 +849,21 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
 
         {/* Notes */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Notes</label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>Notes</label>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} />
         </div>
 
         {/* Step Picker */}
         {(availableSteps.length > 0 || loadingSteps) && (
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
               Focus steps for this slot (optional) ({selectedStepIds.length} selected)
             </label>
-            <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 8 }}>
               Focus highlights the day’s priority steps. It does not hide or block other WO steps in the field app.
             </div>
             {loadingSteps ? (
-              <div style={{ fontSize: 12, color: '#64748b', padding: '8px 0' }}>Loading steps…</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', padding: '8px 0' }}>Loading steps…</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
                 {availableSteps.map(step => {
@@ -875,7 +875,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
                       </div>
                       <input type="checkbox" checked={checked} onChange={() => setSelectedStepIds(prev => checked ? prev.filter(id => id !== step.install_step_id) : [...prev, step.install_step_id])} style={{ display: 'none' }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: checked ? '#e2e8f0' : '#94a3b8', fontWeight: checked ? 700 : 400 }}>{step.step_name}</div>
+                        <div style={{ fontSize: 13, color: checked ? '#e2e8f0' : 'var(--bos-color-ink-tertiary)', fontWeight: checked ? 700 : 400 }}>{step.step_name}</div>
                         {step.allotted_hours > 0 && <div style={{ fontSize: 11, color: '#475569' }}>{step.allotted_hours}h allotted</div>}
                       </div>
                     </label>
@@ -901,7 +901,7 @@ function EditSlotModal({ slot, crewList, onClose, onSaved }: EditSlotModalProps)
               Remove this slot from the schedule?
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#94a3b8', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--bos-color-ink-tertiary)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', background: '#dc2626', border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 800, cursor: deleting ? 'not-allowed' : 'pointer' }}>
                 {deleting ? 'Deleting…' : 'Yes, Delete'}
               </button>
@@ -948,7 +948,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
 
   if (jobs.length === 0) {
     return (
-      <div style={{ padding: '16px 0', textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+      <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontSize: 13 }}>
         All jobs are scheduled ✓
       </div>
     );
@@ -981,7 +981,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
                   padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 800, cursor: 'pointer',
                   background: active ? c.bg : 'rgba(255,255,255,0.04)',
                   border: active ? `1px solid ${c.border}` : '1px solid rgba(255,255,255,0.1)',
-                  color: active ? c.text : '#64748b',
+                  color: active ? c.text : 'var(--bos-color-ink-disabled)',
                 }}>{isl}</button>
             );
           })}
@@ -994,7 +994,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
                   padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 800, cursor: 'pointer',
                   background: active ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.04)',
                   border: active ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                  color: active ? '#fbbf24' : '#64748b',
+                  color: active ? '#fbbf24' : 'var(--bos-color-ink-disabled)',
                   textTransform: 'capitalize',
                 }}>{st.replace('_', ' ')}</button>
             );
@@ -1007,7 +1007,7 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
           )}
         </div>
         {filtered.length !== jobs.length && (
-          <div style={{ fontSize: 10, color: '#64748b' }}>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>
             Showing {filtered.length} of {jobs.length} jobs
           </div>
         )}
@@ -1017,11 +1017,11 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap', minWidth: 80 }}>WO #</th>
-              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Name</th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Island</th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Steps</th>
-              <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}></th>
+              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap', minWidth: 80 }}>WO #</th>
+              <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Name</th>
+              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Island</th>
+              <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>Steps</th>
+              <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: 9, fontWeight: 800, color: 'var(--bos-color-ink-disabled)', textTransform: 'uppercase', letterSpacing: '0.07em' }}></th>
             </tr>
           </thead>
           <tbody>
@@ -1031,10 +1031,10 @@ function UnscheduledQueue({ jobs, onSchedule }: UnscheduledQueueProps) {
               const allScheduled = hasSteps && job.unscheduled_steps === 0;
               return (
                 <tr key={job.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
-                  <td style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: '#64748b', whiteSpace: 'nowrap' }}>{job.kID}</td>
+                  <td style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', whiteSpace: 'nowrap' }}>{job.kID}</td>
                   <td style={{ padding: '6px 10px', fontSize: 12, color: '#e2e8f0', maxWidth: 200 }}>
                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.name}</div>
-                    {job.customer && <div style={{ fontSize: 10, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.customer}</div>}
+                    {job.customer && <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.customer}</div>}
                   </td>
                   <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                     {job.island && (
@@ -1092,7 +1092,7 @@ function extractLatestShiftNote(notesColM: string): { note: string; completedBy:
 function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
   if (slots.length === 0) {
     return (
-      <div style={{ padding: '20px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+      <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
         No crews dispatched today
       </div>
     );
@@ -1116,7 +1116,7 @@ function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', marginBottom: 3 }}>
                   {slot.project_name}
                 </div>
-                <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
                   {crew.length > 0 ? crew.join(' · ') : 'No crew assigned'}
                 </div>
               </div>
@@ -1145,10 +1145,10 @@ function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
             {slot.progress && slot.progress.total > 0 ? (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                  <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
                     {slot.progress.completed} of {slot.progress.total} steps done
                   </span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 100 ? '#86efac' : '#94a3b8' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 100 ? '#86efac' : 'var(--bos-color-ink-tertiary)' }}>
                     {pct}%
                   </span>
                 </div>
@@ -1175,7 +1175,7 @@ function TodayCrews({ slots }: { slots: DispatchSlot[] }) {
 function BlockersSection({ blockers }: { blockers: Blocker[] }) {
   if (blockers.length === 0) {
     return (
-      <div style={{ padding: '16px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+      <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
         No active blockers ✓
       </div>
     );
@@ -1195,11 +1195,11 @@ function BlockersSection({ blockers }: { blockers: Blocker[] }) {
               <div style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5' }}>
                 ❌ {b.project_location || b.job_id} — {b.step_name}
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
                 {b.notes || 'No reason provided'}
               </div>
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8', whiteSpace: 'nowrap', marginLeft: 8 }}>
+            <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', whiteSpace: 'nowrap', marginLeft: 8 }}>
               {b.crew_lead && <span>by {b.crew_lead}</span>}
               {b.date && <span> · {b.date}</span>}
             </div>
@@ -1208,7 +1208,7 @@ function BlockersSection({ blockers }: { blockers: Blocker[] }) {
             <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(234,179,8,0.3)', background: 'rgba(234,179,8,0.1)', color: '#fde68a', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
               Reassign
             </button>
-            <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(148,163,184,0.2)', background: 'rgba(148,163,184,0.08)', color: '#94a3b8', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+            <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(148,163,184,0.2)', background: 'rgba(148,163,184,0.08)', color: 'var(--bos-color-ink-tertiary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
               Notify PM
             </button>
           </div>
@@ -1252,7 +1252,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 0 12px', justifyContent: 'space-between' }}>
         <button
           onClick={() => onWeekChange(weekOffset - 1)}
-          style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
         >
           ← Prev
         </button>
@@ -1265,7 +1265,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                 padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 background: weekOffset === w ? 'rgba(20,184,166,0.2)' : 'rgba(255,255,255,0.04)',
                 border: `1px solid ${weekOffset === w ? 'rgba(20,184,166,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                color: weekOffset === w ? '#5eead4' : '#64748b',
+                color: weekOffset === w ? '#5eead4' : 'var(--bos-color-ink-disabled)',
               }}
             >
               {w === 0 ? 'Now' : w === -2 ? '-2w' : w === -1 ? '-1w' : w === 1 ? '+1w' : '+2w'}
@@ -1274,7 +1274,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
         </div>
         <button
           onClick={() => onWeekChange(weekOffset + 1)}
-          style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--bos-color-ink-tertiary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
         >
           Next →
         </button>
@@ -1282,13 +1282,13 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
 
       {/* Week date range label */}
       {weekDays.length > 0 && (
-        <div style={{ fontSize: 11, color: '#64748b', marginBottom: 10, textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 10, textAlign: 'center' }}>
           {weekLabel} · {fmtShort(weekDays[0])} – {fmtShort(weekDays[weekDays.length - 1])}
         </div>
       )}
 
       {projects.length === 0 ? (
-        <div style={{ padding: '20px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+        <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
           No dispatch slots this week
         </div>
       ) : (
@@ -1296,14 +1296,14 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px' }}>
             <thead>
               <tr>
-                <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#64748b', minWidth: 140 }}>
+                <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', minWidth: 140 }}>
                   Project
                 </th>
                 {weekDays.map(date => (
                   <th key={date} style={{
                     padding: '6px 8px', textAlign: 'center',
                     fontSize: 11, fontWeight: isToday(date) ? 800 : 600,
-                    color: isToday(date) ? '#38bdf8' : '#64748b',
+                    color: isToday(date) ? '#38bdf8' : 'var(--bos-color-ink-disabled)',
                     minWidth: 90,
                     background: isToday(date) ? 'rgba(56,189,248,0.08)' : 'transparent',
                     borderRadius: 6,
@@ -1363,10 +1363,10 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
                             {slot.project_name.split('—')[1]?.trim() || slot.work_type || slot.project_name.slice(0, 24)}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
-                            <span style={{ fontSize: 9, color: '#94a3b8' }}>
+                            <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)' }}>
                               {crew.length > 0 ? crew[0].split(' ')[0] : 'No crew'}{crew.length > 1 ? ` +${crew.length - 1}` : ''}
                             </span>
-                            <span style={{ fontSize: 9, color: focusCount > 0 ? '#fbbf24' : '#64748b', fontWeight: focusCount > 0 ? 800 : 400 }}>
+                            <span style={{ fontSize: 9, color: focusCount > 0 ? '#fbbf24' : 'var(--bos-color-ink-disabled)', fontWeight: focusCount > 0 ? 800 : 400 }}>
                               {focusCount > 0 ? `${focusCount} focus` : slot.hours_estimated ? `${slot.hours_estimated}h` : ''}
                             </span>
                           </div>
@@ -1393,7 +1393,7 @@ function WeekMatrix({ weekDays, weekSlots, crewList, weekOffset, onWeekChange, o
 
 function CrewAvailability({ crew, weekDays }: { crew: CrewMember[]; weekDays: string[] }) {
   if (crew.length === 0) {
-    return <div style={{ padding: '16px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No crew data</div>;
+    return <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No crew data</div>;
   }
 
   return (
@@ -1401,10 +1401,10 @@ function CrewAvailability({ crew, weekDays }: { crew: CrewMember[]; weekDays: st
       <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px 2px' }}>
         <thead>
           <tr>
-            <th style={{ padding: '4px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#64748b', minWidth: 140 }}>Name</th>
-            <th style={{ padding: '4px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#64748b', minWidth: 70 }}>Island</th>
+            <th style={{ padding: '4px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', minWidth: 140 }}>Name</th>
+            <th style={{ padding: '4px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', minWidth: 70 }}>Island</th>
             {weekDays.map(date => (
-              <th key={date} style={{ padding: '4px 8px', textAlign: 'center', fontSize: 10, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? '#38bdf8' : '#64748b', minWidth: 44 }}>
+              <th key={date} style={{ padding: '4px 8px', textAlign: 'center', fontSize: 10, fontWeight: isToday(date) ? 800 : 600, color: isToday(date) ? '#38bdf8' : 'var(--bos-color-ink-disabled)', minWidth: 44 }}>
                 {fmtDayLabel(date)}
               </th>
             ))}
@@ -1414,7 +1414,7 @@ function CrewAvailability({ crew, weekDays }: { crew: CrewMember[]; weekDays: st
           {crew.map(member => (
             <tr key={member.user_id || member.name}>
               <td style={{ padding: '3px 10px', fontSize: 12, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap' }}>{member.name}</td>
-              <td style={{ padding: '3px 8px', fontSize: 10, color: '#64748b', whiteSpace: 'nowrap' }}>{member.island || '—'}</td>
+              <td style={{ padding: '3px 8px', fontSize: 10, color: 'var(--bos-color-ink-disabled)', whiteSpace: 'nowrap' }}>{member.island || '—'}</td>
               {weekDays.map(date => {
                 const day = member.booked_days.find(d => d.date === date);
                 const booked = day?.booked ?? false;
@@ -1434,11 +1434,11 @@ function CrewAvailability({ crew, weekDays }: { crew: CrewMember[]; weekDays: st
       <div style={{ display: 'flex', gap: 16, padding: '8px 10px', marginTop: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 12, height: 12, borderRadius: 3, background: 'rgba(20,184,166,0.25)', border: '1px solid rgba(20,184,166,0.35)' }} />
-          <span style={{ fontSize: 10, color: '#64748b' }}>Booked</span>
+          <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>Booked</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 12, height: 12, borderRadius: 3, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }} />
-          <span style={{ fontSize: 10, color: '#64748b' }}>Available</span>
+          <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>Available</span>
         </div>
       </div>
     </div>
@@ -1452,21 +1452,21 @@ function ManpowerForecast({ weeks }: { weeks: ForecastWeek[] }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
       {weeks.map((wk, i) => (
         <div key={wk.week_start} style={{ padding: '14px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: 10, color: '#64748b', fontWeight: 700, marginBottom: 4 }}>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', fontWeight: 700, marginBottom: 4 }}>
             Week {i + 1} · {fmtShort(wk.week_start)}–{fmtShort(wk.week_end)}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: '#94a3b8' }}>Needed</span>
+              <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>Needed</span>
               <span style={{ color: '#e2e8f0', fontWeight: 700 }}>{wk.needed}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: '#94a3b8' }}>Available</span>
+              <span style={{ color: 'var(--bos-color-ink-tertiary)' }}>Available</span>
               <span style={{ color: '#e2e8f0', fontWeight: 700 }}>{wk.available}</span>
             </div>
             <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>Buffer</span>
+              <span style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Buffer</span>
               <span style={{ fontSize: 14, fontWeight: 900, color: bufferColor(wk.buffer), padding: '2px 8px', borderRadius: 6, background: bufferBg(wk.buffer) }}>
                 {wk.buffer >= 0 ? '+' : ''}{wk.buffer}
               </span>
@@ -1486,7 +1486,7 @@ function SectionHeader({ icon, title, count, accent }: { icon: string; title: st
       <span style={{ fontSize: 16 }}>{icon}</span>
       <span style={{ fontSize: 13, fontWeight: 800, color: accent || '#e2e8f0', letterSpacing: '0.02em' }}>{title}</span>
       {count !== undefined && (
-        <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: count > 0 ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.06)', color: count > 0 ? '#fca5a5' : '#64748b', border: `1px solid ${count > 0 ? 'rgba(220,38,38,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
+        <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: count > 0 ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.06)', color: count > 0 ? '#fca5a5' : 'var(--bos-color-ink-disabled)', border: `1px solid ${count > 0 ? 'rgba(220,38,38,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
           {count}
         </span>
       )}
@@ -1571,7 +1571,7 @@ export default function SuperSchedulingPanel() {
               Scheduling Matrix
             </h1>
             {data && (
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
                 {data.unscheduled_jobs?.length > 0 && (
                   <span style={{ color: '#fbbf24', fontWeight: 700, marginRight: 8 }}>
                     ⚠ {data.unscheduled_jobs.length} need scheduling
@@ -1608,7 +1608,7 @@ export default function SuperSchedulingPanel() {
         <div style={{ textAlign: 'center', padding: 64 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.15)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontSize: 13, color: '#64748b' }}>Loading scheduling data…</div>
+          <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)' }}>Loading scheduling data…</div>
         </div>
       )}
 

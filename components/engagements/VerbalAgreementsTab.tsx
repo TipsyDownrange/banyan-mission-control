@@ -38,7 +38,7 @@ type ApiResponse = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  LOGGED: { bg: '#f8fafc', color: '#64748b' },
+  LOGGED: { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)' },
   FOLLOWED_UP: { bg: '#eff6ff', color: '#1d4ed8' },
   FORMALIZED: { bg: '#f0fdfa', color: '#0f766e' },
   DISPUTED: { bg: '#fef2f2', color: '#b91c1c' },
@@ -51,7 +51,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function DocChip({ icon, label, active }: { icon: string; label: string; active: boolean }) {
-  const color = active ? '#0f766e' : '#94a3b8';
+  const color = active ? '#0f766e' : 'var(--bos-color-ink-tertiary)';
   return (
     <button
       type="button"
@@ -126,13 +126,13 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
   }, [items, search, status, type, followupOnly, formalizedOnly]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading verbal agreements...</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading verbal agreements...</div>;
   }
   if (err) {
     return <div style={{ padding: 24, color: '#b91c1c', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load verbal agreements: {err}</div>;
   }
   if (!data?.kIDFound) {
-    return <div style={{ padding: 24, color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Verbal Agreement Log requires this project to be migrated to Postgres.</div>;
+    return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>Verbal Agreement Log requires this project to be migrated to Postgres.</div>;
   }
 
   return (
@@ -145,7 +145,7 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
           ['Disputed', data.summary.by_status.DISPUTED ?? 0],
         ].map(([label, value]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{value}</div>
           </div>
         ))}
@@ -168,18 +168,18 @@ export default function VerbalAgreementsTab({ kID }: { kID: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No verbal agreements match the current filters.</div>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', background: 'white', border: '1px solid #e2e8f0', borderRadius: 12 }}>No verbal agreements match the current filters.</div>
         ) : filtered.map((it) => (
           <div key={it.verbal_agreement_id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '100px minmax(160px, 1.4fr) minmax(140px, 1fr) 130px 90px 90px', gap: 10, alignItems: 'center' }}>
-              <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>{formatDate(it.occurred_at)}</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>{formatDate(it.occurred_at)}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.subject}</div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.agreement_summary}</div>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.agreement_summary}</div>
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.external_party_org}</div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>{it.external_party_contact_name || '-'}</div>
+                <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>{it.external_party_contact_name || '-'}</div>
               </div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#475569' }}>{it.agreement_type.replace(/_/g, ' ')}</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>{formatCurrency(it.cost_impact_estimate)}</div>

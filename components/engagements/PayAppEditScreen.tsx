@@ -294,7 +294,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
     URL.revokeObjectURL(url);
   }
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>Loading…</div>;
   if (!payApp) return <div style={{ padding: 40, textAlign: 'center', color: '#b91c1c' }}>Pay app not found</div>;
 
   // G702 summary computed client-side off current line state
@@ -323,7 +323,7 @@ export default function PayAppEditScreen({ payAppId, onClose }: Props) {
           <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
             {payApp.period_start} → {payApp.period_end}
           </div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>State: {payApp.state}</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>State: {payApp.state}</div>
         </div>
         <button onClick={onClose} style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: 10, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
           ← Back
@@ -543,7 +543,7 @@ function NotarizationUploadModal({
         <div style={{ fontSize: 16, fontWeight: 800, color: '#0c2330', marginBottom: 4 }}>
           Upload Notarized Pay App PDF
         </div>
-        <div style={{ fontSize: 11, color: '#64748b', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginBottom: 16 }}>
           Manual notarization upload — proof of notary signature + commission stamp.
         </div>
 
@@ -615,14 +615,14 @@ function summaryRow(num: string, label: string, value: number, footnote?: string
       <td style={{ padding: '6px 8px', width: 30 }}>{num}</td>
       <td style={{ padding: '6px 8px' }}>
         {label}
-        {footnote && <div style={{ fontSize: 10, color: '#64748b', fontStyle: 'italic' }}>{footnote}</div>}
+        {footnote && <div style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)', fontStyle: 'italic' }}>{footnote}</div>}
       </td>
       <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmt(value)}</td>
     </tr>
   );
 }
 
-const th = { padding: '8px 6px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: '#64748b' };
+const th = { padding: '8px 6px', textAlign: 'left' as const, fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)' };
 const thRight = { ...th, textAlign: 'right' as const };
 const td = { padding: '6px', color: '#0f172a' };
 const tdRight = { ...td, textAlign: 'right' as const };
@@ -672,7 +672,7 @@ export function SubmissionBundleButtons({
   const tip = submissionBundleTooltip(payAppState);
   const disabledStyle = {
     ...btnSecondary,
-    background: '#f8fafc', color: '#94a3b8', borderColor: '#e2e8f0',
+    background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', borderColor: '#e2e8f0',
     cursor: 'not-allowed' as const,
   };
   return (
@@ -735,7 +735,7 @@ export function SubmissionBundlePreview({
       <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
         {items.map((label) => <li key={label}>{label}</li>)}
       </ul>
-      <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 6 }}>
         {cfg?.gc_certifier_name
           ? `Addressed to: ${cfg.gc_certifier_name}`
           : 'No GC certifier on file — packet will open with "To Whom It May Concern".'}

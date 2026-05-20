@@ -74,7 +74,7 @@ function islandColor(island: string): string {
   if (i.includes('oahu'))  return '#0ea5e9';
   if (i.includes('maui'))  return '#10b981';
   if (i.includes('kauai')) return '#a78bfa';
-  return '#94a3b8';
+  return 'var(--bos-color-ink-tertiary)';
 }
 
 function IslandBadge({ island }: { island: string }) {
@@ -92,7 +92,7 @@ function IslandBadge({ island }: { island: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const s = (status || '').toLowerCase();
-  const color = s === 'confirmed' ? '#22c55e' : s === 'open' ? '#f59e0b' : s === 'complete' ? '#64748b' : '#94a3b8';
+  const color = s === 'confirmed' ? '#22c55e' : s === 'open' ? '#f59e0b' : s === 'complete' ? 'var(--bos-color-ink-disabled)' : 'var(--bos-color-ink-tertiary)';
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
@@ -110,7 +110,7 @@ function SectionHeader({ title, count, accent }: { title: string; count?: number
       display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
       paddingBottom: 8, borderBottom: `1px solid ${accent || 'rgba(255,255,255,0.07)'}`,
     }}>
-      <span style={{ fontSize: 13, fontWeight: 800, color: accent || '#94a3b8', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: 13, fontWeight: 800, color: accent || 'var(--bos-color-ink-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
         {title}
       </span>
       {count !== undefined && (
@@ -336,7 +336,7 @@ function ReadinessSummarySection({ blockers, covered, meta }: { blockers: Island
           border: blockers.length > 0 ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(255,255,255,0.08)',
           minWidth: 100, textAlign: 'center',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: blockers.length > 0 ? '#ef4444' : '#64748b' }}>{blockers.length}</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: blockers.length > 0 ? '#ef4444' : 'var(--bos-color-ink-disabled)' }}>{blockers.length}</div>
           <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Blockers</div>
         </div>
       </div>

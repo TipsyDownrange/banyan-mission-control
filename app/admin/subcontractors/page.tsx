@@ -31,7 +31,7 @@ export default function SubcontractorsAdminPage() {
         }}>
           Subcontractors
         </div>
-        <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+        <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
           Tenant-scoped subs catalog. Framers and waterproofers only (BanyanOS
           Scheduling Spine alignment). Closeout punch items reference rows
           here via <code>assigned_to_sub_id</code>.

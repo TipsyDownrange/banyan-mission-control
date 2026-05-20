@@ -200,7 +200,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           {welcomeSlide > 0 && (
             <button onClick={() => setWelcomeSlide(prev => prev - 1)}
-              style={{ padding: '14px 32px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+              style={{ padding: '14px 32px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--bos-color-ink-tertiary)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
               ← Back
             </button>
           )}
@@ -239,7 +239,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
               <div style={{ fontSize: 12, color: 'rgba(148,163,184,0.5)', marginTop: 4 }}>Getting to know you</div>
             </div>
             <button onClick={() => { setVoiceEnabled(!voiceEnabled); if (speaking) stopSpeaking(); }}
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 12px', cursor: 'pointer', color: voiceEnabled ? '#5eead4' : '#64748b', fontSize: 12, fontWeight: 700 }}>
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 12px', cursor: 'pointer', color: voiceEnabled ? '#5eead4' : 'var(--bos-color-ink-disabled)', fontSize: 12, fontWeight: 700 }}>
               {voiceEnabled ? 'Voice' : 'Muted'}
             </button>
           </div>
@@ -293,7 +293,7 @@ How do you prefer to get updates — in the app when you open it, push notificat
                   width: 48, height: 48, borderRadius: 14, flexShrink: 0, cursor: 'pointer',
                   background: listening ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)',
                   border: listening ? '1.5px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                  color: listening ? '#f87171' : '#94a3b8', fontSize: 20,
+                  color: listening ? '#f87171' : 'var(--bos-color-ink-tertiary)', fontSize: 20,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   animation: listening ? 'pulse-mic 1s ease-in-out infinite' : 'none',
                 }}>

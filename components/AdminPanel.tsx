@@ -32,7 +32,7 @@ function StatusBadge({ status }: { status: string }) {
     unpaid:  { bg: '#eff6ff', color: '#1d4ed8', label: 'Unpaid' },
     overdue: { bg: '#fef2f2', color: '#b91c1c', label: 'Overdue' },
   };
-  const s = map[status] || { bg: '#f8fafc', color: '#64748b', label: status };
+  const s = map[status] || { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: status };
   return (
     <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: s.bg, color: s.color }}>
       {s.label}
@@ -68,13 +68,13 @@ function FinancialsPanel() {
     <div>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Admin & Finance</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Admin & Finance</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Financials</h1>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Live QuickBooks data — AR/AP, P&L, invoices &amp; bills</p>
+        <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>Live QuickBooks data — AR/AP, P&L, invoices &amp; bills</p>
       </div>
 
       {loading && (
-        <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8' }}>
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>💰</div>
           <div style={{ fontSize: 14, fontWeight: 600 }}>Loading QuickBooks data…</div>
         </div>
@@ -93,9 +93,9 @@ function FinancialsPanel() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
             {/* AR */}
             <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>AR Outstanding</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>AR Outstanding</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{fmt$(data.ar.total)}</div>
-              <div style={{ fontSize: 12, color: data.ar.overdue > 0 ? '#b91c1c' : '#64748b' }}>
+              <div style={{ fontSize: 12, color: data.ar.overdue > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>
                 {data.ar.overdue > 0 ? `${fmt$(data.ar.overdue)} overdue` : 'No overdue invoices'} · {data.ar.count} open
               </div>
               {/* Aging buckets */}
@@ -105,7 +105,7 @@ function FinancialsPanel() {
                   if (!val) return null;
                   const isOld = bucket === '61-90' || bucket === '90+';
                   return (
-                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : '#f8fafc', color: isOld ? '#b91c1c' : '#64748b', fontWeight: 700 }}>
+                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : '#f8fafc', color: isOld ? '#b91c1c' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                       {bucket}: {fmt$(val)}
                     </div>
                   );
@@ -114,19 +114,19 @@ function FinancialsPanel() {
             </div>
             {/* AP */}
             <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>AP Outstanding</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>AP Outstanding</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{fmt$(data.ap.total)}</div>
-              <div style={{ fontSize: 12, color: data.ap.upcomingDue > 0 ? '#d97706' : '#64748b' }}>
+              <div style={{ fontSize: 12, color: data.ap.upcomingDue > 0 ? '#d97706' : 'var(--bos-color-ink-disabled)' }}>
                 {data.ap.upcomingDue > 0 ? `${fmt$(data.ap.upcomingDue)} due next 7 days` : 'Nothing due soon'} · {data.ap.count} open
               </div>
             </div>
             {/* P&L */}
             <div style={{ background: 'white', borderRadius: 14, border: `1px solid ${data.pl.netIncomeYtd >= 0 ? 'rgba(15,118,110,0.2)' : 'rgba(185,28,28,0.2)'}`, padding: '16px 18px' }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Net Income {data.pl.period}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Net Income {data.pl.period}</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: data.pl.netIncomeYtd >= 0 ? '#0f766e' : '#b91c1c', marginBottom: 4 }}>
                 {data.pl.netIncomeYtd >= 0 ? '' : '−'}{fmt$(Math.abs(data.pl.netIncomeYtd))}
               </div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>
                 Rev: {fmt$(data.pl.revenueYtd)} · Exp: {fmt$(data.pl.expensesYtd)}
               </div>
             </div>
@@ -136,13 +136,13 @@ function FinancialsPanel() {
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: 16 }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>Recent Invoices (AR)</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>Last 10 · last 90 days</div>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Last 10 · last 90 days</div>
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
                   {['Invoice #', 'Customer', 'Amount', 'Balance', 'Due', 'Status'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -152,8 +152,8 @@ function FinancialsPanel() {
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: '#0369a1' }}>{inv.invoiceNumber || '—'}</td>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: '#0f172a', maxWidth: 200 }}>{inv.customer}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{fmt$(Number(inv.amount))}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(inv.balance) > 0 ? '#b91c1c' : '#64748b' }}>{fmt$(Number(inv.balance))}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 12, color: '#64748b' }}>{fmtDate(inv.dueDate)}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(inv.balance) > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(inv.balance))}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{fmtDate(inv.dueDate)}</td>
                     <td style={{ padding: '11px 16px' }}><StatusBadge status={inv.status} /></td>
                   </tr>
                 ))}
@@ -165,13 +165,13 @@ function FinancialsPanel() {
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>Recent Bills (AP)</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>Last 10 · last 90 days</div>
+              <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>Last 10 · last 90 days</div>
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
                   {['Vendor', 'Amount', 'Balance', 'Due Date', 'Status'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -180,8 +180,8 @@ function FinancialsPanel() {
                   <tr key={bill.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                     <td style={{ padding: '11px 16px', fontSize: 13, color: '#0f172a', maxWidth: 220 }}>{bill.vendor}</td>
                     <td style={{ padding: '11px 16px', fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{fmt$(Number(bill.amount))}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(bill.balance) > 0 ? '#b91c1c' : '#64748b' }}>{fmt$(Number(bill.balance))}</td>
-                    <td style={{ padding: '11px 16px', fontSize: 12, color: '#64748b' }}>{fmtDate(bill.dueDate)}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, color: Number(bill.balance) > 0 ? '#b91c1c' : 'var(--bos-color-ink-disabled)' }}>{fmt$(Number(bill.balance))}</td>
+                    <td style={{ padding: '11px 16px', fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>{fmtDate(bill.dueDate)}</td>
                     <td style={{ padding: '11px 16px' }}><StatusBadge status={bill.status} /></td>
                   </tr>
                 ))}
@@ -210,27 +210,27 @@ function CompliancePanel() {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Admin & Finance</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Admin & Finance</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>Union Compliance</h1>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>CBA — Local 1889, AFL-CIO · Effective July 1, 2022 through June 30, 2027</p>
+        <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>CBA — Local 1889, AFL-CIO · Effective July 1, 2022 through June 30, 2027</p>
       </div>
 
       {/* Key alerts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Next Wage Increase</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Next Wage Increase</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>July 1, 2026</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>87 days · 5-Trade Raise Average</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>87 days · 5-Trade Raise Average</div>
         </div>
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Trust Fund Due</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Trust Fund Due</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', marginBottom: 2 }}>April 25</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>March contributions · 21 days</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>March contributions · 21 days</div>
         </div>
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid rgba(245,158,11,0.3)', padding: '16px 18px' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Apprentice Upgrades</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>Apprentice Upgrades</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: '#92400e', marginBottom: 2 }}>3 near threshold</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Owen, Ninja, Santia-Jacob at 90%</div>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-disabled)' }}>Owen, Ninja, Santia-Jacob at 90%</div>
         </div>
       </div>
 
@@ -242,14 +242,14 @@ function CompliancePanel() {
         {APPRENTICES.map(a => (
           <div key={a.name} style={{ padding: '12px 20px', borderBottom: '1px solid #f8fafc', display: 'grid', gridTemplateColumns: '1fr 120px 80px 1fr', gap: 12, alignItems: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{a.name}</div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>{a.island}</div>
+            <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>{a.island}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ flex: 1, height: 6, borderRadius: 999, background: '#f1f5f9' }}>
-                <div style={{ width: `${a.pct}%`, height: '100%', borderRadius: 999, background: a.pct >= 90 ? '#0f766e' : a.pct >= 70 ? '#0369a1' : '#94a3b8' }} />
+                <div style={{ width: `${a.pct}%`, height: '100%', borderRadius: 999, background: a.pct >= 90 ? '#0f766e' : a.pct >= 70 ? '#0369a1' : 'var(--bos-color-ink-tertiary)' }} />
               </div>
               <span style={{ fontSize: 11, fontWeight: 700, color: a.pct >= 90 ? '#0f766e' : '#334155', whiteSpace: 'nowrap' }}>{a.pct}%</span>
             </div>
-            <div style={{ fontSize: 11, color: a.pct >= 90 ? '#0f766e' : '#64748b', fontWeight: a.pct >= 90 ? 700 : 400 }}>{a.hoursToNext}</div>
+            <div style={{ fontSize: 11, color: a.pct >= 90 ? '#0f766e' : 'var(--bos-color-ink-disabled)', fontWeight: a.pct >= 90 ? 700 : 400 }}>{a.hoursToNext}</div>
           </div>
         ))}
       </div>
@@ -268,9 +268,9 @@ function ComingSoonPanel({ section }: { section: Section }) {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Admin & Finance</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6 }}>Admin & Finance</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a', margin: 0, marginBottom: 4 }}>{meta.title}</h1>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{meta.subtitle}</p>
+        <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', margin: 0 }}>{meta.subtitle}</p>
       </div>
       <BuildQueuePlaceholder
         surfaceName={meta.title}

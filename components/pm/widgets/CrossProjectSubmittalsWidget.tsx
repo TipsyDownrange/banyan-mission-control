@@ -61,7 +61,7 @@ export default function CrossProjectSubmittalsWidget({ onHide, showHide }: { onH
       showHide={showHide}
     >
       {sorted.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ padding: 16, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 12 }}>
           No open submittals.
         </div>
       ) : (
@@ -82,7 +82,7 @@ export default function CrossProjectSubmittalsWidget({ onHide, showHide }: { onH
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
                   {s.submittal_number} {s.display_label && `— ${s.display_label}`}
                 </div>
-                <div style={{ fontSize: 10, color: '#94a3b8' }}>
+                <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>
                   {s.kid ?? '—'} · BIC: {s.ball_in_court ?? '—'} · {s.required_by_date ?? 'no due date'}
                 </div>
               </div>

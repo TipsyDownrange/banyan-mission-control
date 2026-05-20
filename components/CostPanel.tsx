@@ -55,18 +55,18 @@ function AddInvoiceForm({ onAdded }: { onAdded: () => void }) {
   return (
     <div style={{ background:'#f8fafc', borderRadius:12, border:'1px solid #e2e8f0', padding:14, display:'flex', flexDirection:'column', gap:10 }}>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
-        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#64748b', display:'block', marginBottom:3 }}>Date</label>
+        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Date</label>
           <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
-        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#64748b', display:'block', marginBottom:3 }}>Amount ($)</label>
+        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Amount ($)</label>
           <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="257.83" style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const }} /></div>
-        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#64748b', display:'block', marginBottom:3 }}>Type</label>
+        <div><label style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--bos-color-ink-disabled)', display:'block', marginBottom:3 }}>Type</label>
           <select value={type} onChange={e=>setType(e.target.value)} style={{ width:'100%', padding:'7px 9px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' as const, cursor:'pointer' }}>
             <option value="invoice">Invoice</option>
             <option value="credit_grant">Credit Grant</option>
           </select></div>
       </div>
       <div style={{ display:'flex', gap:8 }}>
-        <button onClick={() => setOpen(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'#64748b', fontSize:12, fontWeight:700, cursor:'pointer' }}>Cancel</button>
+        <button onClick={() => setOpen(false)} style={{ flex:1, padding:'8px', borderRadius:8, border:'1px solid #e2e8f0', background:'white', color:'var(--bos-color-ink-disabled)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Cancel</button>
         <button onClick={submit} disabled={!amount||saving} style={{ flex:2, padding:'8px', borderRadius:8, border:'none', background:'#0f766e', color:'white', fontSize:12, fontWeight:800, cursor:'pointer', opacity:saving?0.7:1 }}>{saving?'Saving…':'Save Invoice'}</button>
       </div>
     </div>
@@ -118,7 +118,7 @@ export default function CostPanel() {
     <div style={{ padding:48, textAlign:'center' }}>
       <div style={{ width:28, height:28, borderRadius:'50%', border:'2px solid rgba(15,118,110,0.12)', borderTopColor:'#14b8a6', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ fontSize:13, color:'#94a3b8' }}>Loading cost data…</div>
+      <div style={{ fontSize:13, color:'var(--bos-color-ink-tertiary)' }}>Loading cost data…</div>
     </div>
   );
 
@@ -154,14 +154,14 @@ export default function CostPanel() {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, padding:'0 4px' }}>
         <div style={{ display:'flex', gap:4, background:'#f1f5f9', borderRadius:10, padding:3 }}>
           {(['today','week','month','all'] as const).map(r=>(
-            <button key={r} onClick={()=>setRange(r)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:range===r?'#0f766e':'transparent', color:range===r?'white':'#64748b' }}>
+            <button key={r} onClick={()=>setRange(r)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:range===r?'#0f766e':'transparent', color:range===r?'white':'var(--bos-color-ink-disabled)' }}>
               {r==='today'?'Today':r==='week'?'7 Days':r==='month'?'30 Days':'All Time'}
             </button>
           ))}
         </div>
         <div style={{ display:'flex', gap:4, background:'#f1f5f9', borderRadius:10, padding:3 }}>
           {(['overview','anthropic','openai','subscriptions'] as const).map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:tab===t?'#0f766e':'transparent', color:tab===t?'white':'#64748b', textTransform:'capitalize' }}>
+            <button key={t} onClick={()=>setTab(t)} style={{ padding:'5px 12px', borderRadius:8, fontSize:11, fontWeight:700, border:'none', cursor:'pointer', background:tab===t?'#0f766e':'transparent', color:tab===t?'white':'var(--bos-color-ink-disabled)', textTransform:'capitalize' }}>
               {t}
             </button>
           ))}
@@ -173,19 +173,19 @@ export default function CostPanel() {
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {/* Provider bars */}
           <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>Provider Breakdown</div>
+            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Provider Breakdown</div>
             {[
               { label:'Anthropic Invoices', value:ant?.invoicesPaid||0, color:'#4f46e5', total: allIn },
               { label:'OpenAI API',         value:oai?.apiCostToDate||0, color:'#059669', total: allIn },
               { label:'Subscriptions',      value:subs?.totalToDate||0, color:'#d97706', total: allIn },
-              { label:'Vercel',             value:verc?.totalToDate||0, color:'#64748b', total: allIn },
+              { label:'Vercel',             value:verc?.totalToDate||0, color:'var(--bos-color-ink-disabled)', total: allIn },
             ].map(({label,value,color,total})=>{
               const pct = total>0 ? (value/total)*100 : 0;
               return (
                 <div key={label} style={{ marginBottom:12 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                     <span style={{ fontSize:13, fontWeight:600, color:'#0f172a' }}>{label}</span>
-                    <span style={{ fontSize:13, fontWeight:700, color:'#334155' }}>{fmtUsd(value)} <span style={{ fontSize:10, color:'#94a3b8' }}>({pct.toFixed(0)}%)</span></span>
+                    <span style={{ fontSize:13, fontWeight:700, color:'#334155' }}>{fmtUsd(value)} <span style={{ fontSize:10, color:'var(--bos-color-ink-tertiary)' }}>({pct.toFixed(0)}%)</span></span>
                   </div>
                   <div style={{ height:6, background:'#f1f5f9', borderRadius:999, overflow:'hidden' }}>
                     <div style={{ height:'100%', width:`${pct}%`, background:color, borderRadius:999 }}/>
@@ -200,8 +200,8 @@ export default function CostPanel() {
 
           {/* Daily chart */}
           <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>Daily API Costs</div>
-            {filteredDays.length === 0 ? <div style={{ color:'#94a3b8', fontSize:13 }}>No data for this range.</div> : (() => {
+            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Daily API Costs</div>
+            {filteredDays.length === 0 ? <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No data for this range.</div> : (() => {
               const maxCost = Math.max(...filteredDays.map(([,d])=>d.cost||0), 1);
               return (
                 <div style={{ display:'flex', gap:4, alignItems:'flex-end', height:120, overflowX:'auto' }}>
@@ -215,7 +215,7 @@ export default function CostPanel() {
                           {oaiH > 0 && <div style={{ height:`${oaiH}%`, background:'#059669', borderRadius:'3px 3px 0 0', minHeight:2 }}/>}
                           {antH > 0 && <div style={{ height:`${antH}%`, background:'#4f46e5', borderRadius: oaiH>0?0:'3px 3px 0 0', minHeight:2 }}/>}
                         </div>
-                        <div style={{ fontSize:8, color:'#94a3b8', transform:'rotate(-45deg)', marginTop:4, whiteSpace:'nowrap' }}>{date.slice(5)}</div>
+                        <div style={{ fontSize:8, color:'var(--bos-color-ink-tertiary)', transform:'rotate(-45deg)', marginTop:4, whiteSpace:'nowrap' }}>{date.slice(5)}</div>
                       </div>
                     );
                   })}
@@ -223,8 +223,8 @@ export default function CostPanel() {
               );
             })()}
             <div style={{ display:'flex', gap:12, marginTop:8 }}>
-              <span style={{ fontSize:10, color:'#94a3b8', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'#4f46e5', display:'inline-block' }}/> Anthropic</span>
-              <span style={{ fontSize:10, color:'#94a3b8', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'#059669', display:'inline-block' }}/> OpenAI</span>
+              <span style={{ fontSize:10, color:'var(--bos-color-ink-tertiary)', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'#4f46e5', display:'inline-block' }}/> Anthropic</span>
+              <span style={{ fontSize:10, color:'var(--bos-color-ink-tertiary)', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'#059669', display:'inline-block' }}/> OpenAI</span>
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function CostPanel() {
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-              <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8' }}>Invoices & Credits</div>
+              <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)' }}>Invoices & Credits</div>
               <AddInvoiceForm onAdded={load} />
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
@@ -251,7 +251,7 @@ export default function CostPanel() {
             {(data?.anthropicInvoices||[]).length > 0 ? (
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
                 <thead><tr style={{ borderBottom:'1px solid #f1f5f9' }}>
-                  {['Date','Type','Amount','Status'].map(h=><th key={h} style={{ padding:'6px 8px', textAlign:'left', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'#94a3b8' }}>{h}</th>)}
+                  {['Date','Type','Amount','Status'].map(h=><th key={h} style={{ padding:'6px 8px', textAlign:'left', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--bos-color-ink-tertiary)' }}>{h}</th>)}
                 </tr></thead>
                 <tbody>
                   {[...(data?.anthropicInvoices||[])].sort((a,b)=>b.date.localeCompare(a.date)).map((inv,i)=>(
@@ -264,18 +264,18 @@ export default function CostPanel() {
                   ))}
                 </tbody>
               </table>
-            ) : <div style={{ color:'#94a3b8', fontSize:13 }}>No invoices yet.</div>}
+            ) : <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No invoices yet.</div>}
           </div>
 
           <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>Daily API Costs (Live from Admin API)</div>
+            <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>Daily API Costs (Live from Admin API)</div>
             {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).slice(0,20).map(([date,d])=>(
               <div key={date} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid #f8fafc' }}>
                 <span style={{ fontSize:13, color:'#334155' }}>{date}</span>
                 <span style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{fmtUsd(d.anthropic||d.cost||0,4)}</span>
               </div>
             ))}
-            {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).length===0 && <div style={{ color:'#94a3b8', fontSize:13 }}>No API data for this range.</div>}
+            {filteredDays.filter(([,d])=>(d.anthropic||d.cost||0)>0).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No API data for this range.</div>}
           </div>
         </div>
       )}
@@ -283,7 +283,7 @@ export default function CostPanel() {
       {/* ── OPENAI TAB ─────────────────────────────────── */}
       {tab==='openai' && (
         <div style={{ background:'white', borderRadius:16, border:'1px solid #e2e8f0', padding:20 }}>
-          <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'#94a3b8', marginBottom:14 }}>OpenAI Daily Costs</div>
+          <div style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--bos-color-ink-tertiary)', marginBottom:14 }}>OpenAI Daily Costs</div>
           <div style={{ padding:'10px 14px', background:'#f0fdf4', borderRadius:10, border:'1px solid rgba(5,150,105,0.2)', marginBottom:14 }}>
             <div style={{ fontSize:12, fontWeight:700, color:'#059669' }}>Total from CSV imports: {fmtUsd(oai?.apiCostToDate)}</div>
           </div>
@@ -293,7 +293,7 @@ export default function CostPanel() {
               <span style={{ fontWeight:700, color:'#0f172a' }}>{fmtUsd(e.costUsd,2)}</span>
             </div>
           ))}
-          {(data?.openaiDaily||[]).filter(e=>inRange(e.date)).length===0 && <div style={{ color:'#94a3b8', fontSize:13 }}>No OpenAI data for this range.</div>}
+          {(data?.openaiDaily||[]).filter(e=>inRange(e.date)).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No OpenAI data for this range.</div>}
           <div style={{ marginTop:16, padding:'10px 14px', background:'#fffbeb', border:'1px solid rgba(217,119,6,0.2)', borderRadius:10, fontSize:12, color:'#92400e' }}>
             💡 Export updated CSVs from <strong>platform.openai.com</strong> for latest data. API billing endpoint requires a different org — working on it.
           </div>
@@ -318,7 +318,7 @@ export default function CostPanel() {
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 0', borderBottom:'1px solid #f1f5f9' }}>
                 <div>
                   <div style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{sub.provider} — {sub.plan}</div>
-                  <div style={{ fontSize:11, color:'#94a3b8' }}>Since {sub.startDate}</div>
+                  <div style={{ fontSize:11, color:'var(--bos-color-ink-tertiary)' }}>Since {sub.startDate}</div>
                 </div>
                 <div style={{ textAlign:'right' }}>
                   <div style={{ fontSize:14, fontWeight:800, color:'#0f172a' }}>{fmtUsd(sub.monthlyCost)}/mo</div>
@@ -326,7 +326,7 @@ export default function CostPanel() {
                 </div>
               </div>
             ))}
-            {(subs?.items||data?.subscriptions||[]).length===0 && <div style={{ color:'#94a3b8', fontSize:13 }}>No subscriptions configured.</div>}
+            {(subs?.items||data?.subscriptions||[]).length===0 && <div style={{ color:'var(--bos-color-ink-tertiary)', fontSize:13 }}>No subscriptions configured.</div>}
           </div>
         </div>
       )}

@@ -51,7 +51,7 @@ interface SheetTask {
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> = {
-  queued:      { color: '#64748b', bg: '#f1f5f9', label: 'Queued' },
+  queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
   in_progress: { color: '#0f766e', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
   blocked:     { color: '#b91c1c', bg: '#fef2f2', label: 'Blocked' },
@@ -59,7 +59,7 @@ const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> 
 };
 
 const PRIORITY_DOT: Record<string, string> = {
-  critical: '#b91c1c', high: '#d97706', medium: '#2563eb', low: '#94a3b8',
+  critical: '#b91c1c', high: '#d97706', medium: '#2563eb', low: 'var(--bos-color-ink-tertiary)',
 };
 
 const STATUS_ORDER: TaskStatus[] = ['queued', 'in_progress', 'waiting', 'blocked', 'done'];
@@ -76,7 +76,7 @@ function phaseColors(status: BuildPhaseStatus, isCurrent: boolean) {
   if (status === 'complete') return { bg: '#059669', text: '#fff', border: '#059669' };
   if (status === 'blocked')  return { bg: '#dc2626', text: '#fff', border: '#dc2626' };
   if (isCurrent || status === 'in_progress') return { bg: '#0f766e', text: '#fff', border: '#14b8a6' };
-  return { bg: '#f1f5f9', text: '#64748b', border: '#e2e8f0' };
+  return { bg: '#f1f5f9', text: 'var(--bos-color-ink-disabled)', border: '#e2e8f0' };
 }
 
 // ── PhaseChip ──────────────────────────────────────────────────────────────────
@@ -108,10 +108,10 @@ function PhaseChip({
         animation: isCurrent ? 'pulseBorder 2s ease-in-out infinite' : 'none',
       }}
     >
-      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: isExpanded ? text : phase.status === 'not_started' ? '#94a3b8' : text, lineHeight: 1 }}>
+      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: isExpanded ? text : phase.status === 'not_started' ? 'var(--bos-color-ink-tertiary)' : text, lineHeight: 1 }}>
         Ph {phase.phase_number}
       </span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: isExpanded ? text : phase.status === 'not_started' ? '#64748b' : text, lineHeight: 1.2, textAlign: 'center' as const }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: isExpanded ? text : phase.status === 'not_started' ? 'var(--bos-color-ink-disabled)' : text, lineHeight: 1.2, textAlign: 'center' as const }}>
         {phase.short_label}
       </span>
       {phase.status === 'complete' && (
@@ -121,7 +121,7 @@ function PhaseChip({
         <span style={{ fontSize: 9, color: isExpanded ? 'rgba(255,255,255,0.85)' : '#0f766e', fontWeight: 700 }}>{pct}%</span>
       )}
       {phase.status === 'not_started' && (
-        <span style={{ fontSize: 8, color: '#94a3b8', letterSpacing: '0.04em' }}>{phase.estimated_weeks.replace('Weeks ', 'Wk ')}</span>
+        <span style={{ fontSize: 8, color: 'var(--bos-color-ink-tertiary)', letterSpacing: '0.04em' }}>{phase.estimated_weeks.replace('Weeks ', 'Wk ')}</span>
       )}
     </button>
   );
@@ -185,7 +185,7 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
       <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
         <button onClick={handleOpen} style={{
           background: 'none', border: 'none', cursor: 'pointer',
-          fontSize: 11, fontWeight: 600, color: '#94a3b8', padding: 0,
+          fontSize: 11, fontWeight: 600, color: 'var(--bos-color-ink-tertiary)', padding: 0,
           textDecoration: 'underline dotted', textUnderlineOffset: 2,
         }}>
           + Add directive / context
@@ -202,8 +202,8 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
       {existingLog.length > 0 && (
         <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {existingLog.map((entry, i) => (
-            <div key={i} style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: '#f8fafc', borderLeft: '2px solid #e2e8f0' }}>
-              <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', marginRight: 6 }}>
+            <div key={i} style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', lineHeight: 1.4, padding: '4px 8px', borderRadius: 6, background: '#f8fafc', borderLeft: '2px solid #e2e8f0' }}>
+              <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontFamily: 'monospace', marginRight: 6 }}>
                 {new Date(entry.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
               {entry.action.replace(/^directive:\s*/, '')}
@@ -224,19 +224,19 @@ function TaskDirectiveInput({ task, onLogUpdated }: {
           color: '#0f172a', background: 'white', lineHeight: 1.5,
         }} />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-        <div style={{ fontSize: 10, color: flash === 'error' ? '#dc2626' : '#94a3b8' }}>
+        <div style={{ fontSize: 10, color: flash === 'error' ? '#dc2626' : 'var(--bos-color-ink-tertiary)' }}>
           {flash === 'error' ? errorMsg || 'Submit failed' : 'Cmd+Enter · Esc to cancel'}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={() => { setOpen(false); setText(''); setFlash(null); }}
-            style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }}>
+            style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: '1px solid #e2e8f0', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={!hasText || submitting}
             style={{
               padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, border: 'none',
               background: hasText && !submitting ? '#14b8a6' : '#e2e8f0',
-              color: hasText && !submitting ? 'white' : '#94a3b8',
+              color: hasText && !submitting ? 'white' : 'var(--bos-color-ink-tertiary)',
               cursor: hasText && !submitting ? 'pointer' : 'default',
             }}>
             {submitting ? 'Adding…' : 'Add'}
@@ -256,7 +256,7 @@ function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
   onLogUpdated: (taskId: string, log: ActionLogEntry[]) => void;
 }) {
   const pill = STATUS_PILL[task.status] || STATUS_PILL.queued;
-  const dot = PRIORITY_DOT[task.priority] || '#94a3b8';
+  const dot = PRIORITY_DOT[task.priority] || 'var(--bos-color-ink-tertiary)';
   const isSaving = saving === task.id;
   const nextStatuses = STATUS_ORDER.filter(s => s !== task.status);
 
@@ -271,17 +271,17 @@ function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: task.status === 'done' ? '#94a3b8' : '#0f172a', lineHeight: 1.3, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: task.status === 'done' ? 'var(--bos-color-ink-tertiary)' : '#0f172a', lineHeight: 1.3, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
           {task.title}
         </div>
         {task.detail && (
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: 1.4 }}>{task.detail}</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 2, lineHeight: 1.4 }}>{task.detail}</div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5, flexWrap: 'wrap' as const }}>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: pill.color, background: pill.bg }}>
             {isSaving ? '…' : pill.label}
           </span>
-          {task.id && <span style={{ fontSize: 9, color: '#94a3b8', fontFamily: 'monospace' }}>{task.id}</span>}
+          {task.id && <span style={{ fontSize: 9, color: 'var(--bos-color-ink-tertiary)', fontFamily: 'monospace' }}>{task.id}</span>}
         </div>
         {/* Task-level directive input */}
         <TaskDirectiveInput task={task} onLogUpdated={onLogUpdated} />
@@ -307,7 +307,7 @@ function TaskRow({ task, onStatusChange, saving, onLogUpdated }: {
       {task.status === 'done' && (
         <button disabled={isSaving}
           onClick={() => onStatusChange(task.id, 'queued')}
-          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#94a3b8', cursor: 'pointer' }}>
+          style={{ padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, border: '1px solid #e2e8f0', background: '#f8fafc', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>
           ↩ Reopen
         </button>
       )}
@@ -390,7 +390,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
         Direct Order
       </div>
       <textarea
@@ -409,7 +409,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
         }}
       />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-        <div style={{ fontSize: 11, color: flash === 'success' ? '#15803d' : flash === 'error' ? '#dc2626' : '#94a3b8' }}>
+        <div style={{ fontSize: 11, color: flash === 'success' ? '#15803d' : flash === 'error' ? '#dc2626' : 'var(--bos-color-ink-tertiary)' }}>
           {flash === 'success' ? '✓ Directive added' : flash === 'error' ? errorMsg || 'Submit failed' : 'Cmd+Enter to submit'}
         </div>
         <button
@@ -419,7 +419,7 @@ function DirectOrderInput({ phaseNumber, onAdded }: {
             padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
             border: 'none', cursor: hasText && !submitting ? 'pointer' : 'default',
             background: hasText && !submitting ? '#14b8a6' : '#e2e8f0',
-            color: hasText && !submitting ? 'white' : '#94a3b8',
+            color: hasText && !submitting ? 'white' : 'var(--bos-color-ink-tertiary)',
             transition: 'background 0.15s',
           }}>
           {submitting ? 'Adding…' : 'Add Directive'}
@@ -459,13 +459,13 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
           <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
             Phase {phase.phase_number}: {phase.phase_name}
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{phase.estimated_weeks}</div>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)', marginTop: 1 }}>{phase.estimated_weeks}</div>
         </div>
         <div style={{ textAlign: 'right' as const }}>
-          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8', lineHeight: 1 }}>
+          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', lineHeight: 1 }}>
             {pct}%
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8' }}>{checkDone}/{checkTotal} checklist</div>
+          <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)' }}>{checkDone}/{checkTotal} checklist</div>
         </div>
       </div>
 
@@ -477,7 +477,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
       <div style={{ padding: '12px 18px' }}>
         {/* Section A: Phase Checklist */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8 }}>
             Phase Checklist (read-only)
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
@@ -491,13 +491,13 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
                 }}>
                   {task.done && <span style={{ fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</span>}
                 </div>
-                <span style={{ fontSize: 12, color: task.done ? '#94a3b8' : '#334155', lineHeight: 1.4, textDecoration: task.done ? 'line-through' : 'none' }}>
+                <span style={{ fontSize: 12, color: task.done ? 'var(--bos-color-ink-tertiary)' : '#334155', lineHeight: 1.4, textDecoration: task.done ? 'line-through' : 'none' }}>
                   {task.label}
                 </span>
               </div>
             ))}
             {phase.tasks.length === 0 && (
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>No checklist items for this phase.</div>
+              <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>No checklist items for this phase.</div>
             )}
           </div>
           {phase.notes && (
@@ -521,12 +521,12 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
 
         {/* Section B: Active Tasks */}
         <div style={{ marginBottom: activeTasks.length > 0 || doneTasks.length > 0 ? 12 : 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--bos-color-ink-tertiary)', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Active Tasks</span>
             {activeTasks.length > 0 && <span style={{ fontWeight: 600 }}>{activeTasks.length} open</span>}
           </div>
           {activeTasks.length === 0 ? (
-            <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>No active tasks for this phase.</div>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)', padding: '8px 0' }}>No active tasks for this phase.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
               {activeTasks.map(t => (
@@ -539,7 +539,7 @@ function PhaseCommandPanel({ phase, tasks, onStatusChange, savingId, onTaskAdded
         {/* Done tasks (collapsible) */}
         {doneTasks.length > 0 && (
           <div>
-            <button onClick={() => setShowDone(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#94a3b8', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={() => setShowDone(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 4 }}>
               {showDone ? '▾' : '▸'} {doneTasks.length} completed task{doneTasks.length !== 1 ? 's' : ''}
             </button>
             {showDone && (
@@ -621,7 +621,7 @@ export default function BuildLifecycleTimeline() {
   if (loading) {
     return (
       <div style={{ padding: '20px 24px', borderRadius: 12, background: 'white', border: '1px solid #e2e8f0', marginBottom: 20 }}>
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>Loading War Room…</div>
+        <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>Loading War Room…</div>
       </div>
     );
   }
@@ -662,7 +662,7 @@ export default function BuildLifecycleTimeline() {
         display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
       }}>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#94a3b8', marginBottom: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--bos-color-ink-tertiary)', marginBottom: 2 }}>
             The Chart — BanyanOS Build Progress
           </div>
           {currentPhase && (
@@ -670,17 +670,17 @@ export default function BuildLifecycleTimeline() {
               Currently in Phase {currentPhase.phase_number}: {currentPhase.phase_name}
             </div>
           )}
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2 }}>
             Updated {new Date(data.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ textAlign: 'center' as const }}>
-            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : '#94a3b8', lineHeight: 1 }}>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em', color: pct >= 75 ? '#059669' : pct >= 40 ? '#d97706' : 'var(--bos-color-ink-tertiary)', lineHeight: 1 }}>
               {pct}%
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>complete</div>
+            <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>complete</div>
           </div>
           <div style={{ width: 120 }}>
             <div style={{ height: 6, borderRadius: 3, background: '#f1f5f9' }}>
@@ -690,7 +690,7 @@ export default function BuildLifecycleTimeline() {
                 width: `${pct}%`, transition: 'width 0.5s',
               }} />
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 3 }}>
+            <div style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', marginTop: 3 }}>
               {data.phases.filter((p) => p.status === 'complete').length} of {data.phases.length} phases
             </div>
           </div>

@@ -31,7 +31,7 @@ export default function FreightCalendarAdminPage() {
         }}>
           Freight calendar
         </div>
-        <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+        <div style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
           Matson sailing schedule entries. They surface as overlays on project
           Schedule tabs to align procurement and install windows with arrival
           dates (BanyanOS Scheduling Spine, Hawaii overlays).

@@ -25,14 +25,14 @@ export default async function AdminSovStubPage(
       <div style={{ marginBottom: 18 }}>
         <div style={{
           fontSize: 11, fontWeight: 800, letterSpacing: '0.16em',
-          textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6,
+          textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)', marginBottom: 6,
         }}>
           Admin · SOV Stub
         </div>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0 }}>
           Stub Schedule of Values — {kID}
         </h1>
-        <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+        <p style={{ fontSize: 13, color: 'var(--bos-color-ink-disabled)', marginTop: 4 }}>
           Bypasses Phase 1 Estimating Workspace. Create a Schedule of Values
           manually with N lines and lock it so the Pay App create wizard can
           fire. Super-admin / business-admin only.

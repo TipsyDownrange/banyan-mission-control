@@ -22,7 +22,7 @@ const STATE_BADGE: Record<string, { bg: string; color: string; label: string }> 
   IN_PROGRESS: { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · In Progress' },
   COMPLETED:   { bg: '#f0fdfa', color: '#0f766e', label: 'Notarization · Completed' },
   FAILED:      { bg: '#fef2f2', color: '#b91c1c', label: 'Notarization · Failed' },
-  CANCELLED:   { bg: '#f8fafc', color: '#64748b', label: 'Notarization · Cancelled' },
+  CANCELLED:   { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: 'Notarization · Cancelled' },
 };
 
 const ROW: CSSProperties = {
@@ -44,12 +44,12 @@ export default function NotarizationStatusIndicator({
       <div style={ROW}>
         <span style={{
           padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800,
-          letterSpacing: '0.04em', background: '#f8fafc', color: '#64748b',
+          letterSpacing: '0.04em', background: '#f8fafc', color: 'var(--bos-color-ink-disabled)',
           border: '1px solid #64748b33',
         }}>
           Notarization · Not started
         </span>
-        <span style={{ fontSize: 11, color: '#94a3b8' }}>
+        <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
           Required by billing format. No session has been created yet.
         </span>
       </div>
@@ -57,7 +57,7 @@ export default function NotarizationStatusIndicator({
   }
 
   const badge = STATE_BADGE[latestNotarization.state]
-    ?? { bg: '#f8fafc', color: '#64748b', label: latestNotarization.state.replace(/_/g, ' ') };
+    ?? { bg: '#f8fafc', color: 'var(--bos-color-ink-disabled)', label: latestNotarization.state.replace(/_/g, ' ') };
 
   return (
     <div style={ROW}>
@@ -68,7 +68,7 @@ export default function NotarizationStatusIndicator({
       }}>
         {badge.label}
       </span>
-      <span style={{ fontSize: 11, color: '#94a3b8' }}>
+      <span style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)' }}>
         {latestNotarization.provider} · {latestNotarization.session_id.slice(0, 8)}
       </span>
       <a

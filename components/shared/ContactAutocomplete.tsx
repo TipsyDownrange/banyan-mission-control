@@ -89,7 +89,7 @@ export default function ContactAutocomplete({ value, onChange, onSelect, style, 
             onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
             onMouseLeave={e => (e.currentTarget.style.background = 'white')}>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{c.name}{c.is_primary ? ' ⭐' : ''}</span>
-              <span style={{ fontSize: 11, color: '#64748b' }}>
+              <span style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                 {[c.title, c.org_name, c.phone].filter(Boolean).join(' · ')}
               </span>
             </div>

@@ -51,7 +51,7 @@ const CELL: CSSProperties = {
 };
 const HEADER_CELL: CSSProperties = {
   padding: '10px 12px', fontSize: 10, fontWeight: 800,
-  letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8',
+  letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bos-color-ink-tertiary)',
   textAlign: 'left',
 };
 
@@ -83,7 +83,7 @@ export function SubcontractorsTableView({
       </div>
 
       {state.kind === 'loading' && (
-        <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+        <div style={{ padding: 32, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
           Loading subcontractors…
         </div>
       )}
@@ -105,7 +105,7 @@ export function SubcontractorsTableView({
           <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
             No {TRADE_TAB_LABEL[activeTrade].toLowerCase()} on file
           </div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>
+          <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>
             POST to <code>/api/closeout/subcontractors</code> to add one (business_admin).
           </div>
         </div>
@@ -130,7 +130,7 @@ export function SubcontractorsTableView({
                   <td style={CELL}>
                     <div style={{ fontWeight: 700 }}>{row.company_name}</div>
                     {row.notes && (
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 4 }}>
                         {row.notes}
                       </div>
                     )}

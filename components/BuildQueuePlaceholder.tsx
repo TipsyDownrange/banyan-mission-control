@@ -22,9 +22,9 @@ export default function BuildQueuePlaceholder({
       {icon && <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>}
       <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{surfaceName} — In Build Queue</div>
       {description && (
-        <div style={{ fontSize: 14, color: '#64748b', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>{description}.</div>
+        <div style={{ fontSize: 14, color: 'var(--bos-color-ink-disabled)', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>{description}.</div>
       )}
-      <div style={{ marginTop: 20, fontSize: 12, color: '#94a3b8' }}>{statusLine}</div>
+      <div style={{ marginTop: 20, fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{statusLine}</div>
     </div>
   );
 }

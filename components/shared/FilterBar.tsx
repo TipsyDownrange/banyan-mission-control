@@ -69,7 +69,7 @@ export default function FilterBar({
                   background: isActive
                     ? `color-mix(in srgb, ${chip.color ?? '#14b8a6'} 12%, transparent)`
                     : 'white',
-                  color: isActive ? (chip.color ?? '#0f766e') : '#64748b',
+                  color: isActive ? (chip.color ?? '#0f766e') : 'var(--bos-color-ink-disabled)',
                   fontSize: 11,
                   fontWeight: isActive ? 800 : 600,
                   cursor: 'pointer',
@@ -82,7 +82,7 @@ export default function FilterBar({
                 {chip.count !== undefined && (
                   <span style={{
                     background: isActive ? (chip.color ?? '#14b8a6') : '#e2e8f0',
-                    color: isActive ? 'white' : '#64748b',
+                    color: isActive ? 'white' : 'var(--bos-color-ink-disabled)',
                     fontSize: 9,
                     fontWeight: 800,
                     padding: '1px 5px',
@@ -130,7 +130,7 @@ export default function FilterBar({
         <div style={{ position: 'relative', flex: 1, minWidth: 120, maxWidth: 260 }}>
           <span style={{
             position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)',
-            fontSize: 12, color: '#94a3b8', pointerEvents: 'none',
+            fontSize: 12, color: 'var(--bos-color-ink-tertiary)', pointerEvents: 'none',
           }}>🔍</span>
           <input
             type="text"
@@ -158,7 +158,7 @@ export default function FilterBar({
         <span style={{
           fontSize: 11,
           fontWeight: 700,
-          color: '#94a3b8',
+          color: 'var(--bos-color-ink-tertiary)',
           flexShrink: 0,
         }}>
           {resultCount} {resultCount === 1 ? 'result' : 'results'}

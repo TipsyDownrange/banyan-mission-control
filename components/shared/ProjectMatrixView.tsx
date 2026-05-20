@@ -71,7 +71,7 @@ function cellStatus(
 }
 
 const STATUS_STYLE: Record<CellStatus, { bg: string; border: string; text: string; label: string }> = {
-  not_started: { bg: 'rgba(148,163,184,0.08)',  border: 'rgba(148,163,184,0.15)', text: '#64748b', label: '⬜ Not started' },
+  not_started: { bg: 'rgba(148,163,184,0.08)',  border: 'rgba(148,163,184,0.15)', text: 'var(--bos-color-ink-disabled)', label: '⬜ Not started' },
   in_progress:  { bg: 'rgba(59,130,246,0.15)',   border: 'rgba(59,130,246,0.3)',  text: '#93c5fd', label: '🔄 In progress' },
   complete:     { bg: 'rgba(21,128,61,0.15)',    border: 'rgba(21,128,61,0.3)',   text: '#86efac', label: '✅ Complete' },
   blocked:      { bg: 'rgba(220,38,38,0.15)',    border: 'rgba(220,38,38,0.3)',   text: '#fca5a5', label: '❌ Blocked' },
@@ -85,11 +85,11 @@ function ScheduleSlide({ steps, completionsByStep }: {
 }) {
   const stepsWithDates = steps.filter(s => s.planned_start_date);
   if (stepsWithDates.length === 0) {
-    return <div style={{ padding: '16px 0', color: '#94a3b8', fontSize: 13 }}>No planned dates assigned yet</div>;
+    return <div style={{ padding: '16px 0', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No planned dates assigned yet</div>;
   }
 
   function deltaLabel(planned: string, actual: string): { label: string; color: string } {
-    if (!actual) return { label: 'In progress', color: '#94a3b8' };
+    if (!actual) return { label: 'In progress', color: 'var(--bos-color-ink-tertiary)' };
     const p = new Date(planned).getTime();
     const a = new Date(actual).getTime();
     const days = Math.round((a - p) / (1000 * 60 * 60 * 24));
@@ -103,10 +103,10 @@ function ScheduleSlide({ steps, completionsByStep }: {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead>
           <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <th style={{ padding: '8px 12px', textAlign: 'left', color: '#64748b', fontWeight: 700 }}>Step</th>
-            <th style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>Planned Start</th>
-            <th style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>Actual</th>
-            <th style={{ padding: '8px 12px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>Delta</th>
+            <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>Step</th>
+            <th style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>Planned Start</th>
+            <th style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>Actual</th>
+            <th style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>Delta</th>
           </tr>
         </thead>
         <tbody>
@@ -118,8 +118,8 @@ function ScheduleSlide({ steps, completionsByStep }: {
             return (
               <tr key={step.install_step_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 <td style={{ padding: '8px 12px', color: '#e2e8f0' }}>{step.step_name}</td>
-                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#94a3b8' }}>{step.planned_start_date || '—'}</td>
-                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#94a3b8' }}>{actualDate || '—'}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>{step.planned_start_date || '—'}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--bos-color-ink-tertiary)' }}>{actualDate || '—'}</td>
                 <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: delta.color }}>{delta.label}</td>
               </tr>
             );
@@ -163,13 +163,13 @@ function CellDetail({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#f1f5f9' }}>{plan.location}</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>{stepType}</div>
+            <div style={{ fontSize: 12, color: 'var(--bos-color-ink-tertiary)' }}>{stepType}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 10px', color: '#94a3b8', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 10px', color: 'var(--bos-color-ink-tertiary)', cursor: 'pointer' }}>✕</button>
         </div>
 
         {matchingSteps.length === 0 ? (
-          <div style={{ color: '#64748b', fontSize: 13 }}>No matching steps</div>
+          <div style={{ color: 'var(--bos-color-ink-disabled)', fontSize: 13 }}>No matching steps</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {matchingSteps.map(step => {
@@ -186,18 +186,18 @@ function CellDetail({
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{step.step_name}</div>
                     <span style={{
                       fontSize: 10, fontWeight: 800,
-                      color: isBlocked ? '#fca5a5' : maxPct >= 100 ? '#86efac' : maxPct > 0 ? '#93c5fd' : '#64748b',
+                      color: isBlocked ? '#fca5a5' : maxPct >= 100 ? '#86efac' : maxPct > 0 ? '#93c5fd' : 'var(--bos-color-ink-disabled)',
                     }}>
                       {isBlocked ? '❌ Blocked' : maxPct >= 100 ? '✅ Done' : maxPct > 0 ? `🔄 ${maxPct}%` : '⬜ Not started'}
                     </span>
                   </div>
                   {step.planned_start_date && (
-                    <div style={{ fontSize: 11, color: '#64748b' }}>
+                    <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>
                       Planned: {step.planned_start_date}{step.planned_end_date ? ` → ${step.planned_end_date}` : ''}
                     </div>
                   )}
                   {step.assigned_crew && (
-                    <div style={{ fontSize: 11, color: '#64748b' }}>Crew: {step.assigned_crew}</div>
+                    <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>Crew: {step.assigned_crew}</div>
                   )}
                   {comps.length > 0 && (
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginTop: 6 }}>
@@ -271,7 +271,7 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
       <div style={{ padding: 40, textAlign: 'center' }}>
         <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(20,184,166,0.2)', borderTopColor: '#14b8a6', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>Loading work breakdown…</div>
+        <div style={{ color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>Loading work breakdown…</div>
       </div>
     );
   }
@@ -282,7 +282,7 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
 
   if (plans.length === 0) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>
         No work breakdown yet. Add install plans in the Work Breakdown tab.
       </div>
     );
@@ -303,7 +303,7 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
               padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: 700,
               background: activeSubTab === key ? 'rgba(20,184,166,0.2)' : 'transparent',
-              color: activeSubTab === key ? '#5eead4' : '#94a3b8',
+              color: activeSubTab === key ? '#5eead4' : 'var(--bos-color-ink-tertiary)',
             }}
           >
             {label}
@@ -318,25 +318,25 @@ export default function ProjectMatrixView({ jobId }: ProjectMatrixViewProps) {
             {Object.entries(STATUS_STYLE).map(([key, s]) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 12, height: 12, borderRadius: 3, background: s.bg, border: `1px solid ${s.border}` }} />
-                <span style={{ fontSize: 10, color: '#64748b' }}>{s.label}</span>
+                <span style={{ fontSize: 10, color: 'var(--bos-color-ink-disabled)' }}>{s.label}</span>
               </div>
             ))}
           </div>
 
           {stepTypes.length === 0 ? (
-            <div style={{ padding: 24, color: '#94a3b8', fontSize: 13 }}>No steps defined yet</div>
+            <div style={{ padding: 24, color: 'var(--bos-color-ink-tertiary)', fontSize: 13 }}>No steps defined yet</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '3px' }}>
                 <thead>
                   <tr>
-                    <th style={{ padding: '6px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#64748b', minWidth: 120, whiteSpace: 'nowrap' }}>
+                    <th style={{ padding: '6px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-disabled)', minWidth: 120, whiteSpace: 'nowrap' }}>
                       Step / Area →
                     </th>
                     {plans.map(plan => (
                       <th key={plan.install_plan_id} style={{
                         padding: '6px 8px', textAlign: 'center',
-                        fontSize: 10, fontWeight: 700, color: '#94a3b8',
+                        fontSize: 10, fontWeight: 700, color: 'var(--bos-color-ink-tertiary)',
                         minWidth: 90, maxWidth: 110,
                       }}>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
