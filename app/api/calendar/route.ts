@@ -245,7 +245,7 @@ export async function DELETE(req: Request) {
 
 function userColor(email: string): string {
   const map: Record<string, string> = {
-    'sean@kulaglass.com':  '#0369a1',
+    'sean@kulaglass.com':  'var(--bos-color-accent-data)',
     'jody@kulaglass.com':  '#0D0D80',
     'frank@kulaglass.com': 'var(--bos-color-brand-primary-deep)',
     'kyle@kulaglass.com':  '#4338ca',

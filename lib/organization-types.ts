@@ -7,7 +7,7 @@ export const ORGANIZATION_TYPE_COLORS: Record<string, { color: string; bg: strin
   ARCHITECT:     { color: '#7c3aed', bg: '#f5f3ff' },
   OWNER:         { color: 'var(--color-red-700)', bg: 'var(--color-red-50)' },
   BUILDER:       { color: '#d97706', bg: '#fffbeb' },
-  GOVERNMENT:    { color: '#0369a1', bg: '#f0f9ff' },
+  GOVERNMENT:    { color: 'var(--bos-color-accent-data)', bg: '#f0f9ff' },
   PROPERTY_MGMT: { color: 'var(--bos-color-ink-disabled)', bg: 'var(--color-surface)' },
   CONSULTANT:    { color: '#4b5563', bg: '#f9fafb' },
 };

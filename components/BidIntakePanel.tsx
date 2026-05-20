@@ -27,7 +27,7 @@ type BidOpportunity = {
 };
 
 const ISLAND_COLOR: Record<string, string> = {
-  Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
+  Oahu: 'var(--bos-color-accent-data)', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)',
 };
 
 const LEAD_TYPE_STYLE: Record<string, { color: string; bg: string; label: string; route: string }> = {
@@ -225,7 +225,7 @@ export default function BidIntakePanel() {
                         {opp.confidence.toUpperCase()}
                       </span>
                       {opp.bid_source !== 'email' && (
-                        <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', background: 'rgba(239,246,255,0.9)', padding: '2px 8px', borderRadius: 999 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-accent-data)', background: 'rgba(239,246,255,0.9)', padding: '2px 8px', borderRadius: 999 }}>
                           {opp.bid_source}
                         </span>
                       )}
@@ -315,7 +315,7 @@ export default function BidIntakePanel() {
                 {opp.plan_room_link && (
                   <div style={{ marginTop: 8 }}>
                     <a href={opp.plan_room_link} target="_blank" rel="noopener noreferrer"
-                      style={{ fontSize: 11, color: '#0369a1', textDecoration: 'none', fontWeight: 600 }}>
+                      style={{ fontSize: 11, color: 'var(--bos-color-accent-data)', textDecoration: 'none', fontWeight: 600 }}>
                       🔗 View bid documents →
                     </a>
                   </div>

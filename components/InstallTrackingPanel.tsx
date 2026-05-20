@@ -26,7 +26,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const SYSTEM_COLOR: Record<string, string> = {
-  'Storefront': '#0369a1',
+  'Storefront': 'var(--bos-color-accent-data)',
   'Curtainwall': '#7c3aed',
   'Shower': '#0d9488',
   'Euro Wall': '#c2410c',

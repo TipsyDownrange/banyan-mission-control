@@ -197,7 +197,7 @@ export default function DocumentsTab({ kID }: { kID: string }) {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.filename}
-                  {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginLeft: 6 }}>v{it.version}</span>}
+                  {it.version > 1 && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bos-color-accent-data)', marginLeft: 6 }}>v{it.version}</span>}
                   {!it.is_current && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--bos-color-ink-tertiary)', marginLeft: 6 }}>· SUPERSEDED</span>}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

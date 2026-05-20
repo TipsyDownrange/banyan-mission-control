@@ -14,7 +14,7 @@ interface BidOverviewTabProps {
 const PIPELINE_STAGES: PipelineStage[] = [
   { id: 'Draft',      label: 'Draft',      color: 'var(--bos-color-ink-tertiary)' },
   { id: 'In Review',  label: 'In Review',  color: '#3b82f6' },
-  { id: 'Submitted',  label: 'Submitted',  color: '#0369a1' },
+  { id: 'Submitted',  label: 'Submitted',  color: 'var(--bos-color-accent-data)' },
   { id: 'Won',        label: 'Won',        color: '#16a34a', terminal: 'success' },
   { id: 'Lost',       label: 'Lost',       color: '#dc2626', terminal: 'fail' },
 ];

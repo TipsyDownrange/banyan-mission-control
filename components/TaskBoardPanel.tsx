@@ -269,7 +269,7 @@ function DetailPanel({ task, onClose, onUpdate }: {
                 <button onClick={()=>{setAddingNote(false);setNoteText('');}} style={{padding:'7px 10px',borderRadius:8,border:'1px solid var(--color-surface-border)',background:'white',color:'var(--bos-color-ink-disabled)',fontSize:12,cursor:'pointer'}}>Cancel</button>
               </div>
             ) : (
-              <button onClick={()=>setAddingNote(true)} style={{marginTop:6,fontSize:11,fontWeight:700,color:'#0369a1',background:'none',border:'none',cursor:'pointer',padding:0}}>+ Add Note</button>
+              <button onClick={()=>setAddingNote(true)} style={{marginTop:6,fontSize:11,fontWeight:700,color:'var(--bos-color-accent-data)',background:'none',border:'none',cursor:'pointer',padding:0}}>+ Add Note</button>
             )}
           </div>
         </div>

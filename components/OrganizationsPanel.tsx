@@ -1252,7 +1252,7 @@ function OrgDetailPanel({
 
             <CollapsibleSection title="Mark Related, Not Duplicate" open={!!openSections['related']} onToggle={() => toggleSection('related')}>
               <div style={{ padding: 10, borderRadius: 8, border: '1px solid #bae6fd', background: '#f0f9ff', marginBottom: 10 }}>
-                <div style={{ fontSize: 12, color: '#0369a1', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: 'var(--bos-color-accent-data)', lineHeight: 1.5 }}>
                   <strong>Use when orgs are connected but must stay separate.</strong> Examples: property and billing account, operator and owner, HOA and property manager. Records the relationship without moving or merging any data.
                 </div>
               </div>

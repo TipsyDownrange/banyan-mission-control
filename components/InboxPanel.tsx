@@ -173,7 +173,7 @@ export default function InboxPanel() {
                       <span style={PILL(cfg.color, 'rgba(255,255,255,0.72)', `1px solid ${cfg.accent}33`)}>{cfg.label}</span>
                       {item.unread && <span style={PILL('#ef4444', 'rgba(254,242,242,0.9)', '1px solid rgba(239,68,68,0.2)')}>New</span>}
                       {item.island && item.category === 'bid_invite' && (
-                        <span style={{ padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#0369a1', background: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                        <span style={{ padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--bos-color-accent-data)', background: 'rgba(239,246,255,0.9)', border: '1px solid rgba(59,130,246,0.2)' }}>
                           {item.island}
                         </span>
                       )}

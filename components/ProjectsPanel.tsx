@@ -33,7 +33,7 @@ type CO = Record<string, string>;
 type SOVLine = Record<string, string>;
 type InstallSummary = { kID: string; totalSteps: number; completedSteps: number; pctComplete: number; qcPassRate: number };
 
-const ISLAND_COLOR: Record<string, string> = { Oahu: '#0369a1', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)' };
+const ISLAND_COLOR: Record<string, string> = { Oahu: 'var(--bos-color-accent-data)', Maui: 'var(--bos-color-brand-primary-deep)', Kauai: '#6d28d9', Hawaii: 'var(--color-amber-800)' };
 
 interface Props { onNavigate?: (view: string, params?: Record<string, string>) => void; }
 

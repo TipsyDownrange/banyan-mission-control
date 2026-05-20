@@ -77,7 +77,7 @@ export interface BidSummary {
 const STATUS_STYLES: Record<string, { color: string; bg: string; accentColor: string }> = {
   draft:      { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.1)',  accentColor: 'var(--bos-color-ink-tertiary)' },
   'in review':{ color: '#2563eb', bg: 'rgba(37,99,235,0.1)',    accentColor: '#3b82f6' },
-  submitted:  { color: '#0369a1', bg: 'rgba(3,105,161,0.1)',    accentColor: '#0369a1' },
+  submitted:  { color: 'var(--bos-color-accent-data)', bg: 'rgba(3,105,161,0.1)',    accentColor: 'var(--bos-color-accent-data)' },
   active:     { color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(15,118,110,0.1)',   accentColor: 'var(--bos-color-brand-primary)' },
   won:        { color: '#15803d', bg: 'rgba(21,128,61,0.1)',    accentColor: '#16a34a' },
   lost:       { color: 'var(--bos-color-ink-disabled)', bg: 'rgba(100,116,139,0.08)', accentColor: 'var(--bos-color-ink-tertiary)' },
@@ -102,7 +102,7 @@ const WORKSPACE_TABS: WorkspaceTab[] = [
 const PIPELINE_STAGES: PipelineStage[] = [
   { id: 'Draft',      label: 'Draft',      color: 'var(--bos-color-ink-tertiary)' },
   { id: 'In Review',  label: 'In Review',  color: '#3b82f6' },
-  { id: 'Submitted',  label: 'Submitted',  color: '#0369a1' },
+  { id: 'Submitted',  label: 'Submitted',  color: 'var(--bos-color-accent-data)' },
   { id: 'Won',        label: 'Won',        color: '#16a34a', terminal: 'success' },
   { id: 'Lost',       label: 'Lost',       color: '#dc2626', terminal: 'fail' },
 ];
@@ -110,7 +110,7 @@ const PIPELINE_STAGES: PipelineStage[] = [
 const FILTER_CHIPS: FilterChip[] = [
   { id: 'all',       label: 'All',       color: 'var(--bos-color-ink-disabled)' },
   { id: 'active',    label: 'Active',    color: 'var(--bos-color-brand-primary)' },
-  { id: 'submitted', label: 'Submitted', color: '#0369a1' },
+  { id: 'submitted', label: 'Submitted', color: 'var(--bos-color-accent-data)' },
   { id: 'won',       label: 'Won',       color: '#16a34a' },
   { id: 'lost',      label: 'Lost',      color: 'var(--bos-color-ink-tertiary)' },
 ];

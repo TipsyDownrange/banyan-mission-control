@@ -87,16 +87,16 @@ function normalizeStatus(raw: string): string {
 
 const AREA_COLOR: Record<string, string> = {
   // Maui areas
-  lahaina: 'var(--bos-color-brand-primary-deep)', kahului: '#0369a1', kihei: '#6d28d9',
-  wailea: '#15803d', wailuku: 'var(--color-amber-800)', maalaea: '#0369a1',
+  lahaina: 'var(--bos-color-brand-primary-deep)', kahului: 'var(--bos-color-accent-data)', kihei: '#6d28d9',
+  wailea: '#15803d', wailuku: 'var(--color-amber-800)', maalaea: 'var(--bos-color-accent-data)',
   makawao: 'var(--bos-color-ink-disabled)', paia: 'var(--bos-color-brand-primary-deep)', kapalua: '#15803d',
   // Oahu
-  honolulu: '#0369a1', kapolei: '#6d28d9', kailua: 'var(--bos-color-brand-primary-deep)',
+  honolulu: 'var(--bos-color-accent-data)', kapolei: '#6d28d9', kailua: 'var(--bos-color-brand-primary-deep)',
   kaneohe: '#15803d', 'hawaii kai': 'var(--color-amber-800)', aiea: 'var(--bos-color-ink-disabled)',
   // Kauai
   lihue: '#6d28d9', kapaa: 'var(--bos-color-brand-primary-deep)', poipu: '#15803d',
   // Big Island
-  hilo: 'var(--color-amber-800)', kona: '#0369a1', waimea: '#6d28d9',
+  hilo: 'var(--color-amber-800)', kona: 'var(--bos-color-accent-data)', waimea: '#6d28d9',
 };
 
 function areaColor(area: string): string {
@@ -182,7 +182,7 @@ function WOCard({
         {/* Folder link — small icon if present */}
         {wo.folderUrl && (
           <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
-            <a href={wo.folderUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: '#0369a1', textDecoration: 'none' }} title="Open Drive folder">📁</a>
+            <a href={wo.folderUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: 'var(--bos-color-accent-data)', textDecoration: 'none' }} title="Open Drive folder">📁</a>
           </div>
         )}
       </div>
@@ -458,7 +458,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
         const kpis: KPI[] = [
           { label: 'Open Work Orders', value: mergedWorkOrders.length - completed.length, subtitle: `${completed.length} completed` },
           { label: 'Needs Action', value: needsAction.length, subtitle: 'New leads', color: needsAction.length > 5 ? '#d97706' : '#059669' },
-          { label: 'Scheduled', value: scheduled.length, subtitle: 'In the pipeline', color: '#0369a1' },
+          { label: 'Scheduled', value: scheduled.length, subtitle: 'In the pipeline', color: 'var(--bos-color-accent-data)' },
           { label: 'Completed', value: completed.length, color: '#059669' },
         ];
         const ai: ActionItem[] = [];
@@ -578,7 +578,7 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
             { id: 'deposit_received',   label: 'Deposit Received', count: mergedByStatus['deposit_received']?.length || 0,   color: '#b45309' },
             { id: 'materials_ordered',  label: 'Materials Ordered', count: mergedByStatus['materials_ordered']?.length || 0,  color: '#9a3412' },
             { id: 'materials_received', label: 'Materials In',      count: mergedByStatus['materials_received']?.length || 0, color: '#166534' },
-            { id: 'ready_to_schedule',  label: 'Ready to Schedule', count: mergedByStatus['ready_to_schedule']?.length || 0,  color: '#0369a1' },
+            { id: 'ready_to_schedule',  label: 'Ready to Schedule', count: mergedByStatus['ready_to_schedule']?.length || 0,  color: 'var(--bos-color-accent-data)' },
             { id: 'scheduled',          label: 'Scheduled',         count: mergedByStatus['scheduled']?.length || 0,          color: '#4338ca' },
             { id: 'in_progress', label: 'In Progress',    count: mergedByStatus['in_progress']?.length || 0, color: 'var(--bos-color-brand-primary-deep)' },
             { id: 'closed',      label: 'Completed',      count: completedStageKeys.reduce((sum, key) => sum + (mergedByStatus[key]?.length || 0), 0), color: '#15803d' },
