@@ -226,7 +226,7 @@ export default function TodayPanel({ onNavigate }: TodayPanelProps) {
         <div style={{
           position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
           padding: '10px 20px', borderRadius: 12,
-          background: toast.includes('Failed') ? '#fef2f2' : '#f0fdf4',
+          background: toast.includes('Failed') ? 'var(--color-red-50)' : '#f0fdf4',
           border: `1px solid ${toast.includes('Failed') ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.3)'}`,
           color: toast.includes('Failed') ? 'var(--color-red-700)' : '#15803d',
           fontSize: 13, fontWeight: 700, zIndex: 500,

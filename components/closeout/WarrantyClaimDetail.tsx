@@ -104,7 +104,7 @@ const BUTTON_SECONDARY: CSSProperties = {
 };
 
 const ERROR_BANNER: CSSProperties = {
-  padding: '8px 12px', borderRadius: 8, background: '#fef2f2',
+  padding: '8px 12px', borderRadius: 8, background: 'var(--color-red-50)',
   border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red-700)',
   fontSize: 12, fontWeight: 700,
 };

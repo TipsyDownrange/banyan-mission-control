@@ -193,7 +193,7 @@ export default function ActionItemsTab({ kID }: { kID: string }) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading action items...</div>;
   }
   if (err) {
-    return <div style={{ padding: 24, color: 'var(--color-red-700)', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
+    return <div style={{ padding: 24, color: 'var(--color-red-700)', background: 'var(--color-red-50)', borderRadius: 12, border: '1px solid #fecaca' }}>Failed to load action items: {err}</div>;
   }
   if (!data?.kIDFound) {
     return <div style={{ padding: 24, color: 'var(--bos-color-ink-disabled)', background: 'var(--color-surface)', borderRadius: 12, border: '1px solid var(--color-surface-border)' }}>Action Items requires this project to be migrated to Postgres.</div>;

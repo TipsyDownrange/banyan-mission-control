@@ -178,7 +178,7 @@ export default function DocumentDetailDrawer({ documentId, onClose, onUpdated }:
           {loading ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--bos-color-ink-disabled)' }}>Loading...</div>
           ) : err ? (
-            <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12 }}>{err}</div>
+            <div style={{ padding: 10, background: 'var(--color-red-50)', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12 }}>{err}</div>
           ) : doc ? (
             <>
               <a href={`https://drive.google.com/file/d/${encodeURIComponent(doc.drive_file_id)}/view`} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(15,118,110,0.22)', background: 'rgba(240,253,250,0.96)', color: 'var(--bos-color-brand-primary-deep)', fontSize: 12, fontWeight: 800, textDecoration: 'none', alignSelf: 'flex-start' }}>Open in Drive →</a>

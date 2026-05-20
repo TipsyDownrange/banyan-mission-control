@@ -234,7 +234,7 @@ export default function TaskResourceAssignmentDialog({
           <div
             data-bos-resource-dialog-error
             style={{
-              background: '#fef2f2', color: 'var(--color-red-700)', padding: '8px 12px',
+              background: 'var(--color-red-50)', color: 'var(--color-red-700)', padding: '8px 12px',
               borderRadius: 8, fontSize: 12, marginBottom: 12,
             }}
           >

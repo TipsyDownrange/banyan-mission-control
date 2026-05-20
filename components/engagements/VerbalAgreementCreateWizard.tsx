@@ -152,7 +152,7 @@ export default function VerbalAgreementCreateWizard({ kID, onClose, onCreated }:
           </div>
         )}
 
-        {err && <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+        {err && <div style={{ color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy} style={secondaryButtonStyle}>Cancel</button>

@@ -1777,7 +1777,7 @@ export default function WorkBreakdown({ jobId, jobType, quotedHours, readOnly = 
 
   if (error) {
     return (
-      <div style={{ padding: '16px', background: '#fef2f2', borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
+      <div style={{ padding: '16px', background: 'var(--color-red-50)', borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)' }}>
         Failed to load: {error}
         <button onClick={loadData} style={{ marginLeft: 10, background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', textDecoration: 'underline', fontSize: 12 }}>Retry</button>
       </div>

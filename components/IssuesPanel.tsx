@@ -46,8 +46,8 @@ function deriveBlocking(note: string): boolean {
 }
 
 const SEVERITY_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  CRITICAL: { bg: '#fef2f2', color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
-  HIGH:     { bg: '#fef2f2', color: 'var(--color-red-700)', border: 'rgba(239,68,68,0.2)' },
+  CRITICAL: { bg: 'var(--color-red-50)', color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
+  HIGH:     { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', border: 'rgba(239,68,68,0.2)' },
   MEDIUM:   { bg: '#fffbeb', color: 'var(--color-amber-800)', border: 'rgba(245,158,11,0.2)' },
   LOW:      { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', border: 'rgba(148,163,184,0.2)' },
 };
@@ -192,7 +192,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
         </div>
       )}
 
-      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 20 }}>{error}</div>}
+      {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 20 }}>{error}</div>}
 
       {!loading && filteredIssues.length === 0 && !error && (
         <div style={{ borderRadius: 20, background: 'white', border: '1px solid var(--color-surface-border)' }}>
@@ -228,7 +228,7 @@ export default function IssuesPanel({ onNavigate }: IssuesPanelProps) {
                       {issue.severity}
                     </span>
                     {issue.blocking && (
-                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: '#fef2f2', color: 'var(--color-red-700)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: 'var(--color-red-50)', color: 'var(--color-red-700)', border: '1px solid rgba(239,68,68,0.3)' }}>
                         🚫 BLOCKING
                       </span>
                     )}

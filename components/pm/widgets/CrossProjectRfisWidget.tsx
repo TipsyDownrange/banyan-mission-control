@@ -73,7 +73,7 @@ export default function CrossProjectRfisWidget({ onHide, showHide }: { onHide?: 
                 display: 'flex',
                 gap: 10,
                 padding: '6px 10px',
-                background: r.is_overdue ? '#fef2f2' : 'var(--color-surface)',
+                background: r.is_overdue ? 'var(--color-red-50)' : 'var(--color-surface)',
                 borderRadius: 6,
                 border: `1px solid ${r.is_overdue ? '#fecaca' : 'var(--color-surface-border)'}`,
               }}

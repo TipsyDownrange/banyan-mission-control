@@ -239,7 +239,7 @@ export default function CostPanel() {
               <AddInvoiceForm onAdded={load} />
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
-              <div style={{ padding:'10px 14px', background:'#fef2f2', borderRadius:10, border:'1px solid rgba(185,28,28,0.15)' }}>
+              <div style={{ padding:'10px 14px', background:'var(--color-red-50)', borderRadius:10, border:'1px solid rgba(185,28,28,0.15)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'var(--color-red-700)', marginBottom:2 }}>Invoices Paid</div>
                 <div style={{ fontSize:22, fontWeight:900, color:'var(--color-ink-primary)' }}>{fmtUsd(ant?.invoicesPaid)}</div>
               </div>
@@ -257,7 +257,7 @@ export default function CostPanel() {
                   {[...(data?.anthropicInvoices||[])].sort((a,b)=>b.date.localeCompare(a.date)).map((inv,i)=>(
                     <tr key={i} style={{ borderBottom:'1px solid var(--color-surface)' }}>
                       <td style={{ padding:'7px 8px', color:'#334155' }}>{inv.date}</td>
-                      <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'#fef2f2':'#f0fdf4', color:inv.type==='invoice'?'var(--color-red-700)':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
+                      <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 8px', borderRadius:999, background:inv.type==='invoice'?'var(--color-red-50)':'#f0fdf4', color:inv.type==='invoice'?'var(--color-red-700)':'#059669', fontWeight:700 }}>{inv.type==='invoice'?'Invoice':'Credit'}</span></td>
                       <td style={{ padding:'7px 8px', fontWeight:700, color:'var(--color-ink-primary)' }}>{fmtUsd(inv.amount)}</td>
                       <td style={{ padding:'7px 8px' }}><span style={{ fontSize:10, padding:'2px 7px', borderRadius:999, background:'#f0fdf4', color:'#059669', fontWeight:700 }}>{inv.status||'paid'}</span></td>
                     </tr>

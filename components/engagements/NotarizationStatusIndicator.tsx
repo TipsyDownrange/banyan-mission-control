@@ -21,7 +21,7 @@ const STATE_BADGE: Record<string, { bg: string; color: string; label: string }> 
   CREATED:     { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · Created' },
   IN_PROGRESS: { bg: '#eff6ff', color: '#1d4ed8', label: 'Notarization · In Progress' },
   COMPLETED:   { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)', label: 'Notarization · Completed' },
-  FAILED:      { bg: '#fef2f2', color: 'var(--color-red-700)', label: 'Notarization · Failed' },
+  FAILED:      { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Notarization · Failed' },
   CANCELLED:   { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: 'Notarization · Cancelled' },
 };
 

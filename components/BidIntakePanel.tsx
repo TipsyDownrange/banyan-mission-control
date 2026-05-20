@@ -167,7 +167,7 @@ export default function BidIntakePanel() {
       )}
 
       {error && (
-        <div style={{ padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>
+        <div style={{ padding: '12px 16px', borderRadius: 12, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', marginBottom: 16 }}>
           {error}
         </div>
       )}
@@ -230,7 +230,7 @@ export default function BidIntakePanel() {
                         </span>
                       )}
                       {urgent && (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-red-700)', background: '#fef2f2', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(185,28,28,0.2)' }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-red-700)', background: 'var(--color-red-50)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(185,28,28,0.2)' }}>
                           ⚠ Due in {days} day{days !== 1 ? 's' : ''}
                         </span>
                       )}

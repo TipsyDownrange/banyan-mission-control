@@ -240,7 +240,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
                   <label style={{ fontSize: 11, color: 'var(--bos-color-ink-tertiary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <input type="checkbox" checked={a.attended} onChange={(e) => updateAttendee(a.key, { attended: e.target.checked })} /> Attended
                   </label>
-                  <button type="button" onClick={() => setAttendees((p) => p.filter((x) => x.key !== a.key))} style={{ ...smallButtonStyle, background: '#fef2f2', color: 'var(--color-red-700)', borderColor: '#fecaca' }}>Remove</button>
+                  <button type="button" onClick={() => setAttendees((p) => p.filter((x) => x.key !== a.key))} style={{ ...smallButtonStyle, background: 'var(--color-red-50)', color: 'var(--color-red-700)', borderColor: '#fecaca' }}>Remove</button>
                 </div>
               </div>
               {a.is_kula_user ? (
@@ -273,7 +273,7 @@ export default function MeetingCreateWizard({ kID, onClose, onCreated }: {
           ))}
         </div>
 
-        {err && <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+        {err && <div style={{ color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose} disabled={busy} style={secondaryButtonStyle}>Cancel</button>

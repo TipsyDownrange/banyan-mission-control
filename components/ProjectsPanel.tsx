@@ -189,7 +189,7 @@ function ProjectWorkspace({ project, onClose }: { project: Project; onClose: () 
     APPROVED: { bg: '#f0fdfa', color: 'var(--bos-color-brand-primary-deep)' },
     SUBMITTED: { bg: '#eff6ff', color: '#1d4ed8' },
     PENDING: { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)' },
-    REJECTED: { bg: '#fef2f2', color: 'var(--color-red-700)' },
+    REJECTED: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)' },
     REVISE_RESUBMIT: { bg: '#fffbeb', color: 'var(--color-amber-800)' },
     UNDER_REVIEW: { bg: '#eff6ff', color: '#1d4ed8' },
     IDENTIFIED: { bg: '#fffbeb', color: 'var(--color-amber-800)' },

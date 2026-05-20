@@ -54,7 +54,7 @@ const STATUS_PILL: Record<string, { color: string; bg: string; label: string }> 
   queued:      { color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9', label: 'Queued' },
   in_progress: { color: 'var(--bos-color-brand-primary-deep)', bg: '#f0fdfa', label: 'In Progress' },
   waiting:     { color: '#d97706', bg: '#fffbeb', label: 'Waiting' },
-  blocked:     { color: 'var(--color-red-700)', bg: '#fef2f2', label: 'Blocked' },
+  blocked:     { color: 'var(--color-red-700)', bg: 'var(--color-red-50)', label: 'Blocked' },
   done:        { color: '#15803d', bg: '#f0fdf4', label: 'Done' },
 };
 

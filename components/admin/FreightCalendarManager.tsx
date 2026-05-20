@@ -322,7 +322,7 @@ export default function FreightCalendarManager() {
         <div
           data-testid="freight-error"
           style={{
-            padding: '14px 16px', borderRadius: 12, background: '#fef2f2',
+            padding: '14px 16px', borderRadius: 12, background: 'var(--color-red-50)',
             color: 'var(--color-red-700)', fontSize: 13, fontWeight: 700,
           }}
         >
@@ -478,7 +478,7 @@ export default function FreightCalendarManager() {
               <div
                 data-testid="freight-form-error"
                 style={{
-                  padding: '8px 12px', borderRadius: 8, background: '#fef2f2',
+                  padding: '8px 12px', borderRadius: 8, background: 'var(--color-red-50)',
                   color: 'var(--color-red-700)', fontSize: 12, fontWeight: 700,
                 }}
               >

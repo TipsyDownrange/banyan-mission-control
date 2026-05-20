@@ -1008,13 +1008,13 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
 
         {/* Error banners */}
         {saveError && (
-          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>⚠️ {saveError}</span>
             <button onClick={() => setSaveError('')} style={{ background: 'none', border: 'none', color: 'var(--color-red-700)', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
         )}
         {stageError && (
-          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ margin: '0 20px', padding: '10px 16px', borderRadius: 10, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>⚠️ {stageError}</span>
             <button onClick={() => setStageError('')} style={{ background: 'none', border: 'none', color: 'var(--color-red-700)', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
@@ -1067,7 +1067,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
             {stageExpanded && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginTop: 12 }}>
                 {safeWo.status === 'lost' ? (
-                  <div style={{ padding: '6px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: 'var(--color-red-700)' }}>Declined</div>
+                  <div style={{ padding: '6px 14px', borderRadius: 10, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, fontWeight: 700, color: 'var(--color-red-700)' }}>Declined</div>
                 ) : (
                   <div style={{ flex: 1, overflowX: 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 'max-content', padding: '4px 0' }}>
@@ -1821,7 +1821,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                       IN_TRANSIT: {bg:'#f0f9ff',color:'#0369a1'},
                       DELIVERED: {bg:'#f0fdf4',color:'#15803d'},
                       INSPECTED_PASS: {bg:'#f0fdf4',color:'#15803d'},
-                      INSPECTED_FAIL: {bg:'#fef2f2',color:'#dc2626'},
+                      INSPECTED_FAIL: {bg:'var(--color-red-50)',color:'#dc2626'},
                       CANCELLED: {bg:'var(--color-surface)',color:'var(--bos-color-ink-tertiary)'},
                     };
                     const sc = statusColors[order.status] || statusColors.VENDOR_QUOTED;
@@ -2190,7 +2190,7 @@ export default function WODetailPanel({ wo, allCrew, readOnly = false, onClose, 
                 </button>
                 <div style={{ display: collapsed['job-files'] ? 'none' : 'block' }}>
                 {uploadError && (
-                  <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--color-red-50)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--color-red-700)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>⚠️ {uploadError}</span>
                     <button onClick={() => setUploadError('')} style={{ background: 'none', border: 'none', color: 'var(--color-red-700)', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}>×</button>
                   </div>

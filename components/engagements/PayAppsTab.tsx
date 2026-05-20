@@ -97,7 +97,7 @@ export default function PayAppsTab({ kID }: { kID: string }) {
   if (error) {
     return (
       <div style={{
-        padding: '16px 20px', borderRadius: 12, background: '#fef2f2',
+        padding: '16px 20px', borderRadius: 12, background: 'var(--color-red-50)',
         border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red-700)',
         fontSize: 13, fontWeight: 700,
       }}>

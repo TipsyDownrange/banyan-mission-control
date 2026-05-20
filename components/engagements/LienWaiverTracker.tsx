@@ -87,7 +87,7 @@ export default function LienWaiverTracker({ kID }: { kID: string }) {
   }
   if (error) {
     return (
-      <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 12 }}>
+      <div style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--color-red-50)', color: 'var(--color-red-700)', fontSize: 12 }}>
         Could not load lien waivers: {error}
       </div>
     );

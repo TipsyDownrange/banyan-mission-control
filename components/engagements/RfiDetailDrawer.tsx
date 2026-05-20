@@ -109,7 +109,7 @@ export default function RfiDetailDrawer({ rfiId, kID, onClose, onChanged }: {
         </div>
 
         {err && (
-          <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, margin: 20, fontSize: 12 }}>{err}</div>
+          <div style={{ color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, margin: 20, fontSize: 12 }}>{err}</div>
         )}
 
         {!r ? (

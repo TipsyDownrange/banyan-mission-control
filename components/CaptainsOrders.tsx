@@ -54,9 +54,9 @@ const STATUS_CONFIG: Record<DecisionStatus, { label: string; color: string; bg: 
 const RESOLUTION_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   approved:          { label: 'Approved',          color: '#059669', bg: '#f0fdf4' },
   approved_amended:  { label: 'Approved (amended)', color: 'var(--bos-color-brand-primary-deep)', bg: 'rgba(20,184,166,0.08)' },
-  rejected:          { label: 'Rejected',          color: '#dc2626', bg: '#fef2f2' },
+  rejected:          { label: 'Rejected',          color: '#dc2626', bg: 'var(--color-red-50)' },
   deferred:          { label: 'Deferred',          color: 'var(--bos-color-ink-disabled)', bg: '#f1f5f9' },
-  overridden:        { label: 'Overridden',        color: 'var(--color-red-700)', bg: '#fef2f2' },
+  overridden:        { label: 'Overridden',        color: 'var(--color-red-700)', bg: 'var(--color-red-50)' },
   rerouted:          { label: 'Rerouted',          color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
 };
 

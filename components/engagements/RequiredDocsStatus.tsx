@@ -40,7 +40,7 @@ export default function RequiredDocsStatus({ payAppId }: { payAppId: string }) {
 
   if (error) {
     return (
-      <div style={{ padding: '8px 12px', borderRadius: 8, background: '#fef2f2', color: 'var(--color-red-700)', fontSize: 11 }}>
+      <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--color-red-50)', color: 'var(--color-red-700)', fontSize: 11 }}>
         Required-docs status unavailable: {error}
       </div>
     );

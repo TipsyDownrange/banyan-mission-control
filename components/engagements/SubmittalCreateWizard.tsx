@@ -187,7 +187,7 @@ export default function SubmittalCreateWizard({ kID, onClose, onCreated }: {
         </label>
 
         {err && (
-          <div style={{ color: 'var(--color-red-700)', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
+          <div style={{ color: 'var(--color-red-700)', background: 'var(--color-red-50)', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
             {err}
           </div>
         )}

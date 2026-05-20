@@ -135,7 +135,7 @@ export default function HandoffReviewDrawer({
 
         <div style={{ padding: '20px 24px' }}>
           {err && (
-            <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12, marginBottom: 14 }}>
+            <div style={{ padding: 12, background: 'var(--color-red-50)', border: '1px solid #fecaca', borderRadius: 10, color: 'var(--color-red-700)', fontSize: 12, marginBottom: 14 }}>
               {err}
             </div>
           )}

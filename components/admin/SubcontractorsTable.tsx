@@ -90,7 +90,7 @@ export function SubcontractorsTableView({
 
       {state.kind === 'error' && (
         <div style={{
-          padding: '14px 16px', borderRadius: 12, background: '#fef2f2',
+          padding: '14px 16px', borderRadius: 12, background: 'var(--color-red-50)',
           color: 'var(--color-red-700)', fontSize: 13, fontWeight: 700,
         }}>
           Could not load subcontractors: {state.message}

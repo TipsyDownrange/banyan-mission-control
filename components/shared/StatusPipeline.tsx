@@ -82,7 +82,7 @@ export default function StatusPipeline({
         if (isActive) {
           dotColor = stage.terminal === 'fail' ? '#dc2626' : stage.terminal === 'success' ? '#16a34a' : (stage.color ?? 'var(--bos-color-brand-primary)');
           textColor = dotColor;
-          dotBg = stage.terminal === 'fail' ? '#fef2f2' : stage.terminal === 'success' ? '#f0fdf4' : 'rgba(20,184,166,0.15)';
+          dotBg = stage.terminal === 'fail' ? 'var(--color-red-50)' : stage.terminal === 'success' ? '#f0fdf4' : 'rgba(20,184,166,0.15)';
           lineColor = stage.color ?? 'var(--bos-color-brand-primary)';
         }
 

@@ -16,7 +16,7 @@ export type CriticalGap = {
 };
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  OPEN:         { bg: '#fef2f2', fg: 'var(--color-red-700)' },
+  OPEN:         { bg: 'var(--color-red-50)', fg: 'var(--color-red-700)' },
   ACKNOWLEDGED: { bg: '#fef3c7', fg: 'var(--color-amber-800)' },
   RESOLVED:     { bg: '#f0fdf4', fg: '#15803d' },
   WAIVED:       { bg: '#f1f5f9', fg: 'var(--bos-color-ink-tertiary)' },

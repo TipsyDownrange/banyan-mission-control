@@ -30,7 +30,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     paid:    { bg: '#f0fdf4', color: '#15803d', label: 'Paid' },
     unpaid:  { bg: '#eff6ff', color: '#1d4ed8', label: 'Unpaid' },
-    overdue: { bg: '#fef2f2', color: 'var(--color-red-700)', label: 'Overdue' },
+    overdue: { bg: 'var(--color-red-50)', color: 'var(--color-red-700)', label: 'Overdue' },
   };
   const s = map[status] || { bg: 'var(--color-surface)', color: 'var(--bos-color-ink-disabled)', label: status };
   return (
@@ -81,7 +81,7 @@ function FinancialsPanel() {
       )}
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 14, padding: '16px 20px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--color-red-50)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: 14, padding: '16px 20px', marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-red-700)', marginBottom: 4 }}>⚠️ QuickBooks Connection Error</div>
           <div style={{ fontSize: 12, color: '#7f1d1d', fontFamily: 'monospace' }}>{error}</div>
         </div>
@@ -105,7 +105,7 @@ function FinancialsPanel() {
                   if (!val) return null;
                   const isOld = bucket === '61-90' || bucket === '90+';
                   return (
-                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? '#fef2f2' : 'var(--color-surface)', color: isOld ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
+                    <div key={bucket} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: isOld ? 'var(--color-red-50)' : 'var(--color-surface)', color: isOld ? 'var(--color-red-700)' : 'var(--bos-color-ink-disabled)', fontWeight: 700 }}>
                       {bucket}: {fmt$(val)}
                     </div>
                   );
