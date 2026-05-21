@@ -9,7 +9,7 @@ import WODetailPanel from '@/components/WODetailPanel';
 import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 import { resolveWorkOrderIsland } from '@/lib/normalize';
 import { serviceWOMatchesSearch } from '@/lib/service-panel-filtering';
-import { Button, StatusPill } from '@/components/design-system';
+import { Button, Card, StatusPill } from '@/components/design-system';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -139,61 +139,63 @@ function WOCard({
   const islandColor = ISLAND_COLORS[wo.island || ''] || 'var(--bos-color-ink-disabled)';
 
   return (
-    <article data-wo-id={wo.id || wo.name} style={{ borderRadius: 10, background: 'white', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)', position: 'relative', overflow: 'hidden', marginBottom: 0, borderLeft: `4px solid ${statusStage.color}` }}>
-
-      {/* Simplified card — click anywhere to open detail panel */}
-      <div onClick={() => onDetail(wo)} style={{ padding: '10px 12px', cursor: 'pointer' }}>
-        {/* Row 1: WO# + island badge */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-          <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>{wo.id || ''}</span>
-          {wo.island && (
-            <span style={{ fontSize: 10, color: islandColor, background: `${islandColor}15`, padding: '1px 6px', borderRadius: 999, fontWeight: 700 }}>{wo.island}</span>
-          )}
-        </div>
-
-        {/* Row 2: WO name — bold, 2 lines max */}
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {toTitleCase(wo.name) || wo.id}
-        </div>
-
-        {/* Customer resolution badge — GC-D053 */}
-        {wo.customer_resolved === true && wo.resolved_customer_name && (
-          <div style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 3 }}>{wo.resolved_customer_name}</div>
-        )}
-        {wo.customer_resolved === false && (
-          <div style={{ display: 'inline-block', marginBottom: 3 }}>
-            <StatusPill variant="warn">No customer</StatusPill>
-          </div>
-        )}
-        {wo.data_integrity_error && (
-          <div style={{ display: 'inline-block', marginBottom: 3 }}>
-            <StatusPill variant="error">Customer ID missing</StatusPill>
-          </div>
-        )}
-        {wo.requires_org_assignment && (
-          <div style={{ display: 'inline-block', marginBottom: 3 }}>
-            <StatusPill variant="warn">Needs Org Assignment</StatusPill>
-          </div>
-        )}
-
-        {/* Row 3: Assigned to */}
-        {wo.assignedTo && (
-          <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>→ {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}</div>
-        )}
-        {wo.status === 'scheduled' && wo.scheduledDate && (
-          <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 700, marginTop: 3 }}>
-            Scheduled: {formatScheduledDate(wo.scheduledDate)}
-          </div>
-        )}
-
-        {/* Folder link — small icon if present */}
-        {wo.folderUrl && (
-          <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
-            <a href={wo.folderUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: 'var(--bos-color-accent-data)', textDecoration: 'none' }} title="Open Drive folder">📁</a>
-          </div>
+    <Card
+      variant="compact"
+      accentColor={statusStage.color}
+      data-wo-id={wo.id || wo.name}
+      onClick={() => onDetail(wo)}
+      style={{ position: 'relative', overflow: 'hidden', marginBottom: 0, cursor: 'pointer' }}
+    >
+      {/* Row 1: WO# + island badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+        <span style={{ fontSize: 10, color: 'var(--bos-color-ink-tertiary)', fontWeight: 600 }}>{wo.id || ''}</span>
+        {wo.island && (
+          <StatusPill variant="info" color={islandColor}>{wo.island}</StatusPill>
         )}
       </div>
-    </article>
+
+      {/* Row 2: WO name — bold, 2 lines max */}
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-primary)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        {toTitleCase(wo.name) || wo.id}
+      </div>
+
+      {/* Customer resolution badge — GC-D053 */}
+      {wo.customer_resolved === true && wo.resolved_customer_name && (
+        <div style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 3 }}>{wo.resolved_customer_name}</div>
+      )}
+      {wo.customer_resolved === false && (
+        <div style={{ display: 'inline-block', marginBottom: 3 }}>
+          <StatusPill variant="warn">No customer</StatusPill>
+        </div>
+      )}
+      {wo.data_integrity_error && (
+        <div style={{ display: 'inline-block', marginBottom: 3 }}>
+          <StatusPill variant="error">Customer ID missing</StatusPill>
+        </div>
+      )}
+      {wo.requires_org_assignment && (
+        <div style={{ display: 'inline-block', marginBottom: 3 }}>
+          <StatusPill variant="warn">Needs Org Assignment</StatusPill>
+        </div>
+      )}
+
+      {/* Row 3: Assigned to */}
+      {wo.assignedTo && (
+        <div style={{ fontSize: 11, color: 'var(--bos-color-ink-disabled)' }}>→ {toTitleCase(wo.assignedTo.split(',')[0])}{wo.assignedTo.split(',').length > 1 ? ` +${wo.assignedTo.split(',').length - 1}` : ''}</div>
+      )}
+      {wo.status === 'scheduled' && wo.scheduledDate && (
+        <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 700, marginTop: 3 }}>
+          Scheduled: {formatScheduledDate(wo.scheduledDate)}
+        </div>
+      )}
+
+      {/* Folder link — small icon if present */}
+      {wo.folderUrl && (
+        <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
+          <a href={wo.folderUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: 'var(--bos-color-accent-data)', textDecoration: 'none' }} title="Open Drive folder">📁</a>
+        </div>
+      )}
+    </Card>
   );
 }
 
