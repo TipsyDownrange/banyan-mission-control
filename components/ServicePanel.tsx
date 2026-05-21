@@ -9,6 +9,7 @@ import WODetailPanel from '@/components/WODetailPanel';
 import WOEstimatePanel, { EstimateTotals } from '@/components/WOEstimatePanel';
 import { resolveWorkOrderIsland } from '@/lib/normalize';
 import { serviceWOMatchesSearch } from '@/lib/service-panel-filtering';
+import { Button, StatusPill } from '@/components/design-system';
 
 type WorkOrder = {
   id: string; name: string; description: string;
@@ -160,13 +161,19 @@ function WOCard({
           <div style={{ fontSize: 11, color: 'var(--bos-color-brand-primary-deep)', marginBottom: 3 }}>{wo.resolved_customer_name}</div>
         )}
         {wo.customer_resolved === false && (
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#b45309', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ No customer</div>
+          <div style={{ display: 'inline-block', marginBottom: 3 }}>
+            <StatusPill variant="warn">No customer</StatusPill>
+          </div>
         )}
         {wo.data_integrity_error && (
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#991b1b', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>⚠ Customer ID missing</div>
+          <div style={{ display: 'inline-block', marginBottom: 3 }}>
+            <StatusPill variant="error">Customer ID missing</StatusPill>
+          </div>
         )}
         {wo.requires_org_assignment && (
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-amber-800)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.28)', borderRadius: 6, padding: '1px 7px', display: 'inline-block', marginBottom: 3 }}>Needs Org Assignment</div>
+          <div style={{ display: 'inline-block', marginBottom: 3 }}>
+            <StatusPill variant="warn">Needs Org Assignment</StatusPill>
+          </div>
         )}
 
         {/* Row 3: Assigned to */}
@@ -470,14 +477,22 @@ export default function ServicePanel({ readOnly = false, focusWoId, initialWoId 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-ink-primary)', margin: 0 }}>Work Orders</h1>
           <div style={{ display: 'flex', gap: 8, paddingBottom: 4, alignItems: 'center' }}>
-            {(!readOnly && canCreateLeads) && <button onClick={() => setShowIntake(true)}
-              style={{ padding: '8px 18px', borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(15,118,110,0.3)' }}>
-              + New Lead
-            </button>}
-            <button onClick={loadData}
-              style={{ padding: '7px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid var(--color-surface-border)', background: 'white', color: 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
+            {(!readOnly && canCreateLeads) && (
+              <Button
+                variant="action"
+                shape="pill"
+                onClick={() => setShowIntake(true)}
+                style={{
+                  background: 'linear-gradient(135deg,var(--bos-color-brand-primary-deep),var(--bos-color-brand-primary))',
+                  boxShadow: '0 4px 16px rgba(15,118,110,0.3)',
+                }}
+              >
+                + New Lead
+              </Button>
+            )}
+            <Button variant="secondary" shape="pill" onClick={loadData}>
               Refresh
-            </button>
+            </Button>
             {(['kanban', 'list'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
                 style={{ padding: '7px 16px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: view === v ? '1px solid rgba(15,118,110,0.3)' : '1px solid var(--color-surface-border)', background: view === v ? 'rgba(240,253,250,0.96)' : 'white', color: view === v ? 'var(--bos-color-brand-primary-deep)' : 'var(--bos-color-ink-disabled)', cursor: 'pointer' }}>
